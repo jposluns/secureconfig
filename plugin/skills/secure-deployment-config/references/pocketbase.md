@@ -555,8 +555,6 @@ deployment uses, because a reported `mariadb` can be that fallback over Postgres
 whether the variable is set in the `appwrite` service's environment, and to what, instead. See the
 [console variables adapter fallback](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Console/Http/Variables/Get.php#L115),
 [console variables response model adapter rule](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Utopia/Response/Model/ConsoleVariables.php#L130-L138),
-[utopia-php/system 0.10.6 getEnv fallback](https://github.com/utopia-php/system/blob/bd8f35619c7b69360689467f25e1b608cc3ba6b5/src/System/System.php#L657-L660),
-[composer.lock utopia-php/system pin](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L4844-L4849),
 [install task database parameter](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L65),
 [install task detected-database override](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L206-L211),
 [install task interactive database answer](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L303-L311),
@@ -564,6 +562,9 @@ whether the variable is set in the `appwrite` service's environment, and to what
 [install task existing-configuration check](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L542-L547),
 [install task Compose and environment writes](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L683-L696), and
 [install environment template](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/views/install/env.phtml).
+For the empty-value fallback, see the
+[utopia-php/system 0.10.6 getEnv fallback](https://github.com/utopia-php/system/blob/bd8f35619c7b69360689467f25e1b608cc3ba6b5/src/System/System.php#L657-L660) and
+[composer.lock utopia-php/system pin](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L4844-L4849).
 For the web-installer branch, existing-database detection and container start, see the
 [install task web-installer branch](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L225-L235),
 [install task explicit-parameter check](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1609-L1618),
@@ -588,12 +589,16 @@ text, then from `_APP_DB_ADAPTER` or `_APP_DB_HOST` in the environment file. See
 [web installer database default and lock](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L12-L21),
 [web installer database choices](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L68-L110),
 [web installer default database variable](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer.phtml#L12),
-[web installer posted database fallback](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370),
+[web installer view database settings](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/View.php#L42-L48), and
+[web installer posted database fallback](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370).
+For the install handler, see the
 [web installer database parameter](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L45),
 [web installer database validation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157),
+[web installer supported database values](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206),
 [web installer database adapter input](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243),
 [web installer resumed input and environment preparation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320),
-[web installer installation call](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392),
+[web installer installation call](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392).
+For the install task and installer server, see the
 [install task web installer configuration](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L341-L378),
 [install task existing-installation defaults](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L138-L173),
 [install task user input and database host](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L445-L466),
@@ -1081,9 +1086,11 @@ The September 2026 date in this heading is the guide-wide documentation check; i
 - [Appwrite 2.2.0 web installer database default and lock (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L12-L21).
 - [Appwrite 2.2.0 web installer database choices (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L68-L110).
 - [Appwrite 2.2.0 web installer default database variable (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer.phtml#L12).
+- [Appwrite 2.2.0 web installer view database settings (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/View.php#L42-L48).
 - [Appwrite 2.2.0 web installer posted database fallback (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370).
 - [Appwrite 2.2.0 web installer database parameter (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L45).
 - [Appwrite 2.2.0 web installer database validation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157).
+- [Appwrite 2.2.0 web installer supported database values (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206).
 - [Appwrite 2.2.0 web installer database adapter input (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243).
 - [Appwrite 2.2.0 web installer resumed input and environment preparation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320).
 - [Appwrite 2.2.0 web installer installation call (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392).
@@ -1225,7 +1232,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "84c62214ff1e2544c44eb438cb3b2aa08b8342bc40b2f8a557b7b36a8efceb91",
+  "body_sha256": "644b9a32bcfc21b1b06c22afbb04a866d6b7ba59e0d2613b1b625561c3a56c6a",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -1315,9 +1322,11 @@ Claims (full source mapping in the JSON block below):
         "sad8784f8e9a9": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L12-L21",
         "s06b2c6eab43d": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L68-L110",
         "s805902cec1bc": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer.phtml#L12",
+        "s681a4ae9171a": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/View.php#L42-L48",
         "s6fb9b6903781": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370",
         "s6c1141485824": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L45",
         "s7d56eff0a7da": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157",
+        "s6295037b83da": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206",
         "s9abe0896e1d5": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243",
         "s98f550167154": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320",
         "sae5eb7c54f35": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392",
