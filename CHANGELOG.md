@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-25
 
+- `ai-infra-services.md`: Onyx `AUTH_TYPE` removal records under the maintainer's 2026-10-25 rulings on TODO 1.311. The guide no longer dates the v4.5 removal-plan wording to September 2026, since the Internet Archive held no capture from August to October 2026, and it records that the notes of the 48 stable releases from v4.5.0 to v5.0.0 hold no removal record, not found in that scope on 2026-10-25. It also cites the EE `backend/ee/onyx/main.py` at v4.5.0 and v4.9.2 as source reading: no `AUTH_TYPE`, the base `lifespan` and factory reused, and a Google OAuth router only under `MULTI_TENANT`. The documentation index search stays open under 1.311, runtime selection moves to the new live-checks row 1.377, and DECISIONS.md records the four rulings (#882)
 - `observability-components.md`: Loki's target module graph, init order and gRPC service registrations at v3.7.8 are now cited by source reading of the 2026-10-24 p187a pack, and the internal server's default any-address gRPC listener on an OS-chosen port is now a source reading rather than an inference, still unobserved. TODO 1.301 keeps the bounded source items still open, its observation-only items move to the new live-checks row 1.375, and DECISIONS.md records the maintainer's two rulings (#879)
 
 ## 2026-10-24
