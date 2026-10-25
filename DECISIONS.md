@@ -17,6 +17,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-10-25 on claim-summary sentence length, TODO 1.383 (#898).** The maintainer ruled
+  live through AskUserQuestion at 2026-10-25T14:42:18Z. The ruling as recorded, verbatim:
+  "the 400-character rule for generated claim-summary sentences (counted with their prefix) applies to claims a PR adds or edits; a TODO row tracks a sweep of the 60 legacy over-limit summary sentences (25 guides, scan of main 059d1a80) in later PRs."
+  No reasoning was recorded beyond those words. Its effect (applied by #898): TODO row 1.383 tracks that sweep.
+  This entry does not change the 2026-10-23 claim-length gate ruling below, which refuses claim `text` over 400
+  characters unless the claim is listed in a checked-in baseline that only shrinks, and refuses a listed claim
+  that grows beyond its baselined length.
 - **Maintainer rulings of 2026-10-25 on TODO 1.306, 1.312, 1.283, 1.117, 1.266 and 1.268 (#894).** The maintainer
   ruled live through AskUserQuestion at 2026-10-25T12:57:57Z, resolving the questions held at 02:16:07Z,
   04:25:48Z (two), 04:53:55Z and 05:00:35Z that day. No reasoning was recorded beyond the orchestrator's record of
