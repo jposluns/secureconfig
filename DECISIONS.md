@@ -17,6 +17,32 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-25 on TODO 1.306, 1.312, 1.283, 1.117, 1.266 and 1.268 (#894).** The maintainer
+  ruled live through AskUserQuestion at 2026-10-25T12:57:57Z, resolving the questions held at 02:16:07Z,
+  04:25:48Z (two), 04:53:55Z and 05:00:35Z that day. No reasoning was recorded beyond the orchestrator's record of
+  the ruling, quoted below in parts.
+  - TODO 1.306. The record reads: "TODO 1.306 P3: split RHEL 10 trust-store sourcing into its own row." Its effect
+    (applied by #894): RHEL 10 trust-store sourcing moved to TODO row 1.380, and 1.306 stays open for its other
+    items.
+  - TODO 1.312, p192a plan proposals P1 to P3. The record reads: "TODO 1.312: P1 new live-checks row for I, J, K;
+    P2 bound item L to the recorded commit and page dates; P3 yes, as 1.324 (observable halves of A, B, D to G to
+    the live-checks row, dated recheck kept)." Its effect (applied by #894): deployed identity-provider MFA
+    enforcement, live-console behaviour, the Weaviate UI-label check and the observable halves of the Pinecone
+    and Zilliz items moved to TODO row 1.381. Publication and release timing is bounded to "commit dates and any
+    page-displayed update date are recorded; release timing is not published", and 1.312 stays open as a
+    documentation recheck dated 2026-10-25.
+  - TODO 1.283, p192a plan proposals P4 to P6. The record reads: "TODO 1.283: P4 bound R1 to built-in enterprise
+    roles as published; P5 live-checks row for R2; P6 keep R5 and R9 as drafted in #884." Its effect (applied by
+    #894): the enterprise-role item is bounded to the built-in enterprise workspace roles as published by Dify
+    and closes on vendor documentation or a public pinned enterprise source, and, as P4 proposed, goes to the
+    maintainer to retire or move to observation if neither source is public. Custom roles and running-console
+    observation moved to TODO row 1.382, and the exclude-action and hook-consumer items stand as #884 applied them.
+  - TODO 1.117. The record reads: "TODO 1.117 stays open until the client pipeline run, and the row says so."
+    Applied by #894, whose 1.117 row now says so.
+  - TODO 1.266 and 1.268. The record reads: "TODO 1.266 and 1.268 documentation items close on the stated scope,
+    observations stay in 1.374." Its effect (applied by #894): the Fly renewal item in 1.266 and the Fly and
+    Railway `X-Forwarded-Proto` items in 1.268 closed on the scope "not found in the pinned pages and the
+    Machines API certificate pages on 2026-10-25" (DONE 1.266 and 1.268, #894), and their other items stay open.
 - **Maintainer rulings of 2026-10-25 on `ai-infra-services.md` TODO 1.311 (#882).** The maintainer ruled live four
   times at 2026-10-25T01:37:13Z, the first through AskUserQuestion. No reasoning was recorded beyond the
   maintainer's words quoted below.
