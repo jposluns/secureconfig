@@ -17,6 +17,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **TODO 1.306: RHEL legacy extended support offerings are not current support, 2026-10-25 (#881).** The maintainer
+  ruled live through AskUserQuestion at 2026-10-25T01:01:52Z on p188a plan P1, choosing "No, standard only". The
+  orchestrator's record of the ruling reads: "for TODO 1.306, RHEL legacy extended support offerings do not count as
+  current support ("No, standard only"); RHEL 6 and 7 drop out of 1.306 with no fetch, as for the Ubuntu Pro
+  ruling." Its effect (applied by #881): RHEL 6 and 7, which Red Hat's errata policy page places under "Legacy
+  Extended Support Offerings", need no citation under TODO row 1.306. No reasoning was recorded beyond the record
+  quoted above. The 2026-10-24 Ubuntu Pro ruling below, which this parallels, stands unchanged.
 - **Maintainer ruling of 2026-10-25 on `paas.md` TODO 1.324 (#880).** The maintainer ruled live at
   2026-10-25T01:01:52Z on p188a plan proposal P4. The ruling as recorded, verbatim:
   "if the Heroku Dev Center rechecks find no statement of the Cedar mark's scope for ACM wildcards, move 1.324's observed-request item to live-checks row 1.374 and keep 1.324 as a dated documentation-recheck item ("Split, keep dated recheck")."
