@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PocketBase v0.40.4, Appwrite 2.2.0, utopia-php/database 7.3.9, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 87 claims: 2 demonstrated by a check that ran and 85 reasoned from cited sources.
+Written against PocketBase v0.40.4, Appwrite 2.2.0, utopia-php/database 7.3.9, utopia-php/system 0.10.6, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 87 claims: 2 demonstrated by a check that ran and 85 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -530,8 +530,11 @@ registration, cited above as the pool DSN fallbacks and connections, falls back 
 deployment that leaves the variable unset therefore gets Postgres `console` and `database` pools
 while that endpoint reports `mariadb`; where the variable is set, the endpoint and the pool
 registration read the same value, so for a value that registration accepts, the endpoint reports
-the scheme those pools use. How an empty value is read, and what the filters for an older response
-format do to the field, are not traced here. By the same reading, the 2.2.0 install task starts the
+the scheme those pools use. As source reading of utopia-php/system at bd8f3561, the commit that
+2.2.0's `composer.lock` pins for 0.10.6, `System::getEnv` returns `getenv($name) ?: $default`, so
+an empty value takes the same fallback as an unset one in the endpoint's and the pool
+registration's `System::getEnv` calls. What the filters for an older response format do to the
+field is not traced here. As source reading of 2.2.0, the install task starts the
 web installer and returns when its `interactive` parameter is `Y`, the console is interactive and
 no command-line argument starts with `--`; otherwise it takes its command-line path. In that path
 it sets the variable from an interactive answer, a question it skips when it finds an existing
@@ -542,16 +545,18 @@ service setting `_APP_DB_ADAPTER`, then from `.env`, then from a `mariadb`, `mon
 `postgresql` service name, checked in that order, then from a service's `_APP_DB_HOST` naming one of
 those. Unless its `no-start` parameter is set, it then runs `docker compose` with `--env-file`
 naming its environment file, assigning each nonempty prepared value, this variable included, in
-the command's environment unless it reuses an existing configuration. The Compose generator
-(`src/Appwrite/Docker/Compose/Generator.php` in the 2.2.0 tree) and the web installer's handlers
-were not read, and how Compose resolves the template's value-less `_APP_DB_ADAPTER` entry is not
-traced here, so whether a given installation passes the value to its `appwrite` service is still
-not established. This guide's assessment: do not
+the command's environment unless it reuses an existing configuration. The web installer and the
+Compose generator are traced below, but how Compose resolves the template's value-less
+`_APP_DB_ADAPTER` entry from that `--env-file` and environment, or in a later `docker compose up -d`
+run by hand, is not established here, so whether a given installation passes the value to its
+`appwrite` service is still not established. This guide's assessment: do not
 rely on the `_APP_DB_ADAPTER` value the console reports to identify which adapter a 2.2.0
 deployment uses, because a reported `mariadb` can be that fallback over Postgres pools; check
 whether the variable is set in the `appwrite` service's environment, and to what, instead. See the
 [console variables adapter fallback](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Console/Http/Variables/Get.php#L115),
 [console variables response model adapter rule](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Utopia/Response/Model/ConsoleVariables.php#L130-L138),
+[utopia-php/system 0.10.6 getEnv fallback](https://github.com/utopia-php/system/blob/bd8f35619c7b69360689467f25e1b608cc3ba6b5/src/System/System.php#L657-L660),
+[composer.lock utopia-php/system pin](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L4844-L4849),
 [install task database parameter](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L65),
 [install task detected-database override](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L206-L211),
 [install task interactive database answer](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L303-L311),
@@ -567,6 +572,56 @@ For the web-installer branch, existing-database detection and container start, s
 [install task container start condition](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L739-L745), and
 [install task Compose start](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1239-L1295).
 
+As source reading of the 2.2.0 web installer without a run, its first step offers PostgreSQL,
+MariaDB and MongoDB, each only when enabled, as radio choices. It preselects a locked database or
+else the `_APP_DB_ADAPTER` variable's default as the install task passes it, which is `postgresql`
+unless the task replaced it for an existing installation, and disables the other choices when one
+is locked. The page's script posts the choice as `database`, falling back to `postgresql`. The
+install handler accepts only those three values, requires an unlocked choice to be a supported and
+enabled database, and sets `_APP_DB_ADAPTER` to the locked database or else the choice, taking a
+resumed installation's stored choice in place of the posted one. The install task's environment
+preparation keeps that nonempty value and sets the database host and port to match it, and the
+installation then passes it to the Compose generator and to the environment template as described
+above. When the installer server finds an existing Compose or environment file and has no locked
+database, it locks one detected from database service or container names in the Compose file's
+text, then from `_APP_DB_ADAPTER` or `_APP_DB_HOST` in the environment file. See the
+[web installer database default and lock](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L12-L21),
+[web installer database choices](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L68-L110),
+[web installer default database variable](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer.phtml#L12),
+[web installer posted database fallback](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370),
+[web installer database parameter](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L45),
+[web installer database validation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157),
+[web installer database adapter input](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243),
+[web installer resumed input and environment preparation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320),
+[web installer installation call](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392),
+[install task web installer configuration](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L341-L378),
+[install task existing-installation defaults](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L138-L173),
+[install task user input and database host](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L445-L466),
+[installer server upgrade and database lock detection](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Server.php#L207-L239), and
+[installer server database detection from files](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Server.php#L259-L297).
+
+As source reading of 2.2.0, the Compose generator replaces a `database` value other than
+`postgresql`, `mariadb` or `mongodb` with `postgresql`, removes the other two database services and
+their volumes, and replaces dependencies on any database service or on `${_APP_DB_HOST:-postgresql}`
+with one dependency on the selected service, under the condition `service_healthy`. Its code never
+refers to a service's `environment` or to `_APP_DB_ADAPTER`, so this guide reasons that the
+rendered Compose file keeps the template's value-less `_APP_DB_ADAPTER` entry; no rendered file was
+observed. When the install task reads an existing Compose file, `Appwrite\Docker\Compose` wraps each
+service in a `Service`, which joins its `environment` list with newlines and parses the result with
+`Env`, and `Env` skips a line that has no `=`. A value-less `_APP_DB_ADAPTER` entry therefore yields
+no key, so the install task's first detection step, which tests `isset` on that key, does not match
+it, and detection moves on to `.env`. See the
+[Compose generator](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Docker/Compose/Generator.php),
+[generator selectable database services and volumes](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L9-L26),
+[generator database dependency selector](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L66-L76),
+[generator parameter normalization](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L140-L148),
+[generator service filter](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L179-L187),
+[generator volume filter](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L246-L261),
+[generator dependency rewrite](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L266-L316),
+[Compose services](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose.php#L16-L27),
+[Compose service environment parsing](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Service.php#L28-L29), and
+[environment parser lines without an assignment](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Env.php#L37-L42).
+
 There is a documentation/source conflict: at the time of writing, the current environment
 documentation says "Appwrite supports MariaDB and MongoDB as database backends" and gives
 `_APP_DB_ADAPTER` the default `mongodb` with possible values `mongodb` and `mariadb`, while
@@ -578,9 +633,9 @@ retrieval path, the cited 2.2.0 document GET reads through Pool over whichever M
 Postgres or Mongo adapter its connection's DSN scheme selects. Its transaction-state path, traced
 above, by the same reasoning makes its committed fetches the same way and returns staged documents
 from the transaction's logs. Which adapter a given deployment uses depends on its own environment,
-DSNs and installation history and is not established here, and the 2.2.0 web installer and Compose
-generator are not traced. Those deployment and installer gaps, and the transaction-state layers
-left untraced above, stay open in SELFHOSTED-BACKEND-SOURCE-1; this guide does not claim complete
+DSNs and installation history and is not established here, and neither is how Compose resolves the
+value-less `_APP_DB_ADAPTER` entry. Those deployment and Compose gaps, and the transaction-state
+layers left untraced above, stay open in SELFHOSTED-BACKEND-SOURCE-1; this guide does not claim complete
 pinned-source verification or a live authorization demonstration.
 
 Properly scoped server API keys **bypass resource permissions**. A successful server-key test
@@ -889,7 +944,7 @@ service result or deployed-bundle scan is claimed.
 | Check scope or source-work ID | Procedure and prerequisites | Status |
 | --- | --- | --- |
 | Service comparisons | Demonstrate every REASONED comparison above on PocketBase v0.40.4 and Appwrite 2.2.0, recording binary/image identity, commands, response bodies, denied and allowed identities, disposable-data cleanup, and effective settings. Requires writable service fixtures, a container runtime, controlled accounts and mailboxes, S3 and backup fixtures, ClamAV, function execution, a second-host ingress fixture, and the actual client build. Include all five PocketBase actions, manageRule, file-token issuance versus protected downloads (unrelated-user and unsigned-guest denial, permitted-user bytes), realtime, bootstrap-token handling, MFA, verification, retained-token behavior, additive Appwrite permissions, server-key scopes, registration, console MFA (fresh password-only denial and successful TOTP completion), TLS, proxy trust, limits, encrypted recovery, uploads, and executor privacy. | REASONED: full service-comparison inventory; a live PocketBase or Appwrite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. This comparison still requires the writable service, container, account, mailbox, S3, backup, scanner, function, second-host ingress, and actual-build prerequisites named in this row. All three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with exit 0 and no output. With curl and grep stubbed, written and embedded placeholders, example.com, angle brackets, empty values, and omitted or shortened set -- lines printed their refusal messages without invoking either stub. The signup JSON parsed as four expected string fields; valid curl stubs printed arguments and protected input separately. The grep stub exercised match, no-match, and error branches; real grep on a disposable marker printed only client.js with exit 0 and, after removal, no output with exit 1. None establishes the listed live outcomes. Exposed public authorization should admit unintended access and fixed authorization should deny or filter it while retaining permitted controls; the other expected outcomes remain those in the individual comparisons, per the guide’s cited PocketBase API rules and filters (rolling documentation, checked September 2026); Appwrite legacy collection/document permissions (rolling documentation, checked October 2026); Appwrite 2.2.0 console registration handler; PocketBase v0.40.4 auth defaults, manageRule validation, and MFA; PocketBase v0.40.4 file-token and download authorization; PocketBase v0.40.4 realtime authorization; PocketBase v0.40.4 authentication and superuser IP middleware; PocketBase v0.40.4 settings, encryption, proxy trust, SMTP, backups, and rate defaults; PocketBase v0.40.4 backup download authorization; PocketBase v0.40.4 rate limiter and exemptions; PocketBase v0.40.4 listener and origin flags; Appwrite 2.2.0 API-key authorization, scopes, MFA enforcement, and abuse exemptions; Appwrite 2.2.0 hostname routing and HTTPS enforcement; Appwrite email delivery (rolling documentation, checked September 2026); Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked September 2026); Appwrite 2.2.0 bucket defaults and upload controls; Appwrite 2.2.0 function execute roles, execution-key scopes, and enablement; Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts; PocketBase authentication (rolling documentation, checked September 2026); Appwrite project API keys (rolling documentation, checked September 2026); PocketBase v0.40.4 installer and bootstrap-token lifetime; PocketBase v0.40.4 record CRUD handlers; PocketBase v0.40.4 record authorization and token validation; PocketBase v0.40.4 native TLS and ACME listener; Appwrite console MFA enrollment and recovery codes (rolling documentation, checked September 2026); Appwrite rate limits (rolling documentation, checked September 2026); and Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026). REASONED from the cited vendor documentation and available pinned sources; live behavior is not demonstrated. |
-| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals. The PocketBase CLI wrapper, the `--dev` flag default, the Appwrite requester privileged/API-key classification, and the Appwrite-repository document-read call sites are now cited above, alongside the earlier collection default, document-create permission branch, and backup archive pins. The pinned dependency now cites permission-role extraction and matching, collection/document read checks in `getDocument`, collection checks and adapter dispatch in `find`, and authorization status/skip behavior. The SQL base used by MariaDB, MySQL, Postgres and SQLite is now traced: `getDocument` adds no permission filter, while `find` adds its document-permission predicate only with authorization enabled; the collection-grant skip, non-skip document-security branch, disabled-status bypass and Postgres predicate override are described above. Mongo, Memory, Redis and Pool `getDocument`/`find` are now traced as described above, as are Appwrite 2.2.0's `_APP_DB_ADAPTER` default, pool scheme mapping, factory Pool wrapping on the document GET's non-transaction retrieval path and upgrade engine detection. The 2.2.0 install task's command-line selection, existing-database detection and container start, and the document GET's transaction-state branches, are now traced as described above. Still open: which adapter a given deployment uses, the web installer's selection, the Compose generator's output, the handler's `processDocument` step and any transaction ownership check outside the cited lines. | REASONED: pinned-source reading of PocketBase v0.40.4, Appwrite 2.2.0 and the utopia-php/database 7.3.9 excerpts above; the deployment-adapter, web-installer, Compose-generator and remaining transaction-state gaps stay open, complete pinned-source verification is not claimed, and live authorization is not demonstrated. |
+| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals. The PocketBase CLI wrapper, the `--dev` flag default, the Appwrite requester privileged/API-key classification, and the Appwrite-repository document-read call sites are now cited above, alongside the earlier collection default, document-create permission branch, and backup archive pins. The pinned dependency now cites permission-role extraction and matching, collection/document read checks in `getDocument`, collection checks and adapter dispatch in `find`, and authorization status/skip behavior. The SQL base used by MariaDB, MySQL, Postgres and SQLite is now traced: `getDocument` adds no permission filter, while `find` adds its document-permission predicate only with authorization enabled; the collection-grant skip, non-skip document-security branch, disabled-status bypass and Postgres predicate override are described above. Mongo, Memory, Redis and Pool `getDocument`/`find` are now traced as described above, as are Appwrite 2.2.0's `_APP_DB_ADAPTER` default, pool scheme mapping, factory Pool wrapping on the document GET's non-transaction retrieval path and upgrade engine detection. The 2.2.0 install task's command-line selection, existing-database detection and container start, and the document GET's transaction-state branches, are now traced as described above. The 2.2.0 web installer's database selection, the Compose generator's database handling, the `Appwrite\Docker\Compose` and `Env` representation of a value-less entry and utopia-php/system's empty-value reading are now traced as described above too. Still open: which adapter a given deployment uses, how Compose resolves the value-less `_APP_DB_ADAPTER` entry, the handler's `processDocument` step and any transaction ownership check outside the cited lines. | REASONED: pinned-source reading of PocketBase v0.40.4, Appwrite 2.2.0, utopia-php/system 0.10.6 and the utopia-php/database 7.3.9 excerpts above; the deployment-adapter, Compose-resolution and remaining transaction-state gaps stay open, complete pinned-source verification is not claimed, and live authorization is not demonstrated. |
 
 ## Sources (checked September 2026)
 
@@ -1023,6 +1078,32 @@ The September 2026 date in this heading is the guide-wide documentation check; i
 - [Appwrite 2.2.0 install task explicit command-line parameter check (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1609-L1618).
 - [Appwrite 2.2.0 install task container start condition (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L739-L745).
 - [Appwrite 2.2.0 install task Compose start (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1239-L1295).
+- [Appwrite 2.2.0 web installer database default and lock (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L12-L21).
+- [Appwrite 2.2.0 web installer database choices (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L68-L110).
+- [Appwrite 2.2.0 web installer default database variable (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer.phtml#L12).
+- [Appwrite 2.2.0 web installer posted database fallback (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370).
+- [Appwrite 2.2.0 web installer database parameter (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L45).
+- [Appwrite 2.2.0 web installer database validation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157).
+- [Appwrite 2.2.0 web installer database adapter input (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243).
+- [Appwrite 2.2.0 web installer resumed input and environment preparation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320).
+- [Appwrite 2.2.0 web installer installation call (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392).
+- [Appwrite 2.2.0 install task web installer configuration (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L341-L378).
+- [Appwrite 2.2.0 install task existing-installation defaults (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L138-L173).
+- [Appwrite 2.2.0 install task user input and database host (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L445-L466).
+- [Appwrite 2.2.0 installer server upgrade and database lock detection (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Server.php#L207-L239).
+- [Appwrite 2.2.0 installer server database detection from files (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Server.php#L259-L297).
+- [Appwrite 2.2.0 Compose generator, read whole (checked October 2026)](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Docker/Compose/Generator.php).
+- [Appwrite 2.2.0 Compose generator selectable database services and volumes (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L9-L26).
+- [Appwrite 2.2.0 Compose generator database dependency selector (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L66-L76).
+- [Appwrite 2.2.0 Compose generator parameter normalization (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L140-L148).
+- [Appwrite 2.2.0 Compose generator service filter (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L179-L187).
+- [Appwrite 2.2.0 Compose generator volume filter (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L246-L261).
+- [Appwrite 2.2.0 Compose generator dependency rewrite (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L266-L316).
+- [Appwrite 2.2.0 Compose services (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose.php#L16-L27).
+- [Appwrite 2.2.0 Compose service environment parsing (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Service.php#L28-L29).
+- [Appwrite 2.2.0 environment parser lines without an assignment (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Env.php#L37-L42).
+- [Appwrite 2.2.0 composer.lock utopia-php/system 0.10.6 pin (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L4844-L4849).
+- [utopia-php/system 0.10.6 getEnv empty-value fallback (checked October 2026)](https://github.com/utopia-php/system/blob/bd8f35619c7b69360689467f25e1b608cc3ba6b5/src/System/System.php#L657-L660).
 - [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 - [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
@@ -1046,6 +1127,7 @@ Components (recorded basis):
 - pb-docs: PocketBase documentation (rolling) (unknown)
 - appwrite-docs: Appwrite documentation (rolling) (unknown)
 - utopia-php-database: utopia-php/database (7.3.9)
+- utopia-php-system: utopia-php/system (0.10.6)
 - curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the JSON block below):
@@ -1134,8 +1216,8 @@ Claims (full source mapping in the JSON block below):
 - source-limits-pool (REASONED; utopia-php-database): Pinned Pool delegates getDocument and find to a pooled adapter, outside a transaction first setting its database, namespace, shared tables, tenant and authorization from Pool's own; withTransaction does this for the adapter it pins. This guide reasons that a Pool-wrapped adapter reads with the authorization instance the database set, with no live authorization demonstration.
 - source-limits-appwrite-adapter (REASONED; appwrite): Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to the MariaDB, Mongo, MySQL and Postgres adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.
 - source-limits-appwrite-dev (REASONED; appwrite): Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql, a development default, not a production default; the root Compose file, which the install task reads as its Compose template, passes the variable to the appwrite service without a value. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.
-- source-limits-appwrite-console (REASONED; appwrite): Appwrite 2.2.0's console variables endpoint reports _APP_DB_ADAPTER through its response model with a mariadb fallback while pool registration falls back to postgresql, so by source reading without a run an unset variable gives Postgres console and database pools and a reported mariadb. Both read a set variable; this guide advises not relying on the reported value to identify the adapter.
-- source-limits-appwrite-install-env (REASONED; appwrite): Outside the web installer, Appwrite 2.2.0's install task sets _APP_DB_ADAPTER from an interactive answer or else its database (default postgresql, or one detected from Compose, .env or service names), writing it to .env unless reusing a configuration. The web installer and Compose generator are not traced, so whether an installation's appwrite service gets the value is unknown.
+- source-limits-appwrite-console (REASONED; appwrite, utopia-php-system): Appwrite 2.2.0's console variables endpoint reports _APP_DB_ADAPTER through its response model with a mariadb fallback while pool registration falls back to postgresql, so by source reading without a run an unset or empty variable gives Postgres console and database pools and a reported mariadb. Both read a set variable; this guide advises not relying on the reported value to identify the adapter.
+- source-limits-appwrite-install-env (REASONED; appwrite): Appwrite 2.2.0's install task writes _APP_DB_ADAPTER to .env, unless reusing a configuration, from a prompt answer, its database (default postgresql, or detected) or the web installer's choice (default postgresql). Its Compose generator keeps only the chosen database service and, this guide reasons, the value-less entry, which the first detection step skips; how Compose resolves it is unknown.
 - source-limits-adapter-docs (REASONED; appwrite-docs, appwrite): At the time of writing, Appwrite's environment documentation lists MariaDB and MongoDB and gives _APP_DB_ADAPTER a mongodb default, conflicting with Appwrite 2.2.0, which defaults to postgresql, a value that page does not list.
 
 ````json
@@ -1143,7 +1225,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "2e2f2e21a4f3e1fffcbb072c405895dc4291cbe6a2db92b2c75a999e41277792",
+  "body_sha256": "84c62214ff1e2544c44eb438cb3b2aa08b8342bc40b2f8a557b7b36a8efceb91",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -1229,7 +1311,32 @@ Claims (full source mapping in the JSON block below):
         "sb04bd8725358": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L739-L745",
         "s72ba13c41e7e": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1239-L1295",
         "s3afe73884566": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1609-L1618",
-        "s5625c02a35f4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L122-L124"
+        "s5625c02a35f4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L122-L124",
+        "sad8784f8e9a9": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L12-L21",
+        "s06b2c6eab43d": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L68-L110",
+        "s805902cec1bc": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer.phtml#L12",
+        "s6fb9b6903781": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370",
+        "s6c1141485824": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L45",
+        "s7d56eff0a7da": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157",
+        "s9abe0896e1d5": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243",
+        "s98f550167154": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320",
+        "sae5eb7c54f35": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392",
+        "s5bf1ec01b06d": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L341-L378",
+        "sc45b0bcd7e3d": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L138-L173",
+        "s743783a2e7c4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L445-L466",
+        "s447a96e44d6b": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Server.php#L207-L239",
+        "sc7eff8d8ae01": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Server.php#L259-L297",
+        "s7bba5f7d026a": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Docker/Compose/Generator.php",
+        "s65c6e1b53177": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L9-L26",
+        "s83e6c05eb3d7": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L66-L76",
+        "s20f9a45c1ae4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L140-L148",
+        "s1b716f6425c4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L179-L187",
+        "s4de85dfdcb6c": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L246-L261",
+        "s62081c1c2ce8": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L266-L316",
+        "s61db43082b23": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose.php#L16-L27",
+        "sa319cbeaf14d": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Service.php#L28-L29",
+        "s0397bb7a7d9a": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Env.php#L37-L42",
+        "sd2a7f2cd5865": "https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L4844-L4849"
       }
     },
     "pb-docs": {
@@ -1301,6 +1408,13 @@ Claims (full source mapping in the JSON block below):
         "s39898214cd29": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2976-L2998",
         "s8a9d072c48b1": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L3-L5",
         "s377f4ae1b5bc": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L5-L8"
+      }
+    },
+    "utopia-php-system": {
+      "name": "utopia-php/system",
+      "basis": "0.10.6",
+      "sources": {
+        "s432a4a7a96bf": "https://github.com/utopia-php/system/blob/bd8f35619c7b69360689467f25e1b608cc3ba6b5/src/System/System.php#L657-L660"
       }
     },
     "curl": {
@@ -1398,8 +1512,8 @@ Claims (full source mapping in the JSON block below):
     "source-limits-pool": {"text": "Pinned Pool delegates getDocument and find to a pooled adapter, outside a transaction first setting its database, namespace, shared tables, tenant and authorization from Pool's own; withTransaction does this for the adapter it pins. This guide reasons that a Pool-wrapped adapter reads with the authorization instance the database set, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s4cc1d5739816", "utopia-php-database:s6d59676de4ac", "utopia-php-database:s22782b0cef21", "utopia-php-database:sf6aa64548538", "utopia-php-database:s3389fa5854d5"], "status": "REASONED"},
     "source-limits-appwrite-adapter": {"text": "Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to the MariaDB, Mongo, MySQL and Postgres adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:s2ac9cf2424b0", "appwrite:s72725b186c05", "appwrite:sa6bf00f7f610", "appwrite:s5b95ad04c9e2"], "status": "REASONED"},
     "source-limits-appwrite-dev": {"text": "Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql, a development default, not a production default; the root Compose file, which the install task reads as its Compose template, passes the variable to the appwrite service without a value. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a", "appwrite:s8e5272615f2e", "appwrite:s8830e89f7a80", "appwrite:sd886b53afa75", "appwrite:scbf0003fdebc"], "status": "REASONED"},
-    "source-limits-appwrite-console": {"text": "Appwrite 2.2.0's console variables endpoint reports _APP_DB_ADAPTER through its response model with a mariadb fallback while pool registration falls back to postgresql, so by source reading without a run an unset variable gives Postgres console and database pools and a reported mariadb. Both read a set variable; this guide advises not relying on the reported value to identify the adapter.", "components": ["appwrite"], "sources": ["appwrite:sc259dcc33931", "appwrite:s95ace139c972", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600"], "status": "REASONED"},
-    "source-limits-appwrite-install-env": {"text": "Outside the web installer, Appwrite 2.2.0's install task sets _APP_DB_ADAPTER from an interactive answer or else its database (default postgresql, or one detected from Compose, .env or service names), writing it to .env unless reusing a configuration. The web installer and Compose generator are not traced, so whether an installation's appwrite service gets the value is unknown.", "components": ["appwrite"], "sources": ["appwrite:sb5b101f2f04e", "appwrite:s33547558ebc8", "appwrite:s0a6edcec1f26", "appwrite:sa737cb84c634", "appwrite:s7bb5907c66bd", "appwrite:s64b48746c27d", "appwrite:sdd1a89cf3815", "appwrite:s48bedca5fd4a", "appwrite:s2a7f2bc4e834", "appwrite:sde11935a99de"], "status": "REASONED"},
+    "source-limits-appwrite-console": {"text": "Appwrite 2.2.0's console variables endpoint reports _APP_DB_ADAPTER through its response model with a mariadb fallback while pool registration falls back to postgresql, so by source reading without a run an unset or empty variable gives Postgres console and database pools and a reported mariadb. Both read a set variable; this guide advises not relying on the reported value to identify the adapter.", "components": ["appwrite", "utopia-php-system"], "sources": ["appwrite:sc259dcc33931", "appwrite:s95ace139c972", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:sd2a7f2cd5865", "utopia-php-system:s432a4a7a96bf"], "status": "REASONED"},
+    "source-limits-appwrite-install-env": {"text": "Appwrite 2.2.0's install task writes _APP_DB_ADAPTER to .env, unless reusing a configuration, from a prompt answer, its database (default postgresql, or detected) or the web installer's choice (default postgresql). Its Compose generator keeps only the chosen database service and, this guide reasons, the value-less entry, which the first detection step skips; how Compose resolves it is unknown.", "components": ["appwrite"], "sources": ["appwrite:sb5b101f2f04e", "appwrite:s33547558ebc8", "appwrite:s0a6edcec1f26", "appwrite:sa737cb84c634", "appwrite:s7bb5907c66bd", "appwrite:s64b48746c27d", "appwrite:sdd1a89cf3815", "appwrite:s48bedca5fd4a", "appwrite:s2a7f2bc4e834", "appwrite:sde11935a99de", "appwrite:sd886b53afa75", "appwrite:s06b2c6eab43d", "appwrite:s805902cec1bc", "appwrite:s6fb9b6903781", "appwrite:s7d56eff0a7da", "appwrite:s9abe0896e1d5", "appwrite:sae5eb7c54f35", "appwrite:s743783a2e7c4", "appwrite:s7bba5f7d026a", "appwrite:s20f9a45c1ae4", "appwrite:s1b716f6425c4", "appwrite:s61db43082b23", "appwrite:sa319cbeaf14d", "appwrite:s0397bb7a7d9a"], "status": "REASONED"},
     "source-limits-adapter-docs": {"text": "At the time of writing, Appwrite's environment documentation lists MariaDB and MongoDB and gives _APP_DB_ADAPTER a mongodb default, conflicting with Appwrite 2.2.0, which defaults to postgresql, a value that page does not list.", "components": ["appwrite-docs", "appwrite"], "sources": ["appwrite-docs:s2bf9a4746d28", "appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca"], "status": "REASONED"}
   }
 }
