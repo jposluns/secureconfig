@@ -4,13 +4,16 @@ name: Checks
 # through its QA rounds, where tools/run_all_checks.sh runs locally on each fix round, and `gates`
 # runs here once the change is ready: on every push to main and on every pull request event whose
 # pull request is not a draft, including ready_for_review, which runs it on the head being marked
-# ready. On a draft the job is skipped, and a skip is not a pass for merging, although GitHub
-# reports a job skipped by its `if:` to branch protection as a success. A draft cannot be merged,
-# and the orchestrator's merge gate requires a `gates` job that ran and succeeded on the exact head
-# that merges.
+# ready. The converted_to_draft type is listed too, so turning a ready pull request back into a
+# draft starts a run whose `gates` job is skipped, and through the concurrency group below that run
+# cancels the ready run if it is still queued or in progress, since the change is going back into
+# QA. On a draft the job is skipped, and a skip is not a pass for merging, although GitHub reports
+# a job skipped by its `if:` to branch protection as a success. A draft cannot be merged, and the
+# orchestrator's merge gate requires a `gates` job that ran and succeeded on the exact head that
+# merges.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   push:
     branches: [main]
 
