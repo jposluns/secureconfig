@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-25
+
+- `observability-components.md`: Loki's target module graph, init order and gRPC service registrations at v3.7.8 are now cited by source reading of the 2026-10-24 p187a pack, and the internal server's default any-address gRPC listener on an OS-chosen port is now a source reading rather than an inference, still unobserved. TODO 1.301 keeps the bounded source items still open, its observation-only items move to the new live-checks row 1.375, and DECISIONS.md records the maintainer's two rulings (#879)
+
 ## 2026-10-24
 
 - Trace the Appwrite 2.2.0 install task's command-line database selection, existing-database detection and container start, and the document GET's transaction-state branches, in `pocketbase.md` from the pinned p183a pack. Revise two claims, add twelve Sources items, and partially close TODO 1.291 while keeping deployment adapter identification, the web installer, Compose generation and the remaining transaction-state layers open (#876)
