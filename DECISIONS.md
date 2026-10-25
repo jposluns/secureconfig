@@ -24,6 +24,12 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   ruling." Its effect (applied by #881): RHEL 6 and 7, which Red Hat's errata policy page places under "Legacy
   Extended Support Offerings", need no citation under TODO row 1.306. No reasoning was recorded beyond the record
   quoted above. The 2026-10-24 Ubuntu Pro ruling below, which this parallels, stands unchanged.
+- **Maintainer ruling of 2026-10-25 on `paas.md` TODO 1.324 (#880).** The maintainer ruled live at
+  2026-10-25T01:01:52Z on p188a plan proposal P4. The ruling as recorded, verbatim:
+  "if the Heroku Dev Center rechecks find no statement of the Cedar mark's scope for ACM wildcards, move 1.324's observed-request item to live-checks row 1.374 and keep 1.324 as a dated documentation-recheck item ("Split, keep dated recheck")."
+  No reasoning was recorded beyond those words. Its effect (applied by #880): the p188a rechecks of 2026-10-25
+  found no such statement, so the observed ACM wildcard-domain request in a Cedar Private Space moved to TODO row
+  1.374, and 1.324 stays open as a documentation recheck dated 2026-10-25.
 - **Maintainer rulings of 2026-10-24 on `observability-components.md` TODO 1.301 (#879).** The maintainer ruled live
   twice at 2026-10-24T23:05:04Z, the first through AskUserQuestion. No reasoning was recorded beyond the
   maintainer's words quoted below.
