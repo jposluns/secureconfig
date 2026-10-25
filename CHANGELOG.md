@@ -13,6 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-10-25
 
 - `paas.md` backlog (TODO 1.324, partial; TODO 1.374): the Heroku Dev Center pages in the p188a pack, fetched on 2026-10-25, state no scope for the Generations page's Cedar mark on "Heroku ACM wildcard domains", so `paas.md` is unchanged and keeps the ACM page's Cedar Private Spaces limitation as the governing statement. They are the ACM, Generations, Private Spaces and custom-domains pages, the `internal-routing` article and the changelog's first page. Under the maintainer's 2026-10-25 ruling, the observed Cedar Private Space wildcard request moves to the live-checks row 1.374 and 1.324 stays open as a documentation recheck dated 2026-10-25. `DECISIONS.md` records the ruling and DONE.md gains a partial 1.324 row (#880)
+- `observability-components.md`: Loki's target module graph, init order and gRPC service registrations at v3.7.8 are now cited by source reading of the 2026-10-24 p187a pack, and the internal server's default any-address gRPC listener on an OS-chosen port is now a source reading rather than an inference, still unobserved. TODO 1.301 keeps the bounded source items still open, its observation-only items move to the new live-checks row 1.375, and DECISIONS.md records the maintainer's two rulings (#879)
 
 ## 2026-10-24
 

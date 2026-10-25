@@ -23,6 +23,17 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   No reasoning was recorded beyond those words. Its effect (applied by #880): the p188a rechecks of 2026-10-25
   found no such statement, so the observed ACM wildcard-domain request in a Cedar Private Space moved to TODO row
   1.374, and 1.324 stays open as a documentation recheck dated 2026-10-25.
+- **Maintainer rulings of 2026-10-24 on `observability-components.md` TODO 1.301 (#879).** The maintainer ruled live
+  twice at 2026-10-24T23:05:04Z, the first through AskUserQuestion. No reasoning was recorded beyond the
+  maintainer's words quoted below.
+  - The bounds, resolving the p185a 1.301 decision. The maintainer's words: "bound TODO 1.301 item d to "the gRPC
+    services modules.go registers at v3.7.8, and each one's callers" and item a to "module graph and init functions
+    for targets all, read, write and backend", closable by source reading within those bounds." Its effect (applied
+    by #879): item a closes within its bound and item d's registrations are cited, while callers in files that the
+    p187a pack does not hold stay open under 1.301.
+  - The observation-only items. The maintainer's words: "move TODO 1.301's observation-only items (e, f, g and the
+    observational halves of a, h, k, and the rest of i) into one new live-checks row, as for paas.md row 1.374."
+    Applied by #879 as TODO row 1.375.
 - **Maintainer rulings of 2026-10-24 on the Sources-preface scope sentences, TODO 1.329 and 1.370 (#873).** The
   maintainer ruled live twice through AskUserQuestion. No reasoning was recorded beyond the maintainer's words
   quoted below.
