@@ -1,12 +1,29 @@
 name: Checks
 
+# Once per change (maintainer ruling 2026-10-25, DECISIONS.md). A pull request stays a draft
+# through its QA rounds, where tools/run_all_checks.sh runs locally on each fix round, and `gates`
+# runs here once the change is ready: on every push to main and on every pull request event whose
+# pull request is not a draft, including ready_for_review, which runs it on the head being marked
+# ready. On a draft the job is skipped, and a skip is not a pass for merging, although GitHub
+# reports a job skipped by its `if:` to branch protection as a success. A draft cannot be merged,
+# and the orchestrator's merge gate requires a `gates` job that ran and succeeded on the exact head
+# that merges.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
 
 permissions:
   contents: read
+
+# A newer run for the same pull request cancels its older run, in progress or queued, since only
+# the newest head can merge. A push to main is grouped by its own run id, which no other run
+# shares, and `cancel-in-progress` is false for it as well, so a run on main is never cancelled
+# and never cancels a pull request run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # The gate suite this job runs is offline: no gate in tools/run_all_checks.sh reaches the
@@ -18,6 +35,8 @@ jobs:
   # release that is asserted before the suite (setup-python installs its own build of it, whose
   # bytes are not checked here; the runner image is not fixed), and a failure here is loud.
   gates:
+    # Skipped on a draft pull request only; see the note above `on:`.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
       # The one place the shellcheck version is written. The install step reads both values and

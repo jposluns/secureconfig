@@ -17,6 +17,16 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-10-25 on running the gates workflow once per change (#906).** The maintainer ruled
+  live through AskUserQuestion at 2026-10-25T19:53:35Z, confirming the direction lab_infra relayed at 19:51:27Z.
+  The ruling as recorded, verbatim:
+  "GitHub CI runs once per change, just before merge; PRs stay drafts during QA rounds; checks.yml skips its jobs on draft PRs and runs on ready_for_review; a concurrency group cancels replaced PR runs (never main); the local suite tools/run_all_checks.sh runs on each fix round. Merge gate unchanged: green gates on the exact head that merges."
+  No reasoning was recorded beyond those words. Its effect (applied by #906): `.github/workflows/checks.yml` runs
+  on the `opened`, `synchronize`, `reopened` and `ready_for_review` pull request events and on pushes to `main`,
+  and its `gates` job is skipped on a draft pull request. A workflow-level concurrency group cancels a pull
+  request's older run, in progress or queued, when a newer run for that pull request starts, and never cancels a
+  push run on `main`. A skipped `gates` job is not a pass for merging: a draft cannot be merged, and the
+  orchestrator's merge gate still requires a `gates` job that ran and succeeded on the exact head that merges.
 - **Maintainer ruling of 2026-10-25 on claim-summary sentence length, TODO 1.383 (#898).** The maintainer ruled
   live through AskUserQuestion at 2026-10-25T14:42:18Z. The ruling as recorded, verbatim:
   "the 400-character rule for generated claim-summary sentences (counted with their prefix) applies to claims a PR adds or edits; a TODO row tracks a sweep of the 60 legacy over-limit summary sentences (25 guides, scan of main 059d1a80) in later PRs."
