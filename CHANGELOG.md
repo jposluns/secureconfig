@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-25
 
+- `self-signed.md` (TODO 1.306, partial): under the maintainer's ruling of 2026-10-25, recorded in DECISIONS.md, RHEL legacy extended support offerings are not current support, so RHEL 6 and 7 need no trust-store citation. As documentation reading of the 2026-10-25 p188a pack, Red Hat's errata policy page carries no life-cycle dates in its saved HTML, docs.redhat.com refused the RHEL 9 and RHEL 10 pages, and every Fedora host served a bot challenge. The CentOS Stream page and the mirror and vault indexes state no supported release, so TODO 1.306 keeps the RHEL 10 command and dates, Fedora and CentOS Stream support status and the Fedora 45 recheck, and the guide is unchanged (#881)
 - `observability-components.md`: Loki's target module graph, init order and gRPC service registrations at v3.7.8 are now cited by source reading of the 2026-10-24 p187a pack, and the internal server's default any-address gRPC listener on an OS-chosen port is now a source reading rather than an inference, still unobserved. TODO 1.301 keeps the bounded source items still open, its observation-only items move to the new live-checks row 1.375, and DECISIONS.md records the maintainer's two rulings (#879)
 
 ## 2026-10-24
