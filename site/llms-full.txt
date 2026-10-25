@@ -55404,12 +55404,17 @@ There are two fixes, and you can use both:
   per-request limits are enabled, and it passes the server configuration to
   `fakeauth.SetupAuthMiddleware`. Their code, and the OpenTracing interceptor that dskit adds when a
   global tracer is registered, were not read, so whether any of them wraps `SendMsg` or changes its
-  result is not established. The transport stream's `Write`, which `SendMsg` calls, only returns the
+  result is not established. Nor is whether Loki code sets dskit's `GRPCOptions`, a field with no
+  YAML key whose server options dskit appends to its own, or whether any dependency registers
+  grpc-go global server options, which `NewServer` applies first; either can add a stream
+  interceptor. The transport stream's `Write`, which `SendMsg` calls, only returns the
   result of its transport's `write`, and grpc-go's HTTP/2 server transport sets itself as that
   transport for each stream it creates. In that transport, `write`, and the header write it makes
   first, check the stream's state, not its context: for a stream already marked done, they return
-  `ErrConnClosing` if the transport is closing and otherwise `ContextErr` of the context's error,
-  and `write` returns the same after a failed wait for write quota. `ContextErr` gives a `Canceled`
+  `ErrConnClosing` if the transport's `done` channel is closed and otherwise `ContextErr` of the
+  context's error, and `write` returns the same after a failed wait for write quota. `Close` marks
+  the transport closing before it closes that channel, so such a write in between takes the
+  `ContextErr` path. `ContextErr` gives a `Canceled`
   or `DeadlineExceeded` status for those two context errors and an `Internal` status for any other
   value, including none. A client reset or the server's deadline timer cancels the stream's context
   and then marks the stream done, while a transport close cancels it without marking it done;
@@ -55837,7 +55842,7 @@ from your own account's view of the process.
 - Loki v3.7.8 generated Querier `Query` and `QuerySample` server-stream `Send` methods (return `SendMsg`'s result): https://github.com/grafana/loki/blob/v3.7.8/pkg/logproto/logproto.pb.go#L6179-L6206
 - Loki v3.7.8 vendored grpc-go stream interceptor chaining: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1575-L1588
 - Loki v3.7.8 vendored grpc-go `processStreamingRPC` (server stream passed through the interceptor chain): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1590-L1779
-- Loki v3.7.8 vendored dskit server stream interceptors (logging, OpenTracing with a global tracer, instrumentation, configured ones, then the in-flight limiter when `GrpcMethodLimiter` is set): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L455-L493
+- Loki v3.7.8 vendored dskit server stream interceptors (logging, OpenTracing with a global tracer, instrumentation, configured ones, then the in-flight limiter when `GrpcMethodLimiter` is set; server options from `GRPCOptions`, appended later, and grpc-go global server options can add more): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L455-L493
 - Loki v3.7.8 vendored dskit `GrpcMethodLimiter` field (`yaml:"-"`): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L170
 - Loki v3.7.8 vendored dskit logging stream interceptor (stream and error passed through): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/middleware/grpc_logging.go#L84-L103
 - Loki v3.7.8 vendored dskit instrumentation stream interceptor (stream and error passed through): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/middleware/grpc_instrumentation.go#L57-L66
@@ -56009,7 +56014,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "11090eb71f9c3ac66c4b6843083d8b7ae239b7868b6808b30fa1368d6d8e9fdc",
+  "body_sha256": "50e25512e356b3aba88161791d97ab180a5c76e2c910e1540ff1366c0e69b63b",
   "components": {
     "node": {
       "name": "node_exporter",
