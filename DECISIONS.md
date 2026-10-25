@@ -17,6 +17,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-25 on `ai-infra-services.md` TODO 1.311 (#882).** The maintainer ruled live four
+  times at 2026-10-25T01:37:13Z, the first through AskUserQuestion. No reasoning was recorded beyond the
+  maintainer's words quoted below.
+  - The runtime-selection item, p189a proposal 1. The maintainer's words: "move the runtime-selection item
+    (observing running v4.5.0 and v4.9.2) into one new live-checks row" (option "New live-checks row"). Applied by
+    #882 as TODO row 1.377.
+  - The September 2026 record, p189a proposal 2. The maintainer's words: "if no dated public September 2026 copy
+    shows the v4.5 removal-plan wording, drop "September 2026" from the guide prose" (option
+    "Drop 'September 2026'"). Its effect (applied by #882): the p189a pack's Internet Archive query for August to
+    October 2026 returned no capture, so the Onyx prose and the v4.5.0 template's Sources item no longer say
+    "September 2026" for that wording.
+  - Archive copies. The maintainer's words: "a dated Internet Archive capture may be cited, labelled as a
+    third-party archive copy" (option "Yes, labelled third-party"). #882 cites none, because no capture was found.
+  - The removal record, p189a proposal 3. The maintainer's words: "the removal-record item closes on a stated
+    search scope (release notes v4.5.0 to newest stable plus the docs index pages), recording "not found in that
+    scope on DATE" if nothing is found" (option "Close on a stated scope"). Its effect (applied by #882): the
+    release-notes part, v4.5.0 to v5.0.0, is recorded as not found in that scope on 2026-10-25, and the docs index
+    part, which the pack could not reach, stays open under 1.311.
 - **TODO 1.306: RHEL legacy extended support offerings are not current support, 2026-10-25 (#881).** The maintainer
   ruled live through AskUserQuestion at 2026-10-25T01:01:52Z on p188a plan P1, choosing "No, standard only". The
   orchestrator's record of the ruling reads: "for TODO 1.306, RHEL legacy extended support offerings do not count as
