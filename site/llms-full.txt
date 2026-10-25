@@ -54768,7 +54768,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 98 claims: 14 demonstrated by a check that ran and 84 reasoned from cited sources.
+Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 100 claims: 14 demonstrated by a check that ran and 86 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -55215,20 +55215,41 @@ There are two fixes, and you can use both:
   true (default false); it is then inserted before `Server` in each module dependency list that
   names `Server`, and its HTTP listener defaults to `localhost:3101`. It serves routes including
   `/ready` and the buildinfo route and, when their modules run, `/ring`, `/memberlist` and the
-  compactor's handler prefix. Its flags register no gRPC listen address or port. This guide
-  infers from dskit's listener code that, unless YAML sets them, its gRPC listener uses an empty
-  address and port 0, an any-address listener on an OS-chosen port that carries the
-  HTTP-over-gRPC bridge to the internal router; this has not been observed.
+  compactor's handler prefix. Its flags register no gRPC listen network, address or port, and
+  `initInternalServer` hands its configuration to dskit's `server.New` after replacing only its
+  signal handler. From source reading, without a Loki run, unless YAML sets those fields, dskit
+  therefore listens on `tcp`, its default for an empty network, at an empty address and port 0, an
+  any-address listener on an OS-chosen port, and dskit's `Server.Run` registers the HTTP-over-gRPC
+  bridge to the internal router on that listener's gRPC server. `pkg/loki/config_wrapper.go` was not
+  read, so whether it changes these fields is not traced, and no such listener has been observed.
   `common.instance_addr` also
   sets `MemberlistKV.AdvertiseAddr` when set; memberlist gossip is separate from these gRPC
   calls. A single-binary compactor client uses the server gRPC listen address and port when deletion
   filtering is enabled. Loopback remains this guide's recommendation for this configuration, not a guarantee for
   every single-binary deployment: verify effective
   advertised and dial addresses, worker/frontend/scheduler settings, successful pushes and queries,
-  and any compactor calls. This guide's assessment is that these cited paths do not establish
-  complete per-module start-up behaviour, the Kafka consumer, Kafka-only and partition-ingester
-  paths, every other RPC hop, or live reachability. Remote components need a private address
-  reachable from their hosts.
+  and any compactor calls. From source reading of `setupModuleManager`, without a Loki run, `write`
+  depends on the ingester, distributor and pattern ingester modules, `read` on the query frontend
+  and querier, `backend` on the query scheduler, ruler, compactor, index gateway and bloom planner,
+  builder and gateway, and `all` on the same modules as `read` and `write` plus the query scheduler,
+  ruler, compactor and UI. The four targets have no init function of their own; configuration adds
+  ingest limits to `all` when they are enabled, the backend modules to `read` in the deprecated
+  legacy read mode, and other dependencies by configuration and target. dskit's module manager runs
+  each module's init function once, after those of its dependencies, and returns the first init
+  error with the module's name, which Loki's `Run` returns before it creates the service manager. By
+  the same reading, init functions register gRPC services only on the main server: the distributor's
+  `Pusher` outside the `all`, `write` and `ingester` targets, the ingester's `Pusher`, `Querier` and
+  `StreamData`, the query scheduler's two services, the index gateway's, and that of whichever query
+  frontend version is built. Others depend on settings: the pattern ingester, ingest limits,
+  ingest-limits frontend, bloom gateway and bloom planner services when enabled, the ruler's with
+  its API enabled, and the compactor's delete-requests service with the deletion routes above and
+  its job queue in the main horizontal-scaling mode; `Run` adds the gRPC health service. Of their
+  callers, this guide cites the distributor's `Push` and the ingester querier's `Querier` calls to
+  ingesters and the querier worker's frontend and scheduler calls above; callers of the other
+  services, and any further callers of these, are not traced. This guide's assessment is that these
+  cited paths do not establish whether each module starts successfully, the Kafka consumer,
+  Kafka-only and partition-ingester paths, those untraced callers, or live reachability. Remote
+  components need a private address reachable from their hosts.
 
   Keep gRPC restricted to trusted callers: plaintext loopback is still reachable by local users.
   Enabling `grpc_tls_config` also requires compatible TLS settings on every internal gRPC client,
@@ -55466,6 +55487,20 @@ from your own account's view of the process.
 - Loki v3.7.8 internal-server construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L245-L268
 - Loki v3.7.8 server service running the server: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2646-L2664
 - Loki v3.7.8 ring routes on both servers: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L276-L279
+- Loki v3.7.8 internal-server signal-handler replacement: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2684-L2687
+- Loki v3.7.8 module init functions, with none for the `all`, `read`, `write` and `backend` targets: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L753-L813
+- Loki v3.7.8 configuration- and target-dependent module dependencies: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L869-L921
+- Loki v3.7.8 analytics dependency on the ring when the ingester is active: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L952-L956
+- Loki v3.7.8 ingest-limits gRPC service when enabled: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L452-L477
+- Loki v3.7.8 ingest-limits frontend gRPC service when enabled: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L508-L528
+- Loki v3.7.8 pattern ingester gRPC service when enabled: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L794-L810
+- Loki v3.7.8 query frontend v1 or v2 gRPC service: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1288-L1296
+- Loki v3.7.8 ruler gRPC service with the ruler API enabled: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1670-L1677
+- Loki v3.7.8 bloom gateway gRPC service when enabled: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1954-L1966
+- Loki v3.7.8 index gateway gRPC service: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2008-L2015
+- Loki v3.7.8 bloom planner gRPC service when bloom building is enabled: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2064-L2096
+- Loki v3.7.8 query scheduler gRPC services: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2144-L2151
+- Loki v3.7.8 ingester querier's other `Querier` calls: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L266-L492
 - Loki v3.7.8 push HTTP handlers: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L28-L38
 - Loki v3.7.8 push handler dispatch: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L151
 - Loki v3.7.8 distributor gRPC Push: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L552-L558
@@ -55702,8 +55737,10 @@ Claims (full source mapping in the JSON block below):
 - loki-ingester-wrapper-search (REASONED; loki): From source reading, a word search for Wrapper in Loki v3.7.8's pkg, cmd, integration, tools and clients trees finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides a code comment and stylesheet source maps; nothing there sets it, and initIngester registers Wrap's result only when it is set.
 - loki-querier-ingester-inverted-result (REASONED; loki): Source reading of Loki's querier, ingester querier and ingester query code, with no Loki run, does not establish what they return for the inverted ingester interval a negative store lookback besides -1 yields: in this guide's assessment ingesters can hold entries dated exactly at its start when the lookback's magnitude is within the grace period, on one clock, grace unchanged; no run observed it.
 - loki-internal-server (REASONED; loki, dskit): From source reading, Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101.
-- loki-internal-server-grpc (REASONED; loki, dskit, go): From source reading and Go's net.Listen documentation, the internal server's flags register no gRPC address or port, so by inference, when enabled, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.
+- loki-internal-server-grpc (REASONED; loki, dskit, go): From source reading and Go's net.Listen documentation, the internal server's flags set no gRPC network, address or port and initInternalServer passes that configuration to dskit's server.New, so unless YAML or the unread config_wrapper.go sets them, dskit opens an any-address tcp listener on an OS-chosen port carrying the HTTP bridge; not observed.
 - loki-internal-routes (REASONED; loki): When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.
+- loki-target-modules (REASONED; loki, dskit): From source reading of setupModuleManager, write depends on the ingester, distributor and pattern ingester, read on the query frontend and querier, backend on the query scheduler, ruler, compactor, index gateway and bloom modules, and all on read's and write's modules plus the scheduler, ruler, compactor and UI. dskit runs each init once, dependencies first, stopping at the first error.
+- loki-grpc-services (REASONED; loki): From source reading, Loki's init functions register gRPC services only on the main server, some only when enabled: distributor and ingester Pusher, ingester Querier and StreamData, pattern, ingest limits, frontend, scheduler, ruler, compactor, job queue, bloom gateway, index gateway and bloom planner. This guide traces only the distributor's, ingester querier's and worker's calls.
 - loki-grpc-tls (REASONED; dskit, loki): Inferred from dskit's server TLS source, gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and, per Loki's authentication documentation, mTLS does not supply tenant headers.
 - loki-proxy (REASONED; loki): An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.
 - verify-inventory (REASONED; node, alert, push, jaeger, dskit): Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.
@@ -55718,7 +55755,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "21eee118d39e6a462edbfc64a89d6fa26018127a2cb88564b8d54385ef62a54a",
+  "body_sha256": "e42f3407d2217aabcd8f7c9b1491be54c07a9fee0de790302794635c3ad79cb8",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -55829,6 +55866,20 @@ Claims (full source mapping in the JSON block below):
         "sf19909de84b7": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L245-L268",
         "s309318e5a59c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2646-L2664",
         "s319f6b7b5340": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L276-L279",
+        "s4b5a89431203": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2684-L2687",
+        "se7ef0218d7c5": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L753-L813",
+        "s3eb2a64252dc": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L869-L921",
+        "s80b37692fda0": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L952-L956",
+        "s6b2a91bbd70f": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L452-L477",
+        "sd4bf25cf533c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L508-L528",
+        "s6804d0b9ca37": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L794-L810",
+        "saa25f09d653e": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1288-L1296",
+        "s2b784ff2e354": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1670-L1677",
+        "s11c2c89339af": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1954-L1966",
+        "seaa8a690e518": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2008-L2015",
+        "s4a0aa7492160": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2064-L2096",
+        "s9a1dda234f64": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2144-L2151",
+        "s6ae16575c268": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L266-L492",
         "s543d4de072bb": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L28-L38",
         "s3d6bf0891af0": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L151",
         "sd28855900a87": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L552-L558",
@@ -56138,8 +56189,10 @@ Claims (full source mapping in the JSON block below):
     "loki-ingester-wrapper-search": {"text": "From source reading, a word search for Wrapper in Loki v3.7.8's pkg, cmd, integration, tools and clients trees finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides a code comment and stylesheet source maps; nothing there sets it, and initIngester registers Wrap's result only when it is set.", "components": ["loki"], "sources": ["loki:s24cd2d4a2bce", "loki:sd7efa15100d2", "loki:sf253d44e375f"], "status": "REASONED"},
     "loki-querier-ingester-inverted-result": {"text": "Source reading of Loki's querier, ingester querier and ingester query code, with no Loki run, does not establish what they return for the inverted ingester interval a negative store lookback besides -1 yields: in this guide's assessment ingesters can hold entries dated exactly at its start when the lookback's magnitude is within the grace period, on one clock, grace unchanged; no run observed it.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:sdc0d0e6ad95d", "loki:s10870cc18ddc", "loki:s61e16a1ac1f0", "loki:sadb084375296", "loki:s0b40d7d25a3f", "loki:se34169c8b133", "loki:sd5181aa115e4", "loki:s33683997e787", "loki:s69faadc4a015", "loki:sa66ae191eb87", "loki:s7be82cdc7279", "loki:s9acb77638396"], "status": "REASONED"},
     "loki-internal-server": {"text": "From source reading, Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101.", "components": ["loki", "dskit"], "sources": ["loki:sb7c90a61ae40", "loki:scf7d98f51caa", "loki:sf4c3469d7ee1", "loki:sd4f78f9689f6", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s319f6b7b5340", "dskit:s7848c6311aee"], "status": "REASONED"},
-    "loki-internal-server-grpc": {"text": "From source reading and Go's net.Listen documentation, the internal server's flags register no gRPC address or port, so by inference, when enabled, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.", "components": ["loki", "dskit", "go"], "sources": ["loki:scf7d98f51caa", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s309318e5a59c", "dskit:s7848c6311aee", "dskit:s5fd7b12bfcf1", "go:s37204ff1b27c"], "status": "REASONED"},
+    "loki-internal-server-grpc": {"text": "From source reading and Go's net.Listen documentation, the internal server's flags set no gRPC network, address or port and initInternalServer passes that configuration to dskit's server.New, so unless YAML or the unread config_wrapper.go sets them, dskit opens an any-address tcp listener on an OS-chosen port carrying the HTTP bridge; not observed.", "components": ["loki", "dskit", "go"], "sources": ["loki:scf7d98f51caa", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s4b5a89431203", "loki:s309318e5a59c", "dskit:s7848c6311aee", "dskit:s5fd7b12bfcf1", "go:s37204ff1b27c"], "status": "REASONED"},
     "loki-internal-routes": {"text": "When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.", "components": ["loki"], "sources": ["loki:sb7c90a61ae40", "loki:s319f6b7b5340", "loki:sb6c261fe940d", "loki:s81d8d94c3cea"], "status": "REASONED"},
+    "loki-target-modules": {"text": "From source reading of setupModuleManager, write depends on the ingester, distributor and pattern ingester, read on the query frontend and querier, backend on the query scheduler, ruler, compactor, index gateway and bloom modules, and all on read's and write's modules plus the scheduler, ruler, compactor and UI. dskit runs each init once, dependencies first, stopping at the first error.", "components": ["loki", "dskit"], "sources": ["loki:se7ef0218d7c5", "loki:sf4c3469d7ee1", "loki:s3eb2a64252dc", "loki:s80b37692fda0", "loki:sb7c90a61ae40", "dskit:s96305c045ce4"], "status": "REASONED"},
+    "loki-grpc-services": {"text": "From source reading, Loki's init functions register gRPC services only on the main server, some only when enabled: distributor and ingester Pusher, ingester Querier and StreamData, pattern, ingest limits, frontend, scheduler, ruler, compactor, job queue, bloom gateway, index gateway and bloom planner. This guide traces only the distributor's, ingester querier's and worker's calls.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:sc2b013001317", "loki:s6b2a91bbd70f", "loki:sd4bf25cf533c", "loki:s6804d0b9ca37", "loki:saa25f09d653e", "loki:s2b784ff2e354", "loki:s1f38431776f2", "loki:s11c2c89339af", "loki:seaa8a690e518", "loki:s4a0aa7492160", "loki:s9a1dda234f64", "loki:sa19fa92e5d02", "loki:s61e16a1ac1f0", "loki:s6ae16575c268", "loki:s82a976e6b93c", "loki:s47c05209cd31"], "status": "REASONED"},
     "loki-grpc-tls": {"text": "Inferred from dskit's server TLS source, gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and, per Loki's authentication documentation, mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
     "loki-proxy": {"text": "An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.", "components": ["loki"], "sources": ["loki:s70975c2655fa"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.", "components": ["node", "alert", "push", "jaeger", "dskit"], "sources": ["node:s896899f5a500", "alert:s0fd66cba968e", "push:s5c9f9745f42d", "jaeger:s5619bba2be59", "dskit:sb19d54a19636", "dskit:s23d81aeedf07"], "status": "REASONED", "verify": [1]},

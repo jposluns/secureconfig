@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-25
+
+- `observability-components.md`: Loki's target module graph, init order and gRPC service registrations at v3.7.8 are now cited by source reading of the 2026-10-24 p187a pack, and the internal server's default any-address gRPC listener on an OS-chosen port is now a source reading rather than an inference, still unobserved. TODO 1.301 keeps the bounded source items still open, its observation-only items move to the new live-checks row 1.375, and DECISIONS.md records the maintainer's two rulings (#879)
+
 ## 2026-10-24
 
 - `ollama.md` (TODO 1.335, partial): section 9 now records, as source reading of the 2026-10-24 p186a pack at Ollama v0.34.2 (commit `dfabde45`) with nothing run, the macOS Claude Desktop gateway's loopback `Host` allowlist, its forwarding of only `POST /v1/messages` to the app's `OLLAMA_HOST` with the caller's `Authorization`, `Cookie` and `Proxy-Authorization` removed, and its model-ID routing. It also records that the import blocks of five desktop app files name no pprof package, limits its listener count to the two traced, notes the unread Codex Desktop integration, revises the claim `profiling-app-gateway` and adds nineteen pinned Sources items. TODO 1.335 keeps the observation items, the gateway's model-list and access rules, `app/ui/extract.go`, the Go toolchain sources and the unread Codex Desktop integration open (#878)
