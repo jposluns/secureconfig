@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against n8n listener source n8n@2.40.6, n8n runtime source n8n@2.40.6, n8n environment policy minimum 2.18.0, n8n SSRF filter minimum 2.12.0, n8n 2.0 default exclusion source n8n@2.0.0, n8n 1.x default exclusion source n8n@1.123.85, and express-openapi-validator v5.5.3, plus 6 more recorded bases; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked October 2026. The guide records 80 claims, all reasoned from cited sources.
+Written against n8n listener source n8n@2.40.6, n8n runtime source n8n@2.40.6, n8n environment policy minimum 2.18.0, n8n SSRF filter minimum 2.12.0, n8n 2.0 default exclusion source n8n@2.0.0, n8n 1.x default exclusion source n8n@1.123.85, and express-openapi-validator v5.5.3, plus 8 more recorded bases; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked October 2026. The guide records 80 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -91,7 +91,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 - Launcher 1.5.1 prepares the runner environment from its own `LANG`, `PATH`, `TZ` and `TERM` plus names in `allowed-env`; `env-overrides` sets values directly. This guide advises keeping secrets out of `allowed-env` and keeping that list narrow, because listed values can enter the runner process environment.
 - Launcher 1.5.1 sets the task broker URI, health-check enable flag and port, and legacy auto-shutdown and task timeouts. It removes inherited required runtime keys, including the grant token, and ignores their `env-overrides`; other overrides replace prior values, while grant-token insertion is not shown by this preparation function.
 - From source reading of launcher 1.5.1, the launch command builds the runner environment with `PrepareRunnerEnv`, fetches a grant token from the task broker, appends `N8N_RUNNERS_GRANT_TOKEN` to that environment and sets the result as the runner command's environment.
-- From source reading of the launcher's release tags, `internal/env/env.go` is identical at every tag from 1.3.1 to 1.5.1, `config.go` keeps its `allowed-env` and `env-overrides` fields at each of them, and `launch.go` is identical at 1.5.0 and 1.5.1. Tags before 1.3.1, untagged commits and later releases are not covered.
+- From source reading of the 29 launcher tags fetched on 2026-10-26, `env.go` is identical from 1.3.1 to 1.5.1 and `launch.go` at 1.5.0 and 1.5.1, and `config.go` has `env-overrides` only from 1.2.0. This guide infers from decoding defaults, not cited here, that earlier launchers ignore that field, so `env-overrides` allowlists need 1.2.0 or later. Untagged commits and later tags are not covered.
 - From source reading, the n8n 2.40.6 runners image Dockerfile defaults `LAUNCHER_VERSION` to 1.5.0, not the 1.5.1 this guide cites, installs that launcher release as the image entrypoint and copies `n8n-task-runners.json` to `/etc/n8n-task-runners.json`. This is image source; image reading found the 1.5.0 release binary in the 2.40.6 image of 2026-10-24 on both platforms.
 - From source reading, the n8n 2.40.6 runners image's `n8n-task-runners.json` lists `PATH` and timeout, concurrency, Sentry and version variables in both runners' `allowed-env`, plus `GENERIC_TIMEZONE`, `NODE_OPTIONS`, `NODE_PATH` and `HOME` for JS and the launcher log level for Python. This is image source, found in the 2.40.6 image of 2026-10-24, not a deployed configuration.
 - From source reading, the n8n 2.40.6 runners image's `n8n-task-runners.json` uses `env-overrides` to set `NODE_FUNCTION_ALLOW_BUILTIN` to `crypto` and `NODE_FUNCTION_ALLOW_EXTERNAL` to `moment` for the JS runner and `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW` to empty for the Python runner. This is image source, found in the 2.40.6 image of 2026-10-24, not a deployed configuration.
@@ -281,6 +281,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 - n8n runners image launcher configuration file, `allowed-env` and `env-overrides` (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/docker/images/runners/n8n-task-runners.json#L1-L56
 - n8n launcher runner environment and grant-token insertion (pinned 1.5.1): https://github.com/n8n-io/task-runner-launcher/blob/871cb76bc35c990f368eaa788f0b4ce7b145e143/internal/commands/launch.go#L91-L91 and https://github.com/n8n-io/task-runner-launcher/blob/871cb76bc35c990f368eaa788f0b4ce7b145e143/internal/commands/launch.go#L155-L185
 - n8n launcher environment preparation at 1.5.0, the n8n 2.40.6 runners Dockerfile default and the published 2.40.6 image's launcher release (pinned 1.5.0): https://github.com/n8n-io/task-runner-launcher/blob/3620c3dc721b3538bd97904999ae1b320d81012d/internal/env/env.go#L13-L142
+- n8n launcher runner configuration with `allowed-env` but no `env-overrides`, the last such tag of the 29 fetched on 2026-10-26 (pinned 1.1.5): https://github.com/n8n-io/task-runner-launcher/blob/64bcb118752be41794efc609a85a0ba809fceca3/internal/config/config.go#L65-L80
+- n8n launcher runner configuration with `allowed-env` and `env-overrides`, the first such tag (pinned 1.2.0): https://github.com/n8n-io/task-runner-launcher/blob/c0c861a1f34c81204bc72a372f7b22958490be5a/internal/config/config.go#L65-L83
 - n8n `TaskRunnersConfig.insecureMode` variable `N8N_RUNNERS_INSECURE_MODE` and default `false` (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/config/src/configs/runners.config.ts#L85-L90
 - n8n JS data proxy keys, including `$env` and the additional keys, and its `Proxy` traps (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/workflow/src/workflow-data-proxy.ts#L1237-L1739
 - n8n `getAdditionalKeys` keys and its `$secrets` credential option (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/core/src/execution-engine/node-execution-context/utils/get-additional-keys.ts#L20-L56
@@ -349,6 +351,8 @@ Components (recorded basis):
 - v2-later-commits: n8n later nodes config commits (ea8417e29ad6f8b981d9a04b17283d5d77f2b5bb)
 - v2-last-tag-default: n8n 2.45.0 default exclusion source (n8n@2.45.0)
 - launcher-150: n8n task-runner launcher, n8n 2.40.6 runners Dockerfile default (1.5.0)
+- launcher-115: n8n task-runner launcher, last tag without env-overrides (1.1.5)
+- launcher-120: n8n task-runner launcher, first tag with env-overrides (1.2.0)
 
 Claims (full source mapping in the JSON block below):
 
@@ -403,7 +407,7 @@ Claims (full source mapping in the JSON block below):
 - environment-launcher (REASONED; launcher): Launcher 1.5.1 prepares the runner environment from its own `LANG`, `PATH`, `TZ` and `TERM` plus names in `allowed-env`; `env-overrides` sets values directly. This guide advises keeping secrets out of `allowed-env` and keeping that list narrow, because listed values can enter the runner process environment.
 - environment-launcher-runtime (REASONED; launcher): Launcher 1.5.1 sets the task broker URI, health-check enable flag and port, and legacy auto-shutdown and task timeouts. It removes inherited required runtime keys, including the grant token, and ignores their `env-overrides`; other overrides replace prior values, while grant-token insertion is not shown by this preparation function.
 - environment-launcher-grant (REASONED; launcher): From source reading of launcher 1.5.1, the launch command builds the runner environment with `PrepareRunnerEnv`, fetches a grant token from the task broker, appends `N8N_RUNNERS_GRANT_TOKEN` to that environment and sets the result as the runner command's environment.
-- environment-launcher-tags (REASONED; launcher, launcher-150): From source reading of the launcher's release tags, `internal/env/env.go` is identical at every tag from 1.3.1 to 1.5.1, `config.go` keeps its `allowed-env` and `env-overrides` fields at each of them, and `launch.go` is identical at 1.5.0 and 1.5.1. Tags before 1.3.1, untagged commits and later releases are not covered.
+- environment-launcher-tags (REASONED; launcher, launcher-150, launcher-115, launcher-120): From source reading of the 29 launcher tags fetched on 2026-10-26, `env.go` is identical from 1.3.1 to 1.5.1 and `launch.go` at 1.5.0 and 1.5.1, and `config.go` has `env-overrides` only from 1.2.0. This guide infers from decoding defaults, not cited here, that earlier launchers ignore that field, so `env-overrides` allowlists need 1.2.0 or later. Untagged commits and later tags are not covered.
 - environment-image-launcher (REASONED; runtime, launcher-150): From source reading, the n8n 2.40.6 runners image Dockerfile defaults `LAUNCHER_VERSION` to 1.5.0, not the 1.5.1 this guide cites, installs that launcher release as the image entrypoint and copies `n8n-task-runners.json` to `/etc/n8n-task-runners.json`. This is image source; image reading found the 1.5.0 release binary in the 2.40.6 image of 2026-10-24 on both platforms.
 - environment-image-config (REASONED; runtime): From source reading, the n8n 2.40.6 runners image's `n8n-task-runners.json` lists `PATH` and timeout, concurrency, Sentry and version variables in both runners' `allowed-env`, plus `GENERIC_TIMEZONE`, `NODE_OPTIONS`, `NODE_PATH` and `HOME` for JS and the launcher log level for Python. This is image source, found in the 2.40.6 image of 2026-10-24, not a deployed configuration.
 - environment-image-allowlists (REASONED; runtime): From source reading, the n8n 2.40.6 runners image's `n8n-task-runners.json` uses `env-overrides` to set `NODE_FUNCTION_ALLOW_BUILTIN` to `crypto` and `NODE_FUNCTION_ALLOW_EXTERNAL` to `moment` for the JS runner and `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW` to empty for the Python runner. This is image source, found in the 2.40.6 image of 2026-10-24, not a deployed configuration.
@@ -438,7 +442,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "c0be7ad115e20f891c7827d3d3b9f2c7e5aec64c2992e81d7cdb0798e83ab097",
+  "body_sha256": "65495210308472e2e63f067d56f2988bde788c98b8c23758fd9f39bc758b9ab9",
   "components": {
     "server": {
       "name": "n8n listener source",
@@ -744,6 +748,20 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "sa6e9b2b5f671": "https://github.com/n8n-io/task-runner-launcher/blob/3620c3dc721b3538bd97904999ae1b320d81012d/internal/env/env.go#L13-L142"
       }
+    },
+    "launcher-115": {
+      "name": "n8n task-runner launcher, last tag without env-overrides",
+      "basis": "1.1.5",
+      "sources": {
+        "s9887312755d4": "https://github.com/n8n-io/task-runner-launcher/blob/64bcb118752be41794efc609a85a0ba809fceca3/internal/config/config.go#L65-L80"
+      }
+    },
+    "launcher-120": {
+      "name": "n8n task-runner launcher, first tag with env-overrides",
+      "basis": "1.2.0",
+      "sources": {
+        "sb5f305c25a6a": "https://github.com/n8n-io/task-runner-launcher/blob/c0c861a1f34c81204bc72a372f7b22958490be5a/internal/config/config.go#L65-L83"
+      }
     }
   },
   "claims": {
@@ -798,7 +816,7 @@ Claims (full source mapping in the JSON block below):
     "environment-launcher": {"text": "Launcher 1.5.1 prepares the runner environment from its own `LANG`, `PATH`, `TZ` and `TERM` plus names in `allowed-env`; `env-overrides` sets values directly. This guide advises keeping secrets out of `allowed-env` and keeping that list narrow, because listed values can enter the runner process environment.", "components": ["launcher"], "sources": ["launcher:s0354dcddb708", "launcher:s6a7cebb18624"], "status": "REASONED"},
     "environment-launcher-runtime": {"text": "Launcher 1.5.1 sets the task broker URI, health-check enable flag and port, and legacy auto-shutdown and task timeouts. It removes inherited required runtime keys, including the grant token, and ignores their `env-overrides`; other overrides replace prior values, while grant-token insertion is not shown by this preparation function.", "components": ["launcher"], "sources": ["launcher:s0354dcddb708"], "status": "REASONED"},
     "environment-launcher-grant": {"text": "From source reading of launcher 1.5.1, the launch command builds the runner environment with `PrepareRunnerEnv`, fetches a grant token from the task broker, appends `N8N_RUNNERS_GRANT_TOKEN` to that environment and sets the result as the runner command's environment.", "components": ["launcher"], "sources": ["launcher:s50f317d2aaac", "launcher:sac2b82d94d46", "launcher:s0354dcddb708"], "status": "REASONED"},
-    "environment-launcher-tags": {"text": "From source reading of the launcher's release tags, `internal/env/env.go` is identical at every tag from 1.3.1 to 1.5.1, `config.go` keeps its `allowed-env` and `env-overrides` fields at each of them, and `launch.go` is identical at 1.5.0 and 1.5.1. Tags before 1.3.1, untagged commits and later releases are not covered.", "components": ["launcher", "launcher-150"], "sources": ["launcher:s0354dcddb708", "launcher:s6a7cebb18624", "launcher:sac2b82d94d46", "launcher-150:sa6e9b2b5f671"], "status": "REASONED"},
+    "environment-launcher-tags": {"text": "From source reading of the 29 launcher tags fetched on 2026-10-26, `env.go` is identical from 1.3.1 to 1.5.1 and `launch.go` at 1.5.0 and 1.5.1, and `config.go` has `env-overrides` only from 1.2.0. This guide infers from decoding defaults, not cited here, that earlier launchers ignore that field, so `env-overrides` allowlists need 1.2.0 or later. Untagged commits and later tags are not covered.", "components": ["launcher", "launcher-150", "launcher-115", "launcher-120"], "sources": ["launcher:s0354dcddb708", "launcher:s6a7cebb18624", "launcher:sac2b82d94d46", "launcher-150:sa6e9b2b5f671", "launcher-115:s9887312755d4", "launcher-120:sb5f305c25a6a"], "status": "REASONED"},
     "environment-image-launcher": {"text": "From source reading, the n8n 2.40.6 runners image Dockerfile defaults `LAUNCHER_VERSION` to 1.5.0, not the 1.5.1 this guide cites, installs that launcher release as the image entrypoint and copies `n8n-task-runners.json` to `/etc/n8n-task-runners.json`. This is image source; image reading found the 1.5.0 release binary in the 2.40.6 image of 2026-10-24 on both platforms.", "components": ["runtime", "launcher-150"], "sources": ["runtime:s2a1c7ab05cc2", "runtime:s1b126cc07d43", "launcher-150:sa6e9b2b5f671"], "status": "REASONED"},
     "environment-image-config": {"text": "From source reading, the n8n 2.40.6 runners image's `n8n-task-runners.json` lists `PATH` and timeout, concurrency, Sentry and version variables in both runners' `allowed-env`, plus `GENERIC_TIMEZONE`, `NODE_OPTIONS`, `NODE_PATH` and `HOME` for JS and the launcher log level for Python. This is image source, found in the 2.40.6 image of 2026-10-24, not a deployed configuration.", "components": ["runtime"], "sources": ["runtime:s9942db5a26c5", "runtime:s1b126cc07d43"], "status": "REASONED"},
     "environment-image-allowlists": {"text": "From source reading, the n8n 2.40.6 runners image's `n8n-task-runners.json` uses `env-overrides` to set `NODE_FUNCTION_ALLOW_BUILTIN` to `crypto` and `NODE_FUNCTION_ALLOW_EXTERNAL` to `moment` for the JS runner and `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW` to empty for the Python runner. This is image source, found in the 2.40.6 image of 2026-10-24, not a deployed configuration.", "components": ["runtime"], "sources": ["runtime:s9942db5a26c5", "runtime:s1b126cc07d43"], "status": "REASONED"},
