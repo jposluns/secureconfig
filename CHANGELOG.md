@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-26
+
+- `observability-components.md` (TODO 1.301, partial; carried QA notes from #897): the Loki empty-batch passage, TODO 1.301 and DONE 1.301 now say that the named Loki stream interceptors are only those that `loki.go` and `modules.go` show, and DONE 1.301 cites the interceptor conditions at `loki.go` lines 873 to 895 and 914 to 917. TODO 1.301 keeps open whether other code appends to dskit's `GRPCStreamMiddleware`, says that grpc-go's `controlbuf.go` is held in the p206a pack but not read, and narrows the "now cited" wording that #897's entry here shares to dskit's logging, instrumentation and optional in-flight limiter stream interceptors (#907)
+
 ## 2026-10-25
 
 - `observability-components.md`: as source reading of Loki v3.7.8, the ingester's empty-batch send on a stream grpc-go has already marked done fails with a gRPC status error, never the exact value `context.Canceled`, when `SendMsg`'s message preparation succeeds and the send reaches `Write`, unless an unread stream interceptor changes the result. The generated `Send` methods, dskit's stream interceptors including the optional in-flight limiter's, `ServerStream.Write`, the HTTP/2 transport `write`, which returns `ErrConnClosing` for a done stream only once the transport's `done` channel is closed, `ContextErr` and `toRPCErr` are now cited, with twenty-nine new Sources items and a revised `loki-ingester-empty-send` claim. A context that ends after the transport's state checks, a transport that closes before the stream is marked done, the context's state after a failed write-quota wait, the control-buffer code and any stream interceptor that dskit's `GRPCOptions` or grpc-go global server options add stay open under TODO 1.301 (#897)
