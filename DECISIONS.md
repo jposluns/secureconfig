@@ -17,6 +17,30 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-10-25 on `n8n.md` TODO 1.300 (#908).** The maintainer ruled live at
+  2026-10-25T23:51:55Z on proposals P1 to P5 of the p216a plan for TODO 1.300, whose item table defines the
+  letters quoted below. No reasoning was recorded beyond the ruling's words, quoted below in parts. TODO 1.300
+  stays open for its other items.
+  - P1 and P5, the live-checks row. The record reads: "P1 new n8n live-checks row for A, B, D and the observation
+    halves of T and U" and "P5 define D as a reference deployment built from the 2.40.6 images with the shipped
+    n8n-task-runners.json, inside the P1 row." Its effect (applied by #908): observed `envProviderState` contents
+    (A), observed Python module access (B), that reference deployment's configuration (D) and whether Code tasks
+    can actually read `/proc/<pid>/environ` in internal and external mode (the observation halves of T and U)
+    moved to TODO row 1.384.
+  - P2, Code `process.env` isolation (C). The record reads: "P2 bound C to the channels traced at n8n 2.40.6 (J to
+    O, S, and T/U's /proc channel)". Its effect (applied by #908): 1.300 bounds that item to its traces of what
+    reaches the JS runner's context and which tasks use `runCode` (J to O), of how `TaskRunnersConfig.insecureMode`
+    is set (S) and of whether user code has a file-read primitive reaching `/proc/<pid>/environ` (the source
+    halves of T and U), without establishing complete isolation.
+  - P3, other nodes (G). The record reads: "P3 bound G to a stated git grep (spelling set, named paths, commit
+    024ee46b)". Its effect (applied by #908): 1.300 bounds that item to a `git grep` at `024ee46b` for the
+    plan's spelling set (`startJob`, `child_process`, `spawn`, `exec`, `fork`, `new Function` and `vm.`) in
+    `packages/nodes-base/nodes` and `packages/@n8n/nodes-langchain/nodes`, excluding test files, with community
+    and custom nodes outside it.
+  - P4, other launcher versions (H and I). The record reads: "P4 bound H and I to every launcher tag through the
+    newest on the fetch date, recording the date". Its effect (applied by #908): 1.300 bounds the launcher
+    environment-preparation and launch-command items to every launcher tag from the first through the newest on
+    the fetch date, which the reading records.
 - **Maintainer ruling of 2026-10-25 on running the gates workflow once per change (#906).** The maintainer ruled
   live through AskUserQuestion at 2026-10-25T19:53:35Z, confirming the direction lab_infra relayed at 19:51:27Z.
   The ruling as recorded, verbatim:

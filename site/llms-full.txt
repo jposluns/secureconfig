@@ -55453,7 +55453,10 @@ There are two fixes, and you can use both:
   per-request limits are enabled, and it passes the server configuration to
   `fakeauth.SetupAuthMiddleware`. Their code, and the OpenTracing interceptor that dskit adds when a
   global tracer is registered, were not read, so whether any of them wraps `SendMsg` or changes its
-  result is not established. Nor is whether Loki code sets dskit's `GRPCOptions`, a field with no
+  result is not established. The Loki interceptors named here are only those that `loki.go` and
+  `modules.go` show, and whether other code appends stream interceptors to dskit's
+  `GRPCStreamMiddleware` is not established either. Nor is whether Loki code sets dskit's
+  `GRPCOptions`, a field with no
   YAML key whose server options dskit appends to its own, or whether any dependency registers
   grpc-go global server options, which `NewServer` applies first; either can add a stream
   interceptor. The transport stream's `Write`, which `SendMsg` calls, only returns the
@@ -56068,7 +56071,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "ec82d0a6ec76534748dc900870f2b88717b416a81dfff7650201c671902b4493",
+  "body_sha256": "b065780b9983e8781c3adebc5594fc17877dc6dba87a215f8cdf4f30fe6bee33",
   "components": {
     "node": {
       "name": "node_exporter",
