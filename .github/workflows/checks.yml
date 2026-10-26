@@ -10,7 +10,13 @@ name: Checks
 # QA. On a draft the job is skipped, and a skip is not a pass for merging, although GitHub reports
 # a job skipped by its `if:` to branch protection as a success. A draft cannot be merged, and the
 # orchestrator's merge gate requires a `gates` job that ran and succeeded on the exact head that
-# merges.
+# merges. That merge gate alone refuses the head in one window, observed on #917 at head 582a7dd0,
+# where a push and ready_for_review created runs 40279911250 and 40279910962 in the same second.
+# The ready run 40279910962 was cancelled through the concurrency group below by the push's draft
+# run 40279911250, queued after the ready run, whose `gates` job was skipped, so no `gates` job ran
+# on that head and the head carried only a skipped `gates` check, which GitHub reports to branch
+# protection as a success. The orchestrator's merge step therefore waits for the runs on a head to
+# go idle before marking a pull request ready.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
