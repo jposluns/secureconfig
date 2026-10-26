@@ -17,6 +17,44 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-26 (attended-autonomous, AskUserQuestion) (#930).** The maintainer ruled through
+  AskUserQuestion in three calls, which the integrator recorded at 2026-10-26T14:11:03Z, choosing the recommended
+  option on each of the eleven questions. No reasoning was recorded beyond the chosen options' text, quoted below in
+  parts as the record reads. On the #919 merge, a merge-process question that changes no repository content, the
+  record reads: "Keep it (Recommended)": "Accept the merge, with the post-merge two-family SHIP as the QA record.
+  mclean.sh now refuses this path." The integrator's record says these rulings supersede the held questions on batch
+  5, prose length, the plan questions for TODO 1.301, 1.302 and 1.283, 1.283's R1 and the #919 merge.
+  - TODO 1.300, the 2026-10-25 bounds below. The record reads: "Yes, it closes (Recommended)": "G and the
+    launcher-tags items close on the recorded search and reading, as C did. A follow-up PR moves them to DONE." Its
+    effect (applied by #930): the node-search item (G) closes on the stated `git grep` at `024ee46b` and the reading
+    of its matches (#922), and the launcher-tags item (H and I) closes on the reading of all 29 launcher tags, 0.1.0
+    to 1.5.1 (#925); DONE 1.300 (#930) records both.
+  - The adapter sentence, batch 5. The record reads: "Adopt the sentence (Recommended)": "Add the drafted sentence
+    to both adapter files. checks.yml also names the window as observed, citing #917." Its effect, applied by a
+    later PR: batch 5 adds that sentence to `CLAUDE.md` and `AGENTS.md`, and `.github/workflows/checks.yml` names
+    the window as observed, citing #917. The integrator's record adds that batch 5 is to be re-anchored on current
+    `main`.
+  - Prose sentence length. The record reads: "TODO row and batches (Recommended)": "Add a TODO row and split those
+    sentences in per-guide batches. No new gate." Its effect (applied by #930): TODO row 1.385 tracks splitting
+    guide prose sentences over 400 characters in per-guide batches, and no gate is added.
+  - TODO 1.301, three plan questions. The record reads: "Yes, verify blob SHAs (Recommended)", "Bound to the
+    repository (Recommended)" and "Confirm that reading (Recommended)". Their effects, applied by a later PR, as the
+    integrator's record gives them: the whole-tree searches use a codeload tag archive of Loki v3.7.8, verifying
+    each file against the blob SHA in the held v3.7.8 tree listing, and the plan's item I is bounded to the v3.7.8
+    repository. The third answer confirms that "Kafka-only" means distributor Kafka writes on and ingester writes
+    off (`distributor.go` lines 127 to 136).
+  - TODO 1.302, three plan questions. The record reads: "The 1.26.x patch line (Recommended)", "Reuse 10-22 cache,
+    else fetch (Recommended)" and "Approve the rewrite (Recommended)". Its effect on scope (applied by #930): 1.302
+    bounds "other Go versions" to the Go 1.26.x patch line. Its other effects, applied by a later PR, as the
+    integrator's record gives them: reuse the verified 2026-10-22 module cache if it exists, else fetch
+    `proxy.golang.org` zips checked against `go.sum`, and rewrite the claims `profiling-deps-scan`,
+    `profiling-scope` and `profiling-tag-runs`, with review and rebind, "if X settles".
+  - TODO 1.283, the enterprise-role item (R1). The record reads: "Retire R1 (Recommended)": "No published source
+    exists. Retire R1 and record the search in DONE 1.283." Its effect (applied by #930): R1, which the 2026-10-25
+    ruling on TODO 1.283 below sent to the maintainer to retire or move to observation, is retired, and DONE 1.283
+    (#930) records the retirement with the searches that DONE 1.283 (#875 and #928) records. None of the files and
+    pages those rows record reading maps a built-in enterprise workspace role to `plugin.plugin_preferences`, and
+    the pages that Dify's Developer Resources indexes list were not read.
 - **Maintainer ruling of 2026-10-25 on `n8n.md` TODO 1.300 (#908).** The maintainer ruled live at
   2026-10-25T23:51:55Z on proposals P1 to P5 of the p216a plan for TODO 1.300, whose item table defines the
   letters quoted below. No reasoning was recorded beyond the ruling's words, quoted below in parts. TODO 1.300
