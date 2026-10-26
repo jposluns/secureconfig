@@ -55357,7 +55357,23 @@ are supplied, an invalid value writes HTTP 400 without stopping the handler. `DE
 up a request under the tenant ID: an ID the store does not find returns 404; processed
 requests return 400; partially completed or overdue
 requests return 400 unless `force=true`; store failure returns 500; removal returns 204. A stored
-request does not establish eventual deletion. The gRPC listener registers ingester push/query services in single-binary mode
+request does not establish eventual deletion. From source reading of the compactor at v3.7.8, without a
+Loki run (REASONED), its delete-requests manager selects the requests its store returns as unprocessed
+only after `delete_request_cancel_period` plus one minute has passed since each was created, and only
+for tenants whose mode is then `filter-and-delete`, so it never selects a `filter-only` tenant's
+request for removal. The manager marks a request whose whole interval is older than the tenant's
+longest retention period as processed without filtering, and loads at most the configured delete
+batch size at a time. The compactor passes the manager, behind its retention expiration checker, to
+the retention marker. When a mark phase starts, the manager loads that batch (in the main
+horizontal-scaling mode, only requests without a line filter), and when the phase finishes it marks
+each loaded request processed, which it does not do when the phase fails or times out; the code that
+runs those phases and the marker's code were not read. In the main horizontal-scaling mode, requests
+with a line filter instead go into a deletion manifest that the manager builds every five minutes,
+and jobs built from that manifest rewrite each listed chunk without the lines that a request's filter
+matches. The job builder marks the manifest's requests processed after passing the collected storage
+updates to the tables manager, whose code was not read, and a failed job cancels the manifest's
+processing. Marking a request processed does not establish that its chunks are gone: the retention
+sweeper that deletes marked chunks was not read. The gRPC listener registers ingester push/query services in single-binary mode
 and an HTTP-over-gRPC bridge to the HTTP router. HTTP-only TLS or a proxy in front of 3100 therefore
 does not protect all paths to these services. These exposure consequences are REASONED, not live
 attack results.
@@ -55557,9 +55573,16 @@ There are two fixes, and you can use both:
   runs. Loki also installs a recovery stream interceptor on every target, query-tags, HTTP-header
   and ingestion-policy ones on the `ingester`, `write` and `all` targets and a query-limits one when
   per-request limits are enabled, and it passes the server configuration to
-  `fakeauth.SetupAuthMiddleware`. Their code, and the OpenTracing interceptor that dskit adds when a
-  global tracer is registered, were not read, so whether any of them wraps `SendMsg` or changes its
-  result is not established. The Loki interceptors named here are only those that `loki.go` and
+  `fakeauth.SetupAuthMiddleware`. That function appends one stream interceptor: a fake-tenant one
+  with authentication off, or, with authentication on, one that calls dskit's user-header
+  interceptor except for listed methods. From source reading, the query-tags, HTTP-header,
+  ingestion-policy, query-limits and fake-tenant interceptors, and the OpenTracing interceptor that
+  dskit adds when a global tracer is registered, each pass the handler either the stream itself or
+  a wrapper that replaces only its `Context`, and return the handler's error unchanged. The
+  query-limits interceptor can also end the call before the handler runs when its metadata does
+  not parse. The recovery interceptor is built by the vendored go-grpc-middleware recovery package,
+  whose code was not read, so whether it wraps `SendMsg` or changes its result is not established.
+  The Loki interceptors named here are only those that `loki.go` and
   `modules.go` show, and whether other code appends stream interceptors to dskit's
   `GRPCStreamMiddleware` is not established either. Nor is whether Loki code sets dskit's
   `GRPCOptions`, a field with no
@@ -55582,7 +55605,13 @@ There are two fixes, and you can use both:
   each cancels the context before doing so. Those paths cancel the context the transport creates
   for the stream, but `streamContextErr` reads the stream's current context, which grpc-go's
   `handleStream` replaces through `SetContext` with a context built from the original and passed
-  through any configured stats handler's `TagRPC`, code this reading does not cover. Which status
+  through the configured stats handlers' `TagRPC`. The dskit server always configures otelgrpc's
+  server handler, and adds its in-flight limiter when `GrpcMethodLimiter` is set and its own stats
+  handler when stats tracking is enabled. From source reading, the limiter's `TagRPC` returns its input,
+  dskit's stats handler's returns a `context.WithValue` child of its input, and otelgrpc's returns a
+  `context.WithValue` child of the context that its propagator extraction and tracer start return,
+  code this reading does not cover. Nor does this reading cover how grpc-go combines the handlers, or
+  any handler added through `GRPCOptions` or global server options. Which status
   code the send then fails with is therefore not established, though the failure is a gRPC status
   error either way. So, in this guide's reading, unless an unread
   interceptor intervenes, an empty-batch send that passes `SendMsg`'s message preparation and
@@ -55592,10 +55621,18 @@ There are two fixes, and you can use both:
   also assumes grpc-go's HTTP/2 server transport. In grpc-go, `ServeHTTP` builds a different
   transport on Go's own HTTP/2 server; that transport's code was not read, and whether any Loki
   code serves gRPC through `ServeHTTP` is not established.
-  What the send returns when the context ends after those checks, or when the transport closes
-  before the stream is marked done, depends on the control-buffer code, which was not read, and,
-  after a failed write-quota wait, on the state of the context that `ContextErr` reads, which is not
-  established, so it is still not traced. The ingester querier's
+  From source reading of grpc-go's control buffer and write quota, enqueuing a frame fails, with
+  `ErrConnClosing`, only once the transport's `Close` has finished the control buffer, and a
+  write-quota wait ends only when quota returns or the context the transport created is done. So if
+  the context ends after those checks, a send whose write-quota wait succeeds still enqueues its data
+  frame and returns no error, and the ingester code then returns none. After a failed wait, `write`
+  returns `ErrConnClosing` if the transport's `done` channel is closed and otherwise `ContextErr` of
+  the stream's current context, whose state is not established, as above. If the transport closes
+  before the stream is marked done, a send that enqueues its frames before `Close` finishes the
+  control buffer returns no error. A later enqueue fails with `ErrConnClosing`, and so does `write`
+  after a write-quota wait that `Close` ends by cancelling the stream, since `Close` first closes the
+  transport's `done` channel; the header write and `toRPCErr` turn that error into an `Unavailable`
+  status, which the ingester code returns. The ingester querier's
   per-ingester iterator records those
   statistics and warnings, yields nothing and ends without an error at the end of the stream, while
   any other receive error propagates, and the querier merges the per-ingester iterators with any
@@ -55794,6 +55831,18 @@ from your own account's view of the process.
 - Loki v3.7.8 deletion create handler: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L49-L110
 - Loki v3.7.8 deletion list handler: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L134-L190
 - Loki v3.7.8 deletion cancel handler: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L259-L303
+- Loki v3.7.8 log entry deletion documentation (cancellation period, `deletion_mode` values): https://github.com/grafana/loki/blob/v3.7.8/docs/sources/operations/storage/logs-deletion.md
+- Loki v3.7.8 compactor retention marker, tables manager, delete-requests manager initialization and deletion job builder registration: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/compactor.go#L309-L347
+- Loki v3.7.8 compactor delete-request store, handlers and delete-requests manager set-up, behind the retention expiration checker: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/compactor.go#L352-L393
+- Loki v3.7.8 compactor expiration checker (retention first, then the delete-requests manager): https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/compactor.go#L552-L607
+- Loki v3.7.8 delete-requests manager initialization (job builder marking requests processed in the main horizontal-scaling mode): https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L121-L157
+- Loki v3.7.8 delete-requests manager deletion manifest loop: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L201-L288
+- Loki v3.7.8 delete-requests manager request selection (cancellation period plus one minute, `filter-and-delete` only, requests beyond retention, batch size): https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L332-L457
+- Loki v3.7.8 delete-requests manager expiration check, mark phases and marking requests processed: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L478-L584
+- Loki v3.7.8 deletion job builder manifest and segment processing: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/job_builder.go#L116-L239
+- Loki v3.7.8 deletion job builder jobs split at `maxChunksPerJob` chunks: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/job_builder.go#L323-L370
+- Loki v3.7.8 deletion job builder job results, storage updates and manifest cleanup marking requests processed: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/job_builder.go#L372-L437
+- Loki v3.7.8 deletion job runner chunk rewrite: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/job_runner.go#L54-L203
 - Loki v3.7.8 deletion mode defaults: https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/limits.go#L450-L453
 - Loki v3.7.8 tenant deletion mode override: https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/limits.go#L1128-L1132
 - Loki v3.7.8 worker address selection and discovery: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L117-L182
@@ -56038,6 +56087,22 @@ from your own account's view of the process.
 - Loki v3.7.8 vendored grpc-go `toRPCErr`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/rpc_util.go#L1129-L1157
 - Loki v3.7.8 vendored grpc-go `status.FromError`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/status/status.go#L96-L127
 - Loki v3.7.8 vendored grpc-go status `Error` type: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/status/status.go#L205-L228
+- Loki v3.7.8 vendored grpc-go write quota (`init` keeps the done channel it is given; `get` waits for quota or that channel): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/flowcontrol.go#L44-L67
+- Loki v3.7.8 vendored grpc-go server stream write quota, initialized with the done channel of the context the transport created: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L623-L624
+- Loki v3.7.8 vendored grpc-go control buffer `put` and `executeAndPut` (`ErrConnClosing` only once the buffer is closed): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/controlbuf.go#L347-L398
+- Loki v3.7.8 vendored grpc-go control buffer `finish` (closes the buffer): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/controlbuf.go#L451-L483
+- Loki v3.7.8 vendored grpc-go `NewServer` stats handler (`istats.NewCombinedHandler` of the configured handlers): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L712-L721
+- Loki v3.7.8 vendored dskit server stats handlers (otelgrpc's server handler always; the in-flight limiter and dskit's stats handler when configured): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L491-L523
+- Loki v3.7.8 vendored otelgrpc server handler `TagRPC` (a `context.WithValue` child of the extracted, span-started context): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/stats_handler.go#L98-L158
+- Loki v3.7.8 vendored dskit in-flight limiter `TagRPC` (returns its input): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/limits.go#L151-L153
+- Loki v3.7.8 vendored dskit stats handler `TagRPC` (a `context.WithValue` child): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/middleware/grpc_stats.go#L56-L58
+- Loki v3.7.8 recovery stream interceptor (built by the vendored go-grpc-middleware recovery package): https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/recovery.go#L39
+- Loki v3.7.8 query-tags stream interceptor and its `Context`-only wrapper: https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/grpc_query_tags.go#L66-L81
+- Loki v3.7.8 HTTP-header stream interceptor: https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/grpc_headers.go#L56-L61
+- Loki v3.7.8 ingestion-policy stream interceptor and its `Context`-only wrapper: https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/ingestion_policies.go#L256-L312
+- Loki v3.7.8 query-limits stream interceptor and its `Context`-only wrapper (a metadata parse error ends the call): https://github.com/grafana/loki/blob/v3.7.8/pkg/util/querylimits/grpc.go#L63-L122
+- Loki v3.7.8 `fakeauth.SetupAuthMiddleware` stream interceptors and the fake-tenant wrapper: https://github.com/grafana/loki/blob/v3.7.8/pkg/util/fakeauth/fake_auth.go#L15-L78
+- Loki v3.7.8 vendored OpenTracing stream server interceptor and its `Context`-only wrapper: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/opentracing-contrib/go-grpc/server.go#L91-L135
 - Loki v3.7.8 ingester log query batch limit and send call: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1121-L1129
 - Loki v3.7.8 ingester sample query send call: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1193-L1195
 - Loki v3.7.8 log batch read: https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/entry_iterator.go#L681-L716
@@ -56189,7 +56254,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "c9881613e6320f5a700cf3616fd77dbfdf94b6b29f533964dfe6ef75e4e0f244",
+  "body_sha256": "f4cb10ab4f3273a2d5c8b3107c741a15893e70036d37537311014fddbe548ece",
   "components": {
     "node": {
       "name": "node_exporter",
