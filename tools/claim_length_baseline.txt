@@ -53,8 +53,6 @@ identity-providers.md	google-org-mfa	505
 identity-providers.md	self-hosted-mfa	1947
 identity-providers.md	verify-allowlist	481
 lighttpd.md	mfa	498
-lighttpd.md	module-defaults	438
-lighttpd.md	password-file	559
 lighttpd.md	verify-config	502
 lighttpd.md	verify-host	713
 llm-observability.md	otel-bearer	593
