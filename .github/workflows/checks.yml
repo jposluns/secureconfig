@@ -10,16 +10,18 @@ name: Checks
 # QA. On a draft the job is skipped, and a skip is not a pass for merging, although GitHub reports
 # a job skipped by its `if:` to branch protection as a success. A draft cannot be merged, and the
 # orchestrator's merge gate requires a `gates` job that ran and succeeded on the exact head that
-# merges. That merge gate alone refuses the head in one window, observed on #917 at head 582a7dd0,
-# where a push and ready_for_review created runs 40279911250 and 40279910962 in the same second.
-# The ready run 40279910962 completed cancelled, and the draft run 40279911250 completed with its
-# `gates` job skipped. The run record does not say which run cancelled the other or in what order
-# the two runs were queued. That the draft run, queued after the ready run, cancelled the ready run
-# through the concurrency group below is an inference from the run ids and the concurrency block.
-# No `gates` job ran on that head until the pull request was returned to draft and marked ready
-# again after the runs went idle, and GitHub reports a skipped `gates` job to branch protection as
-# a success. The orchestrator's merge step therefore waits for the runs on a head to go idle before
-# marking a pull request ready.
+# merges. On #917 at head 582a7dd0, the run record shows these observed outcomes: a push and
+# ready_for_review created runs 40279911250 and 40279910962 in the same second, the ready run
+# 40279910962 completed cancelled, and the draft run 40279911250 completed with its `gates` job
+# skipped. The run record also shows that no `gates` job ran on that head until the pull request
+# was returned to draft and marked ready again after the runs went idle. The run record does not
+# say which run cancelled the other or in what order the two runs were queued. That the draft run,
+# queued after the ready run, cancelled the ready run through the concurrency group below is an
+# inference from the run ids and the concurrency block. The run record also does not show what
+# branch protection reported for that head or which mechanism refused a merge. That in that window
+# the orchestrator's merge gate is what would refuse that head is an inference, given GitHub's
+# documented reporting of a skipped job to branch protection as a success. The orchestrator's merge
+# step therefore waits for the runs on a head to go idle before marking a pull request ready.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
