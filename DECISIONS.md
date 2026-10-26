@@ -44,8 +44,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     repository. The third answer confirms that "Kafka-only" means distributor Kafka writes on and ingester writes
     off (`distributor.go` lines 127 to 136).
   - TODO 1.302, three plan questions. The record reads: "The 1.26.x patch line (Recommended)", "Reuse 10-22 cache,
-    else fetch (Recommended)" and "Approve the rewrite (Recommended)". Its effect on scope (applied by #930): 1.302
-    bounds "other Go versions" to the Go 1.26.x patch line. Its other effects, applied by a later PR, as the
+    else fetch (Recommended)" and "Approve the rewrite (Recommended)". Their effect on scope (applied by #930): 1.302
+    bounds "other Go versions" to the Go 1.26.x patch line. Their other effects, applied by a later PR, as the
     integrator's record gives them: reuse the verified 2026-10-22 module cache if it exists, else fetch
     `proxy.golang.org` zips checked against `go.sum`, and rewrite the claims `profiling-deps-scan`,
     `profiling-scope` and `profiling-tag-runs`, with review and rebind, "if X settles".
