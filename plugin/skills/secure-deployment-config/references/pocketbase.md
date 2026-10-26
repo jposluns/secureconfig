@@ -596,7 +596,7 @@ For the install handler, see the
 [web installer database validation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157),
 [web installer supported database values](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206),
 [web installer database adapter input](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243),
-[web installer resumed input and environment preparation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320),
+[web installer resumed input and environment preparation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320), and
 [web installer installation call](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392).
 For the install task and installer server, see the
 [install task web installer configuration](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L341-L378),
@@ -1232,7 +1232,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "644b9a32bcfc21b1b06c22afbb04a866d6b7ba59e0d2613b1b625561c3a56c6a",
+  "body_sha256": "a0fa06e373381acb56f6d034bd03478d50551ac313b6c793746d445da93993ca",
   "components": {
     "pb": {
       "name": "PocketBase",
