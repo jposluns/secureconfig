@@ -106,4 +106,8 @@ It also carries hooks this repository does not own, so never overwrite it by han
 ## Branch protection
 
 `main` requires a pull request, forbids force-push and deletion, and will not merge unless `gates`
-passes. Push a branch and open a pull request; there is no direct path to `main`.
+passes. GitHub reports a `gates` job skipped on a draft pull request to branch protection as a
+success; what keeps that skip from merging is that a draft cannot be merged and that the
+orchestrator's merge gate requires a `gates` job that ran and succeeded on the exact head that
+merges (`.github/workflows/checks.yml`). Push a branch and open a pull request; there is no
+direct path to `main`.
