@@ -55,7 +55,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     (#930) records the retirement with the searches that DONE 1.283 (#875 and #928) records. None of the files and
     pages those rows record reading maps a built-in enterprise workspace role to `plugin.plugin_preferences`, and
     the pages that Dify's Developer Resources indexes list were not read.
-  - Prose sentence length, a later answer. This later answer, given at 2026-10-26T22:52:28Z, followed the correction
+  - Prose sentence length, a later answer. This later answer, recorded at 2026-10-26T22:52:28Z, followed the correction
     of an earlier scan, which covered only 16 of the 103 guides. The question put to the maintainer gave 580 prose
     sentences over 400 characters in 80 guides on main at 3850e719, and 125 split so far. Both figures were corrected
     afterwards: the scan lists 561 prose sentences over 400 characters in 79 guides, plus nine generated claim-summary
