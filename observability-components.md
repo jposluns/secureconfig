@@ -269,18 +269,23 @@ request does not establish eventual deletion. From source reading of the compact
 Loki run (REASONED), its delete-requests manager selects the requests its store returns as unprocessed
 only after `delete_request_cancel_period` plus one minute has passed since each was created, and only
 for tenants whose mode is then `filter-and-delete`, so it never selects a `filter-only` tenant's
-request for removal. The manager marks a request whose whole interval is older than the tenant's
-longest retention period as processed without filtering, and loads at most the configured delete
-batch size at a time. The compactor passes the manager, behind its retention expiration checker, to
-the retention marker. When a mark phase starts, the manager loads that batch (in the main
-horizontal-scaling mode, only requests without a line filter), and when the phase finishes it marks
-each loaded request processed, which it does not do when the phase fails or times out; the code that
-runs those phases and the marker's code were not read. In the main horizontal-scaling mode, requests
-with a line filter instead go into a deletion manifest that the manager builds every five minutes,
-and jobs built from that manifest rewrite each listed chunk without the lines that a request's filter
-matches. The job builder marks the manifest's requests processed after passing the collected storage
-updates to the tables manager, whose code was not read, and a failed job cancels the manifest's
-processing. Marking a request processed does not establish that its chunks are gone: the retention
+request for removal. The manager tries to mark a request whose whole interval is older than the
+tenant's longest retention period as processed without filtering, and loads at most the configured
+delete batch size at a time. Each attempt to mark a request processed writes to the delete-request
+store; on a store error, the manager logs the error and returns nothing to the caller, which carries
+on. The compactor passes the manager, behind its retention expiration checker, to the retention
+marker. When a mark phase starts, the manager loads that batch (in the main horizontal-scaling mode,
+only requests without a line filter), and when the phase finishes it tries to mark each loaded
+request processed, which it does not do when the phase fails or times out; the code that runs those
+phases and the marker's code were not read. In the main horizontal-scaling mode, requests with a
+line filter instead go into a deletion manifest that the manager builds every five minutes. Given a
+job built from that manifest, the deletion job runner rewrites each chunk the job lists without the
+lines that a request's filter matches; the job queue's dispatch of those jobs and the worker's
+registration of that runner were not read. After passing the collected storage updates to the tables
+manager, whose code was not read, the job builder tries to mark the manifest's requests processed
+through a callback that returns nothing, then goes on to delete the manifest's files whatever the
+marks' outcome, and a failed job cancels the manifest's processing. Marking a request processed
+does not establish that its chunks are gone: the retention
 sweeper that deletes marked chunks was not read. The gRPC listener registers ingester push/query services in single-binary mode
 and an HTTP-over-gRPC bridge to the HTTP router. HTTP-only TLS or a proxy in front of 3100 therefore
 does not protect all paths to these services. These exposure consequences are REASONED, not live
@@ -532,8 +537,10 @@ There are two fixes, and you can use both:
   From source reading of grpc-go's control buffer and write quota, enqueuing a frame fails, with
   `ErrConnClosing`, only once the transport's `Close` has finished the control buffer, and a
   write-quota wait ends only when quota returns or the context the transport created is done. So if
-  the context ends after those checks, a send whose write-quota wait succeeds still enqueues its data
-  frame and returns no error, and the ingester code then returns none. After a failed wait, `write`
+  the context ends after those checks, a send whose write-quota wait succeeds then puts its data frame
+  on the control buffer. If that enqueue succeeds, the send returns no error and the ingester code
+  then returns none; once `Close` has finished the control buffer, the enqueue fails with
+  `ErrConnClosing`, as in the transport-close case below. After a failed wait, `write`
   returns `ErrConnClosing` if the transport's `done` channel is closed and otherwise `ContextErr` of
   the stream's current context, whose state is not established, as above. If the transport closes
   before the stream is marked done, a send that enqueues its frames before `Close` finishes the
@@ -745,7 +752,7 @@ from your own account's view of the process.
 - Loki v3.7.8 compactor expiration checker (retention first, then the delete-requests manager): https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/compactor.go#L552-L607
 - Loki v3.7.8 delete-requests manager initialization (job builder marking requests processed in the main horizontal-scaling mode): https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L121-L157
 - Loki v3.7.8 delete-requests manager deletion manifest loop: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L201-L288
-- Loki v3.7.8 delete-requests manager request selection (cancellation period plus one minute, `filter-and-delete` only, requests beyond retention, batch size): https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L332-L457
+- Loki v3.7.8 delete-requests manager request selection (cancellation period plus one minute, `filter-and-delete` only, requests beyond retention, batch size): https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L332-L457 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L667-L683
 - Loki v3.7.8 delete-requests manager expiration check, mark phases and marking requests processed: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/delete_requests_manager.go#L478-L584
 - Loki v3.7.8 deletion job builder manifest and segment processing: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/job_builder.go#L116-L239
 - Loki v3.7.8 deletion job builder jobs split at `maxChunksPerJob` chunks: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/job_builder.go#L323-L370
@@ -1000,7 +1007,7 @@ from your own account's view of the process.
 - Loki v3.7.8 vendored grpc-go control buffer `put` and `executeAndPut` (`ErrConnClosing` only once the buffer is closed): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/controlbuf.go#L347-L398
 - Loki v3.7.8 vendored grpc-go control buffer `finish` (closes the buffer): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/controlbuf.go#L451-L483
 - Loki v3.7.8 vendored grpc-go `NewServer` stats handler (`istats.NewCombinedHandler` of the configured handlers): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L712-L721
-- Loki v3.7.8 vendored dskit server stats handlers (otelgrpc's server handler always; the in-flight limiter and dskit's stats handler when configured): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L491-L523
+- Loki v3.7.8 vendored dskit server stats handlers (otelgrpc's server handler always; the in-flight limiter when `GrpcMethodLimiter` is set; dskit's stats handler when configured): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L483-L485 ; https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L491-L523
 - Loki v3.7.8 vendored otelgrpc server handler `TagRPC` (a `context.WithValue` child of the extracted, span-started context): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/stats_handler.go#L98-L158
 - Loki v3.7.8 vendored dskit in-flight limiter `TagRPC` (returns its input): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/limits.go#L151-L153
 - Loki v3.7.8 vendored dskit stats handler `TagRPC` (a `context.WithValue` child): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/middleware/grpc_stats.go#L56-L58
@@ -1162,7 +1169,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "f4cb10ab4f3273a2d5c8b3107c741a15893e70036d37537311014fddbe548ece",
+  "body_sha256": "fc8bbf8b4faef4601d19966b6aab0de8ea330e6a26c1f8022183d0f4fc7a218f",
   "components": {
     "node": {
       "name": "node_exporter",
