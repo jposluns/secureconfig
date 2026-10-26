@@ -55630,16 +55630,17 @@ There are two fixes, and you can use both:
   transport on Go's own HTTP/2 server; that transport's code was not read, and whether any Loki
   code serves gRPC through `ServeHTTP` is not established.
   From source reading of grpc-go's control buffer and write quota, enqueuing a frame fails, with
-  `ErrConnClosing`, only once the transport's `Close` has finished the control buffer, and a
-  write-quota wait ends only when quota returns or the context the transport created is done. So if
+  `ErrConnClosing`, only once the control buffer is finished, which the transport's `Close` does
+  and the transport's loopy writer also does when it exits, and a write-quota wait ends only when
+  quota returns or the context the transport created is done. So if
   the context ends after those checks, a send whose write-quota wait succeeds then puts its data frame
   on the control buffer. If that enqueue succeeds, the send returns no error and the ingester code
-  then returns none; once `Close` has finished the control buffer, the enqueue fails with
+  then returns none; once the control buffer is finished, the enqueue fails with
   `ErrConnClosing`, as in the transport-close case below. After a failed wait, `write`
   returns `ErrConnClosing` if the transport's `done` channel is closed and otherwise `ContextErr` of
   the stream's current context, whose state is not established, as above. If the transport closes
-  before the stream is marked done, a send that enqueues its frames before `Close` finishes the
-  control buffer returns no error. A later enqueue fails with `ErrConnClosing`, and so does `write`
+  before the stream is marked done, a send that enqueues its frames before the control buffer is
+  finished returns no error. A later enqueue fails with `ErrConnClosing`, and so does `write`
   after a write-quota wait that `Close` ends by cancelling the stream, since `Close` first closes the
   transport's `done` channel; the header write and `toRPCErr` turn that error into an `Unavailable`
   status, which the ingester code returns. The ingester querier's
@@ -56101,6 +56102,7 @@ from your own account's view of the process.
 - Loki v3.7.8 vendored grpc-go server stream write quota, initialized with the done channel of the context the transport created: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L623-L624
 - Loki v3.7.8 vendored grpc-go control buffer `put` and `executeAndPut` (`ErrConnClosing` only once the buffer is closed): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/controlbuf.go#L347-L398
 - Loki v3.7.8 vendored grpc-go control buffer `finish` (closes the buffer): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/controlbuf.go#L451-L483
+- Loki v3.7.8 vendored grpc-go loopy writer `run`, which finishes the control buffer when it exits, and the server transport goroutine that runs it: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/controlbuf.go#L584-L593 ; https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L348-L350
 - Loki v3.7.8 vendored grpc-go `NewServer` stats handler (`istats.NewCombinedHandler` of the configured handlers): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L712-L721
 - Loki v3.7.8 vendored dskit server stats handlers (otelgrpc's server handler always; the in-flight limiter when `GrpcMethodLimiter` is set; dskit's stats handler when configured): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L483-L485 ; https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L491-L523
 - Loki v3.7.8 vendored otelgrpc server handler `TagRPC` (a `context.WithValue` child of the extracted, span-started context): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/stats_handler.go#L98-L158
@@ -56264,7 +56266,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "a819a749e9d7f5f82484717f7b79648f55eddd7ab2d81d83822ba570fc97ca69",
+  "body_sha256": "3b716f8fcec2250abe2406e937597900d02ae3b158b92155e315b90624f20b5b",
   "components": {
     "node": {
       "name": "node_exporter",
