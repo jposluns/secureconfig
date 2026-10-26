@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-26
+
+- `TODO.md` and `DECISIONS.md` record and apply the maintainer ruling of 2026-10-25T23:51:55Z on TODO 1.300 (`n8n.md`): the observation items, including the configuration of a reference deployment built from the 2.40.6 images with the shipped `n8n-task-runners.json`, move to the new live-checks row 1.384. 1.300 keeps its other items, with Code `process.env` isolation bounded to the channels traced at n8n 2.40.6, other nodes to a stated `git grep` at `024ee46b`, and other launcher versions to every tag through the newest on the fetch date (#908)
+
 ## 2026-10-25
 
 - `observability-components.md`: as source reading of Loki v3.7.8, the ingester's empty-batch send on a stream grpc-go has already marked done fails with a gRPC status error, never the exact value `context.Canceled`, when `SendMsg`'s message preparation succeeds and the send reaches `Write`, unless an unread stream interceptor changes the result. The generated `Send` methods, dskit's stream interceptors including the optional in-flight limiter's, `ServerStream.Write`, the HTTP/2 transport `write`, which returns `ErrConnClosing` for a done stream only once the transport's `done` channel is closed, `ContextErr` and `toRPCErr` are now cited, with twenty-nine new Sources items and a revised `loki-ingester-empty-send` claim. A context that ends after the transport's state checks, a transport that closes before the stream is marked done, the context's state after a failed write-quota wait, the control-buffer code and any stream interceptor that dskit's `GRPCOptions` or grpc-go global server options add stay open under TODO 1.301 (#897)
