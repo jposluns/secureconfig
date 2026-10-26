@@ -66,8 +66,6 @@ mfa.md	unattended-mtls	572
 mfa.md	verify-offboarding	749
 mfa.md	verify-recovery-history	702
 mfa.md	webauthn-recovery	811
-mlflow.md	mfa	1117
-mlflow.md	proxy-token	1226
 nginx.md	mfa	469
 oidc-integration.md	client-secret-storage	430
 oidc-integration.md	github-org-mfa	426
