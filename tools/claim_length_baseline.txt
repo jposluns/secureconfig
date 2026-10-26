@@ -53,10 +53,8 @@ low-code-builders.md	budibase-sample-check	442
 low-code-builders.md	nocodb-packaging	474
 low-code-builders.md	verify-litellm	535
 mfa.md	admin-factors	593
-mfa.md	identity-layer-factors	609
 mfa.md	push-matching	942
 mfa.md	ssh-nullok	456
-mfa.md	totp-libraries	413
 mfa.md	unattended-mtls	572
 mfa.md	verify-offboarding	749
 mfa.md	verify-recovery-history	702
