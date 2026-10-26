@@ -14,9 +14,6 @@ authentication.md	verify-transports	499
 cloud-firewalls.md	azure-admin	700
 cloud-firewalls.md	bastion	537
 cloud-firewalls.md	gcp-policies	727
-cloudflare.md	verify-aop	659
-cloudflare.md	verify-http	743
-cloudflare.md	verify-origin	919
 container-hardening.md	docker-socket	653
 container-hardening.md	verify-rootfs	413
 deployment-lifecycle.md	certificate-monitor	579
