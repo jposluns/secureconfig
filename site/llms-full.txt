@@ -55475,11 +55475,19 @@ There are two fixes, and you can use both:
   `toRPCErr` turns `ErrConnClosing`, a connection error, into an `Unavailable` status and returns
   status errors unchanged. In this guide's reading of `http2_server.go`, every path that marks a
   stream done cancels its context first, since only `finishStream` and `closeStream` mark it and
-  each cancels the context before doing so. So, in this guide's reading, unless an unread
+  each cancels the context before doing so. Those paths cancel the context the transport creates
+  for the stream, but `streamContextErr` reads the stream's current context, which grpc-go's
+  `handleStream` replaces through `SetContext` with a context built from the original and passed
+  through any configured stats handler's `TagRPC`, code this reading does not cover. Which status
+  code the send then fails with is therefore not established, though the failure is a gRPC status
+  error either way. So, in this guide's reading, unless an unread
   interceptor intervenes, an empty-batch send that passes `SendMsg`'s message preparation and
   reaches `Write` on a stream already marked done fails with a gRPC status error, never the exact
   value `context.Canceled`, and the ingester code returns that error. That reading does not cover
-  an error from `prepareMsg`, which `SendMsg` returns as is before it calls `Write`.
+  an error from `prepareMsg`, which `SendMsg` returns as is before it calls `Write`. That reading
+  also assumes grpc-go's HTTP/2 server transport. In grpc-go, `ServeHTTP` builds a different
+  transport on Go's own HTTP/2 server; that transport's code was not read, and whether any Loki
+  code serves gRPC through `ServeHTTP` is not established.
   What the send returns when the context ends after those checks, or when the transport closes
   before the stream is marked done, depends on the control-buffer code, which was not read, and,
   after a failed write-quota wait, on the state of the context that `ContextErr` reads, which is not
@@ -55915,8 +55923,12 @@ from your own account's view of the process.
 - Loki v3.7.8 vendored grpc-go server transport `write` (state checks, no context check): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L1157-L1188
 - Loki v3.7.8 vendored grpc-go `ServerStream.Write` (returns its transport's `write`): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/server_stream.go#L69-L72
 - Loki v3.7.8 vendored grpc-go server stream construction (the HTTP/2 server transport set as its transport): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L402-L407
+- Loki v3.7.8 vendored grpc-go server stream context and cancel function, created with the stream: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L535-L539
 - Loki v3.7.8 vendored grpc-go server transport `Close` (streams cancelled, not marked done): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L1290-L1313
 - Loki v3.7.8 vendored grpc-go `finishStream` and `closeStream` (context cancelled, then stream marked done): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L1337-L1379
+- Loki v3.7.8 vendored grpc-go `handleStream` (stream context passed through any stats handler's `TagRPC`, then set with `SetContext`): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1800-L1853
+- Loki v3.7.8 vendored grpc-go `ServerStream.SetContext` (replaces the stream's context): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/server_stream.go#L121-L125
+- Loki v3.7.8 vendored grpc-go `ServeHTTP` (a separate transport on Go's own HTTP/2 server): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1114-L1124
 - Loki v3.7.8 vendored grpc-go `ErrConnClosing`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/transport.go#L818-L820
 - Loki v3.7.8 vendored grpc-go `ContextErr`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/transport.go#L863-L872
 - Loki v3.7.8 vendored grpc-go `toRPCErr`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/rpc_util.go#L1129-L1157
@@ -56073,7 +56085,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "b065780b9983e8781c3adebc5594fc17877dc6dba87a215f8cdf4f30fe6bee33",
+  "body_sha256": "c9881613e6320f5a700cf3616fd77dbfdf94b6b29f533964dfe6ef75e4e0f244",
   "components": {
     "node": {
       "name": "node_exporter",
