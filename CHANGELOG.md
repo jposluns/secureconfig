@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-26
+
+- `n8n.md`: the environment section now cites, from source reading at n8n 2.40.6, the JS data proxy's keys, the JS RPC methods and their dispatch, `freezeGlobals`, how a task's `additionalProperties` bind, how the Python runner reads and applies `N8N_RUNNERS_ALLOW_TRANSITIVE_IMPORTS`, and that `N8N_RUNNERS_INSECURE_MODE` sets both `insecureMode` settings with default `false`. TODO 1.300 keeps open what the p219a pack did not hold (#909)
+
 ## 2026-10-25
 
 - `.github/workflows/checks.yml` and `DECISIONS.md` carry the maintainer ruling of 2026-10-25T19:53:35Z that GitHub CI runs once per change. Pull requests now trigger the workflow on `opened`, `synchronize`, `reopened`, `ready_for_review` and `converted_to_draft`, the `gates` job is skipped on a draft pull request and still runs on every push to `main`, and a workflow-level concurrency group cancels a pull request's older in-progress or queued run when a newer one starts, never a push run on `main`. Converting a ready pull request back to a draft therefore starts a skipped run that cancels the ready run if it is still queued or in progress. A skipped draft job is not a pass for merging: drafts cannot be merged, and the merge gate still requires a `gates` job that ran and succeeded on the exact head that merges (#906)
