@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-26
+
+- `observability-components.md` (TODO 1.301, partial; carried QA notes from #897): the Loki empty-batch passage, TODO 1.301 and DONE 1.301 now say that the named Loki stream interceptors are only those that `loki.go` and `modules.go` show, and DONE 1.301 cites the interceptor conditions at `loki.go` lines 873 to 895 and 914 to 917. TODO 1.301 keeps open whether other code appends to dskit's `GRPCStreamMiddleware`, says that grpc-go's `controlbuf.go` is held in the p206a pack but not read, and narrows the "now cited" wording that #897's entry here shares to dskit's logging, instrumentation and optional in-flight limiter stream interceptors (#907)
+
 ## 2026-10-25
 
 - `.github/workflows/checks.yml` and `DECISIONS.md` carry the maintainer ruling of 2026-10-25T19:53:35Z that GitHub CI runs once per change. Pull requests now trigger the workflow on `opened`, `synchronize`, `reopened`, `ready_for_review` and `converted_to_draft`, the `gates` job is skipped on a draft pull request and still runs on every push to `main`, and a workflow-level concurrency group cancels a pull request's older in-progress or queued run when a newer one starts, never a push run on `main`. Converting a ready pull request back to a draft therefore starts a skipped run that cancels the ready run if it is still queued or in progress. A skipped draft job is not a pass for merging: drafts cannot be merged, and the merge gate still requires a `gates` job that ran and succeeded on the exact head that merges (#906)
