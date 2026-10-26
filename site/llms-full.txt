@@ -55554,9 +55554,12 @@ There are two fixes, and you can use both:
   the comparison assumes the querier and distributor read one reference clock and the tenant's
   grace period is unchanged, since an entry keeping its submitted timestamp must pass
   validation while now plus that grace period still reaches the start. For a larger magnitude,
-  a direct ingester gRPC push is one route this reading establishes; the Kafka
-  partition-ingester consumer pushes each consumed record into the same push code, a path
-  otherwise untraced here, and the distributor's duplicate-timestamp shifts are not ruled out.
+  a direct ingester gRPC push is one route this reading establishes. The Kafka partition-ingester
+  consumer decodes each record of its partition and calls the ingester's own `Push` directly, not
+  through gRPC, with the record key as tenant. The distributor writes its Kafka records only after
+  the same validation and duplicate-timestamp handling as its ingester writes, so in this guide's
+  assessment the distributor's records add no route of their own; records that other Kafka
+  producers write are not traced, and the distributor's duplicate-timestamp shifts are not ruled out.
   No Loki run has observed an ingester holding or returning such an entry. By that reading too,
   backward log queries do not time-filter the head block, and the
   unordered head block queries its vendored go-datastructures v1.1.7 range tree from the interval's
@@ -55590,13 +55593,13 @@ There are two fixes, and you can use both:
   query-limits interceptor can also end the call before the handler runs when its metadata does
   not parse. The recovery interceptor is built by the vendored go-grpc-middleware recovery package,
   whose code was not read, so whether it wraps `SendMsg` or changes its result is not established.
-  The Loki interceptors named here are only those that `loki.go` and
-  `modules.go` show, and whether other code appends stream interceptors to dskit's
-  `GRPCStreamMiddleware` is not established either. Nor is whether Loki code sets dskit's
-  `GRPCOptions`, a field with no
-  YAML key whose server options dskit appends to its own, or whether any dependency registers
-  grpc-go global server options, which `NewServer` applies first; either can add a stream
-  interceptor. The transport stream's `Write`, which `SendMsg` calls, only returns the
+  A search of every Go file in the v3.7.8 tree, `vendor/` included, finds no appender to dskit's
+  `GRPCStreamMiddleware` beyond `loki.go`, `modules.go` and `fakeauth.SetupAuthMiddleware`, so the
+  stream interceptors named here are all that Loki code adds. The same search finds nothing that
+  sets dskit's `GRPCOptions`, a field with no YAML key whose server options dskit appends to its
+  own, and no call of grpc-go's `AddGlobalServerOptions` hook, whose options `NewServer` applies
+  first, so neither adds a stream interceptor or stats handler at v3.7.8. The transport stream's
+  `Write`, which `SendMsg` calls, only returns the
   result of its transport's `write`, and grpc-go's HTTP/2 server transport sets itself as that
   transport for each stream it creates. In that transport, `write`, and the header write it makes
   first, check the stream's state, not its context: for a stream already marked done, they return
@@ -55618,8 +55621,8 @@ There are two fixes, and you can use both:
   handler when stats tracking is enabled. From source reading, the limiter's `TagRPC` returns its input,
   dskit's stats handler's returns a `context.WithValue` child of its input, and otelgrpc's returns a
   `context.WithValue` child of the context that its propagator extraction and tracer start return,
-  code this reading does not cover. Nor does this reading cover how grpc-go combines the handlers, or
-  any handler added through `GRPCOptions` or global server options. Which status
+  code this reading does not cover. Nor does this reading cover how grpc-go combines the handlers,
+  and the search above finds no handler added through `GRPCOptions` or global server options. Which status
   code the send then fails with is therefore not established, though the failure is a gRPC status
   error either way. So, in this guide's reading, unless an unread
   interceptor intervenes, an empty-batch send that passes `SendMsg`'s message preparation and
@@ -55627,8 +55630,12 @@ There are two fixes, and you can use both:
   value `context.Canceled`, and the ingester code returns that error. That reading does not cover
   an error from `prepareMsg`, which `SendMsg` returns as is before it calls `Write`. That reading
   also assumes grpc-go's HTTP/2 server transport. In grpc-go, `ServeHTTP` builds a different
-  transport on Go's own HTTP/2 server; that transport's code was not read, and whether any Loki
-  code serves gRPC through `ServeHTTP` is not established.
+  transport on Go's own HTTP/2 server, whose code was not read. A search of the v3.7.8 tree's
+  non-test Go files finds no call of a gRPC server's `ServeHTTP`, and outside the vendored Bigtable
+  emulator and grpc-go's xDS wrapper the only non-test `grpc.NewServer` call is dskit's, which
+  builds Loki's main and internal gRPC servers. In dskit, the HTTP server's handler wraps only the
+  HTTP router, and `Run` serves the gRPC server with `Serve` on its gRPC listener, so the
+  empty-batch reading's transport assumption holds for Loki's servers.
   From source reading of grpc-go's control buffer and write quota, enqueuing a frame fails, with
   `ErrConnClosing`, only once the control buffer is finished, which the transport's `Close` does
   and the transport's loopy writer also does when it exits, and a write-quota wait ends only when
@@ -55651,8 +55658,11 @@ There are two fixes, and you can use both:
   `pkg`, `cmd`, `integration`, `tools` and `clients` trees at v3.7.8 finds only that field's
   declaration, its one-method `Wrap` interface and the ingester module's nil check and `Wrap` call,
   besides a code comment and two Bootstrap stylesheet source maps; nothing in those trees sets it.
-  So what the ingester querier and ingesters return for the interval is still not established and
-  has not been observed, and what a wrapper set outside those trees does is not traced.
+  The same search over the rest of the v3.7.8 repository outside `vendor/` adds only a comment in a
+  documentation script, and no vendored package imports Loki's `ingester` or `loki` package;
+  nothing in the repository sets it. So what the ingester querier and ingesters return for the
+  interval is still not established and has not been observed, and what a wrapper set by a program
+  that imports Loki does is not traced.
   `Run` initializes the target modules through the module manager and starts the resulting
   services together. The internal server module exists only when `internal-server.enable` is
   true (default false); it is then inserted before `Server` in each module dependency list that
@@ -55689,13 +55699,44 @@ There are two fixes, and you can use both:
   frontend version is built. Others depend on settings: the pattern ingester, ingest limits,
   ingest-limits frontend, bloom gateway and bloom planner services when enabled, the ruler's with
   its API enabled, and the compactor's delete-requests service with the deletion routes above and
-  its job queue in the main horizontal-scaling mode; `Run` adds the gRPC health service. Of their
-  callers, this guide cites the distributor's `Push` and the ingester querier's `Querier` calls to
-  ingesters and the querier worker's frontend and scheduler calls above; callers of the other
-  services, and any further callers of these, are not traced. This guide's assessment is that these
-  cited paths do not establish whether each module starts successfully, the Kafka consumer,
-  Kafka-only and partition-ingester paths, those untraced callers, or live reachability. Remote
-  components need a private address reachable from their hosts.
+  its job queue in the main horizontal-scaling mode; `Run` adds the gRPC health service. From a
+  search of the v3.7.8 tree's non-test Go files for each registered service's generated client
+  constructor, without a Loki run, every in-tree caller of those services uses the clients below,
+  and no other non-test code names a service method directly. The ingester's `Pusher`, `Querier`
+  and `StreamData` clients are built only for the distributor's and the ingester querier's client
+  pools, and besides the `Push` and `Querier` calls above, the distributor's rate store calls
+  `GetStreamRates` on ingesters. The pattern ring client carries the pattern tee's `Push` and the
+  pattern querier's `Query` to the pattern ingesters in its ring. The ingest-limits frontend calls
+  `ExceedsLimits`, `UpdateRates` and `GetAssignedPartitions` on the ingest-limits instances in
+  their ring, and the distributor calls the frontend's `ExceedsLimits` and `UpdateRates` on healthy
+  instances of the frontend's ring. A query frontend opens `FrontendLoop` to each scheduler that
+  the scheduler ring or DNS reports, and, besides the querier worker's calls above, a scheduler
+  reports a failed request's error by `QueryResult` to the frontend address that the request
+  carries. A ruler calls `Rules` on each ruler in its ring's replication set. The compactor's gRPC
+  client, dialled at the gRPC address that `compactorAddress` returns or, in the compactor's worker
+  mode, at `compactor_grpc_address`, calls `GetDeleteRequests` and `GetCacheGenNumbers` and, in
+  worker mode, opens the job queue's `Loop`. The index gateway client calls the index gateway on
+  ring or DNS-resolved addresses, the bloom gateway client calls `FilterChunkRefs` and
+  `PrefetchBloomBlocks` on DNS-resolved addresses, and the bloom builder opens `BuilderLoop` and
+  sends `NotifyBuilderShutdown` to the planner's ring-leader or configured address. Outside `pkg`,
+  only the stream generator tool in `tools` builds such clients: a `Pusher` client for its
+  configured distributor address and an ingest-limits-frontend client pool on that frontend's
+  ring. These call sites do not show that any call succeeds. From the same source reading, with
+  Kafka writes on and ingester writes off, the distributor sends each validated stream only to
+  Kafka, to an active partition of the tenant's partition-ring shuffle shard, and skips its
+  ingester write; the distributor module fails to initialize unless the ingester's Kafka ingestion
+  is also enabled in the same configuration. An ingester with Kafka ingestion enabled takes its
+  partition ID from its instance ID, builds a partition-ring lifecycler and, before its ingester
+  ring lifecycler starts, starts a partition reader for that partition of the configured topic,
+  from the offset after the last committed one or, when none is committed, from the reader's start
+  offset. The reader hands each polled batch to the Kafka consumer, which pushes each record as
+  above, retries a push only while it fails with the ingester's read-only error, and queues for
+  commit the highest offset before the first record it did not push. With
+  `query_partition_ingesters` set, the ingester querier shuffle-shards the partition ring for the
+  tenant over the ingester lookback and queries each partition's replication set until its quorum
+  is met, with minimized requests. This guide's assessment is that these cited paths do not
+  establish whether each module starts successfully or live reachability. Remote components need a
+  private address reachable from their hosts.
 
   Keep gRPC restricted to trusted callers: plaintext loopback is still reachable by local users.
   Enabling `grpc_tls_config` also requires compatible TLS settings on every internal gRPC client,
@@ -55960,6 +56001,31 @@ from your own account's view of the process.
 - Loki v3.7.8 bloom planner gRPC service when bloom building is enabled: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2064-L2096
 - Loki v3.7.8 query scheduler gRPC services: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2144-L2151
 - Loki v3.7.8 ingester querier's other `Querier` calls: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L266-L492
+- Loki v3.7.8 ingester client construction (`Pusher`, `Querier` and `StreamData` clients): https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ingester/client/client.go#L66-L92
+- Loki v3.7.8 distributor rate store `GetStreamRates` calls to ingesters: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/distributor/ratestore.go#L288-L309
+- Loki v3.7.8 pattern ring client pool: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/pattern/ring_client.go#L45-L55
+- Loki v3.7.8 pattern tee `Push` calls to pattern ingesters: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/pattern/tee_service.go#L306-L317 ; https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/pattern/tee_service.go#L399
+- Loki v3.7.8 pattern querier `Query` calls: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/pattern/ingester_querier.go#L52-L59
+- Loki v3.7.8 ingest-limits frontend client pool on the ingest-limits ring: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/frontend/frontend.go#L68-L85
+- Loki v3.7.8 ingest-limits frontend `ExceedsLimits` and `UpdateRates` calls: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/frontend/ring.go#L144 ; https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/frontend/ring.go#L194
+- Loki v3.7.8 ingest-limits frontend `GetAssignedPartitions` call: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/frontend/ring.go#L388
+- Loki v3.7.8 distributor ingest-limits-frontend client pool and ring client: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/distributor/distributor.go#L267-L278
+- Loki v3.7.8 distributor `ExceedsLimits` and `UpdateRates` calls on healthy frontends: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/distributor/ingest_limits.go#L39-L64
+- Loki v3.7.8 query frontend scheduler watchers (scheduler ring or DNS): https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/lokifrontend/frontend/v2/frontend_scheduler_worker.go#L49-L64
+- Loki v3.7.8 query frontend scheduler worker `FrontendLoop`: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/lokifrontend/frontend/v2/frontend_scheduler_worker.go#L208-L235
+- Loki v3.7.8 scheduler error forwarded by `QueryResult` to the request's frontend address: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/scheduler/scheduler.go#L553-L589
+- Loki v3.7.8 ruler `Rules` calls to the rulers in its ring's replication set: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ruler/base/ruler.go#L968-L1001
+- Loki v3.7.8 ruler client construction: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ruler/base/client_pool.go#L82-L100
+- Loki v3.7.8 compactor gRPC client (`GetDeleteRequests`, `GetCacheGenNumbers` and the job queue client): https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/compactor/client/grpc.go#L42-L146
+- Loki v3.7.8 cache-generation loader compactor client: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/loki/modules.go#L1212-L1231
+- Loki v3.7.8 compactor worker mode client at `compactor_grpc_address`: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/loki/modules.go#L1821-L1864
+- Loki v3.7.8 compactor job queue worker `Loop`: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/compactor/jobqueue/worker.go#L143-L148
+- Loki v3.7.8 index gateway client pool (ring mode, or DNS of the configured address) and its client construction: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/indexgateway/client.go#L166-L223 ; https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/indexgateway/client_pool.go#L25-L36
+- Loki v3.7.8 bloom gateway client (DNS-discovered addresses; `PrefetchBloomBlocks` and `FilterChunkRefs`): https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/bloomgateway/client.go#L124-L260
+- Loki v3.7.8 bloom builder planner address, client and `BuilderLoop`: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/bloombuild/builder/builder.go#L211-L244
+- Loki v3.7.8 bloom builder `NotifyBuilderShutdown` call: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/bloombuild/builder/builder.go#L132
+- Loki v3.7.8 stream generator distributor `Pusher` client: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/tools/stream-generator/distributor/client/client.go#L63-L98
+- Loki v3.7.8 stream generator ingest-limits-frontend client pool: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/tools/stream-generator/generator/service.go#L104-L114
 - Loki v3.7.8 push HTTP handlers: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L28-L38
 - Loki v3.7.8 push handler dispatch: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L151
 - Loki v3.7.8 distributor gRPC Push: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L552-L558
@@ -55983,6 +56049,15 @@ from your own account's view of the process.
 - Loki v3.7.8 ingester Kafka consumer factory (the ingester as pusher): https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L395
 - Loki v3.7.8 Kafka consumer storing the pusher it pushes into: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/kafka_consumer.go#L53-L71
 - Loki v3.7.8 Kafka consumer record push into the ingester: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/kafka_consumer.go#L150-L159
+- Loki v3.7.8 distributor write count and ingester write skipped with ingester writes off: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/distributor/distributor.go#L839-L869
+- Loki v3.7.8 distributor module requiring the ingester's Kafka ingestion when Kafka writes are on: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/loki/modules.go#L354-L359
+- Loki v3.7.8 ingester partition ID, partition-ring lifecycler and partition reader: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ingester/ingester.go#L371-L405
+- Loki v3.7.8 ingester partition reader started before the ingester ring lifecycler: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ingester/ingester.go#L633-L647
+- Loki v3.7.8 partition reader start offset, running phase and fetch loop: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/kafka/partition/reader_service.go#L150-L209 ; https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/kafka/partition/reader_service.go#L349-L371
+- Loki v3.7.8 Kafka reader for its partition of the configured topic: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/kafka/partition/reader.go#L122-L151
+- Loki v3.7.8 Kafka reader records (tenant from the record key): https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/kafka/partition/reader.go#L216-L251
+- Loki v3.7.8 Kafka consumer record decode, push retries on `ErrReadOnly` and offset commit: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ingester/kafka_consumer.go#L139-L232
+- Loki v3.7.8 ingester querier partition replication sets queried with minimized requests: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/querier/ingester_querier.go#L195-L205
 - Loki v3.7.8 ingester instance push to streams: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L231-L261
 - Loki v3.7.8 stream creation chunk format from the entries' minimum timestamp: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L316
 - Loki v3.7.8 chunk format selection from the schema configuration: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L423-L440
@@ -56093,6 +56168,11 @@ from your own account's view of the process.
 - Loki v3.7.8 vendored grpc-go `handleStream` (stream context passed through any stats handler's `TagRPC`, then set with `SetContext`): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1800-L1853
 - Loki v3.7.8 vendored grpc-go `ServerStream.SetContext` (replaces the stream's context): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/server_stream.go#L121-L125
 - Loki v3.7.8 vendored grpc-go `ServeHTTP` (a separate transport on Go's own HTTP/2 server): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1114-L1124
+- Loki v3.7.8 main and internal servers built by dskit's server constructors: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/loki/modules.go#L188 ; https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/loki/modules.go#L248
+- Loki v3.7.8 vendored dskit `New` and `NewWithMetrics` (both call `newServer`): https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/vendor/github.com/grafana/dskit/server/server.go#L284-L295
+- Loki v3.7.8 vendored dskit `grpc.NewServer` call and HTTP server whose handler wraps only the HTTP router: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/vendor/github.com/grafana/dskit/server/server.go#L534-L547
+- Loki v3.7.8 vendored dskit `Run` (HTTP-over-gRPC registration, then `Serve` on the gRPC listener): https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/vendor/github.com/grafana/dskit/server/server.go#L678-L683
+- Loki v3.7.8 main HTTP server handler rewrapped, with cleartext HTTP/2 enabled on that server: https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/loki/modules.go#L209-L222 ; https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/util/server/unencrypted_http2.go#L6-L14
 - Loki v3.7.8 vendored grpc-go `ErrConnClosing`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/transport.go#L818-L820
 - Loki v3.7.8 vendored grpc-go `ContextErr`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/transport.go#L863-L872
 - Loki v3.7.8 vendored grpc-go `toRPCErr`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/rpc_util.go#L1129-L1157
@@ -56241,17 +56321,17 @@ Claims (full source mapping in the JSON block below):
 - loki-ingester-inverted-time-filter (REASONED; loki): From source reading, Loki v3.7.8's chunk time-range filters, used for block entries in both directions, the head block in forward log queries and all sample queries, skip entries before the start but accept one timestamped exactly at it before testing the end; in this guide's assessment, they pass only such entries for an inverted interval.
 - loki-push-future-bound (REASONED; loki): From source reading, Loki v3.7.8's distributor validates each pushed entry against a context built from time.Now(): a timestamp strictly newer than now plus the tenant's creation_grace_period (default 10m) is rejected as too far in the future, so one exactly at that bound passes. reject_old_samples (default true) rejects entries older than now minus reject_old_samples_max_age (default 7d).
 - loki-ingester-push-validation (REASONED; loki): From source reading, Loki v3.7.8's ingester gRPC push chain compares timestamps with stream state and schema configuration, never the clock, with no future timestamp bound. Unordered writes (default true) drop entries below the stream's highest timestamp minus half max_chunk_age (default 2h); ordered appends reject those older than the head block's newest or, head empty, the last block's maximum.
-- loki-ingester-inverted-hold (REASONED; loki): From the cited source reading without a Loki run, in this guide's assessment an ingester can hold an entry dated exactly at the inverted interval's future start when the negative lookback's magnitude is at most creation_grace_period, on one clock, grace period unchanged. For a larger magnitude a direct ingester gRPC push can; Kafka consumer pushes and duplicate-timestamp shifts are not ruled out.
+- loki-ingester-inverted-hold (REASONED; loki): Without a Loki run, in this guide's assessment of the cited source, an ingester can hold an entry dated exactly at the inverted interval's future start when the negative lookback's magnitude is at most creation_grace_period, on one clock, grace unchanged. For a larger magnitude a direct ingester gRPC push can, distributor Kafka records cannot; other Kafka producers and duplicate shifts are open.
 - loki-ingester-inverted-unordered (REASONED; loki): From source reading, Loki v3.7.8's backward log queries do not time-filter a chunk's head block, and the unordered head block queries its vendored go-datastructures v1.1.7 range tree from an interval's start to one nanosecond before its end, both inclusive. For an inverted interval that query returns no entry, so the head block yields nothing.
 - loki-ingester-empty-send (REASONED; loki): From source reading, Loki v3.7.8's ingester Query or QuerySample sends one empty batch with statistics and warnings for an empty, error-free iterator if the context is not done, failing only on a Send error besides context.Canceled, like grpc-go's status error from Write on a done stream, barring unread interceptors. The ingester querier's iterator records those, yields nothing and ends cleanly.
 - loki-querier-inverted-merge (REASONED; loki): From source reading, a Loki v3.7.8 querier merges the ingester querier's per-ingester iterators for a log or sample selection with the iterator of any store query it makes for that selection, which it skips when query_ingester_only is set or it builds no store interval; a log selection with only one iterator gets that iterator unmerged.
-- loki-ingester-wrapper-search (REASONED; loki): From source reading, a word search for Wrapper in Loki v3.7.8's pkg, cmd, integration, tools and clients trees finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides a code comment and stylesheet source maps; nothing there sets it, and initIngester registers Wrap's result only when it is set.
+- loki-ingester-wrapper-search (REASONED; loki): From source reading, a word search for Wrapper in Loki v3.7.8 outside vendor finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides comments and source maps, and no vendored package imports Loki's ingester or loki package; nothing in the repository sets it.
 - loki-querier-ingester-inverted-result (REASONED; loki): Source reading of Loki's querier, ingester querier and ingester query code, with no Loki run, does not establish what they return for the inverted ingester interval a negative store lookback besides -1 yields: in this guide's assessment ingesters can hold entries dated exactly at its start when the lookback's magnitude is within the grace period, on one clock, grace unchanged; no run observed it.
 - loki-internal-server (REASONED; loki, dskit): From source reading, Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101.
 - loki-internal-server-grpc (REASONED; loki, dskit, go): From source reading and Go's net.Listen docs, the internal server's flags and config_wrapper.go set no gRPC network, address or port, and initInternalServer passes that configuration to dskit's server.New, so unless YAML sets them, dskit opens an any-address tcp listener on an OS-chosen port carrying the HTTP bridge; not observed.
 - loki-internal-routes (REASONED; loki): When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.
 - loki-target-modules (REASONED; loki, dskit): From source reading of setupModuleManager, write depends on the ingester, distributor and pattern ingester, read on the query frontend and querier, backend on the query scheduler, ruler, compactor, index gateway and bloom modules, and all on read's and write's modules plus the scheduler, ruler, compactor and UI. dskit runs each init once, dependencies first, stopping at the first error.
-- loki-grpc-services (REASONED; loki): From source reading, Loki's init functions register gRPC services only on the main server, some only when enabled: distributor and ingester Pusher, ingester Querier and StreamData, pattern, ingest limits, frontend, scheduler, ruler, compactor, job queue, bloom gateway, index gateway and bloom planner. This guide traces only the distributor's, ingester querier's and worker's calls.
+- loki-grpc-services (REASONED; loki): From source reading, Loki's init functions register gRPC services only on the main server, some only when enabled: distributor and ingester Pusher, ingester Querier and StreamData, pattern, ingest limits, frontend, scheduler, ruler, compactor, job queue, bloom gateway, index gateway and bloom planner. A non-test search finds their callers only in Loki's own clients and a stream generator tool.
 - loki-grpc-tls (REASONED; dskit, loki): Inferred from dskit's server TLS source, gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and, per Loki's authentication documentation, mTLS does not supply tenant headers.
 - loki-proxy (REASONED; loki): An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.
 - verify-inventory (REASONED; node, alert, push, jaeger, dskit): Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.
@@ -56266,7 +56346,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "3b716f8fcec2250abe2406e937597900d02ae3b158b92155e315b90624f20b5b",
+  "body_sha256": "bb07b1d063035977434bbaadde59ea00eb3a3b4e2a27e88769a2d31829a2cdc3",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -56535,7 +56615,25 @@ Claims (full source mapping in the JSON block below):
         "s334ac63c0892": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L704-L711",
         "s68c48fdded52": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L504-L523",
         "sbf9e7851df52": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L124",
-        "s326c544e4f05": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L529-L534"
+        "s326c544e4f05": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L529-L534",
+        "sc2705694b8c1": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ingester/client/client.go#L66-L92",
+        "s34e985ffc25f": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/distributor/ratestore.go#L288-L309",
+        "scdd1efa4b625": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/pattern/ring_client.go#L45-L55",
+        "s9637e24d4a76": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/pattern/tee_service.go#L306-L317",
+        "sfbbe8d6f0c8b": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/pattern/ingester_querier.go#L52-L59",
+        "sb7905b55bf8a": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/frontend/frontend.go#L68-L85",
+        "sde152f1440c8": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/distributor/distributor.go#L267-L278",
+        "s158db2e4f90c": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/lokifrontend/frontend/v2/frontend_scheduler_worker.go#L49-L64",
+        "s5391a2d500b5": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/scheduler/scheduler.go#L553-L589",
+        "s2c42813fbbc1": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ruler/base/ruler.go#L968-L1001",
+        "s19b349e08fd1": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/compactor/client/grpc.go#L42-L146",
+        "s8c054d8b740d": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/indexgateway/client.go#L166-L223",
+        "sfca9a77e69b1": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/bloomgateway/client.go#L124-L260",
+        "s9de56a5b8b27": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/bloombuild/builder/builder.go#L211-L244",
+        "s61779f8269a0": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/tools/stream-generator/distributor/client/client.go#L63-L98",
+        "s1086bb06662d": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/distributor/distributor.go#L839-L869",
+        "s861664803499": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/kafka/partition/reader.go#L216-L251",
+        "sf9ef7591755e": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/ingester/kafka_consumer.go#L139-L232"
       }
     },
     "jaeger-docs": {
@@ -56725,17 +56823,17 @@ Claims (full source mapping in the JSON block below):
     "loki-ingester-inverted-time-filter": {"text": "From source reading, Loki v3.7.8's chunk time-range filters, used for block entries in both directions, the head block in forward log queries and all sample queries, skip entries before the start but accept one timestamped exactly at it before testing the end; in this guide's assessment, they pass only such entries for an inverted interval.", "components": ["loki"], "sources": ["loki:sd5181aa115e4", "loki:scc80bfb6f547", "loki:s0dbdc425ddbb", "loki:s05d6bac1c352"], "status": "REASONED"},
     "loki-push-future-bound": {"text": "From source reading, Loki v3.7.8's distributor validates each pushed entry against a context built from time.Now(): a timestamp strictly newer than now plus the tenant's creation_grace_period (default 10m) is rejected as too far in the future, so one exactly at that bound passes. reject_old_samples (default true) rejects entries older than now minus reject_old_samples_max_age (default 7d).", "components": ["loki"], "sources": ["loki:sa66ae191eb87", "loki:s883c99aaf259", "loki:s03a9eb3c1800", "loki:s7be82cdc7279", "loki:sc1c59c06ac21", "loki:s9acb77638396", "loki:s7e5e17b46be6"], "status": "REASONED"},
     "loki-ingester-push-validation": {"text": "From source reading, Loki v3.7.8's ingester gRPC push chain compares timestamps with stream state and schema configuration, never the clock, with no future timestamp bound. Unordered writes (default true) drop entries below the stream's highest timestamp minus half max_chunk_age (default 2h); ordered appends reject those older than the head block's newest or, head empty, the last block's maximum.", "components": ["loki"], "sources": ["loki:sa5963eda217e", "loki:s02173d6919e0", "loki:s6d778dd956ad", "loki:s3683552f47e7", "loki:s48eb47bcb74e", "loki:s1d09c7438f6c", "loki:s631c8b46da80", "loki:s6259f9f6561b", "loki:sef39e72a9288", "loki:sfc254eaeb3c3", "loki:s19e37d99684b"], "status": "REASONED"},
-    "loki-ingester-inverted-hold": {"text": "From the cited source reading without a Loki run, in this guide's assessment an ingester can hold an entry dated exactly at the inverted interval's future start when the negative lookback's magnitude is at most creation_grace_period, on one clock, grace period unchanged. For a larger magnitude a direct ingester gRPC push can; Kafka consumer pushes and duplicate-timestamp shifts are not ruled out.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:s7be82cdc7279", "loki:s03a9eb3c1800", "loki:s9acb77638396", "loki:sa66ae191eb87", "loki:sa5963eda217e", "loki:s3683552f47e7", "loki:s9044377b42e9", "loki:sd2ef570a75c2", "loki:sd01827189b1e", "loki:s9c1fabf63f70", "loki:s93219a6da66c", "loki:se9b1d3173a5a"], "status": "REASONED"},
+    "loki-ingester-inverted-hold": {"text": "Without a Loki run, in this guide's assessment of the cited source, an ingester can hold an entry dated exactly at the inverted interval's future start when the negative lookback's magnitude is at most creation_grace_period, on one clock, grace unchanged. For a larger magnitude a direct ingester gRPC push can, distributor Kafka records cannot; other Kafka producers and duplicate shifts are open.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:s7be82cdc7279", "loki:s03a9eb3c1800", "loki:s9acb77638396", "loki:sa66ae191eb87", "loki:sa5963eda217e", "loki:s3683552f47e7", "loki:s9044377b42e9", "loki:sd2ef570a75c2", "loki:sd01827189b1e", "loki:s9c1fabf63f70", "loki:s93219a6da66c", "loki:se9b1d3173a5a", "loki:s1086bb06662d", "loki:s861664803499", "loki:sf9ef7591755e"], "status": "REASONED"},
     "loki-ingester-inverted-unordered": {"text": "From source reading, Loki v3.7.8's backward log queries do not time-filter a chunk's head block, and the unordered head block queries its vendored go-datastructures v1.1.7 range tree from an interval's start to one nanosecond before its end, both inclusive. For an inverted interval that query returns no entry, so the head block yields nothing.", "components": ["loki"], "sources": ["loki:sd5181aa115e4", "loki:s33683997e787", "loki:s69faadc4a015", "loki:s18bc063957e1", "loki:sf185bec82940", "loki:s015710936d80", "loki:saf4f45f2d5c7", "loki:sd8ad9fae3598", "loki:sd82568caaafc", "loki:s996300b7bdcf", "loki:s9a133bb92cd3"], "status": "REASONED"},
     "loki-ingester-empty-send": {"text": "From source reading, Loki v3.7.8's ingester Query or QuerySample sends one empty batch with statistics and warnings for an empty, error-free iterator if the context is not done, failing only on a Send error besides context.Canceled, like grpc-go's status error from Write on a done stream, barring unread interceptors. The ingester querier's iterator records those, yields nothing and ends cleanly.", "components": ["loki"], "sources": ["loki:s76e4e638e936", "loki:s5732ba30414b", "loki:sa1a1efa48033", "loki:s00b4ce2d9a6a", "loki:s9f438349ea61", "loki:sf89b7c829a53", "loki:s6c74d0f4adb3", "loki:sdf678b8f143f", "loki:s61e16a1ac1f0", "loki:se2deb786e148", "loki:s4be52dc17660", "loki:s3eb2a64252dc", "loki:sbe53a886169a", "loki:sfa17c8b9744c", "loki:s6bbef377347c", "loki:s958c3fc5fde9", "loki:s6621f46a53f1", "loki:s72e8d6673510", "loki:s807df01bc8a9", "loki:sf19870535c9b", "loki:s86a537881f1c", "loki:s2fdef6108709", "loki:s4011490e4c44", "loki:sc764d609c18a", "loki:sc7f949d05c7e", "loki:sbc58e5ae2f15", "loki:s88b28c9fa838", "loki:s86f5e4dbf938", "loki:sf1dbb24b6f89", "loki:s347ea47da1d9", "loki:scedf32486af2", "loki:s09f50c15300b", "loki:scf2ca760e412", "loki:s658bfc32b613", "loki:s1b47472c83c8", "loki:s0540308a9bbf", "loki:s369533e16eb3", "loki:s334ac63c0892", "loki:s68c48fdded52", "loki:sbf9e7851df52", "loki:s326c544e4f05"], "status": "REASONED"},
     "loki-querier-inverted-merge": {"text": "From source reading, a Loki v3.7.8 querier merges the ingester querier's per-ingester iterators for a log or sample selection with the iterator of any store query it makes for that selection, which it skips when query_ingester_only is set or it builds no store interval; a log selection with only one iterator gets that iterator unmerged.", "components": ["loki"], "sources": ["loki:s8f53a03e764f", "loki:sdc0d0e6ad95d", "loki:s86fc597288e2", "loki:s2d763a8942ef", "loki:s10870cc18ddc", "loki:se3f01b0b8f64", "loki:s6f04b102b391", "loki:s61e16a1ac1f0", "loki:s529cd9a944d9"], "status": "REASONED"},
-    "loki-ingester-wrapper-search": {"text": "From source reading, a word search for Wrapper in Loki v3.7.8's pkg, cmd, integration, tools and clients trees finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides a code comment and stylesheet source maps; nothing there sets it, and initIngester registers Wrap's result only when it is set.", "components": ["loki"], "sources": ["loki:s24cd2d4a2bce", "loki:sd7efa15100d2", "loki:sf253d44e375f"], "status": "REASONED"},
+    "loki-ingester-wrapper-search": {"text": "From source reading, a word search for Wrapper in Loki v3.7.8 outside vendor finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides comments and source maps, and no vendored package imports Loki's ingester or loki package; nothing in the repository sets it.", "components": ["loki"], "sources": ["loki:s24cd2d4a2bce", "loki:sd7efa15100d2", "loki:sf253d44e375f"], "status": "REASONED"},
     "loki-querier-ingester-inverted-result": {"text": "Source reading of Loki's querier, ingester querier and ingester query code, with no Loki run, does not establish what they return for the inverted ingester interval a negative store lookback besides -1 yields: in this guide's assessment ingesters can hold entries dated exactly at its start when the lookback's magnitude is within the grace period, on one clock, grace unchanged; no run observed it.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:sdc0d0e6ad95d", "loki:s10870cc18ddc", "loki:s61e16a1ac1f0", "loki:sadb084375296", "loki:s0b40d7d25a3f", "loki:se34169c8b133", "loki:sd5181aa115e4", "loki:s33683997e787", "loki:s69faadc4a015", "loki:sa66ae191eb87", "loki:s7be82cdc7279", "loki:s9acb77638396"], "status": "REASONED"},
     "loki-internal-server": {"text": "From source reading, Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101.", "components": ["loki", "dskit"], "sources": ["loki:sb7c90a61ae40", "loki:scf7d98f51caa", "loki:sf4c3469d7ee1", "loki:sd4f78f9689f6", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s319f6b7b5340", "dskit:s7848c6311aee"], "status": "REASONED"},
     "loki-internal-server-grpc": {"text": "From source reading and Go's net.Listen docs, the internal server's flags and config_wrapper.go set no gRPC network, address or port, and initInternalServer passes that configuration to dskit's server.New, so unless YAML sets them, dskit opens an any-address tcp listener on an OS-chosen port carrying the HTTP bridge; not observed.", "components": ["loki", "dskit", "go"], "sources": ["loki:scf7d98f51caa", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s4b5a89431203", "loki:s309318e5a59c", "loki:s39d479c8ba94", "dskit:s7848c6311aee", "dskit:s5fd7b12bfcf1", "go:s37204ff1b27c"], "status": "REASONED"},
     "loki-internal-routes": {"text": "When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.", "components": ["loki"], "sources": ["loki:sb7c90a61ae40", "loki:s319f6b7b5340", "loki:sb6c261fe940d", "loki:s81d8d94c3cea"], "status": "REASONED"},
     "loki-target-modules": {"text": "From source reading of setupModuleManager, write depends on the ingester, distributor and pattern ingester, read on the query frontend and querier, backend on the query scheduler, ruler, compactor, index gateway and bloom modules, and all on read's and write's modules plus the scheduler, ruler, compactor and UI. dskit runs each init once, dependencies first, stopping at the first error.", "components": ["loki", "dskit"], "sources": ["loki:se7ef0218d7c5", "loki:sf4c3469d7ee1", "loki:s3eb2a64252dc", "loki:s80b37692fda0", "loki:sb7c90a61ae40", "dskit:s96305c045ce4"], "status": "REASONED"},
-    "loki-grpc-services": {"text": "From source reading, Loki's init functions register gRPC services only on the main server, some only when enabled: distributor and ingester Pusher, ingester Querier and StreamData, pattern, ingest limits, frontend, scheduler, ruler, compactor, job queue, bloom gateway, index gateway and bloom planner. This guide traces only the distributor's, ingester querier's and worker's calls.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:sc2b013001317", "loki:s6b2a91bbd70f", "loki:sd4bf25cf533c", "loki:s6804d0b9ca37", "loki:saa25f09d653e", "loki:s2b784ff2e354", "loki:s1f38431776f2", "loki:s11c2c89339af", "loki:seaa8a690e518", "loki:s4a0aa7492160", "loki:s9a1dda234f64", "loki:sa19fa92e5d02", "loki:s61e16a1ac1f0", "loki:s6ae16575c268", "loki:s82a976e6b93c", "loki:s47c05209cd31"], "status": "REASONED"},
+    "loki-grpc-services": {"text": "From source reading, Loki's init functions register gRPC services only on the main server, some only when enabled: distributor and ingester Pusher, ingester Querier and StreamData, pattern, ingest limits, frontend, scheduler, ruler, compactor, job queue, bloom gateway, index gateway and bloom planner. A non-test search finds their callers only in Loki's own clients and a stream generator tool.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:sc2b013001317", "loki:s6b2a91bbd70f", "loki:sd4bf25cf533c", "loki:s6804d0b9ca37", "loki:saa25f09d653e", "loki:s2b784ff2e354", "loki:s1f38431776f2", "loki:s11c2c89339af", "loki:seaa8a690e518", "loki:s4a0aa7492160", "loki:s9a1dda234f64", "loki:sa19fa92e5d02", "loki:s61e16a1ac1f0", "loki:s6ae16575c268", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:sc2705694b8c1", "loki:s34e985ffc25f", "loki:scdd1efa4b625", "loki:s9637e24d4a76", "loki:sfbbe8d6f0c8b", "loki:sb7905b55bf8a", "loki:sde152f1440c8", "loki:s158db2e4f90c", "loki:s5391a2d500b5", "loki:s2c42813fbbc1", "loki:s19b349e08fd1", "loki:s8c054d8b740d", "loki:sfca9a77e69b1", "loki:s9de56a5b8b27", "loki:s61779f8269a0"], "status": "REASONED"},
     "loki-grpc-tls": {"text": "Inferred from dskit's server TLS source, gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and, per Loki's authentication documentation, mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
     "loki-proxy": {"text": "An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.", "components": ["loki"], "sources": ["loki:s70975c2655fa"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.", "components": ["node", "alert", "push", "jaeger", "dskit"], "sources": ["node:s896899f5a500", "alert:s0fd66cba968e", "push:s5c9f9745f42d", "jaeger:s5619bba2be59", "dskit:sb19d54a19636", "dskit:s23d81aeedf07"], "status": "REASONED", "verify": [1]},
