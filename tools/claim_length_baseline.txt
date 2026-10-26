@@ -49,8 +49,6 @@ identity-providers.md	admin-passkeys	455
 identity-providers.md	application-allowlist	495
 identity-providers.md	auth0-passkey-policy	406
 identity-providers.md	entra-every-signin	487
-identity-providers.md	google-org-mfa	505
-identity-providers.md	self-hosted-mfa	1947
 identity-providers.md	verify-allowlist	481
 lighttpd.md	mfa	498
 lighttpd.md	module-defaults	438
