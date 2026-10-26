@@ -10,7 +10,6 @@ authentication.md	individual-credentials	471
 authentication.md	offboarding	1601
 authentication.md	verify-origin-isolation	984
 authentication.md	verify-secret-scan	435
-authentication.md	verify-transports	499
 cloud-firewalls.md	azure-admin	700
 cloud-firewalls.md	bastion	537
 cloud-firewalls.md	gcp-policies	727
@@ -32,9 +31,7 @@ docker.md	verify-firewalld-reload	448
 docker.md	workload	421
 egress-metadata.md	cloud-egress	503
 egress-metadata.md	verify-allow	438
-free-certificates.md	origin-certificates	441
 frontend-frameworks.md	svelte-handle	1062
-frontend-frameworks.md	svelte-routes	523
 frontend-frameworks.md	verify-host	1707
 frontend-frameworks.md	verify-proxy	889
 frontend-frameworks.md	verify-secret	569
@@ -71,7 +68,6 @@ paas.md	verify-app-auth	408
 php.md	plain-auth	947
 python.md	bind	410
 ray.md	kuberay-token	849
-realtime-webhooks.md	proxy-limits	423
 self-hosted-idp.md	authentik-mfa	754
 self-hosted-idp.md	idp-maintenance	1169
 self-hosted-idp.md	keycloak-http-opt-in	414
