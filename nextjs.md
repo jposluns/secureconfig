@@ -26,7 +26,7 @@ A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/rou
 
 ## 1. Bind privately; TLS comes from the platform or the proxy
 
-On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default (as of v16.3.6 its `--port` defaults to 3000 and it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`); bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
+On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default (as of v16.3.6 its `--port` defaults to 3000 and it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`). For a self-hosted app, bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
 
 ```bash
 next build && next start -H 127.0.0.1 -p 3000    # or PORT=3000; PORT cannot be set in .env
@@ -260,7 +260,7 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 - Node.js `server.listen()` without a host binds the unspecified IPv6 address `::` when available, otherwise `0.0.0.0`: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md
 - Commander 12.1.0 (the version Next.js v16.3.6 pins): an option that takes a value is `undefined` unless specified on the command line: https://github.com/tj/commander.js/blob/v12.1.0/Readme.md#L203-L205
 - Next.js v16.3.6 pins `commander` at `12.1.0` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/package.json#L246
-- curl `--header @-` (header lines read from stdin): https://curl.se/docs/manpage.html#-H ; GNU grep `-f -` ("When file is '-', read patterns from standard input"), `-l` ("print the name of each input file from which output would normally have been printed") and its exit status (0 if a line is selected, 1 if none, 2 on error): https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html , https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html and https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html
+- curl `--header @-` (header lines read from stdin): https://curl.se/docs/manpage.html#-H . GNU grep `-f -` ("When file is '-', read patterns from standard input"), `-l` ("print the name of each input file from which output would normally have been printed") and its exit status (0 if a line is selected, 1 if none, 2 on error). GNU grep sources: https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html , https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html and https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html
 
 
 <!-- version-basis:start -->
@@ -326,7 +326,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "84c9c691803fb2a932f076b24473be780b9f9bab092384b3003091f5e85d56cd",
+  "body_sha256": "4654de867f606c74de3da086cef64abfb85d5beefb68646146124c1f60386cab",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",
