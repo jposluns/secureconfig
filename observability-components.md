@@ -271,17 +271,20 @@ only after `delete_request_cancel_period` plus one minute has passed since each 
 for tenants whose mode is then `filter-and-delete`, so it never selects a `filter-only` tenant's
 request for removal. The manager tries to mark a request whose whole interval is older than the
 tenant's longest retention period as processed without filtering, and loads at most the configured
-delete batch size at a time. Each attempt to mark a request processed writes to the delete-request
-store; on a store error, the manager logs the error and returns nothing to the caller, which carries
-on. The compactor passes the manager, behind its retention expiration checker, to the retention
+delete batch size at a time. Each attempt to mark a request processed calls the delete-request
+store's `MarkShardAsProcessed`; on a store error, the manager logs the error and returns nothing
+to the caller, which carries on. The compactor passes the manager, behind its retention expiration
+checker, to the retention
 marker. When a mark phase starts, the manager loads that batch (in the main horizontal-scaling mode,
 only requests without a line filter), and when the phase finishes it tries to mark each loaded
 request processed, which it does not do when the phase fails or times out; the code that runs those
 phases and the marker's code were not read. In the main horizontal-scaling mode, requests with a
 line filter instead go into a deletion manifest that the manager builds every five minutes. Given a
-job built from that manifest, the deletion job runner rewrites each chunk the job lists without the
-lines that a request's filter matches; the job queue's dispatch of those jobs and the worker's
-registration of that runner were not read. After passing the collected storage updates to the tables
+job built from that manifest, the deletion job runner examines each chunk the job lists. The runner
+skips a listed chunk that storage reports as not found, leaves a found chunk unchanged when no
+request's filter matches any of its lines, and otherwise rewrites the found chunk without the matched
+lines; the job queue's dispatch of those jobs and the worker's registration of that runner were not
+read. After passing the collected storage updates to the tables
 manager, whose code was not read, the job builder tries to mark the manifest's requests processed
 through a callback that returns nothing, then goes on to delete the manifest's files whatever the
 marks' outcome, and a failed job cancels the manifest's processing. Marking a request processed
@@ -1169,7 +1172,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "fc8bbf8b4faef4601d19966b6aab0de8ea330e6a26c1f8022183d0f4fc7a218f",
+  "body_sha256": "a819a749e9d7f5f82484717f7b79648f55eddd7ab2d81d83822ba570fc97ca69",
   "components": {
     "node": {
       "name": "node_exporter",
