@@ -108,7 +108,7 @@ On Go 1.27, setting `SSL_CERT_FILE` or `SSL_CERT_DIR` bypasses the platform cert
 
 ## 5. Keep diagnostic endpoints private
 
-Importing `net/http/pprof` for its side effect registers `/debug/pprof/` (profiles, traces, `cmdline`, and requests that force a GC) on `http.DefaultServeMux`, and `expvar` registers `/debug/vars` (exposing `cmdline` and `memstats`) the same way; neither starts a listener by itself, but `http.ListenAndServe(addr, nil)`, or any server with a nil handler, serves the default mux, so a single stray import turns a public port into an information-disclosure and resource-exhaustion surface. Give the application its own mux and never mount diagnostics on it:
+Importing `net/http/pprof` for its side effect registers `/debug/pprof/` (profiles, traces, `cmdline`, and requests that force a GC) on `http.DefaultServeMux`, and `expvar` registers `/debug/vars` (exposing `cmdline` and `memstats`) the same way. Neither package starts a listener by itself, but `http.ListenAndServe(addr, nil)`, or any server with a nil handler, serves the default mux, so a single stray import turns a public port into an information-disclosure and resource-exhaustion surface. Give the application its own mux and never mount diagnostics on it:
 
 ```go
 mux := http.NewServeMux()          // the app mux; assign it to Server.Handler, not the default mux
@@ -302,7 +302,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "63e38395cc96dd814b2dedccff78a3fa27d6e32b6e4d1a8da4c8a881bd23de50",
+  "body_sha256": "fc2bc21450c0707a37a2953436f6cdf504e3ac230cbc645694700fe71661b70a",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
