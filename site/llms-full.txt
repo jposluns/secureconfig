@@ -5184,8 +5184,9 @@ open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evalua
 `/proc/sys/kernel/yama/ptrace_scope` read `1`. Root was not tested as the observer, because the
 evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
 was set), and no real `vault` client or live Vault service ran, because `vault` was not on the
-evaluation host's PATH. The reasoning from the shell behaviour of file input on stdin applies to both wrapping-lookup
-blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
+evaluation host's PATH. The reasoning from the shell behaviour of file input on stdin applies to
+both wrapping-lookup blocks below, the demonstrated lookup and the recipient-validation lookup.
+Each passes the
 protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
 block types the token or expands a variable holding it, so neither shell history nor `set -x`
 tracing records it from the block, provided the file is prepared through protected delivery
@@ -5519,7 +5520,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a0e001877e972b274a47b5b62fc41a436ff8c2656aeeb2ac04fa5cb80871ff18",
+  "body_sha256": "f43b2adcb54269e3ad3a4f9cf04de0ce49c3bf122a128753f007b19ad08753aa",
   "components": {
     "run": {
       "name": "Vault loopback run",
@@ -34470,7 +34471,7 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 
 ## Verify
 
-**REASONED:** the service-level checks V1 to V6, per the 15 Sources entries this paragraph names, from the memcached documentation, binary protocol SASL authentication entry to the memcached binary requests and responses entry. The first five of the 15 Sources entries are memcached documentation, binary protocol SASL authentication; memcached documentation, TLS; memcached documentation, configuring the server (`-l`, `-U`, exposure warning); memcached 1.6.42 security release notes; and memcached 1.6.45 security and crash fixes. The sixth to ninth of the 15 Sources entries are memcached UDP reflection and amplification advisory; memcached 1.6.45 man page, network, account, resource, flush, and shutdown options; memcached protocol reference (`-Y` text protocol authentication); and memcached 1.5.15 release notes, ASCII authentication and binary idle timeout fix. The tenth to fifteenth of the 15 Sources entries are memcached 1.6.45 CLI help, defaults, effective settings, and signal handling; memcached 1.6.45 text command enforcement; memcached 1.6.45 binary authentication, statistics, and flush enforcement; memcached TLS design and certificate reload; memcached basic text command semantics; and memcached binary requests and responses. The authoring environment has no memcached binary, no container runtime and no network access to obtain either, and no available authorized service environment for reproducing these states, so no exposed or fixed service state was observed; each step records its local runs and its expected exposed and fixed outcomes. Throwaway certificates were generated for the local OpenSSL checks recorded below; a TLS-enabled memcached service, configured authentication service and separate network observers remain unavailable. Expected outcomes come from the linked vendor sources; no live outcome is claimed.
+**REASONED:** the service-level checks V1 to V6, per the 15 Sources entries that this paragraph names. The first five of the 15 Sources entries are memcached documentation, binary protocol SASL authentication; memcached documentation, TLS; memcached documentation, configuring the server (`-l`, `-U`, exposure warning); memcached 1.6.42 security release notes; and memcached 1.6.45 security and crash fixes. The sixth to ninth of the 15 Sources entries are memcached UDP reflection and amplification advisory; memcached 1.6.45 man page, network, account, resource, flush, and shutdown options; memcached protocol reference (`-Y` text protocol authentication); and memcached 1.5.15 release notes, ASCII authentication and binary idle timeout fix. The tenth to fifteenth of the 15 Sources entries are memcached 1.6.45 CLI help, defaults, effective settings, and signal handling; memcached 1.6.45 text command enforcement; memcached 1.6.45 binary authentication, statistics, and flush enforcement; memcached TLS design and certificate reload; memcached basic text command semantics; and memcached binary requests and responses. The authoring environment has no memcached binary, no container runtime and no network access to obtain either, and no available authorized service environment for reproducing these states, so no exposed or fixed service state was observed; each step records its local runs and its expected exposed and fixed outcomes. Throwaway certificates were generated for the local OpenSSL checks recorded below; a TLS-enabled memcached service, configured authentication service and separate network observers remain unavailable. Expected outcomes come from the linked vendor sources; no live outcome is claimed.
 
 **REASONED:** the syntax, lint and guard-validation record for the guide's 11 shell blocks only, not memcached; syntax and lint passes have no exposed-state comparison. The following local runs were recorded during marking review (October 2026) under bash 5.3.9 with logging stubs for memcached, ps, ss, nc and openssl first on PATH and no network. All 11 blocks passed `bash -n` and ShellCheck 0.11.0 with no findings, and `check_guard_conventions.py --strict-guards` on this guide printed PASS for 11 fences, 5 of them guard fences. Each of the five guarded blocks rejected six invalid values and two incomplete-assignment cases under `bash -u`; valid inputs reached instrumented probes. The rejected cases ran no stubs; valid cases reached the stubs with the block's arguments. This tests the guards, not memcached. Memcached startup/configuration parsing remains undemonstrated.
 
@@ -34780,7 +34781,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "002d20d92acb0a1868dca2b63e156e3f811af547cb96c65dca7dbf6870a53e2a",
+  "body_sha256": "33c5bd71ef4f3c73f16ab4d3cb12c7361e982858480f8ea77059070aae4ca21a",
   "components": {
     "stable": {
       "name": "memcached source",
