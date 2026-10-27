@@ -56,7 +56,7 @@ server {
 
 At nginx release-1.26.3, the HTTP/2 module provides `http2 on`; nginx 1.25.1 introduced it and deprecated the older `listen ... http2` parameter ([module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81), [changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480), [listen parser](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188)).
 
-For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. nginx defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically. At nginx release-1.26.3, the default-on setting and shared-cache rotation are supported by the [SSL module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862), [1.23.2 changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775) and [rotation code](https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576).
+For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. The nginx server defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically. At nginx release-1.26.3, the default-on setting and shared-cache rotation are supported by the [SSL module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862), [1.23.2 changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775) and [rotation code](https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576).
 
 ## 2. Redirect HTTP to HTTPS
 
@@ -141,7 +141,7 @@ of a response. A stream that keeps sending stays alive indefinitely under a 60s 
 stalls for 61s is cut. Choose it from the longest acceptable silence, and note that raising it lengthens
 that tolerance rather than removing the timeout.
 
-Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket: the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
+Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket. That CDN or proxy arrangement means the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
 
 ## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture.)
 
@@ -315,7 +315,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "c0b31e49861f861f02aaad2b3398a3b682ae2d41f53f71f641dbc189d6d6f780",
+  "body_sha256": "cda5da25b68be964b3a9cd0b24fc6021dcc527501fe09cac30281402beb032de",
   "components": {
     "nginx-source": {
       "name": "nginx source",
