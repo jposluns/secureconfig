@@ -26,7 +26,7 @@ A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/rou
 
 ## 1. Bind privately; TLS comes from the platform or the proxy
 
-On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default (as of v16.3.6 its `--port` defaults to 3000 and it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`). For a self-hosted app, bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
+On Vercel and similar platforms the platform terminates TLS; nothing to configure ([paas.md](paas.md)). Self-hosted, `next start` listens on every interface on port 3000 by default (as of v16.3.6 its `--port` defaults to 3000 and it passes no hostname to Node's `listen`, which binds `::` where IPv6 is available and `0.0.0.0` otherwise; its `-H` option's help text still says `(default: 0.0.0.0)`). The step for a self-hosted app is to bind to loopback and put a reverse proxy in front, which the Next.js self-hosting guide itself recommends, with TLS and headers per [nodejs.md](nodejs.md), [nginx.md](nginx.md), or [caddy.md](caddy.md).
 
 ```bash
 next build && next start -H 127.0.0.1 -p 3000    # or PORT=3000; PORT cannot be set in .env
@@ -326,7 +326,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4654de867f606c74de3da086cef64abfb85d5beefb68646146124c1f60386cab",
+  "body_sha256": "3e3c78f3bc938c5e60dba0ea3962980482658ef33dc2bb25c1de60f31b47e539",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",
