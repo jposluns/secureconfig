@@ -39295,7 +39295,7 @@ shell to run.
 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
 - GNU Bash reference manual, bash-5.3 (checked October 2026), prefix assignments 3872-3878: https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872
-- Linux man-pages `proc_pid_environ(5)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): initial environment 12-15 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12; later modifications 26-36 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26; procfs access check 43-47 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43
+- Linux man-pages `proc_pid_environ(5)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): initial environment 12-15 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12. The same `proc_pid_environ(5)` page, tag man-pages-6.19 (checked October 2026): later modifications 26-36 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26; procfs access check 43-47 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43
 - Linux man-pages `ptrace(2)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): ptrace access factors 2519-2533 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519
 - SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB 3.2.4 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50
@@ -39373,7 +39373,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ef07b7e962499f1900b3db602bbfad3ee59c8ba44f80a6bcee5d48e6919d662a",
+  "body_sha256": "620867f0f534d42917ab5d1ac3d41b7c769eb80cfd8203cd8ed86a4c4ef3d912",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",
@@ -57287,7 +57287,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Dozzle
 
 - Dozzle reads the Docker socket to show logs, the same host-level access the Docker API section above describes ([docker.md](docker.md)); a Dozzle login is a login to the host.
-- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml` (omit `--password` and Dozzle prompts for it on stdin, so it never lands in shell history or `set -x` tracing; stdin closes the argv channel only, so the password stays visible to your own account and root while the `docker` client relays it, and to anyone who can use the Docker daemon), mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access.
+- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml`, mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access. The `users.yml` generation step is to omit `--password`, and Dozzle then prompts for the password on stdin, so the password never lands in shell history or `set -x` tracing. Stdin closes the argv channel only, so the password stays visible to your own account and root while the `docker` client relays it, and to anyone who can use the Docker daemon.
 - Container actions (start, stop, recreate) and shell access into a running container can be turned on; leave both off unless a specific workflow needs them, since either turns a log viewer into remote command execution on the host.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer, like every panel above.
 
@@ -57366,7 +57366,7 @@ REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal 
 - Coolify installation, firewall, proxy, and DNS pages: https://coolify.io/docs/start-with-self-hosted , https://coolify.io/docs/core/infrastructure/servers/firewall , https://coolify.io/docs/core/networking/proxy/overview , https://coolify.io/docs/core/networking/dns , https://coolify.io/docs/core/infrastructure/servers/openssh
 - Dokploy installation (ports 80, 443, 3000; admin setup; panel domain): https://docs.dokploy.com/docs/core/installation
 - Nginx Proxy Manager setup (port 81, default admin user): https://nginxproxymanager.com/setup/
-- Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS , and the `.env.template` https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
+- Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , and HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS. The Vaultwarden `.env.template`: https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
 - Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
@@ -57490,7 +57490,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "01559f4ff1f76528a2de298393ba2a9634ec6e326c1098f39089da5c80b2c427",
+  "body_sha256": "26e8ed2c8a47a290a9aaefd2cb37d3f833b624d0a8aff89daa2ca5aeac0fc5d1",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -60991,7 +60991,7 @@ openssl s_client -connect smtp.example.com:465 \
   -verify_return_error -min_protocol TLSv1.2 </dev/null
 ```
 
-REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
+REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314, RFC 9989, RFC 8601 and RFC 2505. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ## Common mistakes
 
@@ -61092,7 +61092,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "72ca73d23dc0969cc3e303138ca235cdf68f1cf3ba03bdb38582fc31a8ab9d8f",
+  "body_sha256": "fba28ff4026087f7c7b3ad2fd7e4eaef5fa2569f199c262c469a1f5112f09ba6",
   "components": {
     "spf": {
       "name": "SPF",
@@ -61377,7 +61377,7 @@ SSH-forward or tailnet-only deployment the public URL is unreachable by design, 
 isolation separately and test the tool's own authorization over the permitted private path.
 
 REASONED: default-credential rejection and effective database privileges, per the guide's cited Superset security, Superset docker-compose.yml and Metabase database users, roles, and privileges. No BI account, database role or disposable database is available; this prose supplies no local command or configuration to execute. Live outcomes remain unobserved: exposed credentials permit login or the data-source role writes beyond its needs; fixed credentials reject defaults and the actual role permits intended reads but denies the disposable write, with any required write-back separately scoped. Also confirm no default `admin/admin` or example credentials still work, and that the database
-principal each data source uses is genuinely least-privilege: identify the actual DB role, inspect
+principal each data source uses is genuinely least-privilege. The least-privilege check is to identify the actual DB role, inspect
 its EFFECTIVE grants and inherited roles at the database (a role named `readonly` can still hold
 write, ownership, or admin privileges), confirm reads work while writes are denied (test with a
 disposable object), and keep any needed write-back access separately scoped. Checking only the
@@ -61389,7 +61389,7 @@ connection string or the tool's own login is not enough.
 - Metabase setting up Metabase (first account is admin): https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase
 - Metabase public links and embeds: https://www.metabase.com/docs/latest/embedding/public-links
 - Metabase data permissions (row and column security is Pro/Enterprise): https://www.metabase.com/docs/latest/permissions/data
-- Metabase Jetty host and port (`:mb-jetty-port` default "3000", no host default, blank values treated as unset, nil values dropped from the Jetty options), ring-jetty-adapter 1.15.3 passing the host to `setHost`, Jetty 12.1.13 binding the wildcard address for a null host, environ 1.2.0 merging `.lein-env`, `.boot-env`, the environment and JVM properties in that order, keeping empty values, so the last layer to set a key wins, and the image entrypoint's `MB_JETTY_HOST=0.0.0.0` default (pinned tags v0.63.18, ring 1.15.3, jetty-12.1.13, environ 1.2.0): https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L54, https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L76-L88, https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/server/instance.clj#L36-L41, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L79, https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L32-L43, https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L64-L79, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L164, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L195, https://github.com/ring-clojure/ring/blob/1.15.3/ring-jetty-adapter/src/ring/adapter/jetty.clj#L202-L207, https://github.com/jetty/jetty.project/blob/jetty-12.1.13/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/ServerConnector.java#L338-L344, https://github.com/metabase/metabase/blob/v0.63.18/bin/docker/run_metabase.sh#L2-L5 and https://github.com/metabase/metabase/blob/v0.63.18/Dockerfile#L66-L69
+- Metabase Jetty host and port (`:mb-jetty-port` default "3000", no host default, blank values treated as unset, nil values dropped from the Jetty options), ring-jetty-adapter 1.15.3 passing the host to `setHost`, and Jetty 12.1.13 binding the wildcard address for a null host (pinned tags v0.63.18, ring 1.15.3, jetty-12.1.13, environ 1.2.0). The same Sources item also covers environ 1.2.0 merging `.lein-env`, `.boot-env`, the environment and JVM properties in that order, keeping empty values, so the last layer to set a key wins, and the image entrypoint's `MB_JETTY_HOST=0.0.0.0` default (pinned tags v0.63.18, ring 1.15.3, jetty-12.1.13, environ 1.2.0). The item's sources (1 of 4): https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L54, https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L76-L88, https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/server/instance.clj#L36-L41, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L79. The item's sources (2 of 4): https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L32-L43, https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L64-L79, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L164, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L195. The item's sources (3 of 4): https://github.com/ring-clojure/ring/blob/1.15.3/ring-jetty-adapter/src/ring/adapter/jetty.clj#L202-L207, https://github.com/jetty/jetty.project/blob/jetty-12.1.13/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/ServerConnector.java#L338-L344. The item's sources (4 of 4): https://github.com/metabase/metabase/blob/v0.63.18/bin/docker/run_metabase.sh#L2-L5 and https://github.com/metabase/metabase/blob/v0.63.18/Dockerfile#L66-L69
 - Superset security: https://superset.apache.org/admin-docs/security/
 - Superset docker-compose.yml (production warning): https://github.com/apache/superset/blob/3d01094d231712e3470eb625be3f9925aeaeadb5/docker-compose.yml
 - Redash help center: https://redash.io/help/
@@ -61457,7 +61457,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "86c8d3e97629a5b8185c2054b46d8932c95e6c4ec9312c6a0d78042e9dc644aa",
+  "body_sha256": "50c7d98845f8c09c7c9132f667a2412bc8af5d2790e2b3f3e7f97cd2d67f793e",
   "components": {
     "metabase": {
       "name": "Metabase",
