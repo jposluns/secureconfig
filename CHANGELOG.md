@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-27
+
+- Split 17 prose sentences over 400 characters in `gitops-controllers.md` and its plugin copy `plugin/skills/secure-deployment-config/references/gitops-controllers.md` into sentences of at most 400 characters, with no fact, qualifier, inference label, citation or link changed (TODO 1.385, batch 14). Sources items now end their topic description in its own sentence and list their URLs under neutral sources labels that keep each URL scoped to the whole item (#952)
+
 ## 2026-10-26
 
 - `TODO.md`, `DONE.md` and `DECISIONS.md` (TODO 1.385, partial): row 1.385 now records the corrected scale of guide prose sentence length, and DONE 1.385 records the first six per-guide batches, #933, #934, #936, #937, #939 and #941, which split 122 prose sentences over 400 characters in 12 guides. The integrator's scan of all 103 guides on main at 3850e719 lists 570 sentences over 400 characters in 80 guides, nine of them generated claim-summary lines that TODO 1.383 tracks. The remaining prose sentences continue in per-guide batches, and `DECISIONS.md` records the maintainer's later answer of 2026-10-26 that set that scope, about 20 to 30 more batches with no gate. `CHANGELOG.md`, `VERSION` and `plugin/plugin.json` are updated (#944)
