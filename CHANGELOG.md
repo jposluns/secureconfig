@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-27
 
-- Split 14 prose sentences over 400 characters in `ray.md` and its plugin copy `plugin/skills/secure-deployment-config/references/ray.md` into sentences of at most 400 characters at clause boundaries, with no fact, qualifier, citation or link changed (TODO 1.385, batch 17). The eleven Sources items now end their topic description in its own sentence and list their URLs under neutral sources labels that name each item's whole topic (#955)
+- Split 14 prose sentences over 400 characters in `ray.md` and its plugin copy `plugin/skills/secure-deployment-config/references/ray.md` into sentences of at most 400 characters at clause boundaries, with no fact, qualifier, citation or link changed (TODO 1.385, batch 17). The eleven Sources items now end their topic description in its own sentence and list their URLs under neutral sources labels drawn from each item's topic (#955)
 
 ## 2026-10-26
 
