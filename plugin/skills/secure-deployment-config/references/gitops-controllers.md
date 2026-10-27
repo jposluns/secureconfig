@@ -203,7 +203,7 @@ route in front of it. When you do, the receiver type is what authenticates the r
 presence of a `secretRef`: a `generic` receiver validates nothing, `generic-hmac` and the GitHub,
 Bitbucket and Nexus types verify an HMAC signature against the referenced secret, and `gitlab` compares
 the `X-Gitlab-Token` header against it. The `generic-oidc` type validates a bearer token against configured
-OIDC providers rather than a secret (new in Flux 2.9, and it rejects `.spec.secretRef`), so
+OIDC providers rather than a secret (new in Flux 2.9, and it rejects `.spec.secretRef`), so, when you do,
 constrain it with `.spec.oidcProviders[].validations` and a specific `.audience` (which otherwise
 defaults to `notification-controller`), since a public issuer can otherwise mint valid tokens for
 unrelated callers. Choose a validating type,
@@ -460,7 +460,7 @@ they were not rechecked online. Remaining source limits are identified above. Th
 - RBAC policy loader start in argocd-server: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L674-L675
 - RBAC policy loader callback in argocd-server: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L892-L907
 - argocd-server gRPC authentication interceptors: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L961-L985
-- argocd-server bug21955 workaround interceptor, first in the unary chain, discarding its `*grpc.UnaryServerInfo` parameter. That it comes first in that chain is this guide's source assessment, nothing built or run, for Argo CD c9c369ef's linux/amd64 default-tag package graph with cgo on and test-only imports excluded, in which no package calls grpc-go's global server options hook. argocd-server bug21955 workaround interceptor sources: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L1715 and https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L973-L974
+- argocd-server bug21955 workaround interceptor, first in the unary chain, discarding its `*grpc.UnaryServerInfo` parameter. That it comes first in that chain is this guide's source assessment, nothing built or run, for Argo CD c9c369ef's linux/amd64 default-tag package graph with cgo on and test-only imports excluded, in which no package calls grpc-go's global server options hook. The argocd-server bug21955 workaround interceptor sources: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L1715 and https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L973-L974
 - argocd-server API services receiving the enforcer: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L1029-L1091
 - argocd-server gRPC service registration: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L992-L1004
 - argocd-server service set types, including `*session.Server`, `*settings.Server` and `*version.Server`: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L1012-L1027
@@ -492,7 +492,7 @@ they were not rechecked online. Remaining source limits are identified above. Th
 - Go module zip construction at go1.26.5 (read October 2026 in a local go1.26.5 toolchain tree, not compared with upstream; the Go version the proxy built the module zips with is not recorded): [the go command adds the repository-root LICENSE to the zip of a subdirectory module that has none](https://github.com/golang/go/blob/go1.26.5/src/cmd/go/internal/modfetch/coderepo.go#L1170-L1175); [module zip creation omits files in any directory below the module root that holds its own go.mod](https://github.com/golang/go/blob/go1.26.5/src/cmd/vendor/golang.org/x/mod/zip/zip.go#L232-L298).
 - grpc-go v1.81.1 (commit caf0772c2bcb8bc15d43eb53448e921f34f0b7e8; checked October 2026) `ChainUnaryInterceptor` server option: https://github.com/grpc/grpc-go/blob/v1.81.1/server.go#L481-L489
 - grpc-go v1.81.1 (commit caf0772c2bcb8bc15d43eb53448e921f34f0b7e8; checked October 2026) `NewServer` combining the configured interceptors: https://github.com/grpc/grpc-go/blob/v1.81.1/server.go#L691-L710
-- grpc-go v1.81.1 (commit caf0772c2bcb8bc15d43eb53448e921f34f0b7e8; checked October 2026) global server options, which `NewServer` applies before the caller's (lines 693 to 695 of the `#L691-L710` item), appended only by the internal `AddGlobalServerOptions` hook. The `AddGlobalServerOptions` hook's comment (`internal/internal.go` lines 85 to 86) says the 1.0 release of the separate `gcp/observability` module uses it. grpc-go v1.81.1 global server options source: https://github.com/grpc/grpc-go/blob/caf0772c2bcb8bc15d43eb53448e921f34f0b7e8/server.go#L79-L84
+- grpc-go v1.81.1 (commit caf0772c2bcb8bc15d43eb53448e921f34f0b7e8; checked October 2026) global server options, which `NewServer` applies before the caller's (lines 693 to 695 of the `#L691-L710` item), appended only by the internal `AddGlobalServerOptions` hook. The `AddGlobalServerOptions` hook's comment (`internal/internal.go` lines 85 to 86) says the 1.0 release of the separate `gcp/observability` module uses it. The grpc-go v1.81.1 global server options source: https://github.com/grpc/grpc-go/blob/caf0772c2bcb8bc15d43eb53448e921f34f0b7e8/server.go#L79-L84
 - grpc-go v1.81.1 (commit caf0772c2bcb8bc15d43eb53448e921f34f0b7e8; checked October 2026) `stats/opentelemetry/csm`'s `EnableObservability`, within the grpc module the only caller of the `AddGlobalServerOptions` hook outside tests. Neither `csm` nor `gcp/observability` is in Argo CD c9c369ef's 24 October 2026 linux/amd64 default-tag `go list -deps ./...` graph with cgo on and without test-only imports (source assessment, nothing built or run): https://github.com/grpc/grpc-go/blob/caf0772c2bcb8bc15d43eb53448e921f34f0b7e8/stats/opentelemetry/csm/observability.go#L41-L57
 - grpc-go v1.81.1 (commit caf0772c2bcb8bc15d43eb53448e921f34f0b7e8; checked October 2026) service registration storing the implementation: https://github.com/grpc/grpc-go/blob/v1.81.1/server.go#L757-L793
 - grpc-go v1.81.1 (commit caf0772c2bcb8bc15d43eb53448e921f34f0b7e8; checked October 2026) unary interceptor chain passing one `UnaryServerInfo` to every interceptor: https://github.com/grpc/grpc-go/blob/v1.81.1/server.go#L1212-L1245
@@ -655,7 +655,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "dc66068cab7e59d05854618e760341bc4598679705a21ca763f98dc27ef46ae3",
+  "body_sha256": "581ee513b235b6676a12c7782237db3ead2e56338473a4af02155ad25199479a",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
