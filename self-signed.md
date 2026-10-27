@@ -161,7 +161,7 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - Ubuntu resolute update-ca-certificates (checked October 2026). Sources for this item: https://manpages.ubuntu.com/manpages/resolute/man8/update-ca-certificates.8.html. Quoted text: "Furthermore, all certificates with a .crt extension found below /usr/local/share/ca-certificates are also included and implicitly trusted." and "Then run update-ca-certificates to merge the new certificates into the existing machine store at /etc/ssl/certs."
 - RHEL 8 shared system certificates, section 3.2 "Adding new certificates to the system-wide truststore" (checked October 2026). Sources for this item: https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/securing_networks/using-shared-system-certificates_securing-networks#adding-new-certificates_using-shared-system-certificates. Quoted text, in the order of the section's steps: "copy the certificate file to the /usr/share/pki/ca-trust-source/anchors/ or /etc/pki/ca-trust/source/anchors/ directory"; "use the update-ca-trust command". The section shows the update-ca-trust command as update-ca-trust extract.
 - CentOS Stream 9, not RHEL, ca-certificates commit 848a7831862d78a087c8f5d2284ce603f20ed42f, update-ca-trust.8.txt lines 97 to 99 (checked October 2026). Sources for this item: https://gitlab.com/redhat/centos-stream/rpms/ca-certificates/-/blob/848a7831862d78a087c8f5d2284ce603f20ed42f/update-ca-trust.8.txt#L97-L99. QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
-- Fedora 44 branch ca-certificates commit 1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
+- Fedora 44 branch ca-certificates commit 1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec, update-ca-trust.8.txt lines 97 to 99 (checked October 2026). Sources for this item: https://src.fedoraproject.org/rpms/ca-certificates/blob/1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec/f/update-ca-trust.8.txt#_97. QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
 - Fedora 45 branch, release status not established by this guide, ca-certificates commit 3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7, update-ca-trust.8.txt lines 97 to 99 (checked October 2026). Sources for this item: https://src.fedoraproject.org/rpms/ca-certificates/blob/3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7/f/update-ca-trust.8.txt#_97. QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
 - GNU coreutils v9.7 `chmod` syntax (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11937-L11942
 - GNU coreutils v9.7 mode argument (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11967-L11968
@@ -246,7 +246,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "3e85ca2c7541875854f83f45d23c80dea49c1501a23ab370a19a738e6e54b162",
+  "body_sha256": "a674d8686257bb5d9346bff14c1f97d5a8968e104a2c4f262d16c291c1f4bca1",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",

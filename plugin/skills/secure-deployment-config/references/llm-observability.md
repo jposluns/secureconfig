@@ -91,12 +91,12 @@ provider (its documentation works through Google, AWS Cognito, and Microsoft Ent
 add an identity-aware proxy in front per [mfa.md](mfa.md). Two OAuth caveats: `PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP`
 defaults to `True`, so any identity the provider will authenticate can provision itself an account unless you
 set it `False` and restrict provider membership (test an unapproved identity). The second caveat is that local
-email/password login
-stays available alongside SSO and bypasses the provider's MFA, so set `PHOENIX_DISABLE_BASIC_AUTH=True` once
-the IdP is the intended path. Establish and test an approved IdP administrator BEFORE you disable local login
-or provider signup: disabling basic auth also disables the local admin password, so once
-`PHOENIX_DISABLE_BASIC_AUTH=True` the "replacement admin password works" control in Verify no longer applies -
-instead require local password login to FAIL and an approved IdP login with MFA to succeed.
+email/password login stays available alongside SSO and bypasses the provider's MFA, so set
+`PHOENIX_DISABLE_BASIC_AUTH=True` once the IdP is the intended path. Establish and test an approved IdP
+administrator BEFORE you disable local login or provider signup: disabling basic auth also disables the local
+admin password, so once `PHOENIX_DISABLE_BASIC_AUTH=True` the "replacement admin password works" control in
+Verify no longer applies - instead require local password login to FAIL and an approved IdP login with MFA to
+succeed.
 
 ## Helicone (self-hosted)
 
@@ -110,11 +110,10 @@ your own layer in front. Helicone is several services, not one: its Docker Compo
 stores - PostgreSQL, ClickHouse, MinIO/S3, Redis, and MailHog - on host ports independent of the dashboard
 login (for example `54388:5432` and `18123:8123`). An identity proxy on the Helicone UI therefore leaves those
 backing stores wide open; remove or loopback-scope every backing publication and rotate the example storage
-credentials
-([minio.md](minio.md), [object-storage.md](object-storage.md)). Ingestion runs through the separate AI Gateway
-and the provider keys in its environment, not the web session; store those per [secrets.md](secrets.md). The
-Jawn service and the S3 store also hold your data, so protect every service, not just the dashboard and
-gateway: keep them all on a private network or behind an identity-aware fronting layer
+credentials ([minio.md](minio.md), [object-storage.md](object-storage.md)). Ingestion runs through the separate
+AI Gateway and the provider keys in its environment, not the web session; store those per
+[secrets.md](secrets.md). The Jawn service and the S3 store also hold your data, so protect every service, not
+just the dashboard and gateway: keep them all on a private network or behind an identity-aware fronting layer
 ([fronting-auth.md](fronting-auth.md), [nginx.md](nginx.md), [caddy.md](caddy.md)) with MFA ([mfa.md](mfa.md)).
 
 ## OpenTelemetry Collector
@@ -490,7 +489,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "39189a4273b64e378d79fe747031927635bcf0be0caebbf800a1e7a7c5589689",
+  "body_sha256": "aa4fba1e1ce25881240f5b2ecc03bf6c082a0a326d5e53d95749f5870ff07b73",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
