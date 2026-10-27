@@ -186,9 +186,11 @@ ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0
            # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available. Bash 5.3.9(1)-release passed bash -n on the following fence, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated. The certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check. No network command ran. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
-an unauthenticated request (refused) and a valid-credential request (returns the statistics) against that
-listener specifically. The step for an enabled runtime socket, REASONED from the cited HAProxy
+REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available. Bash 5.3.9(1)-release passed bash -n on the following fence, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated. The certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check. No network command ran. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener, the runtime
+socket and, where `verify required` is set, client certificates. The step for an enabled stats listener,
+REASONED from the cited HAProxy documentation, is to verify that listener with an unauthenticated request
+(refused) and a valid-credential request (returns the statistics) against that listener specifically.
+The step for an enabled runtime socket, REASONED from the cited HAProxy
 documentation, is to verify that socket by its ownership and mode and an unauthorized local identity
 (permission denied), since `show cli level` reporting `admin` is the authorized level, not proof of access
 control. The client certificate step, REASONED from the cited HAProxy documentation, is to verify, where
@@ -320,7 +322,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "0124cc2621c57aeda91d6cc1a1c9226fbe144841043319698fc97032d845e749",
+  "body_sha256": "7e31cdd1a3ad49bec6ab015220eefeb12eeef86b0b22ad2c82e19926c4196a71",
   "components": {
     "haproxy": {
       "name": "HAProxy",
