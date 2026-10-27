@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-27
+
+- Split 14 prose sentences over 400 characters in `ray.md` and its plugin copy `plugin/skills/secure-deployment-config/references/ray.md` into sentences of at most 400 characters at clause boundaries, with no fact, qualifier, citation or link changed (TODO 1.385, batch 17). The eleven Sources items now end their topic description in its own sentence and list their URLs under neutral sources labels that name each item's whole topic (#955)
+
 ## 2026-10-26
 
 - `agent-builders.md` (TODO 1.385, batch 8): the 27 prose sentences over 400 characters, which measured 416 to 4,182 characters with links rendered and backticks kept, are split at clause boundaries into sentences of at most 400 characters, with no fact, qualifier, inference label, citation or link changed. Long Sources items now end their topic description in its own sentence and list their URLs under neutral labels such as "Dify console sources (1 of 2)", so no URL is scoped to a narrower topic than before. No claim, table, code block or heading changes, and `plugin/skills/secure-deployment-config/references/agent-builders.md` follows (#946)
