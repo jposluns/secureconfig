@@ -62560,10 +62560,10 @@ the lists as written, so check each entry. A `sockets=` line means more listener
 exposed variant, a repeated `bind=` whose last value is `*`, `bind=0.0.0.0`, `bind=::`,
 `bind=0:0:0:0:0:0:0:0`, four IPv6 addresses printed as they are (`2001:db8::5`,
 `0:0:0:0:ffff:0:0:1`, `::ffff:0` and `64:ff9b::10.0.0.5`), fourteen values flagged for `ss`, and
-six setting-variant files. The fourteen values flagged for `ss` were `0x0`, `0x00000000`,
+six other files. The fourteen values flagged for `ss` were `0x0`, `0x00000000`,
 `0x0a000005`, `010.0.0.5`, `cafe`, `0 10.0.0.5`, `::ffff:0:0`, `::ffff:10.0.0.5`, `1::2::3`, `a:b:c`,
-`12345::1`, `1:2:3`, `:::1` and `2001:db8:5`. The six setting-variant files had spaced settings,
-commented settings, `bind=0` with
+`12345::1`, `1:2:3`, `:::1` and `2001:db8:5`. The thirty test files included six other files,
+with spaced settings, commented settings, `bind=0` with
 `listen=0` and an empty `allow=`, an empty `allow=` with `deny=127.0.0.1`, CRLF line endings with
 `sockets=*:10001`, and a line without `=`. On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on
 the same file, and the block printed the outcomes above; it reported an unreadable path as not
@@ -62750,7 +62750,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "2ef74230fc497e364a5ea1193e1e50e1ac40647c40d335661033a5d91ba20b84",
+  "body_sha256": "304d166d4b120aa7420463da4a4f8092ddac696f30bba5390dabbe7d4cf18b44",
   "components": {
     "cockpit": {
       "name": "Cockpit",
