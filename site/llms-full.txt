@@ -7614,7 +7614,8 @@ A listener rule with an `authenticate-oidc` (any OIDC provider) or `authenticate
   "Order": 1 }
 ```
 
-The load balancer forwards the user claims to targets in `x-amzn-oidc-data`, a JWT signed with ES256. The app must verify that signature (public key from `https://public-keys.auth.elb.<region>.amazonaws.com/<key-id>`, key ID from the JWT header), confirm that the `signer` field in the JWT header is your load balancer's ARN, and confirm the token's `exp` has not passed, before using any claim. ALB's audience binding is that signer ARN together with the `client` field, both in the JWT header, not a payload `aud` claim. AWS publishes the `aws-jwt-verify` library, which performs these checks for you. `x-amzn-oidc-accesstoken` and `x-amzn-oidc-identity` are unsigned legacy headers and cannot be verified, so never use them for identity. Restrict the targets' security group to accept traffic only from the load balancer's security group, and use an HTTPS target group if the claims must be encrypted on the last hop.
+The load balancer forwards the user claims to targets in `x-amzn-oidc-data`, a JWT signed with ES256. The app must verify that signature (public key from `https://public-keys.auth.elb.<region>.amazonaws.com/<key-id>`, key ID from the JWT header), confirm that the `signer` field in the JWT header is your load balancer's ARN, and confirm the token's `exp` has not passed, before using any claim. AWS publishes the `aws-jwt-verify` library, which performs these checks for you. ALB's audience binding is that signer ARN together with the `client` field, both in the JWT header, not a payload `aud` claim.
+`x-amzn-oidc-accesstoken` and `x-amzn-oidc-identity` are unsigned legacy headers and cannot be verified, so never use them for identity. Restrict the targets' security group to accept traffic only from the load balancer's security group, and use an HTTPS target group if the claims must be encrypted on the last hop.
 
 ## 3. Google Cloud Identity-Aware Proxy
 
@@ -7825,7 +7826,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "96adeb75ae03ea04a020f4a8032b3841bfc374c142e70abaa6b558b2b29d205f",
+  "body_sha256": "e48c6f7a8e9c5c08446c706cc99b18495ce4aa5386e7ba1c51b1a753eeb1fc79",
   "components": {
     "aws": {
       "name": "AWS ALB",
