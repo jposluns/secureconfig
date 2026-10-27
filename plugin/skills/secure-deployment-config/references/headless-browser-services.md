@@ -228,12 +228,13 @@ A connection refused or a timeout that happened during the connect is consistent
 isolation from that vantage, not proof of the configuration. To check the other services, change the
 URL in the block's `curl` line, leaving the guard lines intact, to each port in turn:
 `http://$1:4444/status` for a Selenium Grid Router, Hub or Standalone, `http://$1:5555/status`
-for a Node, `http://$1:3000/pressure` for open-source browserless `2.56.7`. The `4444/status` result
-reads as follows: a `200` JSON `ready` and node inventory is exposure; the `-i` prints the headers, so a
-`401` with `WWW-Authenticate: Basic` means the Router auth is on but the port is still reachable,
-which is not the fixed state. The browserless `3000/pressure` instruction is: with `TOKEN` unset or
-empty, expect `200` with load JSON; with a nonempty `TOKEN`, expect `401` for both the tokenless
-request and a deliberately wrong `?token=` value, then confirm the correct token returns the load JSON.
+for a Node, `http://$1:3000/pressure` for open-source browserless `2.56.7`. The Selenium Grid
+`4444/status` result reads as follows: a `200` JSON `ready` and node inventory is exposure; the
+`-i` prints the headers, so a `401` with `WWW-Authenticate: Basic` means the Router auth is on but
+the port is still reachable, which is not the fixed state. The open-source browserless `2.56.7`
+`3000/pressure` instruction is: with `TOKEN` unset or empty, expect `200` with load JSON; with a
+nonempty `TOKEN`, expect `401` for both the tokenless request and a deliberately wrong `?token=`
+value, then confirm the correct token returns the load JSON.
 These are REASONED expectations from the cited configuration, API documentation and HTTP rejection
 handler, not live observations; this authoring environment has no container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
@@ -373,7 +374,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "782c1f838652d055333f5c3a6e5ff72672abb68c91c55e162c4ec61220cd33e9",
+  "body_sha256": "8042e04b35c377a5c99099702d50f3efbd4cd939ef58b435acd13b55a6165d58",
   "components": {
     "chromium": {
       "name": "Chromium",

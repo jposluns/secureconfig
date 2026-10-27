@@ -48608,7 +48608,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
    )
    ```
 
-   Every line must print `BLOCK`; a printed `ALLOW` for any of these is an SSRF hole. Reasoned (prerequisite unavailable: a malicious server, the target client, and a controllable HTTPS discovery host that carries a valid, trusted TLS certificate and whose name resolves to an address you choose): keep the scheme HTTPS with valid TLS throughout and vary only the resolved address, so a refusal is attributable to the address policy rather than to HTTPS or TLS enforcement. Run the public-address control and the private-address test from the same fresh pre-discovery state, clearing any cached discovery metadata, DNS answers, and open connections between them. The reason for that fresh state and clearing is that otherwise a cached response would satisfy discovery with no fetch at all (RFC 9728 section 7.10 notes "Normal HTTP caching behaviors apply", and RFC 9111 section 4.2 has a fresh cached response served without contacting the origin). Establish the public-address control first: have the malicious server advertise a discovery URL on a host you control, for example `https://discovery.example.com/.well-known/oauth-protected-resource`. The client fetches that discovery URL with `GET /.well-known/oauth-protected-resource HTTP/1.1` and `Host: discovery.example.com` (RFC 9728 section 3.1 requires the metadata "MUST be queried using an HTTP GET request"). A further instruction for the public-address control is to resolve `discovery.example.com` to a routable public address and confirm the client fetches the discovery URL. Then, from that cleared state and changing only the resolved address, point `discovery.example.com` at the cloud metadata address (`169.254.169.254`) or another blocked range. Exposed (vulnerable) client: it fetches the URL and reaches the internal service. Fixed client: it resolves the test to the blocked address and refuses that destination before connecting. Require positive evidence of that resolve-and-reject, not the mere absence of a request, since a cache hit also produces no request. Distinguishing source: RFC 9728 section 7.7 and, for server-deployed clients, the MCP MUST in Security Best Practices.
+   Every line must print `BLOCK`; a printed `ALLOW` for any of these is an SSRF hole. Reasoned (prerequisite unavailable: a malicious server, the target client, and a controllable HTTPS discovery host that carries a valid, trusted TLS certificate and whose name resolves to an address you choose): keep the scheme HTTPS with valid TLS throughout and vary only the resolved address, so a refusal is attributable to the address policy rather than to HTTPS or TLS enforcement. Run the public-address control and the private-address test from the same fresh pre-discovery state, clearing any cached discovery metadata, DNS answers, and open connections between them. The reason for that fresh state and clearing is that otherwise a cached response would satisfy discovery with no fetch at all (RFC 9728 section 7.10 notes "Normal HTTP caching behaviors apply", and RFC 9111 section 4.2 has a fresh cached response served without contacting the origin). Establish the public-address control first: have the malicious server advertise a discovery URL on a host you control, for example `https://discovery.example.com/.well-known/oauth-protected-resource`. A further instruction for the public-address control is to resolve `discovery.example.com` to a routable public address and confirm the client fetches the discovery URL with `GET /.well-known/oauth-protected-resource HTTP/1.1` and `Host: discovery.example.com` (RFC 9728 section 3.1 requires the metadata "MUST be queried using an HTTP GET request"). Then, from that cleared state and changing only the resolved address, point `discovery.example.com` at the cloud metadata address (`169.254.169.254`) or another blocked range. Exposed (vulnerable) client: it fetches the URL and reaches the internal service. Fixed client: it resolves the test to the blocked address and refuses that destination before connecting. Require positive evidence of that resolve-and-reject, not the mere absence of a request, since a cache hit also produces no request. Distinguishing source: RFC 9728 section 7.7 and, for server-deployed clients, the MCP MUST in Security Best Practices.
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
@@ -48738,7 +48738,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "8c834798ce298ae2fcfa3908503c94db203ff5c42cca495f75248f5378b6b8cf",
+  "body_sha256": "86216ab9318081e6b54591e5381c0747f1c4702126864137922cfb2139d4c364",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -65136,12 +65136,13 @@ A connection refused or a timeout that happened during the connect is consistent
 isolation from that vantage, not proof of the configuration. To check the other services, change the
 URL in the block's `curl` line, leaving the guard lines intact, to each port in turn:
 `http://$1:4444/status` for a Selenium Grid Router, Hub or Standalone, `http://$1:5555/status`
-for a Node, `http://$1:3000/pressure` for open-source browserless `2.56.7`. The `4444/status` result
-reads as follows: a `200` JSON `ready` and node inventory is exposure; the `-i` prints the headers, so a
-`401` with `WWW-Authenticate: Basic` means the Router auth is on but the port is still reachable,
-which is not the fixed state. The browserless `3000/pressure` instruction is: with `TOKEN` unset or
-empty, expect `200` with load JSON; with a nonempty `TOKEN`, expect `401` for both the tokenless
-request and a deliberately wrong `?token=` value, then confirm the correct token returns the load JSON.
+for a Node, `http://$1:3000/pressure` for open-source browserless `2.56.7`. The Selenium Grid
+`4444/status` result reads as follows: a `200` JSON `ready` and node inventory is exposure; the
+`-i` prints the headers, so a `401` with `WWW-Authenticate: Basic` means the Router auth is on but
+the port is still reachable, which is not the fixed state. The open-source browserless `2.56.7`
+`3000/pressure` instruction is: with `TOKEN` unset or empty, expect `200` with load JSON; with a
+nonempty `TOKEN`, expect `401` for both the tokenless request and a deliberately wrong `?token=`
+value, then confirm the correct token returns the load JSON.
 These are REASONED expectations from the cited configuration, API documentation and HTTP rejection
 handler, not live observations; this authoring environment has no container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
@@ -65281,7 +65282,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "782c1f838652d055333f5c3a6e5ff72672abb68c91c55e162c4ec61220cd33e9",
+  "body_sha256": "8042e04b35c377a5c99099702d50f3efbd4cd939ef58b435acd13b55a6165d58",
   "components": {
     "chromium": {
       "name": "Chromium",
