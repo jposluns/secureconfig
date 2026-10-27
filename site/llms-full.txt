@@ -4684,7 +4684,7 @@ See [memory-locking configuration](https://developer.hashicorp.com/vault/docs/co
 
 Most checks below were **demonstrated on loopback** against Vault 2.1.1, the release binary with its
 checksum verified against HashiCorp's published SHA256SUMS: a single Raft node running the section 3
-configuration unchanged apart from addresses and paths, with the API on 127.0.0.1:8200, the cluster
+configuration unchanged apart from addresses and paths. The Raft node ran with the API on 127.0.0.1:8200, the cluster
 listener on 127.0.0.1:8201, a private test CA, a file audit device, and the section 2 and section 7
 policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block ran as printed, with only its
 placeholders substituted, except where a step says otherwise. Exposed states ran in further runs of
@@ -4856,9 +4856,10 @@ request failed. A `payments` role written without limits or bounds read back wit
 `secret_id_num_uses` `0`, `secret_id_ttl` `0`, no CIDRs, `token_num_uses` `0` and zero TTLs. In a
 follow-up run, the health request printed `http=200 exit=0 err=` on the healthy node and `http=000
 exit=7 err=Failed to connect ...` with the server stopped; with two file audit devices, one request's
-`request_id` appeared twice in each file; and with a second listener stanza on 127.0.0.2:8200, the
-socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an unintended listener with its own
-cluster port, because `cluster_address` defaults to one port above `address`.
+`request_id` appeared twice in each file. The same follow-up run had a second listener stanza on
+127.0.0.2:8200, and the socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an
+unintended listener with its own cluster port, because `cluster_address` defaults to one port above
+`address`.
 
 REASONED: header-file preparation for the ACL and monitoring comparisons: use the intended identity's actual header; the paired requests must distinguish authorized success from anonymous or cross-application denial. Stub arguments contained the header-file path, not its dummy token. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields); Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
@@ -5079,9 +5080,10 @@ another test:
   Network refusal alone does not demonstrate either CIDR control. On the loopback run, with
   `127.0.0.1/32` as the CIDR, a login sent from 127.0.0.2 (the same JSON request through
   `curl --interface`, because the block's CLI cannot choose its source address) was refused with
-  `source address "127.0.0.2" unauthorized by CIDR restrictions on the role`, a login from 127.0.0.1
-  succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2 (that read
-  also went through `curl --interface`, not the block). With no CIDR bound on the role, a login from
+  `source address "127.0.0.2" unauthorized by CIDR restrictions on the role`. The same loopback run,
+  with `127.0.0.1/32` as the CIDR, showed that a login from 127.0.0.1 succeeded, and its token read
+  the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2 (that read also went through
+  `curl --interface`, not the block). With no CIDR bound on the role, a login from
   127.0.0.2 succeeded with `200`, and a token from a role without `token_bound_cidrs` read the payments
   secret from 127.0.0.2 with `200`.
 - **Token lifetime, use budget and renewal ceiling (demonstrated):** the login response
@@ -5520,7 +5522,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f43b2adcb54269e3ad3a4f9cf04de0ce49c3bf122a128753f007b19ad08753aa",
+  "body_sha256": "92706af39185117ccc6cf7cdb24b379c745c11d344ab0c4af6c3e00fef9af4be",
   "components": {
     "run": {
       "name": "Vault loopback run",
@@ -38702,7 +38704,7 @@ REASONED: following block; the complete fronting-layer scenario includes IAP or 
 
 REASONED: authorization comparison from the cited authentication and permission references; no live deployment or test identities are available. The authorized response must contain the expected data; HTTP success alone is insufficient. Only then assess whether the anonymous response withholds that result. If the control fails, the comparison is inconclusive. Repeat with an authenticated but unauthorized account where actor permissions apply.
 
-On loopback, with the metadata above plus datasette-auth-passwords, the block returned the table's rows to the `analyst` session cookie (`authorized http=200`) and `403` anonymously; an authenticated `guest` got `403`, the unauthorized outcome, and the analyst got `403` on SQL under `allow_sql: false`. For sqlite-web with `-P`, the session cookie got the row with `200` and the anonymous request `302` to `/login/`. With datasette-write on a disposable database, an anonymous write got `403`, a root write without the CSRF token `403`, and with the token `302`, and the row was written. Under the same metadata, `/-/versions.json`, `/-/metadata.json`, `/-/plugins.json`, `/-/settings.json` and `/-/databases.json` returned `403` anonymously and `200` to a freshly logged-in analyst, and `/-/metadata.json` showed that analyst both users' password hashes when they were written inline in the plugin configuration, but only the `$env` references when they were supplied through environment variables.
+On loopback, with the metadata above plus datasette-auth-passwords, the block returned the table's rows to the `analyst` session cookie (`authorized http=200`) and `403` anonymously; an authenticated `guest` got `403`, the unauthorized outcome, and the analyst got `403` on SQL under `allow_sql: false`. For sqlite-web with `-P`, the session cookie got the row with `200` and the anonymous request `302` to `/login/`. With datasette-write on a disposable database, an anonymous write got `403`, a root write without the CSRF token `403`, and with the token `302`, and the row was written. Under the same metadata, `/-/versions.json`, `/-/metadata.json`, `/-/plugins.json`, `/-/settings.json` and `/-/databases.json` returned `403` anonymously and `200` to a freshly logged-in analyst. The same metadata's `/-/metadata.json` showed that analyst both users' password hashes when they were written inline in the plugin configuration, but only the `$env` references when they were supplied through environment variables.
 
 The Caddy proxy was Caddy v2.11.4 (the release tarball, its SHA-256 equal to GitHub's published digest) on `127.0.0.1:8443` with `bind 127.0.0.1`, `auto_https off`, the admin API off and TLS files from the test CA, with [caddy.md](caddy.md)'s `basic_auth` in front of a Datasette that had no authentication of its own. Requests through that Caddy proxy to `/`, the SQL JSON route, `/published.db`, `/-/versions.json` and `/published/items.csv` returned `401` anonymously and `200` with the Basic credential, while the loopback backend answered each of those routes directly with `200`: the proxy-only pattern, safe only while nothing untrusted reaches the backend. Block C through the proxy gave `authorized http=200` with the rows and `anonymous http=401` with `www-authenticate: Basic realm="restricted"`.
 
@@ -38866,7 +38868,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "d363fc55e3be72d68b24a71e673040f844c3b368e9ad29455fdeb9713b69b4dc",
+  "body_sha256": "3b257d052a6365f1b9aa98a3f21e8405f58da646fe0115a0b6ca95a13f2ba83b",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -44110,7 +44112,7 @@ The block creates `CMD_FLAGS.txt` once and never appends to one. Its `set --` li
 python server.py --user-data-dir 'REPLACE_WITH_PRIVATE_USER_DATA_DIR' --api --gradio-auth-path "$HOME/.config/text-generation-webui/gradio-auth"
 ```
 
-Start it this way, directly, not through the one-click `start_*` scripts. At the pinned `one_click.py` the launcher joins its own arguments into one string without quoting them (line 24), builds `python server.py` plus that string (line 486) and runs the result through `bash` with `shell=True` (line 208), so a quoted path is split at its spaces and any shell syntax in it runs, and a key passed to those scripts would land on `server.py`'s command line again. This was read in the pinned source, not run. Clients read the API key from the file's `--api-key` line; give the admin key only to the operators who load and unload models. The keys remain in process memory, in the file, and in the startup log (above). The pinned `modules/shared.py`, imported with `--user-data-dir` pointing at a directory the block had written (a path containing a space, with a `--listen-port` line added after the key lines), parsed both keys and that flag from `CMD_FLAGS.txt` while the process's `/proc/self/cmdline` held neither; the launcher and API behaviour above was read in the pinned source (cited in Sources), and no text-generation-webui server was run.
+Start it this way, directly, not through the one-click `start_*` scripts. At the pinned `one_click.py` the launcher joins its own arguments into one string without quoting them (line 24), builds `python server.py` plus that string (line 486) and runs the result through `bash` with `shell=True` (line 208), so a quoted path is split at its spaces and any shell syntax in it runs, and a key passed to those scripts would land on `server.py`'s command line again. This was read in the pinned source, not run. Clients read the API key from the file's `--api-key` line; give the admin key only to the operators who load and unload models. The keys remain in process memory, in the file, and in the startup log (above). The pinned `modules/shared.py`, imported with `--user-data-dir` pointing at a directory the block had written (a path containing a space, with a `--listen-port` line added after the key lines), parsed both keys and that flag from `CMD_FLAGS.txt` while the process's `/proc/self/cmdline` held neither. The launcher and API behaviour above was read in the pinned source (cited in Sources), and no text-generation-webui server was run.
 
 `--api --nowebui` runs the API alone, the right shape for a server where the UI has no business existing. `--ssl-keyfile` and `--ssl-certfile` give both surfaces TLS, but the better pattern is the usual one: keep both ports on loopback and front them with a reverse proxy that terminates TLS and enforces auth (`--subpath` exists for serving the UI under a proxy path). Without TLS, the Gradio login submits credentials in the clear.
 
@@ -44178,7 +44180,7 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
                                                         # denial. Treat anything ambiguous as inconclusive
 ```
 
-REASONED: mixed process-matching evidence and parser/visibility limitations from the printed expression and cited parser sources. The historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward. The pgrep line's demonstration covered only local expression matching, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line. The `pgrep` line prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4): `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`, while `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`, so the line tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
+REASONED: mixed process-matching evidence and parser/visibility limitations from the printed expression and cited parser sources. The historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward. The pgrep line's demonstration covered only local expression matching, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line. The `pgrep` line prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4). The stub arguments `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`. The stub arguments `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`. The `pgrep` line therefore tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
 
 REASONED: following block; anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage. Bash 5.3.9 bash -n accepted all four Verify shell fences. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
@@ -44439,7 +44441,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "5fe2868f8f3238f03f3607a9da4946194d20a77d2d127cf3d61e0a08beeb411a",
+  "body_sha256": "b73c90c32f6286bc17ff540aa49a9f0b72399bf0b704c7004388e2783cdc0f04",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -45357,7 +45359,7 @@ Leave `server.enableXsrfProtection` and `server.enableCORS` at their defaults (b
 
 ## 2. Native login (OIDC)
 
-Streamlit 1.64.0 provides `st.login()`, `st.logout()`, and `st.user` for OpenID Connect authentication against Google, Microsoft Entra ID, Okta, or any OIDC provider (`st.login()` and `st.logout()` were introduced in 1.42.0; `st.user` was introduced in 1.45.0, replacing `st.experimental_user`); install Streamlit's `auth` extra in the app's environment (`pip install "streamlit[auth]"`), which in 1.64.0 requires `Authlib` 1.3.2 or later and `httpx` 0.24.1 or later; without Authlib the `[auth]` block errors, and in the loopback run with Authlib installed but not httpx every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log. Configuration lives in `.streamlit/secrets.toml`:
+Streamlit 1.64.0 provides `st.login()`, `st.logout()`, and `st.user` for OpenID Connect authentication against Google, Microsoft Entra ID, Okta, or any OIDC provider (`st.login()` and `st.logout()` were introduced in 1.42.0; `st.user` was introduced in 1.45.0, replacing `st.experimental_user`). Streamlit's `auth` extra must be installed in the app's environment (`pip install "streamlit[auth]"`), which in 1.64.0 requires `Authlib` 1.3.2 or later and `httpx` 0.24.1 or later; without Authlib the `[auth]` block errors. The loopback run had Authlib installed but not httpx, and every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log. Configuration lives in `.streamlit/secrets.toml`:
 
 ```toml
 [auth]
@@ -45598,7 +45600,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "14b6f63842fdb73af4a8968517001c05be194aa90e42e47584c9190a719bf605",
+  "body_sha256": "10331550a265af6a4c4a5582689a19b21900cdf73fb58028590ee073d570b2a4",
   "components": {
     "streamlit": {
       "name": "Streamlit",
