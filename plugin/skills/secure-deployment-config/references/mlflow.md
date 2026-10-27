@@ -32,7 +32,7 @@ The defaults are already loopback:
 mlflow server --host 127.0.0.1 --port 5000
 ```
 
-The CLI help for `--host` says it plainly: "This is NOT a security setting". Do not switch to `--host 0.0.0.0` on a machine with a public interface. In Docker the two binds are different things: the host publishes on loopback (`-p 127.0.0.1:5000:5000`, which Docker's port-publishing docs say only the Docker host can reach, assuming a normal bridge-network NAT setup and a Docker version at or after 28.0.0; earlier releases could let hosts on the same layer-2 network reach a loopback-published port). The second Docker bind is inside the container, where the server must listen on the container's own interface (`--host 0.0.0.0` there, private to the Compose network and the host), because a process bound to the container's `127.0.0.1` is not reachable through the published port at all. See [docker.md](docker.md). If the server must listen beyond loopback for a proxy on another host, set `--allowed-hosts mlflow.example.com` and `--cors-allowed-origins https://mlflow.example.com`, and never use `--disable-security-middleware` outside a test. The `--allowed-hosts` and `--cors-allowed-origins` security-middleware flags need MLflow 3.5.0 or newer and the default Uvicorn server, not `--gunicorn-opts`/`--waitress-opts`. The `--allowed-hosts` default validates the request's Host header against localhost, `127.0.0.1`, `[::1]`, `0.0.0.0`, and private ranges, which is a Host-header check, not a client-source firewall.
+The CLI help for `--host` says it plainly: "This is NOT a security setting". Do not switch to `--host 0.0.0.0` on a machine with a public interface. In Docker the two binds are different things: the host publishes on loopback (`-p 127.0.0.1:5000:5000`, which Docker's port-publishing docs say only the Docker host can reach, assuming a normal bridge-network NAT setup and a Docker version at or after 28.0.0; earlier releases could let hosts on the same layer-2 network reach a loopback-published port). The second Docker bind is inside the container, where the server must listen on the container's own interface (`--host 0.0.0.0` there, private to the Compose network and the host), because a process bound to the container's `127.0.0.1` is not reachable through the published port at all. See [docker.md](docker.md). If the server must listen beyond loopback for a proxy on another host, set `--allowed-hosts mlflow.example.com` and `--cors-allowed-origins https://mlflow.example.com`, and never use `--disable-security-middleware` outside a test. The security-middleware flags need MLflow 3.5.0 or newer and the default Uvicorn server, not `--gunicorn-opts`/`--waitress-opts`. The `--allowed-hosts` default validates the request's Host header against localhost, `127.0.0.1`, `[::1]`, `0.0.0.0`, and private ranges, which is a Host-header check, not a client-source firewall.
 
 ## 2. TLS from a fronting proxy
 
@@ -283,7 +283,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "af08e5cd393f1135dcdbd180b1dc7aecc25c7dcccf61054123b2405f65d697ea",
+  "body_sha256": "e7125ada279291517752e5f8ec2f0b5eed39fba2b7f3af3ed17e853298c020ec",
   "components": {
     "source": {
       "name": "MLflow pinned source",
