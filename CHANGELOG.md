@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-27
+
+- Split 19 prose sentences over 400 characters in `headless-cms-instant-api.md` and its plugin copy `plugin/skills/secure-deployment-config/references/headless-cms-instant-api.md` into sentences of at most 400 characters, at clause boundaries, with no fact, qualifier, inference label, citation or link changed (TODO 1.385, batch 13). The PostgREST `Config.hs` Sources item now ends its topic description in its own sentence and lists its three URLs under a neutral sources label (#951)
+
 ## 2026-10-26
 
 - Split 26 prose sentences over 400 characters in `elasticsearch.md` and its plugin copy `plugin/skills/secure-deployment-config/references/elasticsearch.md` into sentences of at most 400 characters, with no fact, qualifier, citation or link changed, and moved long Sources URL lists under neutral sources labels named for the product version, or for the Docker images item (TODO 1.385, batch 7). The three fenced code blocks the scan also listed are unchanged (#945)
