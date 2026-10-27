@@ -111,7 +111,7 @@ The Docker browser images add two more listeners: they start VNC by default (`SE
 `secret`; change it with `SE_VNC_PASSWORD`, disable the prompt deliberately only with
 `SE_VNC_NO_PASSWORD`, or turn VNC off with `SE_START_VNC=false`. `SE_VNC_PASSWORD` is an environment
 credential: it is readable through `/proc/<pid>/environ` by the same account and root while any process
-holding it runs, and Sources has no reference for how the image passes it to the VNC server, so, as with `SE_ROUTER_PASSWORD`, it may reach a command line; read the image's start script before relying on the variable, and apply the trusted-host condition above if it does.
+holding it runs. Sources has no reference for how the image passes `SE_VNC_PASSWORD` to the VNC server, so, as with `SE_ROUTER_PASSWORD`, that variable may reach a command line. The guidance for `SE_VNC_PASSWORD` is to read the image's start script before relying on the variable, and to apply the trusted-host condition above if the variable reaches a command line.
 Selenium can terminate TLS itself with
 `--https-certificate` and `--https-private-key`, but it is not enabled by default, and the Router's
 basic auth travels in clear text without it; enabling native HTTPS or, more commonly, fronting the Grid
@@ -191,14 +191,14 @@ curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 ss -tlnp   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900: loopback or internal only
 ```
 
-REASONED: preceding block; the listener inventory above for every port it names, and this DevTools TCP listener check, per the guide's cited Chromium 154.0.8037.57 entries for the browser loopback factories, the headless-shell loopback factory and the actual bound address and DevToolsActivePort output, plus its Selenium Grid getting started, Selenium Docker images env vars and browserless Docker configuration entries for the other ports. A google-chrome binary of unchecked version is present in the authoring environment, but no isolated network namespace was available (creating one was refused), so no DevTools listener or forwarder was started and neither state was observed; the expected exposed and fixed results are those stated here. **REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
+REASONED: preceding block; the listener inventory above for every port it names, and this DevTools TCP listener check, per the guide's cited Chromium 154.0.8037.57 entries for the browser loopback factories, the headless-shell loopback factory and the actual bound address and DevToolsActivePort output. The same REASONED marking also rests on the guide's cited Selenium Grid getting started, Selenium Docker images env vars and browserless Docker configuration entries for the other ports. A google-chrome binary of unchecked version is present in the authoring environment, but no isolated network namespace was available (creating one was refused), so no DevTools listener or forwarder was started and neither state was observed; the expected exposed and fixed results are those stated here. **REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
 `127.0.0.1` or `::1` for the DevTools TCP listener. Inspect both address families and every actual
 port, including ephemeral ports, plus forwarders in the host and container network namespaces.
 Exposed, a forwarder supplies a reachable non-loopback listener; fixed, no unauthenticated external
 path remains while the local browser endpoint still answers. The pinned socket factories and HTTP
 handler below establish these expected results.
 
-REASONED: the guard and substitution instructions for the DevTools, Grid, browserless and Playwright probes, per the guide's cited curl diagnostic variables entry (pinned tag curl-8_14_1) and Chromium 154.0.8037.57 host check entry. During marking review (October 2026) the guarded block ran in bash 5.3.9 with a stub curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with two values, the exactly-1-value refusal; with 203.0.113.10 substituted, the stub received http://203.0.113.10:9222/json/version, and the 4444/status and 3000/pressure edits reached it as written. No endpoint was probed, so the exposed and fixed results below remain unobserved. For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
+REASONED: the guard and substitution instructions for the DevTools, Grid, browserless and Playwright probes, per the guide's cited curl diagnostic variables entry (pinned tag curl-8_14_1) and Chromium 154.0.8037.57 host check entry. During marking review (October 2026) the guarded block ran in bash 5.3.9 with a stub curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with two values, the exactly-1-value refusal. The guarded block's marking-review testing (October 2026, bash 5.3.9, stub curl, no network) also showed that, with 203.0.113.10 substituted, the stub received http://203.0.113.10:9222/json/version, and the 4444/status and 3000/pressure edits reached the stub as written. No endpoint was probed, so the exposed and fixed results below remain unobserved. For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
 forces a real substitution, and read the write-out. Replace `9222` in the curl URL with the actual
 externally forwarded port if different. For the local positive control, run the same guarded block
 inside the browser's network namespace with its actual loopback address and DevTools port.
@@ -221,18 +221,19 @@ REASONED: following block; external discovery/authentication probes and local po
 )
 ```
 
-REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries, browserless pressure API entry, Playwright Docker entry, Playwright BrowserType.launchServer and connect entry, Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
+REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries. The same REASONED marking also rests on the guide's cited browserless pressure API entry, Playwright Docker entry, Playwright BrowserType.launchServer and connect entry, Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
 a `200` JSON body containing `webSocketDebuggerUrl`. Fixed, the external request cannot reach that
 endpoint while the local positive control still returns it. A `404` from approval mode is not a pass.
 A connection refused or a timeout that happened during the connect is consistent with
 isolation from that vantage, not proof of the configuration. To check the other services, change the
 URL in the block's `curl` line, leaving the guard lines intact, to each port in turn:
-`http://$1:4444/status` for a Selenium Grid Router, Hub or Standalone (a `200` JSON `ready` and node
-inventory is exposure; the `-i` prints the headers, so a `401` with `WWW-Authenticate: Basic` means the
-Router auth is on but the port is still reachable, which is not the fixed state), `http://$1:5555/status`
-for a Node, `http://$1:3000/pressure` for open-source browserless `2.56.7` (with `TOKEN` unset or empty,
-expect `200` with load JSON; with a nonempty `TOKEN`, expect `401` for both the tokenless request and
-a deliberately wrong `?token=` value, then confirm the correct token returns the load JSON).
+`http://$1:4444/status` for a Selenium Grid Router, Hub or Standalone, `http://$1:5555/status`
+for a Node, `http://$1:3000/pressure` for open-source browserless `2.56.7`. The `4444/status` result
+reads as follows: a `200` JSON `ready` and node inventory is exposure; the `-i` prints the headers, so a
+`401` with `WWW-Authenticate: Basic` means the Router auth is on but the port is still reachable,
+which is not the fixed state. The browserless `3000/pressure` instruction is: with `TOKEN` unset or
+empty, expect `200` with load JSON; with a nonempty `TOKEN`, expect `401` for both the tokenless
+request and a deliberately wrong `?token=` value, then confirm the correct token returns the load JSON.
 These are REASONED expectations from the cited configuration, API documentation and HTTP rejection
 handler, not live observations; this authoring environment has no container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
@@ -271,7 +272,7 @@ missing files, authentication failures, connection failures, and timeouts are in
 ## Sources (checked October 2026)
 
 - Chromium 154.0.8037.57 browser loopback factories and approval-mode port fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158
-- Chromium 154.0.8037.57 browser branding/profile and policy checks; approval-mode startup, with the `kDefaultDevToolsPort` 9222 fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282 and https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26
+- Chromium 154.0.8037.57 browser branding/profile and policy checks; approval-mode startup, with the `kDefaultDevToolsPort` 9222 fallback. Chromium 154.0.8037.57 sources: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282 and https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26
 - Browser command-line pipe/port startup and precedence over approval mode (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417
 - Headless-shell loopback factory and pipe/port startup (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145
 - Headless-shell command-line port and pipe handling (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/command_line_handler.cc#L199-L206
@@ -301,7 +302,7 @@ missing files, authentication failures, connection failures, and timeouts are in
 - Playwright BrowserType.launchServer and connect: https://playwright.dev/docs/api/class-browsertype
 - Playwright Docker (run-server remote connection): https://playwright.dev/docs/docker
 - Browserless ALLOW_FILE_PROTOCOL configuration and false default (pinned tag v2.51.0; version basis 2.51.0): https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/config.ts
-- Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2): https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/cli/program.ts#L292-L307, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/browserServerImpl.ts, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/remote/playwrightServer.ts
+- Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2). Playwright sources (pinned tag v1.58.2): https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/cli/program.ts#L292-L307, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/browserServerImpl.ts, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/remote/playwrightServer.ts
 - curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1): https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79, https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md
 
 
@@ -372,7 +373,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "ebb4a62836b2de94321149bbe30a946e00bd1e41c808d1c02be928657667b931",
+  "body_sha256": "782c1f838652d055333f5c3a6e5ff72672abb68c91c55e162c4ec61220cd33e9",
   "components": {
     "chromium": {
       "name": "Chromium",
