@@ -42,7 +42,7 @@ Basic Auth, issued from Project Settings, and unrelated to a user's login creden
 identity provider per [mfa.md](mfa.md); Langfuse's own login has none.
 
 Those controls all sit on the sign-in flow, and the self-hosting `docker-compose.yml` sits under them: it
-ships example secrets marked `# CHANGEME`, and `NEXTAUTH_SECRET` protects the session token, which NextAuth
+ships example secrets marked `# CHANGEME`. The `NEXTAUTH_SECRET` variable protects the session token, which NextAuth
 encrypts and authenticates, so the shipped `mysecret` lets anyone mint a session for any existing account,
 administrators included, without the login flow and the SSO or MFA that only guard it. Disabling signup and
 enforcing SSO do not help, because they gate account creation and sign-in, not a forged cookie. Two related
@@ -54,8 +54,8 @@ for `NEXTAUTH_SECRET` and `SALT`, `openssl rand -hex 32` for `ENCRYPTION_KEY`) a
 repository ([secrets.md](secrets.md)); changing `ENCRYPTION_KEY` later needs a planned re-encryption, and if
 the shipped key was ever live, treat the stored provider credentials as exposed and rotate them. The same
 compose bundles a MinIO with the well-known `minio`/`miniosecret` login and publishes its S3 API on host port
-`9090` on every interface by default, as it does langfuse-web on `3000`, while the bundled Postgres,
-ClickHouse, and Redis default to loopback; change that login, update the matching `LANGFUSE_S3_*` access keys
+`9090` on every interface by default, as it does langfuse-web on `3000`. The same compose's bundled Postgres,
+ClickHouse, and Redis default to loopback; change the MinIO login, update the matching `LANGFUSE_S3_*` access keys
 Langfuse uses to reach MinIO, and keep every published port off untrusted networks ([minio.md](minio.md),
 [object-storage.md](object-storage.md)).
 
@@ -90,7 +90,8 @@ SDKs need one to keep sending traces. Phoenix has no native MFA, but it can fede
 provider (its documentation works through Google, AWS Cognito, and Microsoft Entra ID); enforce MFA there, or
 add an identity-aware proxy in front per [mfa.md](mfa.md). Two OAuth caveats: `PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP`
 defaults to `True`, so any identity the provider will authenticate can provision itself an account unless you
-set it `False` and restrict provider membership (test an unapproved identity); and local email/password login
+set it `False` and restrict provider membership (test an unapproved identity). The second caveat is that local
+email/password login
 stays available alongside SSO and bypasses the provider's MFA, so set `PHOENIX_DISABLE_BASIC_AUTH=True` once
 the IdP is the intended path. Establish and test an approved IdP administrator BEFORE you disable local login
 or provider signup: disabling basic auth also disables the local admin password, so once
@@ -107,8 +108,9 @@ signing secret weakens every session token it protects, so replace whichever exa
 uses. Then restrict who may sign up, and do not expose the dashboard without
 your own layer in front. Helicone is several services, not one: its Docker Compose publishes the backing
 stores - PostgreSQL, ClickHouse, MinIO/S3, Redis, and MailHog - on host ports independent of the dashboard
-login (for example `54388:5432` and `18123:8123`), so an identity proxy on the UI leaves those wide open;
-remove or loopback-scope every backing publication and rotate the example storage credentials
+login (for example `54388:5432` and `18123:8123`). An identity proxy on the Helicone UI therefore leaves those
+backing stores wide open; remove or loopback-scope every backing publication and rotate the example storage
+credentials
 ([minio.md](minio.md), [object-storage.md](object-storage.md)). Ingestion runs through the separate AI Gateway
 and the provider keys in its environment, not the web session; store those per [secrets.md](secrets.md). The
 Jawn service and the S3 store also hold your data, so protect every service, not just the dashboard and
@@ -143,9 +145,9 @@ Supply your own configuration with explicit endpoints for every enabled listener
 zPages from both `extensions` and `service.extensions` unless needed; if retained, bind them privately
 and control access separately from receiver authentication. Widen a receiver's bind only where the
 intended clients, proxy, or mesh need it; require TLS on every receiver and exporter; and attach an authenticator
-extension, such as `basicauth` (htpasswd-style credentials, or a static `client_auth` username/password for
-outgoing calls) or `bearertokenauth` (a static `token` or file `filename`, with `filename` taking precedence), to any
-receiver that accepts data from outside the host. For `bearertokenauth`, each file line with a non-whitespace field supplies its first whitespace-delimited field as a token. The configurable header (default `Authorization`) and scheme (default `Bearer`) apply to outgoing HTTP and gRPC calls: HTTP sends the value as a header, and gRPC sends it as metadata under the lower-case configured header key. On incoming requests, `Authenticate` checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token. Declaring an authenticator extension is not enough to enforce it: list it under `service.extensions` so it
+extension to any receiver that accepts data from outside the host. Examples of an authenticator extension are
+`basicauth` (htpasswd-style credentials, or a static `client_auth` username/password for outgoing calls) and
+`bearertokenauth` (a static `token` or file `filename`, with `filename` taking precedence). For `bearertokenauth`, each file line with a non-whitespace field supplies its first whitespace-delimited field as a token. The configurable header (default `Authorization`) and scheme (default `Bearer`) apply to outgoing HTTP and gRPC calls: HTTP sends the value as a header, and gRPC sends it as metadata under the lower-case configured header key. On incoming requests, `Authenticate` checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token. Declaring an authenticator extension is not enough to enforce it: list it under `service.extensions` so it
 starts, then attach it to EACH receiver protocol with an `auth.authenticator` key naming the extension.
 Inventory the other listeners too. At v0.161.0, the internal telemetry metrics factory defaults to
 `localhost:8888`; the two shipped configs explicitly use `127.0.0.1:8888`. Their
@@ -279,14 +281,15 @@ the listener inventory. Substitute a bracketed literal for an IPv6 host in the U
 
 REASONED: the OTLP/HTTP admission and OTLP gRPC Export checks, per the guide's cited Arize Phoenix authentication entry, Arize Phoenix gRPC OTLP Export authorization entry and pinned Phoenix gRPC bind entry. They need a running Phoenix and, for 4317, an OTLP gRPC client with the protobuf descriptor; the authoring environment has no Phoenix and no protobuf or gRPC Python package, so live HTTP admission, protobuf encoding and gRPC Export were not exercised. During marking review (October 2026), bash ran the HTTP recipe with a stub curl on PATH and no network, anonymously and with a dummy bearer header supplied through stdin using --header @-. In both calls the stub received --data-binary followed by an empty argument, -H followed by Content-Type: application/x-protobuf, and https://phoenix.internal:6006/v1/traces; the anonymous call had empty stdin and no authorization header, and the second received Authorization: Bearer dummy-write-key followed by a newline on stdin. Both stub calls exited 0. This checks local HTTP request construction only, not protobuf serialization, Phoenix admission or gRPC behaviour. The expected exposed and fixed results are those stated here. The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
 is a zero-length protobuf body, so send `--data-binary ''` with `Content-Type: application/x-protobuf` to
-`/v1/traces` on the HTTP port (6006) and read the status - anonymously it must be rejected (401/403), and
-with a WRITE-authorized `Authorization: Bearer` key (a system key, or a user key allowed to write traces,
-NOT a viewer key) it is admitted (a 2xx). This tests request ADMISSION, not span
+`/v1/traces` on the HTTP port (6006) and read the status. The anonymous request must be rejected (401/403),
+and the request with a WRITE-authorized `Authorization: Bearer` key (a system key, or a user key allowed to
+write traces, NOT a viewer key) is admitted (a 2xx). This tests request ADMISSION, not span
 persistence, and a valid VIEWER-role key is not a positive control here: Phoenix authenticates a viewer but
 rejects a viewer token for OTLP writes with `PERMISSION_DENIED`, so admit only with a system key or a
 write-authorized user key. The gRPC OTLP receiver on 4317 is a SEPARATE server with its own
 `ApiKeyInterceptor`, not the HTTP `/v1` router, so a protected HTTP path does not prove the gRPC path is
-protected: test 4317 separately by invoking `opentelemetry.proto.collector.trace.v1.TraceService/Export`
+protected. The gRPC path therefore needs a separate test of 4317: invoke
+`opentelemetry.proto.collector.trace.v1.TraceService/Export`
 with an empty `ExportTraceServiceRequest`, first with no metadata (expect `UNAUTHENTICATED`) then with
 `authorization: Bearer <write-authorized key>` (expect `OK`). That needs an OTLP gRPC client carrying the
 protobuf descriptor (and the CA if TLS is on), so it ships REASONED: with authentication
@@ -303,15 +306,16 @@ rule in [machine-auth.md](machine-auth.md), and the Phoenix TLS entries in Sourc
 settings named here. No Phoenix instance is available, so no plaintext-versus-TLS run was made and Phoenix
 transport and authentication were not exercised. During review, only the key-handling pattern at the end of this
 paragraph was run, in bash under `bash -x` with a stub curl and a dummy key: the subshell traced only its
-`trap - DEBUG RETURN ERR` and `set +x` lines, none carrying the key; curl's argv held no key and its stdin held
-the `Authorization: Bearer` line; and a placeholder, an empty value, a line feed, a carriage return or a tab was
+`trap - DEBUG RETURN ERR` and `set +x` lines, none carrying the key. The same review run found that curl's argv
+held no key and its stdin held the `Authorization: Bearer` line, and that a placeholder, an empty value, a line
+feed, a carriage return or a tab was
 refused before any curl call. With `set +x` removed, the trace showed the key on two lines, the `set --` line
 and the `printf` line, and an interactive run with history enabled kept the key in the history entry. Outside
 the one plaintext exception below, send a Phoenix API key only over TLS: use an `https://` URL for `/v1/traces`
-with certificate verification left on, and a TLS channel for the gRPC Export on 4317, terminated by Phoenix
-itself (`PHOENIX_TLS_ENABLED=True` with `PHOENIX_TLS_CERT_FILE` and `PHOENIX_TLS_KEY_FILE`, or the per-protocol
-`PHOENIX_TLS_ENABLED_FOR_HTTP` and `PHOENIX_TLS_ENABLED_FOR_GRPC` where your release has them) or by a reverse
-proxy or tunnel in front of it. Phoenix defaults to TLS off, so a plain `http://` URL or a plaintext gRPC
+with certificate verification left on, and a TLS channel for the gRPC Export on 4317. The TLS must be terminated
+by Phoenix itself (`PHOENIX_TLS_ENABLED=True` with `PHOENIX_TLS_CERT_FILE` and `PHOENIX_TLS_KEY_FILE`, or the
+per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP` and `PHOENIX_TLS_ENABLED_FOR_GRPC` where your release has them) or by
+a reverse proxy or tunnel in front of Phoenix. Phoenix defaults to TLS off, so a plain `http://` URL or a plaintext gRPC
 channel puts the Bearer key on the wire in cleartext, and a private network is not a substitute: anyone who can
 observe that network reads the key. The plaintext exception, this guide's reasoning rather than machine-auth.md's
 rule, is a client on the Phoenix host using loopback in Phoenix's own network namespace, for example a direct
@@ -329,7 +333,8 @@ them: for gRPC clients using TLS, trust the CA for the certificate presented by 
 to, whether Phoenix or the TLS-terminating proxy or tunnel. When you script the HTTP
 probe, keep the key out of argv and tracing. In a fresh, clean shell (CONTRIBUTING rule 7), build a subshell
 like the Langfuse block above and add `set +x` straight after its `trap - DEBUG RETURN ERR` line, so tracing is
-off before the key arrives on the `set --` line; refuse a placeholder, an empty value or a control character;
+off before the key arrives on the `set --` line. That subshell must refuse a placeholder, an empty value or a
+control character,
 then pipe `printf 'Authorization: Bearer %s\n' "$1"` into curl with `--header @-`, never `-H` with the key and
 never the key in the URL. Require exactly one value, omit the Langfuse block's two escaping lines (they apply
 only to `--config -`), send the empty `application/x-protobuf` POST described above, and delete the history
@@ -356,7 +361,7 @@ that accepts spans with no credential at all.
 - Langfuse, session-lifetime implementation (`AUTH_SESSION_MAX_AGE` validated as an integer greater than five, default `14 * 24 * 60` = 20160 minutes, vs the 43200 in the docs): https://github.com/langfuse/langfuse/blob/24c949d8dd5617219a8415f80e4c65ad611ff05c/web/src/env.mjs
 - Langfuse, self-hosting configuration (`NEXTAUTH_SECRET`, `SALT`, `ENCRYPTION_KEY` and their generation, the bundled MinIO/Postgres/ClickHouse/Redis; checked 2026-09-14): https://langfuse.com/self-hosting/configuration
 - Langfuse, self-hosting docker-compose.yml (the `# CHANGEME` example secrets `mysecret`/`mysalt`/all-zero `ENCRYPTION_KEY`, MinIO `minio`/`miniosecret` on host `9090`, langfuse-web on `3000`; checked 2026-09-14): https://github.com/langfuse/langfuse/blob/0dd0a7fbe2feb300b8776f02b3684eeee3fbceab/docker-compose.yml
-- Arize Phoenix, authentication (`PHOENIX_ENABLE_AUTH`, `PHOENIX_SECRET`, system and user API keys, `PHOENIX_API_KEY`, the default `admin@localhost` / `admin` account, `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` read only at first-account creation, `/v1/` REST permissions, OAuth2/OIDC identity providers, and the absence of native MFA; read 2026-09-13): https://arize.com/docs/phoenix/self-hosting/features/authentication
+- Arize Phoenix, authentication (`PHOENIX_ENABLE_AUTH`, `PHOENIX_SECRET`, system and user API keys, `PHOENIX_API_KEY`, the default `admin@localhost` / `admin` account, `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` read only at first-account creation, `/v1/` REST permissions, OAuth2/OIDC identity providers, and the absence of native MFA; read 2026-09-13). Arize Phoenix authentication sources: https://arize.com/docs/phoenix/self-hosting/features/authentication
 - Arize Phoenix, native HTTP and gRPC TLS introduced in 8.29 (2025-04-28): https://arize.com/docs/phoenix/release-notes/04-2025/04-28-2025-tls-support-for-phoenix-server
 - Arize Phoenix, TLS configuration implementation (`PHOENIX_TLS_ENABLED` default `False`, `PHOENIX_TLS_CERT_FILE`/`PHOENIX_TLS_KEY_FILE`, and the per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP`/`PHOENIX_TLS_ENABLED_FOR_GRPC` overrides): https://github.com/Arize-ai/phoenix/blob/080959576563900038688ddf01f3bee110005df5/src/phoenix/config.py
 - Helicone, self-hosted deployment (default `test@helicone.ai` / `password` login): https://docs.helicone.ai/getting-started/self-host/manual
@@ -485,7 +490,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "bccda510424a75793de8f391c4d82138bbed715c67e81adacfb514c1b9c366f9",
+  "body_sha256": "39189a4273b64e378d79fe747031927635bcf0be0caebbf800a1e7a7c5589689",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
