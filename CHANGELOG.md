@@ -13,6 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-10-27
 
 - Split 17 prose sentences over 400 characters in `gitops-controllers.md` and its plugin copy `plugin/skills/secure-deployment-config/references/gitops-controllers.md` into sentences of at most 400 characters, with no fact, qualifier, inference label, citation or link changed (TODO 1.385, batch 14). Sources items now end their topic description in its own sentence and list their URLs under neutral sources labels that keep each URL scoped to the whole item (#952)
+- `sqlite.md` and its plugin copy `plugin/skills/secure-deployment-config/references/sqlite.md` (TODO 1.385, batch 12): the 19 prose sentences over 400 characters, which measured 406 to 1,160 characters, are split at clause boundaries into sentences of at most 394 characters, with no fact, qualifier, inference label, citation or link changed. The long LiteFS and GNU grep Sources items now list their URLs under labels that name each item's whole topic, and claim text, tables, code blocks and headings are unchanged (#950)
 
 ## 2026-10-26
 
