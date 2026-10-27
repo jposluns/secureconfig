@@ -62505,7 +62505,7 @@ never looks up a name: an all-zero IPv4 or IPv6 address is reported as every add
 IPv4 or IPv6 address the parser accepts is printed as it is, except an IPv4-mapped IPv6 address, and
 every other value is flagged for checking with `ss`.
 The `sockets=` setting adds listeners; a `listen=` value other than empty or `0` opens the UDP discovery socket;
-and an empty `allow=` lets every client address try to log in, except those a `deny=` list refuses. It describes the file, not the running process:
+and an empty `allow=` lets every client address try to log in, except those a `deny=` list refuses. The block describes the file, not the running process:
 `ss` above is the authority for what is listening now, and a change takes effect at
 `/etc/webmin/restart`. Substitute the file path inside the single quotes (the package default is
 `/etc/webmin/miniserv.conf`), and paste the whole block.
@@ -62750,7 +62750,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "304d166d4b120aa7420463da4a4f8092ddac696f30bba5390dabbe7d4cf18b44",
+  "body_sha256": "2c066f6923d24629262e9e1a6145f691e44b35b8b49bdca50bdade65ccc637ad",
   "components": {
     "cockpit": {
       "name": "Cockpit",
