@@ -22,7 +22,7 @@ Written against Apache HTTP Server 2.4, Apache TLSv1.3 minimum 2.4.36+, Apache p
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
-Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host, or [self-signed.md](self-signed.md) for internal use. The public-host step is to note that `certbot --apache` obtains and installs the certificate and, at the time of writing, enables the HTTP-to-HTTPS redirect by default (`--redirect` requests it explicitly), but to review its generated TLS config against steps 1 to 3 and add HSTS yourself, since certbot's `--hsts` is off by default.
+Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host, or [self-signed.md](self-signed.md) for internal use. The advice for a public host is to note that `certbot --apache` obtains and installs the certificate and, at the time of writing, enables the HTTP-to-HTTPS redirect by default (`--redirect` requests it explicitly), but to review its generated TLS config against steps 1 to 3 and add HSTS yourself, since certbot's `--hsts` is off by default.
 
 ## 1. Enable the modules
 
@@ -236,7 +236,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "27f653f414801ca98666c6b1e0e02bbf4a8993ba65e658274e4a6b0a189ef951",
+  "body_sha256": "e48edd8524256e88eec11b446901f6cdc3b75cf3083b576e8d52d861af793504",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
