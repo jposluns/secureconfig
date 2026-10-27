@@ -394,7 +394,7 @@ See [memory-locking configuration](https://developer.hashicorp.com/vault/docs/co
 
 Most checks below were **demonstrated on loopback** against Vault 2.1.1, the release binary with its
 checksum verified against HashiCorp's published SHA256SUMS: a single Raft node running the section 3
-configuration unchanged apart from addresses and paths, with the API on 127.0.0.1:8200, the cluster
+configuration unchanged apart from addresses and paths. The Raft node ran with the API on 127.0.0.1:8200, the cluster
 listener on 127.0.0.1:8201, a private test CA, a file audit device, and the section 2 and section 7
 policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block ran as printed, with only its
 placeholders substituted, except where a step says otherwise. Exposed states ran in further runs of
@@ -566,9 +566,10 @@ request failed. A `payments` role written without limits or bounds read back wit
 `secret_id_num_uses` `0`, `secret_id_ttl` `0`, no CIDRs, `token_num_uses` `0` and zero TTLs. In a
 follow-up run, the health request printed `http=200 exit=0 err=` on the healthy node and `http=000
 exit=7 err=Failed to connect ...` with the server stopped; with two file audit devices, one request's
-`request_id` appeared twice in each file; and with a second listener stanza on 127.0.0.2:8200, the
-socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an unintended listener with its own
-cluster port, because `cluster_address` defaults to one port above `address`.
+`request_id` appeared twice in each file. The same follow-up run had a second listener stanza on
+127.0.0.2:8200, and the socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an
+unintended listener with its own cluster port, because `cluster_address` defaults to one port above
+`address`.
 
 REASONED: header-file preparation for the ACL and monitoring comparisons: use the intended identity's actual header; the paired requests must distinguish authorized success from anonymous or cross-application denial. Stub arguments contained the header-file path, not its dummy token. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields); Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
@@ -789,9 +790,10 @@ another test:
   Network refusal alone does not demonstrate either CIDR control. On the loopback run, with
   `127.0.0.1/32` as the CIDR, a login sent from 127.0.0.2 (the same JSON request through
   `curl --interface`, because the block's CLI cannot choose its source address) was refused with
-  `source address "127.0.0.2" unauthorized by CIDR restrictions on the role`, a login from 127.0.0.1
-  succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2 (that read
-  also went through `curl --interface`, not the block). With no CIDR bound on the role, a login from
+  `source address "127.0.0.2" unauthorized by CIDR restrictions on the role`. The same loopback run,
+  with `127.0.0.1/32` as the CIDR, showed that a login from 127.0.0.1 succeeded, and its token read
+  the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2 (that read also went through
+  `curl --interface`, not the block). With no CIDR bound on the role, a login from
   127.0.0.2 succeeded with `200`, and a token from a role without `token_bound_cidrs` read the payments
   secret from 127.0.0.2 with `200`.
 - **Token lifetime, use budget and renewal ceiling (demonstrated):** the login response
@@ -1230,7 +1232,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f43b2adcb54269e3ad3a4f9cf04de0ce49c3bf122a128753f007b19ad08753aa",
+  "body_sha256": "92706af39185117ccc6cf7cdb24b379c745c11d344ab0c4af6c3e00fef9af4be",
   "components": {
     "run": {
       "name": "Vault loopback run",

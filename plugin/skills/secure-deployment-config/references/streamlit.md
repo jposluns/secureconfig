@@ -57,7 +57,7 @@ Leave `server.enableXsrfProtection` and `server.enableCORS` at their defaults (b
 
 ## 2. Native login (OIDC)
 
-Streamlit 1.64.0 provides `st.login()`, `st.logout()`, and `st.user` for OpenID Connect authentication against Google, Microsoft Entra ID, Okta, or any OIDC provider (`st.login()` and `st.logout()` were introduced in 1.42.0; `st.user` was introduced in 1.45.0, replacing `st.experimental_user`); install Streamlit's `auth` extra in the app's environment (`pip install "streamlit[auth]"`), which in 1.64.0 requires `Authlib` 1.3.2 or later and `httpx` 0.24.1 or later; without Authlib the `[auth]` block errors, and in the loopback run with Authlib installed but not httpx every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log. Configuration lives in `.streamlit/secrets.toml`:
+Streamlit 1.64.0 provides `st.login()`, `st.logout()`, and `st.user` for OpenID Connect authentication against Google, Microsoft Entra ID, Okta, or any OIDC provider (`st.login()` and `st.logout()` were introduced in 1.42.0; `st.user` was introduced in 1.45.0, replacing `st.experimental_user`). Streamlit's `auth` extra must be installed in the app's environment (`pip install "streamlit[auth]"`), which in 1.64.0 requires `Authlib` 1.3.2 or later and `httpx` 0.24.1 or later; without Authlib the `[auth]` block errors. The loopback run had Authlib installed but not httpx, and every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log. Configuration lives in `.streamlit/secrets.toml`:
 
 ```toml
 [auth]
@@ -298,7 +298,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "14b6f63842fdb73af4a8968517001c05be194aa90e42e47584c9190a719bf605",
+  "body_sha256": "10331550a265af6a4c4a5582689a19b21900cdf73fb58028590ee073d570b2a4",
   "components": {
     "streamlit": {
       "name": "Streamlit",
