@@ -45345,7 +45345,7 @@ sslCertFile = "/path/cert.pem"
 sslKeyFile  = "/path/key.pem"
 ```
 
-Leave `server.enableXsrfProtection` and `server.enableCORS` at their defaults (both `true`). Advice to disable them so uploads or embedding work behind a proxy removes protection rather than fixing the proxy; correct the proxy's forwarded headers and WebSocket upgrade instead. XSRF does not enable CORS or require a token when opening a WebSocket. Disabling CORS permits cross-origin WebSockets even with XSRF enabled. Keep both enabled; configure `server.corsAllowedOrigins` with origins and `server.allowedHosts` with hostnames. Configuring native authentication separately enables both protections. These are cross-site controls, not user authentication ([cors.md](cors.md)). Configuration precedence runs command-line over environment variables over the project `.streamlit/config.toml` (relative to the service's working directory) over the global config, so inspect the launch configuration actually in effect and restart after changing server settings. The instruction for write access is to restrict writes to app code and configuration to deployment administrators, and to note that `client.toolbarMode` only changes menu visibility and is not an authorization boundary.
+Leave `server.enableXsrfProtection` and `server.enableCORS` at their defaults (both `true`). Advice to disable them so uploads or embedding work behind a proxy removes protection rather than fixing the proxy; correct the proxy's forwarded headers and WebSocket upgrade instead. XSRF does not enable CORS or require a token when opening a WebSocket. Disabling CORS permits cross-origin WebSockets even with XSRF enabled. Keep both enabled; configure `server.corsAllowedOrigins` with origins and `server.allowedHosts` with hostnames. Configuring native authentication separately enables both protections. These are cross-site controls, not user authentication ([cors.md](cors.md)). Configuration precedence runs command-line over environment variables over the project `.streamlit/config.toml` (relative to the service's working directory) over the global config, so inspect the launch configuration actually in effect and restart after changing server settings. Two other instructions apply: restrict writes to app code and configuration to deployment administrators, and note that `client.toolbarMode` only changes menu visibility and is not an authorization boundary.
 
 ## 2. Native login (OIDC)
 
@@ -45590,7 +45590,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "4affd47cc79ebdb3f94bf5e6d080fe3a7b3a8759ea900badae47b80efaeec91a",
+  "body_sha256": "39f017b494f2dd3b8c7457c92fbc17850ff820c3482a9cd9c093d639e4a61dfb",
   "components": {
     "streamlit": {
       "name": "Streamlit",
