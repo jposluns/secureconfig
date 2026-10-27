@@ -16727,7 +16727,7 @@ On Go 1.27, setting `SSL_CERT_FILE` or `SSL_CERT_DIR` bypasses the platform cert
 
 ## 5. Keep diagnostic endpoints private
 
-Importing `net/http/pprof` for its side effect registers `/debug/pprof/` (profiles, traces, `cmdline`, and requests that force a GC) on `http.DefaultServeMux`, and `expvar` registers `/debug/vars` (exposing `cmdline` and `memstats`) the same way; neither starts a listener by itself, but `http.ListenAndServe(addr, nil)`, or any server with a nil handler, serves the default mux, so a single stray import turns a public port into an information-disclosure and resource-exhaustion surface. Give the application its own mux and never mount diagnostics on it:
+Importing `net/http/pprof` for its side effect registers `/debug/pprof/` (profiles, traces, `cmdline`, and requests that force a GC) on `http.DefaultServeMux`, and `expvar` registers `/debug/vars` (exposing `cmdline` and `memstats`) the same way. Neither package starts a listener by itself, but `http.ListenAndServe(addr, nil)`, or any server with a nil handler, serves the default mux, so a single stray import turns a public port into an information-disclosure and resource-exhaustion surface. Give the application its own mux and never mount diagnostics on it:
 
 ```go
 mux := http.NewServeMux()          // the app mux; assign it to Server.Handler, not the default mux
@@ -16921,7 +16921,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "63e38395cc96dd814b2dedccff78a3fa27d6e32b6e4d1a8da4c8a881bd23de50",
+  "body_sha256": "fc2bc21450c0707a37a2953436f6cdf504e3ac230cbc645694700fe71661b70a",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
@@ -17527,7 +17527,7 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 
 ## Sources (checked September 2026)
 
-- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0 ; Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0 ; proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
+- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0. Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0. Proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
 - Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0 ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0
 - Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0 ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0
 - Rate limiting middleware (rate-limiting middleware in .NET 7 and later; guide targets .NET 10 LTS): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0
@@ -17676,7 +17676,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "6076caf8ba4709b61781d7d215f7b0eafce644800188d8f003eab30f912dc116",
+  "body_sha256": "b974c5893b1c3b20024c307e17a7601c8029c60da11f2874dc29afaa2ac2f2a2",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -20807,7 +20807,7 @@ An AI agent, RAG fetcher, or webhook handler that retrieves URLs can be steered 
 The instance metadata service listens on `169.254.169.254`, and on Nitro instances in an IPv6-enabled subnet also on `[fd00:ec2::254]` (IMDSv2-compatible); block or verify-disabled BOTH, since an IPv4-only control misses the IPv6 path. IMDSv2 requires a session token obtained with a
 `PUT` before any `GET` succeeds. The response to that `PUT`, the token itself, has a hop limit at the IP
 protocol level (1 on many launches, but launch parameters, account/Region settings, and the IMDSv2-only
-`ImdsSupport: v2.0` AMI setting can make it 2, so set it explicitly below rather than assuming): the token
+`ImdsSupport: v2.0` AMI setting can make it 2, so set it explicitly below rather than assuming). The token
 cannot travel more than one network hop back to the requester at hop limit 1 (per
 the AWS instance metadata service documentation). A containerized application sitting one hop from the
 host, for example behind the container network's own routing, will not receive the token and so cannot
@@ -21087,7 +21087,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "dd35bc80d16265a5421b88e5d57cd5aa5049f42100389f0bce972fa962728615",
+  "body_sha256": "712363006ec25a2575f4c2073226e2714426b204e78925ae260203ce8df645ff",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -57795,7 +57795,7 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Verify
 
-**REASONED:** not demonstrated against a deployed API: no Express or FastAPI deployment or browser session is available here, so which origins real CORS middleware echoes rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials. For this change both pipelines ran with curl 8.18.0: against a loopback listener answering 200 with the listed origin's headers, each printed the status line with both Access-Control headers and exited 0; against a closed loopback port, each printed `curl: (7) Failed to connect ...` on stderr and its inconclusive line (the same pipelines without the pipefail subshell exited 1 with empty output, and silently under the old `-s`); and against a stub curl that printed `HTTP/1.1 200 OK`, wrote a transfer error to stderr and returned 18, the pipeline without pipefail exited 0 as if it had passed, while the `set -o pipefail` subshell (the convention litellm.md and search-engines.md use) exited 18, so its `|| echo` printed the inconclusive line. These runs record the pipelines' behaviour, not any deployed middleware's CORS decisions.
+**REASONED:** not demonstrated against a deployed API: no Express or FastAPI deployment or browser session is available here, so which origins real CORS middleware echoes rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials. For this change both pipelines ran with curl 8.18.0: against a loopback listener answering 200 with the listed origin's headers, each printed the status line with both Access-Control headers and exited 0. Both pipelines also ran for this change with curl 8.18.0 against a closed loopback port, where each printed `curl: (7) Failed to connect ...` on stderr and its inconclusive line (the same pipelines without the pipefail subshell exited 1 with empty output, and silently under the old `-s`). Both pipelines also ran for this change with curl 8.18.0 against a stub curl that printed `HTTP/1.1 200 OK`, wrote a transfer error to stderr and returned 18: the pipeline without pipefail exited 0 as if it had passed, while the `set -o pipefail` subshell (the convention litellm.md and search-engines.md use) exited 18, so its `|| echo` printed the inconclusive line. These runs record the pipelines' behaviour, not any deployed middleware's CORS decisions.
 
 ```bash
 (set -o pipefail; curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -iE 'HTTP/|access-control') || echo "inconclusive: the transfer failed or printed no status line; not a pass"
@@ -57851,7 +57851,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "eb3c1f5d52b155096148ebf0a2f9192cc3bfe0d105879f8386fc130209395ed3",
+  "body_sha256": "036af1b8dfee96fe64bed7f7078c83e280f44ea557525cc4c06caed53947d349",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",
