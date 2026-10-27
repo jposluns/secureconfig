@@ -53,8 +53,8 @@ The open-source `dagster-webserver` (as of 1.13.24, run directly or by `dagster 
 3000 unless a flag or an environment variable sets the host or a nonzero port, and with no port set either way, or a port
 of 0, it moves to a free port when 3000 is taken. The official Helm chart (as of 1.13.24) always passes `-h 0.0.0.0`,
 on the Service port, 80 by default, behind a Service of type `ClusterIP` by default. The open-source
-`dagster-webserver` ships no built-in login or access control: the inspected open-source webserver applies no
-authenticating middleware.
+`dagster-webserver` (as of 1.13.24) ships no built-in login or access control: the inspected open-source
+webserver applies no authenticating middleware.
 Put it entirely behind an identity-aware fronting layer ([fronting-auth.md](fronting-auth.md)) or your own
 reverse proxy with its own authentication ([nginx.md](nginx.md), [caddy.md](caddy.md)) plus MFA
 ([mfa.md](mfa.md)); for a proxy on the same host, bind the webserver explicitly with
@@ -608,7 +608,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "7ee8cb8f3bb228a511d5acdd308e432758300b180eba9d74959d5fb637feaa62",
+  "body_sha256": "ae3389228ccdefdd6ade1bdbde9d52c6f7d760647c8d97340ced45eab7888381",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
