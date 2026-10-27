@@ -45,7 +45,7 @@ For applications that give admin to whoever completes first-run setup, an unclai
 
 ## 3. Previews and clones get production posture
 
-A preview deployment or a database clone is not lower stakes just because it is temporary. Vercel's Deployment Protection illustrates the gap: Standard Protection, available on every plan, gates preview and generated deployment URLs but leaves the production domain open by default; the All Deployments scope closes that gap too, and Vercel's September 9, 2026 change made pairing it with Vercel Authentication free on every plan rather than Pro and Enterprise only. Every statement in the previous sentence is per [paas.md](paas.md) and per Vercel's Deployment Protection changelog of 9 September 2026 and its current Deployment Protection reference, which states that Vercel Authentication for All Deployments does not require a paid add-on. Where the platform's own gate does not cover a hostname, front it the same way as production, for example a Cloudflare Access policy scoped to that preview hostname, per the pinned self-hosted application instructions. Those instructions establish the Access gate, not the platform's coverage of preview URLs. Either way, as this guide's advice, treat a clone's data the same as the original: rotate any credential a clone inherited if the clone is less trusted than the source. That a clone can inherit credentials is this guide's assessment; clone credential inheritance and rotation are not established by the Access citation, which supplies fronting context only.
+A preview deployment or a database clone is not lower stakes just because it is temporary. Vercel's Deployment Protection illustrates the gap: Standard Protection, available on every plan, gates preview and generated deployment URLs but leaves the production domain open by default; the All Deployments scope closes that gap too, and Vercel's September 9, 2026 change made pairing it with Vercel Authentication free on every plan rather than Pro and Enterprise only. The previous sentence is per [paas.md](paas.md) and per Vercel's Deployment Protection changelog of 9 September 2026 and its current Deployment Protection reference, which states that Vercel Authentication for All Deployments does not require a paid add-on. Where the platform's own gate does not cover a hostname, front it the same way as production, for example a Cloudflare Access policy scoped to that preview hostname, per the pinned self-hosted application instructions. Those instructions establish the Access gate, not the platform's coverage of preview URLs. Either way, as this guide's advice, treat a clone's data the same as the original: rotate any credential a clone inherited if the clone is less trusted than the source. That a clone can inherit credentials is this guide's assessment; clone credential inheritance and rotation are not established by the Access citation, which supplies fronting context only.
 
 ## 4. Teardown: DNS before the app, then revoke the rest
 
@@ -235,7 +235,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1debe787e3b680d701db012af1e5cd195df0d262a74005a7236439fc9913dba0",
+  "body_sha256": "decf2f67638403bf7f71938bc5d2bc2f71110414788ebe5e8c9f544ea9066bb5",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
