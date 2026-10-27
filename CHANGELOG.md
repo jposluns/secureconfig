@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-27
+
+- `search-engines.md` (TODO 1.385, batch 16): the 14 prose sentences over 400 characters, which measured 419 to 904 characters with links rendered and backticks kept, are split at clause boundaries into sentences of at most 400 characters, with no fact, qualifier, inference label, citation or link changed. The REASONED Verify paragraphs now give their cited entries in sentences of their own, and the long Meilisearch and Caddy Sources items list their URLs under neutral labels such as "Caddy v2.11.4 sources (1 of 2)", so no URL is scoped to a narrower topic than before. No claim, table, code block or heading changes, `plugin/skills/secure-deployment-config/references/search-engines.md` follows, and the edited paragraph's fingerprint in `tools/verify_marking_baseline.txt` is replaced with its count unchanged (#954)
+
 ## 2026-10-26
 
 - `agent-builders.md` (TODO 1.385, batch 8): the 27 prose sentences over 400 characters, which measured 416 to 4,182 characters with links rendered and backticks kept, are split at clause boundaries into sentences of at most 400 characters, with no fact, qualifier, inference label, citation or link changed. Long Sources items now end their topic description in its own sentence and list their URLs under neutral labels such as "Dify console sources (1 of 2)", so no URL is scoped to a narrower topic than before. No claim, table, code block or heading changes, and `plugin/skills/secure-deployment-config/references/agent-builders.md` follows (#946)
