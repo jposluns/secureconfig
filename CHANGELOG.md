@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-27
 
+- `clickhouse.md` and `plugin/skills/secure-deployment-config/references/clickhouse.md` (TODO 1.385, batch 10): the 24 prose sentences over 400 characters are split at clause boundaries into sentences of at most 400 characters, with no fact, qualifier, inference label, citation or link changed. The longest affected sentence measured 1,327 characters and the longest new one measures 388; claim text, tables, code blocks and headings are unchanged (#948)
 - `sqlite.md` and its plugin copy `plugin/skills/secure-deployment-config/references/sqlite.md` (TODO 1.385, batch 12): the 19 prose sentences over 400 characters, which measured 406 to 1,160 characters, are split at clause boundaries into sentences of at most 394 characters, with no fact, qualifier, inference label, citation or link changed. The long LiteFS and GNU grep Sources items now list their URLs under labels that name each item's whole topic, and claim text, tables, code blocks and headings are unchanged (#950)
 
 ## 2026-10-26
