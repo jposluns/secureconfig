@@ -4330,7 +4330,7 @@ available in Vault Community. Edition and version qualifications appear where th
 ## 1. Never run dev mode in production
 
 `vault server -dev` runs entirely in memory, initializes and unseals itself with a single key, serves
-plain HTTP, and prints a root token to the console; the `-dev-tls` variant adds a throwaway
+plain HTTP, and prints a root token to the console. The `-dev-tls` variant adds a throwaway
 certificate but is still a development server: by default it binds loopback rather than the world,
 stores nothing durably, and writes its printed root token into your token helper unless
 `-dev-no-store-token` is set. It does not provide the production protections below.
@@ -4456,7 +4456,7 @@ See [seal and recovery behavior](https://developer.hashicorp.com/vault/docs/conc
 A new cluster has no audit device, so requests are served with no durable record; server logs are not
 a substitute. Enable one (`vault audit enable file file_path=/var/log/vault/audit.log`), and add a
 second, independent one (`vault audit enable syslog` shipping to a SEPARATE host or failure domain: a local
-syslog agent that writes the same disk is not independent), because auditing is fail-closed: when Vault
+syslog agent that writes the same disk is not independent). The reason is that auditing is fail-closed: when Vault
 cannot write to at least one enabled device it "refuses to service the corresponding API request", so a
 full disk on your only device is an outage. Collect both devices: either device alone can have gaps
 when it was unavailable. The syslog device sends to the local syslog agent; configure that agent's
@@ -4689,15 +4689,17 @@ listener on 127.0.0.1:8201, a private test CA, a file audit device, and the sect
 policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block ran as printed, with only its
 placeholders substituted, except where a step says otherwise. Exposed states ran in further runs of
 the same binary: one with both anonymous-access settings `true` throughout, one with `tls_disable =
-true` on the listener (a health check only), one with the section 3 configuration unchanged apart
-from addresses and paths, and a follow-up run with that configuration, then stopped for a
-health-output check, then with one added listener stanza on 127.0.0.2:8200 (which also bound
-127.0.0.2:8201). The first, third and follow-up runs exercised the policies, roles or delivery policy
-under test without their limits. What these runs do
+true` on the listener (a health check only), and one with the section 3 configuration unchanged
+apart from addresses and paths. The exposed-state runs also included a follow-up run with the same
+section 3 configuration, then stopped for a health-output check, then with one added listener
+stanza on 127.0.0.2:8200 (which also bound 127.0.0.2:8201). The first, third and follow-up runs
+exercised the policies, roles or delivery policy under test without their limits. What these runs do
 not show is marked **REASONED** where it occurs, with the reason: HA behavior (no multi-node cluster
-was set up for these runs), a second audit device in a separate failure domain (the host has no second network), the recipient's
-own validation (it belongs to the receiving application), a wildcard bind (the host forbids binding
-every interface), `ss` run as root (the host has no `sudo`), and real network paths and firewalls (the
+was set up for these runs), a second audit device in a separate failure domain (the host has no
+second network), and the recipient's own validation (it belongs to the receiving application). The
+other items these runs do not show, each marked **REASONED** where it occurs, with the reason, are a
+wildcard bind (the host forbids binding every interface), `ss` run as root (the host has no `sudo`),
+and real network paths and firewalls (the
 host has no second network). These expectations follow the cited Vault documentation. The authoring
 host has no `sudo`, so the first block's `sudo ss -tlnp` ran through a stand-in
 that runs `ss` without it; as the same account, `ss` still showed the Vault process.
@@ -4790,7 +4792,7 @@ and read the example AppRole:
 )
 ```
 
-REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. Interpret the checks separately; the block's final exit status does not summarize them:
+REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. The inspection checks follow the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints). The inspection checks also follow the guide's cited Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. Interpret the checks separately; the block's final exit status does not summarize them:
 
 - REASONED: bind and TLS comparison: unintended listeners are findings; intended private binds with verified TLS and matched firewall controls are required. The parenthetical host limitations below describe the historical run. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault production hardening (root token, swap, core dumps). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Bind and TLS (demonstrated, TLS in both states; a wildcard bind, `ss` as root and the firewall
   REASONED: the host forbids binding every interface, has no `sudo`, and has no second network):** read the whole socket table. Confirm `8200` is bound to the intended
@@ -4996,8 +4998,8 @@ with its external commands stubbed and a dummy secret as the credential; no trac
 dummy secret, while a positive control that printed the file with a traced builtin `printf` did.
 A second run the same day pasted the block into Bash 5.3.9 (`bash --noprofile --norc -i`) on a
 pseudo-terminal with history enabled, with a `vault` stub that read stdin and slept four seconds
-and the observing and inspected processes under the same account: the history file held no
-contents of the JSON request file, and neither `/proc/<pid>/cmdline` (the stub's arguments were
+and the observing and inspected processes under the same account. The second run's history file
+held no contents of the JSON request file, and neither `/proc/<pid>/cmdline` (the stub's arguments were
 `write -format=json auth/approle/login -`) nor `/proc/<pid>/environ` of the stub and the block's
 subshell contained the dummy secret. In that run the observer was an ancestor of the inspected
 processes. A third run the same day, on the QA review's evaluation host, repeated the observation
@@ -5006,7 +5008,7 @@ with same-account observers that were siblings of the block's shells rather than
 recording stub, the block's subshell and the outer shell, contained the dummy secret. What was not
 run: the contents of process memory are unknown, because every attempt by those observers to open
 `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
-`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+`/proc/sys/kernel/yama/ptrace_scope` read `1`. Root was not tested as the observer, because the
 evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
 was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
 evaluation host's PATH. The following
@@ -5169,17 +5171,17 @@ trace line carried the dummy secret, while a positive control that printed the f
 builtin `printf` did. A second run the same day pasted both blocks into Bash 5.3.9
 (`bash --noprofile --norc -i`) on a pseudo-terminal with history enabled, with a `vault` stub that
 read stdin and slept four seconds, the dummy token placed in the shell's initial environment as
-`VAULT_TOKEN`, and the observing and inspected processes under the same account: the history file
-held no token value and `/proc/<pid>/cmdline` did not contain it, but `/proc/<pid>/environ` of
+`VAULT_TOKEN`, and the observing and inspected processes under the same account. The second run's
+history file held no token value and `/proc/<pid>/cmdline` did not contain it, but `/proc/<pid>/environ` of
 both the stub and the block's subshell contained `VAULT_TOKEN` set to the dummy token. In that run
 the observer was an ancestor of the inspected processes. A third run the same day, on the QA
 review's evaluation host, repeated the observation with same-account observers that were siblings
-of the block's shells rather than ancestors: `/proc/<pid>/cmdline` of no sampled process contained
+of the block's shells rather than ancestors. The third run found that `/proc/<pid>/cmdline` of no sampled process contained
 the dummy token, but `/proc/<pid>/environ` of the `vault` recording stub, the block's subshell and
 the outer shell, which held `VAULT_TOKEN` in its initial environment, all contained it. What was
 not run: the contents of process memory are unknown, because every attempt by those observers to
 open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
-`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+`/proc/sys/kernel/yama/ptrace_scope` read `1`. Root was not tested as the observer, because the
 evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
 was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
 evaluation host's PATH. This applies to both wrapping-lookup
@@ -5188,8 +5190,8 @@ protected lookup request, wrapping token included, to `vault` from a file on its
 block types the token or expands a variable holding it, so neither shell history nor `set -x`
 tracing records it from the block, provided the file is prepared through protected delivery
 rather than by a shell command that contains the token. Stdin closes the argv channel only: the
-account owner and root can still read the file and the `vault` process's memory, and where
-`VAULT_TOKEN` holds the same token, as the next paragraph asks, the token is also in the
+account owner and root can still read the file and the `vault` process's memory. The token, where
+`VAULT_TOKEN` holds the same token, as the next paragraph asks, is also in the
 environment of every program the shell starts while `VAULT_TOKEN` is exported, including `vault`,
 readable through `/proc/<pid>/environ` by the same account and root while each runs. Where the
 shell received `VAULT_TOKEN` in its initial environment, as in the runs above, that file also shows
@@ -5517,7 +5519,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0bf7df3cd09be317f048df09313fb31631bc814a65264b021f701896d207297a",
+  "body_sha256": "c586dfad9092aa1cddc3459ea2b2df16da184ead793b4ab4bc553bc4c4daed80",
   "components": {
     "run": {
       "name": "Vault loopback run",
