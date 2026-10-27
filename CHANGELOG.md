@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-27
+
+- Guide prose length, batch 15 (TODO 1.385): split eleven prose sentences over 400 characters in `vault.md` and its plugin copy `plugin/skills/secure-deployment-config/references/vault.md` at clause boundaries, with no change to facts, qualifiers, inference labels, citations or links. The three over-length sentences that DEMONSTRATED claims quote as evidence are unchanged, and the edited Verify paragraph's exemption in `tools/verify_marking_baseline.txt` now carries that paragraph's new fingerprint (#953)
+
 ## 2026-10-26
 
 - `TODO.md`, `DONE.md` and `DECISIONS.md` (TODO 1.385, partial): row 1.385 now records the corrected scale of guide prose sentence length, and DONE 1.385 records the first six per-guide batches, #933, #934, #936, #937, #939 and #941, which split 122 prose sentences over 400 characters in 12 guides. The integrator's scan of all 103 guides on main at 3850e719 lists 570 sentences over 400 characters in 80 guides, nine of them generated claim-summary lines that TODO 1.383 tracks. The remaining prose sentences continue in per-guide batches, and `DECISIONS.md` records the maintainer's later answer of 2026-10-26 that set that scope, about 20 to 30 more batches with no gate. `CHANGELOG.md`, `VERSION` and `plugin/plugin.json` are updated (#944)
