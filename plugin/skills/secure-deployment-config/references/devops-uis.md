@@ -100,7 +100,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Dozzle
 
 - Dozzle reads the Docker socket to show logs, the same host-level access the Docker API section above describes ([docker.md](docker.md)); a Dozzle login is a login to the host.
-- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml` (omit `--password` and Dozzle prompts for it on stdin, so it never lands in shell history or `set -x` tracing; stdin closes the argv channel only, so the password stays visible to your own account and root while the `docker` client relays it, and to anyone who can use the Docker daemon), mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access.
+- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml`, mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access. The `users.yml` generation step is to omit `--password`, and Dozzle then prompts for the password on stdin, so the password never lands in shell history or `set -x` tracing. Stdin closes the argv channel only, so the password stays visible to your own account and root while the `docker` client relays it, and to anyone who can use the Docker daemon.
 - Container actions (start, stop, recreate) and shell access into a running container can be turned on; leave both off unless a specific workflow needs them, since either turns a log viewer into remote command execution on the host.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer, like every panel above.
 
@@ -179,7 +179,7 @@ REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal 
 - Coolify installation, firewall, proxy, and DNS pages: https://coolify.io/docs/start-with-self-hosted , https://coolify.io/docs/core/infrastructure/servers/firewall , https://coolify.io/docs/core/networking/proxy/overview , https://coolify.io/docs/core/networking/dns , https://coolify.io/docs/core/infrastructure/servers/openssh
 - Dokploy installation (ports 80, 443, 3000; admin setup; panel domain): https://docs.dokploy.com/docs/core/installation
 - Nginx Proxy Manager setup (port 81, default admin user): https://nginxproxymanager.com/setup/
-- Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS , and the `.env.template` https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
+- Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , and HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS. The Vaultwarden `.env.template`: https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
 - Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
@@ -303,7 +303,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "01559f4ff1f76528a2de298393ba2a9634ec6e326c1098f39089da5c80b2c427",
+  "body_sha256": "26e8ed2c8a47a290a9aaefd2cb37d3f833b624d0a8aff89daa2ca5aeac0fc5d1",
   "components": {
     "portainer": {
       "name": "Portainer",
