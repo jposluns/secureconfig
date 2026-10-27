@@ -432,7 +432,7 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 
 ## Sources (checked September 2026)
 
-- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0 ; Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0 ; proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
+- Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0. Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0. Proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
 - Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0 ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0
 - Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0 ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0
 - Rate limiting middleware (rate-limiting middleware in .NET 7 and later; guide targets .NET 10 LTS): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0
@@ -581,7 +581,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "6076caf8ba4709b61781d7d215f7b0eafce644800188d8f003eab30f912dc116",
+  "body_sha256": "b974c5893b1c3b20024c307e17a7601c8029c60da11f2874dc29afaa2ac2f2a2",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",

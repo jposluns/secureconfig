@@ -26,14 +26,14 @@ Many self-hosted apps (internal tools, dashboards, webhook receivers) ship with 
 
 ## 1. The pattern
 
-1. **Bind the app to loopback**, `127.0.0.1`, never `0.0.0.0` or `::`. Bind the auth service so only the fronting proxy reaches it too: loopback when it shares the host, or a private container network with no published port when it does not (oauth2-proxy's `--http-address` defaults to `127.0.0.1:4180` as of v7.15.4; Authelia's `server.address` defaults to `tcp://:9091/` as of v4.39.28, whose host-and-port, `:9091` with an empty host, Authelia passes to Go's `net.Listen`, which then listens on every local address, so restrict it), never a public interface. If the app also answers directly, the login page in front of it is decorative.
+1. **Bind the app to loopback**, `127.0.0.1`, never `0.0.0.0` or `::`. Bind the auth service so only the fronting proxy reaches it too: loopback when it shares the host, or a private container network with no published port when it does not, never a public interface. The oauth2-proxy `--http-address` option defaults to `127.0.0.1:4180` as of v7.15.4; Authelia's `server.address` defaults to `tcp://:9091/` as of v4.39.28, whose host-and-port, `:9091` with an empty host, Authelia passes to Go's `net.Listen`, which then listens on every local address, so restrict it. If the app also answers directly, the login page in front of it is decorative.
 2. **A proxy authenticates first**: oauth2-proxy, Authelia, or Pomerium checks the session before the request reaches the app; an unauthenticated request never gets there.
 3. **The proxy passes identity in a header and the app reads that header** instead of running its own login. The header must be one the proxy sets on every request from its own verified response, so the proxy overwrites any value a client sent: nginx `X-User`/`X-Email` in the example below, oauth2-proxy's `X-Auth-Request-User` carried through Traefik, Authelia's `Remote-User`. The app must never read a header the proxy does not set, because nginx and Traefik forward the client's other headers unchanged.
 4. **The app must trust only the exact header the proxy sets, and reject any other.** Network isolation, only the proxy can reach the app, stops a direct client from setting the header; but a client can also send a header *through* the proxy, and the proxy overwrites only the one header it sets while forwarding the rest, so the app must read that one header and no other. The managed-cloud version of this same bypass risk is in [cloud-identity-proxies.md](cloud-identity-proxies.md).
 
 ## 2. oauth2-proxy: auth in front of an OIDC/OAuth2 provider
 
-Core flags (env vars use the `OAUTH2_PROXY_` prefix): `--provider` (`oidc`, `google`, `github`, and others), `--client-id`/`--client-secret` from the IdP, `--email-domain` (a domain, or `*` for any authenticated user), `--upstream` (the app address, or `static://202` when a forward-auth proxy handles the actual proxying), and `--cookie-secret`, which must be exactly 16, 24, or 32 bytes, optionally base64-encoded: `openssl rand -base64 32 | tr -- '+/' '-_'`.
+Core flags (env vars use the `OAUTH2_PROXY_` prefix): `--provider` (`oidc`, `google`, `github`, and others), `--client-id`/`--client-secret` from the IdP, `--email-domain` (a domain, or `*` for any authenticated user), `--upstream` (the app address, or `static://202` when a forward-auth proxy handles the actual proxying), and `--cookie-secret`. The `--cookie-secret` value must be exactly 16, 24, or 32 bytes, optionally base64-encoded: `openssl rand -base64 32 | tr -- '+/' '-_'`.
 
 nginx uses `auth_request`, which requires oauth2-proxy's `--reverse-proxy` flag; forwarding the identity headers below also requires `--set-xauthrequest` (it makes oauth2-proxy set `X-Auth-Request-User` and `X-Auth-Request-Email` on its own `/oauth2/auth` response, which the `auth_request_set` lines then read):
 
@@ -272,7 +272,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "90c90501b7e732a3d7d211def54670e1cbf927b2ae6e0af2fa3fe81d74eaae5f",
+  "body_sha256": "3e9c097a6a30e3825408a4d4b7bd9c44e79f3da6d10efb1599a475aa7d98d40c",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
