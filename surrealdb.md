@@ -191,7 +191,7 @@ shell to run.
 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
 - GNU Bash reference manual, bash-5.3 (checked October 2026), prefix assignments 3872-3878: https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872
-- Linux man-pages `proc_pid_environ(5)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): initial environment 12-15 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12; later modifications 26-36 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26; procfs access check 43-47 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43
+- Linux man-pages `proc_pid_environ(5)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): initial environment 12-15 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12. The same `proc_pid_environ(5)` page, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): later modifications 26-36 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26. The same `proc_pid_environ(5)` page, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): procfs access check 43-47 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43
 - Linux man-pages `ptrace(2)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): ptrace access factors 2519-2533 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519
 - SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB 3.2.4 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50
@@ -269,7 +269,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ef07b7e962499f1900b3db602bbfad3ee59c8ba44f80a6bcee5d48e6919d662a",
+  "body_sha256": "a3e474944aff4ff0fb01880e6986cd8007e308e2781ce573a7a1735db36e82fa",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",
