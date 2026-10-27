@@ -29,7 +29,7 @@ An AI agent, RAG fetcher, or webhook handler that retrieves URLs can be steered 
 The instance metadata service listens on `169.254.169.254`, and on Nitro instances in an IPv6-enabled subnet also on `[fd00:ec2::254]` (IMDSv2-compatible); block or verify-disabled BOTH, since an IPv4-only control misses the IPv6 path. IMDSv2 requires a session token obtained with a
 `PUT` before any `GET` succeeds. The response to that `PUT`, the token itself, has a hop limit at the IP
 protocol level (1 on many launches, but launch parameters, account/Region settings, and the IMDSv2-only
-`ImdsSupport: v2.0` AMI setting can make it 2, so set it explicitly below rather than assuming): the token
+`ImdsSupport: v2.0` AMI setting can make it 2, so set it explicitly below rather than assuming). The token
 cannot travel more than one network hop back to the requester at hop limit 1 (per
 the AWS instance metadata service documentation). A containerized application sitting one hop from the
 host, for example behind the container network's own routing, will not receive the token and so cannot
@@ -309,7 +309,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "dd35bc80d16265a5421b88e5d57cd5aa5049f42100389f0bce972fa962728615",
+  "body_sha256": "712363006ec25a2575f4c2073226e2714426b204e78925ae260203ce8df645ff",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
