@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-27
 
-- `mosquitto.md` and its plugin copy `plugin/skills/secure-deployment-config/references/mosquitto.md` (TODO 1.385, batch 19): the 13 prose sentences that the integrator's scan measured at 402 to 1,898 characters are split at clause boundaries into sentences of at most 379 characters, with no fact, qualifier, inference label, citation or link changed. The three long Sources items end their topic description in its own sentence and list their URLs under neutral "Sources for this item (1 of N)" labels, so each URL keeps its scope as on main. No claim, table, code block or heading changes, and the guide's body digest is rebound (#957)
+- `mosquitto.md` and its plugin copy `plugin/skills/secure-deployment-config/references/mosquitto.md` (TODO 1.385, batch 19): the 13 prose sentences that the integrator's scan measured at 402 to 1,898 characters are split at clause boundaries into sentences of at most 379 characters, with no fact, qualifier, inference label, citation or link changed. The three long Sources items end their topic description in its own sentence and list their URLs under neutral "Sources for this item (n of N)" labels, so each URL keeps its scope as on main. No claim, table, code block or heading changes, and the guide's body digest is rebound (#957)
 
 ## 2026-10-26
 
