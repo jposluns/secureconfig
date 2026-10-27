@@ -64,9 +64,10 @@ Several credentials pass through a runner, and they are not interchangeable. The
 a short-lived bootstrap value (documented one-hour lifetime); generate it on demand, never bake it into
 an image, and note that its expiry does not deregister a runner already registered with it. Keep the
 admin-scoped credential that generates it (a GitHub App installation or a PAT) off the runner host and in a
-separate management service, since it outranks anything the runner holds; use the endpoint's documented minimum
-(organization registration or JIT endpoints need `Self-hosted runners: write`, repository endpoints need
-`Administration: write`) and expire or revoke it when no longer needed. A JIT
+separate management service, since it outranks anything the runner holds. The permission and lifetime rule for that admin-scoped
+credential is to use the endpoint's documented minimum (organization registration or JIT endpoints need
+`Self-hosted runners: write`, repository endpoints need `Administration: write`) and to expire or revoke that
+admin-scoped credential when no longer needed. A JIT
 configuration (the `encoded_jit_config` the generate-jitconfig API returns) provisions a runner that
 executes at most one job; protect the whole response. Once configured, the runner stores its own
 authentication credential locally, so protect the install directory and any backups. `GITHUB_TOKEN` is
@@ -74,8 +75,9 @@ a per-job token scoped to the workflow's repository; set the default workflow pe
 and grant more only to the trusted job with an explicit `permissions:` key. Treat OIDC as another job
 credential: grant `id-token: write` only to the deployment job that needs it, keep it out of the default
 permissions, and configure the cloud provider to validate the issuer, audience and a narrowly scoped subject
-for the intended repository and trusted branch or protected environment ([machine-auth.md](machine-auth.md)),
-since any code in an authorized job can mint that token and use the cloud credentials it buys. Run the runner
+for the intended repository and trusted branch or protected environment ([machine-auth.md](machine-auth.md)).
+Those OIDC controls matter because any code in an authorized job can mint the OIDC token and use the cloud
+credentials it buys. Run the runner
 service as a dedicated unprivileged user, never root and never in the `docker` group (membership is
 root-equivalent), because a job executes with that account's authority ([docker.md](docker.md)). Prefer ephemeral or JIT
 runners so one job cannot poison the next, run untrusted CI on a pool kept separate from deployment and
@@ -93,7 +95,8 @@ breakout. Mounting `/var/run/docker.sock` (or reaching a rootful daemon over TCP
 hands over the daemon's host even with `privileged = false`. For untrusted work use an unprivileged Docker or a hardened Kubernetes executor on isolated disposable workers,
 never shell on a shared host, never the socket, and never `services_privileged`; build images without the host
 daemon rather than mounting it. Deny job access to the host Docker daemon, sensitive host mounts, host
-PID/network namespaces, unnecessary devices and elevated capabilities; for Kubernetes enforce non-privileged
+PID/network namespaces, unnecessary devices and elevated capabilities. The Kubernetes executor needs the following
+controls: enforce non-privileged
 containers, disable privilege escalation, restrict the service-account RBAC, and disable automatic
 service-account-token mounting where jobs do not need it, and prevent job configuration from overriding those
 restrictions. Containers share the host kernel, so use separate disposable VMs or nodes where that boundary is
@@ -108,7 +111,7 @@ scope) is a separate, more powerful credential: keep it off the worker, and set 
 creation rather than assuming legacy registration arguments still configure them. `CI_JOB_TOKEN` carries the triggering user's access to the resources it
 supports for the job's
 lifetime, and it is also `CI_REGISTRY_PASSWORD` and is embedded in `CI_REPOSITORY_URL`, so restrict inbound
-job-token access on each target project that holds sensitive resources: that allowlist controls whose job
+job-token access on each target project that holds sensitive resources. That inbound job-token allowlist controls whose job
 tokens may reach the target, not where this job's token may go, and some resources stay reachable outside it
 unless you also restrict their feature visibility. An instance-wide runner on an installation with public
 projects accepts strangers' code just as a public-repository GitHub runner does. A project-scoped runner limits
@@ -171,7 +174,7 @@ jobs:
       - run: printf '%s\n' eligibility-probe
 ```
 
-REASONED: preceding block; the eligibility-probe workflow above and the assignment comparison in this paragraph, per the guide's cited GitHub self-hosted runner groups and access, workflow-jobs REST API and events that trigger workflows entries; no isolated test organization, public test repository or disposable runner is available in the authoring environment, so no fork run was assigned or refused. At marking time PyYAML 6.0.3 parsed the workflow with empty permissions and the self-hosted and ci-audit-probe labels, reading its on key as boolean true under YAML 1.1, so this checked structure only, and the job-listing jq filter below printed a runner_id for an assigned synthetic job and null for an unassigned one. Assign `ci-audit-probe` to the test runner. With eligibility deliberately exposed the approved run must execute
+REASONED: preceding block; the eligibility-probe workflow above and the assignment comparison in this paragraph, per the guide's cited GitHub self-hosted runner groups and access, workflow-jobs REST API and events that trigger workflows entries. No isolated test organization, public test repository or disposable runner is available in the authoring environment, so no fork run was assigned or refused. At marking time PyYAML 6.0.3 parsed the workflow with empty permissions and the self-hosted and ci-audit-probe labels, reading its on key as boolean true under YAML 1.1, so this checked structure only, and the job-listing jq filter below printed a runner_id for an assigned synthetic job and null for an unassigned one. Assign `ci-audit-probe` to the test runner. With eligibility deliberately exposed the approved run must execute
 on it; after applying the private-repository restriction an equivalent fork run must not be assigned to it, and
 the same harmless job from an allowed private repository confirms the runner is still available. Inspect the
 assignment, and treat a skipped workflow, pending approval, offline runner, or queue timeout as inconclusive:
@@ -226,10 +229,10 @@ glab api --hostname REPLACE_WITH_GITLAB_HOST --paginate projects/REPLACE_WITH_PR
 glab api --hostname REPLACE_WITH_GITLAB_HOST runners/REPLACE_WITH_RUNNER_ID
 ```
 
-REASONED: preceding block; the GitLab reads in the block above, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries, and the lifecycle and contamination checks in this paragraph, per the cited GitHub self-hosted runners REST API, GitLab Instance and Docker Autoscaler executors, and GitHub Actions security hardening entries; no registered runner, worker infrastructure or GitLab instance is available in the authoring environment. At marking time both canary commands passed bash -n and ShellCheck 0.11.0, and with job A and job B sharing one home directory job B printed its FAIL line and exited 1, while in a fresh home directory it printed the canary-absent line and exited 0; this exercises the marker logic only, not worker reuse or destruction. Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
+REASONED: preceding block; the GitLab reads in the block above, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries, and the lifecycle and contamination checks in this paragraph, per the cited GitHub self-hosted runners REST API, GitLab Instance and Docker Autoscaler executors, and GitHub Actions security hardening entries. No registered runner, worker infrastructure or GitLab instance is available in the authoring environment. At marking time both canary commands passed bash -n and ShellCheck 0.11.0, and with job A and job B sharing one home directory job B printed its FAIL line and exited 1, while in a fresh home directory it printed the canary-absent line and exited 0; this exercises the marker logic only, not worker reuse or destruction. Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
 from a fully paginated `gh api /orgs/REPLACE_WITH_ORG/actions/runners` after a harmless job, but deregistration
 is not proof the machine was destroyed, and a GitLab runner manager can stay registered while its workers are
-replaced, so verify termination and storage disposal through the infrastructure provider. Test reuse with two
+replaced. The lifecycle check, for those reasons, is to verify termination and storage disposal through the infrastructure provider. Test reuse with two
 sequential harmless jobs: job A runs `printf '%s\n' ci-isolation-canary > "$HOME/.ci-isolation-canary"`, and job
 B runs `if test -e "$HOME/.ci-isolation-canary"; then echo 'FAIL: previous job state survived'; exit 1; else echo 'canary absent; corroborate worker destruction'; fi`. A deliberately persistent worker must find the marker;
 the hardened case uses a newly provisioned worker with disposal records and no marker. Marker absence alone is
@@ -280,8 +283,8 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 - GitLab CI_JOB_TOKEN and the job-token allowlist: https://docs.gitlab.com/ci/jobs/ci_job_token/
 - GitLab runner authentication tokens and the creation workflow: https://docs.gitlab.com/ci/runners/new_creation_workflow/
 - GitLab Runner monitoring (metrics port 9252, no built-in authorization): https://docs.gitlab.com/runner/monitoring/
-- GitLab Runner advanced configuration (session_server, Docker controls and autoscaler limits): https://docs.gitlab.com/runner/configuration/advanced-configuration/ A partial automated page read dated 2026-10-12, not a recheck of this September 2026 list, corroborated the inspected Docker and autoscaler keys except `pid_mode`, which was reported only from rolling GitLab Runner `common/config.go` on `main`; the next item cites `pid_mode` from GitLab Runner source pinned at tag v19.5.0.
-- GitLab Runner `common/config.go` DockerConfig `PidMode` field (toml `pid_mode`, "Run the container in a specific PID space"), tag v19.5.0 at 70f5c12dad80bfd8ab426843f38cae72fddc4e75 (checked October 2026): https://gitlab.com/gitlab-org/gitlab-runner/-/blob/70f5c12dad80bfd8ab426843f38cae72fddc4e75/common/config.go#L330 The same field is at L310 at tag v19.1.0 (5eb085abb18b9c9614ba6e12951ece859d092272). It is absent at tags v18.11.4 (5b1ba4d9a0dec0a0a67ba4b88fa88e7f21b1060f), v19.0.0 (d4bac16c639ce0e7a778f1e88ca05b6d18dde57a), v19.0.1 (c2831b75a3ff0782dca8f64498cbc6f71c76819e), v19.0.2 (02fcb2d71c5d50f2f0ab92f9fd685706d3729b94) and v19.0.3 (e951e4926504fcfce3399542ff56029f77798c5a). No other tag before v19.1.0 was checked, so the tag that introduced the key is not established.
+- GitLab Runner advanced configuration (session_server, Docker controls and autoscaler limits). The GitLab Runner advanced configuration sources: https://docs.gitlab.com/runner/configuration/advanced-configuration/. A partial automated page read dated 2026-10-12, not a recheck of this September 2026 list, corroborated the inspected Docker and autoscaler keys except `pid_mode`, which was reported only from rolling GitLab Runner `common/config.go` on `main`; the next item cites `pid_mode` from GitLab Runner source pinned at tag v19.5.0.
+- GitLab Runner `common/config.go` DockerConfig `PidMode` field (toml `pid_mode`, "Run the container in a specific PID space"), tag v19.5.0 at 70f5c12dad80bfd8ab426843f38cae72fddc4e75 (checked October 2026). The GitLab Runner v19.5.0 `common/config.go` sources: https://gitlab.com/gitlab-org/gitlab-runner/-/blob/70f5c12dad80bfd8ab426843f38cae72fddc4e75/common/config.go#L330. The same field is at L310 at tag v19.1.0 (5eb085abb18b9c9614ba6e12951ece859d092272). It is absent at tags v18.11.4 (5b1ba4d9a0dec0a0a67ba4b88fa88e7f21b1060f), v19.0.0 (d4bac16c639ce0e7a778f1e88ca05b6d18dde57a), v19.0.1 (c2831b75a3ff0782dca8f64498cbc6f71c76819e), v19.0.2 (02fcb2d71c5d50f2f0ab92f9fd685706d3729b94) and v19.0.3 (e951e4926504fcfce3399542ff56029f77798c5a). No other tag before v19.1.0 was checked, so the tag that introduced the key is not established.
 - GitHub self-hosted runner groups REST API (group visibility, allows_public_repositories, group repositories) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/self-hosted-runner-groups
 - GitHub Actions OIDC (id-token permission, issuer/audience/subject claims): https://docs.github.com/en/actions/reference/security/oidc
 - GitHub workflow-jobs REST API (runner assignment: runner_id, runner_group_id) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/workflow-jobs
@@ -361,7 +364,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "0ff09ae9c87de8dd7c482cfe570d868a2143cc21f6d714a70324262fb5034217",
+  "body_sha256": "cfe23c7128b3e11c89fa8a61f60f156b8422f1c314f2cf0a951e85bb8fa3f5b8",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
