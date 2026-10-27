@@ -497,7 +497,7 @@ The service-role key bypasses RLS and never reaches a browser. Server secret key
 
 ## Verify
 
-REASONED: Cloud comparison scope; no authorized cloud fixtures. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited sources listed in the next two sentences, exposed anonymous requests return fixture bytes and fixed private routes deny them while authorized controls succeed. The AWS, Cloudflare and Google Cloud sources among those cited are S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer); Cloudflare R2 public buckets, API tokens, presigned URLs; Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`. The Azure and Supabase sources among those cited are Azure Blob anonymous access remediation and SAS overview; and Supabase Storage buckets, access control, and downloads. Locally, all five Bash blocks passed bash -n and ShellCheck 0.11.0 with no diagnostics; 50 stubbed guard cases printed refusal messages without invoking curl. These comparisons require controlled cloud resources and harmless fixture objects. No live cloud comparison below was run during authoring. Demonstrate exposed and fixed behavior on disposable fixtures without exposing production data. A transport failure, missing object, failed signing operation, or absent permission to inspect configuration is inconclusive.
+REASONED: Cloud comparison scope; no authorized cloud fixtures. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited sources listed in the next two sentences, exposed anonymous requests return fixture bytes and fixed private routes deny them while authorized controls succeed. The AWS, Cloudflare and Google Cloud sources are S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer); Cloudflare R2 public buckets, API tokens, presigned URLs; Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`. The Azure and Supabase sources are Azure Blob anonymous access remediation and SAS overview; and Supabase Storage buckets, access control, and downloads. Locally, all five Bash blocks passed bash -n and ShellCheck 0.11.0 with no diagnostics; 50 stubbed guard cases printed refusal messages without invoking curl. These comparisons require controlled cloud resources and harmless fixture objects. No live cloud comparison below was run during authoring. Demonstrate exposed and fixed behavior on disposable fixtures without exposing production data. A transport failure, missing object, failed signing operation, or absent permission to inspect configuration is inconclusive.
 
 ### 1. Check signed-link lifetimes
 
@@ -783,7 +783,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6c2069f6132c18a0845bf7036fec36b01fb98f7da1c0ad6b6e42ebf18d077410",
+  "body_sha256": "4d24c0b2da1c223e38798145d7a130ba20361b40dbfc828eeecce40f78b35314",
   "components": {
     "s3": {
       "name": "Amazon S3 documentation",
