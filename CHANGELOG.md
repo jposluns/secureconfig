@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-27
+
+- `sqlite.md` and its plugin copy `plugin/skills/secure-deployment-config/references/sqlite.md` (TODO 1.385, batch 12): the 19 prose sentences over 400 characters, which measured 406 to 1,160 characters, are split at clause boundaries into sentences of at most 394 characters, with no fact, qualifier, inference label, citation or link changed. The long LiteFS and GNU grep Sources items now list their URLs under labels that name each item's whole topic, and claim text, tables, code blocks and headings are unchanged (#950)
+
 ## 2026-10-26
 
 - `model-servers.md` and its plugin copy `plugin/skills/secure-deployment-config/references/model-servers.md` (TODO 1.385, batch 9): 24 of the 26 prose sentences that the integrator's scan measured at over 400 characters are split at clause boundaries into sentences of at most 392 characters, with no fact, qualifier, inference label, citation or link changed. Sources items end their topic description in its own sentence and list their URLs under "Sources for ..." labels that keep each URL's scope as on main. The 432-character and 1,083-character sentences that the DEMONSTRATED claims `webui-parser-run` and `argv-test` quote as evidence are unchanged, and the guide's body digest is rebound (#947)
