@@ -264,7 +264,7 @@ done
 - Debian apache2 2.4.69-1 DirectoryIndex list (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/mods-available/dir.conf#L1
 - Debian apache2 2.4.69-1 default modules on fresh installs and configure invocation (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.postinst#L38-L52 ; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.postinst#L257-L266
 - ECMA-426 c724f0f494b44b21b651fdbd6412d3437eef0e72 sources and optional sourcesContent (checked October 2026): https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L584-L585
-- ECMA-426 c724f0f494b44b21b651fdbd6412d3437eef0e72 data URI linking and sourceMappingURL comments (checked October 2026). ECMA-426 c724f0f494b44b21b651fdbd6412d3437eef0e72 sources: https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1294 ; https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1323 ; https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1415
+- ECMA-426 c724f0f494b44b21b651fdbd6412d3437eef0e72 data URI linking and sourceMappingURL comments (checked October 2026). ECMA-426 c724f0f494b44b21b651fdbd6412d3437eef0e72 data URI linking and sourceMappingURL comment sources: https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1294 ; https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1323 ; https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1415
 - Next.js v16.3.6 production browser source maps default and opt-in serving (checked October 2026): https://github.com/vercel/next.js/blob/v16.3.6/docs/01-app/03-api-reference/05-config/01-next-config-js/productionBrowserSourceMaps.mdx#L8-L18
 - Vite v8.3.1 build.sourcemap default and output modes (checked October 2026): https://github.com/vitejs/vite/blob/v8.3.1/docs/config/build-options.md#L145-L150
 
@@ -331,7 +331,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "45efbe5c6695527549e932a0897c02e804f0abda72f904e1b22a727eb78fb15a",
+  "body_sha256": "fe4cb5adedece035095c36fb501666df671489eaf8b94be87f659549cd683bb8",
   "components": {
     "nginx": {
       "name": "nginx documentation",
