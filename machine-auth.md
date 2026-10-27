@@ -75,7 +75,7 @@ Two cautions. GitHub documents an immutable default `sub` format that includes o
 
 ## 5. Store the machine credentials that must exist
 
-API keys, client secrets, and client-certificate keys that cannot be federated away go in a secret manager or the platform's own store ([secrets.md](secrets.md)). Secret manager choices start with AWS Secrets Manager (https://aws.amazon.com/secrets-manager/), Google Cloud Secret Manager (https://docs.cloud.google.com/secret-manager/docs/overview), and Azure Key Vault (https://azure.microsoft.com/en-us/products/key-vault). The list continues with HashiCorp Vault ([vault.md](vault.md); https://developer.hashicorp.com/vault) or OpenBao, its open-source fork under the Linux Foundation (https://openbao.org/), Infisical (https://infisical.com/), and Doppler (https://www.doppler.com/). The list ends with 1Password Secrets Automation (https://www.1password.dev/secrets-automation/) and Bitwarden Secrets Manager (https://bitwarden.com/products/secrets-manager/), and the platform's own store remains the alternative to every secret manager listed. As this guide's advice, the workload should authenticate to the store with its platform identity (an instance role, a managed identity, or the federation above) where the selected store and workload support it, so access need not depend on one more long-lived bootstrap key; otherwise protect the store credential as a machine secret.
+API keys, client secrets, and client-certificate keys that cannot be federated away go in a secret manager or the platform's own store ([secrets.md](secrets.md)). Secret manager choices start with AWS Secrets Manager (https://aws.amazon.com/secrets-manager/), Google Cloud Secret Manager (https://docs.cloud.google.com/secret-manager/docs/overview), and Azure Key Vault (https://azure.microsoft.com/en-us/products/key-vault). The list continues with HashiCorp Vault ([vault.md](vault.md); https://developer.hashicorp.com/vault) or OpenBao, its open-source fork under the Linux Foundation (https://openbao.org/), Infisical (https://infisical.com/), and Doppler (https://www.doppler.com/). The list ends with 1Password Secrets Automation (https://www.1password.dev/secrets-automation/) and Bitwarden Secrets Manager (https://bitwarden.com/products/secrets-manager/). As this guide's advice, the workload should authenticate to the store with its platform identity (an instance role, a managed identity, or the federation above) where the selected store and workload support it, so access need not depend on one more long-lived bootstrap key; otherwise protect the store credential as a machine secret.
 
 ## Verify
 
@@ -250,7 +250,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "fff07406f70d18698e00df348b313948d87f25e1fc1bd3a7401929b5e8a80ef9",
+  "body_sha256": "24473e75bd34bd24d6b6d177e0abcc6fe7c1eab8d6bb7ea4a105d35c02e2a78b",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",

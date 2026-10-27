@@ -720,7 +720,7 @@ run: the contents of process memory are unknown, because every attempt by those 
 `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
 `/proc/sys/kernel/yama/ptrace_scope` read `1`. Root was not tested as the observer, because the
 evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
-was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+was set), and no real `vault` client or live Vault service ran, because `vault` was not on the
 evaluation host's PATH. The following
 login request takes `role_id` and `secret_id` from the request file on
 `vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
@@ -893,8 +893,8 @@ not run: the contents of process memory are unknown, because every attempt by th
 open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
 `/proc/sys/kernel/yama/ptrace_scope` read `1`. Root was not tested as the observer, because the
 evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
-was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
-evaluation host's PATH. This applies to both wrapping-lookup
+was set), and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. The reasoning from the shell behaviour of file input on stdin applies to both wrapping-lookup
 blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
 protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
 block types the token or expands a variable holding it, so neither shell history nor `set -x`
@@ -1229,7 +1229,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c586dfad9092aa1cddc3459ea2b2df16da184ead793b4ab4bc553bc4c4daed80",
+  "body_sha256": "a0e001877e972b274a47b5b62fc41a436ff8c2656aeeb2ac04fa5cb80871ff18",
   "components": {
     "run": {
       "name": "Vault loopback run",
