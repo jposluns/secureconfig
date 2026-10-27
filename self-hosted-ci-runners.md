@@ -232,7 +232,7 @@ glab api --hostname REPLACE_WITH_GITLAB_HOST runners/REPLACE_WITH_RUNNER_ID
 REASONED: preceding block; the GitLab reads in the block above, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries, and the lifecycle and contamination checks in this paragraph, per the cited GitHub self-hosted runners REST API, GitLab Instance and Docker Autoscaler executors, and GitHub Actions security hardening entries. No registered runner, worker infrastructure or GitLab instance is available in the authoring environment. At marking time both canary commands passed bash -n and ShellCheck 0.11.0, and with job A and job B sharing one home directory job B printed its FAIL line and exited 1, while in a fresh home directory it printed the canary-absent line and exited 0; this exercises the marker logic only, not worker reuse or destruction. Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
 from a fully paginated `gh api /orgs/REPLACE_WITH_ORG/actions/runners` after a harmless job, but deregistration
 is not proof the machine was destroyed, and a GitLab runner manager can stay registered while its workers are
-replaced. The lifecycle check, for those reasons, is to verify termination and storage disposal through the infrastructure provider. Test reuse with two
+replaced. The check those reasons call for is to verify termination and storage disposal through the infrastructure provider. Test reuse with two
 sequential harmless jobs: job A runs `printf '%s\n' ci-isolation-canary > "$HOME/.ci-isolation-canary"`, and job
 B runs `if test -e "$HOME/.ci-isolation-canary"; then echo 'FAIL: previous job state survived'; exit 1; else echo 'canary absent; corroborate worker destruction'; fi`. A deliberately persistent worker must find the marker;
 the hardened case uses a newly provisioned worker with disposal records and no marker. Marker absence alone is
@@ -364,7 +364,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "cfe23c7128b3e11c89fa8a61f60f156b8422f1c314f2cf0a951e85bb8fa3f5b8",
+  "body_sha256": "e9168b4d734fbf19f0073e9c0a1efc264463a6b321f4f7e1a973870a1ace20e7",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
