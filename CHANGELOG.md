@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-27
+
+- Guide prose length, batch 11 (TODO 1.385): `machine-auth.md` splits the 22 prose sentences over 400 characters at clause boundaries into sentences of at most 372 characters, with no change to facts, qualifiers, inference labels, citations or links, and `plugin/skills/secure-deployment-config/references/machine-auth.md` follows. Sources items end their topic description in its own sentence and list their URLs under neutral labels that keep each URL's scope as on main (#949)
+
 ## 2026-10-26
 
 - Hardening batch 9: applied the carried LOW and informational QA findings from #926, #928, #930, #933 and #938 that are wording or citation defects on main, in `DECISIONS.md`, `DONE.md`, `observability-components.md` and `vector-databases.md`, with no claim text, status or label changed. The `observability-components.md` Sources item for ingest-limits record production adds a pinned Loki `store.go` source that `loki-ingester-inverted-hold` cites. The plugin copies, `MANIFEST.sha256` and `site/llms-full.txt` are regenerated, `VERSION` and `plugin/plugin.json` are updated, and the other carried findings are not applicable or skipped (#943)
