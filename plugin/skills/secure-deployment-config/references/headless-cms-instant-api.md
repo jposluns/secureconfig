@@ -106,7 +106,7 @@ Access for unauthenticated callers is closed by default: Directus documents that
 permissions are off by default", so the Public role and policy reach no collection until an
 administrator enables it. The real exposures are therefore the bootstrap credentials above and any
 grant an operator later adds to the Public policy, including file read permissions that make items
-served at `/assets` reachable; review those grants rather than assuming the default still holds. Protect the
+served at `/assets` reachable; review those grants rather than assuming the default still holds. The storage rule is to protect the
 underlying upload directory or object-storage bucket too, because a public storage URL can bypass Directus asset
 permissions (grant upload, import, update and delete separately from read). Directus registration is disabled by
 default; leave it off unless required, and note that its registration flow returns an empty `204` regardless of
@@ -115,7 +115,7 @@ outcome, so a response alone is not proof an account was rejected. GraphQL intro
 the same roles and policies as REST. Directus listens on `HOST`, default `0.0.0.0`, and port `8055` (defaults as
 of v12.4.1; a `UNIX_SOCKET_PATH` naming a socket path replaces both) and serves the Data Studio (`/` redirects to
 `/admin`); on a bare host set `HOST=127.0.0.1`, in Docker publish
-`127.0.0.1:8055:8055` or use an unpublished private network. Protect Directus administration after bootstrap
+`127.0.0.1:8055:8055` or use an unpublished private network. The Directus administration rule is to protect administration after bootstrap
 (disabling `SERVE_APP` hides the Studio but does not replace API authorization). Directus serves no TLS itself,
 so terminate it in front per [nginx.md](nginx.md) or [caddy.md](caddy.md) and [fronting-auth.md](fronting-auth.md).
 
@@ -159,7 +159,7 @@ returns `PGRST301` (HTTP 401) and an expired token or one failing claims validat
 
 For a private API, leave `db-anon-role` unset. Where anonymous access is intended, point it at a
 dedicated `NOLOGIN` role whose grants are enumerated and minimal, never a broad or superuser-adjacent
-role, because whatever that role can read or write is what the internet can. Audit the
+role, because whatever that role can read or write is what the internet can. The role-audit rule is to audit the
 authenticator and authenticated roles the same way wherever anonymous access is intended (function
 `EXECUTE` defaults to `PUBLIC`, and
 `SECURITY DEFINER` functions and owner-privileged views can widen access beyond the table grants). Set
@@ -176,8 +176,8 @@ PostgREST terminates no TLS itself; front it per [nginx.md](nginx.md) or [caddy.
 ## Across all four
 
 Three of the four call outward on demand (Strapi webhooks, Directus Flows, Hasura event triggers, Actions and
-remote schemas), and PostgREST can through a database function or extension. Restrict each service's outbound access,
-therefore, to the destinations that service needs and block cloud metadata, loopback, link-local and unrelated
+remote schemas), and PostgREST can through a database function or extension. The egress rule is therefore to restrict each
+service's outbound access to the destinations that service needs and block cloud metadata, loopback, link-local and unrelated
 private networks, applying the restriction after DNS resolution and across redirects ([egress-metadata.md](egress-metadata.md)).
 Directus documents an `IMPORT_IP_DENY_LIST` defaulting to `0.0.0.0,169.254.169.254`, but that import-specific
 control is not evidence that every extension or Flow is equally constrained. Store database passwords and
@@ -476,7 +476,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bc656771b9a0d08730972d0c0a479b0ce9b2615db868d29e9540302c66937ab",
+  "body_sha256": "9d764ad8f466f8ff8ebe36df8cec87ed8a33524d0bf767cdef4e4c2a74269145",
   "components": {
     "strapi-signup-source": {
       "name": "Strapi Users and Permissions source",

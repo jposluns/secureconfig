@@ -13493,11 +13493,11 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 ## Sources (checked September 2026)
 
-- Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/. Kubernetes sources: Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
+- Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ . Kubernetes sources: Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
 - Envoy Gateway (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/v1.9/install/install-helm/ ; quickstart: https://gateway.envoyproxy.io/v1.9/tasks/quickstart/
 - Envoy Gateway v1.9.1 quickstart manifest (GatewayClass `controllerName`): https://github.com/envoyproxy/gateway/releases/download/v1.9.1/quickstart.yaml
-- Envoy Gateway tasks, secure gateways and TLS listener (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/. Envoy Gateway documentation sources (1 of 2): basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/. Envoy Gateway documentation sources (2 of 2): external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
+- Envoy Gateway tasks, secure gateways and TLS listener (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/docs/tasks/security/secure-gateways/ . Envoy Gateway documentation sources (1 of 2): basic auth: https://gateway.envoyproxy.io/docs/tasks/security/basic-auth/ ; OIDC: https://gateway.envoyproxy.io/docs/tasks/security/oidc/. Envoy Gateway documentation sources (2 of 2): external authorization (`extAuth`): https://gateway.envoyproxy.io/docs/tasks/security/ext-auth/ ; HTTP redirect: https://gateway.envoyproxy.io/docs/tasks/traffic/http-redirect/
 - htpasswd, for `-i` rather than `-b` and what SHA-1 costs: https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - Authelia: proxy integration (the proxy calls the authorization endpoint): https://www.authelia.com/integration/proxies/introduction/ ; Envoy Gateway `SecurityPolicy` example: https://www.authelia.com/integration/kubernetes/envoy/gateway/
 - kubectl JSONPath filter syntax: https://kubernetes.io/docs/reference/kubectl/jsonpath/
@@ -13506,10 +13506,10 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Nmap host discovery (`-Pn`): https://nmap.org/book/man-host-discovery.html ; port specification (`-p`): https://nmap.org/book/man-port-specification.html ; IPv6 scanning (`-6`): https://nmap.org/book/man-misc-options.html
 - Kubernetes ports and protocols (6443 API server, 2379 and 2380 etcd, 10250 kubelet, 10259 scheduler, 10257 controller manager): https://kubernetes.io/docs/reference/networking/ports-and-protocols/
 - Kubernetes kubelet authentication and authorization (unrejected requests treated as anonymous, `--anonymous-auth`, `--authorization-mode=Webhook`): https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/
-- Kubernetes v1.37.1 source, legacy flag defaults (anonymous true, webhook false, AlwaysAllow, read-only port constant): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L196-L224. Kubernetes v1.37.1 sources (1 of 3): explicit flags override the file (`--config` help): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L281. Kubernetes v1.37.1 sources (2 of 3): drop-in `--config-dir` files override defaults and the file (`--config-dir` help): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L282. Kubernetes v1.37.1 sources (3 of 3): wildcard address families and read-only flag semantics: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L373-L398 ; read-only port constant 10255: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/cluster/ports/ports.go#L32-L37
-- Kubernetes v1.37.1 source, v1beta1 defaults (`address`, secured port, anonymous false, webhook true, Webhook authorization): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/apis/config/v1beta1/defaults.go#L85-L102. Kubernetes v1.37.1 sources: field contract (`0.0.0.0`, 10250, `readOnlyPort: 0`): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/staging/src/k8s.io/kubelet/config/v1beta1/types.go#L160-L176
-- Kubernetes v1.37.1 kubeadm configuration (read-only port 0, anonymous false, webhook true): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L33-L48. Kubernetes v1.37.1 sources (1 of 2): serialization: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L95-L100. Kubernetes v1.37.1 sources (2 of 2): authentication/authorization defaults and override warnings: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L144-L188 ; warning text: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/utils.go#L66-L71
-- Kubernetes v1.37.1 server (secured address/port, read-only HTTP with nil auth): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L181-L250. Kubernetes v1.37.1 sources (1 of 3): conditional auth filter and debugging handlers: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L339-L375. Kubernetes v1.37.1 sources (2 of 3): auth-required container run and exec handlers: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L577-L610 ; read-only handlers, with no `/spec` registration: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L477-L572. Kubernetes v1.37.1 sources (3 of 3): `/stats/summary`: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/stats/handler.go#L109-L133
+- Kubernetes v1.37.1 source, legacy flag defaults (anonymous true, webhook false, AlwaysAllow, read-only port constant): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L196-L224 . Kubernetes v1.37.1 sources (1 of 3): explicit flags override the file (`--config` help): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L281. Kubernetes v1.37.1 sources (2 of 3): drop-in `--config-dir` files override defaults and the file (`--config-dir` help): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L282. Kubernetes v1.37.1 sources (3 of 3): wildcard address families and read-only flag semantics: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubelet/app/options/options.go#L373-L398 ; read-only port constant 10255: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/cluster/ports/ports.go#L32-L37
+- Kubernetes v1.37.1 source, v1beta1 defaults (`address`, secured port, anonymous false, webhook true, Webhook authorization): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/apis/config/v1beta1/defaults.go#L85-L102 . Kubernetes v1.37.1 sources: field contract (`0.0.0.0`, 10250, `readOnlyPort: 0`): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/staging/src/k8s.io/kubelet/config/v1beta1/types.go#L160-L176
+- Kubernetes v1.37.1 kubeadm configuration (read-only port 0, anonymous false, webhook true): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L33-L48 . Kubernetes v1.37.1 sources (1 of 2): serialization: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L95-L100. Kubernetes v1.37.1 sources (2 of 2): authentication/authorization defaults and override warnings: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/kubelet.go#L144-L188 ; warning text: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/cmd/kubeadm/app/componentconfigs/utils.go#L66-L71
+- Kubernetes v1.37.1 server (secured address/port, read-only HTTP with nil auth): https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L181-L250 . Kubernetes v1.37.1 sources (1 of 3): conditional auth filter and debugging handlers: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L339-L375. Kubernetes v1.37.1 sources (2 of 3): auth-required container run and exec handlers: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L577-L610 ; read-only handlers, with no `/spec` registration: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/server.go#L477-L572. Kubernetes v1.37.1 sources (3 of 3): `/stats/summary`: https://github.com/kubernetes/kubernetes/blob/f78e722310e50bcaca9276be22276d9e91d91308/pkg/kubelet/server/stats/handler.go#L109-L133
 - Kubernetes command-line and configuration references (usage context; the legacy port constant 10255 is pinned above in pkg/cluster/ports/ports.go): https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/ ; https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 - Amazon EKS AMI node bootstrap, the default `KubeletConfiguration` it writes (`Anonymous.Enabled: false`, `Mode: "Webhook"`, `ReadOnlyPort: 0`): https://github.com/awslabs/amazon-eks-ami/blob/6caf8311a3c6a8da71ac7e5e83f9c2e06287039a/nodeadm/internal/kubelet/config.go
 - Kubernetes kubeconfig API reference (`ExecConfig`, whose `env` "defines additional environment variables to expose to the process"): https://kubernetes.io/docs/reference/config-api/kubeconfig.v1/
@@ -13612,7 +13612,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f2f686bff044bbd249394232b668e8c7cf04fc585b353b436e423efc96b24439",
+  "body_sha256": "0d8e93081ad5ee4508082f8017c7154ad8c93251b957bbfc40dbd1ab2d9c9962",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -65561,7 +65561,7 @@ Access for unauthenticated callers is closed by default: Directus documents that
 permissions are off by default", so the Public role and policy reach no collection until an
 administrator enables it. The real exposures are therefore the bootstrap credentials above and any
 grant an operator later adds to the Public policy, including file read permissions that make items
-served at `/assets` reachable; review those grants rather than assuming the default still holds. Protect the
+served at `/assets` reachable; review those grants rather than assuming the default still holds. The storage rule is to protect the
 underlying upload directory or object-storage bucket too, because a public storage URL can bypass Directus asset
 permissions (grant upload, import, update and delete separately from read). Directus registration is disabled by
 default; leave it off unless required, and note that its registration flow returns an empty `204` regardless of
@@ -65570,7 +65570,7 @@ outcome, so a response alone is not proof an account was rejected. GraphQL intro
 the same roles and policies as REST. Directus listens on `HOST`, default `0.0.0.0`, and port `8055` (defaults as
 of v12.4.1; a `UNIX_SOCKET_PATH` naming a socket path replaces both) and serves the Data Studio (`/` redirects to
 `/admin`); on a bare host set `HOST=127.0.0.1`, in Docker publish
-`127.0.0.1:8055:8055` or use an unpublished private network. Protect Directus administration after bootstrap
+`127.0.0.1:8055:8055` or use an unpublished private network. The Directus administration rule is to protect administration after bootstrap
 (disabling `SERVE_APP` hides the Studio but does not replace API authorization). Directus serves no TLS itself,
 so terminate it in front per [nginx.md](nginx.md) or [caddy.md](caddy.md) and [fronting-auth.md](fronting-auth.md).
 
@@ -65614,7 +65614,7 @@ returns `PGRST301` (HTTP 401) and an expired token or one failing claims validat
 
 For a private API, leave `db-anon-role` unset. Where anonymous access is intended, point it at a
 dedicated `NOLOGIN` role whose grants are enumerated and minimal, never a broad or superuser-adjacent
-role, because whatever that role can read or write is what the internet can. Audit the
+role, because whatever that role can read or write is what the internet can. The role-audit rule is to audit the
 authenticator and authenticated roles the same way wherever anonymous access is intended (function
 `EXECUTE` defaults to `PUBLIC`, and
 `SECURITY DEFINER` functions and owner-privileged views can widen access beyond the table grants). Set
@@ -65631,8 +65631,8 @@ PostgREST terminates no TLS itself; front it per [nginx.md](nginx.md) or [caddy.
 ## Across all four
 
 Three of the four call outward on demand (Strapi webhooks, Directus Flows, Hasura event triggers, Actions and
-remote schemas), and PostgREST can through a database function or extension. Restrict each service's outbound access,
-therefore, to the destinations that service needs and block cloud metadata, loopback, link-local and unrelated
+remote schemas), and PostgREST can through a database function or extension. The egress rule is therefore to restrict each
+service's outbound access to the destinations that service needs and block cloud metadata, loopback, link-local and unrelated
 private networks, applying the restriction after DNS resolution and across redirects ([egress-metadata.md](egress-metadata.md)).
 Directus documents an `IMPORT_IP_DENY_LIST` defaulting to `0.0.0.0,169.254.169.254`, but that import-specific
 control is not evidence that every extension or Flow is equally constrained. Store database passwords and
@@ -65931,7 +65931,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bc656771b9a0d08730972d0c0a479b0ce9b2615db868d29e9540302c66937ab",
+  "body_sha256": "9d764ad8f466f8ff8ebe36df8cec87ed8a33524d0bf767cdef4e4c2a74269145",
   "components": {
     "strapi-signup-source": {
       "name": "Strapi Users and Permissions source",
