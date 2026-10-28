@@ -38,7 +38,7 @@ A login proves who the person is. **It does not decide whether they may use your
 
 | Provider | Free tier and MFA facts (September 2026) | Fit |
 |---|---|---|
-| Microsoft Entra ID | Free tier, bundled with Azure and Microsoft 365 subscriptions, includes MFA and unlimited SSO to SaaS apps. Security defaults require every user to register MFA, enforce it for administrators, and prompt other users when Microsoft judges it necessary. P1 at $7 per user per month (annual commitment) adds Conditional Access: require MFA for included users across all resources with an all-users policy that initially runs in Report-only mode and excludes emergency-access accounts; to require repeated reauthentication, also set the separate sign-in-frequency control to Every time, subject to a five-minute prompt tolerance. These controls do not establish a fresh MFA challenge on every resource access. P2 at $10 adds risk-based policies. | Any team already on Microsoft 365. |
+| Microsoft Entra ID | Free tier, bundled with Azure and Microsoft 365 subscriptions, includes MFA and unlimited SSO. Security defaults require every user to register MFA, enforce it for administrators, and prompt other users when Microsoft judges it necessary. P1 at $7 per user per month (annual commitment) adds Conditional Access: require MFA for included users across all resources with an all-users policy that initially runs in Report-only mode and excludes emergency-access accounts; to require repeated reauthentication, also set the separate sign-in-frequency control to Every time, subject to a five-minute prompt tolerance. These controls do not establish a fresh MFA challenge on every resource access. P2 at $10 adds risk-based policies. | Any team already on Microsoft 365. |
 | Google Workspace / Cloud Identity | This guide found no Google page stating Sign in with Google (OIDC) pricing (checked October 2026). Google Workspace super administrators can enforce 2-Step Verification in the Admin console for all users, or for a selected organizational unit or configuration group; this guide's assessment is that Cloud Identity uses the same Admin console setting; the cited Workspace page does not show it. Cloud Identity Free exists; its default licence count was not read from a Google page for this guide, so check the source. | Any team already on Workspace. |
 | Okta Workforce Identity | Okta Verify supports push, TOTP, and FastPass. A $1,500 annual contract minimum applies and there is no free production tier. | Only when your organization already runs Okta. Not a purchase for a small project. |
 | JumpCloud, OneLogin, Ping Identity | Workforce directories in the same class. Tiers not verified for this guide. | Existing enterprise estates only. |
@@ -47,7 +47,7 @@ A login proves who the person is. **It does not decide whether they may use your
 
 | Provider | Free tier and MFA facts (September 2026) | Notes |
 |---|---|---|
-| Microsoft Entra External ID | Core features free for the first 50,000 monthly active users (MAU). SMS MFA and machine-to-machine (client credentials) authentication are billed per transaction as add-ons. | Keep the external (customer) tenant separate from the workforce tenant. |
+| Microsoft Entra External ID | The Basic tier is free for the first 50,000 monthly active users (MAU). SMS MFA and machine-to-machine (client credentials) authentication are billed per transaction as add-ons. | Keep the external (customer) tenant separate from the workforce tenant. |
 | Google Identity Platform / Firebase Authentication | Email, password, and social sign-in are free in base Firebase Authentication. Upgrading to Authentication with Identity Platform unlocks TOTP MFA and, on the pay-as-you-go Blaze plan, a free tier of 50,000 MAU (50 SAML/OIDC MAU); the no-billing Spark plan is capped much lower, at 3,000 daily active users (2 for SAML/OIDC), so confirm which plan applies before relying on the MAU figure. SMS is billed per message. | Cloud Firestore Security Rules evaluate mobile/web client library requests after authentication; server client libraries bypass them and use IAM. Supabase table grants determine permitted operations and RLS policies determine accessible rows; keep the Supabase `service_role` server-side because it bypasses RLS: [firebase-supabase.md](firebase-supabase.md). |
 | Auth0 (Okta) | Free plan: 25,000 MAU, passkeys, and unlimited social connections. **No MFA factors on Free**; MFA factors start with the paid Essentials plan, and Adaptive MFA requires an Enterprise plan plus its add-on. B2C Essentials is $35 per month for 500 MAU. | At the time of writing, Free includes passkeys, which with user verification are multifactor; what Free lacks is Auth0's separately licensed MFA policy (enforced factors and step-up). Enabling passkeys leaves password sign-in available while the database connection permits password authentication. The cited rolling passkey and archived MFA pages do not independently establish Free-tier step-up entitlement. |
 | Amazon Cognito | Lite and Essentials tiers: 10,000 MAU free for direct sign-in and 50 MAU free for SAML/OIDC federation (Lite pools created on or before 10:00 a.m. Pacific Time on 22 November 2024, and qualifying new Lite pools in those existing accounts, keep a grandfathered 50,000 MAU free tier). Essentials is $0.015 per MAU beyond that and includes passkeys; Lite does not. SMS goes through SNS and is billed separately. | Pairs with Application Load Balancer authentication ([cloud-identity-proxies.md](cloud-identity-proxies.md)). |
@@ -89,7 +89,8 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 
 ## Sources (checked September 2026)
 
-- Microsoft Entra pricing (Free, P1, P2, External ID free MAU): https://www.microsoft.com/en-us/security/business/microsoft-entra-pricing
+- Microsoft Entra ID pricing (Free, P1, P2, and External ID free up to the first 50,000 monthly active usages; checked October 2026): https://www.microsoft.com/en-us/security/microsoft-entra-pricing
+- Microsoft Entra External ID pricing (Basic tier, first 50,000 monthly active users at no cost; checked October 2026): https://www.microsoft.com/en-us/security/pricing/microsoft-entra-external-id/
 - Microsoft Entra External ID billing model: https://learn.microsoft.com/en-us/entra/external-id/external-identities-pricing
 - Microsoft Entra security defaults: https://learn.microsoft.com/en-us/entra/fundamentals/security-defaults
 - Google Cloud Identity pricing: https://cloud.google.com/identity/pricing
@@ -214,12 +215,12 @@ Components (recorded basis):
 
 Claims (full source mapping in the JSON block below):
 
-- entra-free (REASONED; entra): Entra Free includes MFA and unlimited SaaS SSO as recorded in September 2026.
+- entra-free (REASONED; entra): Entra Free includes MFA and unlimited SSO as recorded in September 2026.
 - entra-defaults (REASONED; entra): Security defaults require MFA registration for everyone, enforce it for admins and prompt others when Microsoft judges necessary.
 - entra-paid (REASONED; entra): September 2026 USD annual-commitment prices: P1 $7/user/month adds Conditional Access; P2 $10 adds risk-based policies. Verify current pricing.
 - google-free (REASONED; google): Cloud Identity Free exists; its default license count was not checked for this guide.
 - okta-commercial (REASONED; okta): Okta Workforce has a $1,500 annual contract minimum and no free production tier, as recorded in September 2026.
-- external-id-free (REASONED; entra): Entra External ID core features cover the first 50,000 MAU free; keep customer and workforce tenants separate.
+- external-id-free (REASONED; entra): Entra External ID Basic tier covers the first 50,000 MAU free; keep customer and workforce tenants separate.
 - external-id-addons (REASONED; entra): External ID SMS MFA and machine-to-machine client credentials are billed per transaction as add-ons.
 - firebase-base (REASONED; firebase): Base Firebase Authentication provides free email, password and social sign-in; Identity Platform unlocks TOTP MFA.
 - firebase-blaze (REASONED; firebase): With Identity Platform, Blaze has 50,000 free MAU and 50 SAML/OIDC MAU; SMS is billed per message.
@@ -268,7 +269,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "15f4d50f0a142174319273b82594a7c8a27e2f10675fff4ceae7996af706e5f6",
+  "body_sha256": "1fd492927d1c4089d1ffc07d7c7ce94925aa5aac62d55ec098482c8edcf46876",
   "components": {
     "entra": {
       "name": "Microsoft Entra documentation",
@@ -277,7 +278,8 @@ Claims (full source mapping in the JSON block below):
         "s0ee5939cfc03": "https://learn.microsoft.com/en-us/entra/external-id/external-identities-pricing",
         "s36db3cb5ed40": "https://learn.microsoft.com/en-us/entra/fundamentals/security-defaults",
         "sca079c06e1ac": "https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-sign-ins",
-        "s6fa089f8a7c6": "https://www.microsoft.com/en-us/security/business/microsoft-entra-pricing"
+        "sd65e0717c272": "https://www.microsoft.com/en-us/security/microsoft-entra-pricing",
+        "sce0b766339c3": "https://www.microsoft.com/en-us/security/pricing/microsoft-entra-external-id/"
       }
     },
     "google": {
@@ -540,12 +542,12 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "entra-free": {"text": "Entra Free includes MFA and unlimited SaaS SSO as recorded in September 2026.", "components": ["entra"], "sources": ["entra:s6fa089f8a7c6"], "status": "REASONED"},
+    "entra-free": {"text": "Entra Free includes MFA and unlimited SSO as recorded in September 2026.", "components": ["entra"], "sources": ["entra:sd65e0717c272"], "status": "REASONED"},
     "entra-defaults": {"text": "Security defaults require MFA registration for everyone, enforce it for admins and prompt others when Microsoft judges necessary.", "components": ["entra"], "sources": ["entra:s36db3cb5ed40"], "status": "REASONED"},
-    "entra-paid": {"text": "September 2026 USD annual-commitment prices: P1 $7/user/month adds Conditional Access; P2 $10 adds risk-based policies. Verify current pricing.", "components": ["entra"], "sources": ["entra:s6fa089f8a7c6"], "status": "REASONED"},
+    "entra-paid": {"text": "September 2026 USD annual-commitment prices: P1 $7/user/month adds Conditional Access; P2 $10 adds risk-based policies. Verify current pricing.", "components": ["entra"], "sources": ["entra:sd65e0717c272"], "status": "REASONED"},
     "google-free": {"text": "Cloud Identity Free exists; its default license count was not checked for this guide.", "components": ["google"], "sources": ["google:s78598c90d854"], "status": "REASONED"},
     "okta-commercial": {"text": "Okta Workforce has a $1,500 annual contract minimum and no free production tier, as recorded in September 2026.", "components": ["okta"], "sources": ["okta:sc0f6f4461955"], "status": "REASONED"},
-    "external-id-free": {"text": "Entra External ID core features cover the first 50,000 MAU free; keep customer and workforce tenants separate.", "components": ["entra"], "sources": ["entra:s6fa089f8a7c6", "entra:s0ee5939cfc03"], "status": "REASONED"},
+    "external-id-free": {"text": "Entra External ID Basic tier covers the first 50,000 MAU free; keep customer and workforce tenants separate.", "components": ["entra"], "sources": ["entra:sd65e0717c272", "entra:sce0b766339c3", "entra:s0ee5939cfc03"], "status": "REASONED"},
     "external-id-addons": {"text": "External ID SMS MFA and machine-to-machine client credentials are billed per transaction as add-ons.", "components": ["entra"], "sources": ["entra:s0ee5939cfc03"], "status": "REASONED"},
     "firebase-base": {"text": "Base Firebase Authentication provides free email, password and social sign-in; Identity Platform unlocks TOTP MFA.", "components": ["firebase"], "sources": ["firebase:s69c4a65e512f", "firebase:s6bf1b9443202"], "status": "REASONED"},
     "firebase-blaze": {"text": "With Identity Platform, Blaze has 50,000 free MAU and 50 SAML/OIDC MAU; SMS is billed per message.", "components": ["firebase"], "sources": ["firebase:s6bf1b9443202"], "status": "REASONED"},
@@ -573,7 +575,7 @@ Claims (full source mapping in the JSON block below):
     "okta-verify-factors": {"text": "Okta Verify supports push, TOTP and FastPass.", "components": ["okta", "okta-docs"], "sources": ["okta:sc0f6f4461955", "okta-docs:sbad1704aaf36"], "status": "REASONED"},
     "auth0-passkey-policy": {"text": "At the time of writing, Auth0 Free includes passkeys but lacks its separately licensed MFA policy for enforced factors and step-up; with user verification, WebAuthn is multifactor. Enabling passkeys leaves password sign-in available while the database connection permits password authentication. The cited rolling passkey and archived MFA pages do not independently establish Free-tier step-up entitlement.", "components": ["auth0", "auth0-mfa-source"], "sources": ["auth0:s6d62bb8ed8bf", "auth0:s5794c9fb8add", "auth0:s7ecf8ee3e9ba", "auth0-mfa-source:sf926337e245b"], "status": "REASONED"},
     "supabase-aal2": {"text": "Require aal2 in Supabase authorization policies. This guide's assessment is that TOTP enrollment alone does not enforce MFA.", "components": ["supabase-docs"], "sources": ["supabase-docs:sf7aaaf9af229", "supabase-docs:sa9ece8e2f60a"], "status": "REASONED"},
-    "entra-every-signin": {"text": "At the time of writing, Entra P1 adds Conditional Access. An all-users, all-resources policy, initially in Report-only mode and excluding emergency-access accounts, requires MFA for included users when enforced; a separate Every time sign-in-frequency control requires repeated reauthentication, subject to a five-minute prompt tolerance. Security defaults instead prompt non-admin users when necessary. The cited passages do not establish a fresh MFA challenge on every resource access.", "components": ["entra", "entra-conditional"], "sources": ["entra:s6fa089f8a7c6", "entra:s36db3cb5ed40", "entra-conditional:s9bf89b3e9f66", "entra-conditional:sc657c943e436", "entra-conditional:sb1623e284d92", "entra-conditional:se292d57dc695"], "status": "REASONED"},
+    "entra-every-signin": {"text": "At the time of writing, Entra P1 adds Conditional Access. An all-users, all-resources policy, initially in Report-only mode and excluding emergency-access accounts, requires MFA for included users when enforced; a separate Every time sign-in-frequency control requires repeated reauthentication, subject to a five-minute prompt tolerance. Security defaults instead prompt non-admin users when necessary. The cited passages do not establish a fresh MFA challenge on every resource access.", "components": ["entra", "entra-conditional"], "sources": ["entra:sd65e0717c272", "entra:s36db3cb5ed40", "entra-conditional:s9bf89b3e9f66", "entra-conditional:sc657c943e436", "entra-conditional:sb1623e284d92", "entra-conditional:se292d57dc695"], "status": "REASONED"},
     "application-allowlist": {"text": "Guide advice: after any provider login, the application or fronting layer must check a tenant, hosted-domain, group or explicit-user allowlist; accepting every Google or Microsoft account as staff is not authorization. Google documents the ID-token hd claim; Microsoft documents tenant issuer restriction and enterprise-application group assignment, which requires P1 or P2 at the time of writing. No fetched Google Workspace application-access page establishes a native admin-console allowlist.", "components": ["github", "aws-identity", "google-oidc-docs", "entra-allowlist"], "sources": ["github:s6b78ce27fabc", "aws-identity:sb1894f4f0139", "google-oidc-docs:sce9a29f93b69", "entra-allowlist:sb49c822a58e5", "entra-allowlist:sfdfe9683e4ff"], "status": "REASONED"},
     "firebase-data-policy": {"text": "Cloud Firestore Security Rules evaluate mobile/web client library requests after authentication; server client libraries bypass the Rules and use IAM. Supabase table grants decide permitted operations and RLS policies decide accessible rows. Supabase service_role bypasses RLS and must stay server-side.", "components": ["firebase", "supabase-rls-docs"], "sources": ["firebase:s5368f5c06957", "firebase:sd6071548f6fe", "firebase:s75d5ea2efd58", "supabase-rls-docs:sdb0688cb20c8"], "status": "REASONED"},
     "github-proxy-workloads": {"text": "oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC gives workflows short-lived cloud-provider tokens. This guide's assessment is that workload OIDC is separate from human GitHub OAuth login.", "components": ["github", "oauth2-proxy", "github-docs"], "sources": ["github:s6b78ce27fabc", "oauth2-proxy:s6d5e39ce93b5", "github-docs:s4d638483756e"], "status": "REASONED"},
