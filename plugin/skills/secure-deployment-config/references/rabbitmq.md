@@ -654,9 +654,9 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - RabbitMQ administration CLI v2 configuration and TLS flags: https://www.rabbitmq.com/docs/management-cli
 - RabbitMQ queues, durability, and exclusive queue behaviour: https://www.rabbitmq.com/docs/queues
 - RabbitMQ channel exceptions and access-refused errors: https://www.rabbitmq.com/docs/channels
-- Pika TLS context and client certificate example (mutual authentication): https://pika.github.io/pika/latest/examples/tls_mutual_authentication/
-- Pika 1.x `SSLOptions(context, server_hostname)` class taking an `ssl.SSLContext` (pinned tag 1.3.2): https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L937-L958
-- Pika 1.x `ConnectionParameters` `ssl_options` argument (pinned tag 1.3.2): https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L579-L580
+- Pika TLS context and client certificate example (mutual authentication; checked October 2026): https://pika.github.io/pika/latest/examples/tls_mutual_authentication/
+- Pika 1.x `SSLOptions(context, server_hostname)` class taking an `ssl.SSLContext` (pinned tag 1.3.2; checked October 2026): https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L937-L958
+- Pika 1.x `ConnectionParameters` `ssl_options` argument (pinned tag 1.3.2; checked October 2026): https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L579-L580
 - Pika connection parameters: https://pika.readthedocs.io/en/stable/modules/parameters.html
 - Pika blocking connection and channel methods: https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html
 - Pika authentication and authorization exceptions: https://pika.readthedocs.io/en/stable/modules/exceptions.html
@@ -730,7 +730,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ae77f139fc90829efa35769db1602a3fa90b45ef81a9cebaaf22c5372958c466",
+  "body_sha256": "34ab4cbb217b866e649f2a387988d6008a587408fe394fd13905de4bd34efced",
   "components": {
     "source": {
       "name": "RabbitMQ source",
