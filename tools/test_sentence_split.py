@@ -256,6 +256,35 @@ class Cases1015(unittest.TestCase):
                          ["Bind it. Redis security Sentinel", "Then enable auth."])
 
 
+class Cases1016(unittest.TestCase):
+    """The limits the splitter still disclosed after #1016, and the apostrophes and
+    citation runs that the fixes for them must keep."""
+
+    def test_inch_mark_leaves_a_curly_quotation_open(self):
+        self.assertEqual(split_sentences('“A 27" screen. Still inside.” Next.'),
+                         ['“A 27" screen. Still inside.”', "Next."])
+
+    def test_never_inside_a_single_quoted_phrase(self):
+        for text, first in (("He said 'Stop. Now.' Then leave.", "He said 'Stop. Now.'"),
+                            ("He said ‘Stop. Now.’ Then leave.", "He said ‘Stop. Now.’"),
+                            ("See ('Stop. Now.') Then leave.", "See ('Stop. Now.')")):
+            with self.subTest(text=text):
+                self.assertEqual(split_sentences(text), [first, "Then leave."])
+
+    def test_apostrophes_in_words_open_no_quotation(self):
+        self.assertEqual(split_sentences("Don't stop. The users' keys rotate. It’s done."),
+                         ["Don't stop.", "The users' keys rotate.", "It’s done."])
+
+    def test_link_that_opens_a_sentence_before_lowercase_text(self):
+        self.assertEqual(split_sentences("It ends. [mfa.md](mfa.md) covers it."),
+                         ["It ends.", "mfa.md covers it."])
+
+    def test_link_before_a_capital_stays_with_the_sentence_before(self):
+        self.assertEqual(split_sentences("It ends. [Redis](https://example.com/r) Sentinel "
+                                         "docs say so. [source](https://example.com/s)"),
+                         ["It ends. Redis", "Sentinel docs say so. source"])
+
+
 class Command(unittest.TestCase):
     def run_cli(self, text, *args):
         with tempfile.TemporaryDirectory() as directory:
