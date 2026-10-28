@@ -248,7 +248,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Flowise deployment with nginx and certbot: https://docs.flowiseai.com/configuration/deployment/digital-ocean
 - Flowise Compose (publishes `${PORT}:${PORT}`): https://github.com/FlowiseAI/Flowise/blob/4ea391204a499fb6d19747104502362295b4dde3/docker/docker-compose.yml
 - Langflow example Compose (publishes `7860:7860` and PostgreSQL `5432:5432`): https://github.com/langflow-ai/langflow/blob/c6dbca308dc85526d5cecb31211821ec4f5e1d05/docker_example/docker-compose.yml
-- LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml
+- LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/LibreChat-AI/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml
 - Langflow API keys and authentication: https://docs.langflow.org/api-keys-and-authentication
 - Langflow environment variables (`LANGFLOW_HOST`, `LANGFLOW_PORT`, SSL files): https://docs.langflow.org/environment-variables
 - Langflow 1.12.6 server defaults (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/groups/server.py#L21-L24
@@ -442,7 +442,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "c4aeadb22dfa897ab0c46c72cb0d6a86b7d73adb28c3e077bc2f28cc58e35c0e",
+  "body_sha256": "0fd0e34d51b21b3dcaf54b2d66d771032f176988bc02453cfa4687e491c64b5f",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
@@ -745,7 +745,7 @@ Claims (full source mapping in the JSON block below):
       "name": "LibreChat Compose",
       "basis": "1596df724a840f894831fc74f21de8d8df72fcb1",
       "sources": {
-        "sb3cc671b90e3": "https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml"
+        "sb9bc9a9d7f0f": "https://github.com/LibreChat-AI/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml"
       }
     },
     "librechat": {
@@ -812,7 +812,7 @@ Claims (full source mapping in the JSON block below):
   "claims": {
     "flowise-port": {"text": "Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping.", "components": ["flowise", "flowise-compose"], "sources": ["flowise:sfee1ae75d51a", "flowise-compose:s81474794a92d"], "status": "REASONED"},
     "langflow-port": {"text": "Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private.", "components": ["langflow", "langflow-compose", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-compose:s7f4564c949cb", "langflow-1126:s8049fb15747e", "langflow-1126:s44bfa70223f9"], "status": "REASONED"},
-    "librechat-port": {"text": "LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.", "components": ["librechat", "librechat-compose"], "sources": ["librechat:s3f1c594392bc", "librechat-compose:sb3cc671b90e3"], "status": "REASONED"},
+    "librechat-port": {"text": "LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.", "components": ["librechat", "librechat-compose"], "sources": ["librechat:s3f1c594392bc", "librechat-compose:sb9bc9a9d7f0f"], "status": "REASONED"},
     "compose-merge": {"text": "Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins.", "components": ["docker", "docker-merge", "compose-243", "compose-244", "compose-go-rc2", "compose-go-rc3"], "sources": ["docker:se716ad33db1f", "docker-merge:s72ea21230137", "docker-merge:sc9bb17bb3323", "docker-merge:s9d483ca7e4f4", "compose-243:s025e0d398762", "compose-244:s31edecddf3be", "compose-244:s6fc4eeeedfbd", "compose-go-rc2:sc2bf2c1e7297", "compose-go-rc3:s8d6dab78abf1"], "status": "REASONED"},
     "docker-firewall": {"text": "Docker published traffic can bypass UFW; removing or narrowing publications is required.", "components": ["docker"], "sources": ["docker:s351180c6678f"], "status": "REASONED"},
     "dify-ports": {"text": "Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off.", "components": ["dify-console", "dify-compose"], "sources": ["dify-console:sb28809d177bf", "dify-compose:s517af9c43635", "dify-console:s1e4c822a36b1"], "status": "REASONED"},
