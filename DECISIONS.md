@@ -17,6 +17,41 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-28 on the proxy decisions, the #1010 anchors, five pull request bodies and TODO 3.48
+  (#1029).** The maintainer gave five rulings through AskUserQuestion that day, four at 2026-10-28T16:05:45Z and the
+  one on TODO 3.48 at 2026-10-28T18:24:05Z. The orchestrator's record marks the first and the fifth as given in an
+  attended-autonomous session. No reasoning was recorded beyond the words quoted below from that record. Three of
+  the rulings confirm proxy decisions that "Proxy decisions awaiting maintainer review" below records, and each of
+  those three proxy decisions is now a maintainer ruling. Those entries keep their wording; this entry records the
+  outcome.
+  - TODO 1.383. The record reads:
+    "confirmed the proxy decision on TODO 1.383 (A: row stays open for the three claims, no rule change or exemption)."
+    This confirms "Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002)",
+    which is now a maintainer ruling. Row 1.383 stays open for `loki-querier-ingester-inverted`,
+    `loki-querier-ingester-inverted-result` and `transport-authentication-browser`, with no rule change and no
+    exemption.
+  - TODO 1.385, `exposure-index.md:59`. The record reads:
+    "confirmed the proxy decision on TODO 1.385 exposure-index.md:59 (A: a link list is not a prose sentence; left as is with the recorded exclusion; no CONTRIBUTING rule change)."
+    This confirms "Proxy decision of 2026-10-28 on the `exposure-index.md` link list, TODO 1.385, for the
+    maintainer's later review (#1011)", which is now a maintainer ruling. The table cell, a verbless list of 25 guide
+    links, is not a prose sentence and stays as is, with the exclusion DONE 1.385 records. `CONTRIBUTING.md` does
+    not change, so guardrails' suggestion that the rule state how lists are measured, which that entry left for the
+    maintainer's review, is not applied.
+  - The nine Verify-heading anchors that #1010 changed. The record reads:
+    "accepted #1010's nine changed Verify-heading anchors (proxy decision B stands; no explicit-anchor work)."
+    This confirms "Proxy decision of 2026-10-28 on the TODO 1.385 heading declarations, for the maintainer's later
+    review (#1011)", which is now a maintainer ruling. The nine sentences #1010 split inside the REASONED
+    declarations of Verify headings in `dotnet.md`, `minio.md`, `rabbitmq.md` and `jupyter.md` stay split, their
+    changed generated anchors are accepted, and no explicit anchors are to be added.
+  - Five merged pull request bodies. The record reads:
+    "leave the five merged PR bodies (#819, #857, #860, #880, #926) unedited."
+    Those five bodies stay as merged. This ruling confirms no proxy decision recorded in this file.
+  - TODO 3.48, the version-basis component sources that no claim references. The record reads:
+    "TODO 3.48: add a non-failing report of unused component sources to the version-basis gate, then triage per guide in small batches (cite each from the claim it supports, or remove it from the metadata)."
+    This settles the row's open choice: the version-basis gate is to report such sources without failing, and each
+    listed source is then cited from the claim it supports or removed from the component metadata, guide by guide
+    in small batches. No proxy decision preceded this ruling, and no tool, TODO row or guide changes in the same
+    change as this entry.
 - **Maintainer rulings of 2026-10-27 on guide prose and claim-summary sentence length, TODO 1.385 and 1.383
   (#1002).** The maintainer gave three rulings through AskUserQuestion that day, choosing the recommended option
   each time: on the prose noun-phrase rule at 2026-10-27T12:22:25Z, in an attended-autonomous session, and on TODO
