@@ -148,10 +148,10 @@ the prompted key out of curl's environment for an inherited `set -a`, an exporte
 `audit_key` and `declare -i audit_key`. It still assumes an ordinary interactive shell: no alias on any word the block
 uses, reserved words such as `if` included (an alias on `if` brought back the false pass with no request
 sent, while the stock `ls`, `grep` and `ll` aliases left the result unchanged; `alias` lists what is
-defined). The paired-request block also assumes no functions shadowing any builtin or command the block uses (including `unset`, `read`, `printf`
+defined). The ordinary interactive shell that the paired-request block assumes has no functions shadowing any builtin or command the block uses (including `unset`, `read`, `printf`
 and `curl`), curl on `PATH` (with curl missing, a `command_not_found_handle` function that printed a newline
-and the expected status brought back the false pass), no builtins disabled with `enable -n`, and no `hash -p` entries. The paired-request block likewise assumes no hostile inherited
-DEBUG trap (the block clears DEBUG, RETURN and ERR traps with `trap - DEBUG RETURN ERR`, but an inherited DEBUG trap under `set -T` still runs once before that line, and under `shopt -s extdebug` can skip it), and a paste at the prompt rather than inside a function. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
+and the expected status brought back the false pass), no builtins disabled with `enable -n`, and no `hash -p` entries. The same ordinary interactive shell has no hostile inherited
+DEBUG trap (the block clears DEBUG, RETURN and ERR traps with `trap - DEBUG RETURN ERR`, but an inherited DEBUG trap under `set -T` still runs once before that line, and under `shopt -s extdebug` can skip it), and the paired-request block assumes a paste at the prompt rather than inside a function. On the loopback runs, keyless Meilisearch returned the fixture to an anonymous search with `200`, so the
 authentication row printed `FAIL: unexpected HTTP status`: the exposed state. With a master key set, the
 same row got `401` `missing_authorization_header` anonymously and `200` with the fixture on the Default
 Search API Key, and `GET /keys` listed the four default keys named above; the write row got `403`
@@ -330,7 +330,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-10",
-  "body_sha256": "e0b1b9087bfeb84618512e7544fa227ab3aa6c51380186d5e316976adb72161c",
+  "body_sha256": "17a28c2e0c0bd2de07e40aade5e86fdad73787edc3602df81609bdc3023d0c82",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
