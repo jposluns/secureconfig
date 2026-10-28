@@ -29,7 +29,7 @@ An MCP server gives a model tools, and every tool it exposes runs with the crede
 1. The `initialize`/`notifications/initialized` handshake is removed, and MCP is stateless. Every request MUST carry `io.modelcontextprotocol/protocolVersion` and `io.modelcontextprotocol/clientCapabilities` in `params._meta`; clients SHOULD also include `io.modelcontextprotocol/clientInfo`. This per-request metadata supplies the version and capabilities without prior connection state. See the Base protocol and Changelog. Every HTTP POST MUST include `MCP-Protocol-Version`, equal to the body's `_meta` protocol version. `Mcp-Method` MUST mirror `method` on all requests; `Mcp-Name` MUST mirror `params.name` or `params.uri` on `tools/call`, `resources/read`, and `prompts/get` only. Header names are case-insensitive. Missing or malformed required headers, or a header/body mismatch, require HTTP `400` with JSON-RPC `-32020 HeaderMismatch`. An unsupported protocol version requires HTTP `400` with `-32022 UnsupportedProtocolVersionError`. See Streamable HTTP; the Changelog records the error-code renumbering, including `HeaderMismatch` from the draft's `-32001` to `-32020`.
 2. `server/discover` is added. Servers MUST implement it; clients MAY call it for up-front version selection or as a stdio compatibility probe. It does not replace negotiation and is not a mandatory first request: per-request `_meta` supplies the negotiation information, and a client can send another RPC directly and handle a version error. See Discovery.
 
-Protocol-level sessions and `Mcp-Session-Id` are removed, as are the standalone GET stream and stream resumability via `Last-Event-ID`. For older-client traffic, a server supporting only 2026-07-28 SHOULD ignore those removed legacy headers and return `405` for GET/DELETE requests. See the Changelog and Streamable HTTP. Readers maintaining older deployments can consult the explicitly **legacy** 2025-11-25 transport reference, a handshake-based Final revision.
+Protocol-level sessions and `Mcp-Session-Id` are removed, as are the standalone GET stream and stream resumability via `Last-Event-ID`. For older-client traffic, a server supporting only 2026-07-28 SHOULD ignore those removed legacy headers and return `405` for GET/DELETE requests. See the Changelog and Streamable HTTP. Readers maintaining older deployments can consult the explicitly **legacy** 2025-11-25 transport reference. MCP versioning calls 2025-11-25 and earlier handshake-based protocol revisions and, for interoperability with them, points to the Backward Compatibility section of the 2026-07-28 specification. It defines Draft, Current and Final only generically and does not name any revision as Final.
 
 ## 1. Prefer stdio, and keep HTTP on loopback
 
@@ -284,7 +284,7 @@ REASONED: following block; the wrong-audience probe in the following block, per 
 - nginx map module (Origin allowlist map): https://nginx.org/en/docs/http/ngx_http_map_module.html
 - nginx proxy module (`proxy_buffering`, `proxy_read_timeout`, `X-Accel-Buffering`, `proxy_cache`, `proxy_cache_methods`): https://nginx.org/en/docs/http/ngx_http_proxy_module.html
 - Caddy reverse_proxy directive (streaming: a `text/event-stream` response is flushed immediately; the HTTP transport `read_timeout` default is no timeout): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
-- MCP specification versioning (2026-07-28 is the Current revision; 2025-11-25 and earlier are Final, handshake-based revisions): https://modelcontextprotocol.io/specification/versioning
+- MCP versioning, 2026-07-28 documentation (2026-07-28 is the current protocol version; Draft, Current and Final are defined generically, with no revision named as Final; 2025-11-25 and earlier are called handshake-based protocol revisions; checked October 2026): https://modelcontextprotocol.io/docs/2026-07-28/learn/versioning
 - curl manual (leading `-q`, header files, `exitcode` and `errormsg`, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 
 
@@ -310,7 +310,7 @@ Components (recorded basis):
 
 Claims (full source mapping in the JSON block below):
 
-- revision (REASONED; mcp, legacy): Current revision can receive compatible changes; legacy 2025-11-25 is Final and handshake-based.
+- revision (REASONED; mcp, legacy): 2026-07-28 is the Current revision and may still receive backwards-compatible changes; 2025-11-25 and earlier are handshake-based protocol revisions.
 - stdio (REASONED; mcp): Prefer local stdio; subprocess inherits user privileges and supplied environment credentials; restrict that environment.
 - http (REASONED; mcp): Streamable HTTP uses one POST endpoint; 2024-11-05 HTTP+SSE is deprecated.
 - metadata (REASONED; mcp): No initialize handshake; each request needs protocolVersion and clientCapabilities in params._meta; clientInfo is recommended.
@@ -355,7 +355,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a15ccd89f83799f1b184f06703679e057d2bd9b8c18a77c6fee321d0a8e157d4",
+  "body_sha256": "14ddbe1f83f75128280ee817442324de96f6877ebcd3e4ec0b4395f20ebb6660",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -372,7 +372,7 @@ Claims (full source mapping in the JSON block below):
         "s4903497743e8": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices",
         "s047fe3fd0dc0": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching",
         "s7345b33e447b": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions",
-        "sa55ad56b64e9": "https://modelcontextprotocol.io/specification/versioning"
+        "s8bc6dbb1e097": "https://modelcontextprotocol.io/docs/2026-07-28/learn/versioning"
       }
     },
     "legacy": {
@@ -415,7 +415,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "revision": {"text": "Current revision can receive compatible changes; legacy 2025-11-25 is Final and handshake-based.", "components": ["mcp", "legacy"], "sources": ["mcp:sa55ad56b64e9", "legacy:s937fae6437b3"], "status": "REASONED"},
+    "revision": {"text": "2026-07-28 is the Current revision and may still receive backwards-compatible changes; 2025-11-25 and earlier are handshake-based protocol revisions.", "components": ["mcp", "legacy"], "sources": ["mcp:s8bc6dbb1e097", "legacy:s937fae6437b3"], "status": "REASONED"},
     "stdio": {"text": "Prefer local stdio; subprocess inherits user privileges and supplied environment credentials; restrict that environment.", "components": ["mcp"], "sources": ["mcp:s4903497743e8", "mcp:s34fabf499cb7"], "status": "REASONED"},
     "http": {"text": "Streamable HTTP uses one POST endpoint; 2024-11-05 HTTP+SSE is deprecated.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825"], "status": "REASONED"},
     "metadata": {"text": "No initialize handshake; each request needs protocolVersion and clientCapabilities in params._meta; clientInfo is recommended.", "components": ["mcp"], "sources": ["mcp:se8d957787d4b", "mcp:sa739f7343f18"], "status": "REASONED"},
