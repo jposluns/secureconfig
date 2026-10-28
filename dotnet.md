@@ -435,7 +435,7 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0. Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0. Proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
 - Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0 ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0
 - Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0 ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0
-- Rate limiting middleware (rate-limiting middleware in .NET 7 and later; guide targets .NET 10 LTS): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0
+- Rate limiting middleware (rate-limiting middleware in .NET 7 and later; guide targets .NET 10 LTS): https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-10.0 ; OpenID Connect web authentication: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0
 - DangerousAcceptAnyServerCertificateValidator (.NET 10): https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator?view=net-10.0 ; trusted roots on Linux (rolling documentation, checked September 2026): https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography
 - .NET 10 Kestrel TLS protocol selection: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0
 - .NET 10 HstsOptions defaults: https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Middleware/HttpsPolicy/src/HstsOptions.cs
@@ -581,7 +581,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "35abddcda4a70218c3a024dd663da5105da36cf13dda26e2ced9f22503186d46",
+  "body_sha256": "bee0e36f3d600abe468fdc097d3f6c1661c9b5080d527851f6b0ff0c104104e9",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -603,7 +603,7 @@ Claims (full source mapping in the JSON block below):
       "name": "ASP.NET Core rate-limiter minimum",
       "basis": ".NET 7",
       "sources": {
-        "sd3fef8f45066": "https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit"
+        "s6afb78d1fd7a": "https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-10.0"
       }
     },
     "net10": {
@@ -722,7 +722,7 @@ Claims (full source mapping in the JSON block below):
     "samesite": {"text": "NET 10 auth cookie defaults Lax; Strict can suppress cross-site app cookies without universally breaking OAuth/OIDC callbacks.", "components": ["net10"], "sources": ["net10:sc0654e58fc4c"], "status": "REASONED"},
     "remote-cookies": {"text": "Correlation and OIDC nonce cookies separately default None; preserve secure cross-site settings and avoid global rewriting.", "components": ["net10"], "sources": ["net10:sc0654e58fc4c"], "status": "REASONED"},
     "authorization": {"text": "Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.", "components": ["docs"], "sources": ["docs:sa3c22a38f4cb"], "status": "REASONED"},
-    "login-limit": {"text": "NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.", "components": ["rate-min"], "sources": ["rate-min:sd3fef8f45066"], "status": "REASONED"},
+    "login-limit": {"text": "NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.", "components": ["rate-min"], "sources": ["rate-min:s6afb78d1fd7a"], "status": "REASONED"},
     "oidc": {"text": "Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
     "mfa": {"text": "Enforce MFA at the identity provider or fronting layer; this guide recommends Cloudflare Access independent MFA for a self-hosted public app only with effective MFA enforcement (policy over application over organization) and no origin bypass. The cited pages do not establish this deployment's enforcement or origin isolation.", "components": ["docs", "cf-docs"], "sources": ["docs:s592dc85bb71f", "docs:s2d5a930aac35", "cf-docs:s6f6104362214", "cf-docs:s7e793d13cf31", "cf-docs:sfddb92e438ca", "cf-docs:s863803bd9a1f"], "status": "REASONED"},
     "client-validation": {"text": "Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.", "components": ["docs"], "sources": ["docs:s6afc0255098f"], "status": "REASONED"},

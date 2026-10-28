@@ -169,7 +169,7 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 ## Sources (checked September 2026)
 
 - Node.js HTTPS module: https://nodejs.org/api/https.html
-- Express behind proxies: https://expressjs.com/en/guide/behind-proxies.html
+- Express behind proxies: https://expressjs.com/en/guide/behind-proxies/
 - express-session (MemoryStore warning, cookie.maxAge, compatible stores): https://expressjs.com/en/resources/middleware/session/
 - helmet: https://helmet.js.org/
 - express-rate-limit changelog (v8 masks IPv6 clients to a `/56` subnet by default, closing the v7 subnet-rotation bypass; the `limit` option name): https://express-rate-limit.mintlify.app/reference/changelog
@@ -280,7 +280,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "47aa72c795833303005d56f3d0a96572f58c532eee0b2be7654617390d5e973c",
+  "body_sha256": "b3977cb40924950b3c47b20ceeebef524a05ea6ed2978cfb1f2fe521515fa3b6",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",
@@ -308,7 +308,7 @@ Claims (full source mapping in the JSON block below):
       "name": "Express proxy documentation",
       "basis": "unknown",
       "sources": {
-        "s2acbdbd05858": "https://expressjs.com/en/guide/behind-proxies.html"
+        "s4e09c522e530": "https://expressjs.com/en/guide/behind-proxies/"
       }
     },
     "session": {
@@ -442,9 +442,9 @@ Claims (full source mapping in the JSON block below):
   "claims": {
     "tls": {"text": "Direct HTTPS uses a certificate plus chain and private key on all-interface 443.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
     "redirect": {"text": "All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED"},
-    "bind": {"text": "Guide advice: 127.0.0.1 for a same-host proxy, no extra managed listeners, app auth required; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Railway advises 0.0.0.0 on injected PORT with edge-proxy TLS; Heroku web processes must bind PORT, IPv6/dual-stack advised for Fir Private Spaces; checked pages state no Cedar address (guide's assessment, not proof any address works).", "components": ["node", "express", "render", "heroku", "fly-pinned", "railway"], "sources": ["node:s87db42190978", "express:s2acbdbd05858", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "heroku:s110a083f7129", "heroku:s41677c652b96", "heroku:s9f4dec283014", "heroku:s8a2465cbd6c2", "heroku:sb941efbc6dd5", "heroku:sa2690945ce1c", "heroku:s3563a06d3934", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65", "railway:s0462eef65b1b", "railway:sa9d326046a7f"], "status": "REASONED"},
+    "bind": {"text": "Guide advice: 127.0.0.1 for a same-host proxy, no extra managed listeners, app auth required; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Railway advises 0.0.0.0 on injected PORT with edge-proxy TLS; Heroku web processes must bind PORT, IPv6/dual-stack advised for Fir Private Spaces; checked pages state no Cedar address (guide's assessment, not proof any address works).", "components": ["node", "express", "render", "heroku", "fly-pinned", "railway"], "sources": ["node:s87db42190978", "express:s4e09c522e530", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "heroku:s110a083f7129", "heroku:s41677c652b96", "heroku:s9f4dec283014", "heroku:s8a2465cbd6c2", "heroku:sb941efbc6dd5", "heroku:sa2690945ce1c", "heroku:s3563a06d3934", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65", "railway:s0462eef65b1b", "railway:sa9d326046a7f"], "status": "REASONED"},
     "privilege": {"text": "On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.", "components": ["node", "linux-ip", "linux-capabilities"], "sources": ["node:s87db42190978", "linux-ip:s612fed1df1ed", "linux-capabilities:s3c3a13034c04"], "status": "REASONED"},
-    "proxy": {"text": "Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED"},
+    "proxy": {"text": "Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.", "components": ["express"], "sources": ["express:s4e09c522e530"], "status": "REASONED"},
     "headers": {"text": "Install helmet() for security headers including HSTS.", "components": ["helmet"], "sources": ["helmet:sc1865315478e"], "status": "REASONED"},
     "password": {"text": "Guide advice: prefer Argon2id for new apps (argon2 v0.45.1 supports it); retain bcrypt only for legacy systems without Argon2/scrypt, with its 72-byte limit and example cost 12 (OWASP minimum 10). bcrypt v6.0.0 hash/compare return Promises without callbacks when supported; numeric hash cost generates a salt and means 2^cost iterations.", "components": ["session", "owasp", "bcrypt", "argon2"], "sources": ["session:safd9f9d15304", "owasp:s790d2fc1475e", "owasp:s4531e65b6502", "owasp:sad2af32bee2f", "bcrypt:se94486b19d69", "bcrypt:s228d1e5e8827", "bcrypt:s60f2c824a85c", "bcrypt:s55a49cad0981", "argon2:s76b67b13ea1b"], "status": "REASONED"},
     "session-secret": {"text": "Load a long random SESSION_SECRET from the environment.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
@@ -460,8 +460,8 @@ Claims (full source mapping in the JSON block below):
     "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED", "verify": [1]},
     "verify-tls": {"text": "HTTPS must succeed without -k and show Helmet headers.", "components": ["node", "helmet"], "sources": ["node:s87db42190978", "helmet:sc1865315478e"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED", "verify": [1]},
-    "verify-bind": {"text": "Inspect every listener for loopback behind a same-host proxy or the managed platform address and port.", "components": ["node", "express"], "sources": ["node:s87db42190978", "express:s2acbdbd05858"], "status": "REASONED", "verify": [1]},
-    "verify-proxy": {"text": "Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED", "verify": [1]}
+    "verify-bind": {"text": "Inspect every listener for loopback behind a same-host proxy or the managed platform address and port.", "components": ["node", "express"], "sources": ["node:s87db42190978", "express:s4e09c522e530"], "status": "REASONED", "verify": [1]},
+    "verify-proxy": {"text": "Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.", "components": ["express"], "sources": ["express:s4e09c522e530"], "status": "REASONED", "verify": [1]}
   }
 }
 ````

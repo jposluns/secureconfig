@@ -248,7 +248,7 @@ done
 - Caddy `respond` directive (rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/respond
 - Caddy matchers, `path`, `path_regexp`, `not` and named matcher sets (rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy v2.11.4 matcher implementation (`MatchPath`, `MatchPathRE`, `MatchNot`): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/matchers.go
-- GNU coreutils `mktemp` (`--suffix`): https://www.gnu.org/s/coreutils/manual/html_node/mktemp-invocation.html
+- GNU coreutils `mktemp` (`--suffix`): https://www.gnu.org/software/coreutils/manual/html_node/mktemp-invocation.html
 - Next.js environment variables (`NEXT_PUBLIC_`): https://nextjs.org/docs/pages/guides/environment-variables
 - Vite env variables (`VITE_`): https://vite.dev/guide/env-and-mode
 - Create React App environment variables (`REACT_APP_`, deprecation notice): https://create-react-app.dev/docs/adding-custom-environment-variables/
@@ -331,7 +331,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "fe4cb5adedece035095c36fb501666df671489eaf8b94be87f659549cd683bb8",
+  "body_sha256": "fd1133924c8a8c3c139bfd6faba35d6da0e1507f3c364206f16afd9b6260b7f7",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -438,7 +438,7 @@ Claims (full source mapping in the JSON block below):
       "name": "GNU coreutils documentation",
       "basis": "unknown",
       "sources": {
-        "sabbd081d1d5a": "https://www.gnu.org/s/coreutils/manual/html_node/mktemp-invocation.html"
+        "s4166af5265e7": "https://www.gnu.org/software/coreutils/manual/html_node/mktemp-invocation.html"
       }
     },
     "grep": {
@@ -478,7 +478,7 @@ Claims (full source mapping in the JSON block below):
     "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [1]},
     "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
-    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:sabbd081d1d5a"], "status": "REASONED", "verify": [2]}
+    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [2]}
   }
 }
 ````

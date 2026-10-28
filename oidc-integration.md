@@ -75,7 +75,7 @@ Use a maintained library; do not hand-parse JWTs. The snippets are from each lib
   let tokens = await client.authorizationCodeGrant(config, currentUrl, { pkceCodeVerifier: code_verifier, expectedState: state, expectedNonce: nonce })
   ```
 - **Node, [Auth.js](https://authjs.dev/)** (`npm install next-auth@beta` for Next.js; SvelteKit and Express integrations exist): providers `next-auth/providers/google`, `github`, `okta`, and `microsoft-entra-id`, configured through `AUTH_<PROVIDER>_ID`, `AUTH_<PROVIDER>_SECRET`, and for Okta and Entra `AUTH_<PROVIDER>_ISSUER`; callbacks land on `/api/auth/callback/<provider>`. Sessions are an encrypted JWT, or a database session ID, in an `HttpOnly` cookie. With the JWT strategy, sign-out destroys the cookie but the token itself stays valid until `exp` unless your server keeps a blocklist (Auth.js documents this limitation); use database sessions, or the blocklist just mentioned, so logout invalidates a copied cookie rather than leaving it valid until `exp` ([authentication.md](authentication.md) requires logout to invalidate the session server-side). Set `AUTH_MICROSOFT_ENTRA_ID_ISSUER` to your tenant's `/v2.0` issuer: the documented default is `common`. Put the section 2 check in the `signIn` callback.
-- **Python, [Authlib](https://docs.authlib.org/)** (`pip install Authlib`; Flask, Django, Starlette, FastAPI):
+- **Python, [Authlib](https://docs.authlib.org/en/stable/)** (`pip install Authlib`; Flask, Django, Starlette, FastAPI):
   ```python
   oauth.register('google', client_id='YOUR_CLIENT_ID', client_secret='YOUR_CLIENT_SECRET',
       server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
@@ -254,7 +254,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "0cd1d9085bd2c6bd89f7375dddfabb58514b6e4b2ac1ae8580759c6696dbd566",
+  "body_sha256": "6ace922f0c1e3227889aad2c123bba1a2fb6a52c618a59195dda6d0638e6e041",
   "components": {
     "core": {
       "name": "OpenID Connect Core",

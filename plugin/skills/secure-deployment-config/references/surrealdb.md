@@ -189,7 +189,7 @@ shell to run.
 
 ## Sources (checked September 2026)
 
-- SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
+- SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/db/commands/start
 - GNU Bash reference manual, bash-5.3 (checked October 2026), prefix assignments 3872-3878: https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872
 - Linux man-pages `proc_pid_environ(5)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): initial environment 12-15 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12. The same `proc_pid_environ(5)` page, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): later modifications 26-36 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26. The same `proc_pid_environ(5)` page, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): procfs access check 43-47 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43
 - Linux man-pages `ptrace(2)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): ptrace access factors 2519-2533 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519
@@ -197,7 +197,7 @@ shell to run.
 - SurrealDB 3.2.4 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50
 - SurrealDB 3.2.4 `--bind`/`-b` (`SURREAL_BIND`) default `127.0.0.1:8000` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L177-L180
 - SurrealDB `docker/Dockerfile` sets `ENV SURREAL_BIND="0.0.0.0:8000"` in each runtime stage (L78, L104, L139, L165), each followed by `ENTRYPOINT ["/surreal"]` with no `CMD`, shown here for the `prod-ci` stage (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/docker/Dockerfile#L88-L109
-- SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql
+- SurrealDB CLI, `surreal sql`: https://surrealdb.com/docs/reference/cli/db/commands/sql
 - SurrealDB security overview: https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview: https://surrealdb.com/docs/learn/security/authentication/overview
 - SurrealDB security best practices: https://surrealdb.com/docs/learn/security/best-practices/security-best-practices
@@ -269,7 +269,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "2bbe7eebea7df00ec548e2697f95e172834de56649d9b5b1d2a0de519d0db566",
+  "body_sha256": "3ae249c925a97ab8fa00b39d687a5f6f5cf75dd99a8b9122a4176521392465ec",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",
@@ -306,8 +306,8 @@ Claims (full source mapping in the JSON block below):
       "name": "SurrealDB documentation (rolling)",
       "basis": "unknown",
       "sources": {
-        "s36c00a9caa98": "https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start",
-        "sa4cee13a8dd9": "https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql",
+        "s2eb33a763ea4": "https://surrealdb.com/docs/reference/cli/db/commands/start",
+        "sac47cdb4ca48": "https://surrealdb.com/docs/reference/cli/db/commands/sql",
         "s38b5f5aad1d4": "https://surrealdb.com/docs/learn/security",
         "sdaa9a636537a": "https://surrealdb.com/docs/learn/security/authentication/overview",
         "sae73137661aa": "https://surrealdb.com/docs/learn/security/best-practices/security-best-practices",
@@ -353,10 +353,10 @@ Claims (full source mapping in the JSON block below):
   "claims": {
     "auth-default": {"text": "Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default.", "components": ["defaults"], "sources": ["defaults:se73fa9c93548"], "status": "REASONED"},
     "bind-default": {"text": "Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default.", "components": ["defaults", "pinned"], "sources": ["defaults:se73fa9c93548", "pinned:s21f5e29c7e44"], "status": "REASONED"},
-    "root-bootstrap": {"text": "User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "pinned:sac8662d10d16"], "status": "REASONED"},
+    "root-bootstrap": {"text": "User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "pinned:sac8662d10d16"], "status": "REASONED"},
     "root-input": {"text": "v3.2.4 start has no stdin password form; prompt and use a Bash command-local environment assignment, avoiding argv. As this guide's assessment, the initial server environment may be exposed to the same account and root when the procfs ptrace check permits; an inheriting process may expose it the same way while it runs; treat it as exposed to that account and root while the server runs.", "components": ["pinned", "bash", "procfs", "ptrace"], "sources": ["pinned:sac8662d10d16", "bash:sf9757e9fd6e8", "procfs:s56aa3e840419", "procfs:s9aae2a8587f2", "procfs:sd64e43d1515a", "ptrace:sfe9fe6919d33"], "status": "REASONED"},
-    "environment": {"text": "The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "pinned:s91a7bdf0a6e8", "pinned:s21f5e29c7e44"], "status": "REASONED"},
-    "unauthenticated": {"text": "--unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "docs:s38b5f5aad1d4", "docs:sdaa9a636537a", "pinned:s91a7bdf0a6e8"], "status": "REASONED"},
+    "environment": {"text": "The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "pinned:s91a7bdf0a6e8", "pinned:s21f5e29c7e44"], "status": "REASONED"},
+    "unauthenticated": {"text": "--unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "docs:s38b5f5aad1d4", "docs:sdaa9a636537a", "pinned:s91a7bdf0a6e8"], "status": "REASONED"},
     "docker-bind": {"text": "Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication.", "components": ["pinned"], "sources": ["pinned:sb740fb60a865"], "status": "REASONED"},
     "private-network": {"text": "Widen host binds only deliberately to private addresses; internal-service databases should have no public interface.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED"},
     "system-users": {"text": "Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sb9c3a17a2998"], "status": "REASONED"},
@@ -371,9 +371,9 @@ Claims (full source mapping in the JSON block below):
     "capability-scripting": {"text": "Embedded scripting defaults off; enable it only when required.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-guests": {"text": "Guest access defaults off; capabilities govern what an authorized query may do independently of authentication.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-precedence": {"text": "More-specific capability rules override broader ones; deny wins at equal specificity.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
-    "tls": {"text": "web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern.", "components": ["docs"], "sources": ["docs:s36c00a9caa98", "docs:sae73137661aa"], "status": "REASONED"},
+    "tls": {"text": "web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern.", "components": ["docs"], "sources": ["docs:s2eb33a763ea4", "docs:sae73137661aa"], "status": "REASONED"},
     "mfa": {"text": "No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sae73137661aa"], "status": "REASONED"},
-    "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication.", "components": ["docs"], "sources": ["docs:s36c00a9caa98", "docs:scc00d3d3618d"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication.", "components": ["docs"], "sources": ["docs:s2eb33a763ea4", "docs:scc00d3d3618d"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
     "verify-auth-limits": {"text": "Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
     "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]},

@@ -149,7 +149,7 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - Gunicorn documentation (settings reference: bind, certfile, keyfile, ca_certs): https://gunicorn.org/reference/settings/
 - Uvicorn settings reference: https://github.com/Kludex/uvicorn/blob/5ac6265a01ff6dcadb0e4250152c3deaf8a168a9/docs/settings.md
 - Django deployment checklist: https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
-- argon2-cffi: https://argon2-cffi.readthedocs.io/
+- argon2-cffi: https://argon2-cffi.readthedocs.io/en/stable/
 - argon2-cffi PasswordHasher, hash and verify mismatch example (25.1.0, checked October 2026): https://github.com/hynek/argon2-cffi/blob/25.1.0/README.md#L11-L28
 - Python bcrypt hashpw, gensalt and checkpw example (commit 2b4ba9ac84df972e8e81311d09559af8dc82ef33, checked October 2026): https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/README.rst#L62-L76
 - Werkzeug serving (`ssl_context="adhoc"` requires cryptography): https://werkzeug.palletsprojects.com/en/stable/serving/
@@ -283,7 +283,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "f5c97fb59bb0c8c3ea01ebf2c6395901d47ab603d7ad887f01cee7eff16da9c6",
+  "body_sha256": "e1f7bfb5e239d3b6195092d4038aca62ba871ee673692ba5e35f67e32e946cb7",
   "components": {
     "django": {
       "name": "Django documentation",
@@ -390,7 +390,7 @@ Claims (full source mapping in the JSON block below):
       "name": "argon2-cffi documentation",
       "basis": "unknown",
       "sources": {
-        "sff2b9a487e67": "https://argon2-cffi.readthedocs.io/"
+        "s685ac81e6157": "https://argon2-cffi.readthedocs.io/en/stable/"
       }
     },
     "pyotp": {
@@ -512,7 +512,7 @@ Claims (full source mapping in the JSON block below):
     "django-cookies": {"text": "Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
     "django-hsts": {"text": "Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
     "deploy-check": {"text": "Run manage.py check --deploy and fix its findings.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
-    "password": {"text": "Keep Django's built-in hashing; do not replace it with custom code (guide advice). For Flask/FastAPI apps implementing local password accounts, this guide advises account storage and argon2-cffi or bcrypt under authentication.md's constraints; argon2-cffi 25.1.0's PasswordHasher.verify raises VerifyMismatchError on mismatch, and these APIs do not establish framework user-store capabilities.", "components": ["django", "argon", "argon-api", "bcrypt-api"], "sources": ["django:s7289e1c111ae", "argon:sff2b9a487e67", "argon-api:s193f86db0a79", "bcrypt-api:s340a2923b6da"], "status": "REASONED"},
+    "password": {"text": "Keep Django's built-in hashing; do not replace it with custom code (guide advice). For Flask/FastAPI apps implementing local password accounts, this guide advises account storage and argon2-cffi or bcrypt under authentication.md's constraints; argon2-cffi 25.1.0's PasswordHasher.verify raises VerifyMismatchError on mismatch, and these APIs do not establish framework user-store capabilities.", "components": ["django", "argon", "argon-api", "bcrypt-api"], "sources": ["django:s7289e1c111ae", "argon:s685ac81e6157", "argon-api:s193f86db0a79", "bcrypt-api:s340a2923b6da"], "status": "REASONED"},
     "secrets": {"text": "Generate secrets.token_urlsafe(32) and load secrets from the environment (guide advice); 32 counts random input bytes and is this guide's example choice, not a universal size. CPython v3.14.8 uses DEFAULT_ENTROPY (32 bytes) when omitted or None, but that default may change, including in maintenance releases.", "components": ["django", "stdlib-docs", "cpython-secrets"], "sources": ["django:s7289e1c111ae", "stdlib-docs:s971d128efc65", "stdlib-docs:sdad376a711c3", "cpython-secrets:s31e1a792a6b1", "cpython-secrets:s7cc14a5ebfa0", "cpython-secrets:sdef0e1600064"], "status": "REASONED"},
     "credential-extraction": {"text": "FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.", "components": ["fastapi"], "sources": ["fastapi:s077aff608a5c"], "status": "REASONED"},
     "oidc": {"text": "OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.", "components": ["fastapi", "oidc-stub"], "sources": ["fastapi:s077aff608a5c", "oidc-stub:s876e3d51e7ac"], "status": "REASONED"},

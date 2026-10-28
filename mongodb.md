@@ -137,7 +137,7 @@ For initial installation, run the following as root with an unused destination i
 )
 ```
 
-The creation mask applies before the private key is written. `set -C` refuses to overwrite an existing regular file. This is an initial-install block, not a certificate-rotation procedure. If the service cannot read the PEM, fix ownership and directory access; do not make the private key world-readable. See the Bash documentation for [umask](https://www.gnu.org/s/bash/manual/html_node/Bourne-Shell-Builtins.html) and [redirection](https://www.gnu.org/s/bash/manual/bash.html).
+The creation mask applies before the private key is written. `set -C` refuses to overwrite an existing regular file. This is an initial-install block, not a certificate-rotation procedure. If the service cannot read the PEM, fix ownership and directory access; do not make the private key world-readable. See the Bash documentation for [umask](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html) and [redirection](https://www.gnu.org/software/bash/manual/bash.html).
 
 Merge `tls` into the existing `net` mapping, preserving `port`, private binding, and other settings. Do not append a second top-level `net` key:
 
@@ -745,8 +745,8 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 - MongoDB 8.0 CSFLE encryption algorithms: https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/
 - MongoDB 8.0 release notes (Queryable Encryption range queries): https://www.mongodb.com/docs/v8.0/release-notes/8.0/
 - MongoDB 8.0 compatibility notes (rangePreview removal): https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/
-- Bash file-creation mask: https://www.gnu.org/s/bash/manual/html_node/Bourne-Shell-Builtins.html
-- Bash redirection and noclobber behavior: https://www.gnu.org/s/bash/manual/bash.html
+- Bash file-creation mask: https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html
+- Bash redirection and noclobber behavior: https://www.gnu.org/software/bash/manual/bash.html
 
 
 <!-- version-basis:start -->
@@ -858,7 +858,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b9b16786162ccfbf27cc86d862f3355a6054b9864e9a694ac0fe6b21dd376fba",
+  "body_sha256": "90baf221c6abcb60fcc7c572518e792918b2a7b56644d8271cc900c74b58b523",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
@@ -956,8 +956,8 @@ Claims (full source mapping in the JSON block below):
       "name": "Bash documentation",
       "basis": "unknown",
       "sources": {
-        "s6dc18acb3ad4": "https://www.gnu.org/s/bash/manual/html_node/Bourne-Shell-Builtins.html",
-        "s9d924cbc6972": "https://www.gnu.org/s/bash/manual/bash.html"
+        "sa2bb528509ad": "https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html",
+        "s9900e479e21e": "https://www.gnu.org/software/bash/manual/bash.html"
       }
     }
   },
@@ -980,14 +980,14 @@ Claims (full source mapping in the JSON block below):
     "client-source": {"text": "authenticationRestrictions.clientSource checks the source MongoDB sees, including NAT or proxy effects; it restricts authentication, not TCP reachability.", "components": ["docs"], "sources": ["docs:s6a592c920ac2"], "status": "REASONED"},
     "server-address": {"text": "authenticationRestrictions.serverAddress checks the accepting listener address; include required alternate and failover paths. Preserve recovery access because incompatible inherited restrictions can prevent login.", "components": ["docs"], "sources": ["docs:s6a592c920ac2"], "status": "REASONED"},
     "human-mfa": {"text": "Community supports SCRAM and x.509, without a wire-protocol TOTP dialogue; a machine certificate is not human MFA. Protect human host and admin-UI paths with MFA.", "components": ["docs"], "sources": ["docs:s8c3f376f412d", "docs:s0b650ef2f8d8"], "status": "REASONED"},
-    "pem-file": {"text": "Initial PEM creation uses an unused path in a protected directory, umask 077, noclobber, service-account ownership and mode 600; this is not a rotation procedure.", "components": ["bash", "docs"], "sources": ["bash:s6dc18acb3ad4", "bash:s9d924cbc6972", "docs:sa9e55b825b2a"], "status": "REASONED"},
+    "pem-file": {"text": "Initial PEM creation uses an unused path in a protected directory, umask 077, noclobber, service-account ownership and mode 600; this is not a rotation procedure.", "components": ["bash", "docs"], "sources": ["bash:sa2bb528509ad", "bash:s9900e479e21e", "docs:sa9e55b825b2a"], "status": "REASONED"},
     "tls-server": {"text": "Merge requireTLS, certificateKeyFile and CAFile into the existing net mapping; SANs must cover client hostnames. Restart the configured service and confirm TLS before widening access.", "components": ["docs"], "sources": ["docs:s22791f6f25b1", "docs:sa9e55b825b2a"], "status": "REASONED"},
     "tls-mixed-modes": {"text": "allowTLS and preferTLS accept plaintext and TLS; use them only for transition and finish with requireTLS.", "components": ["docs"], "sources": ["docs:s22791f6f25b1"], "status": "REASONED"},
     "tls-client-certificates": {"text": "With the shown CA configuration, certificates are required unless allowConnectionsWithoutCertificates is true; presented certificates are still validated. False also requires SCRAM clients to present certificates and does not assign roles.", "components": ["docs"], "sources": ["docs:sa9e55b825b2a"], "status": "REASONED"},
     "mongot": {"text": "The cited TLS documentation requires allowConnectionsWithoutCertificates: true for mongot; check topology before requiring certificates.", "components": ["docs"], "sources": ["docs:sa9e55b825b2a"], "status": "REASONED"},
     "membership-x509": {"text": "Configure internal authentication on every member, config server and router. Production x.509 membership uses clusterAuthMode: x509 and a protected clusterFile for outgoing authentication, retaining TLS.", "components": ["docs"], "sources": ["docs:sb527c92150ce", "docs:s2862bf749970"], "status": "REASONED"},
     "membership-certificates": {"text": "Default x.509 membership needs matching O, OU and DC attributes with at least one populated, a common CA and matching SANs; EKU, if present, must cover serverAuth/clientAuth as used. Separate application membership attributes.", "components": ["docs"], "sources": ["docs:sb527c92150ce", "docs:s2862bf749970"], "status": "REASONED"},
-    "membership-keyfile": {"text": "The alternative generates one shared key with openssl rand -base64 756, service-account ownership and mode 400; securely distribute it to all members and routers, set keyFile and clusterAuthMode: keyFile, and retain TLS.", "components": ["docs", "bash"], "sources": ["docs:s2093f0ae077e", "bash:s6dc18acb3ad4", "bash:s9d924cbc6972"], "status": "REASONED"},
+    "membership-keyfile": {"text": "The alternative generates one shared key with openssl rand -base64 756, service-account ownership and mode 400; securely distribute it to all members and routers, set keyFile and clusterAuthMode: keyFile, and retain TLS.", "components": ["docs", "bash"], "sources": ["docs:s2093f0ae077e", "bash:sa2bb528509ad", "bash:s9900e479e21e"], "status": "REASONED"},
     "keyfile-rotation": {"text": "Unix keyfiles require no group/world permissions and service-account readability; multiple rotation keys are allowed but every member must share a common key.", "components": ["docs"], "sources": ["docs:s2093f0ae077e"], "status": "REASONED"},
     "transition-auth": {"text": "transitionToAuth: true permits unauthenticated operations without enforcing user access controls; keep it false in the final state and use vendor procedures for existing-cluster migration.", "components": ["docs"], "sources": ["docs:s22791f6f25b1", "docs:s2093f0ae077e"], "status": "REASONED"},
     "mongos-access-control": {"text": "Keep authorization enabled on mongod; security.authorization is unavailable on mongos, where internal authentication enables client access control.", "components": ["docs"], "sources": ["docs:s1f0c41f45f41", "docs:sa7d56fbc7a01", "docs:s2093f0ae077e"], "status": "REASONED"},
@@ -997,9 +997,9 @@ Claims (full source mapping in the JSON block below):
     "x509-identity": {"text": "Register the exact RFC2253 subject in $external with the application role and use MONGODB-X509; without a username mongosh uses the certificate subject. TLS validation alone does not authenticate a MongoDB user.", "components": ["docs", "shell"], "sources": ["docs:s85f35d70e6ed", "shell:s5ed633d4d270"], "status": "REASONED"},
     "x509-client-certificate": {"text": "Application certificates must be current, satisfy CA requirements and contain digitalSignature and clientAuth; keep subjects and membership attributes separate from server/member certificates to avoid internal privileges.", "components": ["docs"], "sources": ["docs:s0b650ef2f8d8"], "status": "REASONED"},
     "x509-source": {"text": "Apply source restrictions separately to the $external subject; restrictions on a SCRAM identity do not transfer to the certificate identity.", "components": ["docs"], "sources": ["docs:s6a592c920ac2", "docs:s85f35d70e6ed"], "status": "REASONED"},
-    "local-guards": {"text": "Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded.", "components": ["bash", "docs"], "sources": ["bash:s9d924cbc6972", "docs:sb59a2357999d"], "status": "DEMONSTRATED", "evidence": "Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access."},
+    "local-guards": {"text": "Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded.", "components": ["bash", "docs"], "sources": ["bash:s9900e479e21e", "docs:sb59a2357999d"], "status": "DEMONSTRATED", "evidence": "Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access."},
     "verify-listeners": {"text": "Inspect all database/router listeners and configured ports; unintended wildcard/public binds are exposed. Private binds require separate firewall checks; the recorded netlink refusal establishes nothing about listeners.", "components": ["docs"], "sources": ["docs:s8c3f376f412d", "docs:s22791f6f25b1"], "status": "REASONED", "verify": [1]},
-    "verify-dispatch": {"text": "Use the whole guarded six-value connection block, real certificate hostname and application PEM; --norc prevents shell startup authentication. Guards assume normal Bash builtins and cannot distinguish inherited exact marker/count arguments.", "components": ["shell", "bash"], "sources": ["shell:s5ed633d4d270", "bash:s9d924cbc6972"], "status": "REASONED", "verify": [2]},
+    "verify-dispatch": {"text": "Use the whole guarded six-value connection block, real certificate hostname and application PEM; --norc prevents shell startup authentication. Guards assume normal Bash builtins and cannot distinguish inherited exact marker/count arguments.", "components": ["shell", "bash"], "sources": ["shell:s5ed633d4d270", "bash:s9900e479e21e"], "status": "REASONED", "verify": [2]},
     "verify-plaintext": {"text": "Plaintext ping succeeds when plaintext is accepted and must fail under requireTLS while a same-endpoint authenticated TLS control succeeds; timeout/refusal alone is inconclusive and ping does not prove authorization.", "components": ["docs", "shell"], "sources": ["docs:s22791f6f25b1", "docs:seee0e2f961d6", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
     "verify-anonymous": {"text": "With a valid client certificate but no authenticated MongoDB identity, an existing collection read succeeds with authorization off and fails Unauthorized (13) with it on; pair with an authenticated read and inspect connectionStatus.", "components": ["docs", "shell"], "sources": ["docs:s6eb89ab49dad", "docs:sb59a2357999d", "docs:sbe43794c8d1c", "docs:s9a8c112b4424", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
     "verify-listdatabases": {"text": "listDatabases depends on privileges and authorizedDatabases and cannot prove collection authorization; empty output, timeout or unrelated errors are not authorization denials.", "components": ["docs"], "sources": ["docs:s6fe5567c6b9f", "docs:s9a8c112b4424"], "status": "REASONED"},

@@ -66,7 +66,7 @@ The version-5 vendor pages checked on 2026-09-26 identify themselves as **5.26 (
 | Raft communication | `server.cluster.raft.listen_address=:7000` | `server.cluster.raft.advertised_address=:7000` | Enterprise. |
 | Server-side routing over an additional Bolt connector | `server.routing.listen_address=:7688` | `server.routing.advertised_address=:7688` | Server-side routing enabled; `dbms.routing.enabled` defaults to `true`. |
 
-All four listen defaults inherit their host from `server.default_listen_address`, whose packaged default is `localhost`. Their advertised defaults inherit `server.default_advertised_address`, also `localhost`; advertising an address does not restrict a bind. Set advertised addresses to names or private IPs reachable by the other members, and match any changed ports. See the [configuration reference](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/#config_server.cluster.listen_address) and [cluster settings](https://neo4j.com/docs/operations-manual/5/clustering/settings/).
+All four listen defaults inherit their host from `server.default_listen_address`, whose packaged default is `localhost`. Their advertised defaults inherit `server.default_advertised_address`, also `localhost`; advertising an address does not restrict a bind. Set advertised addresses to names or private IPs reachable by the other members, and match any changed ports. See the [configuration reference](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/#config_server.cluster.listen_address) and [cluster settings](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/).
 
 Discovery v2 is documented for deployment from 5.23 and uses 6000 instead of a separate 5000 listener. The 5.26 reference still defaults `dbms.cluster.discovery.version` to `V1_ONLY`; `V2_ONLY` runs only v2, while `V1_OVER_V2` and `V2_OVER_V1` run both. Do not drop 5000 from the inventory merely because the version is 5.23 or later. The selector and v2 endpoints carry introduction labels of 5.22, while the deployment instructions describe v2 from 5.23. See [the selector](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/#config_dbms.cluster.discovery.version) and [deployment instructions](https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster).
 
@@ -644,7 +644,6 @@ REASONED: a scope summary for this Verify section, per the guide's cited Configu
 - Exact configuration settings, defaults, editions, and error-obfuscation version (current-series error obfuscation since 2026.01.3): https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/
 - Neo4j 5.26 (LTS), fetched 2026-09-26, Enterprise cluster and monitoring ports: https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster
 - Neo4j 5.26 (LTS) cluster deployment and discovery-version conditions (discovery v2 deployment from 5.23): https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster
-- Neo4j 5.26 (LTS) cluster settings and advertised addresses: https://neo4j.com/docs/operations-manual/5/clustering/settings/
 - OpenSSL 3 TLS probe options: https://docs.openssl.org/3.0/man1/openssl-s_client/
 - TLS 1.3 client-certificate validation and alerts: https://www.rfc-editor.org/rfc/rfc8446.html
 - Probe time limit and exit status: https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html
@@ -652,7 +651,7 @@ REASONED: a scope summary for this Verify section, per the guide's cited Configu
 - Pinned Dockerfile EXPOSE declarations, Debian: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-debian#L53
 - Pinned Dockerfile EXPOSE declarations, UBI 8: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-ubi8#L90
 - Pinned Dockerfile EXPOSE declarations, UBI 9: https://github.com/neo4j/docker-neo4j/blob/5359427c4f51d0d51cce5b048757a2c21e6f377e/docker-image-src/5/coredb/Dockerfile-ubi9#L89
-- Neo4j 5.26 (LTS) configuration reference, listener defaults, and error obfuscation since 5.26.21 (discovery selector/endpoints labelled 5.22): https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/
+- Neo4j 5.26 (LTS) configuration reference, cluster settings and advertised addresses, listener defaults, and error obfuscation since 5.26.21 (discovery selector/endpoints labelled 5.22): https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/
 - Configuration changes in Neo4j 5 (minimum password length setting since 5.3): https://neo4j.com/docs/upgrade-migration-guide/current/version-5/changelogs/configuration-settings/
 - SSL framework and certificate-verified connection schemes: https://neo4j.com/docs/operations-manual/current/security/ssl-framework/
 - Authentication and native lockout configuration: https://neo4j.com/docs/operations-manual/current/authentication-authorization/
@@ -818,7 +817,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c4d8462c47baad380290b68d8d45ff4aceace6b9abbcb4338c91d4d3ee5fe7b4",
+  "body_sha256": "6129030086ca1ddfe97abbcbb5b3979b4f366986e71a8bb4ad7cbf216142b312",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",
@@ -826,7 +825,6 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s0a9b520e7dd9": "https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster",
         "scb82a1e6034e": "https://neo4j.com/docs/operations-manual/5/clustering/setup/deploy/#cluster-example-configure-a-three-primary-cluster",
-        "se7f28a333818": "https://neo4j.com/docs/operations-manual/5/clustering/settings/",
         "s3b91bd83988a": "https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config",
         "s213150a93a9b": "https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/"
       }
@@ -1029,9 +1027,9 @@ Claims (full source mapping in the JSON block below):
     "shipping": {"text": "Enterprise transaction shipping/catch-up uses :6000, also serving backups and discovery v2; default replication is unauthenticated.", "components": ["cluster"], "sources": ["cluster:s0a9b520e7dd9", "cluster:scb82a1e6034e", "cluster:s213150a93a9b"], "status": "REASONED"},
     "raft": {"text": "Enterprise Raft listens on hostless :7000, including on standalone Enterprise deployments.", "components": ["cluster"], "sources": ["cluster:s0a9b520e7dd9", "cluster:s213150a93a9b"], "status": "REASONED"},
     "routing": {"text": "Server-side routing uses additional Bolt :7688 when enabled; dbms.routing.enabled defaults true.", "components": ["cluster"], "sources": ["cluster:s0a9b520e7dd9", "cluster:s213150a93a9b"], "status": "REASONED"},
-    "advertising": {"text": "Cluster listen hosts inherit the shared localhost default; advertised addresses separately inherit localhost and must be peer-reachable with matching ports.", "components": ["cluster"], "sources": ["cluster:se7f28a333818", "cluster:s213150a93a9b"], "status": "REASONED"},
+    "advertising": {"text": "Cluster listen hosts inherit the shared localhost default; advertised addresses separately inherit localhost and must be peer-reachable with matching ports.", "components": ["cluster"], "sources": ["cluster:s213150a93a9b"], "status": "REASONED"},
     "discovery-version": {"text": "In 5.26 discovery defaults V1_ONLY; V2_ONLY shares 6000, mixed modes run both. Deployment docs say v2 from 5.23, while selector/endpoints are labelled 5.22.", "components": ["cluster"], "sources": ["cluster:scb82a1e6034e", "cluster:s213150a93a9b"], "status": "REASONED"},
-    "cluster-isolation": {"text": "Restrict cluster listeners to members with firewall allowlists; single-server overrides retain explicit loopback on 5000/6000/7000/7688.", "components": ["cluster"], "sources": ["cluster:s0a9b520e7dd9", "cluster:se7f28a333818"], "status": "REASONED"},
+    "cluster-isolation": {"text": "Restrict cluster listeners to members with firewall allowlists; single-server overrides retain explicit loopback on 5000/6000/7000/7688.", "components": ["cluster"], "sources": ["cluster:s0a9b520e7dd9", "cluster:s213150a93a9b"], "status": "REASONED"},
     "cluster-tls": {"text": "The disabled-by-default cluster SSL policy covers discovery, shipping, Raft and routing; client_auth=REQUIRE acts only after enabling it.", "components": ["cluster"], "sources": ["cluster:s3b91bd83988a", "cluster:s213150a93a9b"], "status": "REASONED"},
     "cluster-certificates": {"text": "Use distinct protected PKCS#8 PEM keys, leaf-first certificate chains, trusted/revoked directories and both server/client EKUs; retain trust_all=false.", "components": ["cluster"], "sources": ["cluster:s3b91bd83988a"], "status": "REASONED"},
     "backup-tls": {"text": "Cluster TLS does not enable the separate backup SSL scope on 6362 or replace Bolt/HTTPS policies.", "components": ["cluster", "docs"], "sources": ["cluster:s3b91bd83988a", "cluster:s213150a93a9b", "docs:s9114febb4116"], "status": "REASONED"},
