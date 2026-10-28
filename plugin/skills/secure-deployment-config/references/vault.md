@@ -394,25 +394,25 @@ See [memory-locking configuration](https://developer.hashicorp.com/vault/docs/co
 
 Most checks below were **demonstrated on loopback** against Vault 2.1.1, the release binary with its
 checksum verified against HashiCorp's published SHA256SUMS: a single Raft node running the section 3
-configuration unchanged apart from addresses and paths. The Raft node ran with the API on 127.0.0.1:8200, the cluster
-listener on 127.0.0.1:8201, a private test CA, a file audit device, and the section 2 and section 7
-policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block ran as printed, with only its
-placeholders substituted, except where a step says otherwise. Exposed states ran in further runs of
-the same binary: one with both anonymous-access settings `true` throughout, one with `tls_disable =
-true` on the listener (a health check only), and one with the section 3 configuration unchanged
-apart from addresses and paths. The exposed-state runs also included a follow-up run with the same
-section 3 configuration, then stopped for a health-output check, then with one added listener
-stanza on 127.0.0.2:8200 (which also bound 127.0.0.2:8201). The first, third and follow-up runs
-exercised the policies, roles or delivery policy under test without their limits. What these runs do
-not show is marked **REASONED** where it occurs, with the reason: HA behavior (no multi-node cluster
-was set up for these runs), a second audit device in a separate failure domain (the host has no
-second network), and the recipient's own validation (it belongs to the receiving application). The
-other items these runs do not show, each marked **REASONED** where it occurs, with the reason, are a
-wildcard bind (the host forbids binding every interface), `ss` run as root (the host has no `sudo`),
-and real network paths and firewalls (the
-host has no second network). These expectations follow the cited Vault documentation. The authoring
-host has no `sudo`, so the first block's `sudo ss -tlnp` ran through a stand-in
-that runs `ss` without it; as the same account, `ss` still showed the Vault process.
+configuration unchanged apart from addresses and paths. The Raft node ran with the API on
+127.0.0.1:8200, the cluster listener on 127.0.0.1:8201, a private test CA, a file audit device, and
+the section 2 and section 7 policies and AppRole role with `127.0.0.1/32` as the CIDR. Each block
+ran as printed, with only its placeholders substituted, except where a step says otherwise. Exposed
+states ran in further runs of the same binary: one with both anonymous-access settings `true`
+throughout, one with `tls_disable = true` on the listener (a health check only), and one with the
+section 3 configuration unchanged apart from addresses and paths. The exposed-state runs also
+included a follow-up run with the same section 3 configuration, then stopped for a health-output
+check, then with one added listener stanza on 127.0.0.2:8200 (which also bound 127.0.0.2:8201). The
+first, third and follow-up runs exercised the policies, roles or delivery policy under test without
+their limits. What these runs do not show is marked **REASONED** where it occurs, with the reason:
+HA behavior (no multi-node cluster was set up for these runs), a second audit device in a separate
+failure domain (the host has no second network), and the recipient's own validation (it belongs to
+the receiving application). The other items these runs do not show, each marked **REASONED** where
+it occurs, with the reason, are a wildcard bind (the host forbids binding every interface), `ss` run
+as root (the host has no `sudo`), and real network paths and firewalls (the host has no second
+network). These expectations follow the cited Vault documentation. The authoring host has no `sudo`,
+so the first block's `sudo ss -tlnp` ran through a stand-in that runs `ss` without it; as the same
+account, `ss` still showed the Vault process.
 
 REASONED: curl result interpretation: transport or TLS failure is inconclusive, and only matched authenticated controls support a fixed outcome. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The curl `exitcode` and `errormsg` write-out fields require curl 7.75.0 or newer.
 For authenticated and on-host checks, transport failure, TLS failure, an unexpected redirect, or a
@@ -1232,7 +1232,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f67a435b264a32ec3f59105962045574de5269447be6603ad3182d367b7b2610",
+  "body_sha256": "7ba4865e994a160499f8a8eba161dd15e8249a9b14fa7d8856e8bfd586c7fb6b",
   "components": {
     "run": {
       "name": "Vault loopback run",
