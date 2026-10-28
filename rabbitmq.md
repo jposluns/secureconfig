@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against RabbitMQ source v4.3.6, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, and Erlang/OTP distribution 27; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
+Written against RabbitMQ source v4.3.6, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, Erlang/OTP distribution 27, and Pika source 1.3.2; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -654,7 +654,9 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - RabbitMQ administration CLI v2 configuration and TLS flags: https://www.rabbitmq.com/docs/management-cli
 - RabbitMQ queues, durability, and exclusive queue behaviour: https://www.rabbitmq.com/docs/queues
 - RabbitMQ channel exceptions and access-refused errors: https://www.rabbitmq.com/docs/channels
-- Pika TLS context and client certificate example: https://pika.readthedocs.io/en/stable/examples/tls_server_authentication.html
+- Pika TLS context and client certificate example (mutual authentication): https://pika.github.io/pika/latest/examples/tls_mutual_authentication/
+- Pika 1.x `SSLOptions(context, server_hostname)` class taking an `ssl.SSLContext` (pinned tag 1.3.2): https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L937-L958
+- Pika 1.x `ConnectionParameters` `ssl_options` argument (pinned tag 1.3.2): https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L579-L580
 - Pika connection parameters: https://pika.readthedocs.io/en/stable/modules/parameters.html
 - Pika blocking connection and channel methods: https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html
 - Pika authentication and authorization exceptions: https://pika.readthedocs.io/en/stable/modules/exceptions.html
@@ -683,6 +685,7 @@ Components (recorded basis):
 - otp: Erlang/OTP distribution (27)
 - curl: curl documentation (unknown)
 - pika: Pika documentation (unknown)
+- pika-source: Pika source (1.3.2)
 
 Claims (full source mapping in the JSON block below):
 
@@ -717,7 +720,7 @@ Claims (full source mapping in the JSON block below):
 - verify-management (REASONED; docs, curl): Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.
 - verify-mtls (REASONED; docs): Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.
 - queue-default (REASONED; docs): RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.
-- verify-amqp (REASONED; docs, pika): Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.
+- verify-amqp (REASONED; docs, pika, pika-source): Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.
 - verify-definitions (REASONED; docs, admin): Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.
 - verify-distribution-tls (REASONED; docs, otp): TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.
 - verify-topic (REASONED; docs): Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.
@@ -727,7 +730,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3e6f6c06bd4641e5639ea9359425b2691b2865e4c5c4b35ea14d3de3e8850316",
+  "body_sha256": "ae77f139fc90829efa35769db1602a3fa90b45ef81a9cebaaf22c5372958c466",
   "components": {
     "source": {
       "name": "RabbitMQ source",
@@ -819,10 +822,18 @@ Claims (full source mapping in the JSON block below):
       "name": "Pika documentation",
       "basis": "unknown",
       "sources": {
-        "s2cf9e4181462": "https://pika.readthedocs.io/en/stable/examples/tls_server_authentication.html",
+        "sf5430d0d7914": "https://pika.github.io/pika/latest/examples/tls_mutual_authentication/",
         "sbc29096927d1": "https://pika.readthedocs.io/en/stable/modules/parameters.html",
         "sbe84810afdaa": "https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html",
         "s2bd3b0912faf": "https://pika.readthedocs.io/en/stable/modules/exceptions.html"
+      }
+    },
+    "pika-source": {
+      "name": "Pika source",
+      "basis": "1.3.2",
+      "sources": {
+        "s1c536ddcecc3": "https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L937-L958",
+        "s60d4abe2318e": "https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L579-L580"
       }
     }
   },
@@ -858,7 +869,7 @@ Claims (full source mapping in the JSON block below):
     "verify-management": {"text": "Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.", "components": ["docs", "curl"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [7]},
     "verify-mtls": {"text": "Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED", "verify": [8]},
     "queue-default": {"text": "RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.", "components": ["docs"], "sources": ["docs:sef3085ec2cc9"], "status": "REASONED"},
-    "verify-amqp": {"text": "Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.", "components": ["docs", "pika"], "sources": ["docs:s8f066afff416", "docs:sef3085ec2cc9", "docs:s008b12a42f70", "pika:s2cf9e4181462", "pika:sbc29096927d1", "pika:sbe84810afdaa", "pika:s2bd3b0912faf"], "status": "REASONED", "verify": [9]},
+    "verify-amqp": {"text": "Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.", "components": ["docs", "pika", "pika-source"], "sources": ["docs:s8f066afff416", "docs:sef3085ec2cc9", "docs:s008b12a42f70", "pika:sf5430d0d7914", "pika:sbc29096927d1", "pika:sbe84810afdaa", "pika:s2bd3b0912faf", "pika-source:s1c536ddcecc3", "pika-source:s60d4abe2318e"], "status": "REASONED", "verify": [9]},
     "verify-definitions": {"text": "Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.", "components": ["docs", "admin"], "sources": ["docs:sf81e470be6fa", "docs:s62cc3cf19b55", "admin:sdd5688854073", "docs:s59532e00cbad"], "status": "REASONED", "verify": [10]},
     "verify-distribution-tls": {"text": "TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.", "components": ["docs", "otp"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522"], "status": "REASONED", "verify": [11]},
     "verify-topic": {"text": "Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED", "verify": [12]}
