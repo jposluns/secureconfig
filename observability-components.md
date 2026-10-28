@@ -809,7 +809,7 @@ from your own account's view of the process.
 - Loki v3.7.8 config wrapper (`common.instance_addr` copied into component addresses): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L162-L174
 - Loki v3.7.8 config wrapper, read whole (no `Server` field; configuration changes only in `ApplyDynamicConfig` and its helpers): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go
 - Loki v3.7.8 sample local configuration: https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml#L1-L16
-- The dskit pinned listener and TLS flag defaults, and the `server.register-instrumentation` default (true). The `server.register-instrumentation` default was read in the module tree extracted from the downloaded dskit v0.0.0-20260209132809-8d1c6d34bb5a zip, whose proxy-reported origin is the commit the URL below pins, and the zip was not compared with that commit's git tree. Pinned dskit sources: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L189-L212
+- This item cites sources for the dskit pinned listener and TLS flag defaults, and the `server.register-instrumentation` default (true). The `server.register-instrumentation` default was read in the module tree extracted from the downloaded dskit v0.0.0-20260209132809-8d1c6d34bb5a zip, whose proxy-reported origin is the commit the URL below pins, and the zip was not compared with that commit's git tree. Pinned dskit sources: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L189-L212
 - Loki v3.7.8 HTTP port override: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L241-L269
 - Loki v3.7.8 production Docker listener overrides: https://github.com/grafana/loki/blob/v3.7.8/production/docker/config/loki.yaml#L1-L8
 - Loki v3.7.8 auth setup and gRPC exemptions: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L495-L509
@@ -818,7 +818,7 @@ from your own account's view of the process.
 - Loki v3.7.8 query frontend middleware and routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1307-L1378
 - Loki v3.7.8 config route: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L533-L540
 - Loki v3.7.8 ingester gRPC services and maintenance routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L751-L790
-- Loki v3.7.8 conditional deletion routes and middleware (compactor worker mode returns first). Loki v3.7.8 sources: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1866-L1869 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1880-L1883 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1899-L1908 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952
+- This item cites sources for the Loki v3.7.8 conditional deletion routes and middleware (compactor worker mode returns first). Loki v3.7.8 sources: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1866-L1869 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1880-L1883 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1899-L1908 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952
 - Loki v3.7.8 deletion tenant-policy middleware: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/tenant_request_handler.go#L10-L34
 - Loki v3.7.8 deletion create handler: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L49-L110
 - Loki v3.7.8 deletion list handler: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L134-L190
@@ -1307,7 +1307,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "40f57b9e085799f6e117c061d1b14f786d2d22b7d441ab7fe96cf9d58fd42e92",
+  "body_sha256": "471e411038f2c18ad51b0b5a2084a75a58d36088e341081b102760f2782f4b7e",
   "components": {
     "node": {
       "name": "node_exporter",
