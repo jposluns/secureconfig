@@ -91,7 +91,7 @@ namespace- or database-level system user is not a substitute for record-level is
 users need database-enforced row or field permissions, use record users (below), not a system user.
 
 Record users are different: they are rows in your own tables, authenticated through
-`DEFINE ACCESS ... TYPE RECORD` with custom `SIGNUP` and `SIGNIN` logic, and they "have no
+`DEFINE ACCESS ... TYPE RECORD` with custom `SIGNUP` and `SIGNIN` logic. Record users "have no
 permissions" beyond what a `PERMISSIONS` clause on a table or field grants them, the same
 rules-are-the-security model as Firebase and Supabase ([firebase-supabase.md](firebase-supabase.md)):
 a table with no `PERMISSIONS` clause for a record user grants nothing by default. The `/signup` and `/signin`
@@ -269,7 +269,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "a3e474944aff4ff0fb01880e6986cd8007e308e2781ce573a7a1735db36e82fa",
+  "body_sha256": "2bbe7eebea7df00ec548e2697f95e172834de56649d9b5b1d2a0de519d0db566",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",
