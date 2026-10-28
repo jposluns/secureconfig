@@ -59,6 +59,13 @@ class Units(unittest.TestCase):
                                         (3, "First note."), (3, "Second note"),
                                         (3, "a | b")])
 
+    def test_table_without_leading_pipes_is_measured_cell_by_cell(self):
+        table = ("Port | Notes\n--- | :---:\n3000 | First note. Second note\n"
+                 "8080 | Third\n\nA | paragraph.\n")
+        self.assertEqual(guide(table), [(1, "Port"), (1, "Notes"), (3, "3000"),
+                                        (3, "First note."), (3, "Second note"),
+                                        (4, "8080"), (4, "Third"), (6, "A | paragraph.")])
+
     def test_heading_is_measured(self):
         self.assertEqual(guide("## 1. Bind privately. Then add TLS ##\nBody.\n"),
                          [(1, "1. Bind privately."), (1, "Then add TLS"), (2, "Body.")])
@@ -123,6 +130,12 @@ class Boundaries(unittest.TestCase):
                          ['The page says "Use TLS. Rotate keys." today.'])
         self.assertEqual(split_sentences("It reads “One. Two” here."),
                          ["It reads “One. Two” here."])
+
+    def test_escaped_quote_does_not_end_a_quotation(self):
+        self.assertEqual(split_sentences('He said "Use \\"alpha. Beta\\" now." Then leave.'),
+                         ['He said "Use "alpha. Beta" now."', "Then leave."])
+        self.assertEqual(split_sentences('He said "Use \\"alpha.\\" Beta now." Then leave.'),
+                         ['He said "Use "alpha." Beta now."', "Then leave."])
 
     def test_full_stop_inside_quotation_before_comma_is_not_a_boundary(self):
         text = 'stating "2FA actions must be performed in the personal context.", and its page.'
@@ -212,6 +225,16 @@ class Command(unittest.TestCase):
         result = subprocess.run(
             [sys.executable, "-I", "-B", str(TOOLS / "sentence_split.py"), "/nonexistent/g.md"],
             capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("cannot read", result.stderr)
+
+    def test_undecodable_file_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "g.md"
+            path.write_bytes(b"\xff")
+            result = subprocess.run(
+                [sys.executable, "-I", "-B", str(TOOLS / "sentence_split.py"), str(path)],
+                capture_output=True, text=True, timeout=60)
         self.assertEqual(result.returncode, 2)
         self.assertIn("cannot read", result.stderr)
 

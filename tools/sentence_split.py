@@ -42,11 +42,14 @@ Length is len() of the sentence in Unicode code points, the unit the claim-lengt
 gate uses.
 
 Limits, disclosed rather than handled: this is a line scanner, not a CommonMark
-parser. Straight double quotes pair by alternation within a unit. A table row
-must start with a pipe. Setext headings, indented code, HTML blocks and
-reference-style links are read as ordinary lines, and a lazy continuation line
-joins whatever unit is open. An abbreviation outside the five listed, such as
-"Mr.", ends a sentence when a capital follows it.
+parser. Straight double quotes pair by alternation within a unit, and a
+backslash-escaped quote neither opens nor closes one. A table row is a line
+that starts with a pipe, a header row whose next line is a delimiter row with
+as many cells, or a line with an unescaped pipe right after another table row.
+Setext headings, indented code, HTML blocks and reference-style links are read
+as ordinary lines, and a lazy continuation line joins whatever unit is open. An
+abbreviation outside the five listed, such as "Mr.", ends a sentence when a
+capital follows it.
 """
 import argparse
 import re
@@ -78,16 +81,17 @@ ABBREVIATION_RE = re.compile(r"(?<![A-Za-z])(?:e\.g|i\.e|etc|vs|cf)\Z", re.I)
 CLOSERS = "\"”’')]*_"
 OPENERS = "`\"“‘'(["
 
-Rendered = namedtuple("Rendered", "text src code links")
+Rendered = namedtuple("Rendered", "text src code links escaped")
 
 
 def render(raw):
     """Render one unit's inline Markdown: links as their text, everything else kept.
 
-    Returns the text, each text character's index in raw, and the (start, end)
-    ranges of the text's code spans and links.
+    Returns the text, each text character's index in raw, the (start, end)
+    ranges of the text's code spans and links, and the set of text indices
+    that came from a backslash escape.
     """
-    text, src, code, links = [], [], [], []
+    text, src, code, links, escaped = [], [], [], [], set()
 
     def emit(start, end):
         text.extend(raw[start:end])
@@ -106,6 +110,7 @@ def render(raw):
                 code.append((start, len(text)))
             i = end
         elif ch == "\\" and i + 1 < len(raw) and raw[i + 1] in ESCAPABLE:
+            escaped.add(len(text))
             emit(i + 1, i + 2)
             i += 2
         elif ch in "[!" and (m := LINK_RE.match(raw, i)):
@@ -113,6 +118,7 @@ def render(raw):
             text.extend(inner.text)
             src.extend(m.start(1) + k for k in inner.src)
             code.extend((a + offset, b + offset) for a, b in inner.code)
+            escaped.update(k + offset for k in inner.escaped)
             links.append((offset, len(text)))
             i = m.end()
         elif ch == "<" and (m := AUTOLINK_RE.match(raw, i)):
@@ -123,7 +129,7 @@ def render(raw):
         else:
             emit(i, i + 1)
             i += 1
-    return Rendered("".join(text), src, code, links)
+    return Rendered("".join(text), src, code, links, escaped)
 
 
 def _skip_space(text, k):
@@ -139,11 +145,11 @@ def _opens(text, k):
     return k < len(text) and (text[k].isupper() or text[k].isdigit() or text[k] in OPENERS)
 
 
-def _next_start(text, i, opaque, link_end, straight, curly):
+def _next_start(text, i, opaque, escaped, link_end, straight, curly):
     """Where the sentence after the mark at i starts, or None if i ends no sentence."""
     j = i + 1
     while j < len(text) and text[j] in CLOSERS and not opaque[j]:
-        if text[j] == '"':
+        if text[j] == '"' and j not in escaped:
             if not straight:
                 break
             straight = False
@@ -177,14 +183,14 @@ def split_rendered(rendered):
     for i, ch in enumerate(text):
         if opaque[i]:
             continue
-        if ch == '"':
+        if ch == '"' and i not in rendered.escaped:
             straight = not straight
         elif ch == "“":
             curly += 1
         elif ch == "”":
             curly = max(0, curly - 1)
         elif ch in ".?!":
-            start = _next_start(text, i, opaque, link_end, straight, curly)
+            start = _next_start(text, i, opaque, rendered.escaped, link_end, straight, curly)
             if start is not None:
                 starts.add(start)
     edges = [0, *sorted(starts), len(text)]
@@ -227,6 +233,15 @@ def table_cells(line):
     return cells
 
 
+def starts_table(line, below):
+    """True if line is a table header row: below is a delimiter row with as many cells."""
+    if not (CELL_SPLIT_RE.search(line) and CELL_SPLIT_RE.search(below)):
+        return False
+    delimiters = table_cells(below)
+    return (len(delimiters) == len(table_cells(line))
+            and all(DELIMITER_CELL_RE.fullmatch(cell) for cell in delimiters))
+
+
 def units(markdown):
     """Return (raw, where) for each unit: its raw inline Markdown and, for each
     joined line, that line's (offset in raw, one-based line number)."""
@@ -249,6 +264,7 @@ def units(markdown):
     fences = Fences()
     front = bool(lines) and lines[0].rstrip("\r") == "---"
     generated = in_comment = False
+    last_row = -1
     for number, line in enumerate(lines, 1):
         line = line.rstrip("\r")
         if front:
@@ -275,8 +291,11 @@ def units(markdown):
             add(CLOSING_HASHES_RE.sub("", m.group(1)).strip(), number)
             flush()
             continue
-        if line.lstrip().startswith("|"):
+        if (line.lstrip().startswith("|")
+                or (last_row == number - 1 and CELL_SPLIT_RE.search(line))
+                or (number < len(lines) and starts_table(line, lines[number]))):
             flush()
+            last_row = number
             cells = table_cells(line)
             if not all(DELIMITER_CELL_RE.fullmatch(cell) for cell in cells):
                 for cell in cells:
