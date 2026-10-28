@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-28
+
+- `DECISIONS.md` and `TODO.md` record the three maintainer rulings of 2026-10-27, on split-point noun-phrase openings (applied by #999), on the seven DEMONSTRATED-quoted sentences (applied by #1001) and on the seven held claims (applied by #1000), and record the 2026-10-27 proxy decision on TODO 1.383 for the maintainer's later review. TODO 1.385 stays open for the 38 table-cell sentences over 400 characters in 18 guides, with its prose work complete, and TODO 1.383 is narrowed to the three claims still over the limit (#1002)
+
 ## 2026-10-27
 
 - `observability-components.md`: four claims trimmed under the maintainer's 2026-10-27 ruling so that each generated summary sentence, prefix included, is at most 390 characters (TODO 1.383, partial). The claims are loki-ingester-lookback-all, loki-ingester-store-all, loki-ingester-inverted-memory and loki-target-modules. loki-querier-ingester-inverted, loki-querier-ingester-inverted-result and `authentication.md`'s transport-authentication-browser keep main's text, because restoring the details a trim dropped from them does not fit the limits, and they stay open under TODO 1.383 (#1000)
