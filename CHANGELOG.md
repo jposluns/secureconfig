@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-28
 
-- Split the ten table-cell sentences over 400 characters in `mongodb.md` (three), `kafka.md` (three), `neo4j.md` (two) and `vault.md` (two) (TODO 1.385) into sentences of at most 395 characters at clause boundaries inside the same cells, with no fact, qualifier, inference label, citation or link changed. The table shapes are unchanged. The plugin copies `plugin/skills/secure-deployment-config/references/mongodb.md`, `plugin/skills/secure-deployment-config/references/kafka.md`, `plugin/skills/secure-deployment-config/references/neo4j.md` and `plugin/skills/secure-deployment-config/references/vault.md` carry the same splits (#1005)
+- Split the ten table-cell sentences over 400 characters in `mongodb.md` (three), `kafka.md` (three), `neo4j.md` (two) and `vault.md` (two) (TODO 1.385) into sentences of at most 391 characters at clause boundaries inside the same cells, with no fact, qualifier, inference label, citation or link changed. The table shapes are unchanged. The plugin copies `plugin/skills/secure-deployment-config/references/mongodb.md`, `plugin/skills/secure-deployment-config/references/kafka.md`, `plugin/skills/secure-deployment-config/references/neo4j.md` and `plugin/skills/secure-deployment-config/references/vault.md` carry the same splits (#1005)
 
 ## 2026-10-27
 
