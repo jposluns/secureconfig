@@ -182,7 +182,7 @@ REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal 
 - Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , and HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS. The Vaultwarden `.env.template`: https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
-- Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
+- Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet/ and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
 - GitLab CE initial root password (Docker install): https://docs.gitlab.com/install/docker/installation/
 - GitLab CE sign-up restrictions: https://docs.gitlab.com/administration/settings/sign_up_restrictions/
 - GitLab CE default visibility and access controls: https://docs.gitlab.com/administration/settings/visibility_and_access_controls/
@@ -303,7 +303,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "26e8ed2c8a47a290a9aaefd2cb37d3f833b624d0a8aff89daa2ca5aeac0fc5d1",
+  "body_sha256": "a7aa662e7e04c9f69ffc9abf859cfe13b6a7eb9e226f65ee50acd52d49df860f",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -333,7 +333,7 @@ Claims (full source mapping in the JSON block below):
       "name": "Gitea MFA minimum",
       "basis": "1.24",
       "sources": {
-        "s57933519c308": "https://docs.gitea.com/administration/config-cheat-sheet"
+        "sfec17fde7bb0": "https://docs.gitea.com/administration/config-cheat-sheet/"
       }
     },
     "coolify": {
@@ -397,7 +397,7 @@ Claims (full source mapping in the JSON block below):
       "name": "Gitea docs",
       "basis": "unknown",
       "sources": {
-        "s57933519c308": "https://docs.gitea.com/administration/config-cheat-sheet",
+        "sfec17fde7bb0": "https://docs.gitea.com/administration/config-cheat-sheet/",
         "s3b7060d58383": "https://docs.gitea.com/usage/user-setting/multi-factor-authentication/"
       }
     },
@@ -501,10 +501,10 @@ Claims (full source mapping in the JSON block below):
     "jenkins-agents": {"text": "Inbound agents use fixed/random TCP or WebSocket on HTTPS; prefer WebSocket or isolate the extra port.", "components": ["jenkins"], "sources": ["jenkins:s524c8d5871f1"], "status": "REASONED"},
     "jenkins-mfa": {"text": "No native second factor; enforce MFA through SSO/fronting identity.", "components": ["jenkins"], "sources": ["jenkins:s524c8d5871f1", "jenkins:sdfee751aeeee"], "status": "REASONED"},
     "gitea-bind": {"text": "HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default; set 127.0.0.1 behind a proxy.", "components": ["gitea-pin"], "sources": ["gitea-pin:s31dd622b1c12"], "status": "REASONED"},
-    "gitea-tls": {"text": "Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.", "components": ["gitea"], "sources": ["gitea:s57933519c308"], "status": "REASONED"},
-    "gitea-registration": {"text": "Set service DISABLE_REGISTRATION=true; default false.", "components": ["gitea"], "sources": ["gitea:s57933519c308"], "status": "REASONED"},
-    "gitea-private": {"text": "Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false.", "components": ["gitea"], "sources": ["gitea:s57933519c308"], "status": "REASONED"},
-    "gitea-mfa": {"text": "Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later.", "components": ["gitea", "gitea-mfa-min"], "sources": ["gitea:s57933519c308", "gitea:s3b7060d58383", "gitea-mfa-min:s57933519c308"], "status": "REASONED"},
+    "gitea-tls": {"text": "Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
+    "gitea-registration": {"text": "Set service DISABLE_REGISTRATION=true; default false.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
+    "gitea-private": {"text": "Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
+    "gitea-mfa": {"text": "Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later.", "components": ["gitea", "gitea-mfa-min"], "sources": ["gitea:sfec17fde7bb0", "gitea:s3b7060d58383", "gitea-mfa-min:sfec17fde7bb0"], "status": "REASONED"},
     "gitea-tokens": {"text": "With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens.", "components": ["gitea"], "sources": ["gitea:s3b7060d58383"], "status": "REASONED"},
     "gitlab-root": {"text": "Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED"},
     "gitlab-signup": {"text": "signup_enabled defaults true; disable for a private forge.", "components": ["gitlab"], "sources": ["gitlab:s6e8d16cad2ef"], "status": "REASONED"},
@@ -529,7 +529,7 @@ Claims (full source mapping in the JSON block below):
     "nodered-secret": {"text": "Set credentialSecret yourself; otherwise generated, and stored credentials depend on it.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
     "nodered-private": {"text": "Keep editor private with fronting MFA; it has the power of its flows.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
     "verify-listeners": {"text": "Read every panel/API listener; expect loopback or absence, never wildcard exposure.", "components": ["portainer", "dokploy", "npm", "kuma", "docker"], "sources": ["portainer:s3e163c7d3c38", "dokploy:sc2cc854c9b7e", "npm:se553d384e783", "kuma:s05b853ba300b", "docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
-    "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:s57933519c308"], "status": "REASONED", "verify": [1]},
+    "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:sfec17fde7bb0"], "status": "REASONED", "verify": [1]},
     "verify-docker-plain": {"text": "Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.", "components": ["docker"], "sources": ["docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
     "verify-docker-mtls": {"text": "2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.", "components": ["docker"], "sources": ["docker:sfe15a8156c18"], "status": "REASONED", "verify": [1]},
     "verify-gitlab": {"text": "Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED", "verify": [1]}
