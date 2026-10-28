@@ -20878,7 +20878,7 @@ GCP's metadata server answers at `metadata.google.internal` or `169.254.169.254`
   `docker network create --internal agent-net`.
 - **Host-process restriction**: IMDSv2 with hop limit 1 still lets a process ON the host obtain its own
   token, so on a host that runs the agent directly (not in a container one hop away) restrict the metadata
-  address by user, as this guide recommends, with an `iptables` `OUTPUT` owner match, e.g. `iptables -A OUTPUT -d 169.254.169.254 -m owner ! --uid-owner aws -j DROP` (adapt the allowed uid); this does not cover traffic forwarded from a container, an nftables equivalent must be in a base chain hooked at the output path, or in a regular chain reached from that base chain by a jump, and you need the matching `ip6tables` rule for `[fd00:ec2::254]` where IPv6 IMDS is enabled. A forward proxy with a destination allowlist only enforces on traffic that actually passes through it, so it is not a substitute for a network block: pair it with a rule that stops the workload reaching metadata directly, or the workload just bypasses the proxy, and test the proxy path separately.
+  address by user, as this guide recommends, with an `iptables` `OUTPUT` owner match, e.g. `iptables -A OUTPUT -d 169.254.169.254 -m owner ! --uid-owner aws -j DROP` (adapt the allowed uid). The `iptables` `OUTPUT` owner match does not cover traffic forwarded from a container, an nftables equivalent must be in a base chain hooked at the output path, or in a regular chain reached from that base chain by a jump, and you need the matching `ip6tables` rule for `[fd00:ec2::254]` where IPv6 IMDS is enabled. A forward proxy with a destination allowlist only enforces on traffic that actually passes through it, so it is not a substitute for a network block: pair it with a rule that stops the workload reaching metadata directly, or the workload just bypasses the proxy, and test the proxy path separately.
 
 ## Scope boundary
 
@@ -21089,7 +21089,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "712363006ec25a2575f4c2073226e2714426b204e78925ae260203ce8df645ff",
+  "body_sha256": "699af71d5d79b5c67124687ea84ebf13eeb0486a1476c64689d00aac743e2aae",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
