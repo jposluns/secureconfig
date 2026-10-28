@@ -815,7 +815,7 @@ These commands validate configuration acceptance; they do not prove authenticati
 
 | Check scope | Status | Procedure and prerequisites |
 |---|---|---|
-| Service behavior | REASONED from the cited v0.34.2 sources and vendor documentation; not demonstrated | On v0.34.2 or a newly reviewed explicit pin, load the assembled service/proxy configuration and reproduce every applicable exposed/fixed comparison above in isolated states. Record binary/image identity, effective configuration, commands, responses, upstream observations, completed positive controls, state changes, and cleanup without secrets. Include IPv4/IPv6 and Docker bypass paths; absent/wrong/correct authentication; TLS trust and mTLS negatives; all management methods and blob writes; browser preflights and actual calls; finite admission, scheduler observations, parameter overrides, and recovery; effective identity, ACLs, and model digests; controlled registry transfers; cloud disablement; diagnostic denial, prompt-capture behavior, and actual profiling availability. Use CPU fixtures where sufficient and GPU hardware for GPU-specific claims. Configuration inspection or `nginx -t` alone does not demonstrate service behavior. |
+| Service behavior | REASONED from the cited v0.34.2 sources and vendor documentation; not demonstrated | On v0.34.2 or a newly reviewed explicit pin, load the assembled service/proxy configuration and reproduce every applicable exposed/fixed comparison above in isolated states. Record binary/image identity, effective configuration, commands, responses, upstream observations, completed positive controls, state changes, and cleanup without secrets. Include (1 of 2): IPv4/IPv6 and Docker bypass paths; absent/wrong/correct authentication; TLS trust and mTLS negatives; all management methods and blob writes; browser preflights and actual calls; finite admission, scheduler observations, parameter overrides, and recovery. The items to include (2 of 2): effective identity, ACLs, and model digests; controlled registry transfers; cloud disablement; diagnostic denial, prompt-capture behavior, and actual profiling availability. Use CPU fixtures where sufficient and GPU hardware for GPU-specific claims. Configuration inspection or `nginx -t` alone does not demonstrate service behavior. |
 | Native proxy parsing | Not demonstrated here because nginx and Caddy are absent; retained local work | Run the offline parsing checks above against the assembled configuration and real referenced certificate/password files. |
 
 ## Sources (checked September 2026)
@@ -1182,7 +1182,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "27e33269440daaecc6fdfc0fd7ed90f42d636238f9953424ab1ea6afacb6b9e9",
+  "body_sha256": "3b96351b23d24a17e9deef1a0a8e32768456d048ea2466d43dd7f6c4901e0a1f",
   "components": {
     "ollama": {
       "name": "Ollama",

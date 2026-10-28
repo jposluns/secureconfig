@@ -423,7 +423,7 @@ The checks below remain REASONED from the cited LiteLLM documentation and pinned
 
 | Scope | Exposed/fixed checks and prerequisites | Status |
 | --- | --- | --- |
-| LiteLLM controls | Check every REASONED comparison above on a pinned LiteLLM release with PostgreSQL, shared Redis, at least two workers, approved provider test credentials, and a second-host ingress fixture. Cover backend authentication and actual inference; IPv4/IPv6 and container publication; key/team model intersections; key and aggregate team spend; RPM, TPM, and parallel limits; budget verification failures and batch/unestimable-route limitations; expiry, block/unblock, delete, and replacement across workers; application/admin separation and licensed/unlicensed route behavior; documentation URL overrides; health and both metrics listeners; UI fallback removal and Secure cookies; pass-through authentication, methods, subpaths, and headers; destination overrides and egress evidence; and prompt/response absence across spend, debug, error, and callback logs. Include isolated startup tests for unsafe master keys with both overrides absent or false, then with `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true` and YAML `general_settings.dangerously_permit_weak_or_unset_master_key: true` enabled independently. Record versions, commands, diagnostics, positive controls, propagation timing, costs, and cleanup. Configuration inspection alone does not demonstrate service behavior. | REASONED from the cited documentation and pinned sources; service behavior is not demonstrated. |
+| LiteLLM controls | Check every REASONED comparison above on a pinned LiteLLM release with PostgreSQL, shared Redis, at least two workers, approved provider test credentials, and a second-host ingress fixture. Cover (1 of 2): backend authentication and actual inference; IPv4/IPv6 and container publication; key/team model intersections; key and aggregate team spend; RPM, TPM, and parallel limits; budget verification failures and batch/unestimable-route limitations; expiry, block/unblock, delete, and replacement across workers; application/admin separation and licensed/unlicensed route behavior. The items to cover (2 of 2): documentation URL overrides; health and both metrics listeners; UI fallback removal and Secure cookies; pass-through authentication, methods, subpaths, and headers; destination overrides and egress evidence; and prompt/response absence across spend, debug, error, and callback logs. Include isolated startup tests for unsafe master keys with both overrides absent or false, then with `LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true` and YAML `general_settings.dangerously_permit_weak_or_unset_master_key: true` enabled independently. Record versions, commands, diagnostics, positive controls, propagation timing, costs, and cleanup. Configuration inspection alone does not demonstrate service behavior. | REASONED from the cited documentation and pinned sources; service behavior is not demonstrated. |
 
 ## Sources (checked September 2026)
 
@@ -540,7 +540,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "742a27a1d48e5c278e6d8f71c2ce3efc2e99f67fe027cd858e79a0b7bf0c623f",
+  "body_sha256": "eed22494e32c711175ce869c3fc702c4249f32207f97a4198d03171011a17243",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",

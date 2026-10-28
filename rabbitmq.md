@@ -567,7 +567,7 @@ Historical authoring record: no broker, container, or whole-corpus gate suite wa
 
 | Check scope | Procedure and prerequisites | Status |
 |---|---|---|
-| Service checks | Demonstrate checks 1-9 against isolated exposed and fixed states: scoped grants and vhost refusal; monitoring versus administration and message operations; listener/epmd bindings, cookie permissions, external denial and allowed-peer controls including 15671 and removed 5672; management authenticated/anonymous responses; mutual TLS and AMQP user authentication; approved blank-node imports and reduced exports; plaintext versus TLS-required inter-node and CLI distribution, with rejection of a missing or untrusted client certificate; and topic-exchange routing-key authorization, with a broker ACCESS_REFUSED for an out-of-pattern publish or binding. Include startup checks and retain commands, versions, outputs, and matching broker logs. | REASONED from the cited RabbitMQ documentation; missing RabbitMQ/Erlang, rabbitmqadmin, Pika, container runtime, test certificates, and peer infrastructure in the authoring environment. |
+| Service checks | Demonstrate checks 1-9 against isolated exposed and fixed states (1 of 2): scoped grants and vhost refusal; monitoring versus administration and message operations; listener/epmd bindings, cookie permissions, external denial and allowed-peer controls including 15671 and removed 5672; management authenticated/anonymous responses; mutual TLS and AMQP user authentication. The items to demonstrate for checks 1-9 against isolated exposed and fixed states (2 of 2): approved blank-node imports and reduced exports; plaintext versus TLS-required inter-node and CLI distribution, with rejection of a missing or untrusted client certificate; and topic-exchange routing-key authorization, with a broker ACCESS_REFUSED for an out-of-pattern publish or binding. Include startup checks and retain commands, versions, outputs, and matching broker logs. | REASONED from the cited RabbitMQ documentation; missing RabbitMQ/Erlang, rabbitmqadmin, Pika, container runtime, test certificates, and peer infrastructure in the authoring environment. |
 | Native configuration/schema parsing | Parse the RabbitMQ configuration with the native tools. | Unconfirmed because RabbitMQ and Erlang were absent at authoring; retained local work. |
 
 ## 6. Encrypt inter-node and CLI distribution traffic with TLS
@@ -727,7 +727,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3c3c23f0270d674d3466d3f2f809fc0b00ea7c9b8a0f9f580ebff4bc19e46f87",
+  "body_sha256": "f101801997bebd796249328811fec6f1b27c08b68edd949db7ad5aa7b872de58",
   "components": {
     "source": {
       "name": "RabbitMQ source",
