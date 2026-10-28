@@ -31,18 +31,22 @@ What a sentence is, here:
   brackets and emphasis markers may sit between the mark and the whitespace,
   and emphasis markers between the whitespace and the next sentence's first
   character. A run of links between two sentences, such as rendered source
-  citations, stays with the sentence before it unless the first link's text
-  opens a sentence itself. A full stop after etc. ends a sentence like any other.
+  citations, stays with the sentence before it, even when its text starts with
+  a capital. A link run followed by text that cannot open a sentence starts
+  the sentence instead, as in `It ends. [RFC 6455](u) says so.` A full stop
+  after etc. ends a sentence like any other.
 - Not boundaries. A mark inside a code span or inside a double-quoted
   quotation that has not closed by the whitespace, and a full stop directly
   after e.g., i.e., vs. or cf., which seldom end a sentence, or after the
   number that opens a numbered heading such as `## 1. Bind privately`. When a
   closing quote or bracket follows the abbreviation, as in `(see e.g.) The`,
   the end of the bracket is taken as the end of the sentence.
-- Quotations. Straight and curly double quotes pair with each other, and a
-  quotation never stays open past its unit. A quote with no partner later in
-  the unit opens nothing, and nor does a straight quote right after a digit
-  while no quotation is open, an inch mark as in `27" wide`.
+- Quotations. A quote pairs with one of its own style first, so a
+  straight-quoted span nested in a curly quotation, or the reverse, does not
+  end the outer one. Straight and curly double quotes pair with each other
+  otherwise, and a quotation never stays open past its unit. A quote with no
+  partner later in the unit opens nothing, and nor does a straight quote right
+  after a digit, an inch mark as in `27" wide`.
 
 Length is len() of the sentence in Unicode code points, the unit the claim-length
 gate uses.
@@ -57,7 +61,9 @@ Setext headings, indented code, HTML blocks and reference-style links are read
 as ordinary lines, and a lazy continuation line joins whatever unit is open. An
 abbreviation outside the four listed, such as "Mr.", or etc. in mid-sentence,
 ends a sentence when a capital follows it, and a real sentence end after one of
-the four is joined to the next sentence.
+the four is joined to the next sentence. A link that opens a sentence and is
+followed by a capital, as in `It ends. [Redis](u) Sentinel docs say so.`, cannot
+be told apart from a citation run, so it stays with the sentence before.
 """
 import argparse
 import re
@@ -157,19 +163,34 @@ def _opens(text, k):
 def _quote_depth(text, opaque, escaped):
     """How many double quotations are open before each index of text, up to len(text).
 
-    A straight quote closes the innermost open quotation, of either style, and
-    otherwise opens one unless it follows a digit. Openers left unpaired at the
-    end of the unit are dropped, so they hold back no boundary.
+    A quote closes a quotation of its own style first: a straight quote closes
+    an open straight one, and a closing curly quote the innermost open curly
+    one along with any straight quote left open inside it. Otherwise a straight
+    quote opens a nested quotation, or after a digit closes the innermost one,
+    and a closing curly quote closes a straight one. Openers left unpaired at
+    the end of the unit pair a curly one with a straight one after it, and the
+    rest are dropped, so they hold back no boundary.
     """
-    stack, step = [], [0] * (len(text) + 1)
+    stack, pairs = [], []
     for k, ch in enumerate(text):
         if opaque[k] or k in escaped or ch not in "\"“”":
             continue
-        if stack and ch != "“":
-            step[stack.pop() + 1] += 1
-            step[k + 1] -= 1
-        elif ch == "“" or (ch == '"' and not (k and text[k - 1].isdigit())):
+        after_digit = k and text[k - 1].isdigit()
+        if ch == "“":
             stack.append(k)
+        elif ch == "”" and stack:
+            n = max((n for n, o in enumerate(stack) if text[o] == "“"), default=-1)
+            pairs.append((stack[n], k))
+            del stack[n:]
+        elif ch == '"' and stack and (text[stack[-1]] == '"' or after_digit):
+            pairs.append((stack.pop(), k))
+        elif ch == '"' and not after_digit:
+            stack.append(k)
+    pairs += [(a, b) for a, b in zip(stack, stack[1:]) if text[a] == "“" and text[b] == '"']
+    step = [0] * (len(text) + 1)
+    for a, b in pairs:
+        step[a + 1] += 1
+        step[b + 1] -= 1
     return list(accumulate(step))
 
 
@@ -186,11 +207,11 @@ def _next_start(text, i, opaque, depth, link_end):
     if j == len(text) or not text[j].isspace():
         return None
     k = m = _skip_space(text, j)
-    if _opens(text, k):
-        return k
     while m in link_end:
         m = _skip_space(text, link_end[m])
-    return m if m != k and _opens(text, m) else None
+    if m != k and _opens(text, m):
+        return m
+    return k if _opens(text, k) else None
 
 
 def split_rendered(rendered):
