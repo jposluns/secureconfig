@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.386**, **2.50**, **3.47**, **4.12**.
+Next ids: **1.386**, **2.50**, **3.48**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -94,6 +94,7 @@ marked, and those are the ones worth taking first.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 3.40 | F-LYCHEE-2026-09-28 remainder after #448: the six bare body citations in `agent-builders.md` (two), `jupyter.md`, `mlflow.md`, `sqlite-http-frontends.md` and `workflow-orchestrators.md` were written as autolinks (#447), and seven later bare `__main__.py` and `__init__.py` citations in `agent-builders.md` and `free-certificates.md` were written as autolinks (#620). The `--dump` check is recorded in DONE.md under 3.40 (#853): in a lychee 0.24.2 `--dump` run by the orchestrator over e9255153 (offline extraction, no link checked), this change's assessment found no cited URL extracted in truncated form. Remaining: confirm the first completed weekly sweep after these changes. The 2026-10-19 sweep this row waited for (run 39209362953) was cancelled at the 45-minute job timeout with `git.savannah.gnu.org/cgit` requests still timing out, so lychee wrote no `lychee/out.json` and the sweep confirmed nothing; both report steps printed `INCOMPLETE`. That confirmation is still owed on the first completed sweep after #841, which allows lychee at most one retry per request and raises the job limit to 75 minutes. (S, S) | `[gap]` |
+| 3.47 | Shared sentence splitter: add an offline, tested sentence splitter to the repository's tools (for example `tools/sentence_split.py`, with tests that the gate suite runs), so that the 400-character rules for guide prose (row 1.385) and for generated claim-summary sentences (row 1.383) are measured by one implementation. It joins each hard-wrapped paragraph and measures each sentence with links rendered as their text, and with backticks and emphasis markers kept. It does not split inside a double-quoted quotation or a code span, or after an abbreviation such as e.g., i.e. or etc. It does split at a sentence end followed by a closing quote or bracket, and at one next to an opening or closing emphasis marker. It measures each table cell on its own, and it includes headings. These are the cases met in the TODO 1.385 work; for example, the integrator's scan of main at f4306a85 joined sentences after a closing parenthesis and across rendered source citation links. Under the maintainer ruling of 2026-10-26T14:11:03Z (DECISIONS.md), no gate was added for prose length, and this row adds none on its own. Closes when the tool and its tests are merged. (L, M) | `[gap]` |
 
 ## Priority 4: Tooling and process
 
