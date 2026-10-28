@@ -1135,7 +1135,7 @@ class RoundTwoTests(unittest.TestCase):
         rc, output = self.unreferenced_run('--check', 'one.md')
         self.assertEqual(rc, 0, output)
         self.assertIn('  ok    version basis: 1 opted-in guides;', output)
-        self.assertIn('  note  version basis: 1 component sources in 1 guides referenced by no claim; '
+        self.assertIn('  note  version basis: 1 component source in 1 guide referenced by no claim; '
                       '--check --unreferenced lists them\n', output)
         self.assertNotIn('FAIL', output)
 

@@ -1252,7 +1252,7 @@ def main():
     parser.add_argument('--no-advisory', action='store_true',
                         help='suppress the missing-parser advisory when a caller has already printed it')
     parser.add_argument('--unreferenced', action='store_true',
-                        help='list, by guide, each component source that no claim references')
+                        help='with --check, list, by guide, each component source that no claim references')
     args = parser.parse_args()
     if (args.intro is not None) != (args.introduce is not None):
         parser.error('--intro and --introduce require each other')
@@ -1339,8 +1339,10 @@ def main():
         unclaimed = {path.name: refs for path, expected in pending
                      for refs in [unreferenced(split(expected)[0])] if refs}
         if unclaimed:
-            print(f'  note  version basis: {sum(map(len, unclaimed.values()))} component sources '
-                  f'in {len(unclaimed)} guides referenced by no claim'
+            count = sum(map(len, unclaimed.values()))
+            print(f'  note  version basis: {count} component source' + ('s' if count != 1 else '')
+                  + f' in {len(unclaimed)} guide' + ('s' if len(unclaimed) != 1 else '')
+                  + ' referenced by no claim'
                   + ('' if args.unreferenced else '; --check --unreferenced lists them'))
         if args.unreferenced:
             for name, refs in unclaimed.items():
