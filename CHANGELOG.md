@@ -13,6 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-10-28
 
 - Split the ten table-cell sentences over 400 characters in `mongodb.md` (three), `kafka.md` (three), `neo4j.md` (two) and `vault.md` (two) (TODO 1.385) into sentences of at most 391 characters at clause boundaries inside the same cells, with no fact, qualifier, inference label, citation or link changed. The table shapes are unchanged. The plugin copies `plugin/skills/secure-deployment-config/references/mongodb.md`, `plugin/skills/secure-deployment-config/references/kafka.md`, `plugin/skills/secure-deployment-config/references/neo4j.md` and `plugin/skills/secure-deployment-config/references/vault.md` carry the same splits (#1005)
+- `DECISIONS.md` and `TODO.md` record the three maintainer rulings of 2026-10-27, on split-point noun-phrase openings (applied by #999), on the seven DEMONSTRATED-quoted sentences (applied by #1001) and on the seven held claims (applied by #1000), and record the 2026-10-27 proxy decision on TODO 1.383 for the maintainer's later review. TODO 1.385 stays open for the 38 table-cell sentences over 400 characters in 18 guides, with its prose work complete, and TODO 1.383 is narrowed to the three claims still over the limit (#1002)
 
 ## 2026-10-27
 
