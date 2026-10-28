@@ -798,6 +798,13 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
     require(covered == set(range(1, len(blocks) + 1)), 'every Verify bash fence needs a claim mapping')
 
 
+def unreferenced(data):
+    """component:source keys that no claim's sources list; reported, never failed."""
+    cited = {ref for claim in data['claims'].values() for ref in claim['sources']}
+    return [f'{name}:{key}' for name, component in data['components'].items()
+            for key in component['sources'] if f'{name}:{key}' not in cited]
+
+
 def cell(value):
     return html.escape(value, quote=False).replace('|', '&#124;').replace('`', '&#96;')
 
@@ -1244,11 +1251,15 @@ def main():
                         help='fail if the pinned CommonMark parser is unavailable (CI)')
     parser.add_argument('--no-advisory', action='store_true',
                         help='suppress the missing-parser advisory when a caller has already printed it')
+    parser.add_argument('--unreferenced', action='store_true',
+                        help='list, by guide, each component source that no claim references')
     args = parser.parse_args()
     if (args.intro is not None) != (args.introduce is not None):
         parser.error('--intro and --introduce require each other')
     if args.no_advisory and args.bundle is None:
         parser.error('--no-advisory requires --bundle')
+    if args.unreferenced and not args.check:
+        parser.error('--unreferenced requires --check')
     try:
         from check_verify_marking import ParserUnavailable, gate_parser
         try:
@@ -1324,6 +1335,16 @@ def main():
         print(f'  ok    version basis: {len(pending)} opted-in guides; '
               f'{retained} grandfathered Sources URL/items retained'
               + ('; rendered Sources checked' if source_parser else '; line grammar only'))
+        # Informational only: a component source no claim cites never changes the exit status.
+        unclaimed = {path.name: refs for path, expected in pending
+                     for refs in [unreferenced(split(expected)[0])] if refs}
+        if unclaimed:
+            print(f'  note  version basis: {sum(map(len, unclaimed.values()))} component sources '
+                  f'in {len(unclaimed)} guides referenced by no claim'
+                  + ('' if args.unreferenced else '; --check --unreferenced lists them'))
+        if args.unreferenced:
+            for name, refs in unclaimed.items():
+                print(f"  note  {name}: {', '.join(refs)}")
         return 0
     except (OSError, ValueError, TypeError, KeyError) as exc:
         print(f'  FAIL  version basis: {exc}', file=sys.stderr)

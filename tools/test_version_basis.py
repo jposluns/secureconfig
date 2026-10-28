@@ -1108,6 +1108,56 @@ class RoundTwoTests(unittest.TestCase):
             self.assertEqual(run('--rebind', str(path))[0], 1)
             self.assertEqual(path.read_text(), invalid)
 
+    @staticmethod
+    def unreferenced_run(*args):
+        """Run main() over clean.md (none), one.md (one) and two.md (two unreferenced)."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'tools').mkdir()
+            (root / 'tools/version_basis_guides.txt').write_text('clean.md\none.md\ntwo.md\n')
+            (root / 'tools/version_basis_sources_baseline.txt').write_text('')
+            (root / 'CHANGELOG.md').write_text('## 2026-09-26\n')
+            for name, count in (('clean', 0), ('one', 1), ('two', 2)):
+                extra = [URL.replace('#control', f'#extra{n}') for n in range(count)]
+                body = BODY + ''.join(f'- Product v1.0: {url}\n' for url in extra)
+                data = fixture()
+                data['components']['product']['sources'].update({vb.source_id(url): url for url in extra})
+                data['body_sha256'] = vb.digest(body)
+                (root / f'{name}.md').write_text(vb.updated(document(data, body)))
+            output = io.StringIO()
+            args = [str(root / arg) if arg.endswith('.md') else arg for arg in args]
+            with patch.object(vb, 'ROOT', root), patch.object(sys, 'argv', ['version_basis.py', *args]), \
+                    contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+                rc = vb.main()
+            return rc, output.getvalue()
+
+    def test_unreferenced_source_reported_without_failing(self):
+        rc, output = self.unreferenced_run('--check', 'one.md')
+        self.assertEqual(rc, 0, output)
+        self.assertIn('  ok    version basis: 1 opted-in guides;', output)
+        self.assertIn('  note  version basis: 1 component sources in 1 guides referenced by no claim; '
+                      '--check --unreferenced lists them\n', output)
+        self.assertNotIn('FAIL', output)
+
+    def test_no_unreferenced_source_prints_no_report(self):
+        rc, output = self.unreferenced_run('--check', '--unreferenced', 'clean.md')
+        self.assertEqual(rc, 0, output)
+        self.assertIn('  ok    version basis: 1 opted-in guides;', output)
+        self.assertNotIn('  note  ', output)
+
+    def test_unreferenced_count_and_list_match(self):
+        rc, output = self.unreferenced_run('--check', '--unreferenced')
+        self.assertEqual(rc, 0, output)
+        keys = ['product:' + vb.source_id(URL.replace('#control', f'#extra{n}')) for n in range(2)]
+        self.assertIn('  note  version basis: 3 component sources in 2 guides referenced by no claim\n',
+                      output)
+        self.assertIn(f'  note  one.md: {keys[0]}\n', output)
+        self.assertIn(f'  note  two.md: {keys[0]}, {keys[1]}\n', output)
+        self.assertNotIn('clean.md', output)
+        listed = [ref for line in output.splitlines() if line.startswith('  note  ') and '.md: ' in line
+                  for ref in line.split('.md: ', 1)[1].split(', ')]
+        self.assertEqual(len(listed), 3)
+
     def test_rebind_does_not_refresh_stale_summary(self):
         raw = vb.updated(document(fixture()))
         raw = raw.replace('control (REASONED; product): Requires authentication.',

@@ -349,6 +349,8 @@ Schema 1 requires exactly these top-level fields:
 - `claims`: nonempty object with the same ID grammar. Each claim requires `text`, a nonempty unique
   `components` list, a nonempty `sources` list of `component-id:source-id` references, and `status`
   (`DEMONSTRATED` or `REASONED`). Every claim component needs a source; every component must be used.
+  A component source that no claim's `sources` references does not fail: `--check` prints one
+  `note` line with the count, and `--check --unreferenced` lists each such key by guide.
   `evidence` is required only for DEMONSTRATED and quotes the whitespace-normalized historical body.
   Optional `verify` lists unique, one-based bash-fence ordinals within Verify sections; every such
   fence needs a mapping. Names, bases, claim text, URLs and evidence are nonempty single-line strings.
