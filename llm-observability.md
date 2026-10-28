@@ -307,38 +307,37 @@ transport and authentication were not exercised. During review, only the key-han
 paragraph was run, in bash under `bash -x` with a stub curl and a dummy key: the subshell traced only its
 `trap - DEBUG RETURN ERR` and `set +x` lines, none carrying the key. The same review run found that curl's argv
 held no key and its stdin held the `Authorization: Bearer` line, and that a placeholder, an empty value, a line
-feed, a carriage return or a tab was
-refused before any curl call. With `set +x` removed, the trace showed the key on two lines, the `set --` line
-and the `printf` line, and an interactive run with history enabled kept the key in the history entry. Outside
-the one plaintext exception below, send a Phoenix API key only over TLS: use an `https://` URL for `/v1/traces`
-with certificate verification left on, and a TLS channel for the gRPC Export on 4317. The TLS must be terminated
-by Phoenix itself (`PHOENIX_TLS_ENABLED=True` with `PHOENIX_TLS_CERT_FILE` and `PHOENIX_TLS_KEY_FILE`, or the
-per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP` and `PHOENIX_TLS_ENABLED_FOR_GRPC` where your release has them) or by
-a reverse proxy or tunnel in front of Phoenix. Phoenix defaults to TLS off, so a plain `http://` URL or a plaintext gRPC
-channel puts the Bearer key on the wire in cleartext, and a private network is not a substitute: anyone who can
-observe that network reads the key. The plaintext exception, this guide's reasoning rather than machine-auth.md's
-rule, is a client on the Phoenix host using loopback in Phoenix's own network namespace, for example a direct
-probe of a plaintext listener behind a TLS-terminating proxy. A TLS-terminating proxy or tunnel that forwards the
-key to Phoenix is itself a client that sends the key, so it must use that loopback or TLS with verification on.
-**Exposed:** where any client sends the key other than over that loopback, the `https://` probe of the endpoint
-those clients use (Phoenix's port when Phoenix terminates TLS, otherwise the proxy or tunnel) fails the TLS
+feed, a carriage return or a tab was refused before any curl call. With `set +x` removed, the trace showed the
+key on two lines, the `set --` line and the `printf` line, and an interactive run with history enabled kept
+the key in the history entry. Outside the one plaintext exception below, send a Phoenix API key only over TLS:
+use an `https://` URL for `/v1/traces` with certificate verification left on, and a TLS channel for the gRPC
+Export on 4317. The TLS must be terminated by Phoenix itself (`PHOENIX_TLS_ENABLED=True` with
+`PHOENIX_TLS_CERT_FILE` and `PHOENIX_TLS_KEY_FILE`, or the per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP` and
+`PHOENIX_TLS_ENABLED_FOR_GRPC` where your release has them) or by a reverse proxy or tunnel in front of
+Phoenix. Phoenix defaults to TLS off, so a plain `http://` URL or a plaintext gRPC channel puts the Bearer key
+on the wire in cleartext, and a private network is not a substitute: anyone who can observe that network reads
+the key. The plaintext exception, this guide's reasoning rather than machine-auth.md's rule, is a client on
+the Phoenix host using loopback in Phoenix's own network namespace, for example a direct probe of a plaintext
+listener behind a TLS-terminating proxy. A TLS-terminating proxy or tunnel that forwards the key to Phoenix is
+itself a client that sends the key, so it must use that loopback or TLS with verification on. **Exposed:**
+where any client sends the key other than over that loopback, the `https://` probe of the endpoint those
+clients use (Phoenix's port when Phoenix terminates TLS, otherwise the proxy or tunnel) fails the TLS
 handshake against a plaintext listener, or a client sends the key over an `http://` URL or a plaintext gRPC
 channel other than loopback in Phoenix's own network namespace. **Fixed:** that probe, where it applies,
-completes with verification on, and every client that sends the key, including each 4317 gRPC exporter, uses TLS
-with verification on, other than one using loopback in Phoenix's own network namespace (Sources names no gRPC
-client TLS option, so confirm it in that client's configuration). Sources has no Phoenix reference for an API-key
-transport requirement or for an OTLP gRPC client's TLS or CA settings, so this guide names no client option for
-them: for gRPC clients using TLS, trust the CA for the certificate presented by the endpoint your client connects
-to, whether Phoenix or the TLS-terminating proxy or tunnel. When you script the HTTP
-probe, keep the key out of argv and tracing. In a fresh, clean shell (CONTRIBUTING rule 7), build a subshell
-like the Langfuse block above and add `set +x` straight after its `trap - DEBUG RETURN ERR` line, so tracing is
-off before the key arrives on the `set --` line. That subshell must refuse a placeholder, an empty value or a
-control character,
-then pipe `printf 'Authorization: Bearer %s\n' "$1"` into curl with `--header @-`, never `-H` with the key and
-never the key in the URL. Require exactly one value, omit the Langfuse block's two escaping lines (they apply
-only to `--config -`), send the empty `application/x-protobuf` POST described above, and delete the history
-entry for the pasted block. The key on that `set --` line enters shell history, and stdin keeps it out of argv
-only, not out of your own account's view of the process.
+completes with verification on, and every client that sends the key, including each 4317 gRPC exporter, uses
+TLS with verification on, other than one using loopback in Phoenix's own network namespace (Sources names no
+gRPC client TLS option, so confirm it in that client's configuration). Sources has no Phoenix reference for an
+API-key transport requirement or for an OTLP gRPC client's TLS or CA settings, so this guide names no client
+option for them: for gRPC clients using TLS, trust the CA for the certificate presented by the endpoint your
+client connects to, whether Phoenix or the TLS-terminating proxy or tunnel. When you script the HTTP probe,
+keep the key out of argv and tracing. In a fresh, clean shell (CONTRIBUTING rule 7), build a subshell like the
+Langfuse block above and add `set +x` straight after its `trap - DEBUG RETURN ERR` line, so tracing is off
+before the key arrives on the `set --` line. That subshell must refuse a placeholder, an empty value or a
+control character, then pipe `printf 'Authorization: Bearer %s\n' "$1"` into curl with `--header @-`, never
+`-H` with the key and never the key in the URL. Require exactly one value, omit the Langfuse block's two
+escaping lines (they apply only to `--config -`), send the empty `application/x-protobuf` POST described
+above, and delete the history entry for the pasted block. The key on that `set --` line enters shell history,
+and stdin keeps it out of argv only, not out of your own account's view of the process.
 
 REASONED: a summary of the findings the checks above look for, per the guide's cited Langfuse authentication and SSO, Arize Phoenix authentication and OpenTelemetry Collector security best practices entries; it adds no probe of its own, and no deployment was available to show either finding. Exposed, a dashboard or OTLP port answers without a credential; fixed, both require one. A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
 that accepts spans with no credential at all.
@@ -489,7 +488,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "aa4fba1e1ce25881240f5b2ecc03bf6c082a0a326d5e53d95749f5870ff07b73",
+  "body_sha256": "109bc364d02f1fe2c4808885b0accda205afa2ca802ddfd29f2db3321e9067cc",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
