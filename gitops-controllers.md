@@ -87,7 +87,7 @@ ClusterIP is not a pod-network access control. The v3.5.3 component inventory al
 | ApplicationSet controller | Webhook `:7000`, metrics `:8080`, health probes `:8081`; empty hosts are wildcard binds | Container and Service ports `7000` and `8080`; probe port `8081` has neither declaration |
 | Notifications controller | HTTP metrics `0.0.0.0:9001` | Metrics Service and TCP liveness probe; no `containerPort` declaration |
 | Dex | Generated `web.https` (or `web.http` with TLS disabled) `0.0.0.0:5556`, `grpc.addr` `0.0.0.0:5557` and telemetry `http` `0.0.0.0:5558` | All three container and Service ports; the wrapper starts Dex only with a nonempty generated configuration |
-| Redis | Port `6379`; the Deployment has no bind override, and the `redis:8.2.3-alpine` tag, taken as built from docker-library-redis bcbc6921 (tag v8.2.3), uses Redis defaults of IPv4 wildcard (`*`) and optional IPv6 wildcard (`-::*`), with protected mode patched off; this holds for the deployed `public.ecr.aws/docker/library/redis:8.2.3-alpine` image only if that registry tag was built from that recipe (on 2026-10-24 it served Docker Hub's index, whose producer annotations name that recipe; build NOT ESTABLISHED) | Container port and Service |
+| Redis | Port `6379`; the Deployment has no bind override, and the `redis:8.2.3-alpine` tag, taken as built from docker-library-redis bcbc6921 (tag v8.2.3), uses Redis defaults of IPv4 wildcard (`*`) and optional IPv6 wildcard (`-::*`), with protected mode patched off. The described Redis wildcard bind defaults and protected-mode patch hold for the deployed `public.ecr.aws/docker/library/redis:8.2.3-alpine` image only if that registry tag was built from that recipe (on 2026-10-24 it served Docker Hub's index, whose producer annotations name that recipe; build NOT ESTABLISHED) | Container port and Service |
 
 Repo-server's metrics/health mux and notifications' metrics handler have no authentication wrapper
 and use HTTP, so a reachable pod-network peer can request them without an Argo CD login. Repo-server
@@ -655,7 +655,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "581ee513b235b6676a12c7782237db3ead2e56338473a4af02155ad25199479a",
+  "body_sha256": "f488e4ab4c58510e259280fab39ff4321a9f594c6e7e3ad440e8ce814ba0c5c0",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
