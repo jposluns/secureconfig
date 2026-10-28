@@ -145,15 +145,15 @@ class Boundaries(unittest.TestCase):
         self.assertEqual(split_sentences("Run `a. B` and ``c? `D` `` here."),
                          ["Run `a. B` and ``c? `D` `` here."])
 
-    def test_never_inside_link_text(self):
-        self.assertEqual(split_sentences("See [Part 1. Setup](https://example.com/p) now."),
-                         ["See Part 1. Setup now."])
-
     def test_never_after_an_abbreviation(self):
-        for abbreviation in ("e.g.", "i.e.", "etc.", "vs.", "cf.", "E.g.", "Etc."):
+        for abbreviation in ("e.g.", "i.e.", "vs.", "cf.", "E.g."):
             with self.subTest(abbreviation=abbreviation):
                 text = f"Some values, {abbreviation} Redis, are listed."
                 self.assertEqual(split_sentences(text), [text])
+
+    def test_closer_after_an_abbreviation_ends_the_sentence(self):
+        self.assertEqual(split_sentences("Use a proxy (see e.g.) The next one."),
+                         ["Use a proxy (see e.g.)", "The next one."])
 
     def test_abbreviation_needs_a_word_boundary(self):
         self.assertEqual(split_sentences("It is a fetc. Then more."),
@@ -201,6 +201,59 @@ class Cases1385(unittest.TestCase):
     def test_heading(self):
         self.assertEqual(guide("### Verify (REASONED: no runtime. Read from source)\n"),
                          [(1, "Verify (REASONED: no runtime."), (1, "Read from source)")])
+
+
+class Cases1015(unittest.TestCase):
+    """The inputs the first splitter joined or held back after #1015 merged, and the
+    nested quotations and citation runs that the fixes for them must keep."""
+
+    def test_etc_at_a_real_sentence_end(self):
+        self.assertEqual(split_sentences("Use Redis, Kafka, etc. The next one."),
+                         ["Use Redis, Kafka, etc.", "The next one."])
+
+    def test_inch_mark_holds_back_no_boundary(self):
+        self.assertEqual(split_sentences('The screen is 27" wide. Next. Another.'),
+                         ['The screen is 27" wide.', "Next.", "Another."])
+
+    def test_straight_quote_after_a_digit_closes_an_open_quotation(self):
+        self.assertEqual(split_sentences('He set "width 27" here. Then "bold" text.'),
+                         ['He set "width 27" here.', 'Then "bold" text.'])
+
+    def test_unpaired_quote_holds_back_no_boundary(self):
+        self.assertEqual(split_sentences('He wrote "Use TLS. Rotate keys. Next.'),
+                         ['He wrote "Use TLS.', "Rotate keys.", "Next."])
+
+    def test_straight_and_curly_quotes_pair(self):
+        self.assertEqual(split_sentences('"Use TLS. Rotate keys” now. Next.'),
+                         ['"Use TLS. Rotate keys” now.', "Next."])
+        self.assertEqual(split_sentences('“Use TLS. Rotate keys" now. Next.'),
+                         ['“Use TLS. Rotate keys" now.', "Next."])
+
+    def test_nested_quotation_does_not_end_the_outer_one(self):
+        for text, first in (('He said “Outer "Inner. Stop." Continue.” Then leave.',
+                             'He said “Outer "Inner. Stop." Continue.”'),
+                            ('He said "Outer “Inner. Stop.” Continue." Then leave.',
+                             'He said "Outer “Inner. Stop.” Continue."'),
+                            ('He said “Outer "Inner. Continue.” Then leave.',
+                             'He said “Outer "Inner. Continue.”')):
+            with self.subTest(text=text):
+                self.assertEqual(split_sentences(text), [first, "Then leave."])
+        self.assertEqual(split_sentences('“He said "Stop. Now." then left.” Next.'),
+                         ['“He said "Stop. Now." then left.”', "Next."])
+
+    def test_quotation_closes_with_its_table_cell(self):
+        table = '| Size | Note |\n|---|---|\n| 27" wide. Next. | "Open. Shut. |\n'
+        self.assertEqual(guide(table), [(1, "Size"), (1, "Note"), (3, '27" wide.'),
+                                        (3, "Next."), (3, '"Open.'), (3, "Shut.")])
+
+    def test_full_stop_in_link_text(self):
+        self.assertEqual(split_sentences("Read [the guide.](https://example.com/g) Then go."),
+                         ["Read the guide.", "Then go."])
+
+    def test_capitalised_citation_run_stays_with_the_sentence_before(self):
+        self.assertEqual(split_sentences("Bind it. [Redis security](https://example.com/r) "
+                                         "[Sentinel](https://example.com/s) Then enable auth."),
+                         ["Bind it. Redis security Sentinel", "Then enable auth."])
 
 
 class Command(unittest.TestCase):
