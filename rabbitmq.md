@@ -380,7 +380,7 @@ Keeping stdin open helps expose delayed TLS 1.3 alerts; ten seconds is a timing-
 
 **6. AMQP authentication and authorization - REASONED: no RabbitMQ broker or Pika client package was available at authoring.** Run with Python 3 and Pika 1.x using the TLS files from check 5. Passwords are prompted from the terminal. Use an isolated test deployment: the script creates a uniquely named durable queue and direct exchange and deletes them on normal completion; inspect and remove its `app.secureconfig.*` fixtures after an interrupted run.
 
-The positive control declares, binds, publishes, and retrieves a message as `app`. Separate channels test resource denials. The shared queue is durable because RabbitMQ 4.3 disables transient non-exclusive queues by default; an exclusive queue would make the observer's read test ambiguous. The script uses the [documented permission model](https://www.rabbitmq.com/docs/access-control), [channel error codes](https://www.rabbitmq.com/docs/channels), [queue rules](https://www.rabbitmq.com/docs/queues), and [Pika's blocking client](https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html).
+The positive control declares, binds, publishes, and retrieves a message as `app`. Separate channels test resource denials. The shared queue is durable because RabbitMQ 4.3 disables transient non-exclusive queues by default; an exclusive queue would make the observer's read test ambiguous. The script uses the [documented permission model](https://www.rabbitmq.com/docs/access-control), [channel error codes](https://www.rabbitmq.com/docs/channels), [queue rules](https://www.rabbitmq.com/docs/queues), and [Pika's blocking client](https://pika.github.io/pika/latest/modules/adapters/blocking/).
 
 ```bash
 # REASONED: AMQP authentication and authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
@@ -657,9 +657,9 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - Pika TLS context and client certificate example (mutual authentication; checked October 2026): https://pika.github.io/pika/latest/examples/tls_mutual_authentication/
 - Pika 1.x `SSLOptions(context, server_hostname)` class taking an `ssl.SSLContext` (pinned tag 1.3.2; checked October 2026): https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L937-L958
 - Pika 1.x `ConnectionParameters` `ssl_options` argument (pinned tag 1.3.2; checked October 2026): https://github.com/pika/pika/blob/1.3.2/pika/connection.py#L579-L580
-- Pika connection parameters: https://pika.readthedocs.io/en/stable/modules/parameters.html
-- Pika blocking connection and channel methods: https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html
-- Pika authentication and authorization exceptions: https://pika.readthedocs.io/en/stable/modules/exceptions.html
+- Pika connection parameters: https://pika.github.io/pika/latest/modules/parameters/
+- Pika blocking connection and channel methods: https://pika.github.io/pika/latest/modules/adapters/blocking/
+- Pika authentication and authorization exceptions: https://pika.github.io/pika/latest/modules/exceptions/
 - curl password prompts, TLS validation, and diagnostic flags: https://curl.se/docs/manpage.html
 
 
@@ -730,7 +730,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "34ab4cbb217b866e649f2a387988d6008a587408fe394fd13905de4bd34efced",
+  "body_sha256": "0ad631b2caa2abb9f0722b358fa7995ec6f08d74a2ad32d72ab13d4dec392106",
   "components": {
     "source": {
       "name": "RabbitMQ source",
@@ -823,9 +823,9 @@ Claims (full source mapping in the JSON block below):
       "basis": "unknown",
       "sources": {
         "sf5430d0d7914": "https://pika.github.io/pika/latest/examples/tls_mutual_authentication/",
-        "sbc29096927d1": "https://pika.readthedocs.io/en/stable/modules/parameters.html",
-        "sbe84810afdaa": "https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html",
-        "s2bd3b0912faf": "https://pika.readthedocs.io/en/stable/modules/exceptions.html"
+        "s4a943925d547": "https://pika.github.io/pika/latest/modules/parameters/",
+        "s2eb4516d20ec": "https://pika.github.io/pika/latest/modules/adapters/blocking/",
+        "sbb232ff4c000": "https://pika.github.io/pika/latest/modules/exceptions/"
       }
     },
     "pika-source": {
@@ -869,7 +869,7 @@ Claims (full source mapping in the JSON block below):
     "verify-management": {"text": "Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.", "components": ["docs", "curl"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [7]},
     "verify-mtls": {"text": "Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED", "verify": [8]},
     "queue-default": {"text": "RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.", "components": ["docs"], "sources": ["docs:sef3085ec2cc9"], "status": "REASONED"},
-    "verify-amqp": {"text": "Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.", "components": ["docs", "pika", "pika-source"], "sources": ["docs:s8f066afff416", "docs:sef3085ec2cc9", "docs:s008b12a42f70", "pika:sf5430d0d7914", "pika:sbc29096927d1", "pika:sbe84810afdaa", "pika:s2bd3b0912faf", "pika-source:s1c536ddcecc3", "pika-source:s60d4abe2318e"], "status": "REASONED", "verify": [9]},
+    "verify-amqp": {"text": "Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.", "components": ["docs", "pika", "pika-source"], "sources": ["docs:s8f066afff416", "docs:sef3085ec2cc9", "docs:s008b12a42f70", "pika:sf5430d0d7914", "pika:s4a943925d547", "pika:s2eb4516d20ec", "pika:sbb232ff4c000", "pika-source:s1c536ddcecc3", "pika-source:s60d4abe2318e"], "status": "REASONED", "verify": [9]},
     "verify-definitions": {"text": "Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.", "components": ["docs", "admin"], "sources": ["docs:sf81e470be6fa", "docs:s62cc3cf19b55", "admin:sdd5688854073", "docs:s59532e00cbad"], "status": "REASONED", "verify": [10]},
     "verify-distribution-tls": {"text": "TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.", "components": ["docs", "otp"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522"], "status": "REASONED", "verify": [11]},
     "verify-topic": {"text": "Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED", "verify": [12]}

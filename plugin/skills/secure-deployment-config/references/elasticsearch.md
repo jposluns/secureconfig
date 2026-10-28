@@ -162,7 +162,7 @@ xpack.security.audit.enabled: true
 xpack.security.audit.logfile.events.emit_request_body: false
 ```
 
-Events go to `CLUSTERNAME_audit.json` in each node's log directory. The dynamic-enable support documented for **9.5 and later does not apply to 8.x**. See [enabling audit logs](https://www.elastic.co/docs/deploy-manage/security/logging-configuration/enabling-audit-logs).
+Events go to `CLUSTERNAME_audit.json` in each node's log directory. The dynamic-enable support documented for **9.5 and later does not apply to 8.x**. See [enabling audit logs](https://www.elastic.co/docs/deploy-manage/monitor/stack-audit-logging/enabling-audit-logs).
 
 Keep request-body emission disabled, its default. Bodies can contain sensitive application data. The default included events contain `authentication_failed`; ensure custom event exclusions or ignore policies do not suppress the failures you need to detect. See [auditing settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings).
 
@@ -670,7 +670,7 @@ REASONED: preceding block; TLS, RBAC, anonymous-access, CORS and audit compariso
 
 REASONED: event attribution from the cited audit-event references; no target cluster or audit collector is available. For the audit check, expect `401` and require a matching NEW REST-layer Elasticsearch `authentication_failed` or OpenSearch `FAILED_LOGIN` event. Inspect the receiving node's new `CLUSTERNAME_audit.json` entries or the corresponding OpenSearch audit index and separately collected copy. Match the recorded time interval, `audit_probe` identity, POST method, and `/app-data/_search` path. Run probes separately so each event can be attributed to its request.
 
-REASONED: body-logging comparison from the cited audit settings and fields; no target cluster, collector or eligible Elasticsearch audit licence is available. **Reasoned, not demonstrated:** no target cluster, audit collector, or eligible Elasticsearch audit license is available here. In an isolated test cluster, run the probe with request-body logging enabled, then disabled, generating a fresh marker each time. With Elasticsearch `xpack.security.audit.logfile.events.emit_request_body: true`, require that run's marker in the matching event's `request.body`. With OpenSearch `config.audit.log_request_body: true`, require it in `audit_request_body`. After setting the respective setting to `false`, require another matching new event, with its request-body field absent and that run's marker absent from the event. A bodyless request, a missing event, or absence of a marker without the enabled-state positive control cannot establish request-body exclusion. See [Elasticsearch request-body auditing](https://www.elastic.co/docs/deploy-manage/security/logging-configuration/auditing-search-queries), [Elasticsearch auditing settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings), and [OpenSearch audit fields](https://docs.opensearch.org/latest/security/audit-logs/field-reference/).
+REASONED: body-logging comparison from the cited audit settings and fields; no target cluster, collector or eligible Elasticsearch audit licence is available. **Reasoned, not demonstrated:** no target cluster, audit collector, or eligible Elasticsearch audit license is available here. In an isolated test cluster, run the probe with request-body logging enabled, then disabled, generating a fresh marker each time. With Elasticsearch `xpack.security.audit.logfile.events.emit_request_body: true`, require that run's marker in the matching event's `request.body`. With OpenSearch `config.audit.log_request_body: true`, require it in `audit_request_body`. After setting the respective setting to `false`, require another matching new event, with its request-body field absent and that run's marker absent from the event. A bodyless request, a missing event, or absence of a marker without the enabled-state positive control cannot establish request-body exclusion. See [Elasticsearch request-body auditing](https://www.elastic.co/docs/deploy-manage/monitor/stack-audit-logging/auditing-http-request-bodies), [Elasticsearch auditing settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings), and [OpenSearch audit fields](https://docs.opensearch.org/latest/security/audit-logs/field-reference/).
 
 REASONED: configuration and header checks from the cited audit settings; no effective node configuration or collected events are available. Retain configuration readback: confirm Elasticsearch's effective `xpack.security.audit.logfile.events.emit_request_body: false`, accounting for transient and persistent cluster-setting overrides as well as each node's configuration. Repeat the OpenSearch audit configuration GET above and confirm `config.enabled: true`, `config.audit.enable_rest: true`, `config.audit.log_request_body: false`, and `config.audit.exclude_sensitive_headers: true`. Check that sensitive headers, including the Authorization value sent from the header file, are absent from the matching events and their collected copies in both test states. Header exclusion and body exclusion are separate checks. Restore and read back body logging as disabled after the isolated positive-control test. See [OpenSearch body logging](https://docs.opensearch.org/latest/security/audit-logs/index/) and [audit configuration fields](https://docs.opensearch.org/latest/security/api/audit/update-audit-configuration/).
 
@@ -934,7 +934,7 @@ REASONED: deployment expectations and source-audit limits recorded in this guide
 - Elasticsearch LDAP authentication: https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap
 - Elasticsearch 8.x role-mapping API: https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping
 - Elasticsearch anonymous access and rejection without configured roles: https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access
-- Elasticsearch audit enablement and the 9.5 dynamic-setting boundary: https://www.elastic.co/docs/deploy-manage/security/logging-configuration/enabling-audit-logs
+- Elasticsearch audit enablement and the 9.5 dynamic-setting boundary: https://www.elastic.co/docs/deploy-manage/monitor/stack-audit-logging/enabling-audit-logs
 - Elasticsearch auditing settings and request-body default: https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings
 - Elasticsearch audit event names and attributes: https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events
 - Elasticsearch 8.x document retrieval API: https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-get
@@ -1208,7 +1208,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "aa0922054116dc36ea875cd6fa798c57a7c3b611a3ba80a51cb33d3834f26f9f",
+  "body_sha256": "ee833da35bc546914af85f832b22346fc18e2b5723053f56b354d72ff92fb204",
   "components": {
     "es-api": {
       "name": "Elasticsearch API",
@@ -1370,7 +1370,7 @@ Claims (full source mapping in the JSON block below):
         "s0c10cfba4d6b": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping",
         "s204396515260": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access",
         "s0f65658e7273": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings",
-        "s2882d7d6f2fc": "https://www.elastic.co/docs/deploy-manage/security/logging-configuration/enabling-audit-logs",
+        "sfa639f3e13a9": "https://www.elastic.co/docs/deploy-manage/monitor/stack-audit-logging/enabling-audit-logs",
         "s5603a653318d": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings",
         "s4fb9bf780cf5": "https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf",
         "see6eaa520863": "https://www.elastic.co/docs/reference/elasticsearch/security-privileges",
@@ -1661,7 +1661,7 @@ Claims (full source mapping in the JSON block below):
     "es-key-review": {"text": "Review previously issued key permission snapshots separately after changing roles; role edits alone do not establish repaired key restrictions.", "components": ["es819"], "sources": ["es819:s15feb5b3e00c"], "status": "REASONED"},
     "es-anonymous": {"text": "Remove anonymous.roles from every effective node configuration and restart; no roles disables anonymous access. A tested 401 alone cannot prove it is globally off.", "components": ["es"], "sources": ["es:s204396515260"], "status": "REASONED"},
     "es-cors": {"text": "CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization.", "components": ["es"], "sources": ["es:s0f65658e7273"], "status": "REASONED"},
-    "es-audit": {"text": "Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x.", "components": ["es"], "sources": ["es:s2882d7d6f2fc"], "status": "REASONED"},
+    "es-audit": {"text": "Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x.", "components": ["es"], "sources": ["es:sfa639f3e13a9"], "status": "REASONED"},
     "es-audit-body": {"text": "Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed.", "components": ["es"], "sources": ["es:s5603a653318d"], "status": "REASONED"},
     "os-tier": {"text": "OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled.", "components": ["os-license-source"], "sources": ["os-license-source:s6e10cf9ec35a"], "status": "REASONED"},
     "os-demo-users": {"text": "From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index.", "components": ["os", "os-users-source"], "sources": ["os:s73e416ebf765", "os-users-source:se8c473c01153"], "status": "REASONED"},

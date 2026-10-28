@@ -476,7 +476,7 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 ## Sources (checked September 2026)
 
 - llama.cpp server README (defaults, `--api-key` and its `LLAMA_API_KEY` environment input, `--api-key-file` ("path to file containing API keys, one per line") and its `LLAMA_ARG_API_KEY_FILE` environment input, the `LLAMA_ARG_*` environment inputs most options carry, `LLAMA_ARG_HOST` for `--host` among them, SSL flags). Sources for this item: https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md
-- vLLM documentation: https://docs.vllm.ai/
+- vLLM documentation: https://docs.vllm.ai/en/latest/
 - vLLM v0.30.0 network isolation, TCPStore warning and Ray trust model: https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L3-L55, https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138 and https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L442-L538
 - vLLM v0.30.0 node-address detection, open-port allocator and unauthenticated ZMQ socket construction: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L34-L73, https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L166-L247 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/utils/network_utils.py#L310-L368
 - vLLM v0.30.0 engine IPC/TCP addresses, handshake and DP coordinator. Sources for the vLLM v0.30.0 engine IPC/TCP addresses, handshake and DP coordinator: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/utils.py#L1039-L1084, https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/utils.py#L1130-L1247 and https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/engine/coordinator.py#L79-L97. Sources for the Ray V2 dynamic store: https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/ray_executor_v2.py#L127-L139
@@ -656,7 +656,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "c73f43fa88a50dc1fddbcb583ea28d03f26f15363dd6e0a7e2fdbf0424042dc7",
+  "body_sha256": "f7fe51cf784a5f8de4d90469ce4cca4eac1c5ba21736cd73aee8df4c6a074f49",
   "components": {
     "llama": {
       "name": "llama.cpp",

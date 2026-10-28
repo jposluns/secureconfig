@@ -345,7 +345,7 @@ Keep `sb_secret_...` keys only in trusted backends: they resolve to `service_rol
 `BYPASSRLS`. The legacy `service_role` key likewise bypasses RLS; it is a server-only secret that
 must never reach the client bundle or the repository. Browser rejection of a secret key does
 not make a leaked key safe: another client can use it. See
-[API keys](https://supabase.com/docs/guides/api/api-keys).
+[API keys](https://supabase.com/docs/guides/getting-started/api-keys).
 
 Creating replacement publishable and secret keys does **not** disable legacy keys. Migrate every
 consumer, confirm it uses the replacement, then explicitly deactivate the legacy keys in
@@ -839,7 +839,7 @@ A prefix match alone does not establish that a string is a JWT or a valid key.
 REASONED: credential removal and retirement require an actual bundle, confirmed credential and key-lifecycle controls, which were unavailable. Local grep reported a harmless marker's filename and then exited 1 without output after removal; this does not demonstrate revocation. Exposed privileged credentials authorize privileged access; revoked credentials must fail while replacement credentials work, per the guide's cited Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings) and Supabase API-key migration and legacy-key deactivation. A confirmed `sb_secret_...` key, legacy service-role credential, or private key must not be there:
 remove the exposure and rotate or revoke the confirmed credential, not just delete it from the
 tree. Do not rotate credentials merely because a source-code word matched. See
-[API-key handling](https://supabase.com/docs/guides/api/api-keys) and [secrets.md](secrets.md).
+[API-key handling](https://supabase.com/docs/guides/getting-started/api-keys) and [secrets.md](secrets.md).
 
 REASONED: following block; credential-candidate review. No deployed client bundle or credential inventory was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output; stub grep statuses 0, 1 and 2 exercised candidate, clean and failure messages. Actual grep reported a harmless marker filename and then exited 1 without output after removal; exposed markers should be found and removed markers absent, per the guide's cited Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings).
 
@@ -891,7 +891,7 @@ REASONED: tool-version provenance for the historical local runs above; the [Shel
 ## Sources (checked September 2026)
 
 - Firebase security rules: https://firebase.google.com/docs/rules
-- Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings): https://supabase.com/docs/guides/api/api-keys
+- Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings): https://supabase.com/docs/guides/getting-started/api-keys
 - Supabase row level security: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase multi-factor authentication (aal1, aal2, enforcement policy): https://supabase.com/docs/guides/auth/auth-mfa
 - PostgreSQL `CREATE VIEW` (base relations checked against the view owner's permissions by default; the view owner's RLS policies applied by default; `security_invoker`): https://www.postgresql.org/docs/current/sql-createview.html
@@ -1070,7 +1070,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "f5fc3388182b0c4a8050183cd8a4f5d444a284aab31d627d278bda4661cae6b6",
+  "body_sha256": "30b96423259b301603143af4112c74a2c5f5fb8513712033ecb1c45d6cc71b3b",
   "components": {
     "firebase": {
       "name": "Firebase documentation",
@@ -1114,7 +1114,7 @@ Claims (full source mapping in the JSON block below):
       "name": "Supabase documentation",
       "basis": "unknown",
       "sources": {
-        "s73d939b4644e": "https://supabase.com/docs/guides/api/api-keys",
+        "s65d5b8043bad": "https://supabase.com/docs/guides/getting-started/api-keys",
         "s46cff2590323": "https://supabase.com/docs/guides/database/postgres/row-level-security",
         "s741468ff35a9": "https://supabase.com/docs/guides/auth/auth-mfa",
         "s6d5cf2d4dbf3": "https://supabase.com/docs/guides/api/securing-your-api",
@@ -1189,7 +1189,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "public-config": {"text": "Firebase API keys/config and Supabase publishable/anon keys are public identifiers, not authorization; hosted endpoints handle TLS.", "components": ["firebase", "supabase"], "sources": ["firebase:safeed4cd2b67", "firebase:sb0d26775f3b4", "supabase:s73d939b4644e"], "status": "REASONED"},
+    "public-config": {"text": "Firebase API keys/config and Supabase publishable/anon keys are public identifiers, not authorization; hosted endpoints handle TLS.", "components": ["firebase", "supabase"], "sources": ["firebase:safeed4cd2b67", "firebase:sb0d26775f3b4", "supabase:s65d5b8043bad"], "status": "REASONED"},
     "firebase-ownership": {"text": "Require authentication and ownership separately in Firestore, RTDB and Storage; authentication-only rules do not isolate users.", "components": ["firebase"], "sources": ["firebase:s100c2cdbdd59", "firebase:s53bfe8b21868"], "status": "REASONED"},
     "firebase-starting": {"text": "Firestore production and RTDB locked modes deny clients; test templates expose data for about a month. Inspect expiry and replace open rules.", "components": ["firebase"], "sources": ["firebase:s622d3bb0665b", "firebase:sb2c933c841ef", "firebase:s75f018e0fac7"], "status": "REASONED"},
     "firestore-rules": {"text": "Rules version 2 recursive wildcards include the user document and descendants; version 1 excludes the parent. Unmatched paths deny and overlapping grants can reopen access.", "components": ["firebase"], "sources": ["firebase:s7bd11c22c7ce"], "status": "REASONED"},
@@ -1213,7 +1213,7 @@ Claims (full source mapping in the JSON block below):
     "supabase-writes": {"text": "Grant and policy INSERT/UPDATE/DELETE only when intended; UPDATE checks old/new ownership and needs applicable SELECT when reading columns.", "components": ["supabase", "postgres"], "sources": ["supabase:s46cff2590323", "postgres:s8e65a2f3f2bb"], "status": "REASONED"},
     "supabase-schemas": {"text": "public is exposed by default; restrict exposed schemas and deliberately grant schema/object access. Schema selection does not replace RLS.", "components": ["supabase"], "sources": ["supabase:s20ef046ac646"], "status": "REASONED"},
     "supabase-api-disable": {"text": "Disable an unused Data API to close generated REST endpoints; this does not disable all other services.", "components": ["supabase"], "sources": ["supabase:s6d5cf2d4dbf3"], "status": "REASONED"},
-    "supabase-keys": {"text": "Publishable keys select anon or authenticated by session; secret and legacy service_role keys bypass RLS and belong only on trusted servers.", "components": ["supabase"], "sources": ["supabase:s73d939b4644e"], "status": "REASONED"},
+    "supabase-keys": {"text": "Publishable keys select anon or authenticated by session; secret and legacy service_role keys bypass RLS and belong only on trusted servers.", "components": ["supabase"], "sources": ["supabase:s65d5b8043bad"], "status": "REASONED"},
     "supabase-key-retire": {"text": "Replacement keys do not disable legacy keys; migrate consumers then explicitly deactivate legacy keys, or delete compromised secret keys.", "components": ["supabase"], "sources": ["supabase:sa946354db383"], "status": "REASONED"},
     "supabase-jwt-retire": {"text": "Rotation changes the signing key but retains previous trust until revocation; account for verifier caches and propagation.", "components": ["supabase"], "sources": ["supabase:sfc2f9ae0232b"], "status": "REASONED"},
     "supabase-view-owner": {"text": "Views use owner privileges/policies by default; disclosure depends on reachable schemas, grants, query and owner privileges, not anon-key possession alone.", "components": ["postgres", "supabase"], "sources": ["postgres:s13c54ab9cc6b", "supabase:s46cff2590323"], "status": "REASONED"},
@@ -1256,8 +1256,8 @@ Claims (full source mapping in the JSON block below):
     "verify-mfa": {"text": "Owner profiles GET with aal1 must yield no protected rows under the restrictive policy, while fresh aal2 returns the seeded owner row.", "components": ["supabase"], "sources": ["supabase:s741468ff35a9"], "status": "REASONED", "verify": [1]},
     "verify-key-retirement": {"text": "Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches.", "components": ["supabase"], "sources": ["supabase:sa946354db383", "supabase:sfc2f9ae0232b"], "status": "REASONED"},
     "verify-api-removal": {"text": "Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls.", "components": ["supabase"], "sources": ["supabase:s6d5cf2d4dbf3", "supabase:s20ef046ac646"], "status": "REASONED"},
-    "verify-bundle": {"text": "Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately.", "components": ["supabase"], "sources": ["supabase:s73d939b4644e"], "status": "REASONED", "verify": [2]},
-    "local-guards": {"text": "Historical local guard tests rejected placeholders and malformed set lines; this guide's assessment is shell behavior only, not live authorization. The recorded ShellCheck 0.11.0 has a release citation, not host-binary evidence; bash and other tool/parser versions remain unrecorded.", "components": ["supabase", "shellcheck"], "sources": ["supabase:s92b405dc3c7e", "supabase:s73d939b4644e", "shellcheck:sf994764bf270"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty values, and omitted or shortened `set --` lines."},
+    "verify-bundle": {"text": "Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately.", "components": ["supabase"], "sources": ["supabase:s65d5b8043bad"], "status": "REASONED", "verify": [2]},
+    "local-guards": {"text": "Historical local guard tests rejected placeholders and malformed set lines; this guide's assessment is shell behavior only, not live authorization. The recorded ShellCheck 0.11.0 has a release citation, not host-binary evidence; bash and other tool/parser versions remain unrecorded.", "components": ["supabase", "shellcheck"], "sources": ["supabase:s92b405dc3c7e", "supabase:s65d5b8043bad", "shellcheck:sf994764bf270"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty values, and omitted or shortened `set --` lines."},
     "local-syntax": {"text": "Recorded ShellCheck 0.11.0/bash and JSON/TOML/JavaScript parsing passed; this guide's assessment is that these checks do not compile Firebase Rules, execute SQL or demonstrate services. Only the ShellCheck release is cited; bash and other tool/parser versions remain unrecorded.", "components": ["firebase", "supabase", "shellcheck"], "sources": ["firebase:sa6b1c4933e6a", "firebase:sd8a1bda29f5c", "supabase:s3a5e39fe7b4d", "firebase:sc8f214d059d2", "shellcheck:sf994764bf270"], "status": "DEMONSTRATED", "evidence": "The RTDB JSON, `firebase.json` fragment, Auth TOML, and callable JavaScript passed local parsing checks."}
   }
 }
