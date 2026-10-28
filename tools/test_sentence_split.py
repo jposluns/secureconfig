@@ -145,12 +145,8 @@ class Boundaries(unittest.TestCase):
         self.assertEqual(split_sentences("Run `a. B` and ``c? `D` `` here."),
                          ["Run `a. B` and ``c? `D` `` here."])
 
-    def test_never_inside_link_text(self):
-        self.assertEqual(split_sentences("See [Part 1. Setup](https://example.com/p) now."),
-                         ["See Part 1. Setup now."])
-
     def test_never_after_an_abbreviation(self):
-        for abbreviation in ("e.g.", "i.e.", "etc.", "vs.", "cf.", "E.g.", "Etc."):
+        for abbreviation in ("e.g.", "i.e.", "vs.", "cf.", "E.g."):
             with self.subTest(abbreviation=abbreviation):
                 text = f"Some values, {abbreviation} Redis, are listed."
                 self.assertEqual(split_sentences(text), [text])
@@ -201,6 +197,40 @@ class Cases1385(unittest.TestCase):
     def test_heading(self):
         self.assertEqual(guide("### Verify (REASONED: no runtime. Read from source)\n"),
                          [(1, "Verify (REASONED: no runtime."), (1, "Read from source)")])
+
+
+class Cases1015(unittest.TestCase):
+    """The inputs the first splitter joined or held back after #1015 merged."""
+
+    def test_etc_at_a_real_sentence_end(self):
+        self.assertEqual(split_sentences("Use Redis, Kafka, etc. The next one."),
+                         ["Use Redis, Kafka, etc.", "The next one."])
+
+    def test_inch_mark_holds_back_no_boundary(self):
+        self.assertEqual(split_sentences('The screen is 27" wide. Next. Another.'),
+                         ['The screen is 27" wide.', "Next.", "Another."])
+
+    def test_unpaired_quote_holds_back_no_boundary(self):
+        self.assertEqual(split_sentences('He wrote "Use TLS. Rotate keys. Next.'),
+                         ['He wrote "Use TLS.', "Rotate keys.", "Next."])
+
+    def test_straight_and_curly_quotes_pair(self):
+        self.assertEqual(split_sentences('"Use TLS. Rotate keys” now. Next.'),
+                         ['"Use TLS. Rotate keys” now.', "Next."])
+
+    def test_quotation_closes_with_its_table_cell(self):
+        table = '| Size | Note |\n|---|---|\n| 27" wide. Next. | "Open. Shut. |\n'
+        self.assertEqual(guide(table), [(1, "Size"), (1, "Note"), (3, '27" wide.'),
+                                        (3, "Next."), (3, '"Open.'), (3, "Shut.")])
+
+    def test_full_stop_in_link_text(self):
+        self.assertEqual(split_sentences("Read [the guide.](https://example.com/g) Then go."),
+                         ["Read the guide.", "Then go."])
+
+    def test_link_that_opens_a_sentence(self):
+        self.assertEqual(split_sentences("It ends. [Redis](https://example.com/r) Sentinel "
+                                         "docs say so."),
+                         ["It ends.", "Redis Sentinel docs say so."])
 
 
 class Command(unittest.TestCase):

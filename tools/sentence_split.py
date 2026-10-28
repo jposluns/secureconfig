@@ -22,7 +22,8 @@ What a sentence is, here:
   summary and claims JSON) are skipped, as the closing measurement recorded in
   DONE 1.385 skipped them. A claim-summary line can be measured on its own with
   split_sentences().
-- Rendering. A link or image renders as its text, and an autolink as its URL.
+- Rendering. A link or image renders as its text, and an autolink as its URL,
+  before splitting, so a mark in link text counts like any other.
   Backticks, emphasis markers and every other character are kept and counted;
   a backslash escape counts as the character it escapes.
 - Boundaries. A sentence ends at `.`, `?` or `!` followed by whitespace and then
@@ -30,31 +31,39 @@ What a sentence is, here:
   brackets and emphasis markers may sit between the mark and the whitespace,
   and emphasis markers between the whitespace and the next sentence's first
   character. A run of links between two sentences, such as rendered source
-  citations, stays with the sentence before it.
-- Not boundaries. A mark inside a code span, inside link text, or inside a
-  double-quoted quotation that has not closed by the whitespace, and a full
-  stop directly after e.g., i.e., etc., vs. or cf., or after the number that
-  opens a numbered heading such as `## 1. Bind privately`. When a closing
-  quote or bracket follows the abbreviation, as in `"... 2FA, etc." The`, the
-  end of the quotation is taken as the end of the sentence.
+  citations, stays with the sentence before it unless the first link's text
+  opens a sentence itself. A full stop after etc. ends a sentence like any other.
+- Not boundaries. A mark inside a code span or inside a double-quoted
+  quotation that has not closed by the whitespace, and a full stop directly
+  after e.g., i.e., vs. or cf., which seldom end a sentence, or after the
+  number that opens a numbered heading such as `## 1. Bind privately`. When a
+  closing quote or bracket follows the abbreviation, as in `(see e.g.) The`,
+  the end of the bracket is taken as the end of the sentence.
+- Quotations. Straight and curly double quotes pair with each other, and a
+  quotation never stays open past its unit. A quote with no partner later in
+  the unit opens nothing, and nor does a straight quote right after a digit
+  while no quotation is open, an inch mark as in `27" wide`.
 
 Length is len() of the sentence in Unicode code points, the unit the claim-length
 gate uses.
 
 Limits, disclosed rather than handled: this is a line scanner, not a CommonMark
-parser. Straight double quotes pair by alternation within a unit, and a
+parser. Quotes pair by position, not meaning, so a stray quote can still pair
+with a later one and hold back the boundaries between them, and a
 backslash-escaped quote neither opens nor closes one. A table row is a line
 that starts with a pipe, a header row whose next line is a delimiter row with
 as many cells, or a line with an unescaped pipe right after another table row.
 Setext headings, indented code, HTML blocks and reference-style links are read
 as ordinary lines, and a lazy continuation line joins whatever unit is open. An
-abbreviation outside the five listed, such as "Mr.", ends a sentence when a
-capital follows it.
+abbreviation outside the four listed, such as "Mr.", or etc. in mid-sentence,
+ends a sentence when a capital follows it, and a real sentence end after one of
+the four is joined to the next sentence.
 """
 import argparse
 import re
 import sys
 from collections import namedtuple
+from itertools import accumulate
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -77,7 +86,7 @@ LINK_RE = re.compile(
     r"(?:[ \t]+(?:\"[^\"]*\"|'[^']*'))?[ \t]*\)")
 AUTOLINK_RE = re.compile(r"<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s<>]*)>")
 ESCAPABLE = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
-ABBREVIATION_RE = re.compile(r"(?<![A-Za-z])(?:e\.g|i\.e|etc|vs|cf)\Z", re.I)
+ABBREVIATION_RE = re.compile(r"(?<![A-Za-z])(?:e\.g|i\.e|vs|cf)\Z", re.I)
 CLOSERS = "\"”’')]*_"
 OPENERS = "`\"“‘'(["
 
@@ -145,18 +154,31 @@ def _opens(text, k):
     return k < len(text) and (text[k].isupper() or text[k].isdigit() or text[k] in OPENERS)
 
 
-def _next_start(text, i, opaque, escaped, link_end, straight, curly):
+def _quote_depth(text, opaque, escaped):
+    """How many double quotations are open before each index of text, up to len(text).
+
+    A straight quote closes the innermost open quotation, of either style, and
+    otherwise opens one unless it follows a digit. Openers left unpaired at the
+    end of the unit are dropped, so they hold back no boundary.
+    """
+    stack, step = [], [0] * (len(text) + 1)
+    for k, ch in enumerate(text):
+        if opaque[k] or k in escaped or ch not in "\"“”":
+            continue
+        if stack and ch != "“":
+            step[stack.pop() + 1] += 1
+            step[k + 1] -= 1
+        elif ch == "“" or (ch == '"' and not (k and text[k - 1].isdigit())):
+            stack.append(k)
+    return list(accumulate(step))
+
+
+def _next_start(text, i, opaque, depth, link_end):
     """Where the sentence after the mark at i starts, or None if i ends no sentence."""
     j = i + 1
     while j < len(text) and text[j] in CLOSERS and not opaque[j]:
-        if text[j] == '"' and j not in escaped:
-            if not straight:
-                break
-            straight = False
-        elif text[j] == "”":
-            curly = max(0, curly - 1)
         j += 1
-    if straight or curly:
+    if depth[j]:
         return None
     if j == i + 1 and text[i] == "." and (ABBREVIATION_RE.search(text, 0, i)
                                           or (i <= 9 and text[:i].isdigit())):
@@ -164,33 +186,25 @@ def _next_start(text, i, opaque, escaped, link_end, straight, curly):
     if j == len(text) or not text[j].isspace():
         return None
     k = m = _skip_space(text, j)
+    if _opens(text, k):
+        return k
     while m in link_end:
         m = _skip_space(text, link_end[m])
-    if m != k and _opens(text, m):
-        return m
-    return k if _opens(text, k) else None
+    return m if m != k and _opens(text, m) else None
 
 
 def split_rendered(rendered):
     """Yield (start, sentence) for each sentence of a rendered unit."""
     text = rendered.text
     opaque = [False] * len(text)
-    for a, b in rendered.code + rendered.links:
+    for a, b in rendered.code:
         opaque[a:b] = [True] * (b - a)
+    depth = _quote_depth(text, opaque, rendered.escaped)
     link_end = dict(rendered.links)
     starts = set()
-    straight, curly = False, 0
     for i, ch in enumerate(text):
-        if opaque[i]:
-            continue
-        if ch == '"' and i not in rendered.escaped:
-            straight = not straight
-        elif ch == "“":
-            curly += 1
-        elif ch == "”":
-            curly = max(0, curly - 1)
-        elif ch in ".?!":
-            start = _next_start(text, i, opaque, rendered.escaped, link_end, straight, curly)
+        if ch in ".?!" and not opaque[i]:
+            start = _next_start(text, i, opaque, depth, link_end)
             if start is not None:
                 starts.add(start)
     edges = [0, *sorted(starts), len(text)]
