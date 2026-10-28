@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.387**, **2.50**, **3.48**, **4.12**.
+Next ids: **1.387**, **2.50**, **3.49**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -99,6 +99,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.48 | Version-basis component sources that no claim references: a read-only scan of main at 13a34d43 found 86 of the 6,163 component sources in the 100 enrolled guides in no claim's `sources` list. By guide: `ollama.md` 39, `pocketbase.md` 22, `ai-infra-services.md` 8, `elasticsearch.md` 2 and `bi-dashboards.md` 2. One each is in `vault.md`, `memcached.md`, `headless-browser-services.md`, `headless-cms-instant-api.md`, `firebase-supabase.md`, `observability-components.md`, `tunnels.md`, `oidc-integration.md`, `connection-poolers.md`, `surrealdb.md`, `nextjs.md`, `frontend-frameworks.md` and `low-code-builders.md`. The full list, by `component:source` key, is in the description of the pull request that added this row. It includes the five that a review of a merged pull request reported as informational: `elasticsearch.md` `corecrypto370:s6449a83e5cd9` and `corecrypto370:s162f5fe89247`, `firebase-supabase.md` `supabase:sf3246532dd18`, `oidc-integration.md` `okta:s06b93a8255e7` and `surrealdb.md` `docs:sac47cdb4ca48`. Each of the 86 URLs still occurs in its guide's Sources section, and 52 also occur in the body outside Sources (28 in `ollama.md`, 22 in `pocketbase.md`, and one each in `firebase-supabase.md` and `nextjs.md`). The scan matched URLs with `cites()` from `tools/version_basis.py` on raw text, without the pinned parser. Today the gate accepts such a source with no warning: `validate()` requires each component URL to occur in Sources and each component to be used by some claim (`unused component`), and checks each claim's references against the metadata, but nothing checks that each component source is referenced by a claim. Open choice: cite each source from a claim, remove it from the component metadata, or have the gate report component sources that no claim references. This row states no preference among them. Closes when the choice is made and applied to every listed source. (L, M) | `[gap]` |
 
 ## Decisions
 
