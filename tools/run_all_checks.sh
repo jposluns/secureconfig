@@ -62,6 +62,22 @@ for claim_check in test_claim_lengths.py check_claim_lengths.py; do
   fi
 done
 
+echo "== the shared sentence splitter still splits as recorded =="
+# Row 3.47: one implementation measures the 400-character rules for guide prose
+# (DONE 1.385) and for generated claim-summary sentences (row 1.383). Only its
+# self-test runs here; under the maintainer ruling of 2026-10-26 (DECISIONS.md)
+# there is no prose-length gate, and this adds none.
+if sentence_tests=$(python3 -I -B tools/test_sentence_split.py 2>&1); then
+  printf '%s\n' "$sentence_tests"
+  if grep -q '^  FAIL  ' <<< "$sentence_tests" ||
+     ! grep -qE '^  ok    [0-9]+ recorded tests for the sentence splitter$' <<< "$sentence_tests"; then
+    bad "test_sentence_split.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$sentence_tests"
+  bad "test_sentence_split.py failed"
+fi
+
 echo "== llms-full.txt is current =="
 orig=$(mktemp)
 cp site/llms-full.txt "$orig"

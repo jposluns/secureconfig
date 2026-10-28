@@ -99,7 +99,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.47 | Shared sentence splitter: add an offline, tested sentence splitter to the repository's tools (for example `tools/sentence_split.py`, with tests that the gate suite runs), so that the 400-character rules for guide prose (DONE 1.385, #1011) and for generated claim-summary sentences (row 1.383) are measured by one implementation. It joins each hard-wrapped paragraph and measures each sentence with links rendered as their text, and with backticks and emphasis markers kept. It does not split inside a double-quoted quotation or a code span, or after an abbreviation such as e.g., i.e. or etc. It does split at a sentence end followed by a closing quote or bracket, and at one next to an opening or closing emphasis marker. It measures each table cell on its own, and it includes headings. These are the cases met in the TODO 1.385 work; for example, the measurement of 862aa67c recorded in DONE 1.385 (#1011) joined sentences across rendered source citation links, and after "etc." inside a closing quotation. Under the maintainer ruling of 2026-10-26T14:11:03Z (DECISIONS.md), no gate was added for prose length, and this row adds none on its own. Closes when the tool and its tests are merged. (L, M) | `[gap]` |
 
 ## Decisions
 
