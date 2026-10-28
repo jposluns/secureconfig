@@ -208,7 +208,7 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 - header directive (HSTS; rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/header
 - forward_auth directive (rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/forward_auth
 - Caddy command-line signals (SIGUSR1 reload conditions; rolling documentation, checked September 2026): https://caddyserver.com/docs/command-line#signals
-- Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
+- Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails
 - Request matchers (path, wildcards, multiple paths; rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy admin API default `DefaultAdminListen = "localhost:2019"` (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433
 - caddyserver/dist service unit (pinned commit 33ae08ff08d168572df2956ed14fbc4949880d94, checked October 2026): https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32
@@ -283,7 +283,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "0a6268cd109dccb62f926b5112276c2c61e4486658d323c964b08d2b5e2ff82a",
+  "body_sha256": "6433f0acb20d6d9608259f14a735e997970de79e633996679d111a99ffc25a08",
   "components": {
     "admin": {
       "name": "Caddy admin source",
@@ -385,14 +385,14 @@ Claims (full source mapping in the JSON block below):
       "name": "Let's Encrypt expiration-email notice",
       "basis": "2025",
       "sources": {
-        "sdf68595235d4": "https://letsencrypt.org/2025/01/22/ending-expiration-emails/"
+        "sc33d2e1f6703": "https://letsencrypt.org/2025/01/22/ending-expiration-emails"
       }
     }
   },
   "claims": {
     "auto-https": {"text": "Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
     "issuers": {"text": "Public certificates come from Let's Encrypt or ZeroSSL and renew automatically.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
-    "renewal-monitoring": {"text": "Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.", "components": ["docs-rolling", "letsencrypt-notice"], "sources": ["docs-rolling:sdbcd496895d6", "letsencrypt-notice:sdf68595235d4"], "status": "REASONED"},
+    "renewal-monitoring": {"text": "Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.", "components": ["docs-rolling", "letsencrypt-notice"], "sources": ["docs-rolling:sdbcd496895d6", "letsencrypt-notice:sc33d2e1f6703"], "status": "REASONED"},
     "backend": {"text": "reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED"},
     "hsts": {"text": "Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain.", "components": ["docs-rolling"], "sources": ["docs-rolling:s5a6da5adf385", "docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
     "forwarded": {"text": "Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED"},

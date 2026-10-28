@@ -75,7 +75,7 @@ Two cautions. GitHub documents an immutable default `sub` format that includes o
 
 ## 5. Store the machine credentials that must exist
 
-API keys, client secrets, and client-certificate keys that cannot be federated away go in a secret manager or the platform's own store ([secrets.md](secrets.md)). Secret manager choices start with AWS Secrets Manager (https://aws.amazon.com/secrets-manager/), Google Cloud Secret Manager (https://docs.cloud.google.com/secret-manager/docs/overview), and Azure Key Vault (https://azure.microsoft.com/en-us/products/key-vault). The list continues with HashiCorp Vault ([vault.md](vault.md); https://developer.hashicorp.com/vault) or OpenBao, its open-source fork under the Linux Foundation (https://openbao.org/), Infisical (https://infisical.com/), and Doppler (https://www.doppler.com/). The list ends with 1Password Secrets Automation (https://www.1password.dev/secrets-automation/) and Bitwarden Secrets Manager (https://bitwarden.com/products/secrets-manager/). As this guide's advice, the workload should authenticate to the store with its platform identity (an instance role, a managed identity, or the federation above) where the selected store and workload support it, so access need not depend on one more long-lived bootstrap key; otherwise protect the store credential as a machine secret.
+API keys, client secrets, and client-certificate keys that cannot be federated away go in a secret manager or the platform's own store ([secrets.md](secrets.md)). Secret manager choices start with AWS Secrets Manager (https://aws.amazon.com/secrets-manager/), Google Cloud Secret Manager (https://docs.cloud.google.com/secret-manager/docs/overview), and Azure Key Vault (https://azure.microsoft.com/en-us/products/key-vault). The list continues with HashiCorp Vault ([vault.md](vault.md); https://developer.hashicorp.com/vault) or OpenBao, its open-source fork under the Linux Foundation (https://openbao.org/), Infisical (https://infisical.com/), and Doppler (https://www.doppler.com/). The list ends with 1Password Secrets Automation (https://www.1password.dev/secrets-automation) and Bitwarden Secrets Manager (https://bitwarden.com/products/secrets-manager/). As this guide's advice, the workload should authenticate to the store with its platform identity (an instance role, a managed identity, or the federation above) where the selected store and workload support it, so access need not depend on one more long-lived bootstrap key; otherwise protect the store credential as a machine secret.
 
 ## Verify
 
@@ -116,7 +116,7 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 - Azure Key Vault overview (rolling, checked October 2026): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
 - OpenBao README (secret storage), v2.7.1 (checked October 2026): https://github.com/openbao/openbao/blob/v2.7.1/README.md#L47-L51
 - OpenBao website (fork and Linux Foundation OpenSSF attribution; rolling, checked October 2026): https://openbao.org/
-- 1Password Secrets Automation (rolling, checked October 2026): https://www.1password.dev/secrets-automation/
+- 1Password Secrets Automation (rolling, checked October 2026): https://www.1password.dev/secrets-automation
 - Bitwarden Secrets Manager overview (rolling, checked October 2026): https://bitwarden.com/help/secrets-manager-overview/
 - nginx release-1.28.0 `ssl_verify_client` directive and `on` value (checked October 2026): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L76-L78 ; https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L162-L167
 - Apache 2.4 `SSLVerifyClient require` (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslverifyclient
@@ -250,7 +250,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "c6eb7bbc37f945308f633ed601dd8ef40cf0fc831a2c57dcbbd7e53cea0d2f31",
+  "body_sha256": "7ea1d0b362b531001e6c4cc89a15024a0dc1bc5cfe4ad2ac4002b38b92948f0c",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",
@@ -422,7 +422,7 @@ Claims (full source mapping in the JSON block below):
       "name": "1Password Secrets Automation",
       "basis": "unknown",
       "sources": {
-        "s96e614a22cd0": "https://www.1password.dev/secrets-automation/"
+        "s3dba9e568d37": "https://www.1password.dev/secrets-automation"
       }
     },
     "bitwarden": {
@@ -604,7 +604,7 @@ Claims (full source mapping in the JSON block below):
     "subject-format": {"text": "The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d"], "status": "REASONED"},
     "action-pins": {"text": "Pin actions to full commit SHAs; tags and branches can move to different code.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
     "workload-attestation": {"text": "SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret.", "components": ["spiffe"], "sources": ["spiffe:s96e9b9e2739d", "spiffe:sfa39616d8260"], "status": "REASONED"},
-    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers. As this guide's advice, authenticate with platform identity where the selected store and workload support it, so access need not depend on another long-lived bootstrap key; otherwise protect the required store credential.", "components": ["azure", "google", "aws", "vault", "infisical", "doppler-cli", "owasp-secrets", "aws-store", "google-store", "azure-store", "openbao-release", "openbao-site", "onepassword", "bitwarden"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4", "vault:sc7513679fe7e", "infisical:s725a4ac24a82", "doppler-cli:se354d6243027", "owasp-secrets:s3acb98020188", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951", "openbao-release:sdb9d182ed195", "openbao-site:s76158fafba22", "onepassword:s96e614a22cd0", "bitwarden:se179d6bd5c04"], "status": "REASONED"},
+    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers. As this guide's advice, authenticate with platform identity where the selected store and workload support it, so access need not depend on another long-lived bootstrap key; otherwise protect the required store credential.", "components": ["azure", "google", "aws", "vault", "infisical", "doppler-cli", "owasp-secrets", "aws-store", "google-store", "azure-store", "openbao-release", "openbao-site", "onepassword", "bitwarden"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4", "vault:sc7513679fe7e", "infisical:s725a4ac24a82", "doppler-cli:se354d6243027", "owasp-secrets:s3acb98020188", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951", "openbao-release:sdb9d182ed195", "openbao-site:s76158fafba22", "onepassword:s3dba9e568d37", "bitwarden:se179d6bd5c04"], "status": "REASONED"},
     "verify-scope": {"text": "A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "verify-expiry": {"text": "Revoked or expired credentials must be rejected with a service-log record identifying the client.", "components": ["bearer", "jwt"], "sources": ["bearer:sefd3dd623da3", "jwt:sc36d79fcad94"], "status": "REASONED"},
     "verify-ci": {"text": "Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},

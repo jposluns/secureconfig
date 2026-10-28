@@ -8036,7 +8036,7 @@ Two cautions. GitHub documents an immutable default `sub` format that includes o
 
 ## 5. Store the machine credentials that must exist
 
-API keys, client secrets, and client-certificate keys that cannot be federated away go in a secret manager or the platform's own store ([secrets.md](secrets.md)). Secret manager choices start with AWS Secrets Manager (https://aws.amazon.com/secrets-manager/), Google Cloud Secret Manager (https://docs.cloud.google.com/secret-manager/docs/overview), and Azure Key Vault (https://azure.microsoft.com/en-us/products/key-vault). The list continues with HashiCorp Vault ([vault.md](vault.md); https://developer.hashicorp.com/vault) or OpenBao, its open-source fork under the Linux Foundation (https://openbao.org/), Infisical (https://infisical.com/), and Doppler (https://www.doppler.com/). The list ends with 1Password Secrets Automation (https://www.1password.dev/secrets-automation/) and Bitwarden Secrets Manager (https://bitwarden.com/products/secrets-manager/). As this guide's advice, the workload should authenticate to the store with its platform identity (an instance role, a managed identity, or the federation above) where the selected store and workload support it, so access need not depend on one more long-lived bootstrap key; otherwise protect the store credential as a machine secret.
+API keys, client secrets, and client-certificate keys that cannot be federated away go in a secret manager or the platform's own store ([secrets.md](secrets.md)). Secret manager choices start with AWS Secrets Manager (https://aws.amazon.com/secrets-manager/), Google Cloud Secret Manager (https://docs.cloud.google.com/secret-manager/docs/overview), and Azure Key Vault (https://azure.microsoft.com/en-us/products/key-vault). The list continues with HashiCorp Vault ([vault.md](vault.md); https://developer.hashicorp.com/vault) or OpenBao, its open-source fork under the Linux Foundation (https://openbao.org/), Infisical (https://infisical.com/), and Doppler (https://www.doppler.com/). The list ends with 1Password Secrets Automation (https://www.1password.dev/secrets-automation) and Bitwarden Secrets Manager (https://bitwarden.com/products/secrets-manager/). As this guide's advice, the workload should authenticate to the store with its platform identity (an instance role, a managed identity, or the federation above) where the selected store and workload support it, so access need not depend on one more long-lived bootstrap key; otherwise protect the store credential as a machine secret.
 
 ## Verify
 
@@ -8077,7 +8077,7 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 - Azure Key Vault overview (rolling, checked October 2026): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
 - OpenBao README (secret storage), v2.7.1 (checked October 2026): https://github.com/openbao/openbao/blob/v2.7.1/README.md#L47-L51
 - OpenBao website (fork and Linux Foundation OpenSSF attribution; rolling, checked October 2026): https://openbao.org/
-- 1Password Secrets Automation (rolling, checked October 2026): https://www.1password.dev/secrets-automation/
+- 1Password Secrets Automation (rolling, checked October 2026): https://www.1password.dev/secrets-automation
 - Bitwarden Secrets Manager overview (rolling, checked October 2026): https://bitwarden.com/help/secrets-manager-overview/
 - nginx release-1.28.0 `ssl_verify_client` directive and `on` value (checked October 2026): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L76-L78 ; https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L162-L167
 - Apache 2.4 `SSLVerifyClient require` (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslverifyclient
@@ -8211,7 +8211,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "c6eb7bbc37f945308f633ed601dd8ef40cf0fc831a2c57dcbbd7e53cea0d2f31",
+  "body_sha256": "7ea1d0b362b531001e6c4cc89a15024a0dc1bc5cfe4ad2ac4002b38b92948f0c",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",
@@ -8383,7 +8383,7 @@ Claims (full source mapping in the JSON block below):
       "name": "1Password Secrets Automation",
       "basis": "unknown",
       "sources": {
-        "s96e614a22cd0": "https://www.1password.dev/secrets-automation/"
+        "s3dba9e568d37": "https://www.1password.dev/secrets-automation"
       }
     },
     "bitwarden": {
@@ -8565,7 +8565,7 @@ Claims (full source mapping in the JSON block below):
     "subject-format": {"text": "The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d"], "status": "REASONED"},
     "action-pins": {"text": "Pin actions to full commit SHAs; tags and branches can move to different code.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
     "workload-attestation": {"text": "SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret.", "components": ["spiffe"], "sources": ["spiffe:s96e9b9e2739d", "spiffe:sfa39616d8260"], "status": "REASONED"},
-    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers. As this guide's advice, authenticate with platform identity where the selected store and workload support it, so access need not depend on another long-lived bootstrap key; otherwise protect the required store credential.", "components": ["azure", "google", "aws", "vault", "infisical", "doppler-cli", "owasp-secrets", "aws-store", "google-store", "azure-store", "openbao-release", "openbao-site", "onepassword", "bitwarden"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4", "vault:sc7513679fe7e", "infisical:s725a4ac24a82", "doppler-cli:se354d6243027", "owasp-secrets:s3acb98020188", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951", "openbao-release:sdb9d182ed195", "openbao-site:s76158fafba22", "onepassword:s96e614a22cd0", "bitwarden:se179d6bd5c04"], "status": "REASONED"},
+    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers. As this guide's advice, authenticate with platform identity where the selected store and workload support it, so access need not depend on another long-lived bootstrap key; otherwise protect the required store credential.", "components": ["azure", "google", "aws", "vault", "infisical", "doppler-cli", "owasp-secrets", "aws-store", "google-store", "azure-store", "openbao-release", "openbao-site", "onepassword", "bitwarden"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4", "vault:sc7513679fe7e", "infisical:s725a4ac24a82", "doppler-cli:se354d6243027", "owasp-secrets:s3acb98020188", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951", "openbao-release:sdb9d182ed195", "openbao-site:s76158fafba22", "onepassword:s3dba9e568d37", "bitwarden:se179d6bd5c04"], "status": "REASONED"},
     "verify-scope": {"text": "A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "verify-expiry": {"text": "Revoked or expired credentials must be rejected with a service-log record identifying the client.", "components": ["bearer", "jwt"], "sources": ["bearer:sefd3dd623da3", "jwt:sc36d79fcad94"], "status": "REASONED"},
     "verify-ci": {"text": "Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
@@ -10438,7 +10438,7 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 - header directive (HSTS; rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/header
 - forward_auth directive (rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/forward_auth
 - Caddy command-line signals (SIGUSR1 reload conditions; rolling documentation, checked September 2026): https://caddyserver.com/docs/command-line#signals
-- Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
+- Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails
 - Request matchers (path, wildcards, multiple paths; rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy admin API default `DefaultAdminListen = "localhost:2019"` (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433
 - caddyserver/dist service unit (pinned commit 33ae08ff08d168572df2956ed14fbc4949880d94, checked October 2026): https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32
@@ -10513,7 +10513,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "0a6268cd109dccb62f926b5112276c2c61e4486658d323c964b08d2b5e2ff82a",
+  "body_sha256": "6433f0acb20d6d9608259f14a735e997970de79e633996679d111a99ffc25a08",
   "components": {
     "admin": {
       "name": "Caddy admin source",
@@ -10615,14 +10615,14 @@ Claims (full source mapping in the JSON block below):
       "name": "Let's Encrypt expiration-email notice",
       "basis": "2025",
       "sources": {
-        "sdf68595235d4": "https://letsencrypt.org/2025/01/22/ending-expiration-emails/"
+        "sc33d2e1f6703": "https://letsencrypt.org/2025/01/22/ending-expiration-emails"
       }
     }
   },
   "claims": {
     "auto-https": {"text": "Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
     "issuers": {"text": "Public certificates come from Let's Encrypt or ZeroSSL and renew automatically.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
-    "renewal-monitoring": {"text": "Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.", "components": ["docs-rolling", "letsencrypt-notice"], "sources": ["docs-rolling:sdbcd496895d6", "letsencrypt-notice:sdf68595235d4"], "status": "REASONED"},
+    "renewal-monitoring": {"text": "Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.", "components": ["docs-rolling", "letsencrypt-notice"], "sources": ["docs-rolling:sdbcd496895d6", "letsencrypt-notice:sc33d2e1f6703"], "status": "REASONED"},
     "backend": {"text": "reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED"},
     "hsts": {"text": "Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain.", "components": ["docs-rolling"], "sources": ["docs-rolling:s5a6da5adf385", "docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
     "forwarded": {"text": "Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED"},
@@ -42882,8 +42882,8 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ## Sources (checked September 2026)
 
-- Open WebUI environment configuration reference (rolling documentation, checked September 2026): https://docs.openwebui.com/reference/env-configuration
-- Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq
+- Open WebUI environment configuration reference (rolling documentation, checked September 2026): https://docs.openwebui.com/reference/env-configuration/
+- Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq/
 - Open WebUI repository (the Docker Quick Start `-v open-webui:/app/backend/data` data volume): https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/README.md
 - Docker port publishing (localhost publishing; releases older than 28.0.0 let a same-L2 host reach a localhost-published port): https://docs.docker.com/engine/network/port-publishing/
 - [Open WebUI pinned release version](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/package.json).
@@ -42997,7 +42997,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "0314ab63cb70b8239b5a96fc1756cdb981ddeaeed6fecb60522f433c5affb5d6",
+  "body_sha256": "5a2c9ac02469fcca192b14dbfb4104ea710b8361c800ca32523653248fb759fd",
   "components": {
     "webui": {
       "name": "Open WebUI",
@@ -43022,7 +43022,7 @@ Claims (full source mapping in the JSON block below):
       "name": "Open WebUI documentation (rolling)",
       "basis": "unknown",
       "sources": {
-        "s991b1b357189": "https://docs.openwebui.com/reference/env-configuration",
+        "sb5ac55b056ab": "https://docs.openwebui.com/reference/env-configuration/",
         "s4618b483c060": "https://docs.openwebui.com/getting-started/advanced-topics/hardening/",
         "sddffd30a3b0f": "https://docs.openwebui.com/features/authentication-access/auth/sso/",
         "sf412328c22af": "https://docs.openwebui.com/features/extensibility/plugin/development/under-the-hood/",
@@ -43045,7 +43045,7 @@ Claims (full source mapping in the JSON block below):
   },
   "claims": {
     "signup": {"text": "ENABLE_SIGNUP defaults true; disable ordinary registration after accounts exist.", "components": ["webui"], "sources": ["webui:s94d055784840", "webui:s9d6f5fb157de"], "status": "REASONED", "verify": [1]},
-    "persistence": {"text": "ConfigVar database values override environment after first launch unless ENABLE_PERSISTENT_CONFIG=false; default is true.", "components": ["webui", "webui-docs"], "sources": ["webui-docs:s991b1b357189", "webui:s94d055784840"], "status": "REASONED"},
+    "persistence": {"text": "ConfigVar database values override environment after first launch unless ENABLE_PERSISTENT_CONFIG=false; default is true.", "components": ["webui", "webui-docs"], "sources": ["webui-docs:sb5ac55b056ab", "webui:s94d055784840"], "status": "REASONED"},
     "roles": {"text": "DEFAULT_USER_ROLE defaults pending; user auto-approves and admin grants administrative privileges to later registrations.", "components": ["webui"], "sources": ["webui:s94d055784840", "webui:s9d6f5fb157de"], "status": "REASONED"},
     "first-admin": {"text": "First account is admin regardless of DEFAULT_USER_ROLE; bootstrap privately or preset admin email/password.", "components": ["webui"], "sources": ["webui:s9d6f5fb157de", "webui:s8952330d0246"], "status": "REASONED"},
     "signup-auto-disable": {"text": "First normal registration and successful environment admin creation disable signup under normal persisted configuration.", "components": ["webui", "webui-docs"], "sources": ["webui:s9d6f5fb157de", "webui:s8952330d0246", "webui-docs:s4618b483c060"], "status": "REASONED"},
@@ -43054,7 +43054,7 @@ Claims (full source mapping in the JSON block below):
     "sso-mfa": {"text": "OAuth/OIDC MFA belongs at the identity provider; ordinary signup refusal does not close alternative provisioning.", "components": ["webui-docs"], "sources": ["webui-docs:sddffd30a3b0f"], "status": "REASONED"},
     "publication": {"text": "Publish host 127.0.0.1:3000 to container 8080 with Engine 28.0+; inspect NAT and external reachability as well as ss.", "components": ["webui", "docker"], "sources": ["webui:s241050fbe377", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1, 2]},
     "data-volume": {"text": "Retain /app/backend/data for accounts/config; lost data reopens first-admin bootstrap, so keep ingress closed until claimed.", "components": ["webui"], "sources": ["webui:s241050fbe377", "webui:s9d6f5fb157de"], "status": "REASONED"},
-    "transport": {"text": "Open WebUI has no native TLS; use a TLS fronting layer and keep authentication enabled behind public access paths.", "components": ["webui-docs"], "sources": ["webui-docs:s991b1b357189", "webui-docs:s4618b483c060"], "status": "REASONED"},
+    "transport": {"text": "Open WebUI has no native TLS; use a TLS fronting layer and keep authentication enabled behind public access paths.", "components": ["webui-docs"], "sources": ["webui-docs:sb5ac55b056ab", "webui-docs:s4618b483c060"], "status": "REASONED"},
     "session-cookie": {"text": "Set WEBUI_SESSION_COOKIE_SECURE=true before HTTPS publication; default is false.", "components": ["webui"], "sources": ["webui:s7d025cba5af9"], "status": "REASONED", "verify": [3]},
     "auth-cookie": {"text": "WEBUI_AUTH_COOKIE_SECURE inherits the session setting unless overridden; set it true explicitly, since TLS termination alone does not set Secure.", "components": ["webui"], "sources": ["webui:s7d025cba5af9", "webui:s9d6f5fb157de"], "status": "REASONED", "verify": [3]},
     "cookie-test": {"text": "Issued token and owui-session cookies need Secure/HttpOnly and intended SameSite, lax by default; no issued cookie is inconclusive.", "components": ["webui"], "sources": ["webui:s7d025cba5af9", "webui:s9d6f5fb157de", "webui:s8952330d0246"], "status": "REASONED", "verify": [3]},
@@ -43072,11 +43072,11 @@ Claims (full source mapping in the JSON block below):
     "oauth-persistence": {"text": "ENABLE_OAUTH_PERSISTENT_CONFIG defaults false with environment authority/read-only admin UI; enabling persistence permits stored precedence.", "components": ["webui-docs"], "sources": ["webui-docs:sddffd30a3b0f"], "status": "REASONED"},
     "trusted-headers": {"text": "Leave identity headers unset unless a sole trusted proxy strips client values and supplies authenticated identity; forged headers can impersonate/provision users.", "components": ["webui", "webui-docs"], "sources": ["webui:s7d025cba5af9", "webui:s9d6f5fb157de", "webui-docs:sddffd30a3b0f"], "status": "REASONED", "verify": [3]},
     "plugins": {"text": "ENABLE_PLUGINS defaults true; uploaded Tools/Functions execute server-side Python, including top-level code at load.", "components": ["webui", "webui-docs"], "sources": ["webui:s7d025cba5af9", "webui-docs:sf412328c22af"], "status": "REASONED"},
-    "plugin-scope": {"text": "Disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal.", "components": ["webui-docs"], "sources": ["webui-docs:s991b1b357189", "webui-docs:sf412328c22af"], "status": "REASONED", "verify": [3]},
+    "plugin-scope": {"text": "Disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal.", "components": ["webui-docs"], "sources": ["webui-docs:sb5ac55b056ab", "webui-docs:sf412328c22af"], "status": "REASONED", "verify": [3]},
     "tools-access": {"text": "USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS defaults false; ordinary Tool creation depends on workspace.tools, Function creation is administrative.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sf412328c22af"], "status": "REASONED", "verify": [3]},
     "tools-import": {"text": "USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT defaults false; remove unintended import grants from every group.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:seec6b2b9c299"], "status": "REASONED"},
-    "code-execution": {"text": "ENABLE_CODE_EXECUTION defaults true with pyodide engine; disable unused legacy execution independently of server plugins.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:s991b1b357189"], "status": "REASONED", "verify": [3]},
-    "code-interpreter": {"text": "ENABLE_CODE_INTERPRETER defaults true with pyodide engine; test its own request path separately.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:s991b1b357189"], "status": "REASONED", "verify": [3]},
+    "code-execution": {"text": "ENABLE_CODE_EXECUTION defaults true with pyodide engine; disable unused legacy execution independently of server plugins.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sb5ac55b056ab"], "status": "REASONED", "verify": [3]},
+    "code-interpreter": {"text": "ENABLE_CODE_INTERPRETER defaults true with pyodide engine; test its own request path separately.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sb5ac55b056ab"], "status": "REASONED", "verify": [3]},
     "groups": {"text": "Group permissions add grants; a false default or another false membership cannot cancel a true grant.", "components": ["webui-docs"], "sources": ["webui-docs:seec6b2b9c299"], "status": "REASONED", "verify": [3]},
     "model-bypass": {"text": "BYPASS_MODEL_ACCESS_CONTROL defaults false; keep bypass disabled.", "components": ["webui"], "sources": ["webui:s7d025cba5af9"], "status": "REASONED"},
     "model-workspace": {"text": "USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS defaults false and controls creation/editing, not invocation of existing models.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sab6706f74917"], "status": "REASONED", "verify": [3]},
@@ -43086,17 +43086,17 @@ Claims (full source mapping in the JSON block below):
     "direct-connections": {"text": "ENABLE_DIRECT_CONNECTIONS defaults false; enabling it sends browser-to-provider inference, not server-side SSRF protection.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sbebbd1dda5c6"], "status": "REASONED", "verify": [3]},
     "admin-chat": {"text": "ENABLE_ADMIN_CHAT_ACCESS defaults true; disable/restart and test admin list-user refusal while owner access works.", "components": ["webui"], "sources": ["webui:s7d025cba5af9", "webui:s416fdb7c65df"], "status": "REASONED", "verify": [3]},
     "admin-export": {"text": "ENABLE_ADMIN_EXPORT defaults true; disable separately and test /api/v1/chats/all/db refusal; operator/database access remains possible.", "components": ["webui"], "sources": ["webui:s7d025cba5af9", "webui:s416fdb7c65df"], "status": "REASONED", "verify": [3]},
-    "community": {"text": "ENABLE_COMMUNITY_SHARING defaults true; false removes community UI, not all local sharing/export.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:s991b1b357189"], "status": "REASONED", "verify": [3]},
+    "community": {"text": "ENABLE_COMMUNITY_SHARING defaults true; false removes community UI, not all local sharing/export.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sb5ac55b056ab"], "status": "REASONED", "verify": [3]},
     "docs": {"text": "ENV defaults dev in backend and prod in official image; prod removes docs/schema registration, not APIs; inspect content rather than HTTP 200 alone.", "components": ["webui"], "sources": ["webui:s7d025cba5af9", "webui:s0a3440b8f305", "webui:s8952330d0246"], "status": "REASONED", "verify": [3]},
     "api-keys": {"text": "ENABLE_API_KEYS defaults false; disabling rejects existing keys without deleting them or disabling JWTs.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui:seb3e13955745", "webui-docs:sb28825887b54"], "status": "REASONED", "verify": [3]},
     "key-permission": {"text": "API-key permission defaults false; ordinary users need it and global enablement, admins need the global switch; keys inherit owner authority.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui:seb3e13955745", "webui-docs:sb28825887b54"], "status": "REASONED", "verify": [3]},
     "key-routes": {"text": "Endpoint restrictions default false; allowed exact paths also admit slash descendants and do not constrain methods or vary per key.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui:seb3e13955745", "webui-docs:sb28825887b54"], "status": "REASONED", "verify": [3]},
-    "local-fetch": {"text": "ENABLE_LOCAL_WEB_FETCH defaults false; ENABLE_RAG_LOCAL_WEB_FETCH is its deprecated alias.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:s991b1b357189"], "status": "REASONED"},
+    "local-fetch": {"text": "ENABLE_LOCAL_WEB_FETCH defaults false; ENABLE_RAG_LOCAL_WEB_FETCH is its deprecated alias.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sb5ac55b056ab"], "status": "REASONED"},
     "redirects": {"text": "AIOHTTP_CLIENT_ALLOW_REDIRECTS defaults false; keep redirects disabled and enforce independent egress.", "components": ["webui", "webui-docs"], "sources": ["webui:s7d025cba5af9", "webui-docs:s4618b483c060"], "status": "REASONED"},
-    "fetch-filter": {"text": "WEB_FETCH_FILTER_LIST uses comma-separated allow entries and ! deny entries extending the built-in blocklist.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:s991b1b357189"], "status": "REASONED", "verify": [3]},
+    "fetch-filter": {"text": "WEB_FETCH_FILTER_LIST uses comma-separated allow entries and ! deny entries extending the built-in blocklist.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sb5ac55b056ab"], "status": "REASONED", "verify": [3]},
     "web-search": {"text": "ENABLE_WEB_SEARCH defaults false; disabling should stop controlled search-provider calls.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:s4618b483c060"], "status": "REASONED", "verify": [3]},
     "file-size": {"text": "RAG_FILE_MAX_SIZE defaults unset; 10 MB is an example and handler checks after storage upload, so proxy body limits are also needed.", "components": ["webui"], "sources": ["webui:s94d055784840", "webui:s377a6a5e9f43"], "status": "REASONED", "verify": [3]},
-    "file-count": {"text": "RAG_FILE_MAX_COUNT defaults unset; five is an example count, not aggregate storage/request quota.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:s991b1b357189"], "status": "REASONED", "verify": [3]},
+    "file-count": {"text": "RAG_FILE_MAX_COUNT defaults unset; five is an example count, not aggregate storage/request quota.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sb5ac55b056ab"], "status": "REASONED", "verify": [3]},
     "file-permission": {"text": "Chat file-upload permission defaults true; false alone does not block verified-user POST /api/v1/files/, requiring proxy denial when prohibited.", "components": ["webui"], "sources": ["webui:s94d055784840", "webui:s377a6a5e9f43", "webui:seb3e13955745"], "status": "REASONED", "verify": [3]},
     "web-permission": {"text": "Chat web-upload permission defaults true; false alone does not block web/youtube/url handlers; test each proxy denial with a working fixture.", "components": ["webui"], "sources": ["webui:s94d055784840", "webui:sbd0096118f9c", "webui:seb3e13955745"], "status": "REASONED", "verify": [3]},
     "search-permission": {"text": "USER_PERMISSIONS_FEATURES_WEB_SEARCH defaults true; audit every group grant alongside global search disablement.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:seec6b2b9c299"], "status": "REASONED"},
@@ -43105,7 +43105,7 @@ Claims (full source mapping in the JSON block below):
     "verify-signup": {"text": "After bootstrap require disabled feature flag, absent signup option and actual registration refusal; enabled signup should yield pending, not access.", "components": ["webui"], "sources": ["webui:s9d6f5fb157de", "webui:s94d055784840"], "status": "REASONED", "verify": [1]},
     "verify-network": {"text": "Actual host port 3000 must not answer from a second LAN/VPC host while trusted HTTPS works; DNS/local errors do not prove isolation.", "components": ["docker"], "sources": ["docker:s1e53417c513d"], "status": "REASONED", "verify": [2]},
     "verify-ssrf": {"text": "Compare allowed public, controlled private, filter-denied and redirected destinations using contact/egress logs; failed fetch alone proves no boundary.", "components": ["webui", "webui-docs"], "sources": ["webui:sbd0096118f9c", "webui-docs:s4618b483c060"], "status": "REASONED", "verify": [3]},
-    "recorded-version": {"text": "Pinned package identifies v0.11.3; the environment reference describes coverage through v0.11.1; introduction versions remain unverified.", "components": ["webui", "webui-docs"], "sources": ["webui:s26981e2dc6de", "webui-docs:s991b1b357189"], "status": "REASONED"}
+    "recorded-version": {"text": "Pinned package identifies v0.11.3; the environment reference describes coverage through v0.11.1; introduction versions remain unverified.", "components": ["webui", "webui-docs"], "sources": ["webui:s26981e2dc6de", "webui-docs:sb5ac55b056ab"], "status": "REASONED"}
   }
 }
 ````
@@ -44308,14 +44308,14 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - LM Studio server settings: https://lmstudio.ai/docs/developer/core/server/settings
 - LM Studio authentication: https://lmstudio.ai/docs/developer/core/authentication
 - LM Studio OpenAI compatibility (localhost:1234 examples): https://lmstudio.ai/docs/developer/openai-compat
-- text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md
-- text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
-- text-generation-webui, `--user-data-dir` and the in-process `CMD_FLAGS.txt` loader (lines whose first non-space character is `#` skipped, the rest split as shell words and spliced into Python's `sys.argv` before parsing). Sources for this item: https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50 and https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L221-L236. Sources for the directory resolution: https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21
-- text-generation-webui, `user_data/CMD_FLAGS.txt` shipped as a tracked file of three comment lines: https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/user_data/CMD_FLAGS.txt
-- text-generation-webui one-click launcher (its own arguments joined unquoted and run through `bash` as `server.py`'s command line, the update wizard's `git merge --autostash` and `git reset --hard`; read in source, not run). Sources for this item (1 of 2): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L24, https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L208 and https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L396. Sources for this item (2 of 2): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L485-L486, https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L504 and https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L527
-- text-generation-webui `--gradio-auth-path` loader (entries split at commas and line breaks, whitespace stripped, each split at every `:`): https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/server.py#L90-L95
-- text-generation-webui, API bind and key checks (modules/api/script.py): https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py
-- text-generation-webui, the API key and a distinct admin key logged in plaintext at INFO at startup: https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/api/script.py#L594-L597 and https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py#L599-L602
+- text-generation-webui, OpenAI-compatible API documentation: https://github.com/oobabooga/textgen/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md
+- text-generation-webui, flag definitions and defaults (modules/shared.py): https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py
+- text-generation-webui, `--user-data-dir` and the in-process `CMD_FLAGS.txt` loader (lines whose first non-space character is `#` skipped, the rest split as shell words and spliced into Python's `sys.argv` before parsing). Sources for this item: https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50 and https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L221-L236. Sources for the directory resolution: https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21
+- text-generation-webui, `user_data/CMD_FLAGS.txt` shipped as a tracked file of three comment lines: https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/user_data/CMD_FLAGS.txt
+- text-generation-webui one-click launcher (its own arguments joined unquoted and run through `bash` as `server.py`'s command line, the update wizard's `git merge --autostash` and `git reset --hard`; read in source, not run). Sources for this item (1 of 2): https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L24, https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L208 and https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L396. Sources for this item (2 of 2): https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L485-L486, https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L504 and https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L527
+- text-generation-webui `--gradio-auth-path` loader (entries split at commas and line breaks, whitespace stripped, each split at every `:`): https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/server.py#L90-L95
+- text-generation-webui, API bind and key checks (modules/api/script.py): https://github.com/oobabooga/textgen/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py
+- text-generation-webui, the API key and a distinct admin key logged in plaintext at INFO at startup: https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/api/script.py#L594-L597 and https://github.com/oobabooga/textgen/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py#L599-L602
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - SGLang `host` and `port` field defaults, `127.0.0.1` and `30000` (pinned tag v0.5.20; that the `--host`/`--port` flags use these fields rests on the server-arguments docs above): https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L72-L73
 - SGLang `--config` ("Read CLI options from a config file. Must be a YAML file with configuration options."; pinned tag v0.5.20): https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L397-L399
@@ -44440,7 +44440,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b73c90c32f6286bc17ff540aa49a9f0b72399bf0b704c7004388e2783cdc0f04",
+  "body_sha256": "c73f43fa88a50dc1fddbcb583ea28d03f26f15363dd6e0a7e2fdbf0424042dc7",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -44639,34 +44639,34 @@ Claims (full source mapping in the JSON block below):
       "name": "text-generation-webui source",
       "basis": "c022565b1257a9c7d9a5128c8b4c03587559cf08",
       "sources": {
-        "sf47dbc117b02": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py",
-        "sfbacbf383d45": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/server.py#L90-L95",
-        "s304dbbc211b7": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/api/script.py#L594-L597",
-        "s578896c6eca6": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50",
-        "s75153f5981cf": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21",
-        "s4010efbd61e8": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/user_data/CMD_FLAGS.txt",
-        "s77fccc0c7e77": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L24",
-        "sebf417a05868": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L221-L236",
-        "sc8b233101f9d": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L396",
-        "sfc3cbfc0bb00": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L504",
-        "sf5ddb55c9a0a": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L527",
-        "s251238df89f0": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L208",
-        "s8e8079fd81d4": "https://github.com/oobabooga/text-generation-webui/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L485-L486"
+        "sb0d40ae366d1": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py",
+        "see2c95000c1a": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/server.py#L90-L95",
+        "s7b1b7795f4bb": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/api/script.py#L594-L597",
+        "s63f4da305bf6": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L50",
+        "sb5e84cf31785": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/paths.py#L5-L21",
+        "s9b1b924c1e6f": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/user_data/CMD_FLAGS.txt",
+        "sb88452cb3112": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L24",
+        "s45c4e1f82410": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/modules/shared.py#L221-L236",
+        "s553a5ba9a675": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L396",
+        "sbee956b3df58": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L504",
+        "sfc2e359190f8": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L527",
+        "s4655a1f1241b": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L208",
+        "sc2a4d6823a2b": "https://github.com/oobabooga/textgen/blob/c022565b1257a9c7d9a5128c8b4c03587559cf08/one_click.py#L485-L486"
       }
     },
     "webui-api": {
       "name": "text-generation-webui API source",
       "basis": "619a2b8ee4b7e48541a9be5c07e04cd31b91b44f",
       "sources": {
-        "s6c159a552ded": "https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py",
-        "sbafd006b7156": "https://github.com/oobabooga/text-generation-webui/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py#L599-L602"
+        "s7534b811a6d8": "https://github.com/oobabooga/textgen/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py",
+        "s3847a98d7189": "https://github.com/oobabooga/textgen/blob/619a2b8ee4b7e48541a9be5c07e04cd31b91b44f/modules/api/script.py#L599-L602"
       }
     },
     "webui-docs": {
       "name": "text-generation-webui API documentation",
       "basis": "ceade2eb1ba3f84518076270df2240b6bbb01da0",
       "sources": {
-        "sfc908ade10d1": "https://github.com/oobabooga/text-generation-webui/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md"
+        "s3ed187b2ec4e": "https://github.com/oobabooga/textgen/blob/ceade2eb1ba3f84518076270df2240b6bbb01da0/docs/12%20-%20OpenAI%20API.md"
       }
     },
     "curl": {
@@ -44732,27 +44732,27 @@ Claims (full source mapping in the JSON block below):
     "lmstudio-bind": {"text": "Desktop server uses localhost:1234; Serve on Local Network or bind 0.0.0.0 widens access.", "components": ["lmstudio"], "sources": ["lmstudio:s776be8700529", "lmstudio:s6b9f80dc5c59", "lmstudio:sb756d0785d3d"], "status": "REASONED"},
     "lmstudio-auth": {"text": "Authentication defaults off; Require Authentication and bearer tokens are documented for 0.4.0+; enable before remote access.", "components": ["lmstudio"], "sources": ["lmstudio:sb940f6563319"], "status": "REASONED"},
     "lmstudio-tls": {"text": "Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access.", "components": ["lmstudio"], "sources": ["lmstudio:sb7e0fa7490b2"], "status": "REASONED"},
-    "webui-listeners": {"text": "Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated.", "components": ["webui", "webui-api"], "sources": ["webui:sf47dbc117b02", "webui-api:s6c159a552ded"], "status": "REASONED"},
-    "webui-bind": {"text": "--listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen.", "components": ["webui", "webui-api"], "sources": ["webui:sf47dbc117b02", "webui-api:s6c159a552ded"], "status": "REASONED"},
-    "webui-publication": {"text": "--share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication.", "components": ["webui-api", "webui"], "sources": ["webui:sf47dbc117b02", "webui-api:s6c159a552ded"], "status": "REASONED"},
-    "webui-ui-auth": {"text": "gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password.", "components": ["webui"], "sources": ["webui:sfbacbf383d45"], "status": "REASONED"},
-    "webui-api-auth": {"text": "api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa.", "components": ["webui-api", "webui-docs"], "sources": ["webui-api:s6c159a552ded", "webui-docs:sfc908ade10d1"], "status": "REASONED"},
-    "webui-key-logs": {"text": "API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure.", "components": ["webui-api", "webui"], "sources": ["webui-api:sbafd006b7156", "webui:s304dbbc211b7"], "status": "REASONED"},
-    "webui-file": {"text": "API keys lack file/environment flags; private external user-data-dir CMD_FLAGS.txt supplies in-process arguments, keeping keys out of kernel argv.", "components": ["webui"], "sources": ["webui:sf47dbc117b02", "webui:s578896c6eca6", "webui:s75153f5981cf", "webui:sebf417a05868"], "status": "REASONED"},
-    "webui-checkout": {"text": "Checkout CMD_FLAGS.txt is tracked; git diff/stash and one-click autostash/reset can expose or discard keys; use a new private directory outside checkout.", "components": ["webui"], "sources": ["webui:s4010efbd61e8", "webui:s77fccc0c7e77", "webui:sc8b233101f9d", "webui:sfc3cbfc0bb00", "webui:sf5ddb55c9a0a"], "status": "REASONED"},
-    "webui-launcher": {"text": "Run server.py directly: one-click unquoted argument joining and shell=True can split paths or execute shell syntax.", "components": ["webui"], "sources": ["webui:s77fccc0c7e77", "webui:s251238df89f0", "webui:s8e8079fd81d4"], "status": "REASONED"},
-    "webui-api-only": {"text": "--api --nowebui removes UI; ssl-keyfile/ssl-certfile provide both surfaces TLS, with proxy TLS/auth the recommended pattern.", "components": ["webui", "webui-docs"], "sources": ["webui:sf47dbc117b02", "webui-docs:sfc908ade10d1"], "status": "REASONED"},
-    "webui-host": {"text": "Loopback API rejects Host other than localhost/127.0.0.1 with 400 unless listen/public-api is set; proxy must rewrite Host.", "components": ["webui-api"], "sources": ["webui-api:s6c159a552ded"], "status": "REASONED"},
+    "webui-listeners": {"text": "Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated.", "components": ["webui", "webui-api"], "sources": ["webui:sb0d40ae366d1", "webui-api:s7534b811a6d8"], "status": "REASONED"},
+    "webui-bind": {"text": "--listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen.", "components": ["webui", "webui-api"], "sources": ["webui:sb0d40ae366d1", "webui-api:s7534b811a6d8"], "status": "REASONED"},
+    "webui-publication": {"text": "--share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication.", "components": ["webui-api", "webui"], "sources": ["webui:sb0d40ae366d1", "webui-api:s7534b811a6d8"], "status": "REASONED"},
+    "webui-ui-auth": {"text": "gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password.", "components": ["webui"], "sources": ["webui:see2c95000c1a"], "status": "REASONED"},
+    "webui-api-auth": {"text": "api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa.", "components": ["webui-api", "webui-docs"], "sources": ["webui-api:s7534b811a6d8", "webui-docs:s3ed187b2ec4e"], "status": "REASONED"},
+    "webui-key-logs": {"text": "API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure.", "components": ["webui-api", "webui"], "sources": ["webui-api:s3847a98d7189", "webui:s7b1b7795f4bb"], "status": "REASONED"},
+    "webui-file": {"text": "API keys lack file/environment flags; private external user-data-dir CMD_FLAGS.txt supplies in-process arguments, keeping keys out of kernel argv.", "components": ["webui"], "sources": ["webui:sb0d40ae366d1", "webui:s63f4da305bf6", "webui:sb5e84cf31785", "webui:s45c4e1f82410"], "status": "REASONED"},
+    "webui-checkout": {"text": "Checkout CMD_FLAGS.txt is tracked; git diff/stash and one-click autostash/reset can expose or discard keys; use a new private directory outside checkout.", "components": ["webui"], "sources": ["webui:s9b1b924c1e6f", "webui:sb88452cb3112", "webui:s553a5ba9a675", "webui:sbee956b3df58", "webui:sfc2e359190f8"], "status": "REASONED"},
+    "webui-launcher": {"text": "Run server.py directly: one-click unquoted argument joining and shell=True can split paths or execute shell syntax.", "components": ["webui"], "sources": ["webui:sb88452cb3112", "webui:s4655a1f1241b", "webui:sc2a4d6823a2b"], "status": "REASONED"},
+    "webui-api-only": {"text": "--api --nowebui removes UI; ssl-keyfile/ssl-certfile provide both surfaces TLS, with proxy TLS/auth the recommended pattern.", "components": ["webui", "webui-docs"], "sources": ["webui:sb0d40ae366d1", "webui-docs:s3ed187b2ec4e"], "status": "REASONED"},
+    "webui-host": {"text": "Loopback API rejects Host other than localhost/127.0.0.1 with 400 unless listen/public-api is set; proxy must rewrite Host.", "components": ["webui-api"], "sources": ["webui-api:s7534b811a6d8"], "status": "REASONED"},
     "verify-listeners": {"text": "Inspect all backend listeners, namespaces and publications; ss alone proves no external isolation.", "components": ["llama", "vllm", "tgi", "triton", "sglang"], "sources": ["llama:s808f8d1c8da9", "vllm:s90b2ada8e38b", "tgi:s6d442de48f37", "triton:s33bf29bf71da", "sglang:saf08ef6910b0"], "status": "REASONED", "verify": [1]},
     "verify-proxy-auth": {"text": "Proxy model-list probes expect no-key 401 and keyed 200/list; TGI model listing does not establish native key enforcement.", "components": ["tgi-router", "curl"], "sources": ["tgi-router:sc46baeb2e20d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-invocations": {"text": "Use valid JSON/served model and upstream evidence: unknown-model 404 or proxy-intercepted errors cannot establish vLLM route denial.", "components": ["vllm"], "sources": ["vllm:s65a60be2808c", "vllm:s36fcb4c4fc18"], "status": "REASONED", "verify": [1]},
-    "verify-webui": {"text": "No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy.", "components": ["webui-api", "curl"], "sources": ["webui-api:s6c159a552ded", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-webui": {"text": "No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy.", "components": ["webui-api", "curl"], "sources": ["webui-api:s7534b811a6d8", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
     "verify-triton": {"text": "Direct HTTP logging should change from 200/settings to 403/restriction; other errors prove neither this control nor other categories/protocols.", "components": ["triton", "curl"], "sources": ["triton:s7f5038fa0fe2", "triton:s2a4cdfc6be30", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
     "verify-cluster": {"text": "Inventory startup/dynamic sockets; trusted peers connect to cross-node endpoints while outsiders fail with firewall evidence; local-only endpoints need local positive controls.", "components": ["vllm"], "sources": ["vllm:se5660cf62498", "vllm:sfecabc3bc16d", "vllm:se3e528b9ca5c"], "status": "REASONED", "verify": [4]},
     "verify-transport": {"text": "TCP probe establishes only reachability; stale ports, wrong address or stopped service are inconclusive, and RDMA/non-TCP need separate tests.", "components": ["vllm"], "sources": ["vllm:se5660cf62498", "vllm:sec32bab94990"], "status": "REASONED", "verify": [4]},
     "vllm-parser-run": {"text": "Isolated parser harness with stubbed logger/minimal serve parser loaded --config FILE but not --config=FILE; no vLLM server was run.", "components": ["vllm-a"], "sources": ["vllm-a:safb9d5e38921"], "status": "DEMONSTRATED", "evidence": "The pinned parser class was also run on its own, outside vLLM, with vLLM's logger stubbed and a minimal `serve` parser in place of vLLM's own: with `--config FILE` it turned the generated file's `api-key` line into a one-element key list, and with `--config=FILE` it left the key unset."},
-    "webui-parser-run": {"text": "Imported shared.py parsed keys and a later flag from a private path containing a space while kernel cmdline held neither; no server was run.", "components": ["webui"], "sources": ["webui:s578896c6eca6"], "status": "DEMONSTRATED", "evidence": "The pinned `modules/shared.py`, imported with `--user-data-dir` pointing at a directory the block had written (a path containing a space, with a `--listen-port` line added after the key lines), parsed both keys and that flag from `CMD_FLAGS.txt` while the process's `/proc/self/cmdline` held neither"},
-    "argv-test": {"text": "Recorded procps-ng 4.0.4 stub-process checks distinguish named secret flags from file flags; JSON, abbreviations, hidden/scrubbed argv remain misses.", "components": ["llama", "vllm-a", "sglang", "tgi", "webui", "triton"], "sources": ["llama:s808f8d1c8da9", "vllm-a:s7b472d8bd2d0", "sglang:sbf57dc2f54d2", "tgi:s3f8623221ee5", "webui:sf47dbc117b02", "triton:s5f927b497e5d"], "status": "DEMONSTRATED", "evidence": "`--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`"}
+    "webui-parser-run": {"text": "Imported shared.py parsed keys and a later flag from a private path containing a space while kernel cmdline held neither; no server was run.", "components": ["webui"], "sources": ["webui:s63f4da305bf6"], "status": "DEMONSTRATED", "evidence": "The pinned `modules/shared.py`, imported with `--user-data-dir` pointing at a directory the block had written (a path containing a space, with a `--listen-port` line added after the key lines), parsed both keys and that flag from `CMD_FLAGS.txt` while the process's `/proc/self/cmdline` held neither"},
+    "argv-test": {"text": "Recorded procps-ng 4.0.4 stub-process checks distinguish named secret flags from file flags; JSON, abbreviations, hidden/scrubbed argv remain misses.", "components": ["llama", "vllm-a", "sglang", "tgi", "webui", "triton"], "sources": ["llama:s808f8d1c8da9", "vllm-a:s7b472d8bd2d0", "sglang:sbf57dc2f54d2", "tgi:s3f8623221ee5", "webui:sb0d40ae366d1", "triton:s5f927b497e5d"], "status": "DEMONSTRATED", "evidence": "`--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`"}
   }
 }
 ````
@@ -45923,8 +45923,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 - n8n SSRF protection (`N8N_SSRF_PROTECTION_ENABLED`, from 2.12.0): https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/enable-ssrf-protection
 - n8n reverse-proxy webhook URLs (`N8N_WEBHOOK_URL`, proxy hops, `N8N_SECURE_COOKIE`): https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/configuration-examples/configure-webhook-urls-with-reverse-proxy
 - n8n public API authentication (`/api/v1` base path, `X-N8N-API-KEY` header): https://docs.n8n.io/connect/n8n-api/authentication
-- n8n Webhook node (Authentication options, production and test URLs, HTTP Method): https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/
-- n8n Webhook credentials (Basic, Header, JWT auth): https://docs.n8n.io/integrations/builtin/credentials/webhook/
+- n8n Webhook node (Authentication options, production and test URLs, HTTP Method): https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook
+- n8n Webhook credentials (Basic, Header, JWT auth): https://docs.n8n.io/integrations/builtin/credentials/webhook
 - n8n `N8N_PORT` default `5678` and `N8N_LISTEN_ADDRESS` default `'::'` (pinned tag n8n@2.40.6): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/index.ts#L164-L171
 - n8n auth cookie Secure default, recorded in the 1.32.0 changes (pinned tag n8n@2.40.6): https://raw.githubusercontent.com/n8n-io/n8n/n8n@2.40.6/packages/cli/BREAKING-CHANGES.md
 - n8n 2.0 changes, ExecuteCommand and LocalFileTrigger disabled by default (rolling documentation, checked October 2026): https://docs.n8n.io/changelog/v20-breaking-changes
@@ -46188,7 +46188,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "ddb5d953941827a3ccfa5b0250e8a8e51f2e3dabc93d90444de8d8cf29f09d6c",
+  "body_sha256": "9673c2069a870b71db5ed9b73904ce9c93c572c714da0142d7995c3d98178a48",
   "components": {
     "server": {
       "name": "n8n listener source",
@@ -46405,8 +46405,8 @@ Claims (full source mapping in the JSON block below):
         "s290535cad2ea": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners",
         "se9dd39628347": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/configuration-examples/configure-webhook-urls-with-reverse-proxy",
         "s7ce8bf5b35e8": "https://docs.n8n.io/connect/n8n-api/authentication",
-        "sab23639d9b2a": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/",
-        "sa18a30d563bd": "https://docs.n8n.io/integrations/builtin/credentials/webhook/",
+        "s7b31c553d69e": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook",
+        "s2841cfa69312": "https://docs.n8n.io/integrations/builtin/credentials/webhook",
         "scb2b0578a5a2": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/manage-security-policies",
         "sbc0e98df861a": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/task-runners",
         "s2f18871e2911": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/harden-task-runners"
@@ -46525,9 +46525,9 @@ Claims (full source mapping in the JSON block below):
     "sso-mfa": {"text": "Instance MFA enforcement excludes SSO logins; enforce their MFA at the identity provider.", "components": ["docs"], "sources": ["docs:scb2b0578a5a2"], "status": "REASONED"},
     "encryption": {"text": "Stored credentials are encrypted; unset N8N_ENCRYPTION_KEY generates a key under ~/.n8n, not plaintext; losing it makes retained credentials unrecoverable.", "components": ["docs"], "sources": ["docs:se8f5861891dc"], "status": "REASONED"},
     "key-custody": {"text": "Set the same encryption key across workers/replicas, back it up separately from the database and exclude it from source and images.", "components": ["docs"], "sources": ["docs:se8f5861891dc"], "status": "REASONED"},
-    "webhook-auth": {"text": "Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
-    "auth-boundaries": {"text": "Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries.", "components": ["docs"], "sources": ["docs:s7ce8bf5b35e8", "docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
-    "signature": {"text": "A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
+    "webhook-auth": {"text": "Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential.", "components": ["docs"], "sources": ["docs:s7b31c553d69e", "docs:s2841cfa69312"], "status": "REASONED"},
+    "auth-boundaries": {"text": "Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries.", "components": ["docs"], "sources": ["docs:s7ce8bf5b35e8", "docs:s7b31c553d69e", "docs:s2841cfa69312"], "status": "REASONED"},
+    "signature": {"text": "A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials.", "components": ["docs"], "sources": ["docs:s7b31c553d69e", "docs:s2841cfa69312"], "status": "REASONED"},
     "code-execution": {"text": "Code runs JavaScript/Python and Execute Command a shell child of n8n; NODES_EXCLUDE turns Execute Command off by default at 2.40.6, and with Local File Trigger at 2.0.0 and 2.43.8, while 1.123.85 (1.x line) excludes none. The unversioned rolling 2.0 changes page also lists both as disabled by default in 2.0.", "components": ["docs", "v2-docs", "runtime", "v2-default", "v1-default", "v2-later-default"], "sources": ["docs:s290535cad2ea", "v2-docs:s994d1a49cf93", "runtime:s42b6fad131ec", "runtime:s3bfd6e00f52b", "v2-default:s0b6707ff8f67", "v1-default:s10f7d5ae15e5", "v1-default:scd888024007a", "v2-default:sed9acc6f59f6", "v2-later-default:sa172b5ee013d"], "status": "REASONED"},
     "code-execution-introduced": {"text": "Commit a4757cf0 (2025-12-01) changed the n8n NODES_EXCLUDE default in nodes.config.ts from none to Execute Command and Local File Trigger, and four later nodes.config.ts commits through ea8417e2 keep the default. The lowest-version 2.x tag, 2.0.0-rc.0, excludes both; 1.123.0 and 1.123.85 exclude none.", "components": ["v2-change", "v2-later-commits", "v2-first-default", "v1-first-default", "v1-default"], "sources": ["v2-change:sd5273e65f9ae", "v2-change:s32c46ff8799b", "v2-later-commits:s5781e44679c8", "v2-later-commits:s879c80d47bb5", "v2-later-commits:s031c835d5cd3", "v2-later-commits:se440fd8c8db4", "v2-first-default:saa97fedeb022", "v2-first-default:sad53656aa702", "v1-first-default:sb99e9bb32834", "v1-first-default:s71dd7eaad4e5", "v1-default:s10f7d5ae15e5", "v1-default:scd888024007a"], "status": "REASONED"},
     "code-execution-tags": {"text": "This guide's assessment of n8n nodes.config.ts at each tag, as of October 2026: the NODES_EXCLUDE default is empty at every 1.123.x tag and excludes Execute Command and Local File Trigger at every 2.x tag from 2.0.0-rc.0 through 2.45.0. Releases after 2.45.0 are not covered, and no release was run.", "components": ["v1-first-default", "v1-default", "v2-first-default", "v2-last-tag-default"], "sources": ["v1-first-default:sb99e9bb32834", "v1-first-default:s71dd7eaad4e5", "v1-default:s10f7d5ae15e5", "v1-default:scd888024007a", "v2-first-default:saa97fedeb022", "v2-first-default:sad53656aa702", "v2-last-tag-default:s0f6265beb7d9"], "status": "REASONED"},
@@ -46589,8 +46589,8 @@ Claims (full source mapping in the JSON block below):
     "workflows-list-status": {"text": "At n8n 2.40.6, GET /workflows declares @ApiResponse(200, WorkflowListPublicDto); resolveSuccessStatus returns a route's declared status or throws if none is declared, and, when the handler returns and the DTO parse succeeds, the registry sends 200 with JSON parsed by that DTO (a data array and a nullable nextCursor). This is source reasoning; no response was observed.", "components": ["runtime"], "sources": ["runtime:sd20d9418a167", "runtime:s9a9a1d48bc0f", "runtime:s9f605e5ee70f", "runtime:sb0d44f195f2b", "runtime:s30e4c954e008", "runtime:sd129a893e3bc"], "status": "REASONED"},
     "verify-api": {"text": "At /api/v1/workflows, compare no X-N8N-API-KEY and a valid key (fixed proxy credentials, key on stdin); on success n8n 2.40.6 returns data and nextCursor JSON (spec: 200). This guide assesses 401 if no auth strategy authenticates a keyless call, or a selected express-openapi-validator 5.5.3 security failure lacks a status; rejection and 200 stay unobserved expectations; proxies can alter status.", "components": ["docs", "runtime", "validator"], "sources": ["docs:s7ce8bf5b35e8", "runtime:s3036202ca2bb", "runtime:s1f6c80c34ae4", "runtime:s7a685c70d38b", "runtime:s7a5a33c2d969", "runtime:s5bc5f889e34f", "runtime:s3bec46cee679", "runtime:sc47bb251d1a8", "runtime:s2a7bf000586e", "runtime:sb56a3059769a", "validator:s98d84eff0a82", "validator:s1cdc721af10e", "runtime:s36fc02fa718a", "runtime:s2d9fd6635fbf", "validator:s80197403fe11", "validator:sd316616a548a", "validator:s35d0eaba3dad", "runtime:sa7664370234c", "runtime:sb0d44f195f2b", "runtime:s30e4c954e008", "runtime:s0b99491fb492", "runtime:s64c7fad8e9b8", "runtime:seeadaac62b26", "runtime:sefedd6e89959", "runtime:sc2d6d5f9631a", "runtime:sb3d5f5fd5d13"], "status": "REASONED", "verify": [1]},
     "verify-editor": {"text": "Confirm editor session login at /rest/login separately; the pinned login controller registers POST /login under the default rest endpoint, which is configurable. A protected public API does not prove editor protection.", "components": ["runtime"], "sources": ["runtime:sb97647f7fcce", "runtime:s5d8dc0d1f235"], "status": "REASONED", "verify": [1]},
-    "verify-webhook": {"text": "Use each production /webhook/ method and valid payload with missing/wrong/valid credentials; the pinned Webhook handler returns 401 for missing Basic/JWT credentials and 403 for missing Header credentials when node credentials are configured. Verify actions, not status alone.", "components": ["docs", "runtime"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd", "runtime:s475cc9182a7a", "runtime:s07bb616d396d", "runtime:s4d8fc5553b56", "runtime:s7a5b5df355c6", "runtime:s2fc1bd6b7634"], "status": "REASONED", "verify": [1]},
-    "verify-signature": {"text": "For None plus workflow signature checks, unsigned calls must run no action; 404 from inactive/wrong path/method is not protection.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED", "verify": [1]}
+    "verify-webhook": {"text": "Use each production /webhook/ method and valid payload with missing/wrong/valid credentials; the pinned Webhook handler returns 401 for missing Basic/JWT credentials and 403 for missing Header credentials when node credentials are configured. Verify actions, not status alone.", "components": ["docs", "runtime"], "sources": ["docs:s7b31c553d69e", "docs:s2841cfa69312", "runtime:s475cc9182a7a", "runtime:s07bb616d396d", "runtime:s4d8fc5553b56", "runtime:s7a5b5df355c6", "runtime:s2fc1bd6b7634"], "status": "REASONED", "verify": [1]},
+    "verify-signature": {"text": "For None plus workflow signature checks, unsigned calls must run no action; 404 from inactive/wrong path/method is not protection.", "components": ["docs"], "sources": ["docs:s7b31c553d69e", "docs:s2841cfa69312"], "status": "REASONED", "verify": [1]}
   }
 }
 ````
@@ -46958,7 +46958,7 @@ Point that block at Sentry's `http://tracker.example.com:9000/`: because the bun
 - Sentry organization update API (`require2FA`, data scrubbing fields): https://docs.sentry.io/api/organizations/update-an-organization/
 - Sentry bundled configuration (`SENTRY_SINGLE_ORGANIZATION`, the commented-out `SECURE_PROXY_SSL_HEADER`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`): https://github.com/getsentry/self-hosted/blob/26.8.0/sentry/sentry.conf.example.py
 - Sentry DSN explainer (a DSN is public and allows only event submission, not read access): https://docs.sentry.io/concepts/key-terms/dsn-explainer/
-- GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install
+- GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install/
 - GlitchTip two-factor authentication (available since v1.8): https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/
 - [GlitchTip backend v6.2.6 organization membership on login for a user with a linked social account (checked October 2026)](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45).
 - [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
@@ -47016,7 +47016,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3352bcdbc8350cf1e4966038e3e9531acf00baa3cf839fd59dff973a9bb555e9",
+  "body_sha256": "4dc4dda9ced1d601b8d45a8c9f506889a0ca4bf10c1d140303e4ab0c17a2c66e",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",
@@ -47051,7 +47051,7 @@ Claims (full source mapping in the JSON block below):
       "name": "GlitchTip documentation",
       "basis": "unknown",
       "sources": {
-        "seb7debbdfdf4": "https://glitchtip.com/documentation/install"
+        "scaee058a19e4": "https://glitchtip.com/documentation/install/"
       }
     },
     "glitchtip-mfa": {
@@ -47075,17 +47075,17 @@ Claims (full source mapping in the JSON block below):
     "sentry-mfa": {"text": "Enforce organization member MFA with require2FA.", "components": ["sentry-docs"], "sources": ["sentry-docs:see399d43779f"], "status": "REASONED"},
     "sentry-scrubbing": {"text": "Use dataScrubber, dataScrubberDefaults and scrubIPAddresses to reduce sensitive intake.", "components": ["sentry-docs"], "sources": ["sentry-docs:see399d43779f"], "status": "REASONED"},
     "sentry-precedence": {"text": "auth.allow-registration prioritizes config.yml over the database; verify SSO provisioning and effective scrubbing separately.", "components": ["sentry", "sentry-docs"], "sources": ["sentry:sd576440e137e", "sentry-docs:see399d43779f"], "status": "REASONED"},
-    "glitchtip-port": {"text": "GlitchTip Compose publishes 8000; bind privately behind TLS and verify the actual sample host bind.", "components": ["glitchtip"], "sources": ["glitchtip:seb7debbdfdf4"], "status": "REASONED"},
-    "glitchtip-registration": {"text": "ENABLE_USER_REGISTRATION defaults True; False disables self-signup after the first user exists.", "components": ["glitchtip"], "sources": ["glitchtip:seb7debbdfdf4"], "status": "REASONED"},
-    "glitchtip-secret": {"text": "Use a unique SECRET_KEY for Django signing and keep it out of version control.", "components": ["glitchtip"], "sources": ["glitchtip:seb7debbdfdf4"], "status": "REASONED"},
+    "glitchtip-port": {"text": "GlitchTip Compose publishes 8000; bind privately behind TLS and verify the actual sample host bind.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED"},
+    "glitchtip-registration": {"text": "ENABLE_USER_REGISTRATION defaults True; False disables self-signup after the first user exists.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED"},
+    "glitchtip-secret": {"text": "Use a unique SECRET_KEY for Django signing and keep it out of version control.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED"},
     "glitchtip-mfa": {"text": "Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version.", "components": ["glitchtip-mfa"], "sources": ["glitchtip-mfa:sb4f6be6e6b48"], "status": "REASONED"},
-    "glitchtip-stores": {"text": "Keep PostgreSQL and optional Valkey or Redis internal.", "components": ["glitchtip"], "sources": ["glitchtip:seb7debbdfdf4"], "status": "REASONED"},
+    "glitchtip-stores": {"text": "Keep PostgreSQL and optional Valkey or Redis internal.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED"},
     "membership": {"text": "Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner.", "components": ["sentry", "glitchtip-backend"], "sources": ["sentry:sf2294c9468b9", "sentry:se4a92c571e6f", "glitchtip-backend:s32daf6ef6011"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sd29b3662378f", "glitchtip:seb7debbdfdf4"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sd29b3662378f", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [1]},
     "verify-sentry": {"text": "Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration.", "components": ["sentry"], "sources": ["sentry:sd576440e137e", "sentry:sf2294c9468b9"], "status": "REASONED", "verify": [2]},
-    "verify-glitchtip": {"text": "On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user.", "components": ["glitchtip"], "sources": ["glitchtip:seb7debbdfdf4"], "status": "REASONED", "verify": [2]},
-    "verify-stores": {"text": "Off-host backing-port probes judge TCP connection outcomes, not HTTP codes; distinguish the public HTTPS proxy and backend ports.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sd29b3662378f", "glitchtip:seb7debbdfdf4"], "status": "REASONED", "verify": [2]},
-    "verify-https": {"text": "Confirm plaintext web requests redirect to the HTTPS proxy; login pages, 404s and TLS errors do not prove controls.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sf2294c9468b9", "glitchtip:seb7debbdfdf4"], "status": "REASONED", "verify": [2]}
+    "verify-glitchtip": {"text": "On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [2]},
+    "verify-stores": {"text": "Off-host backing-port probes judge TCP connection outcomes, not HTTP codes; distinguish the public HTTPS proxy and backend ports.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sd29b3662378f", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [2]},
+    "verify-https": {"text": "Confirm plaintext web requests redirect to the HTTPS proxy; login pages, 404s and TLS errors do not prove controls.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sf2294c9468b9", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [2]}
   }
 }
 ````
@@ -48941,7 +48941,7 @@ RAY_AUTH_MODE=token ray start --head
 
 Every node and every client needs the same token. Ray reads it from `RAY_AUTH_TOKEN`, then from the file named by `RAY_AUTH_TOKEN_PATH`, then from `~/.ray/auth_token`; the docs recommend the file paths over the environment variable so other code that reads the environment cannot see it. Copy the file to each node before `ray start`, keep its permissions tight, and never commit it: tokens do not expire and are stored in plaintext ([secrets.md](secrets.md)). The token travels as an HTTP header, so over plain HTTP it is visible to the network; only send it inside the SSH tunnel, tailnet, or TLS proxy from step 1.
 
-On Kubernetes, [KubeRay v1.6.0](https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L17-L19) defines the `authOptions` field of a `RayCluster`; the [v1.5.0 types file](https://github.com/ray-project/kuberay/blob/v1.5.0/ray-operator/apis/ray/v1/raycluster_types.go#L12-L47) has no `AuthOptions` in `RayClusterSpec`. This guide infers support in v1.6.0 and later from those tags; later releases have not been checked. With token mode enabled, the [v1.6.0 controller](https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/raycluster_controller.go#L369-L433) creates a Secret with a random token only when Kubernetes ServiceAccount token authentication is off, `SecretName` is null or empty, and the generated-name Secret does not already exist; if that Secret exists, it creates none. A nonempty `SecretName` selects the named Secret without creating one, and ServiceAccount token authentication creates no Secret. The [head pod call](https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L234-L236) and [worker pod call](https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L460-L462) both use the [pod builder](https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L253-L271), which sets `RAY_AUTH_MODE` if unset on the Ray containers of head and worker pods and on the `wait-gcs-ready` init container when present. The [head autoscaler call](https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L194-L220) also sets it on the autoscaler container when autoscaling is enabled. Outside ServiceAccount token authentication, the builder adds `RAY_AUTH_TOKEN` from the selected Secret if unset on those containers; in ServiceAccount mode it does not add `RAY_AUTH_TOKEN` and instead adds `RAY_ENABLE_K8S_TOKEN_AUTH` and mounts a token ([environment-variable code](https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L296-L336)). For Secret-based token authentication, clients read the token with `kubectl get secrets 'REPLACE_WITH_SECRET_NAME' --template='{{.data.auth_token}}' | base64 -d` (quote the name, or the shell reads the unquoted `<name>` as input redirection, and quote the template so its braces are not globbed). Without the token, `ray job submit` fails with `401 Unauthorized`.
+On Kubernetes, [KubeRay v1.6.0](https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L17-L19) defines the `authOptions` field of a `RayCluster`; the [v1.5.0 types file](https://github.com/kuberay-project/kuberay/blob/v1.5.0/ray-operator/apis/ray/v1/raycluster_types.go#L12-L47) has no `AuthOptions` in `RayClusterSpec`. This guide infers support in v1.6.0 and later from those tags; later releases have not been checked. With token mode enabled, the [v1.6.0 controller](https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/raycluster_controller.go#L369-L433) creates a Secret with a random token only when Kubernetes ServiceAccount token authentication is off, `SecretName` is null or empty, and the generated-name Secret does not already exist; if that Secret exists, it creates none. A nonempty `SecretName` selects the named Secret without creating one, and ServiceAccount token authentication creates no Secret. The [head pod call](https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L234-L236) and [worker pod call](https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L460-L462) both use the [pod builder](https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L253-L271), which sets `RAY_AUTH_MODE` if unset on the Ray containers of head and worker pods and on the `wait-gcs-ready` init container when present. The [head autoscaler call](https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L194-L220) also sets it on the autoscaler container when autoscaling is enabled. Outside ServiceAccount token authentication, the builder adds `RAY_AUTH_TOKEN` from the selected Secret if unset on those containers; in ServiceAccount mode it does not add `RAY_AUTH_TOKEN` and instead adds `RAY_ENABLE_K8S_TOKEN_AUTH` and mounts a token ([environment-variable code](https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L296-L336)). For Secret-based token authentication, clients read the token with `kubectl get secrets 'REPLACE_WITH_SECRET_NAME' --template='{{.data.auth_token}}' | base64 -d` (quote the name, or the shell reads the unquoted `<name>` as input redirection, and quote the template so its braces are not globbed). Without the token, `ray job submit` fails with `401 Unauthorized`.
 
 MFA: Ray has no user accounts, so a second factor can only come from the path to the cluster: the SSH login, the tailnet, or an identity-aware proxy in front of the dashboard ([mfa.md](mfa.md)).
 
@@ -49134,10 +49134,10 @@ REASONED: mixed historical listener observations and unrun service comparisons f
 - `ray start` CLI reference (`--dashboard-host` default, `--dashboard-port` 8265, `--port` 6379, `--ray-client-server-port` 10001): https://docs.ray.io/en/latest/cluster/cli.html
 - Configuring Ray (TLS environment variables, ports opened by nodes): https://docs.ray.io/en/latest/ray-core/configure.html
 - Configure Ray clusters to use token authentication (KubeRay `authOptions`, 401 without token): https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html
-- KubeRay v1.6.0 `RayClusterSpec.authOptions` and token options (checked October 2026): https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L17-L19, https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L81-L107
-- KubeRay v1.5.0 `RayClusterSpec` comparison (checked October 2026): https://github.com/ray-project/kuberay/blob/v1.5.0/ray-operator/apis/ray/v1/raycluster_types.go#L12-L47
-- KubeRay v1.6.0 token Secret reconciliation and auth-mode predicate (checked October 2026): https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/raycluster_controller.go#L369-L433, https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/utils/util.go#L760-L766
-- KubeRay v1.6.0 head and worker pod token calls, head autoscaler token call, and Ray-container and init-container token setup (checked October 2026). KubeRay v1.6.0 token call and setup sources (checked October 2026): https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L194-L220, https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L234-L236 and https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L460-L462. KubeRay v1.6.0 token call and setup sources (checked October 2026), continued: https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L253-L271 and https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L296-L336
+- KubeRay v1.6.0 `RayClusterSpec.authOptions` and token options (checked October 2026): https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L17-L19, https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L81-L107
+- KubeRay v1.5.0 `RayClusterSpec` comparison (checked October 2026): https://github.com/kuberay-project/kuberay/blob/v1.5.0/ray-operator/apis/ray/v1/raycluster_types.go#L12-L47
+- KubeRay v1.6.0 token Secret reconciliation and auth-mode predicate (checked October 2026): https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/raycluster_controller.go#L369-L433, https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/utils/util.go#L760-L766
+- KubeRay v1.6.0 head and worker pod token calls, head autoscaler token call, and Ray-container and init-container token setup (checked October 2026). KubeRay v1.6.0 token call and setup sources (checked October 2026): https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L194-L220, https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L234-L236 and https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L460-L462. KubeRay v1.6.0 token call and setup sources (checked October 2026), continued: https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L253-L271 and https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L296-L336
 - Docker, port publishing (loopback publishing): https://docs.docker.com/engine/network/port-publishing/
 - Docker Engine v28.0.0 release notes, neighbour-host loopback-publishing fix (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/release-notes/28.md#L768-L768
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
@@ -49174,7 +49174,7 @@ REASONED: mixed historical listener observations and unrun service comparisons f
 - Ray metrics imports the standard WSGI server (pinned tag), whose default server inherits `AF_INET` (CPython v3.11.0). That WSGI import and `AF_INET` default are the source basis for the IPv4-only bind and `::1` limitation. Ray metrics WSGI server sources (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L10 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L326-L334. CPython `AF_INET` default sources (CPython v3.11.0): https://github.com/python/cpython/blob/v3.11.0/Lib/wsgiref/simple_server.py#L1-L160, https://github.com/python/cpython/blob/v3.11.0/Lib/http/server.py#L120-L145 and https://github.com/python/cpython/blob/v3.11.0/Lib/socketserver.py#L400-L480
 - Ray direct `/logs/` Verify discriminator: static directory index inside the agent middleware, disabled token bypass, 401 for missing credentials, valid-token access and exact health exemptions (pinned tag). Ray direct `/logs/` Verify discriminator sources (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L245-L249 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L20-L23. Ray direct `/logs/` Verify discriminator sources (pinned tag), continued: https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/authentication/http_token_authentication.py#L28-L80
 - Kubernetes security contexts (runAsNonRoot, drop capabilities, seccomp): https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-- KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
+- KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/kuberay-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
 - [Ray ray-2.58.0 Serve gRPC default port and servicer-function requirement (checked October 2026)](https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/config.py#L955-L963).
 
 
@@ -49259,7 +49259,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "815fd376d619c0e992cb2ede22510a043707348ea5db2c08cbcec886aba6a5b3",
+  "body_sha256": "00705e982caf1287b763daf4cbf22ec934a09311d02680bd0f0b338c06204c58",
   "components": {
     "ray": {
       "name": "Ray pinned source",
@@ -49371,29 +49371,29 @@ Claims (full source mapping in the JSON block below):
       "name": "KubeRay chart",
       "basis": "v1.7.0",
       "sources": {
-        "s76e45858aa01": "https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml"
+        "s0a2d3e6aaea9": "https://github.com/kuberay-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml"
       }
     },
     "kuberay-auth-source": {
       "name": "KubeRay authentication source",
       "basis": "v1.6.0",
       "sources": {
-        "s9a9f9edcc07e": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L17-L19",
-        "s51c84c0bc3b4": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L81-L107",
-        "s61e750cdc2e0": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/raycluster_controller.go#L369-L433",
-        "s6171707b3edb": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L194-L220",
-        "s408a3a202322": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L234-L236",
-        "s8505add03e5a": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L253-L271",
-        "s1cb4f972131a": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L296-L336",
-        "sd1b672bc4edd": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L460-L462",
-        "se37635162dc9": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/utils/util.go#L760-L766"
+        "s417d19011876": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L17-L19",
+        "s458847583318": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L81-L107",
+        "sb656a53eb388": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/raycluster_controller.go#L369-L433",
+        "s950487dca90c": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L194-L220",
+        "s75fe88e2e7f7": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L234-L236",
+        "s0c69263cf3da": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L253-L271",
+        "sa247fb19c9a7": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L296-L336",
+        "se2297a39bafa": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L460-L462",
+        "s98da5c4b5deb": "https://github.com/kuberay-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/utils/util.go#L760-L766"
       }
     },
     "kuberay-auth-prior": {
       "name": "KubeRay prior RayCluster types",
       "basis": "v1.5.0",
       "sources": {
-        "s04c5ce0b599d": "https://github.com/ray-project/kuberay/blob/v1.5.0/ray-operator/apis/ray/v1/raycluster_types.go#L12-L47"
+        "s5c1c11450a05": "https://github.com/kuberay-project/kuberay/blob/v1.5.0/ray-operator/apis/ray/v1/raycluster_types.go#L12-L47"
       }
     },
     "docker": {
@@ -49463,7 +49463,7 @@ Claims (full source mapping in the JSON block below):
     "token-input": {"text": "Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client.", "components": ["ray"], "sources": ["ray:sed3f197cc1ef"], "status": "REASONED"},
     "token-storage": {"text": "Generate/protect token files and copy before startup; tokens are plaintext, do not expire and must never be committed.", "components": ["ray"], "sources": ["ray:sed3f197cc1ef"], "status": "REASONED"},
     "token-transport": {"text": "Token HTTP headers require a trusted tunnel or TLS; plaintext HTTP exposes them on the network.", "components": ["docs", "ray"], "sources": ["docs:s6f0aa11f549a", "ray:sed3f197cc1ef"], "status": "REASONED"},
-    "kuberay-token": {"text": "KubeRay v1.6.0 defines authOptions; v1.5.0 RayClusterSpec lacks it. With token mode enabled, the controller creates a random-token Secret when Kubernetes ServiceAccount token authentication is off, SecretName is null or empty, and the generated-name Secret does not already exist; it leaves an existing generated-name Secret or a supplied named Secret in place and creates no Secret in ServiceAccount mode. The pod builder sets RAY_AUTH_MODE when unset on head and worker Ray containers, on the wait-gcs-ready init container when present, and on the head autoscaler when autoscaling is enabled; outside ServiceAccount mode it adds RAY_AUTH_TOKEN from the selected Secret when unset, and in ServiceAccount mode it does not add RAY_AUTH_TOKEN. This guide infers support in v1.6.0 and later from the compared tags; later releases have not been checked.", "components": ["kuberay-auth", "kuberay-auth-source", "kuberay-auth-prior"], "sources": ["kuberay-auth:saf5247262bc7", "kuberay-auth-source:s9a9f9edcc07e", "kuberay-auth-source:s51c84c0bc3b4", "kuberay-auth-source:s61e750cdc2e0", "kuberay-auth-source:s6171707b3edb", "kuberay-auth-source:s408a3a202322", "kuberay-auth-source:s8505add03e5a", "kuberay-auth-source:s1cb4f972131a", "kuberay-auth-source:sd1b672bc4edd", "kuberay-auth-source:se37635162dc9", "kuberay-auth-prior:s04c5ce0b599d"], "status": "REASONED"},
+    "kuberay-token": {"text": "KubeRay v1.6.0 defines authOptions; v1.5.0 RayClusterSpec lacks it. With token mode enabled, the controller creates a random-token Secret when Kubernetes ServiceAccount token authentication is off, SecretName is null or empty, and the generated-name Secret does not already exist; it leaves an existing generated-name Secret or a supplied named Secret in place and creates no Secret in ServiceAccount mode. The pod builder sets RAY_AUTH_MODE when unset on head and worker Ray containers, on the wait-gcs-ready init container when present, and on the head autoscaler when autoscaling is enabled; outside ServiceAccount mode it adds RAY_AUTH_TOKEN from the selected Secret when unset, and in ServiceAccount mode it does not add RAY_AUTH_TOKEN. This guide infers support in v1.6.0 and later from the compared tags; later releases have not been checked.", "components": ["kuberay-auth", "kuberay-auth-source", "kuberay-auth-prior"], "sources": ["kuberay-auth:saf5247262bc7", "kuberay-auth-source:s417d19011876", "kuberay-auth-source:s458847583318", "kuberay-auth-source:sb656a53eb388", "kuberay-auth-source:s950487dca90c", "kuberay-auth-source:s75fe88e2e7f7", "kuberay-auth-source:s0c69263cf3da", "kuberay-auth-source:sa247fb19c9a7", "kuberay-auth-source:se2297a39bafa", "kuberay-auth-source:s98da5c4b5deb", "kuberay-auth-prior:s5c1c11450a05"], "status": "REASONED"},
     "mfa": {"text": "Ray has no user accounts; MFA belongs on SSH, tailnet or identity-aware proxy access.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12"], "status": "REASONED"},
     "grpc-tls": {"text": "RAY_USE_TLS defaults 0; export it and server certificate/key/CA variables on every node before startup for internal gRPC mutual TLS.", "components": ["docs"], "sources": ["docs:s261570b2672b"], "status": "REASONED"},
     "tls-scope": {"text": "gRPC TLS can cost performance and does not replace isolation or the dashboard/Jobs HTTP TLS proxy.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12", "docs:s261570b2672b"], "status": "REASONED"},
@@ -49474,7 +49474,7 @@ Claims (full source mapping in the JSON block below):
     "serve-tls": {"text": "Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates.", "components": ["docs"], "sources": ["docs:scd3f7d8a9b02"], "status": "REASONED"},
     "serve-grpc": {"text": "Optional Serve gRPC uses 9000 only with configured servicer functions.", "components": ["docs", "ray"], "sources": ["docs:s045d75fbdecc", "ray:scc7af6be456e"], "status": "REASONED"},
     "image-privilege": {"text": "Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation.", "components": ["ray"], "sources": ["ray:s08d31327265a"], "status": "REASONED"},
-    "pod-security": {"text": "KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.", "components": ["kuberay", "kubernetes"], "sources": ["kuberay:s76e45858aa01", "kubernetes:sb78ea91d0308"], "status": "REASONED"},
+    "pod-security": {"text": "KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.", "components": ["kuberay", "kubernetes"], "sources": ["kuberay:s0a2d3e6aaea9", "kubernetes:sb78ea91d0308"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available.", "components": ["ray"], "sources": ["ray:s9a060fe08a53", "ray:s6f5310eb313d", "ray:s532a98227d6d", "ray:s7f27125f73b7", "ray:s434c7b4364dc"], "status": "REASONED", "verify": [1]},
     "verify-external": {"text": "Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive.", "components": ["docs", "curl"], "sources": ["docs:sa5e2c2d58c12", "docs:s261570b2672b", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-jobs": {"text": "Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error.", "components": ["ray", "kuberay-auth"], "sources": ["ray:sed3f197cc1ef", "kuberay-auth:saf5247262bc7"], "status": "REASONED", "verify": [1]},
@@ -50169,7 +50169,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Flowise deployment with nginx and certbot: https://docs.flowiseai.com/configuration/deployment/digital-ocean
 - Flowise Compose (publishes `${PORT}:${PORT}`): https://github.com/FlowiseAI/Flowise/blob/4ea391204a499fb6d19747104502362295b4dde3/docker/docker-compose.yml
 - Langflow example Compose (publishes `7860:7860` and PostgreSQL `5432:5432`): https://github.com/langflow-ai/langflow/blob/c6dbca308dc85526d5cecb31211821ec4f5e1d05/docker_example/docker-compose.yml
-- LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml
+- LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/LibreChat-AI/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml
 - Langflow API keys and authentication: https://docs.langflow.org/api-keys-and-authentication
 - Langflow environment variables (`LANGFLOW_HOST`, `LANGFLOW_PORT`, SSL files): https://docs.langflow.org/environment-variables
 - Langflow 1.12.6 server defaults (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/groups/server.py#L21-L24
@@ -50363,7 +50363,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "c4aeadb22dfa897ab0c46c72cb0d6a86b7d73adb28c3e077bc2f28cc58e35c0e",
+  "body_sha256": "0fd0e34d51b21b3dcaf54b2d66d771032f176988bc02453cfa4687e491c64b5f",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
@@ -50666,7 +50666,7 @@ Claims (full source mapping in the JSON block below):
       "name": "LibreChat Compose",
       "basis": "1596df724a840f894831fc74f21de8d8df72fcb1",
       "sources": {
-        "sb3cc671b90e3": "https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml"
+        "sb9bc9a9d7f0f": "https://github.com/LibreChat-AI/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml"
       }
     },
     "librechat": {
@@ -50733,7 +50733,7 @@ Claims (full source mapping in the JSON block below):
   "claims": {
     "flowise-port": {"text": "Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping.", "components": ["flowise", "flowise-compose"], "sources": ["flowise:sfee1ae75d51a", "flowise-compose:s81474794a92d"], "status": "REASONED"},
     "langflow-port": {"text": "Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private.", "components": ["langflow", "langflow-compose", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-compose:s7f4564c949cb", "langflow-1126:s8049fb15747e", "langflow-1126:s44bfa70223f9"], "status": "REASONED"},
-    "librechat-port": {"text": "LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.", "components": ["librechat", "librechat-compose"], "sources": ["librechat:s3f1c594392bc", "librechat-compose:sb3cc671b90e3"], "status": "REASONED"},
+    "librechat-port": {"text": "LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.", "components": ["librechat", "librechat-compose"], "sources": ["librechat:s3f1c594392bc", "librechat-compose:sb9bc9a9d7f0f"], "status": "REASONED"},
     "compose-merge": {"text": "Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins.", "components": ["docker", "docker-merge", "compose-243", "compose-244", "compose-go-rc2", "compose-go-rc3"], "sources": ["docker:se716ad33db1f", "docker-merge:s72ea21230137", "docker-merge:sc9bb17bb3323", "docker-merge:s9d483ca7e4f4", "compose-243:s025e0d398762", "compose-244:s31edecddf3be", "compose-244:s6fc4eeeedfbd", "compose-go-rc2:sc2bf2c1e7297", "compose-go-rc3:s8d6dab78abf1"], "status": "REASONED"},
     "docker-firewall": {"text": "Docker published traffic can bypass UFW; removing or narrowing publications is required.", "components": ["docker"], "sources": ["docker:s351180c6678f"], "status": "REASONED"},
     "dify-ports": {"text": "Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off.", "components": ["dify-console", "dify-compose"], "sources": ["dify-console:sb28809d177bf", "dify-compose:s517af9c43635", "dify-console:s1e4c822a36b1"], "status": "REASONED"},
@@ -57373,7 +57373,7 @@ REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal 
 - Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , and HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS. The Vaultwarden `.env.template`: https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
-- Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
+- Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet/ and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
 - GitLab CE initial root password (Docker install): https://docs.gitlab.com/install/docker/installation/
 - GitLab CE sign-up restrictions: https://docs.gitlab.com/administration/settings/sign_up_restrictions/
 - GitLab CE default visibility and access controls: https://docs.gitlab.com/administration/settings/visibility_and_access_controls/
@@ -57494,7 +57494,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "26e8ed2c8a47a290a9aaefd2cb37d3f833b624d0a8aff89daa2ca5aeac0fc5d1",
+  "body_sha256": "a7aa662e7e04c9f69ffc9abf859cfe13b6a7eb9e226f65ee50acd52d49df860f",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -57524,7 +57524,7 @@ Claims (full source mapping in the JSON block below):
       "name": "Gitea MFA minimum",
       "basis": "1.24",
       "sources": {
-        "s57933519c308": "https://docs.gitea.com/administration/config-cheat-sheet"
+        "sfec17fde7bb0": "https://docs.gitea.com/administration/config-cheat-sheet/"
       }
     },
     "coolify": {
@@ -57588,7 +57588,7 @@ Claims (full source mapping in the JSON block below):
       "name": "Gitea docs",
       "basis": "unknown",
       "sources": {
-        "s57933519c308": "https://docs.gitea.com/administration/config-cheat-sheet",
+        "sfec17fde7bb0": "https://docs.gitea.com/administration/config-cheat-sheet/",
         "s3b7060d58383": "https://docs.gitea.com/usage/user-setting/multi-factor-authentication/"
       }
     },
@@ -57692,10 +57692,10 @@ Claims (full source mapping in the JSON block below):
     "jenkins-agents": {"text": "Inbound agents use fixed/random TCP or WebSocket on HTTPS; prefer WebSocket or isolate the extra port.", "components": ["jenkins"], "sources": ["jenkins:s524c8d5871f1"], "status": "REASONED"},
     "jenkins-mfa": {"text": "No native second factor; enforce MFA through SSO/fronting identity.", "components": ["jenkins"], "sources": ["jenkins:s524c8d5871f1", "jenkins:sdfee751aeeee"], "status": "REASONED"},
     "gitea-bind": {"text": "HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default; set 127.0.0.1 behind a proxy.", "components": ["gitea-pin"], "sources": ["gitea-pin:s31dd622b1c12"], "status": "REASONED"},
-    "gitea-tls": {"text": "Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.", "components": ["gitea"], "sources": ["gitea:s57933519c308"], "status": "REASONED"},
-    "gitea-registration": {"text": "Set service DISABLE_REGISTRATION=true; default false.", "components": ["gitea"], "sources": ["gitea:s57933519c308"], "status": "REASONED"},
-    "gitea-private": {"text": "Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false.", "components": ["gitea"], "sources": ["gitea:s57933519c308"], "status": "REASONED"},
-    "gitea-mfa": {"text": "Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later.", "components": ["gitea", "gitea-mfa-min"], "sources": ["gitea:s57933519c308", "gitea:s3b7060d58383", "gitea-mfa-min:s57933519c308"], "status": "REASONED"},
+    "gitea-tls": {"text": "Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
+    "gitea-registration": {"text": "Set service DISABLE_REGISTRATION=true; default false.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
+    "gitea-private": {"text": "Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
+    "gitea-mfa": {"text": "Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later.", "components": ["gitea", "gitea-mfa-min"], "sources": ["gitea:sfec17fde7bb0", "gitea:s3b7060d58383", "gitea-mfa-min:sfec17fde7bb0"], "status": "REASONED"},
     "gitea-tokens": {"text": "With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens.", "components": ["gitea"], "sources": ["gitea:s3b7060d58383"], "status": "REASONED"},
     "gitlab-root": {"text": "Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED"},
     "gitlab-signup": {"text": "signup_enabled defaults true; disable for a private forge.", "components": ["gitlab"], "sources": ["gitlab:s6e8d16cad2ef"], "status": "REASONED"},
@@ -57720,7 +57720,7 @@ Claims (full source mapping in the JSON block below):
     "nodered-secret": {"text": "Set credentialSecret yourself; otherwise generated, and stored credentials depend on it.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
     "nodered-private": {"text": "Keep editor private with fronting MFA; it has the power of its flows.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
     "verify-listeners": {"text": "Read every panel/API listener; expect loopback or absence, never wildcard exposure.", "components": ["portainer", "dokploy", "npm", "kuma", "docker"], "sources": ["portainer:s3e163c7d3c38", "dokploy:sc2cc854c9b7e", "npm:se553d384e783", "kuma:s05b853ba300b", "docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
-    "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:s57933519c308"], "status": "REASONED", "verify": [1]},
+    "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:sfec17fde7bb0"], "status": "REASONED", "verify": [1]},
     "verify-docker-plain": {"text": "Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.", "components": ["docker"], "sources": ["docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
     "verify-docker-mtls": {"text": "2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.", "components": ["docker"], "sources": ["docker:sfe15a8156c18"], "status": "REASONED", "verify": [1]},
     "verify-gitlab": {"text": "Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED", "verify": [1]}
