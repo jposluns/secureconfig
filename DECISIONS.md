@@ -812,6 +812,32 @@ recorded with its question, the three predictions and its outcome, for the maint
   with no trigger that would ever close it". The record gives the final count: A 2, B 1, A stands. Its effect,
   applied in the same change as this entry: TODO row 1.383 stays open, narrowed to those three claims, and no rule
   changes.
+- **Proxy decision of 2026-10-28 on the `exposure-index.md` link list, TODO 1.385, for the maintainer's later review
+  (#1011).** Decided at 2026-10-28T01:17:20Z under that directive. The question was whether `exposure-index.md:59`, a
+  427-character verbless list of 25 guide links in a table cell, counts as a sentence under row 1.385. The outcome,
+  as the record reads:
+  "A, not a prose sentence; leave it as is and record the exclusion explicitly in row 1.385 when it closes (guardrails suggests also stating in the rule how lists are measured)."
+  The predictions, as recorded: the orchestrator predicted B (split with neutral labels), and lab_infra predicted A
+  (20261028T011233Z.from-lab_infra.934803d024c5.msg). The guardrails prediction, forwarded by lab_infra, is A, with
+  the reasoning "a verbless list of 25 links is a citation list, not a sentence ... rather than insert artificial
+  labels or keep the row open" (20261028T011708Z.from-lab_infra.1c74359d6742.msg). The record gives the final
+  count: A 2, B 1. Guardrails also suggested that the rule state how lists are measured; no rule text changes here,
+  and that suggestion is left for the maintainer's review. Its effect, applied in the same change as this entry:
+  the cell is left as is, and DONE 1.385 records the exclusion as the row closes.
+- **Proxy decision of 2026-10-28 on the TODO 1.385 heading declarations, for the maintainer's later review
+  (#1011).** Decided at 2026-10-28T03:15:00Z under that directive. The question was whether nine sentences over 400
+  characters inside the REASONED declarations of Verify headings count as prose under row 1.385. The outcome, as the
+  record reads:
+  "B, treat as prose and fix in a final batch before the row closes."
+  The predictions, as recorded: the orchestrator predicted B, and lab_infra predicted B ("these are real prose
+  sentences ... that sit in headings only by placement ... he consistently has a found defect fixed before the row
+  closes"; 20261028T031441Z.from-lab_infra.585e7cc632eb.msg). The guardrails prediction was still pending when the
+  decision was taken, and the record notes that the majority was reached without it. The record notes the
+  guardrails prediction as received at 2026-10-28T03:18:22Z, forwarded by lab_infra. It is B, with the reasoning
+  "closing a row whose condition is no prose sentence in any guide exceeds 400 characters while they stand would
+  make its completion claim false" (20261028T031812Z.from-lab_infra.de637cc570ae.msg). The record gives the final
+  count: B 3. Its effect (applied by #1010): the nine sentences were split inside their headings' declarations
+  before row 1.385 closed.
 
 ## Profile: predicting these rulings
 
