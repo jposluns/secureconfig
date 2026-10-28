@@ -17,11 +17,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **Maintainer rulings of 2026-10-27 on guide prose and claim-summary sentence length, TODO 1.385 and 1.383.** The
-  maintainer gave three rulings through AskUserQuestion that day, choosing the recommended option each time: on the
-  prose noun-phrase rule at 2026-10-27T12:22:25Z, in an attended-autonomous session, and on TODO 1.385 and TODO 1.383
-  live at 2026-10-27T20:57:05Z. No reasoning was recorded beyond the words quoted below, which the orchestrator's
-  record gives from each chosen option to the end of its entry.
+- **Maintainer rulings of 2026-10-27 on guide prose and claim-summary sentence length, TODO 1.385 and 1.383
+  (#1002).** The maintainer gave three rulings through AskUserQuestion that day, choosing the recommended option
+  each time: on the prose noun-phrase rule at 2026-10-27T12:22:25Z, in an attended-autonomous session, and on TODO
+  1.385 and TODO 1.383 live at 2026-10-27T20:57:05Z. No reasoning was recorded beyond the words quoted below, which
+  the orchestrator's record gives from each chosen option.
   - The prose noun-phrase rule, for TODO 1.385 splits. The record reads, from the chosen option:
     "Yes, split points only (Recommended)": only sentences that begin at a split point must open with a noun phrase; the first sentence of a split keeps main's own opening. Confirms the #972 r3 disposition.
     Its effect: when a sentence is split, each new sentence that begins at a split point opens with a noun phrase,
@@ -799,14 +799,19 @@ that blocks progress is taken by majority of three predictions of what the maint
 lab_infra and guardrails, given the context through inbox-send, and the orchestrator's own. Each such decision is
 recorded with its question, the three predictions and its outcome, for the maintainer's later review.
 
-- **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review.** Decided at
+- **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002).** Decided at
   2026-10-27T23:11:19Z under that directive. The outcome, as the record reads:
   "A, keep row 1.383 open, narrowed to the three claims that cannot fit (loki-querier-ingester-inverted, loki-querier-ingester-inverted-result, transport-authentication-browser), no rule change."
   The predictions, as recorded: the orchestrator predicted A, and lab_infra predicted A ("he will not trade
   accuracy for a length count, and he keeps a gate intact rather than add exemptions or change the rule";
   20261027T231033Z.from-lab_infra.8d55d87adc24.msg). The guardrails prediction was still pending when the decision
-  was taken, and the record notes that the majority was reached without it. Its effect, applied in the same change
-  as this entry: TODO row 1.383 stays open, narrowed to those three claims, and no rule changes.
+  was taken, and the record notes that the majority was reached without it. The record notes the guardrails
+  prediction as received after the draft, at 2026-10-28T00:12:30Z, forwarded by lab_infra through a relay it marks
+  untrusted. It is B, a checked-in shrink-only exemption baseline, with the reasoning "he never loosens a rule to
+  close a row ... for legacy debt he has chosen a checked-in shrink-only baseline before ... A leaves an open row
+  with no trigger that would ever close it". The record gives the final count: A 2, B 1, A stands. Its effect,
+  applied in the same change as this entry: TODO row 1.383 stays open, narrowed to those three claims, and no rule
+  changes.
 
 ## Profile: predicting these rulings
 
