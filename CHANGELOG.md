@@ -13,6 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-10-28
 
 - Split the eight table-cell sentences over 400 characters in four guides at clause boundaries, keeping each split inside its original cell and changing no fact, qualifier, citation or link (TODO 1.385). The changed guides are `jupyter.md`, `pocketbase.md`, `memcached.md` and `redis.md`, with their plugin copies `plugin/skills/secure-deployment-config/references/jupyter.md`, `plugin/skills/secure-deployment-config/references/pocketbase.md`, `plugin/skills/secure-deployment-config/references/memcached.md` and `plugin/skills/secure-deployment-config/references/redis.md` (#1004)
+- `DECISIONS.md` and `TODO.md` record the three maintainer rulings of 2026-10-27, on split-point noun-phrase openings (applied by #999), on the seven DEMONSTRATED-quoted sentences (applied by #1001) and on the seven held claims (applied by #1000), and record the 2026-10-27 proxy decision on TODO 1.383 for the maintainer's later review. TODO 1.385 stays open for the 38 table-cell sentences over 400 characters in 18 guides, with its prose work complete, and TODO 1.383 is narrowed to the three claims still over the limit (#1002)
 
 ## 2026-10-27
 
