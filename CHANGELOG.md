@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-29
 
-- `gradio.md`, `headless-cms-instant-api.md` and `workflow-orchestrators.md` now cite the redirect targets that TODO 1.386 names for their gradio, PostgREST and Dagster citations, after each target page was checked against the guide text, with each component source key and claim source reference recomputed from the new URL. The PostgREST authentication citation stays unchanged because its target does not state the function `EXECUTE`, `SECURITY DEFINER` and owner-privileged view points that the `postgrest-grants` claim cites it for. `TODO.md` narrows row 1.386 to that entry and its other unchanged items, with `body_sha256` regenerated in the three guides and the plugin copies, `MANIFEST.sha256` and `site/llms-full.txt` rebuilt (#1030)
+- `gradio.md`, `headless-cms-instant-api.md` and `workflow-orchestrators.md` now cite, for the gradio, Dagster and four PostgREST citations that TODO 1.386 lists, the page each old URL redirects to, checked against the guide text, with each component source key and claim source reference recomputed from the new URL. The PostgREST authentication citation stays unchanged, and `TODO.md` narrows row 1.386 to that entry and its other unchanged items, saying a 2026-10-29 fetch of the cited URL returned HTTP 200 after one redirect to that target. `TODO.md` also adds row 1.387 for the claims whose statements the cited pages do not make (`dagster-auth`, `verify-dagster`, `flagging`, `flag-storage`, `postgrest-grants` and the PostgREST part of `egress`), with `body_sha256` regenerated in the three guides and the plugin copies, `MANIFEST.sha256` and `site/llms-full.txt` rebuilt (#1030)
 
 ## 2026-10-28
 
