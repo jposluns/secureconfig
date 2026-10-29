@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-29
 
-- TODO 3.48 step 2, batch C: `ai-infra-services.md` drops seven unreferenced Onyx component sources from its version-basis metadata, three from `onyx-v494` and four from `onyx-v50-beta`, because no claim's text states what those pinned ranges show. The eighth, `onyx-v50-beta:s8843778589c8`, is now cited from `onyx-auth-type-legacy-startup`, whose "no-op unless AUTH_TYPE=saml with no SAML row" the range's three early returns show. The guide body, Sources section, claim texts and statuses, summary and `body_sha256` are unchanged, and TODO 3.48 stays open (#1033)
+- TODO 3.48 step 2, batch C: `ai-infra-services.md` drops six unreferenced Onyx component sources from its version-basis metadata, three from `onyx-v494` and three from `onyx-v50-beta`, because no claim's text states what those pinned ranges show. Two more, both in `onyx-v50-beta`, are now cited from `onyx-auth-type-legacy-startup`: `s8bbce4b47acc`, whose `verify_auth_setting` body warns operators about inert AUTH_TYPE values as the claim's "AUTH_TYPE stale-value warning call" states, and `s8843778589c8`, whose three early returns show the claim's "no-op unless AUTH_TYPE=saml with no SAML row". The guide body, Sources section, claim texts and statuses, summary and `body_sha256` are unchanged, and TODO 3.48 stays open (#1033)
 
 ## 2026-10-28
 
