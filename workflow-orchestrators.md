@@ -265,7 +265,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 ) || echo 'prefect-auth: skipped or failed; continuing'
 
 # dagster-webserver 1.13.24's build_middleware() and build_graphql_middleware() add no authentication,
-# so test /graphql, which can read configuration and launch runs.
+# so test whether /graphql at the origin answers an anonymous query.
 # A RepositoryConnection containing nodes (including an empty nodes list) is a successful read.
 # PythonError, top-level GraphQL errors, and transport failures are inconclusive.
 # Test the proxy separately: send this identical query anonymously and authenticated to the SAME proxy URL.
@@ -611,7 +611,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "ff814feb6956eb7c7a36c679c0ef2ae36668493babbb4bb8a35245f2e63beb3b",
+  "body_sha256": "bfa85243de9cd70b6d7521c19368a8b5291cbdc6b322c507b528314f9d6503d9",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
