@@ -140,12 +140,15 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme or path: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|example.com|example.net|example.org|*/*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme or path) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   curl -q -g -sI --noproxy '*' "http://$1/"    # expect 301 with an https:// Location
   curl -q -g -sI --noproxy '*' "https://$1/"   # succeeds without -k; shows helmet's headers
@@ -289,7 +292,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "9cdaeb02f94283b32c6326a781ea89c10a987a80b156e5d4f931ad95bb0ca743",
+  "body_sha256": "992a9b097ca577dfbb3f777202fed424a50554432afda67ae62bd492db86e0eb",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",
