@@ -2309,7 +2309,6 @@ Claims (full source mapping in the JSON block below):
       "name": "frp documentation",
       "basis": "unknown",
       "sources": {
-        "s7800b0cbd057": "https://gofrp.org/en/docs/",
         "seaee50f5c2ba": "https://gofrp.org/en/docs/reference/server-configures/",
         "s7479bbde986d": "https://gofrp.org/en/docs/features/common/authentication/",
         "sdd126f42c07d": "https://gofrp.org/en/docs/features/common/network/network-tls/"
@@ -5597,7 +5596,6 @@ Claims (full source mapping in the JSON block below):
         "s745b51dd1719": "https://developer.hashicorp.com/vault/docs/auth/approle",
         "s553adec7c375": "https://developer.hashicorp.com/vault/api-docs/auth/approle",
         "s3cf51daf4c81": "https://developer.hashicorp.com/vault/docs/auth/approle/approle-pattern",
-        "s45334d3270eb": "https://developer.hashicorp.com/vault/docs/commands/auth/enable",
         "scfa855ec9d87": "https://developer.hashicorp.com/vault/api-docs/auth/kubernetes",
         "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt",
         "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping",
@@ -7294,7 +7292,7 @@ Components (recorded basis):
 
 Claims (full source mapping in the JSON block below):
 
-- code-flow (REASONED; oauth): Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.
+- code-flow (REASONED; oauth, okta): Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.
 - redirect-match (REASONED; oauth): Register an exact callback URI including scheme, host, path and trailing slash; avoid prefix and wildcard matching.
 - transaction-binding (REASONED; oauth, core): Generate state bound to the browser session, nonce and S256 code_challenge for each authorization; request openid email profile.
 - code-exchange (REASONED; oauth, core): Exchange the code server-side with client secret and the code_verifier that produced the challenge.
@@ -7510,7 +7508,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "code-flow": {"text": "Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.", "components": ["oauth"], "sources": ["oauth:sde329701b60c", "oauth:scb6a61add96b"], "status": "REASONED"},
+    "code-flow": {"text": "Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.", "components": ["oauth", "okta"], "sources": ["oauth:sde329701b60c", "oauth:scb6a61add96b", "okta:s06b93a8255e7"], "status": "REASONED"},
     "redirect-match": {"text": "Register an exact callback URI including scheme, host, path and trailing slash; avoid prefix and wildcard matching.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
     "transaction-binding": {"text": "Generate state bound to the browser session, nonce and S256 code_challenge for each authorization; request openid email profile.", "components": ["oauth", "core"], "sources": ["oauth:scb6a61add96b", "core:scfd2790a544c"], "status": "REASONED"},
     "code-exchange": {"text": "Exchange the code server-side with client secret and the code_verifier that produced the challenge.", "components": ["oauth", "core"], "sources": ["oauth:scb6a61add96b", "core:scfd2790a544c"], "status": "REASONED"},
@@ -34908,7 +34906,7 @@ Claims (full source mapping in the JSON block below):
     "verify-budgets": {"text": "Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity.", "components": ["stable"], "sources": ["stable:s1310cfc0315d"], "status": "REASONED", "verify": [1, 3]},
     "verify-isolation": {"text": "Disallowed observer must lose TCP11211 while allowed observer still completes a protected request; timeout alone is inconclusive without target/listener/firewall evidence.", "components": ["docs"], "sources": ["docs:sb2bb8731440a"], "status": "REASONED", "verify": [2]},
     "verify-text": {"text": "Loopback plaintext stats/settings end with END only in the applicable text configuration; SASL/TLS/private-bind failures prove none of those controls independently.", "components": ["protocol", "stable"], "sources": ["protocol:s625682583be8", "stable:sceaaea90ec60"], "status": "REASONED", "verify": [3]},
-    "verify-tls": {"text": "Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient.", "components": ["docs", "openssl"], "sources": ["docs:s57f57201fc31", "openssl:s8a7380c7371d"], "status": "REASONED", "verify": [4]},
+    "verify-tls": {"text": "Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient.", "components": ["docs", "openssl"], "sources": ["docs:s57f57201fc31", "openssl:s8a7380c7371d", "openssl:s00aaf106164f"], "status": "REASONED", "verify": [4]},
     "verify-mtls": {"text": "Under verify mode 2, only a valid client certificate completes the application request; server Verification: OK can precede client rejection.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED", "verify": [4]},
     "verify-reload": {"text": "After replacing material and SIGHUP, new connections must present the new certificate and complete an application request; errors or old certificates fail.", "components": ["reload", "stable"], "sources": ["reload:s839f028f2a46", "stable:s1310cfc0315d"], "status": "REASONED", "verify": [4]},
     "verify-flush": {"text": "Disposable text/binary comparisons change flush success and lost item to explicit refusal and retained item; initial SET/GET and ordinary operations stay usable.", "components": ["stable", "docs"], "sources": ["stable:sd40dab94f516", "stable:sceaaea90ec60", "docs:sc0c6532a1ef5"], "status": "REASONED", "verify": [5]},
@@ -57138,7 +57136,7 @@ Claims (full source mapping in the JSON block below):
     "loki-tenants": {"text": "From source reading, auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only.", "components": ["loki", "dskit"], "sources": ["loki:sd13fa86b20d0", "loki:sb5e56f0d6348", "dskit:s3634557bb838", "dskit:s1ca109a7a016"], "status": "REASONED"},
     "loki-grpc-auth": {"text": "From source reading, default dskit interceptors lack credentials; Loki has tenant exemptions; complete interceptor behaviour was not re-traced.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb", "loki:s7786b9105acc"], "status": "REASONED"},
     "loki-push-query": {"text": "From source reading, reachable clients can push/query without credentials subject to tenant headers and ingest/query policies.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:s39c270ed878c"], "status": "REASONED"},
-    "loki-config": {"text": "From source reading, GET /config exposes configuration without a tenant-auth wrapper.", "components": ["loki"], "sources": ["loki:sbe0aa939a44d"], "status": "REASONED"},
+    "loki-config": {"text": "From source reading, GET /config exposes configuration without a tenant-auth wrapper.", "components": ["loki"], "sources": ["loki:sbe0aa939a44d", "loki:s303881c903ca"], "status": "REASONED"},
     "loki-diagnostics": {"text": "From source reading, metrics and pprof routes are registered by default without a tenant-auth wrapper.", "components": ["dskit"], "sources": ["dskit:sb19d54a19636", "dskit:se0830c9ea1b5", "dskit:s761b46738198"], "status": "REASONED"},
     "loki-maintenance": {"text": "From source reading, ingester flush/shutdown accept GET/POST; prepare_shutdown accepts POST/GET/DELETE, without tenant-auth wrappers.", "components": ["loki"], "sources": ["loki:sc2b013001317"], "status": "REASONED"},
     "loki-delete": {"text": "Non-worker compactor deletion routes require a supported shipper index, retention and a delete-request store; tenant and deletion-policy middleware gate create/list/cancel. After tenant validation, filter-only and filter-and-delete pass, disabled gets 403 and an unrecognized mode gets 400, by source reasoning, not observed responses; admission does not establish eventual deletion.", "components": ["loki"], "sources": ["loki:s4f3a19f7f08c", "loki:s3d51e1213e70", "loki:s38c1e77fe01e", "loki:s1f38431776f2", "loki:s3ff15746c2c9", "loki:s14f65483dd4d", "loki:s0bde2f8abe97", "loki:saf8f37e04b71", "loki:s6feced2aa907", "loki:se1440b6eb37a", "loki:sae57ccde5dc6", "loki:s86b57bdedee7", "loki:sc37c5a5a63b4"], "status": "REASONED"},
@@ -59369,7 +59367,6 @@ Claims (full source mapping in the JSON block below):
         "s182755725d74": "https://supabase.com/docs/guides/auth/auth-mfa/totp",
         "s92b405dc3c7e": "https://supabase.com/docs/reference/javascript/select",
         "s087c8cf42ab0": "https://supabase.com/docs/reference/javascript/rpc",
-        "sf3246532dd18": "https://supabase.com/docs/guides/functions",
         "s7dfbb47b5d20": "https://supabase.com/docs/reference/cli/supabase-functions-deploy",
         "sf7d438b8c080": "https://supabase.com/docs/guides/functions/auth",
         "se52bbd097033": "https://supabase.com/docs/guides/functions/auth-headers",
@@ -65366,7 +65363,6 @@ Claims (full source mapping in the JSON block below):
       "name": "Chrome DevTools Protocol",
       "basis": "unknown",
       "sources": {
-        "se77e8fd82ffd": "https://developer.chrome.com/docs/devtools/remote-debugging/",
         "s523649d3b233": "https://chromedevtools.github.io/devtools-protocol/"
       }
     },
@@ -66095,7 +66091,7 @@ Claims (full source mapping in the JSON block below):
     "directus-studio": {"text": "Root redirects to /admin; SERVE_APP hides Studio without replacing API authorization. Terminate TLS in front.", "components": ["directus"], "sources": ["directus:sf46f66d9d647"], "status": "REASONED"},
     "hasura-admin": {"text": "An unset HASURA_GRAPHQL_ADMIN_SECRET permits full admin rights; keep the configured bearer secret server-side and use scoped JWT/webhook client auth.", "components": ["hasura"], "sources": ["hasura:scf6fdeea5567"], "status": "REASONED"},
     "hasura-bind": {"text": "HASURA_GRAPHQL_SERVER_HOST defaults * on 8080; bind privately and terminate TLS in front.", "components": ["hasura"], "sources": ["hasura:s5a2b2f9a72fa"], "status": "REASONED"},
-    "hasura-console": {"text": "Binary console default is false, but 2.46.0 quickstart enables / and /console; disable console where unnecessary.", "components": ["hasura", "hasura-start"], "sources": ["hasura:s5a2b2f9a72fa", "hasura-start:s8a898d4830a5"], "status": "REASONED"},
+    "hasura-console": {"text": "Binary console default is false, but 2.46.0 quickstart enables / and /console; disable console where unnecessary.", "components": ["hasura", "hasura-start"], "sources": ["hasura:s5a2b2f9a72fa", "hasura:se1d13e0328aa", "hasura-start:s8a898d4830a5"], "status": "REASONED"},
     "hasura-dev": {"text": "Keep HASURA_GRAPHQL_DEV_MODE=false in production.", "components": ["hasura"], "sources": ["hasura:s5a2b2f9a72fa"], "status": "REASONED"},
     "hasura-agent": {"text": "Quickstart publishes data-connector 8081 and literal Postgres credentials; isolate the additional listener and replace credentials.", "components": ["hasura-start"], "sources": ["hasura-start:s8a898d4830a5"], "status": "REASONED"},
     "hasura-apis": {"text": "ENABLED_APIS defaults metadata, graphql, pgdump, config; narrow unused APIs and protect them with the admin secret.", "components": ["hasura"], "sources": ["hasura:s5a2b2f9a72fa"], "status": "REASONED"},
