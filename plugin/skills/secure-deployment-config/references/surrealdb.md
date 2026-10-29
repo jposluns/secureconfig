@@ -307,7 +307,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "unknown",
       "sources": {
         "s2eb33a763ea4": "https://surrealdb.com/docs/reference/cli/db/commands/start",
-        "sac47cdb4ca48": "https://surrealdb.com/docs/reference/cli/db/commands/sql",
         "s38b5f5aad1d4": "https://surrealdb.com/docs/learn/security",
         "sdaa9a636537a": "https://surrealdb.com/docs/learn/security/authentication/overview",
         "sae73137661aa": "https://surrealdb.com/docs/learn/security/best-practices/security-best-practices",

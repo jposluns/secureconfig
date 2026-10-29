@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-29
+
+- Step 2 of TODO 3.48, batch B, triages nine version-basis component sources that no claim referenced in seven guides. `connection-poolers.md` now cites the Pgpool-II parameter-setting page, `pgpool:sd1c787b7784e`, from claim `verify-pgpool`, whose PGPOOL SHOW and reload-error checks that page documents. The other eight sources support no claim and are removed from component metadata: `surrealdb.md` `docs:sac47cdb4ca48`, `nextjs.md` `better:sdd3d825cc3a4`, `frontend-frameworks.md` `svelte:sc183fdb68165` and `low-code-builders.md` `nocodb:se81c30b3f43b`. The same removal applies to `bi-dashboards.md` `metabase-docs:sefe12b1b495c` and `redash-docs:s069a74340b65` and to `elasticsearch.md` `corecrypto370:s6449a83e5cd9` and `corecrypto370:s162f5fe89247`. Each URL stays in its guide's Sources section; claim text, status, summary lines, generated headers and `body_sha256` are unchanged; the plugin copies, `MANIFEST.sha256` and `site/llms-full.txt` are regenerated, `VERSION` and `plugin/plugin.json` are bumped, and TODO 3.48 stays open (#1032)
+
 ## 2026-10-28
 
 - The version-basis gate now reports component sources that no claim references, as step 1 of TODO 3.48: when any exist, `tools/version_basis.py --check` and `--write` print one `note` line with the count of such sources and of guides holding them, without changing the exit status, and `--check --unreferenced` lists each `component:source` key by guide. The line uses the singular for a count of one, `--unreferenced` help names its `--check` requirement, the self-test covers the report, its absence, its count and the singular wording, and the per-guide triage stays open (#1028)
