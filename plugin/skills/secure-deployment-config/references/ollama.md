@@ -1276,43 +1276,16 @@ Claims (full source mapping in the JSON block below):
         "s4100d1423b14": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L419-L435",
         "s4b2897a4f253": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L363-L380",
         "sc0473f9f9c2d": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L126-L130",
-        "s879be6ebc8ca": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L442-L511",
-        "s5804726fe842": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L594-L634",
-        "s8aef89b5f98b": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L741-L748",
-        "sc87414a09b6f": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L807-L818",
-        "sfaac9168b667": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L636-L724",
-        "s959e3b79b691": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L27-L31",
-        "s90d8365f6905": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L143",
         "s11e3644384be": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L599-L609",
         "s6a1dfd450763": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go#L20-L60",
         "s6cab16cc1556": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go#L62-L83",
         "s99dbaec1750f": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go#L378-L380",
-        "sebb66adac984": "https://github.com/ollama/ollama/blob/v0.34.2/app/ui/app.go#L5-L13",
-        "se3e2cfa03db9": "https://github.com/ollama/ollama/blob/v0.34.2/app/ui/ui.go#L6-L39",
-        "sb7983eb0757d": "https://github.com/ollama/ollama/blob/v0.34.2/app/webview/webview.go#L53-L60",
-        "sd4620366d20d": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L12-L44",
-        "sc918a5f51d7d": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/webview.go#L8-L26",
-        "sb9475646ce87": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_models.go#L16-L35",
-        "s5f7ba12ad29a": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_models.go#L308-L353",
-        "s679019d0fd06": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L146-L148",
-        "s886dd375d7b9": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_models.go#L183-L200",
-        "s47c363d28175": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_models.go#L433-L467",
-        "s24f723d1ab2a": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L519-L555",
-        "s7521ebbabc63": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_access.go#L55-L124",
-        "sd3d0dcc68985": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L750-L799",
-        "s18ae5e5655cf": "https://github.com/ollama/ollama/blob/v0.34.2/app/ui/extract.go#L5-L14",
-        "s9338302936c6": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/codex_app_darwin.go#L5-L25",
         "see893978ecc6": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/codex_app_darwin.go",
-        "s1db2e43b7b45": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/codex_app_darwin.go#L35-L48",
         "s3f66206086dd": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go",
         "s141dcff0708a": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L26-L29",
         "s8ab7a3732a2c": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L59-L61",
         "s17e93913af2b": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L156-L176",
-        "sf35837ccc256": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L192-L263",
-        "s5ac8a92f00fd": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L358-L375",
-        "s1cd9864b2a34": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L517-L533",
-        "s848cbf05de34": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L643-L653",
-        "s292d5f730519": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L678-L684"
+        "s848cbf05de34": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L643-L653"
       }
     },
     "commit": {
@@ -1357,7 +1330,6 @@ Claims (full source mapping in the JSON block below):
         "sdba7b87fda8d": "https://github.com/golang/go/blob/go1.26.5/src/cmd/go/alldocs.go#L236-L240",
         "s7290caae7a3c": "https://github.com/golang/go/blob/go1.26.5/src/net/http/header.go#L43-L51",
         "s0388b420c217": "https://github.com/golang/go/blob/go1.26.5/src/internal/goversion/goversion.go#L12",
-        "sbf25f8fb5cce": "https://github.com/golang/go/blob/go1.26.5/src/go/build/build.go#L354-L355",
         "s41262ad87b65": "https://github.com/golang/go/blob/go1.26.5/src/net/http/pprof/pprof.go#L88",
         "s80e5cbbd9e14": "https://github.com/golang/go/blob/go1.26.5/src/testing/internal/testdeps/deps.go#L23",
         "s63df9d2be607": "https://github.com/golang/go/blob/go1.26.5/src/simd/archsimd/_gen/simdgen/main.go#L91",
@@ -1374,7 +1346,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.0",
       "sources": {
         "s7670be382fd6": "https://github.com/golang/go/blob/go1.26.0/src/internal/goversion/goversion.go#L12",
-        "s7134707033bd": "https://github.com/golang/go/blob/go1.26.0/src/go/build/build.go#L354-L355",
         "sc4d5a418cc8a": "https://github.com/golang/go/blob/go1.26.0/src/net/http/pprof/pprof.go#L88",
         "s63f63360f142": "https://github.com/golang/go/blob/go1.26.0/src/testing/internal/testdeps/deps.go#L23",
         "se924f730cd16": "https://github.com/golang/go/blob/go1.26.0/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1385,7 +1356,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.1",
       "sources": {
         "sc2735a74234b": "https://github.com/golang/go/blob/go1.26.1/src/internal/goversion/goversion.go#L12",
-        "sc15133c74365": "https://github.com/golang/go/blob/go1.26.1/src/go/build/build.go#L354-L355",
         "sd0122b4596e5": "https://github.com/golang/go/blob/go1.26.1/src/net/http/pprof/pprof.go#L88",
         "sa24dcdd9e52c": "https://github.com/golang/go/blob/go1.26.1/src/testing/internal/testdeps/deps.go#L23",
         "s2a55e411da1d": "https://github.com/golang/go/blob/go1.26.1/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1396,7 +1366,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.2",
       "sources": {
         "sa8ba29c45871": "https://github.com/golang/go/blob/go1.26.2/src/internal/goversion/goversion.go#L12",
-        "se0e77cda3f1d": "https://github.com/golang/go/blob/go1.26.2/src/go/build/build.go#L354-L355",
         "s058a974ee5d5": "https://github.com/golang/go/blob/go1.26.2/src/net/http/pprof/pprof.go#L88",
         "s019e0fb220fc": "https://github.com/golang/go/blob/go1.26.2/src/testing/internal/testdeps/deps.go#L23",
         "s8a4dc2d3db9b": "https://github.com/golang/go/blob/go1.26.2/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1407,7 +1376,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.3",
       "sources": {
         "sdc07d97a87b6": "https://github.com/golang/go/blob/go1.26.3/src/internal/goversion/goversion.go#L12",
-        "s5aea4d01f83c": "https://github.com/golang/go/blob/go1.26.3/src/go/build/build.go#L354-L355",
         "sed7ba616e62c": "https://github.com/golang/go/blob/go1.26.3/src/net/http/pprof/pprof.go#L88",
         "s040d1ea399ae": "https://github.com/golang/go/blob/go1.26.3/src/testing/internal/testdeps/deps.go#L23",
         "s898567a72486": "https://github.com/golang/go/blob/go1.26.3/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1418,7 +1386,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.4",
       "sources": {
         "s2fd10ac9b790": "https://github.com/golang/go/blob/go1.26.4/src/internal/goversion/goversion.go#L12",
-        "seae65bce1fda": "https://github.com/golang/go/blob/go1.26.4/src/go/build/build.go#L354-L355",
         "s860b46eaab36": "https://github.com/golang/go/blob/go1.26.4/src/net/http/pprof/pprof.go#L88",
         "s2104c8373c85": "https://github.com/golang/go/blob/go1.26.4/src/testing/internal/testdeps/deps.go#L23",
         "s0e9e578b8243": "https://github.com/golang/go/blob/go1.26.4/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1429,7 +1396,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.6",
       "sources": {
         "s8b8ebc7e8db6": "https://github.com/golang/go/blob/go1.26.6/src/internal/goversion/goversion.go#L12",
-        "s3709671e863b": "https://github.com/golang/go/blob/go1.26.6/src/go/build/build.go#L354-L355",
         "sb1475154fbb7": "https://github.com/golang/go/blob/go1.26.6/src/net/http/pprof/pprof.go#L88",
         "s974c60526bb6": "https://github.com/golang/go/blob/go1.26.6/src/testing/internal/testdeps/deps.go#L23",
         "s52851e8b4312": "https://github.com/golang/go/blob/go1.26.6/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1440,7 +1406,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.7",
       "sources": {
         "s17ad8bf46090": "https://github.com/golang/go/blob/go1.26.7/src/internal/goversion/goversion.go#L12",
-        "sd315e2226ae8": "https://github.com/golang/go/blob/go1.26.7/src/go/build/build.go#L354-L355",
         "s54141d62f948": "https://github.com/golang/go/blob/go1.26.7/src/net/http/pprof/pprof.go#L88",
         "sf081388dd0f7": "https://github.com/golang/go/blob/go1.26.7/src/testing/internal/testdeps/deps.go#L23",
         "s64e2db3b685b": "https://github.com/golang/go/blob/go1.26.7/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1451,7 +1416,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.8",
       "sources": {
         "s6175e03794cf": "https://github.com/golang/go/blob/go1.26.8/src/internal/goversion/goversion.go#L12",
-        "s7ed9d53e6261": "https://github.com/golang/go/blob/go1.26.8/src/go/build/build.go#L354-L355",
         "s88d4166a7bee": "https://github.com/golang/go/blob/go1.26.8/src/net/http/pprof/pprof.go#L88",
         "sa79ec4182285": "https://github.com/golang/go/blob/go1.26.8/src/testing/internal/testdeps/deps.go#L23",
         "s9ad74046b534": "https://github.com/golang/go/blob/go1.26.8/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1462,7 +1426,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.9",
       "sources": {
         "s69637c613830": "https://github.com/golang/go/blob/go1.26.9/src/internal/goversion/goversion.go#L12",
-        "sfd6e7fa1d8e8": "https://github.com/golang/go/blob/go1.26.9/src/go/build/build.go#L354-L355",
         "s71887e5f7cdf": "https://github.com/golang/go/blob/go1.26.9/src/net/http/pprof/pprof.go#L88",
         "s6728c0a5d0d1": "https://github.com/golang/go/blob/go1.26.9/src/testing/internal/testdeps/deps.go#L23",
         "s110ef73adaf3": "https://github.com/golang/go/blob/go1.26.9/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1473,7 +1436,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.10",
       "sources": {
         "scff07ded2fad": "https://github.com/golang/go/blob/go1.26.10/src/internal/goversion/goversion.go#L12",
-        "se93bdeb9d5e7": "https://github.com/golang/go/blob/go1.26.10/src/go/build/build.go#L354-L355",
         "sd61f4ff8d5d6": "https://github.com/golang/go/blob/go1.26.10/src/net/http/pprof/pprof.go#L88",
         "s9b82f1629b4d": "https://github.com/golang/go/blob/go1.26.10/src/testing/internal/testdeps/deps.go#L23",
         "s599b4645909f": "https://github.com/golang/go/blob/go1.26.10/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -1633,7 +1595,7 @@ Claims (full source mapping in the JSON block below):
     "profiling-release": {"text": "From this guide's reading of v0.34.2's Dockerfile, build scripts and release workflow, which show intended builds rather than artifact contents, the main package is built with no -tags, and with CGO_ENABLED=1 in the Dockerfile, the darwin build and both Windows CLI builds. The go.mod declares go 1.26.0, which the Dockerfile uses to choose Go, while this guide's go list runs used Go 1.26.5.", "components": ["ollama"], "sources": ["ollama:s2422d51c7511", "ollama:sc2b36fe862cd", "ollama:s048a8041e459", "ollama:s69d878a2f01f", "ollama:saffcf6c517dc", "ollama:sfbdb6f7a76af", "ollama:s0c28c94bb1ee", "ollama:sdc9725a324a3", "ollama:s50dc1a212bc5", "ollama:s2c83e3be00ef", "ollama:s383b8a85907a", "ollama:sdf3692260fb9", "ollama:s73deff2c03e1", "ollama:s99ff5d94d99e", "ollama:s3d177b1fcaf1", "ollama:s54c3a8422a93", "ollama:s83f85bf889db", "ollama:sae92e96027b1"], "status": "REASONED"},
     "profiling-app-runs": {"text": "Go 1.26.5 go list -e -deps runs for this guide list no net/http/pprof or runtime/pprof for the v0.34.2 desktop app main package on darwin/windows amd64 and arm64, cgo off and on; linux lists only the error-marked main package. Loaded cells mark app/ui (no app/dist); cgo-off cells cannot load cgo-only app/webview and omit the main package's cgo files with no error, so imports may be incomplete.", "components": ["ollama"], "sources": ["ollama:sad61f21372d7", "ollama:sf38afcc73250", "ollama:s45897fae891f", "ollama:s2b2be911f51e", "ollama:se6c615cc2b3a"], "status": "REASONED"},
     "profiling-app-listener": {"text": "From source reading, the app's UI listener is loopback (127.0.0.1:0, or 3001 in dev mode), served by an http.Server with a non-nil Handler whose mux has a token-cookie check on /api/v1 routes, proxy and catch-all routes without it, and no /debug/pprof pattern. This guide's inference, not run: even a build linking net/http/pprof would not serve DefaultServeMux handlers there.", "components": ["ollama", "go"], "sources": ["ollama:s73b81a1f8d04", "ollama:s67fd6cba9588", "ollama:s243bac4ebddb", "ollama:s4421d53f8855", "go:sab55ef9009c4", "go:s2e779f75153e", "go:s038b2186ee21", "go:sa0c56e16001f"], "status": "REASONED"},
-    "profiling-app-gateway": {"text": "From source reading, another loopback app listener is the Claude Desktop gateway on 127.0.0.1:11435, in macOS cgo builds, started only when Claude Desktop is installed. Its non-nil Handler refuses non-loopback Host values and a non-empty first Origin, serves four routes, not /debug/pprof, and forwards only POST /v1/messages, stripping caller auth headers, to the app's OLLAMA_HOST; not run.", "components": ["ollama", "go"], "sources": ["ollama:s2b2be911f51e", "ollama:s84f1c8cf636d", "ollama:sba33d5d074d0", "ollama:sb8e91213cc53", "ollama:s132b1b4bbbe5", "ollama:s58d1846a87f0", "ollama:s8b3afc8d9f86", "ollama:s5897f909de84", "ollama:saf6c2bd158fc", "ollama:s4100d1423b14", "ollama:s4b2897a4f253", "ollama:s11e3644384be", "ollama:s6a1dfd450763", "ollama:s6cab16cc1556", "ollama:s99dbaec1750f", "go:s7290caae7a3c"], "status": "REASONED"},
+    "profiling-app-gateway": {"text": "From source reading, another loopback app listener is the Claude Desktop gateway on 127.0.0.1:11435, in macOS cgo builds, started only when Claude Desktop is installed. Its non-nil Handler refuses non-loopback Host values and a non-empty first Origin, serves four routes, not /debug/pprof, and forwards only POST /v1/messages, stripping caller auth headers, to the app's OLLAMA_HOST; not run.", "components": ["ollama", "go"], "sources": ["ollama:s2b2be911f51e", "ollama:s84f1c8cf636d", "ollama:sba33d5d074d0", "ollama:sb8e91213cc53", "ollama:s132b1b4bbbe5", "ollama:s58d1846a87f0", "ollama:s8b3afc8d9f86", "ollama:s5897f909de84", "ollama:saf6c2bd158fc", "ollama:s4100d1423b14", "ollama:s4b2897a4f253", "ollama:sc0473f9f9c2d", "ollama:s11e3644384be", "ollama:s6a1dfd450763", "ollama:s6cab16cc1556", "ollama:s99dbaec1750f", "go:s7290caae7a3c"], "status": "REASONED"},
     "profiling-app-gateway-start": {"text": "Source reading, not run: startup starts the gateway only if Claude Desktop is installed and configured to use it; setClaudeGatewayInstalled, prepareClaudeDesktopConnection and model mapping start it if installed. The first two stop it unless Claude Desktop then uses it (the first not after an auto-mode error); mapping, if none existed, stops it on profile-change errors except restart confirmation.", "components": ["ollama"], "sources": ["ollama:sd92431ef4485", "ollama:sb5822b8eeabd", "ollama:se1879bd92d00", "ollama:s9a2533a8e3e0", "ollama:s29f084ce74cf", "ollama:sb8e91213cc53", "ollama:sd1743f37dd2c", "ollama:s8b982a956f29"], "status": "REASONED"},
     "profiling-app-release": {"text": "By this guide's reading of intended builds, not artifacts, build_darwin.sh builds the app package with GOOS=darwin, CGO_ENABLED=1, amd64 and arm64 and no -tags. In build_windows.ps1, buildApp builds it with no -tags, by default setting no GOARCH under its unconditional CGO_ENABLED=1 and, when the cross-compile tools are present, for arm64 (GOOS=windows, GOARCH=arm64, CGO_ENABLED=1).", "components": ["ollama"], "sources": ["ollama:s46dc00636dd6", "ollama:sde507d86d7ac", "ollama:s52f3436c9021", "ollama:s0c28c94bb1ee", "ollama:sdc9725a324a3", "ollama:saffcf6c517dc"], "status": "REASONED"},
     "desktop-app-server": {"text": "From source reading, the desktop app serves no HTTP on the Ollama API listener itself: it runs the separate ollama binary with serve and restarts it, and the spawn copies the app's own environment, setting OLLAMA_HOST=0.0.0.0 when the Expose setting is on, so that setting or an inherited OLLAMA_HOST can expose that process. No shipped app binary was inspected and no run observed these behaviours.", "components": ["ollama"], "sources": ["ollama:sa4c68b27021b", "ollama:sd5ce93133b59", "ollama:s80b241b854c7"], "status": "REASONED"},
