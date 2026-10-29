@@ -51596,16 +51596,13 @@ Claims (full source mapping in the JSON block below):
         "s93073617917f": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L394-L395",
         "saa2935bc2cc9": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L414-L432",
         "sa1ae7eae7541": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L452-L455",
-        "scb836c981018": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L651-L750",
         "sa460f7210ca4": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/auth/users.py#L200-L219",
         "sdf15a9263d34": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/db/sso_provider.py#L300-L398",
         "s56d064c896d9": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/db/sso_provider.py#L28-L82",
         "s55b9746616f4": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/db/sso_provider.py#L132-L256",
         "s8a5f96230d05": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/db/engine/sql_engine.py#L441-L549",
-        "s3c0ba5e12710": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L434-L438",
         "s19ba2d899d29": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L534-L549",
         "s8e0f5703a244": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L812-L815",
-        "sffaf980923fa": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/utils/variable_functionality.py#L42-L72",
         "s1230ebe5af1d": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/utils/variable_functionality.py#L100-L127"
       }
     },
@@ -51613,12 +51610,7 @@ Claims (full source mapping in the JSON block below):
       "name": "Onyx v5.0 pre-release source",
       "basis": "55df913b37cb9c001a77dd010ff8c6331e70447b",
       "sources": {
-        "sb6a38c2222ba": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L395-L431",
-        "s9d9b4f165479": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L659-L758",
-        "s8bbce4b47acc": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/auth/users.py#L204-L223",
-        "s8843778589c8": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/db/sso_provider.py#L300-L398",
-        "s790b22b45669": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L433",
-        "s8c549de2d619": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L646-L657"
+        "sb6a38c2222ba": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L395-L431"
       }
     },
     "searx-source": {
