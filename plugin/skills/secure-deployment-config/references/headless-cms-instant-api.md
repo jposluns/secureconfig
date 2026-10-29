@@ -176,7 +176,9 @@ PostgREST terminates no TLS itself; front it per [nginx.md](nginx.md) or [caddy.
 ## Across all four
 
 Three of the four call outward on demand (Strapi webhooks, Directus Flows, Hasura event triggers, Actions and
-remote schemas), and PostgREST can through a database function or extension. The egress rule is therefore to restrict each
+remote schemas). PostgREST makes every function in the exposed schema that the active database role can access
+executable under `/rpc`, and this guide infers that such a function can call outward through an installed extension
+or similar. The egress rule is therefore to restrict each
 service's outbound access to the destinations that service needs and block cloud metadata, loopback, link-local and unrelated
 private networks, applying the restriction after DNS resolution and across redirects ([egress-metadata.md](egress-metadata.md)).
 Directus documents an `IMPORT_IP_DENY_LIST` defaulting to `0.0.0.0,169.254.169.254`, but that import-specific
@@ -374,6 +376,8 @@ Version boundary at the time of writing: Strapi 5 documentation; current Directu
 - PostgREST configuration reference (db-anon-role, db-schemas, server-host, jwt-secret): https://docs.postgrest.org/en/stable/references/configuration.html
 - PostgREST `server-host` default `!4` (L556), `server-port` default 3000 (L386), and `admin-server-host` falling back to `server-host` (L357-L360) (pinned tag v16.4). PostgREST v16.4 `Config.hs` sources: https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L556, https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L386 and https://github.com/PostgREST/postgrest/blob/v16.4/src/library/PostgREST/Config.hs#L357-L360
 - PostgREST authentication and roles: https://postgrest.org/en/stable/references/auth.html
+- PostgREST database authorization, function access `PUBLIC` by default, `SECURITY DEFINER` functions running with the owner's authority, and views invoked with the view owner's privileges (rolling documentation, checked October 2026): https://docs.postgrest.org/en/stable/explanations/db_authz.html
+- PostgREST functions as RPC, every exposed function the active role can access executable under `/rpc`, and functions able to perform any operation PostgreSQL allows (rolling documentation, checked October 2026): https://docs.postgrest.org/en/stable/references/api/functions.html
 - PostgREST error codes (PGRST300 to PGRST303): https://docs.postgrest.org/en/stable/references/errors.html
 - PostgREST OpenAPI output at the root path: https://docs.postgrest.org/en/stable/references/api/openapi.html
 - PostgREST admin server (optional health/metrics listener): https://docs.postgrest.org/en/stable/references/admin_server.html
@@ -459,7 +463,7 @@ Claims (full source mapping in the JSON block below):
 - postgrest-schema (REASONED; postgrest): db-schemas defaults public; expose a deliberate API schema and note that root OpenAPI output follows the requesting role privileges.
 - postgrest-secret (REASONED; postgrest): Set random jwt-secret of at least 32 characters; a supplied token with no secret configured fails with 500 PGRST300.
 - postgrest-bind (REASONED; postgrest, postgrest-bind): At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front.
-- egress (REASONED; directus, hasura, postgrest, strapi-rolling): Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only.
+- egress (REASONED; directus, hasura, postgrest, strapi-rolling): Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only. PostgREST runs any exposed function the active role can access; functions can do anything PostgreSQL allows. This guide infers that functions reach the network only via installed extensions or similar, so their egress depends on what is installed.
 - database-boundary (REASONED; directus, hasura, postgrest, strapi-rolling): Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport.
 - human-machine-auth (REASONED; strapi, directus, hasura, postgrest, strapi-rolling): Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials.
 - verify-canary (REASONED; directus, hasura, postgrest, strapi-rolling): Pair authorized canary retrieval with identical anonymous requests; empty/missing/unrelated responses and transport errors are inconclusive.
@@ -476,7 +480,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "c635f89cad9c499faecf5d1672eecf442e60cd8bf5880325016b95456b5fc584",
+  "body_sha256": "ce02d104824a52c221b9bceca0897a110cc39c02648de17979837eae018b5a30",
   "components": {
     "strapi-signup-source": {
       "name": "Strapi Users and Permissions source",
@@ -583,7 +587,9 @@ Claims (full source mapping in the JSON block below):
         "s212cf1cff4a4": "https://postgrest.org/en/stable/references/auth.html",
         "sa2516a436dca": "https://docs.postgrest.org/en/stable/references/errors.html",
         "s5e5f9522821f": "https://docs.postgrest.org/en/stable/references/api/openapi.html",
-        "sfbd46253f1a9": "https://docs.postgrest.org/en/stable/references/admin_server.html"
+        "sfbd46253f1a9": "https://docs.postgrest.org/en/stable/references/admin_server.html",
+        "s60b0eee68d51": "https://docs.postgrest.org/en/stable/explanations/db_authz.html",
+        "s637fd0a1a752": "https://docs.postgrest.org/en/stable/references/api/functions.html"
       }
     },
     "apollo": {
@@ -628,11 +634,11 @@ Claims (full source mapping in the JSON block below):
     "hasura-introspection": {"text": "Introspection is enabled by default; its documented per-role disabling control is self-hosted Enterprise, not assumed available in Community.", "components": ["hasura"], "sources": ["hasura:sdd8563e06e4c"], "status": "REASONED"},
     "postgrest-anon": {"text": "Unset db-anon-role refuses missing JWTs with 401 PGRST302; intended anonymous access needs a dedicated minimal NOLOGIN role.", "components": ["postgrest"], "sources": ["postgrest:s3133e2e17cbe", "postgrest:s212cf1cff4a4", "postgrest:sa2516a436dca"], "status": "REASONED", "verify": [1]},
     "postgrest-invalid": {"text": "Malformed/bad-signature JWTs return 401 PGRST301; expired or invalid-claims JWTs return 401 PGRST303 instead of anonymous fallback.", "components": ["postgrest"], "sources": ["postgrest:s212cf1cff4a4", "postgrest:sa2516a436dca"], "status": "REASONED", "verify": [1]},
-    "postgrest-grants": {"text": "GRANT/REVOKE govern API access; PUBLIC function EXECUTE, DEFINER functions and owner-privileged views can widen it.", "components": ["postgrest"], "sources": ["postgrest:s212cf1cff4a4"], "status": "REASONED"},
+    "postgrest-grants": {"text": "GRANT/REVOKE govern API access; PUBLIC function EXECUTE, DEFINER functions and owner-privileged views can widen it.", "components": ["postgrest"], "sources": ["postgrest:s212cf1cff4a4", "postgrest:s60b0eee68d51"], "status": "REASONED"},
     "postgrest-schema": {"text": "db-schemas defaults public; expose a deliberate API schema and note that root OpenAPI output follows the requesting role privileges.", "components": ["postgrest"], "sources": ["postgrest:s3133e2e17cbe", "postgrest:s5e5f9522821f"], "status": "REASONED"},
     "postgrest-secret": {"text": "Set random jwt-secret of at least 32 characters; a supplied token with no secret configured fails with 500 PGRST300.", "components": ["postgrest"], "sources": ["postgrest:s3133e2e17cbe", "postgrest:sa2516a436dca"], "status": "REASONED"},
     "postgrest-bind": {"text": "At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front.", "components": ["postgrest", "postgrest-bind"], "sources": ["postgrest:s3133e2e17cbe", "postgrest-bind:sf27352fc3094", "postgrest-bind:sb8d27dc6392b", "postgrest-bind:sb1cd23c9b7eb", "postgrest:sfbd46253f1a9"], "status": "REASONED"},
-    "egress": {"text": "Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only.", "components": ["directus", "hasura", "postgrest", "strapi-rolling"], "sources": ["strapi-rolling:s14bc6df86824", "directus:sdb5770dacce9", "hasura:s5a2b2f9a72fa", "postgrest:s212cf1cff4a4"], "status": "REASONED"},
+    "egress": {"text": "Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only. PostgREST runs any exposed function the active role can access; functions can do anything PostgreSQL allows. This guide infers that functions reach the network only via installed extensions or similar, so their egress depends on what is installed.", "components": ["directus", "hasura", "postgrest", "strapi-rolling"], "sources": ["strapi-rolling:s14bc6df86824", "directus:sdb5770dacce9", "hasura:s5a2b2f9a72fa", "postgrest:s637fd0a1a752"], "status": "REASONED"},
     "database-boundary": {"text": "Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport.", "components": ["directus", "hasura", "postgrest", "strapi-rolling"], "sources": ["strapi-rolling:s98b50551124e", "directus:sf46f66d9d647", "hasura:s5a2b2f9a72fa", "postgrest:s3133e2e17cbe"], "status": "REASONED"},
     "human-machine-auth": {"text": "Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials.", "components": ["strapi", "directus", "hasura", "postgrest", "strapi-rolling"], "sources": ["strapi-rolling:s5525cacf37f3", "strapi:sb599a80b159b", "directus:sdb5770dacce9", "hasura:scf6fdeea5567", "postgrest:s212cf1cff4a4"], "status": "REASONED"},
     "verify-canary": {"text": "Pair authorized canary retrieval with identical anonymous requests; empty/missing/unrelated responses and transport errors are inconclusive.", "components": ["directus", "hasura", "postgrest", "strapi-rolling"], "sources": ["strapi-rolling:se092a52da156", "directus:s95b4deed4c04", "hasura:scf6fdeea5567", "postgrest:s212cf1cff4a4"], "status": "REASONED", "verify": [1]},
