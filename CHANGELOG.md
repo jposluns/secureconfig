@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-29
 
+- Moved `java.md` from Spring Boot 4.1.1 to 4.1.2 after re-checking every 4.1 statement against the 4.1.2 reference pages and the `v4.1.2` `RestClientSsl` source; updated the `boot41` basis, pinned source and its key, three claim texts and the documentation check date to October 2026 (#1042)
 - Made two claims exact: `gradio.md` `flagging` now excludes input-only Interfaces from auto flagging, per the pinned Gradio 6.28.0 `interface.py` lines already cited, and `memcached.md` `verify-tls` now requires the check to fail closed, because `s_client` continues past verification errors unless `-verify_return_error` is given (#1040)
 - `headless-cms-instant-api.md` cites the PostgREST authentication page at its redirect target `https://docs.postgrest.org/en/stable/references/auth.html`, and the seven claims that cited it now cite the new source key `s45f396aa4325`, with no claim text changed. `TODO.md` narrows row 1.386 to the two Milvus citations, and `DONE.md` adds a 1.386 row recording the move (#1039)
 - TODO 3.48 closes: batches A to E (#1031 to #1035) triaged all 86 version-basis component sources that no claim referenced, and the row moves from `TODO.md` to `DONE.md` with what step 1 (#1028) added, what each batch cited and removed, and what `tools/version_basis.py --check --unreferenced` reports now: no `note` line and no listed key; `VERSION` and `plugin/plugin.json` are bumped (#1038)
