@@ -1307,7 +1307,6 @@ Claims (full source mapping in the JSON block below):
         "s745b51dd1719": "https://developer.hashicorp.com/vault/docs/auth/approle",
         "s553adec7c375": "https://developer.hashicorp.com/vault/api-docs/auth/approle",
         "s3cf51daf4c81": "https://developer.hashicorp.com/vault/docs/auth/approle/approle-pattern",
-        "s45334d3270eb": "https://developer.hashicorp.com/vault/docs/commands/auth/enable",
         "scfa855ec9d87": "https://developer.hashicorp.com/vault/api-docs/auth/kubernetes",
         "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt",
         "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping",
