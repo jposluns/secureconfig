@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-29
+
+- `pocketbase.md`: TODO 3.48 batch D cites five unreferenced component sources from the claims they support (`source-limits-appwrite-adapter`, `source-limits-appwrite-dev` and `source-limits-appwrite-install-env`) and removes the other 17 from the component metadata. The plugin copy `plugin/skills/secure-deployment-config/references/pocketbase.md`, `plugin/skills/secure-deployment-config/references/MANIFEST.sha256` and `site/llms-full.txt` are regenerated (#1034)
+
 ## 2026-10-28
 
 - The version-basis gate now reports component sources that no claim references, as step 1 of TODO 3.48: when any exist, `tools/version_basis.py --check` and `--write` print one `note` line with the count of such sources and of guides holding them, without changing the exit status, and `--check --unreferenced` lists each `component:source` key by guide. The line uses the singular for a count of one, `--unreferenced` help names its `--check` requirement, the self-test covers the report, its absence, its count and the singular wording, and the per-guide triage stays open (#1028)
