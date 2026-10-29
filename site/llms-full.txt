@@ -15620,7 +15620,6 @@ Claims (full source mapping in the JSON block below):
       "name": "SvelteKit documentation",
       "basis": "unknown",
       "sources": {
-        "sc183fdb68165": "https://svelte.dev/docs/kit/$env-static-public",
         "s59abf03bae6a": "https://svelte.dev/docs/kit/adapter-node",
         "s23f255e94668": "https://svelte.dev/docs/kit/@sveltejs-kit-vite",
         "se2fdc4fd5885": "https://svelte.dev/docs/kit/server-only-modules"
@@ -16551,7 +16550,6 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s981751bcb554": "https://better-auth.com/docs/installation",
         "s2ac2e0926f25": "https://better-auth.com/docs/integrations/next",
-        "sdd3d825cc3a4": "https://better-auth.com/docs/introduction",
         "s8677a74455a1": "https://better-auth.com/docs/plugins/2fa",
         "s4b3a514c43d9": "https://better-auth.com/docs/reference/options"
       }
@@ -23759,7 +23757,7 @@ Claims (full source mapping in the JSON block below):
     "verify-listeners": {"text": "Inventory 6432/9999 on private addresses and PCP 9898 on loopback including IPv6; unexpected listeners are findings.", "components": ["pgb", "pgpool"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s7b1cbfaacbb8"], "status": "REASONED", "verify": [1]},
     "verify-client": {"text": "Plaintext must fail for TLS, verified TLS with the correct password must succeed, and a wrong password must fail authentication; repeat for pgpool-II 9999.", "components": ["pgb", "pgpool", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "postgres:s198d4780d9a4", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [2]},
     "password-delivery": {"text": "Use mode-600 .pgpass for real passwords; PGPASSWORD can expose credentials through process environments.", "components": ["postgres"], "sources": ["postgres:s97264da004c0", "postgres:s198d4780d9a4"], "status": "REASONED"},
-    "verify-pgpool": {"text": "PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e"], "status": "REASONED", "verify": [3]},
+    "verify-pgpool": {"text": "PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "pgpool:sd1c787b7784e"], "status": "REASONED", "verify": [3]},
     "verify-pcp": {"text": "PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:sdc3d487af0ae", "pgpool:s13f19539cfbf"], "status": "REASONED", "verify": [3]},
     "verify-pgb-policy": {"text": "RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests.", "components": ["pgb", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae", "postgres:sf8b93623c032"], "status": "REASONED", "verify": [4]},
     "hba-parser": {"text": "PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete.", "components": ["pgb-source"], "sources": ["pgb-source:sd1ad8c2587a4"], "status": "REASONED", "verify": [4]},
@@ -28674,8 +28672,6 @@ Claims (full source mapping in the JSON block below):
         "sd0fb4126a358": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-azure/src/main/java/org/opensearch/repositories/azure/native_store/AzureNativeObjectStorePlugin.java#L124-L143",
         "s65640ab98d93": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-gcs/src/main/rust/src/gcs.rs#L40-L59",
         "s218c27ed61b0": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-azure/src/main/rust/src/azure.rs#L43-L64",
-        "s6449a83e5cd9": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java#L485-L493",
-        "s162f5fe89247": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/utils/SseKmsUtil.java#L41-L59",
         "s4c05d0197613": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-s3/src/main/java/org/opensearch/repositories/s3/native_store/S3NativeObjectStorePlugin.java#L135-L185",
         "sac592366d6c9": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-s3/src/main/rust/src/s3.rs#L95-L97"
       }
@@ -39430,7 +39426,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "unknown",
       "sources": {
         "s2eb33a763ea4": "https://surrealdb.com/docs/reference/cli/db/commands/start",
-        "sac47cdb4ca48": "https://surrealdb.com/docs/reference/cli/db/commands/sql",
         "s38b5f5aad1d4": "https://surrealdb.com/docs/learn/security",
         "sdaa9a636537a": "https://surrealdb.com/docs/learn/security/authentication/overview",
         "sae73137661aa": "https://surrealdb.com/docs/learn/security/best-practices/security-best-practices",
@@ -61501,7 +61496,6 @@ Claims (full source mapping in the JSON block below):
       "name": "Metabase docs",
       "basis": "unknown",
       "sources": {
-        "sefe12b1b495c": "https://www.metabase.com/docs/latest/",
         "s5e2251b3184d": "https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase",
         "s521b3063e9f0": "https://www.metabase.com/docs/latest/embedding/public-links",
         "s02b7797b6ffe": "https://www.metabase.com/docs/latest/permissions/data",
@@ -61526,7 +61520,6 @@ Claims (full source mapping in the JSON block below):
       "name": "Redash docs",
       "basis": "unknown",
       "sources": {
-        "s069a74340b65": "https://redash.io/help/",
         "s4c72252b5447": "https://redash.io/help/open-source/setup/",
         "sbaf5b44079a0": "https://redash.io/help/open-source/admin-guide/secrets/"
       }
@@ -62187,8 +62180,7 @@ Claims (full source mapping in the JSON block below):
         "s2b16e2c93606": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L90",
         "s118384fa1d9f": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95",
         "s9bee4adc612e": "https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0",
-        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3",
-        "se81c30b3f43b": "https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env"
+        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3"
       }
     },
     "baserow": {

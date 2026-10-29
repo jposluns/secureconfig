@@ -234,7 +234,6 @@ Claims (full source mapping in the JSON block below):
       "name": "Metabase docs",
       "basis": "unknown",
       "sources": {
-        "sefe12b1b495c": "https://www.metabase.com/docs/latest/",
         "s5e2251b3184d": "https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase",
         "s521b3063e9f0": "https://www.metabase.com/docs/latest/embedding/public-links",
         "s02b7797b6ffe": "https://www.metabase.com/docs/latest/permissions/data",
@@ -259,7 +258,6 @@ Claims (full source mapping in the JSON block below):
       "name": "Redash docs",
       "basis": "unknown",
       "sources": {
-        "s069a74340b65": "https://redash.io/help/",
         "s4c72252b5447": "https://redash.io/help/open-source/setup/",
         "sbaf5b44079a0": "https://redash.io/help/open-source/admin-guide/secrets/"
       }
