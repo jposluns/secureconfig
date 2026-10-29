@@ -180,12 +180,21 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
 ## 9. Verify (REASONED: TLS, authentication, listener and diagnostic expectations follow the Go Sources below; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Go service, proxy or outside-network probe host.)
 
 ```bash
-curl -q -sI http://example.com/         # expect 301 with a https:// Location
-curl -q -sI https://example.com/        # succeeds without -k
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401 or 403 without credentials
-ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
-curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/   # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   # diagnostics must never be routed on your PUBLIC app: substitute your hostname, expect 404, never 200
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme or path: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|example.com|example.net|example.org|*/*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme or path) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"         # expect 301 with a https:// Location
+  curl -q -g -sI "https://$1/"        # succeeds without -k
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"   # 401 or 403 without credentials
+  ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/   # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"   # diagnostics must never be routed on your PUBLIC app: expect 404, never 200
+)
 ```
 
 ```bash
@@ -302,7 +311,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "fc2bc21450c0707a37a2953436f6cdf504e3ac230cbc645694700fe71661b70a",
+  "body_sha256": "cbea52481cc34836e02fa7ecbafcb88f11a6f80cc0911036d21a316983898264",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
