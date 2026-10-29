@@ -279,18 +279,14 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Kubernetes v1.37.1 server, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block while it still held the node scans; five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block while it still held the node scans; five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
-The existing commands state the expected workload and API outcomes. For the node scans, an exposed
-kubelet is expected to show 10250 open and, when enabled, 10255 open; after private binding and
-network restrictions, neither should be reachable from an untrusted network, while an authorized
-cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have no kubelet listener
-even from that authorized client. Check every configured address family and retain an authorized
-positive control so an unavailable node is not mistaken for successful isolation. The pinned
-listener/default sources below support these expectations; no live result is claimed.
+The existing commands state the expected workload and API outcomes: exposed endpoints answer
+untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
+expectations, with their sources, are stated after the next block, in the marker for that block.
 
 ```bash
-# REASONED: workload, API and kubelet exposure checks follow the cited documentation and pinned listener sources;
+# REASONED: workload and API exposure checks follow the cited documentation;
 # no Kubernetes cluster or isolated network namespace is available.
 kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the Gateway's Service
 kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}'    # the public address; DNS points here
@@ -351,8 +347,8 @@ fi
 # port the cluster was never using, where a refusal proves nothing.
 # A context with no user entry would make the TLS jsonpath error out; every real one names
 # a user, and kubectl says so if yours does not.
-# This step needs python3, nc and nmap on the machine you run it from, none of which the
-# cluster provides for you.
+# This step needs python3 and nc on the machine you run it from, neither of which the
+# cluster provides for you. The node scans in the next block also need nmap there.
 # "succeeded" means something is listening and reachable from here, whatever it does next.
 
 # Then at the HTTP layer, with verification left ON.
@@ -419,7 +415,14 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.a
                                                                      # containers; 2379 is the whole of etcd
 ```
 
-REASONED: preceding block; complete node/etcd address coverage (the Gateway/service inventory, TLS/authentication and API reachability checks sit in the block before it), per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Kubernetes, operating etcd clusters, Nmap host discovery and Amazon EKS cluster endpoint access. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded; five YAML blocks parsed and the embedded endpoint parser produced five expected host/port/URL results and two input failures. No live scan ran: exposed endpoints answer untrusted sources; fixed workloads use the authenticated Gateway and restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families. One name is not one address and one node is not the cluster. Repeat the scan for every node that has a
+REASONED: preceding block; node, kubelet and etcd scans with complete address coverage (the Gateway/service inventory, TLS/authentication and API reachability checks sit in the block before it), per the guide's cited Kubernetes ports and protocols; Kubernetes, operating etcd clusters; Kubernetes v1.37.1 server; and Nmap host discovery. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded. No live scan ran: exposed endpoints answer untrusted sources; in the fixed state, restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families.
+For the node scans, an exposed kubelet is expected to show 10250 open and, when enabled, 10255 open;
+after private binding and network restrictions, neither should be reachable from an untrusted network,
+while an authorized cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have
+no kubelet listener even from that authorized client. Check every configured address family and retain
+an authorized positive control so an unavailable node is not mistaken for successful isolation. The
+pinned listener/default sources below support these expectations; no live result is claimed.
+One name is not one address and one node is not the cluster. Repeat the scan for every node that has a
 public address, worker nodes included, and every address each one answers on, in both families: a host
 filtered on IPv4 while it answers on IPv6 passes every check above and is still reachable. The
 `kubectl get svc` line catches NodePort Services that exist, but nothing here probes the 30000 to 32767
@@ -556,7 +559,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "7a4f109ca62e68ec1def8d48eb8d0da56627e8cae020eb9cfce4b9adb56cb238",
+  "body_sha256": "887a854abc0e1f21efe9090f6b3a6328d2b19e5748c694ec4bf5630a8799841e",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
