@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-29
+
+- `gradio.md`, `headless-cms-instant-api.md` and `workflow-orchestrators.md` now cite, for the gradio, Dagster and four PostgREST citations that TODO 1.386 lists, the page each old URL redirects to, checked against the guide text, with each component source key and claim source reference recomputed from the new URL. The PostgREST authentication citation stays unchanged, and `TODO.md` narrows row 1.386 to that entry and its other unchanged items, saying a 2026-10-29 fetch of the cited URL returned HTTP 200 after one redirect to that target. `TODO.md` also adds row 1.387 for the claims whose statements the cited pages do not make (`dagster-auth`, `verify-dagster`, `flagging`, `flag-storage`, `postgrest-grants` and the PostgREST part of `egress`), with `body_sha256` regenerated in the three guides and the plugin copies, `MANIFEST.sha256` and `site/llms-full.txt` rebuilt (#1030)
+
 ## 2026-10-28
 
 - The version-basis gate now reports component sources that no claim references, as step 1 of TODO 3.48: when any exist, `tools/version_basis.py --check` and `--write` print one `note` line with the count of such sources and of guides holding them, without changing the exit status, and `--check --unreferenced` lists each `component:source` key by guide. The line uses the singular for a count of one, `--unreferenced` help names its `--check` requirement, the self-test covers the report, its absence, its count and the singular wording, and the per-guide triage stays open (#1028)
