@@ -17904,7 +17904,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Spring Boot 4.1.2, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked October 2026. The guide records 57 claims, all reasoned from cited sources.
+Written against Spring Boot 4.1.2, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -18278,7 +18278,7 @@ Reasoned check: use a test upload route that accepts a multipart file field name
 
 The small upload must reach and succeed at the intended handler. With a deliberately raised limit in an isolated exposed fixture, both files should succeed; with the production limit, the larger file must be rejected because of its size. Inspect the response and server logs for that specific cause. Authentication, CSRF, missing-route, content-validation, and transport failures are not evidence of the multipart limit. A proxy rejection demonstrates the proxy limit; testing Boot's limit also requires reaching the application through an authorized path. See the [multipart limits](https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html).
 
-## Sources (checked October 2026)
+## Sources (checked September 2026)
 
 - Spring Boot how-to, embedded web servers (Configure SSL, forward headers, Tomcat proxy settings): https://docs.spring.io/spring-boot/how-to/webserver.html
 - Spring Boot SSL bundles: https://docs.spring.io/spring-boot/reference/features/ssl.html ; REST clients (applying a bundle): https://docs.spring.io/spring-boot/reference/io/rest-client.html
@@ -18311,7 +18311,7 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Boot error-inclusion options, including ON_PARAM (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html
 - Spring Boot servlet error handling (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/reference/web/servlet.html
 - Spring Boot RestClientSsl API (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/client/RestClientSsl.html
-- Spring Boot 4.1.2 RestClientSsl API, moved package (checked October 2026): https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java
+- Spring Boot 4.1.2 RestClientSsl source, moved package (checked October 2026): https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java
 - Spring Boot REST clients and SSL helper imports (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/reference/io/rest-client.html
 - Spring Boot REST clients and moved SSL helper imports (rolling documentation, checked October 2026): https://docs.spring.io/spring-boot/4.1/reference/io/rest-client.html
 - Spring Framework ForwardedHeaderFilter, proxy trust boundary: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/ForwardedHeaderFilter.html
@@ -18416,8 +18416,8 @@ Claims (full source mapping in the JSON block below):
 {
   "schema": 1,
   "checked": "2026-10-19",
-  "documentation_checked": "2026-10",
-  "body_sha256": "34a9490dba5982ca3a83b6a82c26a6c3fd192c3e2425c9613c3bc0755bc654e2",
+  "documentation_checked": "2026-09",
+  "body_sha256": "69ee69cdbea9a402716700d59f3152ee6216d69619f3200aac7dcea85778011f",
   "components": {
     "boot41": {
       "name": "Spring Boot",
