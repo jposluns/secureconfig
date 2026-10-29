@@ -322,7 +322,6 @@ Claims (full source mapping in the JSON block below):
       "name": "SvelteKit documentation",
       "basis": "unknown",
       "sources": {
-        "sc183fdb68165": "https://svelte.dev/docs/kit/$env-static-public",
         "s59abf03bae6a": "https://svelte.dev/docs/kit/adapter-node",
         "s23f255e94668": "https://svelte.dev/docs/kit/@sveltejs-kit-vite",
         "se2fdc4fd5885": "https://svelte.dev/docs/kit/server-only-modules"

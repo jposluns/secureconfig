@@ -1140,7 +1140,6 @@ Claims (full source mapping in the JSON block below):
         "s182755725d74": "https://supabase.com/docs/guides/auth/auth-mfa/totp",
         "s92b405dc3c7e": "https://supabase.com/docs/reference/javascript/select",
         "s087c8cf42ab0": "https://supabase.com/docs/reference/javascript/rpc",
-        "sf3246532dd18": "https://supabase.com/docs/guides/functions",
         "s7dfbb47b5d20": "https://supabase.com/docs/reference/cli/supabase-functions-deploy",
         "sf7d438b8c080": "https://supabase.com/docs/guides/functions/auth",
         "se52bbd097033": "https://supabase.com/docs/guides/functions/auth-headers",

@@ -427,7 +427,6 @@ Claims (full source mapping in the JSON block below):
       "name": "Chrome DevTools Protocol",
       "basis": "unknown",
       "sources": {
-        "se77e8fd82ffd": "https://developer.chrome.com/docs/devtools/remote-debugging/",
         "s523649d3b233": "https://chromedevtools.github.io/devtools-protocol/"
       }
     },

@@ -1602,8 +1602,6 @@ Claims (full source mapping in the JSON block below):
         "sd0fb4126a358": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-azure/src/main/java/org/opensearch/repositories/azure/native_store/AzureNativeObjectStorePlugin.java#L124-L143",
         "s65640ab98d93": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-gcs/src/main/rust/src/gcs.rs#L40-L59",
         "s218c27ed61b0": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-azure/src/main/rust/src/azure.rs#L43-L64",
-        "s6449a83e5cd9": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java#L485-L493",
-        "s162f5fe89247": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/utils/SseKmsUtil.java#L41-L59",
         "s4c05d0197613": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-s3/src/main/java/org/opensearch/repositories/s3/native_store/S3NativeObjectStorePlugin.java#L135-L185",
         "sac592366d6c9": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-s3/src/main/rust/src/s3.rs#L95-L97"
       }
