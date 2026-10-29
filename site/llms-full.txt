@@ -15620,7 +15620,6 @@ Claims (full source mapping in the JSON block below):
       "name": "SvelteKit documentation",
       "basis": "unknown",
       "sources": {
-        "sc183fdb68165": "https://svelte.dev/docs/kit/$env-static-public",
         "s59abf03bae6a": "https://svelte.dev/docs/kit/adapter-node",
         "s23f255e94668": "https://svelte.dev/docs/kit/@sveltejs-kit-vite",
         "se2fdc4fd5885": "https://svelte.dev/docs/kit/server-only-modules"
@@ -16551,7 +16550,6 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s981751bcb554": "https://better-auth.com/docs/installation",
         "s2ac2e0926f25": "https://better-auth.com/docs/integrations/next",
-        "sdd3d825cc3a4": "https://better-auth.com/docs/introduction",
         "s8677a74455a1": "https://better-auth.com/docs/plugins/2fa",
         "s4b3a514c43d9": "https://better-auth.com/docs/reference/options"
       }
@@ -23759,7 +23757,7 @@ Claims (full source mapping in the JSON block below):
     "verify-listeners": {"text": "Inventory 6432/9999 on private addresses and PCP 9898 on loopback including IPv6; unexpected listeners are findings.", "components": ["pgb", "pgpool"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s7b1cbfaacbb8"], "status": "REASONED", "verify": [1]},
     "verify-client": {"text": "Plaintext must fail for TLS, verified TLS with the correct password must succeed, and a wrong password must fail authentication; repeat for pgpool-II 9999.", "components": ["pgb", "pgpool", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "postgres:s198d4780d9a4", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [2]},
     "password-delivery": {"text": "Use mode-600 .pgpass for real passwords; PGPASSWORD can expose credentials through process environments.", "components": ["postgres"], "sources": ["postgres:s97264da004c0", "postgres:s198d4780d9a4"], "status": "REASONED"},
-    "verify-pgpool": {"text": "PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e"], "status": "REASONED", "verify": [3]},
+    "verify-pgpool": {"text": "PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "pgpool:sd1c787b7784e"], "status": "REASONED", "verify": [3]},
     "verify-pcp": {"text": "PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:sdc3d487af0ae", "pgpool:s13f19539cfbf"], "status": "REASONED", "verify": [3]},
     "verify-pgb-policy": {"text": "RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests.", "components": ["pgb", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae", "postgres:sf8b93623c032"], "status": "REASONED", "verify": [4]},
     "hba-parser": {"text": "PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete.", "components": ["pgb-source"], "sources": ["pgb-source:sd1ad8c2587a4"], "status": "REASONED", "verify": [4]},
@@ -28674,8 +28672,6 @@ Claims (full source mapping in the JSON block below):
         "sd0fb4126a358": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-azure/src/main/java/org/opensearch/repositories/azure/native_store/AzureNativeObjectStorePlugin.java#L124-L143",
         "s65640ab98d93": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-gcs/src/main/rust/src/gcs.rs#L40-L59",
         "s218c27ed61b0": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-azure/src/main/rust/src/azure.rs#L43-L64",
-        "s6449a83e5cd9": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java#L485-L493",
-        "s162f5fe89247": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/utils/SseKmsUtil.java#L41-L59",
         "s4c05d0197613": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-s3/src/main/java/org/opensearch/repositories/s3/native_store/S3NativeObjectStorePlugin.java#L135-L185",
         "sac592366d6c9": "https://github.com/opensearch-project/OpenSearch/blob/3.7.0/sandbox/plugins/native-repository-s3/src/main/rust/src/s3.rs#L95-L97"
       }
@@ -39430,7 +39426,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "unknown",
       "sources": {
         "s2eb33a763ea4": "https://surrealdb.com/docs/reference/cli/db/commands/start",
-        "sac47cdb4ca48": "https://surrealdb.com/docs/reference/cli/db/commands/sql",
         "s38b5f5aad1d4": "https://surrealdb.com/docs/learn/security",
         "sdaa9a636537a": "https://surrealdb.com/docs/learn/security/authentication/overview",
         "sae73137661aa": "https://surrealdb.com/docs/learn/security/best-practices/security-best-practices",
@@ -42140,43 +42135,16 @@ Claims (full source mapping in the JSON block below):
         "s4100d1423b14": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L419-L435",
         "s4b2897a4f253": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L363-L380",
         "sc0473f9f9c2d": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L126-L130",
-        "s879be6ebc8ca": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L442-L511",
-        "s5804726fe842": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L594-L634",
-        "s8aef89b5f98b": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L741-L748",
-        "sc87414a09b6f": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L807-L818",
-        "sfaac9168b667": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L636-L724",
-        "s959e3b79b691": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L27-L31",
-        "s90d8365f6905": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L143",
         "s11e3644384be": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L599-L609",
         "s6a1dfd450763": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go#L20-L60",
         "s6cab16cc1556": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go#L62-L83",
         "s99dbaec1750f": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go#L378-L380",
-        "sebb66adac984": "https://github.com/ollama/ollama/blob/v0.34.2/app/ui/app.go#L5-L13",
-        "se3e2cfa03db9": "https://github.com/ollama/ollama/blob/v0.34.2/app/ui/ui.go#L6-L39",
-        "sb7983eb0757d": "https://github.com/ollama/ollama/blob/v0.34.2/app/webview/webview.go#L53-L60",
-        "sd4620366d20d": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L12-L44",
-        "sc918a5f51d7d": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/webview.go#L8-L26",
-        "sb9475646ce87": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_models.go#L16-L35",
-        "s5f7ba12ad29a": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_models.go#L308-L353",
-        "s679019d0fd06": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L146-L148",
-        "s886dd375d7b9": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_models.go#L183-L200",
-        "s47c363d28175": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_models.go#L433-L467",
-        "s24f723d1ab2a": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L519-L555",
-        "s7521ebbabc63": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop_access.go#L55-L124",
-        "sd3d0dcc68985": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L750-L799",
-        "s18ae5e5655cf": "https://github.com/ollama/ollama/blob/v0.34.2/app/ui/extract.go#L5-L14",
-        "s9338302936c6": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/codex_app_darwin.go#L5-L25",
         "see893978ecc6": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/codex_app_darwin.go",
-        "s1db2e43b7b45": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/codex_app_darwin.go#L35-L48",
         "s3f66206086dd": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go",
         "s141dcff0708a": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L26-L29",
         "s8ab7a3732a2c": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L59-L61",
         "s17e93913af2b": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L156-L176",
-        "sf35837ccc256": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L192-L263",
-        "s5ac8a92f00fd": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L358-L375",
-        "s1cd9864b2a34": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L517-L533",
-        "s848cbf05de34": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L643-L653",
-        "s292d5f730519": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L678-L684"
+        "s848cbf05de34": "https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/codex_desktop.go#L643-L653"
       }
     },
     "commit": {
@@ -42221,7 +42189,6 @@ Claims (full source mapping in the JSON block below):
         "sdba7b87fda8d": "https://github.com/golang/go/blob/go1.26.5/src/cmd/go/alldocs.go#L236-L240",
         "s7290caae7a3c": "https://github.com/golang/go/blob/go1.26.5/src/net/http/header.go#L43-L51",
         "s0388b420c217": "https://github.com/golang/go/blob/go1.26.5/src/internal/goversion/goversion.go#L12",
-        "sbf25f8fb5cce": "https://github.com/golang/go/blob/go1.26.5/src/go/build/build.go#L354-L355",
         "s41262ad87b65": "https://github.com/golang/go/blob/go1.26.5/src/net/http/pprof/pprof.go#L88",
         "s80e5cbbd9e14": "https://github.com/golang/go/blob/go1.26.5/src/testing/internal/testdeps/deps.go#L23",
         "s63df9d2be607": "https://github.com/golang/go/blob/go1.26.5/src/simd/archsimd/_gen/simdgen/main.go#L91",
@@ -42238,7 +42205,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.0",
       "sources": {
         "s7670be382fd6": "https://github.com/golang/go/blob/go1.26.0/src/internal/goversion/goversion.go#L12",
-        "s7134707033bd": "https://github.com/golang/go/blob/go1.26.0/src/go/build/build.go#L354-L355",
         "sc4d5a418cc8a": "https://github.com/golang/go/blob/go1.26.0/src/net/http/pprof/pprof.go#L88",
         "s63f63360f142": "https://github.com/golang/go/blob/go1.26.0/src/testing/internal/testdeps/deps.go#L23",
         "se924f730cd16": "https://github.com/golang/go/blob/go1.26.0/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42249,7 +42215,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.1",
       "sources": {
         "sc2735a74234b": "https://github.com/golang/go/blob/go1.26.1/src/internal/goversion/goversion.go#L12",
-        "sc15133c74365": "https://github.com/golang/go/blob/go1.26.1/src/go/build/build.go#L354-L355",
         "sd0122b4596e5": "https://github.com/golang/go/blob/go1.26.1/src/net/http/pprof/pprof.go#L88",
         "sa24dcdd9e52c": "https://github.com/golang/go/blob/go1.26.1/src/testing/internal/testdeps/deps.go#L23",
         "s2a55e411da1d": "https://github.com/golang/go/blob/go1.26.1/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42260,7 +42225,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.2",
       "sources": {
         "sa8ba29c45871": "https://github.com/golang/go/blob/go1.26.2/src/internal/goversion/goversion.go#L12",
-        "se0e77cda3f1d": "https://github.com/golang/go/blob/go1.26.2/src/go/build/build.go#L354-L355",
         "s058a974ee5d5": "https://github.com/golang/go/blob/go1.26.2/src/net/http/pprof/pprof.go#L88",
         "s019e0fb220fc": "https://github.com/golang/go/blob/go1.26.2/src/testing/internal/testdeps/deps.go#L23",
         "s8a4dc2d3db9b": "https://github.com/golang/go/blob/go1.26.2/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42271,7 +42235,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.3",
       "sources": {
         "sdc07d97a87b6": "https://github.com/golang/go/blob/go1.26.3/src/internal/goversion/goversion.go#L12",
-        "s5aea4d01f83c": "https://github.com/golang/go/blob/go1.26.3/src/go/build/build.go#L354-L355",
         "sed7ba616e62c": "https://github.com/golang/go/blob/go1.26.3/src/net/http/pprof/pprof.go#L88",
         "s040d1ea399ae": "https://github.com/golang/go/blob/go1.26.3/src/testing/internal/testdeps/deps.go#L23",
         "s898567a72486": "https://github.com/golang/go/blob/go1.26.3/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42282,7 +42245,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.4",
       "sources": {
         "s2fd10ac9b790": "https://github.com/golang/go/blob/go1.26.4/src/internal/goversion/goversion.go#L12",
-        "seae65bce1fda": "https://github.com/golang/go/blob/go1.26.4/src/go/build/build.go#L354-L355",
         "s860b46eaab36": "https://github.com/golang/go/blob/go1.26.4/src/net/http/pprof/pprof.go#L88",
         "s2104c8373c85": "https://github.com/golang/go/blob/go1.26.4/src/testing/internal/testdeps/deps.go#L23",
         "s0e9e578b8243": "https://github.com/golang/go/blob/go1.26.4/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42293,7 +42255,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.6",
       "sources": {
         "s8b8ebc7e8db6": "https://github.com/golang/go/blob/go1.26.6/src/internal/goversion/goversion.go#L12",
-        "s3709671e863b": "https://github.com/golang/go/blob/go1.26.6/src/go/build/build.go#L354-L355",
         "sb1475154fbb7": "https://github.com/golang/go/blob/go1.26.6/src/net/http/pprof/pprof.go#L88",
         "s974c60526bb6": "https://github.com/golang/go/blob/go1.26.6/src/testing/internal/testdeps/deps.go#L23",
         "s52851e8b4312": "https://github.com/golang/go/blob/go1.26.6/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42304,7 +42265,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.7",
       "sources": {
         "s17ad8bf46090": "https://github.com/golang/go/blob/go1.26.7/src/internal/goversion/goversion.go#L12",
-        "sd315e2226ae8": "https://github.com/golang/go/blob/go1.26.7/src/go/build/build.go#L354-L355",
         "s54141d62f948": "https://github.com/golang/go/blob/go1.26.7/src/net/http/pprof/pprof.go#L88",
         "sf081388dd0f7": "https://github.com/golang/go/blob/go1.26.7/src/testing/internal/testdeps/deps.go#L23",
         "s64e2db3b685b": "https://github.com/golang/go/blob/go1.26.7/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42315,7 +42275,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.8",
       "sources": {
         "s6175e03794cf": "https://github.com/golang/go/blob/go1.26.8/src/internal/goversion/goversion.go#L12",
-        "s7ed9d53e6261": "https://github.com/golang/go/blob/go1.26.8/src/go/build/build.go#L354-L355",
         "s88d4166a7bee": "https://github.com/golang/go/blob/go1.26.8/src/net/http/pprof/pprof.go#L88",
         "sa79ec4182285": "https://github.com/golang/go/blob/go1.26.8/src/testing/internal/testdeps/deps.go#L23",
         "s9ad74046b534": "https://github.com/golang/go/blob/go1.26.8/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42326,7 +42285,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.9",
       "sources": {
         "s69637c613830": "https://github.com/golang/go/blob/go1.26.9/src/internal/goversion/goversion.go#L12",
-        "sfd6e7fa1d8e8": "https://github.com/golang/go/blob/go1.26.9/src/go/build/build.go#L354-L355",
         "s71887e5f7cdf": "https://github.com/golang/go/blob/go1.26.9/src/net/http/pprof/pprof.go#L88",
         "s6728c0a5d0d1": "https://github.com/golang/go/blob/go1.26.9/src/testing/internal/testdeps/deps.go#L23",
         "s110ef73adaf3": "https://github.com/golang/go/blob/go1.26.9/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42337,7 +42295,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "go1.26.10",
       "sources": {
         "scff07ded2fad": "https://github.com/golang/go/blob/go1.26.10/src/internal/goversion/goversion.go#L12",
-        "se93bdeb9d5e7": "https://github.com/golang/go/blob/go1.26.10/src/go/build/build.go#L354-L355",
         "sd61f4ff8d5d6": "https://github.com/golang/go/blob/go1.26.10/src/net/http/pprof/pprof.go#L88",
         "s9b82f1629b4d": "https://github.com/golang/go/blob/go1.26.10/src/testing/internal/testdeps/deps.go#L23",
         "s599b4645909f": "https://github.com/golang/go/blob/go1.26.10/src/simd/archsimd/_gen/simdgen/main.go#L91"
@@ -42497,7 +42454,7 @@ Claims (full source mapping in the JSON block below):
     "profiling-release": {"text": "From this guide's reading of v0.34.2's Dockerfile, build scripts and release workflow, which show intended builds rather than artifact contents, the main package is built with no -tags, and with CGO_ENABLED=1 in the Dockerfile, the darwin build and both Windows CLI builds. The go.mod declares go 1.26.0, which the Dockerfile uses to choose Go, while this guide's go list runs used Go 1.26.5.", "components": ["ollama"], "sources": ["ollama:s2422d51c7511", "ollama:sc2b36fe862cd", "ollama:s048a8041e459", "ollama:s69d878a2f01f", "ollama:saffcf6c517dc", "ollama:sfbdb6f7a76af", "ollama:s0c28c94bb1ee", "ollama:sdc9725a324a3", "ollama:s50dc1a212bc5", "ollama:s2c83e3be00ef", "ollama:s383b8a85907a", "ollama:sdf3692260fb9", "ollama:s73deff2c03e1", "ollama:s99ff5d94d99e", "ollama:s3d177b1fcaf1", "ollama:s54c3a8422a93", "ollama:s83f85bf889db", "ollama:sae92e96027b1"], "status": "REASONED"},
     "profiling-app-runs": {"text": "Go 1.26.5 go list -e -deps runs for this guide list no net/http/pprof or runtime/pprof for the v0.34.2 desktop app main package on darwin/windows amd64 and arm64, cgo off and on; linux lists only the error-marked main package. Loaded cells mark app/ui (no app/dist); cgo-off cells cannot load cgo-only app/webview and omit the main package's cgo files with no error, so imports may be incomplete.", "components": ["ollama"], "sources": ["ollama:sad61f21372d7", "ollama:sf38afcc73250", "ollama:s45897fae891f", "ollama:s2b2be911f51e", "ollama:se6c615cc2b3a"], "status": "REASONED"},
     "profiling-app-listener": {"text": "From source reading, the app's UI listener is loopback (127.0.0.1:0, or 3001 in dev mode), served by an http.Server with a non-nil Handler whose mux has a token-cookie check on /api/v1 routes, proxy and catch-all routes without it, and no /debug/pprof pattern. This guide's inference, not run: even a build linking net/http/pprof would not serve DefaultServeMux handlers there.", "components": ["ollama", "go"], "sources": ["ollama:s73b81a1f8d04", "ollama:s67fd6cba9588", "ollama:s243bac4ebddb", "ollama:s4421d53f8855", "go:sab55ef9009c4", "go:s2e779f75153e", "go:s038b2186ee21", "go:sa0c56e16001f"], "status": "REASONED"},
-    "profiling-app-gateway": {"text": "From source reading, another loopback app listener is the Claude Desktop gateway on 127.0.0.1:11435, in macOS cgo builds, started only when Claude Desktop is installed. Its non-nil Handler refuses non-loopback Host values and a non-empty first Origin, serves four routes, not /debug/pprof, and forwards only POST /v1/messages, stripping caller auth headers, to the app's OLLAMA_HOST; not run.", "components": ["ollama", "go"], "sources": ["ollama:s2b2be911f51e", "ollama:s84f1c8cf636d", "ollama:sba33d5d074d0", "ollama:sb8e91213cc53", "ollama:s132b1b4bbbe5", "ollama:s58d1846a87f0", "ollama:s8b3afc8d9f86", "ollama:s5897f909de84", "ollama:saf6c2bd158fc", "ollama:s4100d1423b14", "ollama:s4b2897a4f253", "ollama:s11e3644384be", "ollama:s6a1dfd450763", "ollama:s6cab16cc1556", "ollama:s99dbaec1750f", "go:s7290caae7a3c"], "status": "REASONED"},
+    "profiling-app-gateway": {"text": "From source reading, another loopback app listener is the Claude Desktop gateway on 127.0.0.1:11435, in macOS cgo builds, started only when Claude Desktop is installed. Its non-nil Handler refuses non-loopback Host values and a non-empty first Origin, serves four routes, not /debug/pprof, and forwards only POST /v1/messages, stripping caller auth headers, to the app's OLLAMA_HOST; not run.", "components": ["ollama", "go"], "sources": ["ollama:s2b2be911f51e", "ollama:s84f1c8cf636d", "ollama:sba33d5d074d0", "ollama:sb8e91213cc53", "ollama:s132b1b4bbbe5", "ollama:s58d1846a87f0", "ollama:s8b3afc8d9f86", "ollama:s5897f909de84", "ollama:saf6c2bd158fc", "ollama:s4100d1423b14", "ollama:s4b2897a4f253", "ollama:sc0473f9f9c2d", "ollama:s11e3644384be", "ollama:s6a1dfd450763", "ollama:s6cab16cc1556", "ollama:s99dbaec1750f", "go:s7290caae7a3c"], "status": "REASONED"},
     "profiling-app-gateway-start": {"text": "Source reading, not run: startup starts the gateway only if Claude Desktop is installed and configured to use it; setClaudeGatewayInstalled, prepareClaudeDesktopConnection and model mapping start it if installed. The first two stop it unless Claude Desktop then uses it (the first not after an auto-mode error); mapping, if none existed, stops it on profile-change errors except restart confirmation.", "components": ["ollama"], "sources": ["ollama:sd92431ef4485", "ollama:sb5822b8eeabd", "ollama:se1879bd92d00", "ollama:s9a2533a8e3e0", "ollama:s29f084ce74cf", "ollama:sb8e91213cc53", "ollama:sd1743f37dd2c", "ollama:s8b982a956f29"], "status": "REASONED"},
     "profiling-app-release": {"text": "By this guide's reading of intended builds, not artifacts, build_darwin.sh builds the app package with GOOS=darwin, CGO_ENABLED=1, amd64 and arm64 and no -tags. In build_windows.ps1, buildApp builds it with no -tags, by default setting no GOARCH under its unconditional CGO_ENABLED=1 and, when the cross-compile tools are present, for arm64 (GOOS=windows, GOARCH=arm64, CGO_ENABLED=1).", "components": ["ollama"], "sources": ["ollama:s46dc00636dd6", "ollama:sde507d86d7ac", "ollama:s52f3436c9021", "ollama:s0c28c94bb1ee", "ollama:sdc9725a324a3", "ollama:saffcf6c517dc"], "status": "REASONED"},
     "desktop-app-server": {"text": "From source reading, the desktop app serves no HTTP on the Ollama API listener itself: it runs the separate ollama binary with serve and restarts it, and the spawn copies the app's own environment, setting OLLAMA_HOST=0.0.0.0 when the Expose setting is on, so that setting or an inherited OLLAMA_HOST can expose that process. No shipped app binary was inspected and no run observed these behaviours.", "components": ["ollama"], "sources": ["ollama:sa4c68b27021b", "ollama:sd5ce93133b59", "ollama:s80b241b854c7"], "status": "REASONED"},
@@ -51594,16 +51551,13 @@ Claims (full source mapping in the JSON block below):
         "s93073617917f": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L394-L395",
         "saa2935bc2cc9": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L414-L432",
         "sa1ae7eae7541": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L452-L455",
-        "scb836c981018": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L651-L750",
         "sa460f7210ca4": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/auth/users.py#L200-L219",
         "sdf15a9263d34": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/db/sso_provider.py#L300-L398",
         "s56d064c896d9": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/db/sso_provider.py#L28-L82",
         "s55b9746616f4": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/db/sso_provider.py#L132-L256",
         "s8a5f96230d05": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/db/engine/sql_engine.py#L441-L549",
-        "s3c0ba5e12710": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L434-L438",
         "s19ba2d899d29": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L534-L549",
         "s8e0f5703a244": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/main.py#L812-L815",
-        "sffaf980923fa": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/utils/variable_functionality.py#L42-L72",
         "s1230ebe5af1d": "https://github.com/onyx-dot-app/onyx/blob/4cfda3c38c7f25e190d735b52d6c8e75522d99f5/backend/onyx/utils/variable_functionality.py#L100-L127"
       }
     },
@@ -51612,11 +51566,8 @@ Claims (full source mapping in the JSON block below):
       "basis": "55df913b37cb9c001a77dd010ff8c6331e70447b",
       "sources": {
         "sb6a38c2222ba": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L395-L431",
-        "s9d9b4f165479": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L659-L758",
         "s8bbce4b47acc": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/auth/users.py#L204-L223",
-        "s8843778589c8": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/db/sso_provider.py#L300-L398",
-        "s790b22b45669": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L433",
-        "s8c549de2d619": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/main.py#L646-L657"
+        "s8843778589c8": "https://github.com/onyx-dot-app/onyx/blob/55df913b37cb9c001a77dd010ff8c6331e70447b/backend/onyx/db/sso_provider.py#L300-L398"
       }
     },
     "searx-source": {
@@ -51751,7 +51702,7 @@ Claims (full source mapping in the JSON block below):
     "onyx-prod": {"text": "Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished.", "components": ["onyx-compose"], "sources": ["onyx-compose:sc35a382f123e"], "status": "REASONED"},
     "onyx-bootstrap": {"text": "Email/password auth is on and first signup becomes admin; claim privately before exposure.", "components": ["onyx"], "sources": ["onyx:sc7649811ee67"], "status": "REASONED"},
     "onyx-auth-type": {"text": "Guide inference from v4.3.13/v4.4.0 tags: beyond two one-time imports (migration Google/OIDC row, startup SAML row), AUTH_TYPE no longer selects v4.4.0 runtime auth; legacy values remain for migrations, a one-time legacy SAML startup import and a stale-value warning. Version identity rests on tags; cited web manifests lack release versions. Guide advice: do not set AUTH_TYPE to change auth.", "components": ["onyx", "onyx-v43", "onyx-v44"], "sources": ["onyx:sc7649811ee67", "onyx-v43:s279734512e1b", "onyx-v43:sb03484e56906", "onyx-v44:s799b0a246cf5", "onyx-v44:sac84754b3dd2", "onyx-v44:s9275371ceeec", "onyx-v44:sc9b10b6185fd", "onyx-v44:s5c46d1afde57", "onyx-v44:s75cc112525f7", "onyx-v44:s54e8bbf4f896", "onyx-v44:s6602dda5fa9c", "onyx-v44:s170322fcd248", "onyx-v44:s74923f110244", "onyx-v43:seb430888edc4", "onyx-v44:sbc5f578e1c7e"], "status": "REASONED"},
-    "onyx-auth-type-legacy-startup": {"text": "Guide assessment: v4.5.0, v4.9.2 to v4.9.4 (newest stable reviewed) and pre-release v5.0.0-beta.3 retain the AUTH_TYPE stale-value warning call and, under if not MULTI_TENANT, the legacy SAML startup call (commented no-op unless AUTH_TYPE=saml with no SAML row). Runtime auth selection, full helper behaviour and any docs-site record of the v4.5 removal remain unverified.", "components": ["onyx-v45", "onyx-v49", "onyx-v494", "onyx-v50-beta"], "sources": ["onyx-v45:s50116ebcab47", "onyx-v45:sab806f01b340", "onyx-v49:sba8318be94ea", "onyx-v49:sab9b9d5d76ac", "onyx-v494:s93073617917f", "onyx-v494:saa2935bc2cc9", "onyx-v50-beta:sb6a38c2222ba"], "status": "REASONED"},
+    "onyx-auth-type-legacy-startup": {"text": "Guide assessment: v4.5.0, v4.9.2 to v4.9.4 (newest stable reviewed) and pre-release v5.0.0-beta.3 retain the AUTH_TYPE stale-value warning call and, under if not MULTI_TENANT, the legacy SAML startup call (commented no-op unless AUTH_TYPE=saml with no SAML row). Runtime auth selection, full helper behaviour and any docs-site record of the v4.5 removal remain unverified.", "components": ["onyx-v45", "onyx-v49", "onyx-v494", "onyx-v50-beta"], "sources": ["onyx-v45:s50116ebcab47", "onyx-v45:sab806f01b340", "onyx-v49:sba8318be94ea", "onyx-v49:sab9b9d5d76ac", "onyx-v494:s93073617917f", "onyx-v494:saa2935bc2cc9", "onyx-v50-beta:sb6a38c2222ba", "onyx-v50-beta:s8bbce4b47acc", "onyx-v50-beta:s8843778589c8"], "status": "REASONED"},
     "onyx-auth-type-plan-record": {"text": "Documented: Onyx's undated basic auth page, fetched Oct 2026, says AUTH_TYPE \"is inert\" since v4.4.0, full removal planned in v4.5; v4.4.0 release notes list removing AUTH_TYPE and AuthType enum; source reading: v4.5.0/v4.9.2 env.prod.template heads its legacy SSO block (with AUTH_TYPE) \"Planned for removal in v4.5.\" None records the full v4.5 removal as done.", "components": ["onyx", "onyx-v44", "onyx-v45", "onyx-v49"], "sources": ["onyx:sc7649811ee67", "onyx-v44:sa49753aa8478", "onyx-v45:s7ebeb588576d", "onyx-v49:sb19e8617a53f"], "status": "REASONED"},
     "onyx-auth-type-later-selection": {"text": "Source reading and guide inference: a case-sensitive AUTH_TYPE search of Onyx v4.5.0/v4.9.2 backend/web finds reads only in two migrations and two helpers; main.py always mounts password login, gating only env-credential Google login on OAuth credentials. Beyond two one-time imports (migration Google/OIDC row, startup SAML row), AUTH_TYPE selects no runtime auth; deployed selection is unobserved.", "components": ["onyx-v45", "onyx-v49"], "sources": ["onyx-v45:sbc16f4507870", "onyx-v45:sc23bf087d9f8", "onyx-v45:sd046764eadb4", "onyx-v45:sb5ac094a2533", "onyx-v45:s1f8204533a74", "onyx-v45:sb0b19e5482b8", "onyx-v45:s20888688ad03", "onyx-v45:s0945580d24f5", "onyx-v49:sc82872ea4ee8", "onyx-v49:s85054eff3304", "onyx-v49:sad04863d1458", "onyx-v49:s589436426362", "onyx-v49:sed2172013ac6", "onyx-v49:secbe5662c7eb", "onyx-v49:se9a7d604174b", "onyx-v49:sf74066095373"], "status": "REASONED"},
     "onyx-auth-type-helpers": {"text": "Source reading, v4.5.0 and v4.9.2-v4.9.4: verify_auth_setting only logs warnings for AUTH_TYPE disabled, google_oauth, oidc or saml, then a MULTI_TENANT mode notice. The SAML seed acts only if single-tenant, AUTH_TYPE=saml, no SAML row and valid SAML_CONF_DIR settings.json, creating one SAML row, catching only IntegrityError; at v4.9.2-v4.9.4 other errors end non-EE lifespan pre-yield (not run).", "components": ["onyx-v45", "onyx-v49", "onyx-v494"], "sources": ["onyx-v45:sc23bf087d9f8", "onyx-v45:sd046764eadb4", "onyx-v49:s85054eff3304", "onyx-v49:sad04863d1458", "onyx-v494:sa460f7210ca4", "onyx-v494:sdf15a9263d34", "onyx-v494:s56d064c896d9", "onyx-v494:s55b9746616f4", "onyx-v494:sa1ae7eae7541", "onyx-v494:s8a5f96230d05", "onyx-v494:s19ba2d899d29", "onyx-v494:s8e0f5703a244", "onyx-v494:s1230ebe5af1d"], "status": "REASONED"},
@@ -61501,7 +61452,6 @@ Claims (full source mapping in the JSON block below):
       "name": "Metabase docs",
       "basis": "unknown",
       "sources": {
-        "sefe12b1b495c": "https://www.metabase.com/docs/latest/",
         "s5e2251b3184d": "https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase",
         "s521b3063e9f0": "https://www.metabase.com/docs/latest/embedding/public-links",
         "s02b7797b6ffe": "https://www.metabase.com/docs/latest/permissions/data",
@@ -61526,7 +61476,6 @@ Claims (full source mapping in the JSON block below):
       "name": "Redash docs",
       "basis": "unknown",
       "sources": {
-        "s069a74340b65": "https://redash.io/help/",
         "s4c72252b5447": "https://redash.io/help/open-source/setup/",
         "sbaf5b44079a0": "https://redash.io/help/open-source/admin-guide/secrets/"
       }
@@ -62187,8 +62136,7 @@ Claims (full source mapping in the JSON block below):
         "s2b16e2c93606": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L90",
         "s118384fa1d9f": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95",
         "s9bee4adc612e": "https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0",
-        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3",
-        "se81c30b3f43b": "https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env"
+        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3"
       }
     },
     "baserow": {
@@ -64710,39 +64658,24 @@ Claims (full source mapping in the JSON block below):
         "sdd1a89cf3815": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/views/install/env.phtml",
         "s1c354b6df527": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Databases/TransactionState.php#L50-L92",
         "s21476585e7d9": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Databases/TransactionState.php#L339-L350",
-        "s4daf9abb72b4": "https://github.com/appwrite/appwrite/blob/2.2.0/app/init/resources/request.php#L1192-L1196",
         "s8a44ff629c40": "https://github.com/appwrite/appwrite/blob/2.2.0/app/init/resources/request.php#L215-L219",
         "s08213afcf157": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Upgrade.php#L102-L104",
         "s2a7f2bc4e834": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L186-L205",
         "sde11935a99de": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1624-L1643",
         "s48bedca5fd4a": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L225-L235",
-        "sb04bd8725358": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L739-L745",
-        "s72ba13c41e7e": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1239-L1295",
-        "s3afe73884566": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1609-L1618",
-        "s5625c02a35f4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L122-L124",
         "sad8784f8e9a9": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L12-L21",
         "s06b2c6eab43d": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/templates/steps/step-1.phtml#L68-L110",
         "s805902cec1bc": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer.phtml#L12",
-        "s681a4ae9171a": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/View.php#L42-L48",
         "s6fb9b6903781": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370",
-        "s6c1141485824": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L45",
         "s7d56eff0a7da": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157",
-        "s6295037b83da": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206",
         "s9abe0896e1d5": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243",
         "s98f550167154": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L308-L320",
         "sae5eb7c54f35": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L379-L392",
-        "s5bf1ec01b06d": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L341-L378",
-        "sc45b0bcd7e3d": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L138-L173",
         "s743783a2e7c4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L445-L466",
-        "s447a96e44d6b": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Server.php#L207-L239",
-        "sc7eff8d8ae01": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Server.php#L259-L297",
         "s7bba5f7d026a": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Docker/Compose/Generator.php",
         "s65c6e1b53177": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L9-L26",
-        "s83e6c05eb3d7": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L66-L76",
         "s20f9a45c1ae4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L140-L148",
         "s1b716f6425c4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L179-L187",
-        "s4de85dfdcb6c": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L246-L261",
-        "s62081c1c2ce8": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Generator.php#L266-L316",
         "s61db43082b23": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose.php#L16-L27",
         "sa319cbeaf14d": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Compose/Service.php#L28-L29",
         "s0397bb7a7d9a": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Docker/Env.php#L37-L42",
@@ -64815,9 +64748,7 @@ Claims (full source mapping in the JSON block below):
         "s3c305a201d46": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L380-L423",
         "s553c31c38ee3": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2005-L2066",
         "s768127e55c8e": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2824-L2861",
-        "s39898214cd29": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2976-L2998",
-        "s8a9d072c48b1": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L3-L5",
-        "s377f4ae1b5bc": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L5-L8"
+        "s39898214cd29": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2976-L2998"
       }
     },
     "utopia-php-system": {
@@ -64920,10 +64851,10 @@ Claims (full source mapping in the JSON block below):
     "source-limits-mongo": {"text": "Pinned Mongo getDocument filters by _uid, plus tenant under shared tables, with no adapter authorization check; Mongo find adds an $in filter on _permissions of requester roles wrapped in the action only with authorization status enabled. This guide reasons that a collection grant or disabled status omits that filter and getDocument adds none, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:sbc944db029cb", "utopia-php-database:s6a9132fbc928", "utopia-php-database:sdc4aebfb869d", "utopia-php-database:s6324818fa770", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s01a8ce8001e0", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d"], "status": "REASONED"},
     "source-limits-memory-redis": {"text": "Pinned Memory, intended for tests, fixtures and ephemeral workloads, and Redis, mirroring its surface, check no authorization in getDocument; their find paths keep only IDs matching requester roles for the action while authorization is enabled. This guide reasons that a collection grant or disabled status omits that filtering, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s637a07eb6f05", "utopia-php-database:s68f0dd3f99e1", "utopia-php-database:s9be04229c19a", "utopia-php-database:sa8ac8f3419dd", "utopia-php-database:s942a26817d62", "utopia-php-database:s1da4feb30d76", "utopia-php-database:s553c31c38ee3", "utopia-php-database:s768127e55c8e", "utopia-php-database:s39898214cd29", "utopia-php-database:s3c305a201d46", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"},
     "source-limits-pool": {"text": "Pinned Pool delegates getDocument and find to a pooled adapter, outside a transaction first setting its database, namespace, shared tables, tenant and authorization from Pool's own; withTransaction does this for the adapter it pins. This guide reasons that a Pool-wrapped adapter reads with the authorization instance the database set, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s4cc1d5739816", "utopia-php-database:s6d59676de4ac", "utopia-php-database:s22782b0cef21", "utopia-php-database:sf6aa64548538", "utopia-php-database:s3389fa5854d5"], "status": "REASONED"},
-    "source-limits-appwrite-adapter": {"text": "Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to the MariaDB, Mongo, MySQL and Postgres adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:s2ac9cf2424b0", "appwrite:s72725b186c05", "appwrite:sa6bf00f7f610", "appwrite:s5b95ad04c9e2"], "status": "REASONED"},
-    "source-limits-appwrite-dev": {"text": "Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql, a development default, not a production default; the root Compose file, which the install task reads as its Compose template, passes the variable to the appwrite service without a value. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a", "appwrite:s8e5272615f2e", "appwrite:s8830e89f7a80", "appwrite:sd886b53afa75", "appwrite:scbf0003fdebc"], "status": "REASONED"},
+    "source-limits-appwrite-adapter": {"text": "Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to the MariaDB, Mongo, MySQL and Postgres adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:s2ac9cf2424b0", "appwrite:s72725b186c05", "appwrite:sa6bf00f7f610", "appwrite:s5b95ad04c9e2", "appwrite:s8a44ff629c40"], "status": "REASONED"},
+    "source-limits-appwrite-dev": {"text": "Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql, a development default, not a production default; the root Compose file, which the install task reads as its Compose template, passes the variable to the appwrite service without a value. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a", "appwrite:s8e5272615f2e", "appwrite:s8830e89f7a80", "appwrite:sd886b53afa75", "appwrite:scbf0003fdebc", "appwrite:s08213afcf157"], "status": "REASONED"},
     "source-limits-appwrite-console": {"text": "Appwrite 2.2.0's console variables endpoint reports _APP_DB_ADAPTER through its response model with a mariadb fallback while pool registration falls back to postgresql, so by source reading without a run an unset or empty variable gives Postgres console and database pools and a reported mariadb. Both read a set variable; this guide advises not relying on the reported value to identify the adapter.", "components": ["appwrite", "utopia-php-system"], "sources": ["appwrite:sc259dcc33931", "appwrite:s95ace139c972", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:sd2a7f2cd5865", "utopia-php-system:s432a4a7a96bf"], "status": "REASONED"},
-    "source-limits-appwrite-install-env": {"text": "Appwrite 2.2.0's install task writes _APP_DB_ADAPTER to .env, unless reusing a configuration, from a prompt answer, its database (default postgresql, or detected) or the web installer's choice (default postgresql). Its Compose generator keeps only the chosen database service and, this guide reasons, the value-less entry, which the first detection step skips; how Compose resolves it is unknown.", "components": ["appwrite"], "sources": ["appwrite:sb5b101f2f04e", "appwrite:s33547558ebc8", "appwrite:s0a6edcec1f26", "appwrite:sa737cb84c634", "appwrite:s7bb5907c66bd", "appwrite:s64b48746c27d", "appwrite:sdd1a89cf3815", "appwrite:s48bedca5fd4a", "appwrite:s2a7f2bc4e834", "appwrite:sde11935a99de", "appwrite:sd886b53afa75", "appwrite:s06b2c6eab43d", "appwrite:s805902cec1bc", "appwrite:s6fb9b6903781", "appwrite:s7d56eff0a7da", "appwrite:s9abe0896e1d5", "appwrite:sae5eb7c54f35", "appwrite:s743783a2e7c4", "appwrite:s7bba5f7d026a", "appwrite:s20f9a45c1ae4", "appwrite:s1b716f6425c4", "appwrite:s61db43082b23", "appwrite:sa319cbeaf14d", "appwrite:s0397bb7a7d9a"], "status": "REASONED"},
+    "source-limits-appwrite-install-env": {"text": "Appwrite 2.2.0's install task writes _APP_DB_ADAPTER to .env, unless reusing a configuration, from a prompt answer, its database (default postgresql, or detected) or the web installer's choice (default postgresql). Its Compose generator keeps only the chosen database service and, this guide reasons, the value-less entry, which the first detection step skips; how Compose resolves it is unknown.", "components": ["appwrite"], "sources": ["appwrite:sb5b101f2f04e", "appwrite:s33547558ebc8", "appwrite:s0a6edcec1f26", "appwrite:sa737cb84c634", "appwrite:s7bb5907c66bd", "appwrite:s64b48746c27d", "appwrite:sdd1a89cf3815", "appwrite:s48bedca5fd4a", "appwrite:s2a7f2bc4e834", "appwrite:sde11935a99de", "appwrite:sd886b53afa75", "appwrite:s06b2c6eab43d", "appwrite:s805902cec1bc", "appwrite:s6fb9b6903781", "appwrite:s7d56eff0a7da", "appwrite:s9abe0896e1d5", "appwrite:sae5eb7c54f35", "appwrite:s743783a2e7c4", "appwrite:s7bba5f7d026a", "appwrite:s20f9a45c1ae4", "appwrite:s1b716f6425c4", "appwrite:s61db43082b23", "appwrite:sa319cbeaf14d", "appwrite:s0397bb7a7d9a", "appwrite:sad8784f8e9a9", "appwrite:s98f550167154", "appwrite:s65c6e1b53177"], "status": "REASONED"},
     "source-limits-adapter-docs": {"text": "At the time of writing, Appwrite's environment documentation lists MariaDB and MongoDB and gives _APP_DB_ADAPTER a mongodb default, conflicting with Appwrite 2.2.0, which defaults to postgresql, a value that page does not list.", "components": ["appwrite-docs", "appwrite"], "sources": ["appwrite-docs:s2bf9a4746d28", "appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca"], "status": "REASONED"}
   }
 }
