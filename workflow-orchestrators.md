@@ -52,9 +52,10 @@ for `include_secrets`; restrict API and worker access, and keep credentials out 
 The open-source `dagster-webserver` (as of 1.13.24, run directly or by `dagster dev`) binds `127.0.0.1` on port
 3000 unless a flag or an environment variable sets the host or a nonzero port, and with no port set either way, or a port
 of 0, it moves to a free port when 3000 is taken. The official Helm chart (as of 1.13.24) always passes `-h 0.0.0.0`,
-on the Service port, 80 by default, behind a Service of type `ClusterIP` by default. The open-source
-`dagster-webserver` (as of 1.13.24) ships no built-in login or access control: the inspected open-source
-webserver applies no authenticating middleware.
+on the Service port, 80 by default, behind a Service of type `ClusterIP` by default. In the open-source
+`dagster-webserver` (as of 1.13.24), `build_middleware()` adds only a call-counting middleware and
+`build_graphql_middleware()` adds none, so neither adds authentication; this guide therefore treats the
+webserver as having no built-in login or access control.
 Put it entirely behind an identity-aware fronting layer ([fronting-auth.md](fronting-auth.md)) or your own
 reverse proxy with its own authentication ([nginx.md](nginx.md), [caddy.md](caddy.md)) plus MFA
 ([mfa.md](mfa.md)); for a proxy on the same host, bind the webserver explicitly with
@@ -263,7 +264,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
 ) || echo 'prefect-auth: skipped or failed; continuing'
 
-# Dagster has no login of its own, so test /graphql, which can read configuration and launch runs.
+# dagster-webserver 1.13.24's build_middleware() and build_graphql_middleware() add no authentication,
+# so test /graphql, which can read configuration and launch runs.
 # A RepositoryConnection containing nodes (including an empty nodes list) is a successful read.
 # PythonError, top-level GraphQL errors, and transport failures are inconclusive.
 # Test the proxy separately: send this identical query anonymously and authenticated to the SAME proxy URL.
@@ -548,7 +550,7 @@ Claims (full source mapping in the JSON block below):
 - prefect-port (REASONED; prefect-rolling): The self-hosted Prefect server uses port 4200.
 - dagster-bind (REASONED; dagster): Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin.
 - dagster-helm (REASONED; dagster): The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default.
-- dagster-auth (REASONED; dagster): In dagster-webserver 1.13.24, build_middleware() returns only DagsterTracedCounterMiddleware, which counts traced calls and adds a response header, and build_graphql_middleware() returns an empty list, so neither adds authentication. Protect all routes with an authenticating proxy.
+- dagster-auth (REASONED; dagster): In dagster-webserver 1.13.24, build_middleware() returns only DagsterTracedCounterMiddleware, which counts traced calls and adds a response header, and build_graphql_middleware() returns an empty list, so neither adds authentication; this guide therefore treats the OSS webserver as having no built-in login. Protect all routes with an authenticating proxy.
 - airflow-boundary (REASONED; airflow): Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private.
 - airflow-two-api (REASONED; airflow-two, airflow-old): Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all.
 - airflow-simple (REASONED; airflow): Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied.
@@ -609,7 +611,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "736d182fea48f7584db528fd3acfdf141362f9351aae59032886e56c6eccba39",
+  "body_sha256": "ff814feb6956eb7c7a36c679c0ef2ae36668493babbb4bb8a35245f2e63beb3b",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -894,7 +896,7 @@ Claims (full source mapping in the JSON block below):
     "prefect-port": {"text": "The self-hosted Prefect server uses port 4200.", "components": ["prefect-rolling"], "sources": ["prefect-rolling:sbe64d51110a2"], "status": "REASONED"},
     "dagster-bind": {"text": "Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin.", "components": ["dagster"], "sources": ["dagster:sab1b42d92f27", "dagster:s6bc57f86dfe1", "dagster:s2455602a504b", "dagster:s3c7d8f17f245", "dagster:s469c458c4a71"], "status": "REASONED"},
     "dagster-helm": {"text": "The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default.", "components": ["dagster"], "sources": ["dagster:s695dfd19dcca", "dagster:sf6f027e96a0d", "dagster:seda3a1b24425"], "status": "REASONED"},
-    "dagster-auth": {"text": "In dagster-webserver 1.13.24, build_middleware() returns only DagsterTracedCounterMiddleware, which counts traced calls and adds a response header, and build_graphql_middleware() returns an empty list, so neither adds authentication. Protect all routes with an authenticating proxy.", "components": ["dagster"], "sources": ["dagster:sabd01546900d", "dagster:s1fb740d34a69", "dagster:s9e0d6cad1a6f"], "status": "REASONED"},
+    "dagster-auth": {"text": "In dagster-webserver 1.13.24, build_middleware() returns only DagsterTracedCounterMiddleware, which counts traced calls and adds a response header, and build_graphql_middleware() returns an empty list, so neither adds authentication; this guide therefore treats the OSS webserver as having no built-in login. Protect all routes with an authenticating proxy.", "components": ["dagster"], "sources": ["dagster:sabd01546900d", "dagster:s1fb740d34a69", "dagster:s9e0d6cad1a6f"], "status": "REASONED"},
     "airflow-boundary": {"text": "Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private.", "components": ["airflow"], "sources": ["airflow:s1d0b86fe4334"], "status": "REASONED"},
     "airflow-two-api": {"text": "Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all.", "components": ["airflow-two", "airflow-old"], "sources": ["airflow-two:sb97f3044e215", "airflow-old:s4e72b1f51038"], "status": "REASONED"},
     "airflow-simple": {"text": "Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied.", "components": ["airflow"], "sources": ["airflow:sad02a49561a0", "airflow:s3be3e4616150"], "status": "REASONED"},
@@ -939,7 +941,7 @@ Claims (full source mapping in the JSON block below):
     "argo-network": {"text": "Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained.", "components": ["argo-docs"], "sources": ["argo-docs:s6c8e78288632"], "status": "REASONED"},
     "verify-inventory": {"text": "ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.", "components": ["flower", "argo-three", "iproute2", "network-namespaces", "prefect-rolling"], "sources": ["prefect-rolling:sbe64d51110a2", "flower:s25760fae7152", "argo-three:sbddb9f07a301", "iproute2:s6cc7f285a0c7", "network-namespaces:s427c923e346f", "iproute2:s9fa9a260f1de"], "status": "REASONED", "verify": [1]},
     "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-source:sa4574c7ed80f", "prefect-rolling:s0ef73a227667"], "status": "REASONED", "verify": [1]},
-    "verify-dagster": {"text": "Dagster 1.13.24 routes /graphql over HTTP GET and POST and over WebSocket, and its build_middleware() adds no authentication. This guide reads a RepositoryConnection from /graphql as a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately.", "components": ["dagster", "dagster-rolling"], "sources": ["dagster:sf751886ecbdd", "dagster:s1fb740d34a69", "dagster-rolling:sb623df76a5b1"], "status": "REASONED", "verify": [1]},
+    "verify-dagster": {"text": "Dagster 1.13.24 routes /graphql over HTTP GET and POST and over WebSocket, and its build_middleware() adds no authentication. This guide reads a RepositoryConnection from /graphql as a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately.", "components": ["dagster", "dagster-rolling"], "sources": ["dagster:sf751886ecbdd", "dagster:s1fb740d34a69", "dagster:s9e0d6cad1a6f", "dagster-rolling:sb623df76a5b1"], "status": "REASONED", "verify": [1]},
     "verify-airflow": {"text": "FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.", "components": ["airflow-two", "airflow-rolling", "fab-rolling"], "sources": ["fab-rolling:s989f09d05161", "airflow-rolling:s39bfd91c507b", "airflow-two:sb97f3044e215"], "status": "REASONED", "verify": [1]},
     "verify-temporal": {"text": "Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8", "temporal-rolling:s12f2c64ad396"], "status": "REASONED", "verify": [1]},
     "verify-flower": {"text": "Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected.", "components": ["flower-rolling"], "sources": ["flower-rolling:sb1ba69f79c9b"], "status": "REASONED", "verify": [1]},
