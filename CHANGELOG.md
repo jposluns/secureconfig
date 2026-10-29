@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-29
+
+- TODO 3.48 step 2, batch A: of eight component sources that no claim referenced, four are now cited from the claim each supports and four are removed from the component metadata. Citations: `memcached.md` (`openssl:s00aaf106164f` on `verify-tls`), `headless-cms-instant-api.md` (`hasura:se1d13e0328aa` on `hasura-console`), `observability-components.md` (`loki:s303881c903ca` on `loki-config`) and `oidc-integration.md` (`okta:s06b93a8255e7` on `code-flow`, which also gains the `okta` component). Removals: `vault.md` (`docs:s45334d3270eb`), `headless-browser-services.md` (`cdp:se77e8fd82ffd`), `firebase-supabase.md` (`supabase:sf3246532dd18`) and `tunnels.md` (`frp:s7800b0cbd057`); Sources sections, guide bodies and claim text are unchanged. The plugin copies, `MANIFEST.sha256` and `site/llms-full.txt` are regenerated, and 78 listed sources remain (#1031)
+
 ## 2026-10-28
 
 - The version-basis gate now reports component sources that no claim references, as step 1 of TODO 3.48: when any exist, `tools/version_basis.py --check` and `--write` print one `note` line with the count of such sources and of guides holding them, without changing the exit status, and `--check --unreferenced` lists each `component:source` key by guide. The line uses the singular for a count of one, `--unreferenced` help names its `--check` requirement, the self-test covers the report, its absence, its count and the singular wording, and the per-guide triage stays open (#1028)
