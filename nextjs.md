@@ -383,7 +383,6 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s981751bcb554": "https://better-auth.com/docs/installation",
         "s2ac2e0926f25": "https://better-auth.com/docs/integrations/next",
-        "sdd3d825cc3a4": "https://better-auth.com/docs/introduction",
         "s8677a74455a1": "https://better-auth.com/docs/plugins/2fa",
         "s4b3a514c43d9": "https://better-auth.com/docs/reference/options"
       }

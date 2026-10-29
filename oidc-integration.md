@@ -196,7 +196,7 @@ Components (recorded basis):
 
 Claims (full source mapping in the JSON block below):
 
-- code-flow (REASONED; oauth): Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.
+- code-flow (REASONED; oauth, okta): Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.
 - redirect-match (REASONED; oauth): Register an exact callback URI including scheme, host, path and trailing slash; avoid prefix and wildcard matching.
 - transaction-binding (REASONED; oauth, core): Generate state bound to the browser session, nonce and S256 code_challenge for each authorization; request openid email profile.
 - code-exchange (REASONED; oauth, core): Exchange the code server-side with client secret and the code_verifier that produced the challenge.
@@ -412,7 +412,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "code-flow": {"text": "Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.", "components": ["oauth"], "sources": ["oauth:sde329701b60c", "oauth:scb6a61add96b"], "status": "REASONED"},
+    "code-flow": {"text": "Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.", "components": ["oauth", "okta"], "sources": ["oauth:sde329701b60c", "oauth:scb6a61add96b", "okta:s06b93a8255e7"], "status": "REASONED"},
     "redirect-match": {"text": "Register an exact callback URI including scheme, host, path and trailing slash; avoid prefix and wildcard matching.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
     "transaction-binding": {"text": "Generate state bound to the browser session, nonce and S256 code_challenge for each authorization; request openid email profile.", "components": ["oauth", "core"], "sources": ["oauth:scb6a61add96b", "core:scfd2790a544c"], "status": "REASONED"},
     "code-exchange": {"text": "Exchange the code server-side with client secret and the code_verifier that produced the challenge.", "components": ["oauth", "core"], "sources": ["oauth:scb6a61add96b", "core:scfd2790a544c"], "status": "REASONED"},

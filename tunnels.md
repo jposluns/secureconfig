@@ -289,7 +289,6 @@ Claims (full source mapping in the JSON block below):
       "name": "frp documentation",
       "basis": "unknown",
       "sources": {
-        "s7800b0cbd057": "https://gofrp.org/en/docs/",
         "seaee50f5c2ba": "https://gofrp.org/en/docs/reference/server-configures/",
         "s7479bbde986d": "https://gofrp.org/en/docs/features/common/authentication/",
         "sdd126f42c07d": "https://gofrp.org/en/docs/features/common/network/network-tls/"
