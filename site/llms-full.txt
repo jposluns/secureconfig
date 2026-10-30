@@ -24494,17 +24494,17 @@ For the MySQL client:
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "supply exactly 2 values; not connecting"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "supply exactly 2 values; not connecting"; exit 2; }
   case "$1$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
       mysql --protocol=TCP --host="$1" --port=3306 --user=app -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2"
       ;;
@@ -24521,23 +24521,23 @@ The existing `batch` account's `REQUIRE X509` also needs a client certificate an
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 2; }
   case "$1$2$3$4" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
-      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "certificate must be readable"; exit 1; }
-      [ -f "$4" ] || { echo "key must be a regular file"; exit 1; }
-      [ -r "$4" ] || { echo "key must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
+      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "certificate must be readable"; exit 2; }
+      [ -f "$4" ] || { echo "key must be a regular file"; exit 2; }
+      [ -r "$4" ] || { echo "key must be readable"; exit 2; }
       mysql --protocol=TCP --host="$1" --port=3306 --user=batch -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" \
         --ssl-cert="$3" --ssl-key="$4"
@@ -24552,7 +24552,7 @@ Apply the same MariaDB client substitution when appropriate. Restrict access to 
 
 REASONED: service scope for every check in this section, from the authoring limitations recorded in this paragraph and the vendor documentation cited at each check below. Service behavior below is **REASONED, not demonstrated**. The authoring environment has a read-only filesystem, no MySQL/MariaDB client or server binaries, no Docker/Podman runtime, and no supplied writable deployment or database credentials. No available authorized environment could reproduce the exposed and fixed service states.
 
-DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
+DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. The bash -n, ShellCheck and guard-only runs recorded in this paragraph, at marking time and originally, covered the five guarded blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
 
 DEMONSTRATED: the in-memory INI parse recorded in this paragraph, re-run at marking time against both states: all five INI fragments parsed with Python 3.14.4 configparser in strict mode (`ConfigParser(strict=True)`, other arguments at their defaults). The control fragments in that marking-time re-run against both states used the same parser and options: a control fragment repeating `require_secure_transport` under `[mysqld]` was rejected with DuplicateOptionError, and a control fragment placing that option before any section header was rejected with MissingSectionHeaderError. Vendor option acceptance stays with the reasoned native checks, as stated. All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
 
@@ -24578,18 +24578,18 @@ Run the following from the application's permitted source host. Replace the prod
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRODUCT' 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "supply exactly 3 values; not connecting"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "supply exactly 3 values; not connecting"; exit 2; }
   case "$1$2$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -f "$3" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "CA must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -f "$3" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "CA must be readable"; exit 2; }
       case "$1" in
         mysql)
           mysql --protocol=TCP --host="$2" --port=3306 --user=app -p \
@@ -24617,7 +24617,7 @@ Run the following from the application's permitted source host. Replace the prod
             echo "inspect the refusal and requirements; failure alone is not a pass"
           fi
           ;;
-        *) echo "product must be mysql or mariadb"; exit 1 ;;
+        *) echo "product must be mysql or mariadb"; exit 2 ;;
       esac
       ;;
   esac
@@ -24637,23 +24637,23 @@ For the existing `batch` account, compare a connection with its valid client cer
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 2; }
   case "$1$2$3$4" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
-      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "certificate must be readable"; exit 1; }
-      [ -f "$4" ] || { echo "key must be a regular file"; exit 1; }
-      [ -r "$4" ] || { echo "key must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
+      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "certificate must be readable"; exit 2; }
+      [ -f "$4" ] || { echo "key must be a regular file"; exit 2; }
+      [ -r "$4" ] || { echo "key must be readable"; exit 2; }
       mysql --no-defaults --no-login-paths --protocol=TCP --host="$1" --port=3306 --user=batch -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" \
         --ssl-cert="$3" --ssl-key="$4" --connect-timeout=5 \
@@ -24685,15 +24685,15 @@ Run on the database server, using its actual `hostname` output:
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_SERVER_HOSTNAME'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly 1 value; not connecting"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly 1 value; not connecting"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ "$(hostname)" = "$1" ] || { echo "run on the named database server"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ "$(hostname)" = "$1" ] || { echo "run on the named database server"; exit 2; }
       ss -tlnp
       ;;
   esac
@@ -25022,7 +25022,7 @@ Claims (full source mapping in the JSON block below):
 - verify-weak (REASONED; mysql, maria): Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin.
 - verify-reuse (REASONED; mysql, maria): After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed.
 - visibility (REASONED; mysql): SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary.
-- local-guards (DEMONSTRATED; mysql, maria): Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated.
+- local-guards (DEMONSTRATED; mysql, maria): Historical invalid-input and valid-dispatch checks tested guards only, in an earlier form whose guard refusals exited with status 1; the current form was not re-run, and no database behavior was simulated.
 - local-ini (DEMONSTRATED; mysql, maria): Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved.
 
 ````json
@@ -25030,7 +25030,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "304ca71ddf0b6dbae6ada9c057d9e3ebb7cfb3dc988899f92b89dd1a7213fdc6",
+  "body_sha256": "114343102b74ab877f9c1c7cbd7167e95f792e65940b053cc8146dce10fbcb17",
   "components": {
     "mysql": {
       "name": "MySQL reference",
@@ -25231,7 +25231,7 @@ Claims (full source mapping in the JSON block below):
     "verify-weak": {"text": "Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin.", "components": ["mysql", "maria"], "sources": ["mysql:sd3caefce406e", "maria:s9e17c3adbc4f", "maria:s1e467414669c"], "status": "REASONED"},
     "verify-reuse": {"text": "After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed.", "components": ["mysql", "maria"], "sources": ["mysql:sf95e18b15977", "maria:sf9fb4aa4058e"], "status": "REASONED"},
     "visibility": {"text": "SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary.", "components": ["mysql"], "sources": ["mysql:s72c17cae9130"], "status": "REASONED"},
-    "local-guards": {"text": "Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated.", "components": ["mysql", "maria"], "sources": ["mysql:s156681123604", "maria:s368aa92bc449"], "status": "DEMONSTRATED", "evidence": "Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated."},
+    "local-guards": {"text": "Historical invalid-input and valid-dispatch checks tested guards only, in an earlier form whose guard refusals exited with status 1; the current form was not re-run, and no database behavior was simulated.", "components": ["mysql", "maria"], "sources": ["mysql:s156681123604", "maria:s368aa92bc449"], "status": "DEMONSTRATED", "evidence": "Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated."},
     "local-ini": {"text": "Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved.", "components": ["mysql", "maria"], "sources": ["mysql:s58e2db31fec2", "maria:sa80a8ed71629"], "status": "DEMONSTRATED", "evidence": "All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance."}
   }
 }
@@ -41751,9 +41751,9 @@ Add C4's explicit origin only if required, and remove inherited unwanted origins
 
 REASONED: service-comparison scope from the cited v0.34.2 sources; no authorized live deployment or external observer. No service was started or contacted for these checks. All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
 
-REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
+REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. The fresh bash -n and ShellCheck run and the historical guard-only tests covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
 
-REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
+REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. Those runs covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The V6 arms that stop when the result directory cannot be created or protected are not guard refusals and still exit with status 1. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
 
 REASONED: comparison procedure from the cited service and proxy sources; isolated exposed/fixed deployments, identities and observers are unavailable. Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
 
@@ -41764,12 +41764,12 @@ REASONED: comparison procedure from the cited service and proxy sources; isolate
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'ollama.service' 'REPLACE_WITH_CONTAINER_NAME_OR_NONE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not inspecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not inspecting"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "supply unit and container name or NONE"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "supply unit and container name or NONE"; exit 2; }
   case "$1|$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:space:]]*)
-      echo "replace both values; not inspecting"; exit 1 ;;
+      echo "replace both values; not inspecting"; exit 2 ;;
     *)
       systemctl cat -- "$1"
       systemctl show --property=User,Group,UMask,Environment,MainPID -- "$1"
@@ -41801,12 +41801,12 @@ Expected behavior follows C1's [Docker publication reference](https://docs.docke
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|*'<'*|*'>'*|*example.com*|""|*@*|*/*|*\?*|*\#*|*[[:space:]]*|203.0.113.*|198.51.100.*|192.0.2.*|*2001:db8*)
-      echo "supply the real deployment address; not probing"; exit 1 ;;
+      echo "supply the real deployment address; not probing"; exit 2 ;;
     *)
       curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -41872,33 +41872,33 @@ The following reusable probe reads the client configuration on stdin, keeping cr
 (
   set +x
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'POST' 'REPLACE_WITH_BODY_FILE_OR_DEV_NULL' 'REPLACE_WITH_CURL_CONFIG_FILE' 'application/json'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 5 ] || { echo "supply URL, method, body file, client config, and content type"; exit 1; }
+  [ "$#" -eq 5 ] || { echo "supply URL, method, body file, client config, and content type"; exit 2; }
   case "$1|$2|$3|$4|$5" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:cntrl:]]*)
-      echo "replace every value; not probing"; exit 1 ;;
+      echo "replace every value; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 1 ;;
+        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 2 ;;
         https://*|http://127.0.0.1:11434/*|http://localhost:11434/*) ;;
-        *) echo "use HTTPS, or the administrative loopback endpoint"; exit 1 ;;
+        *) echo "use HTTPS, or the administrative loopback endpoint"; exit 2 ;;
       esac
       case "$2" in
         GET|HEAD|OPTIONS)
-          [ "$3" = /dev/null ] || { echo "use /dev/null for this method"; exit 1; } ;;
+          [ "$3" = /dev/null ] || { echo "use /dev/null for this method"; exit 2; } ;;
         POST|DELETE) ;;
-        *) echo "unsupported test method"; exit 1 ;;
+        *) echo "unsupported test method"; exit 2 ;;
       esac
       case "$5" in
         application/json|application/octet-stream) ;;
-        *) echo "choose the fixture content type"; exit 1 ;;
+        *) echo "choose the fixture content type"; exit 2 ;;
       esac
-      [ -r "$3" ] || { echo "body file is unreadable"; exit 1; }
-      [ -r "$4" ] || { echo "client config is unreadable"; exit 1; }
+      [ -r "$3" ] || { echo "body file is unreadable"; exit 2; }
+      [ -r "$4" ] || { echo "client config is unreadable"; exit 2; }
       case "$(< "$4")" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-          echo "replace placeholders in the client config; not probing"; exit 1 ;;
+          echo "replace placeholders in the client config; not probing"; exit 2 ;;
       esac
       case "$2" in
         HEAD) set -- "$4" --head --url "$1" ;;
@@ -41987,23 +41987,23 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 (
   set +x
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_CHAT_URL' 'REPLACE_WITH_CHAT_BODY_FILE' 'REPLACE_WITH_CURL_CONFIG_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "supply URL, body file, and client config"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "supply URL, body file, and client config"; exit 2; }
   case "$1|$2|$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:cntrl:]]*)
-      echo "replace every value; not probing"; exit 1 ;;
+      echo "replace every value; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 1 ;;
+        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 2 ;;
         https://*/api/chat) ;;
-        *) echo "use the HTTPS chat URL"; exit 1 ;;
+        *) echo "use the HTTPS chat URL"; exit 2 ;;
       esac
-      [ -r "$2" ] || { echo "body file is unreadable"; exit 1; }
-      [ -r "$3" ] || { echo "client config is unreadable"; exit 1; }
+      [ -r "$2" ] || { echo "body file is unreadable"; exit 2; }
+      [ -r "$3" ] || { echo "client config is unreadable"; exit 2; }
       case "$(< "$3")" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-          echo "replace placeholders in the client config; not probing"; exit 1 ;;
+          echo "replace placeholders in the client config; not probing"; exit 2 ;;
       esac
       ollama_probe_dir=$(mktemp -d) || { echo "cannot create result directory"; exit 1; }
       chmod 700 "$ollama_probe_dir" || { echo "cannot protect results"; exit 1; }
@@ -42461,7 +42461,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "3b96351b23d24a17e9deef1a0a8e32768456d048ea2466d43dd7f6c4901e0a1f",
+  "body_sha256": "3e9cfc601c839facec9bc660caa3d2fbc41b0f12d0ab422318fb537160afa53d",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -54832,7 +54832,7 @@ Pods can turn an exposed API into cluster compromise.
 
 REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe) is covered by this declaration. The declaration for those probes rests on the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs. The origin guard in that stub run (marking review, October 2026) printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the first TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. During marking review (October 2026), the second TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 with dummy credentials on a pseudo-terminal, stubs for every external command and only the known credential helpers delegated to the scratch interpreter. Under bash -e before that revision, each helper exit 73, partial-output failure or empty credential stopped the calling shell at that authenticated probe, so later probes did not run. In those second-review fixtures, where every other external-command stub succeeded, each refusal skipped only its authenticated request and all later probes ran. Valid credentials reached all three authenticated curl stubs with the expected header or JSON before and after, with and without bash -e. All four empty credential cases and each helper failure were also checked without errexit before and after. With PYTHONOPTIMIZE=1 and an empty Argo token, the unchanged helper sent an empty bearer header; the revised helper refused it and skipped the Argo authenticated request, with and without bash -e. In that second review, every completed sequence reached the unchanged direct-origin placeholder refusal; all files exited 2, either at the first unhandled refusal before that revision under bash -e or at the final origin guard. These runs checked shell flow and credential encoding only, not service authentication. During marking review (October 2026), the third TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 through a pseudo-terminal with dummy credentials, stubs for every external command and only the three exact credential helpers delegated to the isolated scratch interpreter. No probe reached a service or read the host socket paths. Before this revision, under bash -e, exit 1 from ss, Temporal, stat or getfacl, and curl exits 6, 7 or 28 from each anonymous or default-account probe, stopped the file at that label and skipped the remaining probes. After this revision, under bash -e, those same cases reached every later label and the final origin-placeholder refusal. Each authenticated curl exit 6, 7 or 28, helper exit 73, partial-output failure and empty credential case reached all later probes before and after; helper refusals sent no authenticated request. Valid dummy credentials produced the expected Basic header, JSON and bearer header before and after. An empty Argo token was also refused with PYTHONOPTIMIZE=1 before and after. With a substituted origin URL, origin curl exits 6, 7 and 28 were reported before and after. The missing-set-line, short-set-line and ftp:// origin cases refused without an origin request before and after. The revised files exited 0 after their labelled continuation messages, including the final origin refusal; this status means the sequence continued, not that any service was secure. These stub runs establish shell flow and encoding only, not service authentication. All of the local runs above covered the block in an earlier form, before its three Airflow requests took the Airflow host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on the guarded block, and the Airflow guard has not been run. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
 live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
-no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
+no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED. None of the local runs recorded above covered the current closing echoes: in the latest form those runs covered, the prefect-auth, airflow-valid-token, argo-auth and origin subshells ended with an echo of `skipped or failed; continuing` that printed no status, and the airflow subshell did not exist. All five guarded subshells now end with an echo of the form `) || echo "origin: block exit $?; continuing"`, each with its own label, which keeps the reader's shell running and prints the subshell's non-zero status, such as `origin: block exit 2; continuing` after a guard refusal. The block pasted whole still reports status 0 because that echo succeeds, and no recorded bash -n, ShellCheck, stub or pseudo-terminal run covered the closing echo.
 The exception is the Flower unix-socket stat mode
 and named-ACL checks, demonstrated without a container and recorded after the block. Each names its expected
 exposed and fixed result so it discriminates against a live instance, based on the cited vendor documentation
@@ -54876,7 +54876,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
         -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
         -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
-) || echo 'prefect-auth: skipped or failed; continuing'
+) || echo "prefect-auth: block exit $?; continuing"
 
 # dagster-webserver 1.13.24's build_middleware() and build_graphql_middleware() add no authentication,
 # so test whether /graphql at the origin answers an anonymous query.
@@ -54928,13 +54928,13 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
           | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
               -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
               -H 'Content-Type: application/json' --data-binary @- "https://$1/auth/token"
-      ) || echo 'airflow-valid-token: skipped or failed; continuing'
+      ) || echo "airflow-valid-token: block exit $?; continuing"
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' "https://$1/api/v2/pools" \
         || echo 'airflow-pools-anon: exited nonzero; continuing'
       ;;
   esac
-) || echo 'airflow: skipped or failed; continuing'
+) || echo "airflow: block exit $?; continuing"
 
 # Temporal: a protected read against the frontend gRPC port. With an Authorizer and ClaimMapper configured this
 # is rejected without credentials (an mTLS deployment refuses the connection outright); a listing, even an empty
@@ -55004,7 +55004,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
         --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
         https://argo.internal:2746/api/v1/workflows/argo
-) || echo 'argo-auth: skipped or failed; continuing'
+) || echo "argo-auth: block exit $?; continuing"
 
 # Direct-origin reachability from an UNTRUSTED vantage (run from OUTSIDE your network). Paste the whole block and
 # substitute your origin URL inside the quotes; any HTTP response means the origin is published and is itself the
@@ -55023,7 +55023,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
         -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" ;;
     *) echo "give an http:// or https:// URL; not probing"; exit 2 ;;
   esac
-) || echo 'origin: skipped or failed; continuing'
+) || echo "origin: block exit $?; continuing"
 ```
 
 REASONED: preceding block; every probe in the block above, summarized here as findings, per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow running in Docker; Temporal, self-hosted security; Temporal, Web UI configuration reference; Flower configuration; and Argo anonymous fallback when server mode is enabled. It adds no probe of its own; that block's local runs are recorded in the declaration before it, and no orchestrator was available in the authoring environment to show either state. Exposed, a listing answers without a credential; fixed, the anonymous call is refused while the matched authorized call succeeds. A DAG list, flow run, task graph, repository, or worker pool that renders without a credential is a finding; so
@@ -55236,7 +55236,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "02d61aca6f360da61868287c376a3f8de1c31f9ad1fac2a54a5d0b91741bc29e",
+  "body_sha256": "4c6954657a6f8f950e16125138512d16ac19ab524be2a8b888ac44f7037ffcc7",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
