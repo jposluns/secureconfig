@@ -94,9 +94,9 @@ set `encrypt`.
 
 ## Verify
 
-REASONED: this overview distinguishes the historical loopback record from this marking review, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The expected states, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, are wildcard API binds for exposed and private or management binds for fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host now forbids that without an isolated network namespace, and none was available. This review passed all five Verify blocks through `bash -n` and ShellCheck 0.11.0 with no output, exercised guards and synthetic command results, and used a local terminal to test token input; these runs do not reproduce live ACL, bootstrap, anonymous-policy, listener or external-isolation outcomes. The historical record follows: These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
+REASONED: this overview distinguishes the historical loopback record from this marking review, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The expected states, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, are wildcard API binds for exposed and private or management binds for fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host now forbids that without an isolated network namespace, and none was available. This review passed all five Verify blocks through `bash -n` and ShellCheck 0.11.0 with no output, exercised guards and synthetic command results, and used a local terminal to test token input; these runs do not reproduce live ACL, bootstrap, anonymous-policy, listener or external-isolation outcomes. The bash -n, ShellCheck and guard runs in this review covered the Nomad probe, Consul probe and TCP blocks in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form of those three blocks, whose guard refusals exit with status 2. The historical record follows: These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
 listener was bound to 127.0.0.1: the Nomad and Consul probes in each ACL state, the bootstrap and anonymous-policy checks, and the
-listener list.
+listener list. The loopback runs of the Nomad and Consul probe blocks used an earlier form of each block, whose guard refusals ended with status 0; the current form of each, whose guard refusals exit with status 2, has not been run.
 The exposed listener state is REASONED from source: the authoring host forbids binding every
 interface, so the default wildcard bind was not observed, and no Nomad client ran a job.
 The TCP reachability probe is the block demonstrated on loopback in
@@ -116,19 +116,19 @@ ports, 4646 and 8500; fixed means a private or management address. On the loopba
 listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300
 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports.
 
-REASONED: this anonymous-request instruction, per the guide's cited Nomad 2.0.7 ACL resolution when disabled and Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`); expected ACLs-off results are self/jobs/agent HTTP 200 with self AccessorID `acls-disabled`, versus 200/403/403 and `anonymous` with ACLs on. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. Synthetic curl, grep and head stubs printed those HTTP/AccessorID results; they do not establish live ACL behaviour. For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
+REASONED: this anonymous-request instruction, per the guide's cited Nomad 2.0.7 ACL resolution when disabled and Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`); expected ACLs-off results are self/jobs/agent HTTP 200 with self AccessorID `acls-disabled`, versus 200/403/403 and `anonymous` with ACLs on. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. The bash -n, ShellCheck and refusal runs recorded here covered the Nomad probe block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Synthetic curl, grep and head stubs printed those HTTP/AccessorID results; they do not establish live ACL behaviour. For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
 `http://10.0.0.5:4646`) inside the single quotes, and paste the whole block.
 
-DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job.
+DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job. The loopback runs used an earlier form of the Nomad probe block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NOMAD_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Nomad URL on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Nomad URL on the set -- line above; not probing"; exit 2 ;;
     *) for path in /v1/acl/token/self /v1/jobs /v1/agent/self; do
          out=$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$path" 2>&1)
          status=${out##*$'\n'}
@@ -190,21 +190,21 @@ anonymous job registration returned `200`, and `nomad acl policy info anonymous`
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
 policy, it returned `403`.
 
-REASONED: this per-agent anonymous-request instruction, per the guide's cited Consul 2.0.4 ACL resolution when disabled and Consul 2.0.4 configuration builder (listener addresses, ACL default, script checks and their warning, UI); expected ACLs-off self/agent results are 401/200, and enabled deny-policy results are 403/403 with the anonymous-permission message. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. Synthetic curl, grep and head stubs printed those status pairs and messages; they do not establish live ACL behaviour. For Consul, send two requests without a token, to every agent's HTTP API, servers and clients; probe
+REASONED: this per-agent anonymous-request instruction, per the guide's cited Consul 2.0.4 ACL resolution when disabled and Consul 2.0.4 configuration builder (listener addresses, ACL default, script checks and their warning, UI); expected ACLs-off self/agent results are 401/200, and enabled deny-policy results are 403/403 with the anonymous-permission message. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. The bash -n, ShellCheck and refusal runs recorded here covered the Consul probe block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Synthetic curl, grep and head stubs printed those status pairs and messages; they do not establish live ACL behaviour. For Consul, send two requests without a token, to every agent's HTTP API, servers and clients; probe
 an agent whose `client_addr` is loopback, the default, from its own host (for example
 `http://127.0.0.1:8500`). Substitute the HTTP API URL (for example
 `http://10.0.0.5:8500`) inside the single quotes, and paste the whole block.
 
-DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed disabled, allow, deny and per-agent/default-token HTTP outcomes below on test ports.
+DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed disabled, allow, deny and per-agent/default-token HTTP outcomes below on test ports. The loopback runs used an earlier form of the Consul probe block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CONSUL_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Consul URL on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Consul URL on the set -- line above; not probing"; exit 2 ;;
     *) for path in /v1/acl/token/self /v1/agent/self; do
          out=$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$path" 2>&1)
          status=${out##*$'\n'}
@@ -249,7 +249,7 @@ sections. On the same runs an anonymous key-value write succeeded in both expose
 refused with `403` with the deny policy, and with script checks at their default, registering a script
 check through the API was refused with "Scripts are disabled on this agent from remote calls".
 
-REASONED: this external TCP-check instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and a failed control is inconclusive. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. These are synthetic dispatch and output tests, not network observations. Finally, from a host that should not have access, try a TCP connection to each port. The block takes
+REASONED: this external TCP-check instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and a failed control is inconclusive. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. These are synthetic dispatch and output tests, not network observations. Finally, from a host that should not have access, try a TCP connection to each port. The block takes
 one IP address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot hide
 one behind a timeout on the other: run it once for each public address of the host. It also takes a
 port you know is open on that address from this host (for example SSH on 22) as the positive control,
@@ -260,25 +260,25 @@ REASONED: following block; port targets follow the pinned Nomad and Consul defau
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ONE_IP_ADDRESS' 'REPLACE_WITH_A_KNOWN_OPEN_PORT'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
-  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit ;; esac
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit 2 ;; esac
+  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit 2 ;; esac
   ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
   case "$1" in
     *:*:*)
-      case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
-      case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
-      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit ;; esac ;;
-    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
+      case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit 2 ;; esac
+      case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit 2 ;; esac
+      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit 2 ;; esac ;;
+    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
   esac
-  case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
-  { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit; }
-  command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit; }
+  case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit 2 ;; esac
+  { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit 2; }
+  command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
   err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit; }
+    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 2; }
   echo "control $1:$2 connected"
   for p in 4646 4647 4648 8500 8600 8300 8301 8302 8503; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
@@ -293,7 +293,7 @@ REASONED: following block; port targets follow the pinned Nomad and Consul defau
 )
 ```
 
-REASONED: preceding block; this interpretation and the entire TCP block, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The entire TCP block includes address and port guards, the positive control, all nine targets and all result branches. The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and UDP remains outside the probe. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. These are synthetic dispatch and output tests; the earlier cross-guide loopback record remains historical. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
+REASONED: preceding block; this interpretation and the entire TCP block, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The entire TCP block includes address and port guards, the positive control, all nine targets and all result branches. The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and UDP remains outside the probe. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. These are synthetic dispatch and output tests; the earlier cross-guide loopback record remains historical. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
 complete the handshake, so confirm a surprising "connected" with `ss` on the host. "refused" and
 "timed out" show only that this host could not reach the port: a firewall in front of the host
 produces either, but so can filtering on the probing host's own network, and the control proves only
@@ -394,7 +394,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "bc4a41368f8846ac40072b3a60fae824f1cc8aea1ff3ef2385404764a3e057af",
+  "body_sha256": "03bb5d486faf73b1dc8114c6ea5a85fa952d20b070e7f18ced46738b0e544e4d",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
