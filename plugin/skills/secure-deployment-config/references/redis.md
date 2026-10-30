@@ -184,11 +184,11 @@ Replace the host inside the single quotes with your Redis hostname, such as `red
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_REDIS_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not connecting"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not connecting"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute your Redis host; not connecting"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute your Redis host; not connecting"; exit 2 ;;
     *)
       REDISCLI_HISTFILE=/dev/null redis-cli --tls \
         --cacert /etc/redis/tls/ca.crt -h "$1" -p 6379 --user app --askpass
@@ -209,7 +209,7 @@ GET app:probe
 
 ## 8. Verify (REASONED: deployment and HA comparisons from cited Redis documentation and pinned sources; no Redis runtime, live topology or permitted socket inspection.)
 
-The deployment checks below are **REASONED, not demonstrated**. The authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and denies socket inspection. No live deployment was supplied. Shell syntax and placeholder rejection were checked locally; Redis configuration parsing remains unconfirmed, and exposed/fixed runtime behaviour is REASONED from the cited documentation and pinned sources.
+The deployment checks below are **REASONED, not demonstrated**. The authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and denies socket inspection. No live deployment was supplied. Shell syntax and placeholder rejection were checked locally; Redis configuration parsing remains unconfirmed, and exposed/fixed runtime behaviour is REASONED from the cited documentation and pinned sources. Those local checks covered an earlier form of the guarded shell blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2.
 
 **REASONED: listener inventory.** On the Redis host, inspect every listener:
 
@@ -224,13 +224,13 @@ For the local-only configuration, Redis TCP listeners should be on loopback. An 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_REDIS_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute your Redis host; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute your Redis host; not probing"; exit 2 ;;
     *)
-      unset REDISCLI_AUTH || exit 1
+      unset REDISCLI_AUTH || exit 2
       redis-cli -h "$1" -p 6379 ping
       redis-cli --tls --cacert /etc/redis/tls/ca.crt -h "$1" -p 6379 ping
       ;;
@@ -339,16 +339,16 @@ For the **REASONED** section 12 network comparison, no live bus endpoint or auth
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 2 ;;
   esac
   case "$2" in
-    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 2; }
   if nc -vz -w 5 "$1" "$2"; then
     echo "TCP connected; the bus port is reachable from here"
   else
@@ -388,17 +388,17 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRIMARY_HOST' 'REPLACE_WITH_PRIMARY_TLS_PORT'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 2 ;;
   esac
   case "$2" in
-    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
-  unset REDISCLI_AUTH || exit 1
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 2; }
+  unset REDISCLI_AUTH || exit 2
   printf '\nNo client certificate\n'
   if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
       -h "$1" -p "$2" PING; then
@@ -440,18 +440,18 @@ These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 2 ;;
   esac
   case "$2" in
-    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 2; }
   case "$3" in
-    *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 2 ;;
   esac
   printf '\nNo client certificate\n'
   if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
@@ -488,13 +488,13 @@ An exposed plaintext bus has no TLS certificate gate and will fail the TLS posit
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SENTINEL_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute your Sentinel host; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute your Sentinel host; not probing"; exit 2 ;;
     *)
-      unset REDISCLI_AUTH || exit 1
+      unset REDISCLI_AUTH || exit 2
       timeout 10s redis-cli -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
       timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
         --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
@@ -513,7 +513,7 @@ Any RESP reply to the first request proves plaintext Redis protocol is available
 
 One Sentinel can demonstrate its incoming listener. Outgoing TLS, peer discovery, and failover need a live Sentinel/data-node topology and independent connection evidence; success on 26379 does not prove those outgoing connections use TLS. See the [pinned outgoing connection and advertisement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
 
-The Sentinel shell block above passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour.
+The Sentinel shell block above passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour. Those checks covered an earlier form of the block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2.
 
 **REASONED: enforced HA peer identity, Redis 8.10+, section 15.** No Redis 8.10 runtime, certificate fixtures, or HA endpoints were available. Prepare two otherwise valid client certificates signed by the same trusted CA: one matching the configured HA identity and one that does not match it through either SAN or CN fallback. Keep certificate purpose, validity, CA trust, and Redis credentials constant.
 
@@ -534,18 +534,18 @@ Replace the example identity consistently with the identity issued to intended H
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 2 ;;
   esac
   case "$2" in
-    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 1 ;;
+    *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 1; }
+  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 2; }
   case "$3" in
-    *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 2 ;;
   esac
   printf '\nSame CA, wrong peer name\n'
   if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
@@ -930,14 +930,14 @@ Claims (full source mapping in the JSON block below):
 - verify-peer-name (REASONED; ha): Same-CA bus certificates both pass without name restriction; enabled enforcement rejects wrong SAN/CN and accepts matching identity. Build warnings/readback alone are insufficient.
 - verify-outbound-name (REASONED; ha, docs): Force new replication connections: wrong-name server works unrestricted, fails with explicit name-verification evidence when restricted, then recovers with matching certificate/canary.
 - valkey (REASONED; valkey): Valkey shares requirepass/ACL/TLS concepts; verify its version-specific syntax. Redis HA findings and limitations have not been established for Valkey.
-- local-sentinel (DEMONSTRATED; docs): Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior.
+- local-sentinel (DEMONSTRATED; docs): Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior; those runs covered an earlier form whose refusals exited with status 1, and the current form was not re-run.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9e3b160fed33d18a030714d1ada47fa711d92ed37d29ed612c4fa61ffb212f37",
+  "body_sha256": "5de4613021d23a25ca838a721e726e379306d1893143684caa8ec03676e1aafd",
   "components": {
     "r60": {
       "name": "Redis configuration",
@@ -1157,7 +1157,7 @@ Claims (full source mapping in the JSON block below):
     "verify-peer-name": {"text": "Same-CA bus certificates both pass without name restriction; enabled enforcement rejects wrong SAN/CN and accepts matching identity. Build warnings/readback alone are insufficient.", "components": ["ha"], "sources": ["ha:sf86ee0b4abaa", "ha:s28f3f121848c"], "status": "REASONED", "verify": [8]},
     "verify-outbound-name": {"text": "Force new replication connections: wrong-name server works unrestricted, fails with explicit name-verification evidence when restricted, then recovers with matching certificate/canary.", "components": ["ha", "docs"], "sources": ["ha:s9f433f5e78e3", "ha:s28f3f121848c", "docs:sb384cc06fc43", "docs:s89a679483b31", "docs:sce02504d451b"], "status": "REASONED"},
     "valkey": {"text": "Valkey shares requirepass/ACL/TLS concepts; verify its version-specific syntax. Redis HA findings and limitations have not been established for Valkey.", "components": ["valkey"], "sources": ["valkey:sb488496d1f4b", "valkey:s0eebdf8ee73e", "valkey:sdc8d63632a85"], "status": "REASONED"},
-    "local-sentinel": {"text": "Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior.", "components": ["docs"], "sources": ["docs:sc6b4e54687ac"], "status": "DEMONSTRATED", "evidence": "With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran."}
+    "local-sentinel": {"text": "Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior; those runs covered an earlier form whose refusals exited with status 1, and the current form was not re-run.", "components": ["docs"], "sources": ["docs:sc6b4e54687ac"], "status": "DEMONSTRATED", "evidence": "With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran."}
   }
 }
 ````
