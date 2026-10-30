@@ -147,11 +147,11 @@ ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0
 # value; copy this whole block, not just the command below
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) docker -H "tcp://$1:2375" info ;;       # must fail: connection refused or filtered
     # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
     # never opened a connection is inconclusive, not a pass
@@ -314,7 +314,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c4dc794757d55928e74658158ec7ed3409da83bd881b564a79333a33fc31f7d1",
+  "body_sha256": "a24013a853886f7ace8c795caa1c6a31bf9719dbfedcf47d07dae522b20c522f",
   "components": {
     "portainer": {
       "name": "Portainer",
