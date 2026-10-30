@@ -158,7 +158,7 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   DOCROOT=/var/www/html
-  result=0                              # 3 once any step is inconclusive; the block exits with it after its cleanup
+  result=0                              # 3 once any step is inconclusive or a removal fails; the block exits with it after its cleanup
   if probe=$(sudo mktemp "$DOCROOT/.env.probeXXXXXX" 2>/dev/null); then
     # mktemp makes it root-only (0600); chmod so the web-server worker can READ it, or its 403 is a FILE
     # PERMISSION denial (not the deny rule) and the check would false-pass with no rule configured:
@@ -173,7 +173,7 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
       echo "inconclusive: could not prepare the probe file"
       result=3
     fi
-    sudo rm -f "$probe"
+    sudo rm -f "$probe" || result=3
   else
     echo "inconclusive: could not create a probe under $DOCROOT; point it at the writable document root"
     result=3
@@ -183,7 +183,7 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
   # directory does not exist:
   if u=$(sudo mktemp "$DOCROOT/uploads/listcheckXXXXXX" 2>/dev/null); then
     curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/" || result=3   # 403/404, never a 200 listing
-    sudo rm -f "$u"
+    sudo rm -f "$u" || result=3
   else
     echo "inconclusive: $DOCROOT/uploads does not exist or is not writable"
     result=3
@@ -199,7 +199,7 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
       echo "inconclusive: could not prepare the challenge file"
       result=3
     fi
-    sudo rm -f "$tok"
+    sudo rm -f "$tok" || result=3
   else
     echo "inconclusive: $acme does not exist"
     result=3
@@ -208,7 +208,7 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
   # must be 403 or 404: a directory that only starts with "well-known" must not inherit the exemption. A bare
   # 404 is inconclusive here (nothing is there); create a real .well-known-backup/config to be certain a
   # served 200 would be the finding, then remove it
-  exit "$result"                        # after every cleanup above: 3 if any step was inconclusive, else 0
+  exit "$result"                        # after every cleanup attempt above: 3 if any step was inconclusive or a removal failed, else 0
 )
 
 (                                       # a subshell, so the exit below ends only this check
@@ -235,13 +235,13 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
 # and 0 otherwise.
 ```
 
-REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its result arms with status 0; the current form, in which an inconclusive step exits 3 after its cleanup and a bundle match exits 1, was not re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its result arms with status 0; the current form, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1, was not re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
-REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0; the current form, which exits 3 after its cleanup when a plant or curl transfer was inconclusive, was not re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0; the current form, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed, was not re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
 against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and put its
 served host name on the block's `set --` line. On an isolated test host, run before and after enabling the
 deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
-return 403 or 404 without that body. A failed plant or curl transfer is inconclusive, and the block then exits 3.
+return 403 or 404 without that body. A failed plant or curl transfer is inconclusive. The block attempts to remove every plant, and it exits 3 when a step was inconclusive or a removal failed.
 
 ```bash
 # REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
@@ -249,7 +249,7 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
 # outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
 # references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
 # block before its host guard was added. That form's inconclusive arms ended with status 0; this form,
-# which exits 3 after its cleanup when one is inconclusive, was not re-checked.
+# which exits 3 after attempting its cleanup when a step is inconclusive or a removal fails, was not re-checked.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -262,7 +262,7 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   DOCROOT=/var/www/html
-  result=0                              # 3 once any plant or transfer is inconclusive; the block exits with it after its cleanup
+  result=0                              # 3 once any plant or transfer is inconclusive or a removal fails; the block exits with it after its cleanup
   for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
     template="$DOCROOT/probeXXXXXX"
     [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
@@ -276,13 +276,13 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
         echo "inconclusive: could not prepare $probe"
         result=3
       fi
-      sudo rm -f "$probe"
+      sudo rm -f "$probe" || result=3
     else
       echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
       result=3
     fi
   done
-  exit "$result"                        # after every plant was removed: 3 if any step was inconclusive, else 0
+  exit "$result"                        # after every removal was attempted: 3 if any step was inconclusive or a removal failed, else 0
 )
 ```
 
@@ -381,7 +381,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "61cfc5a74df69711ee14e354b91965a09e94a28fa85a99f62db8398b3ec939ba",
+  "body_sha256": "3fa29a0cb0557f181a4b8f660f0515483f5375fceff0e23f212d5384278c6363",
   "components": {
     "nginx": {
       "name": "nginx documentation",

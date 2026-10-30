@@ -463,7 +463,7 @@ public addresses. And a cluster whose etcd runs on its own machines has hosts th
 never lists, because they carry no kubelet; take their client and peer addresses from wherever you
 configured them and scan those too.
 
-REASONED: multi-vantage corroboration and effective provider ranges, per the guide's cited Amazon EKS cluster endpoint access, GKE control plane network isolation, including how authorized networks work and AKS API server authorized IP ranges. No cluster configuration or separate probe networks are available. Related shell checks exited 0 without diagnostics; the endpoint parser produced the expected host, port and URL for five valid fixtures and rejected two invalid inputs. No live reachability was observed: exposed configuration admits an untrusted source; fixed configuration restricts every intended boundary while an allowed control still works. A failed probe alone remains inconclusive. Be clear about what a pass here is worth. It says that this host, at this moment, over this address
+REASONED: multi-vantage corroboration and effective provider ranges, per the guide's cited Amazon EKS cluster endpoint access, GKE control plane network isolation, including how authorized networks work and AKS API server authorized IP ranges. No cluster configuration or separate probe networks are available. Related shell checks exited 0 without diagnostics on earlier forms of the preceding block, whose API-server check ran at top level; the current form, which wraps that check in a subshell, was not re-run. The endpoint parser, which that wrapper left unchanged, produced the expected host, port and URL for five valid fixtures and rejected two invalid inputs. No live reachability was observed: exposed configuration admits an untrusted source; fixed configuration restricts every intended boundary while an allowed control still works. A failed probe alone remains inconclusive. Be clear about what a pass here is worth. It says that this host, at this moment, over this address
 family, could not reach that endpoint. It does not say the cluster is restricted, because your own
 egress, a stale kubeconfig context, a resolver, a tunnel that is down, or a transient failure at the far
 end all produce the same result, and because an allowlist that admits one network you forgot about is
@@ -591,7 +591,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3c9b6e3ea57372e228e479317d77d4bc2d4ed29ce8e11660602e0ccaebc23a82",
+  "body_sha256": "0346c3bad6163ab409a8369c6971f0d516661c3f024a94c7123c415b9cf7e7f7",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
