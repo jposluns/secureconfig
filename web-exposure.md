@@ -147,12 +147,12 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
 # lands. mktemp creates the probe exclusively so it never clobbers a real file, and only that file is
 # removed. --noproxy so no client proxy answers; the body is shown so leaked content is visible:
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -230,12 +230,12 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
 # references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
 # block before its host guard was added.
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -356,7 +356,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "30beed1a2fad13a9f82808d2dfd9ff2ef3ab79fe18bb5be1e4ee897c2b24f0db",
+  "body_sha256": "5bb241183147f348632c15456f61edc141d0f385f6cf9e81d64cac6da0e65f28",
   "components": {
     "nginx": {
       "name": "nginx documentation",

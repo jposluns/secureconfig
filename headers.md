@@ -63,7 +63,19 @@ REASONED: final-response header inspection follows the cited MDN header document
 # --noproxy so no client proxy rewrites the headers; the body is discarded. -D - prints EVERY
 # response's headers (a 103 Early Hints and each redirect hop, then the final one), and -w prints where
 # you ended up, so read the block under the LAST "HTTP/.. <status>" line:
-curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'final: %{http_code} %{url_effective}\n' https://example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_SITE_HOST'   # your site's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'final: %{http_code} %{url_effective}\n' "https://$1/"
+)
 # In that final response check VALUES, not just presence: Strict-Transport-Security with a large,
 # non-zero max-age (max-age=0 disables HSTS); an ENFORCING Content-Security-Policy, not only
 # Content-Security-Policy-Report-Only (which enforces nothing); X-Content-Type-Options nosniff;
@@ -75,7 +87,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'fin
 # inconclusive.
 ```
 
-REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; no HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
+REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the guard has not been run. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
 
 REASONED: shared-cache caller separation, per the guide's cited MDN Cache-Control. No deployed shared cache or authenticated A/B accounts are available; this prose supplies no local command or configuration to execute. No response sequence was observed. Exposed caching replays a previous caller's private content; fixed responses after warming the same URL belong only to their current authenticated or anonymous caller. For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
@@ -177,7 +189,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "b6e0ae522b02fe13877cbb89ed19424cbccd1af7f7aab13311987d3ba3ebaa14",
+  "body_sha256": "b2b9ce382311f0bdae7bbcefb1f917ec913b675f6fa6862cad5a002ce9cb5f4a",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",

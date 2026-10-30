@@ -295,12 +295,12 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -593,7 +593,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "117ca33cc85c07e2247155b61d06267038949b812c44050f3ce363fabdfcf073",
+  "body_sha256": "7525d0d5b3fa9756440fda8dbeb259a5059d221c4e5e4330e0001e651268970e",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",

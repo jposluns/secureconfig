@@ -221,7 +221,7 @@ platform git sources that feed the privileged controllers.
 
 ## Verify
 
-REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks, each with exit 0 and no diagnostics. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
+REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks, each with exit 0 and no diagnostics. The October 2026 marking review covered the Argo CD API and Flux webhook blocks in an earlier form, before their curls took the host on a guarded `set --` line; neither tool was re-run on those guarded blocks. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
 also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
 so it discriminates against a live install, based on the cited vendor documentation and pinned source readings. A login page, a
@@ -242,6 +242,10 @@ An empty token printed 'supply the token; not probing'; readonly tok printed
 'stub curl' and all inventory stub lines, and the file exited 0 after inventory continued.
 These stub outputs do not verify Argo CD authorization; the live comparison remains anonymous
 401 versus application JSON listing the expected application with a valid token.
+The marking and scratch-local reviews above covered the block's earlier form, which named
+argocd.example.com directly. The anonymous and token-bearing curls now take the Argo CD host on a
+guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and
+the guarded form has not been run.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
 also clears the `REDIS_PASSWORD` environment copy, and per-handler RBAC coverage in `argocd-server`.
@@ -257,27 +261,39 @@ every line after the first for your shell to run.
 # token) must answer 401 fixed (application JSON exposed); with a valid bearer token it must return JSON
 # listing the expected application - the positive control a fronting proxy's 401 cannot fake. Repeat both
 # against the ORIGIN from an authorized location (keep the TLS hostname), and test the gRPC/CLI path too.
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
-  -w '\nanon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  'https://argocd.example.com/api/v1/applications'
-# token from `argocd account generate-token` (or a login session); read it without echo, pass via stdin.
-# Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
-# an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
-# `set -e` cannot end the block early.
-# The hidden prompt keeps the token out of shell history; stdin closes the argv channel only, so the
-# account owner and root can still read the token in the subshell and curl.
-(
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a +e
-  { unset -n tok && unset -v tok; } 2>/dev/null ||
-    { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
-  IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty || exit 2; echo
-  case "$tok" in ''|*[[:cntrl:]]*) echo 'supply the token; not probing'; exit 2 ;; esac
-  printf 'Authorization: Bearer %s\n' "$tok" \
-    | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
-        -H @- -w '\nauth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        'https://argocd.example.com/api/v1/applications'
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_ARGOCD_HOST'   # the Argo CD server's host name, the name its TLS certificate covers, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the Argo CD server's host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
+    -w '\nanon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1/api/v1/applications"
+  # token from `argocd account generate-token` (or a login session); read it without echo, pass via stdin.
+  # Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
+  # an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
+  # `set -e` cannot end the block early.
+  # The hidden prompt keeps the token out of shell history; stdin closes the argv channel only, so the
+  # account owner and root can still read the token in the subshell and curl.
+  (
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    set +x +a +e
+    { unset -n tok && unset -v tok; } 2>/dev/null ||
+      { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
+    { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+    IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty || exit 2; echo
+    case "$tok" in ''|*[[:cntrl:]]*) echo 'supply the token; not probing'; exit 2 ;; esac
+    printf 'Authorization: Bearer %s\n' "$tok" \
+      | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
+          -H @- -w '\nauth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+          "https://$1/api/v1/applications"
+  )
 )
 # The bootstrap admin Secret should be gone once the password was rotated (its presence proves retained
 # bootstrap material; its absence alone does not prove the password changed). This prints no secret.
@@ -344,6 +360,10 @@ and a pseudo-terminal. Unchanged placeholders and substituted dummy inputs each 
 signature, so the HMAC computation is not verified. In the local marking review, a python3 stub exiting 1 and one printing no output each printed 'signature generation failed; not probing' (exit 2). With no readable /dev/tty, stdout was empty and Bash printed `<fixture path>: line 16: /dev/tty: No such device or address` on stderr (exit 2). The stub outputs do not verify receiver
 authorization or reconciliation; the live comparison remains rejection without a signature
 versus acceptance and reconciliation with a valid signature over the same body.
+The marking and scratch-local reviews above covered the Flux block's earlier form, which named
+flux-webhook.example.com in its `url` assignment. The block now takes the receiver's host on a guarded
+`set --` line, checked before the secret prompt, that refuses example.com, example.net, example.org and
+their subdomains, and the guarded form has not been run.
 A bare `401` proves less than it looks: a fronting authentication proxy can return it while the
 underlying `users.anonymous.enabled` is still on, so pair the probe with an authenticated request
 through the same route that should succeed, and read the anonymous and `policy.default` settings from
@@ -367,6 +387,16 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_RECEIVER_HOST'   # the public host name the Flux receiver is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them (the receiver path goes on the url line below)
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the receiver's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
   { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
     { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -377,7 +407,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
     'import hmac, sys; print(hmac.new(sys.stdin.buffer.read(), sys.argv[1].encode(), "sha256").hexdigest())' "$body") ||
     { echo 'signature generation failed; not probing'; exit 2; }
   [ -n "$sig" ] || { echo 'signature generation failed; not probing'; exit 2; }
-  url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
+  url="https://$1/hook/REPLACE_WITH_PATH"
   printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected
   printf 'X-Signature: sha256=%s\n' "$sig" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -385,14 +415,19 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 )
 ```
 
+REASONED: receiver status and rejection reading and the pass criteria of the guarded checks above, per
+the guide's cited Flux notification Receivers and Argo CD RBAC entries; no live Argo CD or Flux installation
+is available, so no status, rejection or response was observed.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
 version-dependent, so read it as rejected rather than a fixed code. A malformed-payload error or a
 proxy-only rejection is inconclusive; repeat against the receiver origin from an authorized location.
-Because these checks discriminate on a response rather than on silence, they take the plain form above;
-a bare reachability probe of your own public address, whose pass is nothing answering, would instead
-need the guarded-subshell form so an unsubstituted address cannot time out and read as closed.
+Because these checks discriminate on a response rather than on silence, an unsubstituted value cannot
+read as a pass; the guarded `set --` lines in the Argo CD and Flux blocks refuse an unsubstituted host
+and keep the requests off reserved example hosts. A bare reachability probe of your own public address,
+whose pass is nothing answering, needs the guarded-subshell form for a further reason: an unsubstituted
+address could otherwise time out and read as closed.
 
 ## Sources (checked September 2026)
 
@@ -655,7 +690,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "f488e4ab4c58510e259280fab39ff4321a9f594c6e7e3ad440e8ce814ba0c5c0",
+  "body_sha256": "c5a0dc32fcaa703483a70b04441dd31639830a858cb01226fa10081b0bac0f48",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",

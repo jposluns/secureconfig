@@ -123,15 +123,26 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ## Verify
 
-REASONED: following block; panel, Docker daemon and GitLab sources below support these listener/login, 2375/2376 and password-file checks. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded.
+REASONED: following block; panel, Docker daemon and GitLab sources below support these listener/login, 2375/2376 and password-file checks. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -s -o /dev/null -w '%{http_code}\n' https://panel.example.com/
-                                                                  # 401, 403, or a login redirect, never a dashboard. No -k:
-                                                                  # this panel is behind a proxy holding a real certificate, so
-                                                                  # a check that skips verification proves nothing about it
+(                                                   # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PANEL_HOST'   # the public host name your proxy serves one panel on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them, and run the block once per panel
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"
+                                                                    # 401, 403, or a login redirect, never a dashboard. No -k:
+                                                                    # this panel is behind a proxy holding a real certificate, so
+                                                                    # a check that skips verification proves nothing about it
+)
 # clears a pre-set declare -i or -l attribute, and any stale
 # value; copy this whole block, not just the command below
 (                                                   # a subshell, so your own script arguments are untouched
@@ -303,7 +314,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a7aa662e7e04c9f69ffc9abf859cfe13b6a7eb9e226f65ee50acd52d49df860f",
+  "body_sha256": "c4dc794757d55928e74658158ec7ed3409da83bd881b564a79333a33fc31f7d1",
   "components": {
     "portainer": {
       "name": "Portainer",
