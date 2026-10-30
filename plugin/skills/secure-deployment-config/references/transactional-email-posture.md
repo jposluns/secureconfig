@@ -124,16 +124,16 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
   shift
   [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values: mail domain, bounce domain, DKIM selector and submission host; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your mail domain (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your mail domain (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$2" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your bounce (Return-Path) domain, the name that carries its SPF record, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your bounce (Return-Path) domain, the name that carries its SPF record, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$3" in
     ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your DKIM selector, the s= tag of a real signature, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$4" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your submission host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your submission host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '|%s|%s|%s|' "$1" "$2" "$4" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     *'|example.com|'*|*'|example.net|'*|*'|example.org|'*|*'.example.com|'*|*'.example.net|'*|*'.example.org|'*) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own names on the set -- line above; not probing"; exit 2 ;;
@@ -262,7 +262,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "f5e2531ecc3d1456148d92965e49a66aef6a8de28b4b0c230ff4b523d72821df",
+  "body_sha256": "16b839f03069c98b5fa6dd67411932325573db0eba0574c474bc01409fec7899",
   "components": {
     "spf": {
       "name": "SPF",
