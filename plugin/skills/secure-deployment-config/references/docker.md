@@ -104,13 +104,25 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 
 ## 4. Verify
 
-REASONED: publication, redirect, authentication and external isolation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker networking sources and linked proxy guides; the authoring environment has no authorized deployment or external probe hosts. For the unauthenticated API probe, expect 401 from Caddy or nginx basic auth; Caddy `forward_auth` admits auth-service 2xx, but its rejection status is not established by the fetched lines. Expect 401/403 from nginx `auth_request`; the cited Authelia nginx configuration converts its 401 to a 302 login redirect. Traefik `forwardAuth` passes through its auth service's non-2xx status, including a login redirect; Traefik `basicAuth` calls `RequireAuth`, whose response the fetched lines do not show, so 401 is this guide's expectation rather than a status established by the fetched middleware. For Cloudflare Access, this guide expects a 302 login redirect in the configuration described in [cloudflare.md](cloudflare.md); the fetched Cloudflare lines do not establish that status. A 3xx passes only when its printed location is the gate's own login portal (for Cloudflare Access, your team's `*.cloudflareaccess.com`), never the application's own login. The command fails on any 2xx; any status other than the gate's expected rejection or a 3xx to its portal is not a pass; and an authorized request must succeed separately.
+REASONED: publication, redirect, authentication and external isolation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker networking sources and linked proxy guides; the authoring environment has no authorized deployment or external probe hosts. For the unauthenticated API probe, expect 401 from Caddy or nginx basic auth; Caddy `forward_auth` admits auth-service 2xx, but its rejection status is not established by the fetched lines. Expect 401/403 from nginx `auth_request`; the cited Authelia nginx configuration converts its 401 to a 302 login redirect. Traefik `forwardAuth` passes through its auth service's non-2xx status, including a login redirect; Traefik `basicAuth` calls `RequireAuth`, whose response the fetched lines do not show, so 401 is this guide's expectation rather than a status established by the fetched middleware. For Cloudflare Access, this guide expects a 302 login redirect in the configuration described in [cloudflare.md](cloudflare.md); the fetched Cloudflare lines do not establish that status. A 3xx passes only when its printed location is the gate's own login portal (for Cloudflare Access, your team's `*.cloudflareaccess.com`), never the application's own login. The command fails on any 2xx; any status other than the gate's expected rejection or a 3xx to its portal is not a pass; and an authorized request must succeed separately. The redirect and unauthenticated API curls take the app's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0/[::] or a host IP) binding; review every container on the host, IPv6 included
 ss -tulnp                             # host sockets (TCP and UDP); socket visibility varies by Docker version and config, so a socket listing alone does not prove reachability
-curl -q -sI http://app.example.com/      # expect a redirect to https:// with Caddy automatic HTTPS, or after configuring nginx or Traefik to redirect
-( set -o pipefail; curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/api | awk '{ print; if ($1 ~ /^http=2/) { print "FAIL: unauthenticated /api returned " substr($1, 6); exit 1 } }' )  # unauthenticated: inspect the gate's rejection and portal location; then confirm an authorized request succeeds
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your TLS proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"      # expect a redirect to https:// with Caddy automatic HTTPS, or after configuring nginx or Traefik to redirect
+  ( set -o pipefail; curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/api" | awk '{ print; if ($1 ~ /^http=2/) { print "FAIL: unauthenticated /api returned " substr($1, 6); exit 1 } }' )  # unauthenticated: inspect the gate's rejection and portal location; then confirm an authorized request succeeds
+)
 ```
 
 REASONED: preceding block; publication and socket inventory, HTTPS redirect, unauthenticated API rejection and authorized API success follow the cited Docker networking sources and linked proxy guides, as do the external isolation probes this paragraph describes; no Docker runtime or external probe hosts are available, and no exposed/fixed result is recorded. Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
@@ -260,7 +272,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "601f36919dbc15e3b04b81583a4f1ee871a44080799d24e1d8ae63b0d3c8805f",
+  "body_sha256": "0f20b4ebeb0de89dba8d0403e93dbe200201519f5a98c00abae0023d643cedaa",
   "components": {
     "boundary": {
       "name": "Docker Engine minimum boundary",

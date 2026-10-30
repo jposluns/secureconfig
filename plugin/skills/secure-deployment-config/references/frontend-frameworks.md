@@ -68,10 +68,22 @@ REASONED: output-path coverage per the cited SvelteKit adapter-node, Nitro and V
 
 REASONED: scan coverage and the dist/server classification per the design of the block itself and the cited output-path sources; at marking time the scan ran against local fixture trees, where a secret planted under dist/assets was reported as a FINDING, a tree without it reported clean, and a plant only under dist/server was reported as server output. The same marking-time fixture run also showed that, with no listed directory, the block refused as inconclusive, and that, with dist/assets a symlink to an external fixture directory holding the planted value, the scan followed the link and reported dist/assets/x.js as a FINDING. No real framework production build is available in the authoring environment, so none was scanned. Before running, adjust both path lists for your actual adapter, Nitro preset or configured output directories. The block always scans all of `dist`, following symlinks, so it never misses a browser-served file. In a Vite SSR layout, where `dist/server` holds the server build, a result whose matches are all under `dist/server/` is reported as server output rather than as a client leak, and any other result is a FINDING, with its `dist/server/` matches labelled as server output. Confirm that `dist/server` is server-only in your deployment before treating a server-output result as clean. Include any separately deployed static assets and prerendered HTML, and, apart from `dist` (scanned whole, as described above), never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
 
-REASONED: following block; private-route denial, client-secret scanning, Host handling and proxy cookies/redirects. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework and grep documentation.
+REASONED: following block; private-route denial, client-secret scanning, Host handling and proxy cookies/redirects. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework and grep documentation. The private-route and spoofed-Host requests each take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guards have not been run.
 
 ```bash
-curl -q -si https://app.example.com/api/private | head -1   # 401 with no session cookie, on all three frameworks
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the deployed application's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -si "https://$1/api/private" | head -1   # 401 with no session cookie, on all three frameworks
+)
 ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm browser-served output paths
 # Use the browser-served paths above; adapt both lists for custom output or SSR before running.
 # Search client assets and prerendered pages for the literal secret with a fixed-string match. The secret is prompted
@@ -115,7 +127,20 @@ ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm 
     *) echo "error: grep exited $rc, result inconclusive" ;;
   esac
 )
-curl -q -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # the deployed application must not trust a spoofed Host
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the same application host name as the private-route check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  # The spoofed Host header evil.example.com is a deliberately foreign value, so it stays as written.
+  curl -q -g -si "https://$1/" -H "Host: evil.example.com" | head -1   # the deployed application must not trust a spoofed Host
+)
 ```
 
 REASONED: preceding block; the whole fence: the private-route request, the output-path listing, the client-secret scan and the spoofed-Host request, per the cited framework documentation and GNU grep manual entries; no deployed framework application is available in the authoring environment, so the two curl checks were not run. The scan subshell ran at marking time against local fixture trees, where a planted secret produced the FINDING line and a clean fixture tree reported clean. On 2026-10-13 (UTC), with Bash 5.3.9 and a dummy secret typed at a pty's hidden prompt, the scan subshell traced two lines under `bash -x` (`trap -` and `set +x +a +e`), neither holding the dummy, where the same subshell with `set +x` removed traced 32 lines, one of them holding the dummy; an interactive Bash given the subshell wrote a history file holding the block's lines and not the dummy. The account-owner and transformation limits stated in this paragraph are documented, not demonstrated. The secret reaches grep on stdin, never argv; the hidden prompt keeps it out of shell history and the block's `set +x` keeps it out of `set -x` tracing, but this does not hide it from the account owner or root. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
@@ -244,7 +269,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1d6de89dc5138547447754ca7212aec63e3ce852dba756ea27e3de71d8233758",
+  "body_sha256": "ad5754ae7144508a936d1d6b0cf05f8fe59292bd246c95ff5eaa3928f7216287",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
