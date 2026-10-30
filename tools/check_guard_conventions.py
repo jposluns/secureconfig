@@ -52,6 +52,10 @@ WHAT THIS CATCHES
                  extension. Invalid or unterminated cases grant no coverage.
                  A sentinel arm cannot use its own case to cover its probes;
                  cases with ;& or ;;& grant no coverage.
+                 A shape the scanner cannot track, such as a ) with no
+                 matching ( at that point, withdraws coverage from the
+                 whole block; each finding then names the first such line
+                 and its cause.
   C2-WARN-ONLY-GUARD  (--strict-guards only; NOT registered in run_all_checks)
                  an if/elif whose condition mentions REPLACE_WITH_ but whose
                  body reaches fi without exit/return, followed later in the
@@ -1753,6 +1757,7 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
     in_dbrackets = False
     c2_array_depth = 0
     c2_uncertain = False
+    c2_uncertain_cause = None  # (line or None, reason) of the first one
     saw_sentinel = False
     funcdef_pending = False
     in_compound_stmt = False
@@ -1790,6 +1795,14 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
         (fence, nest, case_stack, funcdef_pending,
          in_compound_stmt, continuation, live_handles,
          inherited_exclusions, c2_array_depth) = state
+
+    def note_uncertain(line, reason):
+        # Fail closed for the whole fence, and keep the first cause so each
+        # finding can name the shape the scanner could not track.
+        nonlocal c2_uncertain, c2_uncertain_cause
+        c2_uncertain = True
+        if c2_uncertain_cause is None:
+            c2_uncertain_cause = (line, reason)
 
     origin_states = {}
     active_origin = 0
@@ -1981,7 +1994,8 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
             strict_toks = strict_records[record_no][token_no]
             if literals is None:
                 literals = [False] * len(toks)
-                c2_uncertain = True
+                note_uncertain(lineno, "the C2 quote scan cannot align "
+                               "this line with the shared tokenizer")
                 kill_arms(revoke=True)
 
             # A lifted body shares the existing command numbering and C1/C3
@@ -2031,7 +2045,8 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                     elif t == ")":
                         array_depth -= 1
                     if bool(array_depth) != bool(c2_array_depth):
-                        c2_uncertain = True
+                        note_uncertain(lineno, "a quoted or escaped ( or ) "
+                                       "inside an array assignment")
                     k += 1
                     continue
                 if in_dbrackets:
@@ -2041,13 +2056,15 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                         strict_buf = []
                         buf_is_literal = True
                         if not literal:
-                            c2_uncertain = True
+                            note_uncertain(lineno, "a quoted or escaped ]] "
+                                           "ends a [[ test")
                     k += 1
                     continue
                 if t == "[[":
                     kill_arms()
                     if not literal:
-                        c2_uncertain = True
+                        note_uncertain(lineno, "a quoted or escaped [[ "
+                                       "starts a test")
                     in_dbrackets = True
                     k += 1
                     continue
@@ -2058,7 +2075,8 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                     array_depth = 1
                     c2_array_depth = 1 if literal else 0
                     if not literal:
-                        c2_uncertain = True
+                        note_uncertain(lineno, "a quoted or escaped ( "
+                                       "starts an array assignment")
                     kill_arms()
                     k += 1
                     continue
@@ -2216,7 +2234,15 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                                     s is f for s in span["scopes"])
                             ]
                         else:
-                            c2_uncertain = True
+                            if t == ")":
+                                why = ("a ) the scanner cannot match to an "
+                                       "open ( at that point, as when a "
+                                       "multiline $( ... ) closes on a line "
+                                       "of its own")
+                            else:
+                                why = ("a } the scanner cannot match to an "
+                                       "open { at that point")
+                            note_uncertain(lineno, why)
                             for f in case_stack:
                                 f["valid"] = False
                             live_handles = []
@@ -2291,9 +2317,9 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
     for state in origin_states.values():
         finish_scope(state[0], seq + 1)
         if state[-1]:
-            c2_uncertain = True
+            note_uncertain(None, "an array assignment is still open")
     if array_depth or in_dbrackets:
-        c2_uncertain = True
+        note_uncertain(None, "an array assignment or [[ test is still open")
     for span in guard_spans:
         if (span["chain"]
                 and (not all(s["closed"] for s in span["chain"])
@@ -2317,13 +2343,22 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
     for lineno, code, waived in curl_findings:
         if not waived:
             findings.append((path, lineno, code, ""))
+    uncertain_note = ""
+    if c2_uncertain_cause is not None:
+        cause_line, cause = c2_uncertain_cause
+        uncertain_note = (
+            "; no probe in this block counts as guarded: guard tracking "
+            "became uncertain %s: %s" % (
+                "at line %d" % cause_line if cause_line is not None
+                else "at the end of the block", cause))
     if saw_sentinel:
         stats.guard_fences += 1
         if not opts.no_c2:
             for pseq, lineno, name, waived in probes:
                 if not waived and pseq in unguarded_probes:
                     findings.append((path, lineno, "C2-PROBE-OUTSIDE-GUARD",
-                                     " (probe: %s)" % name))
+                                     " (probe: %s%s)"
+                                     % (name, uncertain_note)))
     if opts.strict_guards:
         guarded_probes = set()
         for pseq, _lineno, _name, _waived in probes:
@@ -3672,6 +3707,37 @@ _C2_EXPECT_LINES = {
     "subshell-arm-boundary-tracked": [6],
 }
 
+# C2 finding text: a fence whose guard tracking became uncertain names the
+# first such line and its cause; an ordinary unguarded probe keeps its text.
+_C2_DETAIL_GUARD = (
+    "```bash\n"
+    "case \"$1\" in\n"
+    "  *REPLACE_WITH_*) echo \"substitute\"; exit 2 ;;\n"
+    "esac\n")
+SELF_TEST_CASES += [
+    ("c2-detail-lone-paren-heredoc", _C2_DETAIL_GUARD
+     + "PARSED=$(python3 - <<'PY'\nprint(1)\nPY\n)\n"
+     "nc -vz -w 3 \"$1\" 443\n```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+    ("c2-detail-open-array-at-end", _C2_DETAIL_GUARD
+     + "nc -vz -w 3 \"$1\" 443\nA=(one\n```\n",
+     ["C2-PROBE-OUTSIDE-GUARD"], ()),
+    ("c2-detail-certain-fence",
+     "```bash\ncase \"$1\" in\n  *REPLACE_WITH_*) echo \"substitute\" ;;\n"
+     "esac\nnc -vz -w 3 \"$1\" 443\n```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
+]
+_C2_EXPECT_DETAILS = {
+    "c2-detail-lone-paren-heredoc": [
+        " (probe: nc; no probe in this block counts as guarded: guard "
+        "tracking became uncertain at line 8: a ) the scanner cannot match "
+        "to an open ( at that point, as when a multiline $( ... ) closes on "
+        "a line of its own)"],
+    "c2-detail-open-array-at-end": [
+        " (probe: nc; no probe in this block counts as guarded: guard "
+        "tracking became uncertain at the end of the block: an array "
+        "assignment is still open)"],
+    "c2-detail-certain-fence": [" (probe: nc)"],
+}
+
 
 # Explicit expected outcomes for the non-curl credential rule.
 _TOOL_ARGV_CASES = [
@@ -4461,6 +4527,14 @@ def run_self_test():
                 ok = False
                 print("  C2 lines expect=%s got=%s"
                       % (expected_lines, got_lines))
+        if name in _C2_EXPECT_DETAILS:
+            got_details = sorted(
+                extra for _p, _l, code, extra in findings
+                if code == "C2-PROBE-OUTSIDE-GUARD")
+            if got_details != _C2_EXPECT_DETAILS[name]:
+                ok = False
+                print("  C2 details expect=%s got=%s"
+                      % (_C2_EXPECT_DETAILS[name], got_details))
         print("%s %-48s expect=%s got=%s"
               % ("PASS" if ok else "FAIL", name, exp, got))
         if not ok:
