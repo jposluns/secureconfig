@@ -114,6 +114,26 @@ rm -rf plugin
 cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
 rm -rf "$plugin_tmp"
 
+echo "== the committed generated files match a fresh build of the commit =="
+# The two gates above rebuild in the working tree, so they pass when the working tree is right and
+# the commit is not: a bundle rebuilt but only partly staged (F-PLUGIN-MANIFEST-PARTIAL-STAGE), or
+# a VERSION bump committed without its plugin/plugin.json (F-VERSION-BUMP-NO-REGEN). This gate
+# checks the committed plugin.json version against the committed VERSION. Unless git status shows
+# the working tree is HEAD with no change, in which case the gates above already rebuilt HEAD, it
+# also exports HEAD with git archive, runs the same two builds there and compares. The self-test
+# runs first, so what runs is the shipped gate.
+for generated_check in test_generated_committed.py check_generated_committed.py; do
+  if generated_committed=$(python3 -I -B "tools/$generated_check" 2>&1); then
+    printf '%s\n' "$generated_committed"
+    if grep -q '^  FAIL  ' <<< "$generated_committed" || ! grep -q '^  ok    ' <<< "$generated_committed"; then
+      bad "$generated_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$generated_committed"
+    bad "$generated_check failed"
+  fi
+done
+
 echo "== the generated-file record matches how they are generated =="
 # CLAUDE.md names .aiqt/gensrc.json as the record of which sources produce site/llms-full.txt.
 # Adding a guide touches five wiring surfaces and four of them were gated; this was the fifth,
@@ -632,6 +652,22 @@ for changelog_check in test_changelog_format.py check_changelog_format.py; do
   else
     printf '%s\n' "$changelog_format"
     bad "$changelog_check failed"
+  fi
+done
+
+echo "== TODO.md: one backlog row per line =="
+# Finding F-TODO-ROW-CONCATENATION: a lost line break joins two banded-table rows onto one line,
+# and Markdown renders the second inside the first row's last cell. #71 committed one, joining
+# rows 1.13 and 1.19. The self-test runs first, so what runs against TODO.md is the shipped gate.
+for todo_check in test_todo_rows.py check_todo_rows.py; do
+  if todo_rows=$(python3 -I -B "tools/$todo_check" 2>&1); then
+    printf '%s\n' "$todo_rows"
+    if grep -q '^  FAIL  ' <<< "$todo_rows" || ! grep -q '^  ok    ' <<< "$todo_rows"; then
+      bad "$todo_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$todo_rows"
+    bad "$todo_check failed"
   fi
 done
 
