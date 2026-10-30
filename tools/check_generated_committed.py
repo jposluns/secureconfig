@@ -32,7 +32,11 @@ run earlier in tools/run_all_checks.sh, have already rebuilt exactly this commit
 checks the version and stops, which saves the minutes the two builds take; that is the CI case.
 Run on its own with a clean tree, it relies on those staleness gates and says so in its ok
 line. Any staged, modified or untracked file, a --rev other than HEAD, a `git status` that
-cannot run, or --rebuild makes it rebuild the export.
+cannot run, or --rebuild makes it rebuild the export. The skip trusts `git status`, which does
+not report a tracked file marked skip-worktree or assume-unchanged; a build input or generated
+file edited locally under either mark leaves the status clean, so this gate skips its rebuild
+while the working-tree staleness gates rebuild something other than HEAD. CI checks out the
+commit with neither mark set, so it is unaffected.
 
 WHAT IT DOES NOT CHECK: the index. A run before committing checks the previous commit, which
 is why CONTRIBUTING.md says to run the suite again after committing; uncommitted edits stay
