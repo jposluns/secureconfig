@@ -312,14 +312,22 @@ echo "== README's stated guide and category counts match the corpus =="
 # nor drift unchecked. The guide count is checked against the root guides (every root *.md outside
 # not_a_guide, less README.md itself), the same set the wiring gate above walks. The README guide
 # index must list exactly that set, once each, so the two definitions of the guide count cannot
-# drift apart. The category count is checked against the "###" headings of "## Guide index". A
-# reworded, missing or misplaced count sentence fails closed rather than passing unchecked.
+# drift apart. The category count is checked against the "###" headings of "## Guide index".
+# Both sections and the "###" headings come from the pinned CommonMark parser that the
+# Verify-marking gate uses (gate_parser, locked in tools/requirements-gates.txt): a section ends
+# at the next level-one or level-two heading in any form (ATX with spaces or tabs, indented up to
+# three spaces, or setext), and a heading-shaped line inside a code block is not a heading. The
+# gate fails if the pinned parser is unavailable. A reworded, missing or misplaced count sentence
+# fails closed rather than passing unchecked.
 guide_files=()
 for f in *.md; do
   not_a_guide "$f" || [ "$f" = README.md ] || guide_files+=("$f")
 done
 if count_diff=$(python3 - "${guide_files[@]}" <<'PY'
 import re, sys
+
+sys.path.insert(0, "tools")
+from check_verify_marking import ParserUnavailable, gate_parser
 
 guides = sys.argv[1:]
 readme = open("README.md", encoding="utf-8").read()
@@ -328,21 +336,31 @@ form = "that is N guides across the M categories indexed below"
 count_re = re.compile(
     r"\bthat\s+is\s+(\d+)\s+guides\s+across\s+the\s+(\d+)\s+categories\s+indexed\s+below\b",
     re.I)
+try:
+    tokens = gate_parser(required=True).parse(readme)
+except ParserUnavailable as exc:
+    print(f"README.md's sections need the pinned Markdown parser: {exc}")
+    sys.exit(1)
+lines = re.sub(r"\r\n?", "\n", readme).split("\n")
+heads = [(t.tag, t.level, t.map, tokens[i + 1].content.strip())
+         for i, t in enumerate(tokens) if t.type == "heading_open"]
 
 
 def section_of(heading):
-    m = re.search(rf"^##[ \t]+{re.escape(heading)}[ \t]*$", readme, re.M)
-    if not m:
-        return None
-    rest = readme[m.end():]
-    m2 = re.search(r"^##[ \t]", rest, re.M)
-    return rest[:m2.start()] if m2 else rest
+    # Line range under a top-level "## heading", ATX or setext, up to the next heading of level 1
+    # or 2 in any CommonMark form; a "## " line inside a code block is not a heading.
+    for i, (tag, level, (_, start), text) in enumerate(heads):
+        if tag == "h2" and level == 0 and text == heading:
+            ends = [m[0] for t, _, m, _ in heads[i + 1:] if t in ("h1", "h2")]
+            return start, ends[0] if ends else len(lines)
+    return None
 
 
-intro = section_of("What this is")
-if intro is None:
+span = section_of("What this is")
+if span is None:
     print("README.md has no '## What this is' section")
     sys.exit(1)
+intro = "\n".join(lines[span[0]:span[1]])
 stated = count_re.findall(intro)
 if len(stated) != 1:
     print(f"README.md's '## What this is' section must state its counts exactly once as "
@@ -355,11 +373,12 @@ if elsewhere:
     sys.exit(1)
 stated_guides, stated_cats = (int(n) for n in stated[0])
 
-section = section_of("Guide index")
-if section is None:
+span = section_of("Guide index")
+if span is None:
     print("README.md has no '## Guide index' section")
     sys.exit(1)
-cats = re.findall(r"^### (.+?)[ \t]*$", section, re.M)
+section = "\n".join(lines[span[0]:span[1]])
+cats = [h for h in heads if h[0] == "h3" and span[0] <= h[2][0] < span[1]]
 rows = re.findall(r"^\|\s*\[([^\]]+\.md)\]\(", section, re.M)
 
 problems = []
