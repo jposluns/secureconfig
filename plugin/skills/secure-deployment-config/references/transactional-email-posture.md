@@ -109,35 +109,59 @@ BIMI is optional display metadata that shows a brand logo in supporting clients;
 
 ## Verify
 
-REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
+REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard was added; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
 
 ```bash
 # REASONED: DNS and TLS expectations follow the cited RFCs; no DNS control, SMTP endpoint, or container runtime is available.
-# Inspect the published records (replace names; take the DKIM selector from a real signature).
+# Inspect the published records. Substitute your own names inside the quotes on the set -- line below,
+# taking the DKIM selector from the s= tag of a real signature. The block refuses example.com,
+# example.net, example.org and their subdomains: example.com publishes real DNS records of its own, so
+# an unsubstituted run would show another domain's policy.
 # These read DNS and TLS state; they do not evaluate SPF or DMARC or prove a service listener.
-dig +noall +answer TXT bounce.example.com
-dig +noall +answer TXT tx202609._domainkey.example.com
-dig +noall +answer CNAME tx202609._domainkey.example.com
-dig +noall +answer TXT _dmarc.example.com
-dig +noall +answer TXT _mta-sts.example.com
-dig +noall +answer TXT _smtp._tls.example.com
-dig +noall +answer TXT default._bimi.example.com
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MAIL_DOMAIN' 'REPLACE_WITH_YOUR_BOUNCE_DOMAIN' 'REPLACE_WITH_YOUR_DKIM_SELECTOR' 'REPLACE_WITH_YOUR_SUBMISSION_HOST'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values: mail domain, bounce domain, DKIM selector and submission host; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your mail domain (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your bounce (Return-Path) domain, the name that carries its SPF record, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your DKIM selector, the s= tag of a real signature, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$4" in
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your submission host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '|%s|%s|%s|' "$1" "$2" "$4" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+    *'|example.com|'*|*'|example.net|'*|*'|example.org|'*|*'.example.com|'*|*'.example.net|'*|*'.example.org|'*) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own names on the set -- line above; not probing"; exit 2 ;;
+  esac
+  dig +noall +answer TXT "$2"
+  dig +noall +answer TXT "$3._domainkey.$1"
+  dig +noall +answer CNAME "$3._domainkey.$1"
+  dig +noall +answer TXT "_dmarc.$1"
+  dig +noall +answer TXT "_mta-sts.$1"
+  dig +noall +answer TXT "_smtp._tls.$1"
+  dig +noall +answer TXT "default._bimi.$1"
 
-# Submission must complete TLS with a validated certificate before AUTH. -verify_return_error
-# matters because s_client otherwise continues past a verification failure. This confirms TLS is
-# available, not that AUTH is gated on it; the discriminating check, reasoned here, is the negative
-# one: a plaintext or post-stripped-STARTTLS AUTH attempt must be refused, where the exposed state
-# accepts it.
-openssl s_client -connect smtp.example.com:587 -starttls smtp \
-  -servername smtp.example.com -verify_hostname smtp.example.com \
-  -verify_return_error -min_protocol TLSv1.2 </dev/null
+  # Submission must complete TLS with a validated certificate before AUTH. -verify_return_error
+  # matters because s_client otherwise continues past a verification failure. This confirms TLS is
+  # available, not that AUTH is gated on it; the discriminating check, reasoned here, is the negative
+  # one: a plaintext or post-stripped-STARTTLS AUTH attempt must be refused, where the exposed state
+  # accepts it.
+  openssl s_client -connect "$4:587" -starttls smtp \
+    -servername "$4" -verify_hostname "$4" \
+    -verify_return_error -min_protocol TLSv1.2 </dev/null
 
-openssl s_client -connect smtp.example.com:465 \
-  -servername smtp.example.com -verify_hostname smtp.example.com \
-  -verify_return_error -min_protocol TLSv1.2 </dev/null
+  openssl s_client -connect "$4:465" \
+    -servername "$4" -verify_hostname "$4" \
+    -verify_return_error -min_protocol TLSv1.2 </dev/null
+)
 ```
 
-REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314, RFC 9989, RFC 8601 and RFC 2505. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
+REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314, RFC 9989, RFC 8601 and RFC 2505. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard was added; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ## Common mistakes
 
@@ -238,7 +262,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "fba28ff4026087f7c7b3ad2fd7e4eaef5fa2569f199c262c469a1f5112f09ba6",
+  "body_sha256": "f5e2531ecc3d1456148d92965e49a66aef6a8de28b4b0c230ff4b523d72821df",
   "components": {
     "spf": {
       "name": "SPF",

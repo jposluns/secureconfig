@@ -44,6 +44,8 @@ python3 tools/version_basis.py --check
   echo
   echo "> Generated from https://github.com/jposluns/secureconfig (CC0 1.0, except the AIQT Guardrails material listed in .aiqt/PIN, Apache-2.0)."
   echo "> Per-guide index: https://secureconfig.ai/llms.txt"
+  echo "> Each file below starts with a line such as \`==> nginx.md\` between two lines of \`=\` characters."
+  echo "> A relative file link such as \`(mfa.md)\` names the section that starts with that file name, or, for a path with no section such as \`CONTRIBUTING.md\`, that path in https://github.com/jposluns/secureconfig; neither is a page on secureconfig.ai."
   for f in "${files[@]}"; do
     echo
     echo "======================================================================"
