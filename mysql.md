@@ -315,17 +315,17 @@ For the MySQL client:
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "supply exactly 2 values; not connecting"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "supply exactly 2 values; not connecting"; exit 2; }
   case "$1$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
       mysql --protocol=TCP --host="$1" --port=3306 --user=app -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2"
       ;;
@@ -342,23 +342,23 @@ The existing `batch` account's `REQUIRE X509` also needs a client certificate an
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 2; }
   case "$1$2$3$4" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
-      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "certificate must be readable"; exit 1; }
-      [ -f "$4" ] || { echo "key must be a regular file"; exit 1; }
-      [ -r "$4" ] || { echo "key must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
+      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "certificate must be readable"; exit 2; }
+      [ -f "$4" ] || { echo "key must be a regular file"; exit 2; }
+      [ -r "$4" ] || { echo "key must be readable"; exit 2; }
       mysql --protocol=TCP --host="$1" --port=3306 --user=batch -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" \
         --ssl-cert="$3" --ssl-key="$4"
@@ -373,7 +373,7 @@ Apply the same MariaDB client substitution when appropriate. Restrict access to 
 
 REASONED: service scope for every check in this section, from the authoring limitations recorded in this paragraph and the vendor documentation cited at each check below. Service behavior below is **REASONED, not demonstrated**. The authoring environment has a read-only filesystem, no MySQL/MariaDB client or server binaries, no Docker/Podman runtime, and no supplied writable deployment or database credentials. No available authorized environment could reproduce the exposed and fixed service states.
 
-DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
+DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. The bash -n, ShellCheck and guard-only runs recorded in this paragraph, at marking time and originally, covered the five guarded blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
 
 DEMONSTRATED: the in-memory INI parse recorded in this paragraph, re-run at marking time against both states: all five INI fragments parsed with Python 3.14.4 configparser in strict mode (`ConfigParser(strict=True)`, other arguments at their defaults). The control fragments in that marking-time re-run against both states used the same parser and options: a control fragment repeating `require_secure_transport` under `[mysqld]` was rejected with DuplicateOptionError, and a control fragment placing that option before any section header was rejected with MissingSectionHeaderError. Vendor option acceptance stays with the reasoned native checks, as stated. All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
 
@@ -399,18 +399,18 @@ Run the following from the application's permitted source host. Replace the prod
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRODUCT' 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "supply exactly 3 values; not connecting"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "supply exactly 3 values; not connecting"; exit 2; }
   case "$1$2$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -f "$3" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "CA must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -f "$3" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "CA must be readable"; exit 2; }
       case "$1" in
         mysql)
           mysql --protocol=TCP --host="$2" --port=3306 --user=app -p \
@@ -438,7 +438,7 @@ Run the following from the application's permitted source host. Replace the prod
             echo "inspect the refusal and requirements; failure alone is not a pass"
           fi
           ;;
-        *) echo "product must be mysql or mariadb"; exit 1 ;;
+        *) echo "product must be mysql or mariadb"; exit 2 ;;
       esac
       ;;
   esac
@@ -458,23 +458,23 @@ For the existing `batch` account, compare a connection with its valid client cer
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 2; }
   case "$1$2$3$4" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
-      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "certificate must be readable"; exit 1; }
-      [ -f "$4" ] || { echo "key must be a regular file"; exit 1; }
-      [ -r "$4" ] || { echo "key must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
+      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "certificate must be readable"; exit 2; }
+      [ -f "$4" ] || { echo "key must be a regular file"; exit 2; }
+      [ -r "$4" ] || { echo "key must be readable"; exit 2; }
       mysql --no-defaults --no-login-paths --protocol=TCP --host="$1" --port=3306 --user=batch -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" \
         --ssl-cert="$3" --ssl-key="$4" --connect-timeout=5 \
@@ -506,15 +506,15 @@ Run on the database server, using its actual `hostname` output:
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_SERVER_HOSTNAME'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly 1 value; not connecting"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly 1 value; not connecting"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ "$(hostname)" = "$1" ] || { echo "run on the named database server"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ "$(hostname)" = "$1" ] || { echo "run on the named database server"; exit 2; }
       ss -tlnp
       ;;
   esac
@@ -843,7 +843,7 @@ Claims (full source mapping in the JSON block below):
 - verify-weak (REASONED; mysql, maria): Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin.
 - verify-reuse (REASONED; mysql, maria): After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed.
 - visibility (REASONED; mysql): SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary.
-- local-guards (DEMONSTRATED; mysql, maria): Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated.
+- local-guards (DEMONSTRATED; mysql, maria): Historical invalid-input and valid-dispatch checks tested guards only, in an earlier form whose guard refusals exited with status 1; the current form was not re-run, and no database behavior was simulated.
 - local-ini (DEMONSTRATED; mysql, maria): Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved.
 
 ````json
@@ -851,7 +851,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "304ca71ddf0b6dbae6ada9c057d9e3ebb7cfb3dc988899f92b89dd1a7213fdc6",
+  "body_sha256": "114343102b74ab877f9c1c7cbd7167e95f792e65940b053cc8146dce10fbcb17",
   "components": {
     "mysql": {
       "name": "MySQL reference",
@@ -1052,7 +1052,7 @@ Claims (full source mapping in the JSON block below):
     "verify-weak": {"text": "Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin.", "components": ["mysql", "maria"], "sources": ["mysql:sd3caefce406e", "maria:s9e17c3adbc4f", "maria:s1e467414669c"], "status": "REASONED"},
     "verify-reuse": {"text": "After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed.", "components": ["mysql", "maria"], "sources": ["mysql:sf95e18b15977", "maria:sf9fb4aa4058e"], "status": "REASONED"},
     "visibility": {"text": "SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary.", "components": ["mysql"], "sources": ["mysql:s72c17cae9130"], "status": "REASONED"},
-    "local-guards": {"text": "Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated.", "components": ["mysql", "maria"], "sources": ["mysql:s156681123604", "maria:s368aa92bc449"], "status": "DEMONSTRATED", "evidence": "Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated."},
+    "local-guards": {"text": "Historical invalid-input and valid-dispatch checks tested guards only, in an earlier form whose guard refusals exited with status 1; the current form was not re-run, and no database behavior was simulated.", "components": ["mysql", "maria"], "sources": ["mysql:s156681123604", "maria:s368aa92bc449"], "status": "DEMONSTRATED", "evidence": "Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated."},
     "local-ini": {"text": "Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved.", "components": ["mysql", "maria"], "sources": ["mysql:s58e2db31fec2", "maria:sa80a8ed71629"], "status": "DEMONSTRATED", "evidence": "All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance."}
   }
 }

@@ -85,6 +85,13 @@ def main():
         count += case({"CHANGELOG.md": "- Added a gate (#NNN).\n"})
         for version in ("1.0.NNN", "1.1.NNN", "2.0.NNN", "12.345.NNN"):
             count += case({"VERSION": version + "\n"})
+        # A run of more than three N is the same marker, never a longer clean token.
+        for text, marker in (("#NNNN", "#NNNN"), ("(#NNNN)", "#NNNN"),
+                             ("- Added a gate (#NNNN).\n", "#NNNN"), ("_#NNNN_", "#NNNN"),
+                             ("#NNNNN", "#NNNNN"), ("**1.0.NNNN**", "1.0.NNNN")):
+            count += case({"notes.md": text}, needle=f"'{marker}'")
+        for version in ("1.0.NNNN", "1.1.NNNN", "12.345.NNNNN"):
+            count += case({"VERSION": version + "\n"}, needle=f"'{version}'")
         for digit in "0123456789":
             for suffix in ("", "-VERIFY"):
                 count += case({"DONE.md": f"| {digit}.NEW{suffix} | Done |\n"},
@@ -107,15 +114,17 @@ def main():
                      "1.NEW-", "1.NEW--"):
             count += case({"notes.md": text})
         # Embedded and longer tokens, including unsupported id suffixes, are clean.
-        for text in ("ldap1.NEW_PASSWORD", "v1.NEWS.md", "#NNNN", "release1.0.NNN",
+        for text in ("ldap1.NEW_PASSWORD", "v1.NEWS.md", "release1.0.NNN",
                      "a#NNN", "#NNN1", "#NNNs",
                      "a1.NEW", "11.NEW", "12.NEW", "12.NEW-VERIFY", ".1.NEW", "1.0.NEW",
                      "1.NEWS", "1.new", "1.NEW1", "1.NEW-Followup", "1.NEW-verify",
                      "1.NEW-VERIFY2", "1.NEW-VERIFY_MORE", "1.NEW-VERIFY-MORE",
                      "1.NEW.md", "1.NEW-VERIFY.md", "1.NEW_FOLLOWUP",
-                     "v1.1.NNN", "release2.0.NNN", "1.1.NNNN",
+                     "v1.1.NNN", "release2.0.NNN",
                      "2.0.NNN1", "12.345.NNN_suffix", "1.0.NNNs",
-                     "release1.0.NNNN", "x_#NNN", "1.NEW_PASSWORD", "MY_1.NEW"):
+                     "release1.0.NNNN", "x_#NNN", "1.NEW_PASSWORD", "MY_1.NEW",
+                     "a#NNNN", "#NNNN1", "#NNNNs", "x_#NNNN", "v1.1.NNNN",
+                     "1.0.NNNNs", "2.0.NNNN1", "1.0.NNNN_suffix", "CONNNNECT"):
             count += case({"notes.md": text}, 0, "no authoring placeholders")
         for text in ("Done in this draft", "Done in this draft, #363.",
                      "<!-- Done in this draft -->", "`Done in this draft`",
