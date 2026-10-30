@@ -17,6 +17,21 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-10-30 on the exit status of a Verify block's result arms (#1083).** The maintainer
+  chose option B of the p400a plan, which inventoried result arms that report a finding or a failed check but leave
+  the block's status at 0. The ruling was recorded in the orchestrator's store on 2026-10-30 and is entered here
+  by #1083. Its terms: a Verify block exits 0 for a pass or for an observation it cannot classify, 1 for a finding, 2
+  for a guard refusal, and 3 for a failed or inconclusive result, including a failed positive control and a failure
+  in the local environment, such as a failed `mktemp`. Status 2 for a guard refusal is the convention CONTRIBUTING.md
+  rule 6 already stated (#1070), and it is unchanged. The alternatives not chosen were these. Option A kept status 0
+  for every result arm and relied on the printed text, so a caller that checks the status would still read a finding
+  as a pass. Option C exited 1 for any result other than a pass, with refusals at 2, so a finding and a broken check
+  would look the same to a caller. Option D exited non-zero only for a finding and left an inconclusive result at 0,
+  where it would still read as a pass. Its effect (applied by #1083): CONTRIBUTING.md rule 6 states the convention,
+  including that a block with several probes or with cleanup exits once after the cleanup, with a finding outranking
+  an inconclusive result. No guide changes in #1083; the result arms that do not yet follow the convention are
+  recoded in later pull requests. The revert path is a later maintainer ruling for another option, which replaces the
+  rule 6 text and recodes any arms already changed; status 2 for a guard refusal does not depend on this ruling.
 - **Maintainer rulings of 2026-10-28 on the proxy decisions, the #1010 anchors, five pull request bodies and TODO 3.48
   (#1029).** The maintainer gave five rulings through AskUserQuestion that day, four at 2026-10-28T16:05:45Z and the
   one on TODO 3.48 at 2026-10-28T18:24:05Z. The orchestrator's record marks the first and the fifth as given in an
