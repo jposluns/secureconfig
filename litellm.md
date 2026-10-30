@@ -318,7 +318,7 @@ ss -tlnp   # a listener inventory in THIS network namespace, not a firewall/NAT/
 
 The `/v1/models` comparison tests authentication and listing, not successful inference or model authorization. Complete the inference comparisons below too. Inspect IPv4 and IPv6 reachability, published container ports, and any separate metrics listener.
 
-### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. These runs covered both fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. These observations establish neither file-content validation nor API acceptance)
+### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. The bash -n run covered both fences, and the stub runs the request fence, in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. These observations establish neither file-content validation nor API acceptance)
 
 **REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result.
 
@@ -540,7 +540,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0fd64cb0bbeeeccf2250b5e511a5c337b306a0ed2e3187caa7bab65afee5500b",
+  "body_sha256": "a34d33c4347949a36d9625d0803c520e2b3b0b260136c5093830c6c56311de63",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",
