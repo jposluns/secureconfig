@@ -106,11 +106,11 @@ sudo ss -6 -tulnp                 # IPv6 TCP and UDP listeners: only intended on
 sudo ufw status verbose           # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
 (                                 # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) nc -vz -w 3 "$1" 22 ;;   # from an address outside the admin range: must fail to connect
     # as this guide's assessment, a refusal or timeout only means THIS connection failed, not that the host firewall denied it (a host with
     # no sshd listening refuses too): confirm SSH works from an allowed source and read `ufw status`/`--list-all`
@@ -266,7 +266,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "ce06a5b97d707b06dd8ddcbfdee22c09bc74d59bd3d111dc084525acd27ebfa6",
+  "body_sha256": "16eff2aea7e4e9fc85785cfc8368e6fae769d3bcbe50c2d5c3f883795b67d4de",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",

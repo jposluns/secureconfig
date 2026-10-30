@@ -185,11 +185,11 @@ ss -tlnp   # read every listener; 3001/3210/3000: each UI on 127.0.0.1 only
 # timeout that did not come from the remote address is inconclusive, never a pass.
 (                                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3210/" ;;
   esac
@@ -317,7 +317,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1093f83ba01187f1dc4a488e2fc08ad036b36c0023b7923a6c4b71ff8748dbb4",
+  "body_sha256": "8d72ad09738b5167793e052f691c13b4a40c6b274c0ad876309eea7843a19d09",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",
