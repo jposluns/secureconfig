@@ -314,11 +314,11 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added, so the guarded section 9 block needs a bash -n re-run before the guarded block's syntax counts as checked. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons. The bash -n run and the separate local guard record covered the five child-section blocks in an earlier form, whose guard refusals ended with status 0; neither was re-run on the current form, whose guard refusals exit with status 2 inside the subshell; each block as a whole still reports status 0 because of its final `|| true`)
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added, so the guarded section 9 block needs a bash -n re-run before the guarded block's syntax counts as checked. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons. The bash -n run and the separate local guard record covered the five child-section blocks in an earlier form, whose guard refusals ended with status 0; neither was re-run on the current form, whose guard refusals exit with status 2 inside the subshell. Each block now ends with `) || echo "block exit $?"`, which keeps the reader's shell running and prints the subshell's non-zero status, such as `block exit 2` after a refusal; the block pasted whole still reports status 0 because the echo succeeds, and no recorded run covered that ending)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
-Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. The final `|| true` protects an enclosing shell from termination; it does not mean the check passed.
+Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. The final `|| echo "block exit $?"` keeps an enclosing shell running and prints the subshell's status when that status is non-zero: `block exit 2` after a guard refusal, or the last command's status when that command fails. No `block exit` line means the subshell ended with status 0. The block pasted whole still reports status 0 because the echo succeeds, and status 0 does not mean the check passed.
 
 #### Production error disclosure (REASONED: the following block tests error representations against the cited error-handling documentation; no .NET runtime or deployed test application, as recorded below.)
 
@@ -341,7 +341,7 @@ With the Developer Exception Page exposed, expect a `500` response containing di
         -H 'Accept: text/html' "$1"
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 #### Oversized-request rejection (REASONED: the following block compares body sizes against the cited Kestrel limit; no .NET runtime or deployed body-reading endpoint, as recorded below.)
@@ -369,7 +369,7 @@ The fixed expectation is `204` at 1,048,576 bytes and `413` at 1,048,577 bytes. 
         --data-binary @- -o /dev/null -w 'over-limit http=%{http_code}\n' "$1"
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 #### Diagnostic, OpenAPI, and health access (REASONED: the following block checks endpoint exposure against the cited OpenAPI and health documentation; no deployed endpoints or external test vantage, as recorded below.)
@@ -392,7 +392,7 @@ For retained routes, pair the anonymous request with an authorized request throu
       curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 #### Public response headers (REASONED: the following block checks header removal against the cited Kestrel and IIS controls; no deployed Kestrel, IIS or proxy response, as recorded below.)
@@ -412,7 +412,7 @@ For retained routes, pair the anonymous request with an authorized request throu
         --connect-timeout 5 --max-time 20 "$1"
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 #### Cookie continuity across restart and replicas (REASONED: the following block checks continuity against the cited key-lifetime and cookie-sharing documentation; no running cookie-authenticated application or replicas, as recorded below.)
@@ -437,7 +437,7 @@ The anonymous control should return `401`. The request using the original cookie
         -b ./dotnet-verify.cookies "$1"
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 Also retain an antiforgery token and its accompanying cookie across a restart, then submit the application's normal protected form. Confirm success without fetching a replacement token first. A lost key ring can invalidate antiforgery tokens independently of whether another authentication mechanism signs the user back in.
@@ -593,7 +593,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "69f97bf1ed565efc7e59cfcc50e795fee5e32e509d696142171954f23c685510",
+  "body_sha256": "7d4872a1a249f9db7258a36d7fdf3de02e3e16ce4db2211fbddbb9ac85096ec4",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
