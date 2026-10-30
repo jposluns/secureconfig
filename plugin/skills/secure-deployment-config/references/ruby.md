@@ -113,18 +113,30 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 
 ## Verify
 
-REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources.
+REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
-curl -q -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
-curl -q -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
-curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
-curl -q -sS -i https://app.example.com/sidekiq
-# if you run Sidekiq Web, read the headers, not just the code: Basic Auth answers 401 with a
-# WWW-Authenticate: Basic header; the Devise constraint answers 302 with a Location pointing at your
-# login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
-# the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"                                 # 301 to https:// (force_ssl)
+  curl -q -g -sI "https://$1/" | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
+  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/dashboard"    # 302 to login, or 401
+  curl -q -g -sS -i "https://$1/sidekiq"
+  # if you run Sidekiq Web, read the headers, not just the code: Basic Auth answers 401 with a
+  # WWW-Authenticate: Basic header; the Devise constraint answers 302 with a Location pointing at your
+  # login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
+  # the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
+)
 git ls-files config/master.key                                   # prints nothing
 ```
 
@@ -208,7 +220,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "131cbbefd3328afe905548bab00cb281e5e5c534701c22b0388741da58250e17",
+  "body_sha256": "1660ec787cfe13068dc4f7fc85dd482d84425e9fdfee190ec74d927062e63ed7",
   "components": {
     "rails": {
       "name": "Rails documentation",
