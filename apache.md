@@ -111,31 +111,43 @@ status code is printed and you compare it; nothing here fails on its own.
 
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
-curl -q -sSI --noproxy '*' http://example.com/            # expect 301 with a https:// Location
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' https://example.com/
-                                        # 200 before section 4, 401 after it. Once
-                                        # authentication is on, a 200 here is the finding
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sSI --noproxy '*' "http://$1/"            # expect 301 with a https:// Location
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1/"
+                                          # 200 before section 4, 401 after it. Once
+                                          # authentication is on, a 200 here is the finding
 
-# Read every listener. Do not filter to the ports you expect: a filter cannot show you a port
-# you did not think of, which is the whole question, and `grep ':(80|443)'` also matches an
-# address such as [2001:db8:80::1]:9000.
-ss -tlnp
+  # Read every listener. Do not filter to the ports you expect: a filter cannot show you a port
+  # you did not think of, which is the whole question, and `grep ':(80|443)'` also matches an
+  # address such as [2001:db8:80::1]:9000.
+  ss -tlnp
 
-# A request whose name matches no ServerName or ServerAlias does not fail. Apache falls through
-# to "the first listed virtual host that matches" the address and port, so a vhost listed
-# before yours over the same DocumentRoot answers without your authentication.
-#
-# Over TLS the name that selects the vhost is the SNI one, not the Host header: Apache says
-# that when the handshake carries it, "that hostname is used below just like the Host: header
-# would be used on a non-SSL connection". So setting only the header tests nothing. It leaves
-# SNI saying example.com, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
-# mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
-# The URL hostname supplies SNI and the Host header; --connect-to changes only the connection destination (your address):
-curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
-  --connect-to REPLACE_WITH_AN_UNCONFIGURED_NAME:443:example.com:443 \
-  https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH
-                                        # 401 is the pass. 200 means another vhost served the
-                                        # protected resource with no authentication at all
+  # A request whose name matches no ServerName or ServerAlias does not fail. Apache falls through
+  # to "the first listed virtual host that matches" the address and port, so a vhost listed
+  # before yours over the same DocumentRoot answers without your authentication.
+  #
+  # Over TLS the name that selects the vhost is the SNI one, not the Host header: Apache says
+  # that when the handshake carries it, "that hostname is used below just like the Host: header
+  # would be used on a non-SSL connection". So setting only the header tests nothing. It leaves
+  # SNI saying your own host name, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
+  # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
+  # The URL hostname supplies SNI and the Host header; --connect-to changes only the connection destination (your address):
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
+    --connect-to "REPLACE_WITH_AN_UNCONFIGURED_NAME:443:$1:443" \
+    https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH
+                                          # 401 is the pass. 200 means another vhost served the
+                                          # protected resource with no authentication at all
+)
 ```
 
 That name has to be one your certificate already covers, typically a spare label under a
@@ -236,7 +248,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "e48edd8524256e88eec11b446901f6cdc3b75cf3083b576e8d52d861af793504",
+  "body_sha256": "31ac8015125665d3f840f19f63d520ffd31602dd0d94f2b2599f23dff619c99d",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
