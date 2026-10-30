@@ -161,11 +161,11 @@ docker compose ps --format json                 # run in dify/docker: no Publish
 # See the pinned Compose publication and daemon startup sources.
 (                                               # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) nc -vz -w 3 "$1" 5003 ;;                # from an outside network, and the authority here:
   esac
 )
@@ -221,10 +221,10 @@ docker compose ps --format json                 # run in dify/docker: no Publish
   # Stdin closes the argv channel only: it does not hide the key from set -x
   # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIFY_APP_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Dify app key on the set -- line above; not probing"; exit ;; esac
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Dify app key on the set -- line above; not probing"; exit 2 ;; esac
   curl -q -g -sS -w '\ndify no-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 http://127.0.0.1:8080/v1/parameters
   printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS -w '\ndify with-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 -H @- http://127.0.0.1:8080/v1/parameters
 )
@@ -453,7 +453,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "03b38059c9ce3626a772b1c55118e76b124f45601a4d35f767a3f5f0eee983ce",
+  "body_sha256": "a5b248c898492b447bed03a19566576895e32009e84c3464f117ef4fc807d929",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
