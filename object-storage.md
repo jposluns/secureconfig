@@ -45,16 +45,16 @@ The following applies the baseline and reads it back. Account changes affect oth
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ACCOUNT_ID' 'REPLACE_WITH_BUCKET'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not configuring"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not configuring"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not configuring"; exit; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not configuring"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "substitute the account ID; not configuring" ;;
+      echo "substitute the account ID; not configuring"; exit 2 ;;
     *)
       case "$2" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-          echo "substitute the bucket; not configuring" ;;
+          echo "substitute the bucket; not configuring"; exit 2 ;;
         *)
           aws s3control put-public-access-block --account-id "$1" \
             --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true || exit
@@ -269,12 +269,12 @@ Enforce public access prevention on the bucket, and enforce the organization-pol
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BUCKET'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not configuring"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not configuring"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not configuring"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not configuring"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "substitute the bucket; not configuring" ;;
+      echo "substitute the bucket; not configuring"; exit 2 ;;
     *)
       gcloud storage buckets update "gs://$1" \
         --uniform-bucket-level-access --public-access-prevention || exit
@@ -354,16 +354,16 @@ After granting and testing the Entra data role, apply the authorization and tran
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_STORAGE_ACCOUNT' 'REPLACE_WITH_RESOURCE_GROUP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not configuring"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not configuring"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not configuring"; exit; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not configuring"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "substitute the storage account; not configuring" ;;
+      echo "substitute the storage account; not configuring"; exit 2 ;;
     *)
       case "$2" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-          echo "substitute the resource group; not configuring" ;;
+          echo "substitute the resource group; not configuring"; exit 2 ;;
         *)
           az storage account update --name "$1" --resource-group "$2" \
             --allow-blob-public-access false --allow-shared-key-access false \
@@ -497,7 +497,7 @@ The service-role key bypasses RLS and never reaches a browser. Server secret key
 
 ## Verify
 
-REASONED: Cloud comparison scope; no authorized cloud fixtures. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited sources listed in the next two sentences, exposed anonymous requests return fixture bytes and fixed private routes deny them while authorized controls succeed. The AWS, Cloudflare and Google Cloud sources are S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer); Cloudflare R2 public buckets, API tokens, presigned URLs; Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`. The Azure and Supabase sources are Azure Blob anonymous access remediation and SAS overview; and Supabase Storage buckets, access control, and downloads. Locally, all five Bash blocks passed bash -n and ShellCheck 0.11.0 with no diagnostics; 50 stubbed guard cases printed refusal messages without invoking curl. These comparisons require controlled cloud resources and harmless fixture objects. No live cloud comparison below was run during authoring. Demonstrate exposed and fixed behavior on disposable fixtures without exposing production data. A transport failure, missing object, failed signing operation, or absent permission to inspect configuration is inconclusive.
+REASONED: Cloud comparison scope; no authorized cloud fixtures. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited sources listed in the next two sentences, exposed anonymous requests return fixture bytes and fixed private routes deny them while authorized controls succeed. The AWS, Cloudflare and Google Cloud sources are S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer); Cloudflare R2 public buckets, API tokens, presigned URLs; Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`. The Azure and Supabase sources are Azure Blob anonymous access remediation and SAS overview; and Supabase Storage buckets, access control, and downloads. Locally, all five Bash blocks passed bash -n and ShellCheck 0.11.0 with no diagnostics; 50 stubbed guard cases printed refusal messages without invoking curl. Those bash -n, ShellCheck and stubbed guard runs covered the five Bash blocks in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. These comparisons require controlled cloud resources and harmless fixture objects. No live cloud comparison below was run during authoring. Demonstrate exposed and fixed behavior on disposable fixtures without exposing production data. A transport failure, missing object, failed signing operation, or absent permission to inspect configuration is inconclusive.
 
 ### 1. Check signed-link lifetimes
 
@@ -505,17 +505,17 @@ REASONED: Cloud comparison scope; no authorized cloud fixtures. A local Supabase
 
 | Provider | Expiry control | Documented default and limit |
 | --- | --- | --- |
-| S3 | `aws s3 presign --expires-in` | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. Per the guide's cited AWS CLI `s3 presign` (`--expires-in` default and maximum), the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. Local stub signing recorded --expires-in 60 and the identical saved URL on both signed requests; it did not validate AWS signing or expiry. Default 3600 seconds; maximum 604800. Signing credentials can expire sooner. [CLI](https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html). |
-| R2 | JavaScript signer `expiresIn` | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. Per the guide's cited Cloudflare R2 public buckets, API tokens, presigned URLs, the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. The generic GET block in step 3 passed bash -n and ShellCheck 0.11.0 with no diagnostics, and stub execution printed http=200 exit=0 err=; no provider signer ran. Set explicitly; supported lifetime 1-604800 seconds. Use the S3 API domain. [Presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/). |
-| GCS | `gcloud storage sign-url --duration` | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. Per the guide's cited Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`, the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. The generic GET block in step 3 passed bash -n and ShellCheck 0.11.0 with no diagnostics, and stub execution printed http=200 exit=0 err=; no provider signer ran. Default 1h; maximum 12h with system-managed signing, or 7d with `--private-key-file` or an activated service account. [CLI](https://docs.cloud.google.com/sdk/gcloud/reference/storage/sign-url). |
-| Azure | `generate-sas --auth-mode login --as-user`, with explicit start and expiry | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. Per the guide's cited Azure user delegation SAS CLI, the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. The generic GET block in step 3 passed bash -n and ShellCheck 0.11.0 with no diagnostics, and stub execution printed http=200 exit=0 err=; no provider signer ran. User delegation maximum 7d, bounded by the delegation key and any applicable stricter policy. [Creation](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-user-delegation-sas-create-cli). |
+| S3 | `aws s3 presign --expires-in` | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. Per the guide's cited AWS CLI `s3 presign` (`--expires-in` default and maximum), the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. Local stub signing recorded --expires-in 60 and the identical saved URL on both signed requests; it did not validate AWS signing or expiry. That stub run covered the S3 Verify block in an earlier form, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run. Default 3600 seconds; maximum 604800. Signing credentials can expire sooner. [CLI](https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html). |
+| R2 | JavaScript signer `expiresIn` | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. Per the guide's cited Cloudflare R2 public buckets, API tokens, presigned URLs, the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. The generic GET block in step 3 passed bash -n and ShellCheck 0.11.0 with no diagnostics, and stub execution printed http=200 exit=0 err=; no provider signer ran. The bash -n, ShellCheck and stub runs covered the step 3 block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Set explicitly; supported lifetime 1-604800 seconds. Use the S3 API domain. [Presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/). |
+| GCS | `gcloud storage sign-url --duration` | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. Per the guide's cited Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`, the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. The generic GET block in step 3 passed bash -n and ShellCheck 0.11.0 with no diagnostics, and stub execution printed http=200 exit=0 err=; no provider signer ran. The bash -n, ShellCheck and stub runs covered the step 3 block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Default 1h; maximum 12h with system-managed signing, or 7d with `--private-key-file` or an activated service account. [CLI](https://docs.cloud.google.com/sdk/gcloud/reference/storage/sign-url). |
+| Azure | `generate-sas --auth-mode login --as-user`, with explicit start and expiry | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. Per the guide's cited Azure user delegation SAS CLI, the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. The generic GET block in step 3 passed bash -n and ShellCheck 0.11.0 with no diagnostics, and stub execution printed http=200 exit=0 err=; no provider signer ran. The bash -n, ShellCheck and stub runs covered the step 3 block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. User delegation maximum 7d, bounded by the delegation key and any applicable stricter policy. [Creation](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-user-delegation-sas-create-cli). |
 | Supabase | `createSignedUrl(path, seconds)` | REASONED: Signed-link lifetime scope; no authorized provider signing identity or known cloud object is available. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited Supabase createBucket and createSignedUrl, the same saved URL should read the fixture before expiry and be denied afterward; an exposed public route must be tested separately. The local JavaScript syntax check passed with no diagnostics; it did not execute createSignedUrl. Supply seconds explicitly; 3600 is an example, not a default. Auth-key rotation does not revoke the link. [Reference](https://supabase.com/docs/reference/javascript/file-buckets-createsignedurl), [revocation caveat](https://supabase.com/docs/guides/storage/serving/downloads). |
 
 ### 2. Prove authorized S3 access, anonymous denial, and expiry
 
 **REASONED:** No S3 account, signing role, or known object was supplied. On a deliberately exposed disposable fixture, an unsigned GET returns its bytes; after the public-access baseline, that same unsigned GET must be denied while an authorized HTTPS GET succeeds. The saved signed URL must subsequently fail after expiry. See [public-access behavior](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html) and [presigned URL behavior](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html).
 
-REASONED: S3 known-object and GET control scope; no authorized S3 signing identity or fixture bucket is available. Per the guide's cited S3 presigned URL permissions, expiry, revocation, and signature age, the authorized GET must succeed before anonymous denial can establish the fix. Locally, Bash syntax and ShellCheck 0.11.0 passed; injected responses printed 200/403/403, while a failed first control printed 'authorized control failed; no access-control conclusion' and made no later requests. These are stub observations, not S3 outcomes. Use the same bucket and object in both arguments, with the correct regional endpoint. First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access, not a missing object. S3 also returns `403` for an object you cannot list. Presigning signs a GET, so test with GET.
+REASONED: S3 known-object and GET control scope; no authorized S3 signing identity or fixture bucket is available. Per the guide's cited S3 presigned URL permissions, expiry, revocation, and signature age, the authorized GET must succeed before anonymous denial can establish the fix. Locally, Bash syntax and ShellCheck 0.11.0 passed; injected responses printed 200/403/403, while a failed first control printed 'authorized control failed; no access-control conclusion' and made no later requests. These are stub observations, not S3 outcomes. The Bash syntax, ShellCheck and stub runs covered the S3 Verify block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Use the same bucket and object in both arguments, with the correct regional endpoint. First prove the object exists and is readable WITH authorization, so a later anonymous denial is about access, not a missing object. S3 also returns `403` for an object you cannot list. Presigning signs a GET, so test with GET.
 
 REASONED: following block; S3 public-access and presigned-URL documentation supply the expected outcomes; no authorized S3 account, signing role or known object was supplied.
 
@@ -523,16 +523,16 @@ REASONED: following block; S3 public-access and presigned-URL documentation supp
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 's3://REPLACE_WITH_BUCKET/model.safetensors' 'https://REPLACE_WITH_BUCKET.s3.REPLACE_WITH_REGION.amazonaws.com/model.safetensors'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "substitute the S3 URI; not probing" ;;
+      echo "substitute the S3 URI; not probing"; exit 2 ;;
     *)
       case "$2" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*)
-          echo "substitute the same object's unsigned HTTPS URL; not probing" ;;
+          echo "substitute the same object's unsigned HTTPS URL; not probing"; exit 2 ;;
         https://*)
           # First prove the object exists and is readable WITH authorization.
           # S3 also returns 403 for an object you cannot list. presign signs a GET.
@@ -563,13 +563,13 @@ REASONED: following block; S3 public-access and presigned-URL documentation supp
               esac ;;
             *) echo "signing did not return HTTPS; not probing" ;;
           esac ;;
-        *) echo "use the canonical unsigned HTTPS object URL; not probing" ;;
+        *) echo "use the canonical unsigned HTTPS object URL; not probing"; exit 2 ;;
       esac ;;
   esac
 )
 ```
 
-REASONED: preceding block; S3 signing, authorized control, anonymous denial, expiry sequence, and local guards. No authorized S3 account or fixture object is available. Per the guide's cited S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer) and S3 presigned URL permissions, expiry, revocation, and signature age, exposed unsigned reads return bytes and fixed reads follow the sequence below. Bash syntax and ShellCheck 0.11.0 passed without diagnostics. Injected response sequences printed 200/200/200 and 200/403/403; a failed authorized control stopped later requests. Six unsafe signing-output cases printed refusal messages without invoking curl. These local stubs establish shell control flow only. Expected sequence: authorized `200`, anonymous `403`, then denial of the expired signed URL. A DNS, TLS, proxy, or local curl error is inconclusive. Client proxies are disabled so a proxy cannot answer for S3. One object is not the whole bucket: repeat for other keys, prefixes, and enabled access paths.
+REASONED: preceding block; S3 signing, authorized control, anonymous denial, expiry sequence, and local guards. No authorized S3 account or fixture object is available. Per the guide's cited S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer) and S3 presigned URL permissions, expiry, revocation, and signature age, exposed unsigned reads return bytes and fixed reads follow the sequence below. Bash syntax and ShellCheck 0.11.0 passed without diagnostics. Injected response sequences printed 200/200/200 and 200/403/403; a failed authorized control stopped later requests. Six unsafe signing-output cases printed refusal messages without invoking curl. These local stubs establish shell control flow only. The Bash syntax, ShellCheck and stub runs covered the preceding block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Expected sequence: authorized `200`, anonymous `403`, then denial of the expired signed URL. A DNS, TLS, proxy, or local curl error is inconclusive. Client proxies are disabled so a proxy cannot answer for S3. One object is not the whole bucket: repeat for other keys, prefixes, and enabled access paths.
 
 The signed URL stays out of curl's process arguments because the shell's builtin `printf` supplies it through stdin. The block generates it by command substitution and it is never typed, so it is not in this block's shell history. This does not protect it from shell tracing, copied terminal output, or the account owner's process inspection. Keep `set -x` off. The curl status fields require curl 7.75.0 or later.
 
@@ -583,12 +583,12 @@ The signed URL stays out of curl's process arguments because the shell's builtin
   # A signed URL substituted on the set -- line is a credential and enters shell
   # history. Use a short-lived signed URL or clear that history line afterward.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_FIXTURE_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*)
-      echo "substitute a complete fixture URL without control characters; not probing" ;;
+      echo "substitute a complete fixture URL without control characters; not probing"; exit 2 ;;
     https://*)
       set -- "${1//\\/\\\\}"
       set -- "${1//\"/\\\"}"
@@ -596,12 +596,12 @@ The signed URL stays out of curl's process arguments because the shell's builtin
         curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
           -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --config -
       ;;
-    *) echo "use an HTTPS fixture URL; not probing" ;;
+    *) echo "use an HTTPS fixture URL; not probing"; exit 2 ;;
   esac
 )
 ```
 
-REASONED: preceding block; generic HTTPS fixture GET, URL guards and escaping, credential handling, and provider comparisons. No R2, GCS, Azure, or Supabase fixture accounts or URLs are available. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited sources listed in the next sentence, exposed anonymous routes serve bytes and fixed private routes deny them while authorized controls succeed. Those cited sources are Cloudflare R2 public buckets, API tokens, presigned URLs; Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`; Azure Blob anonymous access remediation and SAS overview; and Supabase Storage buckets, access control, and downloads. Bash syntax and ShellCheck 0.11.0 passed without diagnostics; a stub printed http=200 exit=0 err= and recorded the escaped URL on stdin, absent from argv. HTTP and control-character inputs printed refusal messages without invoking curl. This does not establish remote access control or credential secrecy. A pasted signed URL can enter shell history even though it is absent from curl's arguments, and stdin does not protect it from shell tracing or the account owner's process inspection. Use a shell session configured not to retain credentials, and do not record signed URLs in test reports.
+REASONED: preceding block; generic HTTPS fixture GET, URL guards and escaping, credential handling, and provider comparisons. No R2, GCS, Azure, or Supabase fixture accounts or URLs are available. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited sources listed in the next sentence, exposed anonymous routes serve bytes and fixed private routes deny them while authorized controls succeed. Those cited sources are Cloudflare R2 public buckets, API tokens, presigned URLs; Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`; Azure Blob anonymous access remediation and SAS overview; and Supabase Storage buckets, access control, and downloads. Bash syntax and ShellCheck 0.11.0 passed without diagnostics; a stub printed http=200 exit=0 err= and recorded the escaped URL on stdin, absent from argv. HTTP and control-character inputs printed refusal messages without invoking curl. The Bash syntax, ShellCheck and stub runs covered the preceding block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. This does not establish remote access control or credential secrecy. A pasted signed URL can enter shell history even though it is absent from curl's arguments, and stdin does not protect it from shell tracing or the account owner's process inspection. Use a shell session configured not to retain credentials, and do not record signed URLs in test reports.
 
 | Provider | Required comparison |
 | --- | --- |
@@ -628,13 +628,13 @@ REASONED: preceding block; generic HTTPS fixture GET, URL guards and escaping, c
 
 ### Verification scope and local observations
 
-REASONED: Local observation provenance; the original authoring evidence is unavailable for authentication, so the following report of the original authoring runs is retained unauthenticated. This marking run independently passed bash -n and ShellCheck 0.11.0 on five blocks with no diagnostics, parsed seven JSON examples, passed two JavaScript syntax checks with no diagnostics, and observed 50 stubbed guard refusals without invoking curl. These runs establish local syntax and selected guards, not the provider comparisons. The provider behavior rests on the following Sources entries together, listed across this sentence and the next: S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer); S3 presigned URL permissions, expiry, revocation, and signature age; Cloudflare R2 public buckets, API tokens, presigned URLs. The Sources entries continuing that list are Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`; Azure Blob anonymous access remediation and SAS overview; Supabase Storage buckets, access control, and downloads; Supabase createBucket; and createSignedUrl. Historical report: All five bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring. Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines in 50 cases. The repository's guard-convention scanner reported no findings on these blocks. All seven JSON examples parsed, and the two JavaScript examples passed syntax checking.
+REASONED: Local observation provenance; the original authoring evidence is unavailable for authentication, so the following report of the original authoring runs is retained unauthenticated. This marking run independently passed bash -n and ShellCheck 0.11.0 on five blocks with no diagnostics, parsed seven JSON examples, passed two JavaScript syntax checks with no diagnostics, and observed 50 stubbed guard refusals without invoking curl. These runs establish local syntax and selected guards, not the provider comparisons. This marking run covered the five Bash blocks in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. The provider behavior rests on the following Sources entries together, listed across this sentence and the next: S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer); S3 presigned URL permissions, expiry, revocation, and signature age; Cloudflare R2 public buckets, API tokens, presigned URLs. The Sources entries continuing that list are Google Cloud Storage uniform bucket-level access, public access prevention, signed URLs, `gcloud storage sign-url`; Azure Blob anonymous access remediation and SAS overview; Supabase Storage buckets, access control, and downloads; Supabase createBucket; and createSignedUrl. Historical report: All five bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring. Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines in 50 cases. The repository's guard-convention scanner reported no findings on these blocks. All seven JSON examples parsed, and the two JavaScript examples passed syntax checking. The historical bash -n, ShellCheck and guard runs also covered the five Bash blocks in an earlier form, whose guard refusals ended with status 0.
 
 REASONED: Historical evidence boundary; no original authoring receipts, authorized cloud fixtures, or deployed bundle are available. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. The preceding local reruns do not establish SQL policy enforcement or cloud outcomes. Per the guide's cited Supabase Storage buckets, access control, and downloads, exposed public retrieval serves bytes while fixed private retrieval requires authorization; this remains unobserved here. The following statement describes the original authoring report, not subsequent gate runs: These are local syntax and guard results only. SQL policies were source-traced but not executed against Supabase. No live cloud behavior, deployed-bundle inspection, or whole-corpus gate result is claimed.
 
 | Check scope | Deployment comparison and prerequisites | Status |
 | --- | --- | --- |
-| Cloud and application checks | REASONED: Full cloud and application comparison inventory; the accounts, identities, objects, policies, networks, keys, logs, sessions, and client build listed here are unavailable. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited S3 presigned URL permissions, expiry, revocation, and signature age; Cloudflare R2 public buckets, API tokens, presigned URLs; GCS IAM conditions and listing limitations; Azure network restrictions; and Supabase Storage buckets, access control, and downloads, these comparisons require the exposed/fixed outcomes specified above, including successful authorized controls. Local Bash and JavaScript syntax checks passed without diagnostics, seven JSON examples parsed, and 50 stubbed guard cases refused inputs without invoking curl; provider enforcement remains unobserved. Demonstrate every REASONED comparison above with controlled S3, R2, GCS, Azure, and Supabase accounts; harmless objects; narrowly scoped application and signing identities; organization-policy access; TLS and private-network fixtures; KMS keys; retention and logging fixtures; Azure diagnostics; two Supabase users and buckets; and the deployed client build. Record effective settings, CLI/SDK versions, operations, identities, response/error codes and request versions, object-byte controls, expiry/revocation timing, logs, and disposable-data cleanup. Include S3 account and bucket readbacks, ACL migration, transport and endpoint denials, signature-age policy, versioning/Object Lock/MFA Delete behavior, Azure SAS-policy exceptions and delegation revocation, GCS conditional IAM and signing modes, every R2 route and CORS flow, and Supabase cross-bucket and per-operation denials. Never retain usable signed URLs or credentials in the record. | REASONED from the cited vendor documentation; live behavior is not demonstrated. |
+| Cloud and application checks | REASONED: Full cloud and application comparison inventory; the accounts, identities, objects, policies, networks, keys, logs, sessions, and client build listed here are unavailable. A local Supabase stand-up opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Per the guide's cited S3 presigned URL permissions, expiry, revocation, and signature age; Cloudflare R2 public buckets, API tokens, presigned URLs; GCS IAM conditions and listing limitations; Azure network restrictions; and Supabase Storage buckets, access control, and downloads, these comparisons require the exposed/fixed outcomes specified above, including successful authorized controls. Local Bash and JavaScript syntax checks passed without diagnostics, seven JSON examples parsed, and 50 stubbed guard cases refused inputs without invoking curl; provider enforcement remains unobserved. The Bash syntax checks and stubbed guard cases covered the five Bash blocks in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Demonstrate every REASONED comparison above with controlled S3, R2, GCS, Azure, and Supabase accounts; harmless objects; narrowly scoped application and signing identities; organization-policy access; TLS and private-network fixtures; KMS keys; retention and logging fixtures; Azure diagnostics; two Supabase users and buckets; and the deployed client build. Record effective settings, CLI/SDK versions, operations, identities, response/error codes and request versions, object-byte controls, expiry/revocation timing, logs, and disposable-data cleanup. Include S3 account and bucket readbacks, ACL migration, transport and endpoint denials, signature-age policy, versioning/Object Lock/MFA Delete behavior, Azure SAS-policy exceptions and delegation revocation, GCS conditional IAM and signing modes, every R2 route and CORS flow, and Supabase cross-bucket and per-operation denials. Never retain usable signed URLs or credentials in the record. | REASONED from the cited vendor documentation; live behavior is not demonstrated. |
 
 ## Common mistakes
 
@@ -783,7 +783,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "42220c34511a9ffb6ca2f36707536b565b9b7bc5daf8dc519f07c9f61a05c9d4",
+  "body_sha256": "6b53211ed10a8f57bdd3aa6fac58830a40ef0a294fb9b5dd4385870721f54357",
   "components": {
     "s3": {
       "name": "Amazon S3 documentation",
