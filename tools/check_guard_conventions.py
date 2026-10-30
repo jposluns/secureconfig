@@ -75,7 +75,8 @@ WHAT THIS CATCHES
 
   C4-EXAMPLE-HOST  (--example-hosts only; NOT yet registered in run_all_checks)
                  in a fenced shell block inside a Verify section, or in an
-                 inline Verify command that C3 already parses, a
+                 inline Verify command in a guide the C3 inline scan covers
+                 (a guide listed in tools/version_basis_guides.txt), a
                  probe-class command (PROBE_CMDS or openssl s_client) has an
                  argv word whose host is example.com, example.net,
                  example.org or a subdomain, in any letter case. A host is
@@ -124,7 +125,8 @@ SCOPE
 
   In enrolled guides (tools/version_basis_guides.txt), Verify-section inline
   code spans also run through the SAME command walk, retaining only C3
-  credential findings. Section selection and metadata masking come from
+  credential findings and, under --example-hosts, C4-EXAMPLE-HOST findings.
+  Section selection and metadata masking come from
   check_verify_marking.guide_context, which scan_guide itself uses. Matched
   equal-length backticks, including double backticks and multiline spans,
   are recognized in prose, lists, tables, headings and quoted prose. Newlines
@@ -158,21 +160,12 @@ SCOPE
   reason is NOT honored.
 
   C4-EXAMPLE-HOST ignores that general waiver, whatever its reason. Its own
-  waiver is one of two exact comment lines, each waiving C4 alone:
-      # guard-conventions: allow C4-EXAMPLE-HOST wrong-host negative control: <reason>
+  waiver is one exact comment line, which waives C4 alone:
       # guard-conventions: allow C4-EXAMPLE-HOST egress negative control: <reason>
-  The wrong-host form is honored only when the same command routes every
-  reserved host it names to a $-expanded address: the host is the source
-  host of a curl --resolve host:port:addr or --connect-to
-  host:port:addr:port value whose addr holds a $, or the openssl s_client
-  -servername name when the -connect address (port dropped) holds a $. A
-  route for another host, or a $ only in a port, does not count. The
-  reserved name is then a deliberately wrong host sent to the reader's own
-  server. The egress form is honored only when
-  every reserved host in the command is example.com, example.net or
-  example.org itself, which IANA serves, for a probe that must fail when
-  egress is enforced. Any other waiver whose reason starts with C4- grants
-  nothing.
+  The egress waiver is honored only when every reserved host in the command
+  is example.com, example.net or example.org itself, which IANA serves, for
+  a probe that must fail when egress is enforced. Any other waiver whose
+  reason starts with C4- grants nothing.
 
 KNOWN REMAINING BYPASSES (recorded so a pass is never mistaken for a
 guarantee)
@@ -252,8 +245,12 @@ guarantee)
     expansion such as "https://${H:-app.example.com}/" yields the host
     ${h, so none of these forms is reported. The _C4_SKIP_OPTS tables are
     bounded: the value of a non-host option missing from them is still read
-    as a host. A C4 finding on an inline Verify command has no waiver form;
-    a deliberate wrong-host or egress probe belongs in a fence.
+    as a host. The value of a separate ssh, scp or sftp -o option is
+    skipped, so a host named by -o ProxyJump=, -o HostName= or
+    -o ProxyCommand= is not reported; only the attached -oProxyJump=host
+    and -oHostName=host spellings are read. A C4 finding on an inline
+    Verify command has no waiver form; a deliberate egress probe belongs in
+    a fence.
   - the waiver comment is greppable; review waivers in code review.
   - C2: composite adjacent punctuation such as );, )& or )) can confuse
     command and scope boundaries. Write the guard in the standard
@@ -543,10 +540,7 @@ _C4_SKIP_OPTS = {name: frozenset(opts.split())
 _C4_SKIP_OPTS["netcat"] = _C4_SKIP_OPTS["nc"]
 _C4_SKIP_OPTS["curl"] = (_VALUE_OPTS_NONURL | _SKIP_VALUE_OPTS
                          | frozenset(("--connect-to",)))
-# curl --connect-to HOST1:PORT1:HOST2:PORT2; HOST2 may be a bracketed IPv6.
-_C4_CONNECT_TO_RE = re.compile(r"([^:]*):([^:]*):(.*):([^:]*)")
-C4_WAIVER_RE = re.compile(
-    r"C4-EXAMPLE-HOST (wrong-host|egress) negative control: \S.*")
+C4_WAIVER_RE = re.compile(r"C4-EXAMPLE-HOST egress negative control: \S.*")
 
 MESSAGES = {
     "C1-MISSING-Q": "curl lacks -q/--disable: the reader's ~/.curlrc (proxy, "
@@ -1476,44 +1470,9 @@ def _c4_reserved_hosts(name, args):
     return hosts
 
 
-def _c4_routes(name, args):
-    """(source host, destination address) pairs a probe's routing names.
-
-    curl --resolve [+]host:port:addr[,addr...] and --connect-to
-    host:port:addr:port route a source host; openssl s_client sends the
-    -servername name to the -connect address, whose port is dropped.
-    """
-    routes, connect, sni = [], None, None
-    for i, a in enumerate(args):
-        opt, eq, val = a.partition("=")
-        if not eq:
-            val = args[i + 1] if i + 1 < len(args) else ""
-        if name == "curl" and opt == "--resolve":
-            parts = val.lstrip("+").split(":", 2)
-            if len(parts) == 3:
-                routes.append((parts[0], parts[2]))
-        elif name == "curl" and opt == "--connect-to":
-            m = _C4_CONNECT_TO_RE.fullmatch(val)
-            if m:
-                routes.append((m.group(1), m.group(3)))
-        elif name == "openssl" and opt == "-connect":
-            connect = val.rpartition(":")[0] or val
-        elif name == "openssl" and opt == "-servername":
-            sni = val
-    if connect is not None and sni is not None:
-        routes.append((sni, connect))
-    return [(_c4_norm(host), dest) for host, dest in routes]
-
-
-def _c4_waiver_holds(kind, name, args, hosts):
-    """A C4 waiver holds only for its stated shape (see the docstring)."""
-    if kind == "egress":
-        return all(h in RESERVED_EXAMPLE_DOMAINS for h in hosts)
-    # wrong-host: every flagged host is a route's source host (or the SNI
-    # name), and every destination address of that route is $-expanded.
-    routed = {host for host, dest in _c4_routes(name, args)
-              if dest and all("$" in d for d in dest.split(","))}
-    return all(h in routed for h in hosts)
+def _c4_waiver_holds(hosts):
+    """The C4 egress waiver holds only when every flagged host is an apex."""
+    return all(h in RESERVED_EXAMPLE_DOMAINS for h in hosts)
 
 
 def _console_pairs(body, start):
@@ -1738,17 +1697,16 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
     c2_records = []  # aligned [(literal flags, lifted), ...]
     strict_records = []  # aligned tokens retaining unknown value references
     pending_waiver = False
-    pending_c4_waiver = None
-    c4_waivers = {}  # line -> "wrong-host" or "egress"
+    pending_c4_waiver = False
+    c4_waivers = set()  # lines an exact C4 egress waiver precedes
     for lineno, raw in lls:
         wm = WAIVER_RE.search(raw)
         if wm and raw.lstrip().startswith("#") and wm.group(1).strip():
             if wm.group(1).startswith("C4-"):
-                # C4 has its own exact waivers, which waive C4 alone; any
-                # other C4- reason grants nothing.
-                c4 = C4_WAIVER_RE.fullmatch(wm.group(1).strip())
-                if c4:
-                    pending_c4_waiver = c4.group(1)
+                # C4 has its own exact egress waiver, which waives C4 alone;
+                # any other C4- reason grants nothing.
+                if C4_WAIVER_RE.fullmatch(wm.group(1).strip()):
+                    pending_c4_waiver = True
                     stats.waivers += 1
                 continue
             pending_waiver = True
@@ -1769,12 +1727,12 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                 stats.unparseable += 1
         records.append((lineno, raw, token_lines, pending_waiver))
         if pending_c4_waiver:
-            c4_waivers[lineno] = pending_c4_waiver
+            c4_waivers.add(lineno)
         c2_records.append(c2_lines)
         strict_records.append(strict_lines)
         if raw.strip():
             pending_waiver = False
-            pending_c4_waiver = None
+            pending_c4_waiver = False
 
     termination_shadowed = _c2_shadows_termination(records)
     uri_builtins_uncertain = (
@@ -1998,9 +1956,8 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                 name = word.rsplit("/", 1)[-1]
                 c4_args = _drop_redirections(stripped[1:])
                 hosts = _c4_reserved_hosts(name, c4_args)
-                if hosts and not (
-                        line in c4_waivers and _c4_waiver_holds(
-                            c4_waivers[line], name, c4_args, hosts)):
+                if hosts and not (line in c4_waivers
+                                  and _c4_waiver_holds(hosts)):
                     findings.append((path, line, "C4-EXAMPLE-HOST",
                                      " (probe: %s, host: %s)"
                                      % (name, hosts[0])))
@@ -4315,11 +4272,14 @@ _C4_CASES = [
      "https://notexample.com/ https://example.com.test/\n", []),
     ("payload-values", "curl -q -g -H 'Host: evil.example.com' -e "
      "https://example.com/ --data 'to=a@example.com' \"https://$1/\"\n", []),
+    # The wrong-host waiver form was removed and, like any other C4- reason,
+    # now grants nothing, so every wrong-host case below reports C4.
     ("wrong-host-routed", _C4_WRONG_HOST
      + "curl -q -g --resolve \"example.com:443:$1\" https://example.com/\n",
-     []),
+     ["C4-EXAMPLE-HOST"]),
     ("wrong-host-openssl", _C4_WRONG_HOST
-     + "openssl s_client -connect \"$1:443\" -servername example.com\n", []),
+     + "openssl s_client -connect \"$1:443\" -servername example.com\n",
+     ["C4-EXAMPLE-HOST"]),
     ("wrong-host-unrouted", _C4_WRONG_HOST + "curl -q https://example.com/\n",
      ["C4-EXAMPLE-HOST"]),
     ("wrong-host-other-route", _C4_WRONG_HOST
@@ -4333,7 +4293,17 @@ _C4_CASES = [
      "https://app.example.com/\n", ["C4-EXAMPLE-HOST"]),
     ("wrong-host-connect-to", _C4_WRONG_HOST
      + "curl -q --connect-to \"example.com:443:$1:443\" "
-     "https://example.com/\n", []),
+     "https://example.com/\n", ["C4-EXAMPLE-HOST"]),
+    ("wrong-host-route-port", _C4_WRONG_HOST
+     + "curl -q --resolve \"example.com:8443:$1\" https://example.com/\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("wrong-host-http-port", _C4_WRONG_HOST
+     + "curl -q --resolve \"example.com:443:$1\" http://example.com/\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("wrong-host-mixed-routes", _C4_WRONG_HOST
+     + "curl -q --resolve \"example.com:443:$1\" --resolve "
+     "\"example.com:443:203.0.113.10\" https://example.com/\n",
+     ["C4-EXAMPLE-HOST"]),
     ("wrong-host-openssl-port-only", _C4_WRONG_HOST
      + "openssl s_client -connect \"example.com:${P}\" -servername "
      "example.com\n", ["C4-EXAMPLE-HOST"]),
@@ -4344,8 +4314,7 @@ _C4_CASES = [
     ("ssh-file-options", "ssh -i example.com -F example.org \"$1\"\n", []),
     ("nmap-exclude", "nmap -oN example.net --exclude example.com \"$1\"\n",
      []),
-    ("waiver-is-c4-only", _C4_WRONG_HOST
-     + "curl --resolve \"example.com:443:$1\" https://example.com/\n",
+    ("waiver-is-c4-only", _C4_EGRESS + "curl https://example.com/\n",
      ["C1-MISSING-Q"]),
     ("egress-apex", _C4_EGRESS + "curl -q https://example.com/\n", []),
     ("egress-subdomain", _C4_EGRESS + "curl -q https://app.example.com/\n",

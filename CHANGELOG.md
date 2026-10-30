@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-30
 
-- Added C4-EXAMPLE-HOST to `tools/check_guard_conventions.py`, opt-in through `--example-hosts` until the remaining guides are swept: a Verify probe whose argv names example.com, example.net, example.org or a subdomain is reported, and a general waiver no longer exempts the probe. Only an exact wrong-host or egress negative-control waiver, each checked against its shape, waives C4. The #1053 and #1055 host guards now also refuse `@`, `?`, `#` and `%`, with `#` as a quoted alternative so the gate's tokenizer keeps each guard's `exit`. `kubernetes.md` and `lighttpd.md` take the reader's host on a guarded `set --` line, and the kubernetes node-scan marker cites the v1beta1 defaults source (#1060)
+- Added C4-EXAMPLE-HOST to `tools/check_guard_conventions.py`, opt-in through `--example-hosts` until the remaining guides are swept: a Verify probe whose argv names example.com, example.net, example.org or a subdomain is reported, and a general waiver no longer exempts the probe. Only an exact egress negative-control waiver, honored only for the apex names, waives C4. The #1053 and #1055 host guards now also refuse `@`, `?`, `#` and `%`, with `#` as a quoted alternative so the gate's tokenizer keeps each guard's `exit`. `kubernetes.md` and `lighttpd.md` take the reader's host on a guarded `set --` line, and the kubernetes node-scan marker cites the v1beta1 defaults source (#1060)
 
 ## 2026-10-29
 
