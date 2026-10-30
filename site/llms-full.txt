@@ -64022,7 +64022,11 @@ else the `_APP_DB_ADAPTER` variable's default as the install task passes it, whi
 unless the task replaced it for an existing installation, and disables the other choices when one
 is locked. The page's script posts the choice as `database`, falling back to `postgresql`. The
 install handler accepts only those three values, requires an unlocked choice to be a supported and
-enabled database, and sets `_APP_DB_ADAPTER` to the locked database or else the choice. When a
+enabled database, and sets `_APP_DB_ADAPTER` to the locked database or else the choice. For a
+request without a retry step whose installation already has progress steps recorded, the handler
+deletes the progress file of an earlier run that ended in error or completed every step, so the
+request starts fresh, and otherwise sets the installer lock to an error status and answers
+"Installation already started" (409, or an error event on a stream) before any comparison. When a
 resumed installation has a saved payload and the earlier run recorded no error, the handler
 compares the stored fields with the request and refuses a mismatch, such as a nonempty posted
 `database` that differs from a stored `database`, by setting the installer lock to an error status
@@ -64046,6 +64050,7 @@ For the install handler, see the
 [web installer database validation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157),
 [web installer supported database values](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206),
 [web installer database adapter input](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243),
+[web installer resumed progress check](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L198-L221),
 [web installer resumed payload comparison](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L245-L282),
 [web installer resumed database input](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L311),
 [web installer environment preparation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L318-L320), and
@@ -64544,6 +64549,7 @@ The October 2026 date in this heading is the guide-wide documentation check, whi
 - [Appwrite 2.2.0 web installer database validation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157).
 - [Appwrite 2.2.0 web installer supported database values (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206).
 - [Appwrite 2.2.0 web installer database adapter input (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243).
+- [Appwrite 2.2.0 web installer resumed progress check (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L198-L221).
 - [Appwrite 2.2.0 web installer resumed payload comparison (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L245-L282).
 - [Appwrite 2.2.0 web installer resumed database input (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L311).
 - [Appwrite 2.2.0 web installer environment preparation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L318-L320).
@@ -64686,7 +64692,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-10",
-  "body_sha256": "8056bc3f19a4e6194e72b81a859723fbfc60526359cb07a0b4ca6bad9a1af093",
+  "body_sha256": "c0bd90c09c8d36f139dea8577e944c170d8d387028a815cca909998525cb0f20",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -64774,6 +64780,7 @@ Claims (full source mapping in the JSON block below):
         "s6fb9b6903781": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370",
         "s7d56eff0a7da": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157",
         "s9abe0896e1d5": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243",
+        "s79f740b03171": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L198-L221",
         "s2fa48cd8d192": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L245-L282",
         "s9f909d25dbd8": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L311",
         "s4cf4607fb9ae": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L318-L320",
@@ -64961,7 +64968,7 @@ Claims (full source mapping in the JSON block below):
     "source-limits-appwrite-adapter": {"text": "Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to the MariaDB, Mongo, MySQL and Postgres adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:s2ac9cf2424b0", "appwrite:s72725b186c05", "appwrite:sa6bf00f7f610", "appwrite:s5b95ad04c9e2", "appwrite:s8a44ff629c40"], "status": "REASONED"},
     "source-limits-appwrite-dev": {"text": "Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql, a development default, not a production default; the root Compose file, which the install task reads as its Compose template, passes the variable to the appwrite service without a value. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a", "appwrite:s8e5272615f2e", "appwrite:s8830e89f7a80", "appwrite:sd886b53afa75", "appwrite:scbf0003fdebc", "appwrite:s08213afcf157"], "status": "REASONED"},
     "source-limits-appwrite-console": {"text": "Appwrite 2.2.0's console variables endpoint reports _APP_DB_ADAPTER through its response model with a mariadb fallback while pool registration falls back to postgresql, so by source reading without a run an unset or empty variable gives Postgres console and database pools and a reported mariadb. Both read a set variable; this guide advises not relying on the reported value to identify the adapter.", "components": ["appwrite", "utopia-php-system"], "sources": ["appwrite:sc259dcc33931", "appwrite:s95ace139c972", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:sd2a7f2cd5865", "utopia-php-system:s432a4a7a96bf"], "status": "REASONED"},
-    "source-limits-appwrite-install-env": {"text": "Appwrite 2.2.0's install task writes _APP_DB_ADAPTER to .env, unless reusing a configuration, from a prompt answer, its database (default postgresql, or detected) or the web installer's choice (default postgresql). Its Compose generator keeps only the chosen database service and, this guide reasons, the value-less entry, which the first detection step skips; how Compose resolves it is unknown.", "components": ["appwrite"], "sources": ["appwrite:sb5b101f2f04e", "appwrite:s33547558ebc8", "appwrite:s0a6edcec1f26", "appwrite:sa737cb84c634", "appwrite:s7bb5907c66bd", "appwrite:s64b48746c27d", "appwrite:sdd1a89cf3815", "appwrite:s48bedca5fd4a", "appwrite:s2a7f2bc4e834", "appwrite:sde11935a99de", "appwrite:sd886b53afa75", "appwrite:s06b2c6eab43d", "appwrite:s805902cec1bc", "appwrite:s6fb9b6903781", "appwrite:s7d56eff0a7da", "appwrite:s9abe0896e1d5", "appwrite:sae5eb7c54f35", "appwrite:s743783a2e7c4", "appwrite:s7bba5f7d026a", "appwrite:s20f9a45c1ae4", "appwrite:s1b716f6425c4", "appwrite:s61db43082b23", "appwrite:sa319cbeaf14d", "appwrite:s0397bb7a7d9a", "appwrite:sad8784f8e9a9", "appwrite:s9f909d25dbd8", "appwrite:s2fa48cd8d192", "appwrite:s4cf4607fb9ae", "appwrite:s65c6e1b53177"], "status": "REASONED"},
+    "source-limits-appwrite-install-env": {"text": "Appwrite 2.2.0's install task writes _APP_DB_ADAPTER to .env, unless reusing a configuration, from a prompt answer, its database (default postgresql, or detected) or the web installer's choice (default postgresql). Its Compose generator keeps only the chosen database service and, this guide reasons, the value-less entry, which the first detection step skips; how Compose resolves it is unknown.", "components": ["appwrite"], "sources": ["appwrite:sb5b101f2f04e", "appwrite:s33547558ebc8", "appwrite:s0a6edcec1f26", "appwrite:sa737cb84c634", "appwrite:s7bb5907c66bd", "appwrite:s64b48746c27d", "appwrite:sdd1a89cf3815", "appwrite:s48bedca5fd4a", "appwrite:s2a7f2bc4e834", "appwrite:sde11935a99de", "appwrite:sd886b53afa75", "appwrite:s06b2c6eab43d", "appwrite:s805902cec1bc", "appwrite:s6fb9b6903781", "appwrite:s7d56eff0a7da", "appwrite:s9abe0896e1d5", "appwrite:sae5eb7c54f35", "appwrite:s743783a2e7c4", "appwrite:s7bba5f7d026a", "appwrite:s20f9a45c1ae4", "appwrite:s1b716f6425c4", "appwrite:s61db43082b23", "appwrite:sa319cbeaf14d", "appwrite:s0397bb7a7d9a", "appwrite:sad8784f8e9a9", "appwrite:s9f909d25dbd8", "appwrite:s2fa48cd8d192", "appwrite:s79f740b03171", "appwrite:s4cf4607fb9ae", "appwrite:s65c6e1b53177"], "status": "REASONED"},
     "source-limits-adapter-docs": {"text": "At the time of writing, Appwrite's environment documentation lists MariaDB and MongoDB and gives _APP_DB_ADAPTER a mongodb default, conflicting with Appwrite 2.2.0, which defaults to postgresql, a value that page does not list.", "components": ["appwrite-docs", "appwrite"], "sources": ["appwrite-docs:s2bf9a4746d28", "appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca"], "status": "REASONED"}
   }
 }

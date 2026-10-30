@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-30
+
+- `pocketbase.md` now says that the Appwrite 2.2.0 web install handler, given a request without a retry step for an installation that already has progress steps recorded, deletes the progress file of an earlier run that ended in error or completed every step, so the request starts fresh, and otherwise refuses the request with "Installation already started" before the saved-payload comparison. The guide cites the handler lines for both paths. `TODO.md` adds row 1.388, which records that the served Appwrite documentation now documents settings from 2.3.0 to 2.6.2 and deprecates creating API keys through the Project API, against the guide's 2.2.0 basis, and leaves the basis decision open (#1059)
+
 ## 2026-10-29
 
 - `pocketbase.md` now gives October 2026 as its documentation date, after a recheck on 2026-10-29 of the 14 rolling Appwrite and PocketBase pages that the guide's Sources section cites, and the guide's Sources preface now says that the October date covers every rolling documentation item while pinned items carry no check date unless marked. The `verify-pb-mfa` claim and its Verify row now also cite the pinned v0.40.4 auth options file for the `authRule` comparison, which the authentication page does not cover, and TODO 1.370 is closed (#1056)
