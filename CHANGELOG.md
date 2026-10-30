@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-30
 
-- The gate suite now fails when README.md's stated guide count or category count differs from the corpus, comparing the guide count with the root guides outside not_a_guide (which the README guide index must list exactly once each) and the category count with the "###" headings of the guide index, and failing closed if the sentence is missing or reworded (#1058)
+- The gate suite now fails when `README.md`'s stated guide count or category count differs from the corpus, comparing the guide count with the root guides outside `not_a_guide` (which the README guide index must list exactly once each) and the category count with the "###" headings of the guide index. The gate also fails closed if the count sentence in the "What this is" section is missing or reworded, or if a copy of the count sentence in any letter case appears anywhere else in `README.md` outside HTML comments (#1058)
 
 ## 2026-10-29
 

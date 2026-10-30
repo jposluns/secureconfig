@@ -304,13 +304,16 @@ else
 fi
 
 echo "== README's stated guide and category counts match the corpus =="
-# README.md's "What this is" section states the corpus size in prose ("N guides across the M
-# categories indexed below"), and the gates above check category lists and membership but not
-# those numerals. The guide count is checked against the root guides (every root *.md outside
+# README.md's "## What this is" section states the corpus size in prose ("that is N guides across
+# the M categories indexed below"), and the gates above check category lists and membership but not
+# those numerals. The count sentence is matched in any letter case, with any whitespace between
+# words, after HTML comments are stripped. The "## What this is" section must hold exactly one
+# match, and any match elsewhere in README.md fails, so a stale copy can neither mask a wrong count
+# nor drift unchecked. The guide count is checked against the root guides (every root *.md outside
 # not_a_guide, less README.md itself), the same set the wiring gate above walks. The README guide
 # index must list exactly that set, once each, so the two definitions of the guide count cannot
 # drift apart. The category count is checked against the "###" headings of "## Guide index". A
-# reworded or missing sentence fails closed rather than passing unchecked.
+# reworded, missing or misplaced count sentence fails closed rather than passing unchecked.
 guide_files=()
 for f in *.md; do
   not_a_guide "$f" || [ "$f" = README.md ] || guide_files+=("$f")
@@ -322,22 +325,40 @@ guides = sys.argv[1:]
 readme = open("README.md", encoding="utf-8").read()
 readme = re.sub(r"<!--.*?-->", "", readme, flags=re.S)
 form = "that is N guides across the M categories indexed below"
-stated = re.findall(
+count_re = re.compile(
     r"\bthat\s+is\s+(\d+)\s+guides\s+across\s+the\s+(\d+)\s+categories\s+indexed\s+below\b",
-    readme)
+    re.I)
+
+
+def section_of(heading):
+    m = re.search(rf"^## {re.escape(heading)}[ \t]*$", readme, re.M)
+    if not m:
+        return None
+    rest = readme[m.end():]
+    m2 = re.search(r"^## ", rest, re.M)
+    return rest[:m2.start()] if m2 else rest
+
+
+intro = section_of("What this is")
+if intro is None:
+    print("README.md has no '## What this is' section")
+    sys.exit(1)
+stated = count_re.findall(intro)
 if len(stated) != 1:
-    print(f"README.md must state its counts exactly once as '{form}' "
-          f"(found {len(stated)}); restore that wording or update this gate")
+    print(f"README.md's '## What this is' section must state its counts exactly once as "
+          f"'{form}' (found {len(stated)}); restore that wording or update this gate")
+    sys.exit(1)
+elsewhere = len(count_re.findall(readme)) - 1
+if elsewhere:
+    print(f"README.md states its counts as '{form}' {elsewhere} more time(s) outside "
+          f"'## What this is'; remove the stale copy or update this gate")
     sys.exit(1)
 stated_guides, stated_cats = (int(n) for n in stated[0])
 
-m = re.search(r"^## Guide index[ \t]*$", readme, re.M)
-if not m:
+section = section_of("Guide index")
+if section is None:
     print("README.md has no '## Guide index' section")
     sys.exit(1)
-rest = readme[m.end():]
-m2 = re.search(r"^## ", rest, re.M)
-section = rest[:m2.start()] if m2 else rest
 cats = re.findall(r"^### (.+?)[ \t]*$", section, re.M)
 rows = re.findall(r"^\|\s*\[([^\]]+\.md)\]\(", section, re.M)
 
