@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MLflow pinned source v3.16.1, MLflow security middleware minimum 3.5.0, Docker Engine loopback publication minimum 28.0.0, nginx proxy implementation release-1.28.0, Caddy reverse proxy parser v2.11.4, oauth2-proxy documentation v7.15.4, and Authelia source v4.39.28, plus 2 more recorded bases; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
+Written against MLflow pinned source v3.16.1, MLflow security middleware minimum 3.5.0, Docker Engine loopback publication minimum 28.0.0, nginx proxy implementation release-1.28.0, Caddy reverse proxy parser v2.11.4, oauth2-proxy documentation v7.15.4, and Authelia source v4.39.28, plus 3 more recorded bases; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -36,7 +36,7 @@ The CLI help for `--host` says it plainly: "This is NOT a security setting". Do 
 
 ## 2. TLS from a fronting proxy
 
-`mlflow server` has no dedicated certificate flags (though `--uvicorn-opts` can forward `--ssl-keyfile`/`--ssl-certfile` to Uvicorn). Terminate TLS in nginx or Caddy per [nginx.md](nginx.md)/[caddy.md](caddy.md) with `proxy_pass http://127.0.0.1:5000` or `reverse_proxy 127.0.0.1:5000`, a certificate from [free-certificates.md](free-certificates.md), and `--allowed-hosts` set to the public hostname; or use a tunnel or tailnet ([cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md)). Point clients at `MLFLOW_TRACKING_URI=https://mlflow.example.com`, and never set `MLFLOW_TRACKING_INSECURE_TLS=true` in production (MLflow's own docs say the same).
+`mlflow server` has no dedicated certificate flags (though in MLflow v3.16.1 `--uvicorn-opts` forwards its options to the default Uvicorn server, for which Uvicorn 0.54.0 documents `--ssl-keyfile`/`--ssl-certfile`; MLflow rejects `--uvicorn-opts` with `--dev`, `--gunicorn-opts` or `--waitress-opts`, and `--gunicorn-opts` or `--waitress-opts` runs gunicorn or waitress instead of Uvicorn). Terminate TLS in nginx or Caddy per [nginx.md](nginx.md)/[caddy.md](caddy.md) with `proxy_pass http://127.0.0.1:5000` or `reverse_proxy 127.0.0.1:5000`, a certificate from [free-certificates.md](free-certificates.md), and `--allowed-hosts` set to the public hostname; or use a tunnel or tailnet ([cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md)). Point clients at `MLFLOW_TRACKING_URI=https://mlflow.example.com`, and never set `MLFLOW_TRACKING_INSECURE_TLS=true` in production (MLflow's own docs say the same).
 
 ## 3. Turn on the built-in basic auth
 
@@ -211,6 +211,8 @@ REASONED: preceding block; listener inventory, external TCP reachability, proxy/
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
 - MLflow `--host` option, default `127.0.0.1`, and `--port`, default `5000`, which the `MLFLOW_HOST` and `MLFLOW_PORT` environment variables override (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180
 - MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): <https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541>
+- MLflow v3.16.1 `--uvicorn-opts` forwarding to the default Uvicorn server (checked October 2026): [`--uvicorn-opts` option and `MLFLOW_UVICORN_OPTS`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L454-L459), [only one of `--gunicorn-opts`, `--waitress-opts` or `--uvicorn-opts`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L317-L325), [`--dev` refuses `--uvicorn-opts`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L602-L608), [Uvicorn unless gunicorn or waitress options are given](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L409-L411), [Uvicorn command selection](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L437-L441) and [`shlex.split` options placed after `-m uvicorn`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L303-L327).
+- Uvicorn 0.54.0 `--ssl-keyfile` and `--ssl-certfile` HTTPS options (checked October 2026): [settings documentation](https://github.com/encode/uvicorn/blob/0.54.0/docs/settings.md#L128-L134) and [command-line option definitions](https://github.com/encode/uvicorn/blob/0.54.0/uvicorn/main.py#L310-L317).
 - nginx release-1.28.0 proxy directive registration (checked October 2026; `proxy_pass` takes one upstream argument): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310
 - Caddy v2.11.4 `reverse_proxy` parser (checked October 2026): [directive registration](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40) and [upstream syntax](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62).
 - iproute2 v6.12.0 `ss` manual (checked October 2026): [numeric output](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34), [listening sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44), [process display](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163), and [TCP sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375).
@@ -248,6 +250,7 @@ Components (recorded basis):
 - authelia-source: Authelia source (v4.39.28)
 - curl: curl minimum write-out version (7.75.0)
 - iproute2: iproute2 ss manual (v6.12.0)
+- uvicorn: Uvicorn source (0.54.0)
 
 Claims (full source mapping in the JSON block below):
 
@@ -259,7 +262,7 @@ Claims (full source mapping in the JSON block below):
 - host-allowlist (REASONED; docs): Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.
 - cors (REASONED; docs): Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.
 - middleware-disable (REASONED; docs): Do not use --disable-security-middleware outside a test.
-- tls (REASONED; docs, nginx, caddy): There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.
+- tls (REASONED; docs, source, uvicorn, nginx, caddy): There are no dedicated server TLS flags; MLflow v3.16.1 --uvicorn-opts can forward Uvicorn 0.54.0 --ssl-keyfile/--ssl-certfile to the default Uvicorn server, not with --dev, --gunicorn-opts or --waitress-opts. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.
 - client-tls (REASONED; docs): Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.
 - auth-app (REASONED; docs): Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.
 - csrf-key (REASONED; docs): Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.
@@ -289,7 +292,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "ac9f6588a4d5dc4a3d32df09c82450fe806fe6fcb26084470b1e6c23805a71d4",
+  "body_sha256": "c26be5df8848ac134c74388c6608d68aa93710cdc720c9ffe1ab3548e7ed237e",
   "components": {
     "source": {
       "name": "MLflow pinned source",
@@ -302,7 +305,13 @@ Claims (full source mapping in the JSON block below):
         "s99d30948902f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L85-L86",
         "s687f1c9977cd": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L94-L105",
         "s1661739df39d": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/environment_variables.py#L493-L503",
-        "s5801c6ac1ac2": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/rest_utils.py#L254-L292"
+        "s5801c6ac1ac2": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/rest_utils.py#L254-L292",
+        "s4a930b35f97e": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L454-L459",
+        "s3df936d1e2ff": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L317-L325",
+        "sea0054295867": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L602-L608",
+        "sf711a9bb7d38": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L409-L411",
+        "s25614af41a95": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L437-L441",
+        "sa1678567912a": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L303-L327"
       }
     },
     "middleware-min": {
@@ -389,6 +398,14 @@ Claims (full source mapping in the JSON block below):
         "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
         "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375"
       }
+    },
+    "uvicorn": {
+      "name": "Uvicorn source",
+      "basis": "0.54.0",
+      "sources": {
+        "s1a2858bce328": "https://github.com/encode/uvicorn/blob/0.54.0/docs/settings.md#L128-L134",
+        "s6ad833b4b583": "https://github.com/encode/uvicorn/blob/0.54.0/uvicorn/main.py#L310-L317"
+      }
     }
   },
   "claims": {
@@ -400,7 +417,7 @@ Claims (full source mapping in the JSON block below):
     "host-allowlist": {"text": "Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
     "cors": {"text": "Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
     "middleware-disable": {"text": "Do not use --disable-security-middleware outside a test.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
-    "tls": {"text": "There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.", "components": ["docs", "nginx", "caddy"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609", "nginx:s6dfa81e36717", "caddy:s52039756d4f4", "caddy:s9dde4a2bda4c"], "status": "REASONED"},
+    "tls": {"text": "There are no dedicated server TLS flags; MLflow v3.16.1 --uvicorn-opts can forward Uvicorn 0.54.0 --ssl-keyfile/--ssl-certfile to the default Uvicorn server, not with --dev, --gunicorn-opts or --waitress-opts. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.", "components": ["docs", "source", "uvicorn", "nginx", "caddy"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609", "source:s4a930b35f97e", "source:s3df936d1e2ff", "source:sea0054295867", "source:sf711a9bb7d38", "source:s25614af41a95", "source:sa1678567912a", "uvicorn:s1a2858bce328", "uvicorn:s6ad833b4b583", "nginx:s6dfa81e36717", "caddy:s52039756d4f4", "caddy:s9dde4a2bda4c"], "status": "REASONED"},
     "client-tls": {"text": "Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "auth-app": {"text": "Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "csrf-key": {"text": "Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
