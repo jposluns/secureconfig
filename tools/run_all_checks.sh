@@ -232,19 +232,62 @@ echo "== README guide-index categories match the site menu and site/llms.txt =="
 # llms.txt is checked on its guide MEMBERSHIP too, not just its headings, because a guide
 # filed under a different category in one file than the other is the same defect one level
 # down. Its "Start here" and "Optional" sections are the llms.txt format's own and are exempt.
+# README.md and site/llms.txt are both hand-written Markdown, not generated, so their sections
+# and headings come from the pinned CommonMark parser that the count gate below uses (gate_parser,
+# locked in tools/requirements-gates.txt): a "##" section ends at the next level-one or level-two
+# heading in any form (ATX with spaces or tabs, indented up to three spaces, or setext), a "###"
+# category ends at the next heading of level three or higher, and a heading-shaped line inside a
+# code block is not a heading. The gate fails if the pinned parser is unavailable.
 if cat_diff=$(python3 - <<'PY'
 import re, sys
 
+sys.path.insert(0, "tools")
+from check_verify_marking import ParserUnavailable, gate_parser
+
+try:
+    parser = gate_parser(required=True)
+except ParserUnavailable as exc:
+    print(f"README.md's and site/llms.txt's sections need the pinned Markdown parser: {exc}")
+    sys.exit(1)
+
+
+def headings(text):
+    # The text's lines, and its headings as (tag, nesting level, line map, heading text).
+    tokens = parser.parse(text)
+    lines = re.sub(r"\r\n?", "\n", text).split("\n")
+    return lines, [(t.tag, t.level, t.map, tokens[i + 1].content.strip())
+                   for i, t in enumerate(tokens) if t.type == "heading_open"]
+
+
+def sections(heads, tag, lo, hi, top=False):
+    # (heading text, first line under it, end line) for each heading of this tag, ATX or setext,
+    # that starts at or after line lo and before line hi; with top, only headings outside any
+    # container count. A section ends at the next heading of the same or a higher level in any
+    # form, or at hi.
+    rank = int(tag[1])
+    found = []
+    for i, (t, level, (first, start), name) in enumerate(heads):
+        if t != tag or not lo <= first < hi or (top and level != 0):
+            continue
+        stops = [m[0] for u, _, m, _ in heads[i + 1:] if int(u[1]) <= rank and m[0] < hi]
+        found.append((name, start, stops[0] if stops else hi))
+    return found
+
+
+def rows(lines, start, end, pattern):
+    return re.findall(pattern, "\n".join(lines[start:end]), re.M)
+
+
 readme = open("README.md", encoding="utf-8").read()
 readme = re.sub(r"<!--.*?-->", "", readme, flags=re.S)
-m = re.search(r"^## Guide index[ \t]*$", readme, re.M)
-if not m:
+readme_lines, readme_heads = headings(readme)
+index = [s for s in sections(readme_heads, "h2", 0, len(readme_lines), top=True)
+         if s[0] == "Guide index"]
+if not index:
     print("README.md has no '## Guide index' section")
     sys.exit(1)
-rest = readme[m.end():]
-m2 = re.search(r"^## ", rest, re.M)
-section = rest[:m2.start()] if m2 else rest
-readme_cats = re.findall(r"^### (.+?)[ \t]*$", section, re.M)
+readme_sections = sections(readme_heads, "h3", index[0][1], index[0][2])
+readme_cats = [name for name, _, _ in readme_sections]
 
 html = open("site/index.html", encoding="utf-8").read()
 html = re.sub(r"<!--.*?-->", "", html, flags=re.S)
@@ -254,20 +297,18 @@ site_cats = [c for c in re.findall(r'<h2 class="sidenav-h">([^<]*)</h2>', html) 
 llms = open("site/llms.txt", encoding="utf-8").read()
 llms = re.sub(r"<!--.*?-->", "", llms, flags=re.S)
 exempt = {"Start here", "Optional"}
-llms_blocks = re.split(r"^## ", llms, flags=re.M)[1:]
+llms_lines, llms_heads = headings(llms)
 llms_cats, llms_members = [], {}
-for block in llms_blocks:
-    name = block.split("\n", 1)[0].strip()
+for name, start, end in sections(llms_heads, "h2", 0, len(llms_lines), top=True):
     if name in exempt:
         continue
     llms_cats.append(name)
-    llms_members[name] = re.findall(r"^- \[([a-z0-9.-]+)\]\(", block, re.M)
+    llms_members[name] = rows(llms_lines, start, end, r"^- \[([a-z0-9.-]+)\]\(")
 
 readme_members = {}
-for block in re.split(r"^### ", section, flags=re.M)[1:]:
-    name = block.split("\n", 1)[0].strip()
+for name, start, end in readme_sections:
     readme_members[name] = [g[:-3] for g in
-                            re.findall(r"^\|\s*\[([^\]]+\.md)\]\(", block, re.M)]
+                            rows(readme_lines, start, end, r"^\|\s*\[([^\]]+\.md)\]\(")]
 
 problems = []
 if readme_cats != site_cats:
