@@ -93,34 +93,49 @@ Basic authentication is single-factor, and this guide finds no lighttpd entry in
 
 REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. These are read-and-judge checks: the status code is printed and you compare it.
 
-REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous.
+REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous. The block takes the site's host name and a protected path on its guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd
-curl -q -sI http://example.com/        # expect a redirect to https://
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/
-                                    # expect 401 without credentials once auth is on
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_A_PROTECTED_PATH'   # the site's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected path without its leading slash: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"          # expect a redirect to https://
+  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"
+                                      # expect 401 without credentials once auth is on
 
-# Read every listener rather than filtering to the ports you expect. The checks above prove
-# the front door asks for credentials; they do not prove it is the only door, and a filtered
-# list cannot show you a port you did not think of.
-ss -tlnp
+  # Read every listener rather than filtering to the ports you expect. The checks above prove
+  # the front door asks for credentials; they do not prove it is the only door, and a filtered
+  # list cannot show you a port you did not think of.
+  ss -tlnp
 
-# `auth.require` can sit at the top level or inside a `$HTTP["host"]` conditional, and a
-# conditional one applies only to the hosts it names. If yours is conditional, a request
-# carrying a host it does not name is served by the global configuration instead (this
-# guide's inference from conditional merging and the mod_auth documentation). That
-# conditional uses the request Host for auth after headers are read. In lighttpd 1.4.75,
-# TLS SNI, when the client sends it, first selects mod_openssl settings; Apache
-# 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI,
-# for name-based TLS virtual-host
-# selection. This guide's advice is to vary Host while keeping the URL and SNI fixed for
-# this auth check:
-curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
-  https://example.com/REPLACE_WITH_A_PROTECTED_PATH
-                                    # This guide interprets 401 as the pass and 200 as the protected
-                                    # path served without authentication on this TLS connection to a
-                                    # client that sends another host
+  # `auth.require` can sit at the top level or inside a `$HTTP["host"]` conditional, and a
+  # conditional one applies only to the hosts it names. If yours is conditional, a request
+  # carrying a host it does not name is served by the global configuration instead (this
+  # guide's inference from conditional merging and the mod_auth documentation). That
+  # conditional uses the request Host for auth after headers are read. In lighttpd 1.4.75,
+  # TLS SNI, when the client sends it, first selects mod_openssl settings; Apache
+  # 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI,
+  # for name-based TLS virtual-host
+  # selection. This guide's advice is to vary Host while keeping the URL and SNI fixed for
+  # this auth check:
+  curl -q -g -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
+    "https://$1/$2"
+                                      # This guide interprets 401 as the pass and 200 as the protected
+                                      # path served without authentication on this TLS connection to a
+                                      # client that sends another host
+)
 ```
 
 ## Common mistakes
@@ -229,7 +244,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "589faa6964787f1d48fe44f28e0688096480a864c2971c4a3370f5c2cf785439",
+  "body_sha256": "19b194f5fcdbbc47a962f42bfdd51d074cf741148a86d9068a56c80c7e6c24b3",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",

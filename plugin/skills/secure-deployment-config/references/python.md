@@ -135,12 +135,12 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -295,7 +295,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "3afe10d654468cc3107abce5a5c1a707ed583e6a903288cb51bccd36a09841e5",
+  "body_sha256": "dd746c0f968ce6c3b32b9f24440d31e608a8ee4e0eae52272860b682099e9d8a",
   "components": {
     "django": {
       "name": "Django documentation",
