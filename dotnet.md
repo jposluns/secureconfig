@@ -314,7 +314,7 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added, so the guarded section 9 block needs a bash -n re-run before the guarded block's syntax counts as checked. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons)
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added, so the guarded section 9 block needs a bash -n re-run before the guarded block's syntax counts as checked. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons. The bash -n run and the separate local guard record covered the five child-section blocks in an earlier form, whose guard refusals ended with status 0; neither was re-run on the current form, whose guard refusals exit with status 2)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
@@ -329,11 +329,11 @@ With the Developer Exception Page exposed, expect a `500` response containing di
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_ERROR_TEST_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
     *)
       curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
         -H 'Accept: text/plain' "$1"
@@ -353,11 +353,11 @@ The fixed expectation is `204` at 1,048,576 bytes and `413` at 1,048,577 bytes. 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_BODY_TEST_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
     *)
       head -c 1048576 /dev/zero | curl -q -g --noproxy '*' -sS \
         --http1.1 --connect-timeout 5 --max-time 30 \
@@ -383,11 +383,11 @@ For retained routes, pair the anonymous request with an authorized request throu
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_AUXILIARY_ENDPOINT_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
     *)
       curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"
       ;;
@@ -402,11 +402,11 @@ For retained routes, pair the anonymous request with an authorized request throu
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_PUBLIC_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
     *)
       curl -q -g --noproxy '*' -sS -D - -o /dev/null \
         --connect-timeout 5 --max-time 20 "$1"
@@ -426,11 +426,11 @@ The anonymous control should return `401`. The request using the original cookie
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_PROTECTED_COOKIE_API_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
     *)
       curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"
       curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
@@ -593,7 +593,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7525d0d5b3fa9756440fda8dbeb259a5059d221c4e5e4330e0001e651268970e",
+  "body_sha256": "a0321946dda2c8438c7e0c193ffb911b79b8b45e7addfc236c55f96d17541661",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
