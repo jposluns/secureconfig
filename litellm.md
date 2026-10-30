@@ -295,11 +295,11 @@ Use a valid virtual key whose `allowed_routes` includes `/v1/models`. Substitute
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VIRTUAL_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 2 ;;
     *)
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' http://127.0.0.1:4000/v1/models
   # guard-conventions: allow deliberate bad-key negative control; sk-not-a-real-key is a dummy, not a live credential
@@ -318,7 +318,7 @@ ss -tlnp   # a listener inventory in THIS network namespace, not a firewall/NAT/
 
 The `/v1/models` comparison tests authentication and listing, not successful inference or model authorization. Complete the inference comparisons below too. Inspect IPv4 and IPv6 reachability, published container ports, and any separate metrics listener.
 
-### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. These observations establish neither file-content validation nor API acceptance)
+### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. These runs covered both fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. These observations establish neither file-content validation nor API acceptance)
 
 **REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result.
 
@@ -331,19 +331,19 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'POST' 'REPLACE_WITH_HEADER_FILE' 'REPLACE_WITH_JSON_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "provide endpoint, method, header file and JSON file; not probing"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "provide endpoint, method, header file and JSON file; not probing"; exit 2; }
   case "|$1|$2|$3|$4|" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|*'||'*|*[[:cntrl:]]*)
-      echo "substitute every placeholder inside the quotes; not probing"; exit 1 ;;
+      echo "substitute every placeholder inside the quotes; not probing"; exit 2 ;;
   esac
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "substitute the endpoint; not probing"; exit 1 ;;
+      echo "substitute the endpoint; not probing"; exit 2 ;;
     https://*|http://127.0.0.1:4000/*)
-      [ -r "$3" ] || { echo "header file is unreadable"; exit 1; }
-      [ -r "$4" ] || { echo "JSON file is unreadable"; exit 1; }
+      [ -r "$3" ] || { echo "header file is unreadable"; exit 2; }
+      [ -r "$4" ] || { echo "JSON file is unreadable"; exit 2; }
       umask 077
       set -- "$@" "$(mktemp -d)" || exit 1
       [ -d "$5" ] || { echo "cannot create private results directory"; exit 1; }
@@ -360,10 +360,10 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
             -H "@$3" -o "$5/body" -D "$5/headers" \
             -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
           ;;
-        *) echo "only GET and POST are supported; not probing"; exit 1 ;;
+        *) echo "only GET and POST are supported; not probing"; exit 2 ;;
       esac
       ;;
-    *) echo "use HTTPS or the loopback backend; not probing"; exit 1 ;;
+    *) echo "use HTTPS or the loopback backend; not probing"; exit 2 ;;
   esac
 )
 ```
@@ -540,7 +540,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "eed22494e32c711175ce869c3fc702c4249f32207f97a4198d03171011a17243",
+  "body_sha256": "0fd64cb0bbeeeccf2250b5e511a5c337b306a0ed2e3187caa7bab65afee5500b",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",
