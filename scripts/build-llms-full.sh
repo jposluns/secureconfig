@@ -37,11 +37,262 @@ if [ "${1:-}" = "--list-inputs" ] || [ "${1:-}" = "--list-guides" ]; then
   exit 0
 fi
 
+# The link check. The bundle is served from https://secureconfig.ai/, where a relative link
+# such as (mfa.md) resolves to a page that does not exist, so no link in it may be relative.
+# This program parses a bundle with the pinned markdown-it-py in its CommonMark preset, once
+# as is and once with tables enabled as the other gates parse, and parses each piece of raw
+# HTML the Markdown parser finds with Python's html.parser. It checks the target of every link
+# and image, every link reference definition, and these HTML attributes: href, xlink:href, src,
+# longdesc, poster, action, formaction, data, cite, background, codebase, classid, usemap,
+# manifest, icon, lowsrc, dynsrc and profile, each URL in ping and archive, the url= part of a
+# meta content attribute, and each url(...) in a style attribute or style element. A target
+# passes only if it is an in-page anchor or has a scheme, and a link into this repository's main
+# branch passes only if it names a file or directory present in this checkout. Any srcset or
+# imagesrcset fails, as does CSS that holds a backslash, @import, image-set( or src(, a url( that
+# does not close, and a style element that continues outside the HTML that opens it. Code spans,
+# fenced code and indented code are code to the parser, so a link-shaped string inside them is
+# not checked. A self-test of at least one mutation per form, and of clean cases, runs before the
+# bundle is read, so what checks the bundle is the shipped rule. It reads only the working tree,
+# so it stays offline. The build runs it on its output before writing site/llms-full.txt, and
+# the gate in tools/run_all_checks.sh runs it on the committed file through --check-links, so
+# the build and the gate apply one rule.
+IFS= read -r -d '' certify <<'PY' || true
+import html.parser
+import os
+import re
+import sys
+from urllib.parse import unquote
+
+sys.path.insert(0, "tools")
+from check_verify_marking import ParserUnavailable, gate_parser
+
+SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+SELF = re.compile(r"^https://github\.com/jposluns/secureconfig/(blob|tree)/main/([^#?]+)")
+REPO = "https://github.com/jposluns/secureconfig"
+# HTML attributes whose value is one URL, and those whose value is a space-separated URL list.
+ONE_URL = {
+    "href", "xlink:href", "src", "longdesc", "poster", "action", "formaction", "data", "cite",
+    "background", "codebase", "classid", "usemap", "manifest", "icon", "lowsrc", "dynsrc", "profile",
+}
+URL_LIST = {"ping", "archive"}
+# Each candidate in these is a URL with an optional descriptor, so neither is ever certified.
+CANDIDATES = {"srcset", "imagesrcset"}
+CSS_URL = re.compile(r"url\(\s*([\"']?)(.*?)\1\s*\)", re.I | re.S)
+CSS_OPEN = re.compile(r"url\(", re.I)
+CSS_OTHER = re.compile(r"\\|@import|image-set\(|src\(", re.I)
+REFRESH = re.compile(r"url\s*=\s*[\"']?([^\"']*)", re.I)
+HEADER = "=" * 70
+# Each mutation must fail the check; each clean case must pass it.
+MUTATIONS = [
+    "[x](mfa.md)",
+    "[x](./mfa.md#a)",
+    '[x](mfa.md "title")',
+    "[x](<mfa.md>)",
+    '[x]( <mfa.md> "title")',
+    "[x](foo(1).md)",
+    "[x](\nmfa.md)",
+    "[x]()",
+    "[x](//example.com/a)",
+    "![i](mfa.png)",
+    "[x]: mfa.md",
+    '   [x]: <mfa.md> "title"',
+    "> - [x]: mfa.md",
+    "[x]:\nmfa.md",
+    "[a\nb]: mfa.md",
+    "[`m`]: mfa.md",
+    "a ` b\nc ` [x](mfa.md) ` d",
+    '<a href="mfa.md">x</a>',
+    "<img src='mfa.png'>",
+    "<a HREF=mfa.md>x</a>",
+    'See <a href\n="mfa.md">x</a>.',
+    '<img\nsrc="mfa.png">',
+    'See <img src\n= "mfa.png">.',
+    '<img srcset="https://example.com/a.png 1x">',
+    'See <img\nsrcset="https://example.com/a.png 1x">.',
+    '<a href="https://example.com/" ping="https://example.com/p track">x</a>',
+    '<img src="https://example.com/a.png" longdesc="mfa.md">',
+    '<link rel="preload" as="image" imagesrcset="https://example.com/a.png 1x">',
+    '<div style="background: url(mfa.png)">x</div>',
+    "<div style='background: url(\"mfa.png\")'>x</div>",
+    '<div style="background: u\\72l(mfa.png)">x</div>',
+    '<div style="background: url(https://example.com/a.png">x</div>',
+    "<style>\na { background: url(mfa.png) }\n</style>",
+    "See <style>a { color: red }",
+    '<video poster="mfa.png"></video>',
+    '<form action="mfa.md"></form>',
+    '<button formaction="mfa.md">x</button>',
+    '<object data="mfa.md"></object>',
+    '<q cite="mfa.md">x</q>',
+    '<table><tr><td background="mfa.png">x</td></tr></table>',
+    '<svg><a xlink:href="mfa.md">x</a></svg>',
+    '<meta http-equiv="refresh" content="0; url=mfa.md">',
+    f"[x]({REPO}/blob/main/nope-missing.md)",
+    f"[x]({REPO}/blob/main/tools/)",
+    f"[x]({REPO}/tree/main/mfa.md/)",
+    f"[x]({REPO}/blob/main/../mfa.md)",
+    f"[x]({REPO}/blob/main//etc/hostname)",
+    f"[x]: {REPO}/blob/main/nope-missing.md",
+    f'<a href="{REPO}/blob/main/nope-missing.md">x</a>',
+]
+CLEAN = [
+    f"[x]({REPO}/blob/main/mfa.md)",
+    f'[x]({REPO}/blob/main/mfa.md#a "title")',
+    f"[x](<{REPO}/tree/main/tools/>)",
+    f"[x]: {REPO}/blob/main/mfa.md",
+    f'<a href="{REPO}/blob/main/mfa.md" ping="https://example.com/p">x</a>',
+    f'See <a href\n="{REPO}/blob/main/mfa.md">x</a>.',
+    '<div style="background: url(https://example.com/a.png)">x</div>',
+    "[x](#a) and [y](https://example.com/a_(b)) and <https://example.com/c>",
+    "[x]( and [y]: mfa.md",
+    "[x]:",
+    '`[x](mfa.md)` and ``[y]: mfa.md`` and `<a href="mfa.md">`',
+    "a `b\n[x](mfa.md) c` d",
+    '```\n[x](mfa.md)\n[y]: mfa.md\n<a href="mfa.md">\n```',
+    "~~~~md\n![i](mfa.png)\n~~~~",
+    'Text.\n\n    [x](mfa.md)\n    <a href="mfa.md">x</a>',
+    '<!-- <a href="mfa.md">x</a> -->',
+    '<a id="ai-assistant-prompt"></a>',
+]
+
+
+class Html(html.parser.HTMLParser):
+    """The URL-valued attributes and the CSS in one piece of raw HTML."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.found, self.css, self.styling = [], [], False
+
+    def handle_starttag(self, tag, attrs):
+        for name, value in attrs:
+            value = (value or "").strip(" \t\n\f\r")
+            if name in ONE_URL:
+                self.found.append((name, value))
+            elif name in URL_LIST:
+                self.found.extend((name, part) for part in value.split() or [""])
+            elif name in CANDIDATES:
+                self.found.append((name, None))
+            elif name == "style":
+                self.css.append(value)
+            elif name == "content" and tag == "meta":
+                self.found.extend(("meta url=", part.strip()) for part in REFRESH.findall(value))
+        if tag == "style":
+            self.styling = True
+
+    def handle_endtag(self, tag):
+        if tag == "style":
+            self.styling = False
+
+    def handle_data(self, data):
+        if self.styling:
+            self.css.append(data)
+
+
+def styles(css):
+    """Each url(...) target in some CSS; None for a form that is never certified."""
+    if CSS_OTHER.search(css):
+        yield "CSS with a backslash, @import, image-set( or src(", None
+    for start in CSS_OPEN.finditer(css):
+        match = CSS_URL.match(css, start.start())
+        yield ("url()", match.group(2).strip()) if match else ("a url( that does not close", None)
+
+
+def pieces(parser, text):
+    """Each (line, form, target) in parsed text; a target of None is never certified."""
+    pending = [(token, 0) for token in reversed(parser.parse(text))]
+    while pending:
+        token, line = pending.pop()
+        if token.map:
+            line = token.map[0] + 1
+        if token.type == "link_open":
+            yield line, "link", token.attrs.get("href", "")
+        elif token.type == "image":
+            yield line, "image", token.attrs.get("src", "")
+        elif token.type == "definition":
+            yield line, "definition", token.meta["url"]
+        elif token.type in ("html_inline", "html_block"):
+            raw = Html()
+            raw.feed(token.content)
+            raw.close()
+            for form, target in raw.found:
+                yield line, form, target
+            for css in raw.css:
+                for form, target in styles(css):
+                    yield line, form, target
+            if raw.styling:
+                yield line, "a style element that continues outside its HTML", None
+        pending.extend((child, line) for child in reversed(token.children or []))
+
+
+def verdict(form, target):
+    """A problem with one target, or None, and whether it points into this repository."""
+    if target is None:
+        return f"{form} is never certified", False
+    if target.startswith("#"):
+        return None, False
+    match = SELF.match(target)
+    if match:
+        kind, path = match.group(1), unquote(match.group(2)).rstrip("/")
+        found = os.path.isdir(path) if kind == "tree" else os.path.isfile(path)
+        if path.startswith("/") or ".." in path.split("/") or not found:
+            what = "directory" if kind == "tree" else "file"
+            return f"{form} {target} names no {what} in this checkout", True
+        return None, True
+    if SCHEME.match(target):
+        return None, False
+    return f'{form} target "{target}" is not absolute, a scheme or an in-page anchor', False
+
+
+def check(text):
+    """The problems in some Markdown, and how many of its links point into this repository."""
+    lines = text.split("\n")
+    guides = [(n + 1, lines[n][4:]) for n in range(1, len(lines) - 1)
+              if lines[n].startswith("==> ") and lines[n - 1] == HEADER == lines[n + 1]]
+    problems, counts = {}, []
+    for parser in PARSERS:
+        count = 0
+        for line, form, target in pieces(parser, text):
+            problem, own = verdict(form, target)
+            count += own
+            if problem:
+                guide = next((g for start, g in reversed(guides) if start <= line), None)
+                where = f"line {line} ({guide})" if guide else f"line {line}"
+                problems.setdefault(f"{where}: {problem}")
+        counts.append(count)
+    return list(problems), counts[0]
+
+
+try:
+    PARSERS = [gate_parser(required=True), gate_parser(required=True).disable("table")]
+except ParserUnavailable as exc:
+    sys.exit(f"the link check needs the pinned parser: {exc}")
+for parser in PARSERS:
+    parser.options["inline_definitions"] = True
+problems = []
+for case in MUTATIONS:
+    if not check(case)[0]:
+        problems.append(f"self-test: mutation passed: {case!r}")
+for case in CLEAN:
+    failed = check(case)[0]
+    if failed:
+        problems.append(f"self-test: clean case failed: {case!r}: {failed[0]}")
+with open(sys.argv[1], encoding="utf-8") as handle:
+    found, links = check(handle.read())
+problems += found
+for problem in problems:
+    print(problem)
+if problems:
+    sys.exit(1)
+print(links)
+PY
+
+if [ "${1:-}" = "--check-links" ]; then
+  exec python3 -c "$certify" "$out"
+fi
+
 python3 tools/version_basis.py --check
 
-# The bundle is served from https://secureconfig.ai/, where a guide's relative link such as
-# (mfa.md) resolves to a page that does not exist. So each relative link outside code is
-# rewritten to the same path in the repository on GitHub: blob/main/<path> for a file and
+# Because of the relative-link problem the link check describes, each relative link outside code
+# is rewritten to the same path in the repository on GitHub: blob/main/<path> for a file and
 # tree/main/<path>/ for a directory, keeping any #anchor. That covers an inline link or image,
 # with or without angle brackets or a title, and a link reference definition such as
 # [m]: mfa.md. In-page anchors, links with a scheme, fenced blocks and code spans stay exactly
@@ -56,11 +307,13 @@ python3 tools/version_basis.py --check
 # it describe the same revision.
 #
 # A link that leaves the repository, or names a path absent from this checkout, fails the
-# build, so a broken target cannot reach the bundle as a dead GitHub URL. After the rewrite,
-# any link target that is not absolute, a scheme or an in-page anchor also fails the build:
-# a relative HTML attribute such as href or src, any srcset, a definition whose target is on
-# the next line, and a relative inline target that holds parentheses or whitespace. The gate in
-# tools/run_all_checks.sh applies the same rule to the built file.
+# build, so a broken target cannot reach the bundle as a dead GitHub URL. The rewrite works one
+# line at a time, so it does not handle every form the parser does, such as a relative HTML
+# attribute or a definition whose label spans lines. The link check above therefore runs on the
+# built text before it replaces site/llms-full.txt, and any target it cannot certify fails the
+# build. The build also parses each guide before and after the rewrite and fails if any code
+# span, code block or raw HTML changed, so a line the rewrite reads as prose but the parser reads
+# as code is refused rather than altered.
 IFS= read -r -d '' absolutize <<'PY' || true
 import os
 import posixpath
@@ -69,6 +322,7 @@ import sys
 
 sys.path.insert(0, "tools")
 from _markdown import Fences
+from check_verify_marking import ParserUnavailable, gate_parser
 
 BASE = "https://github.com/jposluns/secureconfig"
 REF = "main"
@@ -78,13 +332,7 @@ TICKS = re.compile(r"`+")
 INLINE = re.compile(r"(\]\([ \t]*)(?:<([^<>\n]*)>|([^\s<>()]+)(?=[ \t]|\)))")
 # A link reference definition at the start of a line, inside a block quote or list item or not.
 DEFINE = re.compile(r"^([ \t>]*(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)*\[[^\]]+\]:[ \t]*)(?:<([^<>\n]*)>|(\S+))")
-# Where a target starts in each form that is certified after the rewrite, as the gate does.
-OPEN = re.compile(r"\]\([ \t]*<?")
-OPEN_DEFINE = re.compile(r"^[ \t>]*(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)*\[[^\]]+\]:[ \t]*<?")
-ATTRIBUTE = re.compile(
-    r"(?i)(?<![\w-])(href|src|srcset|poster|action|formaction|cite|data|background)[ \t]*=[ \t]*[\"']?"
-)
-TARGET = re.compile(r"[^\s<>()\"']*")
+LITERAL = ("code_inline", "code_block", "fence", "html_inline", "html_block")
 name = sys.argv[1]
 
 
@@ -110,28 +358,10 @@ def swap(match):
     return head + (target if angled is None else f"<{target}>")
 
 
-def uncertified(text, first):
-    """Each target left in text that is not absolute, a scheme or an in-page anchor."""
-    starts = [match.end() for match in OPEN.finditer(text)]
-    define = OPEN_DEFINE.match(text) if first else None
-    if define:
-        starts.append(define.end())
-    found = [target for target in (TARGET.match(text, s).group(0) for s in starts) if not KEEP.match(target)]
-    for match in ATTRIBUTE.finditer(text):
-        target = TARGET.match(text, match.end()).group(0)
-        if match.group(1).lower() == "srcset" or not KEEP.match(target):
-            found.append(f"{match.group(1)}={target}")
-    return found
-
-
 def prose(text, first):
     # Only the text before a line's first code span can start a reference definition.
     text = INLINE.sub(swap, text)
-    if first:
-        text = DEFINE.sub(swap, text, count=1)
-    for target in uncertified(text, first):
-        sys.exit(f'{name}: link target "{target}" cannot be certified as absolute, a scheme or an in-page anchor, and the build does not rewrite its form')
-    return text
+    return DEFINE.sub(swap, text, count=1) if first else text
 
 
 def rewrite(line):
@@ -152,14 +382,35 @@ def rewrite(line):
     return "".join(out)
 
 
+def literal(text):
+    """The text of each code span, code block and piece of raw HTML, in order."""
+    found, pending = [], list(reversed(parser.parse(text)))
+    while pending:
+        token = pending.pop()
+        if token.type in LITERAL:
+            found.append((token.type, token.content))
+        pending.extend(reversed(token.children or []))
+    return found
+
+
+try:
+    parser = gate_parser(required=True)
+except ParserUnavailable as exc:
+    sys.exit(f"{name}: the build needs the pinned parser: {exc}")
 fences = Fences()
-lines = sys.stdin.buffer.read().decode("utf-8").split("\n")
+source = sys.stdin.buffer.read().decode("utf-8")
+lines = source.split("\n")
 for i, line in enumerate(lines):
     if not fences.feed(line) and not fences.inside:
         lines[i] = rewrite(line)
-sys.stdout.buffer.write("\n".join(lines).encode("utf-8"))
+result = "\n".join(lines)
+if literal(result) != literal(source):
+    sys.exit(f"{name}: the rewrite changed a code span, code block or raw HTML, which must stay as written")
+sys.stdout.buffer.write(result.encode("utf-8"))
 PY
 
+built=$(mktemp)
+trap 'rm -f "$built"' EXIT
 {
   echo "# secureconfig.ai: all guides in one file"
   echo
@@ -177,6 +428,14 @@ PY
     # rewrite its relative links to absolute GitHub URLs, as described above.
     python3 tools/version_basis.py --no-advisory --bundle "$f" | python3 -c "$absolutize" "$f"
   done
-} > "$out"
+} > "$built"
 
-echo "wrote $out ($(wc -c < "$out") bytes, ${#files[@]} files)"
+# The link check, on the built text before it replaces the committed file.
+if ! links=$(python3 -c "$certify" "$built"); then
+  printf '%s\n' "$links" >&2
+  echo "scripts/build-llms-full.sh: the link check refused the built text; $out is unchanged" >&2
+  exit 1
+fi
+cat "$built" > "$out"
+
+echo "wrote $out ($(wc -c < "$out") bytes, ${#files[@]} files, $links links into this repository)"

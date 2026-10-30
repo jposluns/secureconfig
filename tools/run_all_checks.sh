@@ -98,147 +98,19 @@ echo "== llms-full.txt links are absolute and name repository paths =="
 # site/llms-full.txt is served from https://secureconfig.ai/, where a relative link such as
 # (mfa.md) names a page that does not exist, so scripts/build-llms-full.sh rewrites each one to
 # https://github.com/jposluns/secureconfig/blob/main/<path> (tree/main/ for a directory). The
-# freshness gate above proves the committed file is the build's output. This one fails closed:
-# every link target outside code must be certified as absolute, a scheme or an in-page anchor,
-# and every link into this repository's main branch must name a file or directory present in
-# this checkout. It finds a target after each "](", with or without angle brackets or a title,
-# after a link reference definition at the start of a line, and in the HTML attributes href,
-# src, poster, action, formaction, cite, data and background. Any srcset fails, as does a
-# target that is empty, runs onto the next line or starts with a parenthesis. A self-test of
-# at least one mutation per form, and of clean cases, runs first, so what checks the bundle is
-# the shipped rule. It reads only the working tree, so it stays offline. A fenced block or a
-# code span is code, not a link, and is skipped with the same fence rule and code-span split
-# the build uses. Heading anchors are not checked here; the local-links gate below checks them
-# in the guides the bundle is built from.
-if llms_links=$(python3 - <<'PY'
-import os
-import re
-import sys
-
-sys.path.insert(0, "tools")
-from _markdown import Fences
-
-KEEP = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.-]*:|#)")
-SELF = re.compile(r"^https://github\.com/jposluns/secureconfig/(blob|tree)/main/([^#?]+)")
-TICKS = re.compile(r"`+")
-# Where a target starts: after "](", or after a link reference definition at a line's start.
-OPEN = re.compile(r"\]\([ \t]*<?")
-OPEN_DEFINE = re.compile(r"^[ \t>]*(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)*\[[^\]]+\]:[ \t]*<?")
-ATTRIBUTE = re.compile(
-    r"(?i)(?<![\w-])(href|src|srcset|poster|action|formaction|cite|data|background)[ \t]*=[ \t]*[\"']?"
-)
-TARGET = re.compile(r"[^\s<>()\"']*")
-REPO = "https://github.com/jposluns/secureconfig"
-# Each mutation must fail the check; each clean case must pass it.
-MUTATIONS = [
-    "[x](mfa.md)",
-    "[x](./mfa.md#a)",
-    '[x](mfa.md "title")',
-    "[x](<mfa.md>)",
-    '[x]( <mfa.md> "title")',
-    "[x](foo(1).md)",
-    "[x](",
-    "[x]: mfa.md",
-    '   [x]: <mfa.md> "title"',
-    "> - [x]: mfa.md",
-    "[x]:",
-    '<a href="mfa.md">x</a>',
-    "<img src='mfa.png'>",
-    "<a HREF=mfa.md>x</a>",
-    '<img srcset="https://example.com/a.png 1x">',
-    f"[x]({REPO}/blob/main/nope-missing.md)",
-    f"[x]({REPO}/blob/main/tools/)",
-    f"[x]({REPO}/tree/main/mfa.md/)",
-    f"[x]({REPO}/blob/main/../mfa.md)",
-    f"[x]: {REPO}/blob/main/nope-missing.md",
-    f'<a href="{REPO}/blob/main/nope-missing.md">x</a>',
-]
-CLEAN = [
-    f"[x]({REPO}/blob/main/mfa.md)",
-    f'[x]({REPO}/blob/main/mfa.md#a "title")',
-    f"[x](<{REPO}/tree/main/tools/>)",
-    f"[x]: {REPO}/blob/main/mfa.md",
-    f'<a href="{REPO}/blob/main/mfa.md">x</a>',
-    "[x](#a) and [y](https://example.com/a_(b)) and [z]: not a definition",
-    "`[x](mfa.md)` and ``[y]: mfa.md``",
-    "```\n[x](mfa.md)\n[y]: mfa.md\n<a href=\"mfa.md\">\n```",
-]
-
-
-def prose(line):
-    """The line with each code span removed, split the way the build splits it."""
-    runs = list(TICKS.finditer(line))
-    out, pos, k = [], 0, 0
-    while k < len(runs):
-        n = len(runs[k].group(0))
-        close = next((j for j in range(k + 1, len(runs)) if len(runs[j].group(0)) == n), None)
-        if close is None:
-            k += 1
-            continue
-        out.append(line[pos:runs[k].start()])
-        pos, k = runs[close].end(), close + 1
-    out.append(line[pos:])
-    return "\n".join(out)
-
-
-def targets(text):
-    """Each link target in a line's prose, with its form and whether it is certified."""
-    for match in OPEN.finditer(text):
-        target = TARGET.match(text, match.end()).group(0)
-        yield "link", target, bool(KEEP.match(target))
-    match = OPEN_DEFINE.match(text)
-    if match:
-        target = TARGET.match(text, match.end()).group(0)
-        yield "definition", target, bool(KEEP.match(target))
-    for match in ATTRIBUTE.finditer(text):
-        target = TARGET.match(text, match.end()).group(0)
-        name = match.group(1).lower()
-        yield name, target, name != "srcset" and bool(KEEP.match(target))
-
-
-def check(lines):
-    problems, links = [], 0
-    fences = Fences()
-    for number, line in enumerate(lines, 1):
-        if fences.feed(line) or fences.inside:
-            continue
-        for form, target, certified in targets(prose(line)):
-            if form == "srcset":
-                problems.append(f'line {number}: srcset "{target}" lists several targets and is never certified')
-                continue
-            if not certified:
-                problems.append(f'line {number}: {form} target "{target}" is not absolute, a scheme or an in-page anchor')
-                continue
-            match = SELF.match(target)
-            if not match:
-                continue
-            links += 1
-            kind, path = match.group(1), match.group(2).rstrip("/")
-            found = os.path.isdir(path) if kind == "tree" else os.path.isfile(path)
-            if ".." in path.split("/") or not found:
-                what = "directory" if kind == "tree" else "file"
-                problems.append(f"line {number}: {target} names no {what} in this checkout")
-    return problems, links
-
-
-problems = []
-for case in MUTATIONS:
-    if not check(case.split("\n"))[0]:
-        problems.append(f"self-test: mutation passed: {case}")
-for case in CLEAN:
-    failed = check(case.split("\n"))[0]
-    if failed:
-        problems.append(f"self-test: clean case failed: {case!r}: {failed[0]}")
-with open("site/llms-full.txt", encoding="utf-8") as handle:
-    found, links = check(handle.read().split("\n"))
-problems += found
-for problem in problems:
-    print(problem)
-if problems:
-    sys.exit(1)
-print(links)
-PY
-); then
+# freshness gate above proves the committed file is the build's output. This one runs the
+# build's link check, through scripts/build-llms-full.sh --check-links, on the committed file,
+# so the build and this gate apply one rule. The check parses the file with the pinned
+# markdown-it-py and each piece of raw HTML in it with Python's html.parser. It fails closed on
+# any link, image, link reference definition or listed HTML URL attribute whose target is not
+# an in-page anchor or a URL with a scheme, and on any link into this repository's main branch
+# that names no file or directory in this checkout. The build script's comment above the check
+# lists the attributes and the CSS and srcset forms it refuses. Code spans, fenced code and
+# indented code are code to the parser and are not checked. Its self-test of mutations and
+# clean cases runs first, so what checks the bundle is the shipped rule, and it reads only the
+# working tree, so it stays offline. Heading anchors are not checked here; the local-links gate
+# below checks them in the guides the bundle is built from.
+if llms_links=$(bash scripts/build-llms-full.sh --check-links 2>&1); then
   ok "site/llms-full.txt has no link target the gate cannot certify, and all $llms_links of its links into this repository's main branch name a path in this checkout"
 else
   bad "site/llms-full.txt has a link target the gate cannot certify, or a link into this repository that names no path here, or the gate's self-test failed"
