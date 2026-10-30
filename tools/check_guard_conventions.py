@@ -73,6 +73,23 @@ WHAT THIS CATCHES
                  file and documented stdin forms pass; a waiver uses the
                  same preceding-comment mechanism as curl's C3 checks.
 
+  C4-EXAMPLE-HOST  (--example-hosts only; NOT yet registered in run_all_checks)
+                 in a fenced shell block inside a Verify section, a
+                 probe-class command (PROBE_CMDS or openssl s_client) has an
+                 argv word whose host is example.com, example.net,
+                 example.org or a subdomain, in any letter case. A host is
+                 read from a URL authority (userinfo and port dropped,
+                 percent escapes decoded), from user@host, host:port or a
+                 bare name with an optional trailing dot, and from the value
+                 of a --long=value option. Values of curl's payload and other
+                 value-taking options (-H, -d, -F, -e, -A, --resolve, ...) are
+                 skipped, and a word holding =, a slash or a second colon
+                 outside a URL is not a host. These names resolve to hosts the
+                 reader does not run, so the probe reports on someone else's
+                 server. A probe whose host comes from a guarded "$1" or "$2"
+                 never matches. Opt-in until the guides' remaining Verify
+                 probes take the reader's host.
+
 WHAT THIS IS NOT
   This is a tripwire for the accidental case; a determined author walks
   past it. It is not a general safety proof for shell programs. A guard over $1 proves nothing about a later
@@ -135,6 +152,19 @@ SCOPE
   A waiver covers only the next command line and is counted in the summary.
   A trailing same-line waiver is NOT honored; a bare `allow` without a
   reason is NOT honored.
+
+  C4-EXAMPLE-HOST ignores that general waiver, whatever its reason. Its own
+  waiver is one of two exact comment lines, each waiving C4 alone:
+      # guard-conventions: allow C4-EXAMPLE-HOST wrong-host negative control: <reason>
+      # guard-conventions: allow C4-EXAMPLE-HOST egress negative control: <reason>
+  The wrong-host form is honored only when the same command routes the
+  connection to a $-expanded address (curl --resolve or --connect-to,
+  openssl s_client -connect), so the reserved name is a deliberately wrong
+  host sent to the reader's own server. The egress form is honored only when
+  every reserved host in the command is example.com, example.net or
+  example.org itself, which IANA serves, for a probe that must fail when
+  egress is enforced. Any other waiver whose reason starts with C4- grants
+  nothing.
 
 KNOWN REMAINING BYPASSES (recorded so a pass is never mistaken for a
 guarantee)
@@ -276,6 +306,7 @@ from pathlib import Path
 import re
 import shlex
 import sys
+from urllib.parse import unquote
 
 # tools/ must be importable for the _markdown sibling even under `python3 -I`
 # (isolated mode drops the script directory from sys.path). Stdlib imports sit
@@ -433,6 +464,18 @@ _SKIP_VALUE_OPTS = frozenset((
     "-b", "--cookie", "-F", "--form", "--form-string", "-e", "--referer",
 ))
 
+# C4: a Verify probe aimed at a reserved example domain (RFC 2606). The names
+# resolve to hosts the reader does not run, so the probe reports on someone
+# else's server; the reader's own host belongs on a guarded set -- line.
+RESERVED_EXAMPLE_DOMAINS = ("example.com", "example.net", "example.org")
+_C4_URL_RE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://([^/?#]*)")
+_C4_BARE_RE = re.compile(r"(?:[^\s/@=]*@)?([^\s/@=:?#\[\]]+)(?::[0-9]*)?")
+_C4_CURL_SKIP = _VALUE_OPTS_NONURL | _SKIP_VALUE_OPTS
+_C4_ROUTE_OPTS = {"curl": ("--resolve", "--connect-to"),
+                  "openssl": ("-connect",)}
+C4_WAIVER_RE = re.compile(
+    r"C4-EXAMPLE-HOST (wrong-host|egress) negative control: \S.*")
+
 MESSAGES = {
     "C1-MISSING-Q": "curl lacks -q/--disable: the reader's ~/.curlrc (proxy, "
                     "insecure, output redirect) can silently alter this probe",
@@ -472,6 +515,11 @@ MESSAGES = {
     "C3-NO-VALUE": "a curl credential option lacks a statically readable "
                    "value; move the credential onto stdin (--config - / "
                    "--header @-) so this gate can see it is not in argv",
+    "C4-EXAMPLE-HOST": "a Verify probe targets example.com, example.net, "
+                       "example.org or a subdomain, a host the reader does "
+                       "not run; take the reader's host on a guarded set -- "
+                       "line (a general waiver does not exempt this; see "
+                       "the C4 waiver in the docstring)",
 }
 
 
@@ -1312,6 +1360,58 @@ def _check_curl(args, q_anywhere_ok):
     return codes
 
 
+def _c4_host(word):
+    """The lowercased host a probe argv word names, or None."""
+    m = _C4_URL_RE.match(word)
+    if m:
+        host = m.group(1).rpartition("@")[2]
+        if host.startswith("["):
+            return None
+        host = host.partition(":")[0]
+    else:
+        m = _C4_BARE_RE.fullmatch(word)
+        if not m:
+            return None
+        host = m.group(1)
+    host = unquote(host).lower()
+    return host[:-1] if host.endswith(".") else host
+
+
+def _c4_reserved_hosts(name, args):
+    """Hosts under RESERVED_EXAMPLE_DOMAINS named by a probe's argv words."""
+    hosts, skip = [], False
+    for a in args:
+        if skip:
+            skip = False
+            continue
+        if name == "curl" and a in _C4_CURL_SKIP:
+            skip = True
+            continue
+        if a.startswith("-"):
+            opt, eq, a = a.partition("=")
+            if not eq or (name == "curl" and opt in _C4_CURL_SKIP):
+                continue
+        host = _c4_host(a)
+        if host and any(host == d or host.endswith("." + d)
+                        for d in RESERVED_EXAMPLE_DOMAINS):
+            hosts.append(host)
+    return hosts
+
+
+def _c4_waiver_holds(kind, name, args, hosts):
+    """A C4 waiver holds only for its stated shape (see the docstring)."""
+    if kind == "egress":
+        return all(h in RESERVED_EXAMPLE_DOMAINS for h in hosts)
+    route = _C4_ROUTE_OPTS.get(name, ())
+    for i, a in enumerate(args):
+        opt, eq, val = a.partition("=")
+        if not eq:
+            val = args[i + 1] if i + 1 < len(args) else ""
+        if opt in route and "$" in val:
+            return True
+    return False
+
+
 def _console_pairs(body, start):
     pairs, i = [], 0
     while i < len(body):
@@ -1507,7 +1607,8 @@ def _c2_shadows_termination(records):
     return False
 
 
-def _analyze_fence(path, lang, start, body, findings, stats, opts):
+def _analyze_fence(path, lang, start, body, findings, stats, opts,
+                   verify=False):
     stats.fences += 1
     unparseable_before = stats.unparseable
     shell_heredoc_bodies = []
@@ -1533,9 +1634,19 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
     c2_records = []  # aligned [(literal flags, lifted), ...]
     strict_records = []  # aligned tokens retaining unknown value references
     pending_waiver = False
+    pending_c4_waiver = None
+    c4_waivers = {}  # line -> "wrong-host" or "egress"
     for lineno, raw in lls:
         wm = WAIVER_RE.search(raw)
         if wm and raw.lstrip().startswith("#") and wm.group(1).strip():
+            if wm.group(1).startswith("C4-"):
+                # C4 has its own exact waivers, which waive C4 alone; any
+                # other C4- reason grants nothing.
+                c4 = C4_WAIVER_RE.fullmatch(wm.group(1).strip())
+                if c4:
+                    pending_c4_waiver = c4.group(1)
+                    stats.waivers += 1
+                continue
             pending_waiver = True
             stats.waivers += 1
             continue
@@ -1553,10 +1664,13 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
             except ValueError:
                 stats.unparseable += 1
         records.append((lineno, raw, token_lines, pending_waiver))
+        if pending_c4_waiver:
+            c4_waivers[lineno] = pending_c4_waiver
         c2_records.append(c2_lines)
         strict_records.append(strict_lines)
         if raw.strip():
             pending_waiver = False
+            pending_c4_waiver = None
 
     termination_shadowed = _c2_shadows_termination(records)
     uri_builtins_uncertain = (
@@ -1776,6 +1890,16 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts):
             probe_exclusions[seq] = inherited_exclusions | {
                 f["id"] for f in case_stack if f["current_sentinel"]
             }
+            if verify:
+                name = word.rsplit("/", 1)[-1]
+                c4_args = _drop_redirections(stripped[1:])
+                hosts = _c4_reserved_hosts(name, c4_args)
+                if hosts and not (
+                        line in c4_waivers and _c4_waiver_holds(
+                            c4_waivers[line], name, c4_args, hosts)):
+                    findings.append((path, line, "C4-EXAMPLE-HOST",
+                                     " (probe: %s, host: %s)"
+                                     % (name, hosts[0])))
 
     for record_no, (lineno, _raw, token_lines, waived) in enumerate(records):
         origin = c2_origins[lineno]
@@ -2280,9 +2404,20 @@ def _scan_inline(path, text, findings, stats, opts):
 
 
 def scan_text(path, text, findings, stats, opts, *, inline=True):
+    verify_lines = None
+    if opts.example_hosts:
+        try:
+            verify_lines = guide_context(text, enrolled=inline)[3]
+        except ValueError:
+            verify_lines = None  # unreadable sections: every fence counts
     for lang, start, body in _blocks(text):
         if lang in SHELL_INFOS or lang in CONSOLE_INFOS:
-            _analyze_fence(path, lang, start, body, findings, stats, opts)
+            # start is the first body line (1-based); the opener's 0-based
+            # index, as guide_context numbers lines, is two less.
+            verify = opts.example_hosts and (
+                verify_lines is None or start - 2 in verify_lines)
+            _analyze_fence(path, lang, start, body, findings, stats, opts,
+                           verify=verify)
     if inline:
         try:
             _scan_inline(path, text, findings, stats, opts)
@@ -4029,6 +4164,78 @@ SELF_TEST_CASES.append((
     "~~~bash\nenv --future-option curl https://example.com/\n~~~\n",
     ["C1-MISSING-Q"], ()))
 
+# C4: Verify probes aimed at a reserved example domain. Every case passes
+# --example-hosts except the one proving the check is opt-in.
+_C4_GUARDED = r"""(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "exactly 1 value"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "host"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "reserved"; exit 2 ;;
+  esac
+  curl -q -g -sI "https://$1/"
+)
+"""
+_C4_WRONG_HOST = ("# guard-conventions: allow C4-EXAMPLE-HOST wrong-host "
+                  "negative control: an unknown SNI name must be refused\n")
+_C4_EGRESS = ("# guard-conventions: allow C4-EXAMPLE-HOST egress negative "
+              "control: a known-live host outside the allow list\n")
+_C4_CASES = [
+    ("bare", "curl -q https://example.com/\n", ["C4-EXAMPLE-HOST"]),
+    ("uppercase", "nc -vz EXAMPLE.NET 443\n", ["C4-EXAMPLE-HOST"]),
+    ("subdomain", "ssh admin@app.example.org\n", ["C4-EXAMPLE-HOST"]),
+    ("url-with-port", "curl -q http://app.example.com:8080/x\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("host-port", "openssl s_client -connect Example.Com:443\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("trailing-dot", "dig +short TXT _dmarc.example.org.\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("percent-encoded", "curl -q https://ex%61mple.com/\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("option-value", "curl -q --url=https://www.example.net/\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("guarded-positional", _C4_GUARDED, []),
+    ("old-waiver",
+     "# guard-conventions: allow probe of an illustrative example host; "
+     "no reader-substituted placeholder in this probe's argv\n"
+     "curl https://app.example.com/\n", ["C4-EXAMPLE-HOST"]),
+    ("lookalikes", "curl -q https://example.community/ "
+     "https://notexample.com/ https://example.com.test/\n", []),
+    ("payload-values", "curl -q -g -H 'Host: evil.example.com' -e "
+     "https://example.com/ --data 'to=a@example.com' \"https://$1/\"\n", []),
+    ("wrong-host-routed", _C4_WRONG_HOST
+     + "curl -q -g --resolve \"example.com:443:$1\" https://example.com/\n",
+     []),
+    ("wrong-host-openssl", _C4_WRONG_HOST
+     + "openssl s_client -connect \"$1:443\" -servername example.com\n", []),
+    ("wrong-host-unrouted", _C4_WRONG_HOST + "curl -q https://example.com/\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("waiver-is-c4-only", _C4_WRONG_HOST
+     + "curl --resolve \"example.com:443:$1\" https://example.com/\n",
+     ["C1-MISSING-Q"]),
+    ("egress-apex", _C4_EGRESS + "curl -q https://example.com/\n", []),
+    ("egress-subdomain", _C4_EGRESS + "curl -q https://app.example.com/\n",
+     ["C4-EXAMPLE-HOST"]),
+    ("malformed-c4-waiver",
+     "# guard-conventions: allow C4-EXAMPLE-HOST illustrative example host\n"
+     "curl https://example.com/\n", ["C1-MISSING-Q", "C4-EXAMPLE-HOST"]),
+]
+for _name, _shell, _codes in _C4_CASES:
+    SELF_TEST_CASES.append(("c4-" + _name, "## Verify\n```bash\n" + _shell
+                            + "```\n", _codes, ("--example-hosts",)))
+SELF_TEST_CASES += [
+    ("c4-console", "## Verify\n```console\n$ curl -q https://example.com/\n"
+     "```\n", ["C4-EXAMPLE-HOST"], ("--example-hosts",)),
+    ("c4-outside-verify", "## Setup\n```bash\ncurl -q https://example.com/\n"
+     "```\n", [], ("--example-hosts",)),
+    ("c4-opt-in", "## Verify\n```bash\ncurl -q https://example.com/\n```\n",
+     [], ()),
+]
+
 
 _INLINE_CASES = [
     ("tool", "## Verify\n- Run `mysql --password=SECRET`.\n",
@@ -4175,6 +4382,11 @@ def parse_args(argv):
                     help="demote convention 2: skip C2-PROBE-OUTSIDE-GUARD "
                          "(tracked-row fallback if the idiom rule proves "
                          "noisy on real guides)")
+    ap.add_argument("--example-hosts", action="store_true",
+                    dest="example_hosts",
+                    help="also apply C4-EXAMPLE-HOST: a Verify probe aimed "
+                         "at example.com, example.net, example.org or a "
+                         "subdomain (opt-in until the guide sweep lands)")
     ap.add_argument("--q-anywhere", action="store_true", dest="q_anywhere",
                     help="accept -q in any position (triage aid; curl only "
                          "honors a FIRST-position -q)")

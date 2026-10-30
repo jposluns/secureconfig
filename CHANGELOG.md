@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-30
+
+- Added C4-EXAMPLE-HOST to `tools/check_guard_conventions.py`, opt-in through `--example-hosts` until the remaining guides are swept: a Verify probe whose argv names example.com, example.net, example.org or a subdomain is reported, and a general waiver no longer exempts the probe. Only an exact wrong-host or egress negative-control waiver, each checked against its shape, waives C4. The #1053 and #1055 host guards now also refuse `@`, `?`, `#` and `%`, with `#` as a quoted alternative so the gate's tokenizer keeps each guard's `exit`. `kubernetes.md` and `lighttpd.md` take the reader's host on a guarded `set --` line, and the kubernetes node-scan marker cites the v1beta1 defaults source (#1060)
+
 ## 2026-10-29
 
 - Verify blocks in `nginx.md`, `web-exposure.md` and `transactional-email-posture.md` no longer send their probes to `example.com`, which serves HTTPS, answers 404 for unknown paths and publishes an enforcing DMARC record, so an unsubstituted run could read as a pass. Each block now takes the reader's names on a `set -- PASTE_WHOLE_BLOCK` line inside a subshell and, before any probe runs, exits with status 2 on an empty or unsubstituted value, on a scheme, path, colon or trailing dot, on whitespace or control characters, or on `example.com`, `example.net`, `example.org` or a subdomain of them in any letter case. The `nginx.md` waivers that called its probe host illustrative are removed. The `kubernetes.md` node scans move to their own block, where each `nmap` scan refuses an empty, unsubstituted, hyphen-led or whitespace-bearing target before it runs. `README.md` no longer says that the verification checklist rejects unsubstituted values, and states what an unsubstituted name does in checks 2, 3 and 4 (#1055)

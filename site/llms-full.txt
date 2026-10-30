@@ -9102,12 +9102,12 @@ status code is printed and you compare it; nothing here fails on its own.
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -9238,7 +9238,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "31ac8015125665d3f840f19f63d520ffd31602dd0d94f2b2599f23dff619c99d",
+  "body_sha256": "27e2367fee431cc907cacea61bf35e344851452e1933987c97f486e339daced4",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -9538,12 +9538,12 @@ Mind the client address these headers carry. At a direct internet edge the block
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the server_name), no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -9564,12 +9564,12 @@ sudo nginx -t && sudo systemctl reload nginx
   # Clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the password from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the server_name), no scheme, port, path or trailing dot, then the admin password: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -9721,7 +9721,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "88e2ef7175025abfa1d1e8d7b40265f65243b96ceb486cef6ffa8993b2ae0cf8",
+  "body_sha256": "1567c153ede312cc84063b1191cd7e4db7d0fc901daf4743d8178176f741fd6a",
   "components": {
     "nginx-source": {
       "name": "nginx source",
@@ -9959,34 +9959,49 @@ Basic authentication is single-factor, and this guide finds no lighttpd entry in
 
 REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. These are read-and-judge checks: the status code is printed and you compare it.
 
-REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous.
+REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous. The block takes the site's host name and a protected path on its guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd
-curl -q -sI http://example.com/        # expect a redirect to https://
-curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/
-                                    # expect 401 without credentials once auth is on
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_A_PROTECTED_PATH'   # the site's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected path without its leading slash: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"          # expect a redirect to https://
+  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"
+                                      # expect 401 without credentials once auth is on
 
-# Read every listener rather than filtering to the ports you expect. The checks above prove
-# the front door asks for credentials; they do not prove it is the only door, and a filtered
-# list cannot show you a port you did not think of.
-ss -tlnp
+  # Read every listener rather than filtering to the ports you expect. The checks above prove
+  # the front door asks for credentials; they do not prove it is the only door, and a filtered
+  # list cannot show you a port you did not think of.
+  ss -tlnp
 
-# `auth.require` can sit at the top level or inside a `$HTTP["host"]` conditional, and a
-# conditional one applies only to the hosts it names. If yours is conditional, a request
-# carrying a host it does not name is served by the global configuration instead (this
-# guide's inference from conditional merging and the mod_auth documentation). That
-# conditional uses the request Host for auth after headers are read. In lighttpd 1.4.75,
-# TLS SNI, when the client sends it, first selects mod_openssl settings; Apache
-# 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI,
-# for name-based TLS virtual-host
-# selection. This guide's advice is to vary Host while keeping the URL and SNI fixed for
-# this auth check:
-curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
-  https://example.com/REPLACE_WITH_A_PROTECTED_PATH
-                                    # This guide interprets 401 as the pass and 200 as the protected
-                                    # path served without authentication on this TLS connection to a
-                                    # client that sends another host
+  # `auth.require` can sit at the top level or inside a `$HTTP["host"]` conditional, and a
+  # conditional one applies only to the hosts it names. If yours is conditional, a request
+  # carrying a host it does not name is served by the global configuration instead (this
+  # guide's inference from conditional merging and the mod_auth documentation). That
+  # conditional uses the request Host for auth after headers are read. In lighttpd 1.4.75,
+  # TLS SNI, when the client sends it, first selects mod_openssl settings; Apache
+  # 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI,
+  # for name-based TLS virtual-host
+  # selection. This guide's advice is to vary Host while keeping the URL and SNI fixed for
+  # this auth check:
+  curl -q -g -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
+    "https://$1/$2"
+                                      # This guide interprets 401 as the pass and 200 as the protected
+                                      # path served without authentication on this TLS connection to a
+                                      # client that sends another host
+)
 ```
 
 ## Common mistakes
@@ -10095,7 +10110,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "589faa6964787f1d48fe44f28e0688096480a864c2971c4a3370f5c2cf785439",
+  "body_sha256": "19b194f5fcdbbc47a962f42bfdd51d074cf741148a86d9068a56c80c7e6c24b3",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",
@@ -11715,12 +11730,12 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -11867,7 +11882,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "992a9b097ca577dfbb3f777202fed424a50554432afda67ae62bd492db86e0eb",
+  "body_sha256": "626944fb63e22169352746aae9f58268b4ff184ac0c8d348f690b8cb732e362f",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",
@@ -12195,12 +12210,12 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -12355,7 +12370,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "3afe10d654468cc3107abce5a5c1a707ed583e6a903288cb51bccd36a09841e5",
+  "body_sha256": "dd746c0f968ce6c3b32b9f24440d31e608a8ee4e0eae52272860b682099e9d8a",
   "components": {
     "django": {
       "name": "Django documentation",
@@ -13420,7 +13435,7 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block while it still held the node scans; five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line; neither tool was re-run on the guarded block. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
@@ -13433,15 +13448,27 @@ kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the 
 kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}'    # the public address; DNS points here
 kubectl get certificate -A                                           # Ready=True
 # App checks, run directly with client proxies disabled (the unset below only affects LATER commands).
-curl -q --noproxy '*' -sI http://app.example.com/                       # 301 with Location: https://app.example.com/
-curl -q --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/
-                                                                        # no credentials: 401 where basic auth is set
-# Positive control: confirm the SecurityPolicy attached, and that a valid basic-auth credential (from a
-# mode-0600 ~/.netrc-style file, never argv) is ACCEPTED by the gateway - it reaches the app rather than
-# drawing the gateway's basic-auth 401. The app's own login may then answer, so the test is that you NO
-# LONGER get the gateway's 401 with `WWW-Authenticate: Basic`, not that `/` returns 2xx.
-kubectl get securitypolicy app-basic-auth -o yaml   # an Accepted "True" condition under .status.ancestors (PolicyStatus)
-curl -q --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" -D - -o /dev/null https://app.example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Gateway listener and HTTPRoute serve, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g --noproxy '*' -sI "http://$1/"                             # 301 with Location: https:// and your host name
+  curl -q -g --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' "https://$1/"
+                                                                          # no credentials: 401 where basic auth is set
+  # Positive control: confirm the SecurityPolicy attached, and that a valid basic-auth credential (from a
+  # mode-0600 ~/.netrc-style file, never argv) is ACCEPTED by the gateway - it reaches the app rather than
+  # drawing the gateway's basic-auth 401. The app's own login may then answer, so the test is that you NO
+  # LONGER get the gateway's 401 with `WWW-Authenticate: Basic`, not that `/` returns 2xx.
+  kubectl get securitypolicy app-basic-auth -o yaml   # an Accepted "True" condition under .status.ancestors (PolicyStatus)
+  curl -q -g --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" -D - -o /dev/null "https://$1/"
+)
 
 # The API server endpoint, taken WHOLE. Do not rebuild it with :6443. Managed providers
 # serve the API on 443, and a probe of 6443 times out against a cluster that is answering
@@ -13459,7 +13486,8 @@ unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy NO_PROXY
 
 # First at the TCP layer, because this is the only part with a clean answer. Did anything
 # accept a connection?
-PARSED=$(python3 - "$API" "$TLS" <<'PY'
+parse_api_server() {   # a function, not a multiline $(...), so the guard checker keeps its scope tracking for this block
+  python3 - "$API" "$TLS" <<'PY'
 import sys, urllib.parse
 raw, tls = sys.argv[1].strip(), sys.argv[2].strip()
 if "://" not in raw:
@@ -13474,10 +13502,12 @@ if not p.hostname:
 print(p.hostname, p.port or (80 if p.scheme == "http" else 443),
       p.scheme + "://" + p.netloc)
 PY
-) || { echo "could not read the API server endpoint; skipping the probe" >&2; PARSED=; }
+}
+PARSED=$(parse_api_server) || { echo "could not read the API server endpoint; skipping the probe" >&2; PARSED=; }
 if [ -n "$PARSED" ]; then
   read -r HOST PORT URL <<<"$PARSED"
   echo "$URL"
+  # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
   nc -vz -w 3 "$HOST" "$PORT"
 fi
 # Parsed with python3 rather than cut with sed. A bracketed IPv6 address breaks on the
@@ -13493,6 +13523,7 @@ fi
 # "succeeded" means something is listening and reachable from here, whatever it does next.
 
 # Then at the HTTP layer, with verification left ON.
+# guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
 curl -q --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 \
   -w '%{http_code}\n' "$URL/version"; echo "curl exit $?"
 # Exit 0 with ANY status, 200, 401, 403 and 404 alike, means it answered.
@@ -13556,7 +13587,7 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.a
                                                                      # containers; 2379 is the whole of etcd
 ```
 
-REASONED: preceding block; node, kubelet and etcd scans with complete address coverage (the Gateway/service inventory, TLS/authentication and API reachability checks sit in the block before it), per the guide's cited Kubernetes ports and protocols; Kubernetes, operating etcd clusters; Kubernetes v1.37.1 server; and Nmap host discovery. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded. No live scan ran: exposed endpoints answer untrusted sources; in the fixed state, restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families.
+REASONED: preceding block; node, kubelet and etcd scans with complete address coverage (the Gateway/service inventory, TLS/authentication and API reachability checks sit in the block before it), per the guide's cited Kubernetes ports and protocols; Kubernetes, operating etcd clusters; Kubernetes v1.37.1 server; Kubernetes v1.37.1 source, v1beta1 defaults; and Nmap host discovery. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded. No live scan ran: exposed endpoints answer untrusted sources; in the fixed state, restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families.
 For the node scans, an exposed kubelet is expected to show 10250 open and, when enabled, 10255 open;
 after private binding and network restrictions, neither should be reachable from an untrusted network,
 while an authorized cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have
@@ -13700,7 +13731,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "887a854abc0e1f21efe9090f6b3a6328d2b19e5748c694ec4bf5630a8799841e",
+  "body_sha256": "b763799a0190046f34dabee539b46ad963d1bb85c97742f9b023a54a30bad712",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -16886,12 +16917,12 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -17019,7 +17050,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "412c5b9a38d293bf25c8c83440942fb4c813fc020fc9c01d19b865ad76fb4f04",
+  "body_sha256": "73da41c84e8fc6d8d03da557b8d9b87151f5ab20360f84a39df42943b95e6ec9",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
@@ -17488,12 +17519,12 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -17786,7 +17817,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "117ca33cc85c07e2247155b61d06267038949b812c44050f3ce363fabdfcf073",
+  "body_sha256": "7525d0d5b3fa9756440fda8dbeb259a5059d221c4e5e4330e0001e651268970e",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -18224,12 +18255,12 @@ None of these properties establishes a universal JSON body limit. Bound other re
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -18535,7 +18566,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "7777e37debccc35ef1dbf1f0b36612ad64188e095a27f79d26d7b6e10ba6faee",
+  "body_sha256": "ce981f9c9500e980452755576c1496447e17a68b7b780ae740296766d2061d22",
   "components": {
     "boot41": {
       "name": "Spring Boot",
@@ -21099,6 +21130,7 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
+# guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
 if curl -q -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then rc=0; else rc=$?; fi
 if [ "$rc" -eq 0 ]; then
   echo "FAIL: connected to a host outside the allow list, egress is not enforced"
@@ -21209,7 +21241,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "699af71d5d79b5c67124687ea84ebf13eeb0486a1476c64689d00aac743e2aae",
+  "body_sha256": "1d30a27b2711977c882eeda8c740d41c3099dc10d3636c796ef04b63d6b47ee3",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -60092,12 +60124,12 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
 # lands. mktemp creates the probe exclusively so it never clobbers a real file, and only that file is
 # removed. --noproxy so no client proxy answers; the body is shown so leaked content is visible:
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -60175,12 +60207,12 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
 # references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
 # block before its host guard was added.
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -60301,7 +60333,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "30beed1a2fad13a9f82808d2dfd9ff2ef3ab79fe18bb5be1e4ee897c2b24f0db",
+  "body_sha256": "5bb241183147f348632c15456f61edc141d0f385f6cf9e81d64cac6da0e65f28",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -61106,16 +61138,16 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
   shift
   [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values: mail domain, bounce domain, DKIM selector and submission host; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your mail domain (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your mail domain (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$2" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your bounce (Return-Path) domain, the name that carries its SPF record, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your bounce (Return-Path) domain, the name that carries its SPF record, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$3" in
     ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your DKIM selector, the s= tag of a real signature, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$4" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your submission host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your submission host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '|%s|%s|%s|' "$1" "$2" "$4" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     *'|example.com|'*|*'|example.net|'*|*'|example.org|'*|*'.example.com|'*|*'.example.net|'*|*'.example.org|'*) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own names on the set -- line above; not probing"; exit 2 ;;
@@ -61244,7 +61276,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "f5e2531ecc3d1456148d92965e49a66aef6a8de28b4b0c230ff4b523d72821df",
+  "body_sha256": "16b839f03069c98b5fa6dd67411932325573db0eba0574c474bc01409fec7899",
   "components": {
     "spf": {
       "name": "SPF",
