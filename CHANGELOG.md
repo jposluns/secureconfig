@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-30
+
+- The gate suite now fails when README.md's stated guide count or category count differs from the corpus, comparing the guide count with the root guides outside not_a_guide (which the README guide index must list exactly once each) and the category count with the "###" headings of the guide index, and failing closed if the sentence is missing or reworded (#1058)
+
 ## 2026-10-29
 
 - Verify blocks in `go.md`, `java.md`, `dotnet.md`, `apache.md`, `nodejs.md` and `python.md` no longer send their probes to the real host `example.com`, which serves valid HTTPS, so the TLS-success checks (and the `go.md` public-pprof 404 check) passed for any reader who did not substitute, and the other probes tested the wrong host. Each block now takes the reader's host on a `set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'` line inside a subshell and, before any probe runs, exits with a message and status 2 on an empty or unsubstituted value, on a value carrying a scheme, path, colon or trailing dot, or on whitespace or control characters. The block also refuses `example.com`, `example.net`, `example.org` and any subdomain of them, in any letter case. The `dotnet.md` Additional deployment checks heading now says its recorded bash -n run covered the section 9 block before the guard was added (#1053)

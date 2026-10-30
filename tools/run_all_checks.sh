@@ -303,6 +303,70 @@ else
   printf '%s\n' "$cat_diff" | sed 's/^/          /'
 fi
 
+echo "== README's stated guide and category counts match the corpus =="
+# README.md's "What this is" section states the corpus size in prose ("N guides across the M
+# categories indexed below"), and the gates above check category lists and membership but not
+# those numerals. The guide count is checked against the root guides (every root *.md outside
+# not_a_guide, less README.md itself), the same set the wiring gate above walks. The README guide
+# index must list exactly that set, once each, so the two definitions of the guide count cannot
+# drift apart. The category count is checked against the "###" headings of "## Guide index". A
+# reworded or missing sentence fails closed rather than passing unchecked.
+guide_files=()
+for f in *.md; do
+  not_a_guide "$f" || [ "$f" = README.md ] || guide_files+=("$f")
+done
+if count_diff=$(python3 - "${guide_files[@]}" <<'PY'
+import re, sys
+
+guides = sys.argv[1:]
+readme = open("README.md", encoding="utf-8").read()
+readme = re.sub(r"<!--.*?-->", "", readme, flags=re.S)
+form = "that is N guides across the M categories indexed below"
+stated = re.findall(
+    r"\bthat\s+is\s+(\d+)\s+guides\s+across\s+the\s+(\d+)\s+categories\s+indexed\s+below\b",
+    readme)
+if len(stated) != 1:
+    print(f"README.md must state its counts exactly once as '{form}' "
+          f"(found {len(stated)}); restore that wording or update this gate")
+    sys.exit(1)
+stated_guides, stated_cats = (int(n) for n in stated[0])
+
+m = re.search(r"^## Guide index[ \t]*$", readme, re.M)
+if not m:
+    print("README.md has no '## Guide index' section")
+    sys.exit(1)
+rest = readme[m.end():]
+m2 = re.search(r"^## ", rest, re.M)
+section = rest[:m2.start()] if m2 else rest
+cats = re.findall(r"^### (.+?)[ \t]*$", section, re.M)
+rows = re.findall(r"^\|\s*\[([^\]]+\.md)\]\(", section, re.M)
+
+problems = []
+if len(rows) != len(set(rows)) or set(rows) != set(guides):
+    extra = sorted(set(rows) - set(guides))
+    missing = sorted(set(guides) - set(rows))
+    twice = sorted({r for r in rows if rows.count(r) > 1})
+    problems.append(f"README guide index lists {len(rows)} rows but the root has "
+                    f"{len(guides)} guides outside not_a_guide; not root guides: {extra!r}; "
+                    f"not indexed: {missing!r}; listed more than once: {twice!r}")
+if stated_guides != len(guides):
+    problems.append(f"README.md states {stated_guides} guides but the root has "
+                    f"{len(guides)} guides (root *.md outside not_a_guide, less README.md)")
+if stated_cats != len(cats):
+    problems.append(f"README.md states {stated_cats} categories but its '## Guide index' "
+                    f"section has {len(cats)} '###' category headings")
+if problems:
+    print("\n".join(problems))
+    sys.exit(1)
+print(f"{len(guides)} guides across {len(cats)} categories")
+PY
+); then
+  ok "README.md's stated counts match the corpus: $count_diff"
+else
+  bad "README.md's stated guide or category count does not match the corpus"
+  printf '%s\n' "$count_diff" | sed 's/^/          /'
+fi
+
 echo "== every guide has a Verify section and dated Sources =="
 # The structural half of the CONTRIBUTING rule that a guide must hand the reader runnable checks and
 # dated, cited sources. What a reader copies from here faces the internet, so a guide that ships with
