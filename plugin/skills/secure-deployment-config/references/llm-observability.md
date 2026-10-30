@@ -279,11 +279,11 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
 # REASONED: Phoenix read-API authentication follows the cited documentation and source; no Phoenix instance is available.
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PHOENIX_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "https://$1/v1/projects" \
          -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n'
        ;;
@@ -291,7 +291,7 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
 )
 ```
 
-REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
+REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. The bash -n and stub runs recorded here covered an earlier form of this block, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
 is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login page, a `415`, or a transport
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
@@ -506,7 +506,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "b22a5cbf0d79a6fe0d6cc51578b422e70a145e187173b8933512cc8a2f29f062",
+  "body_sha256": "ac6aae2726cf301025195a2f207306adbd69adcc2aef41253575ba3831c9218f",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
