@@ -18,9 +18,9 @@ This repository gives an AI assistant the security steps to apply and a way to b
 
 ## The maintainer
 
-Jeff Posluns has spent more than 30 years in technology and security and wants to help keep the world and its information more secure. He built this library from that experience and uses his own AI tooling to keep expanding and updating it, with automated checks so it keeps its accuracy as it grows. Everything here is free and in the public domain.
+Jeff Posluns has spent more than 30 years in technology and security and wants to help keep the world and its information more secure. He built this library from that experience and uses his own AI tooling to keep expanding and updating it, with automated checks so it keeps its accuracy as it grows. Everything here is free, and all of it except the AIQT Guardrails material listed in `.aiqt/PIN` is in the public domain.
 
-The guides are dedicated to the public domain under CC0; the one exception, vendored AIQT Guardrails material, is licensed under the Apache License 2.0 (see [Licence](#licence)).
+The guides are dedicated to the public domain under CC0; the one exception, the AIQT Guardrails material listed in `.aiqt/PIN` (vendored files and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), is licensed under the Apache License 2.0 (see [Licence](#licence)).
 
 ## Use it
 
