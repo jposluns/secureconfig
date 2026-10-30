@@ -98,10 +98,10 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   # Stdin closes the argv channel only: it does not hide the token from set -x
   # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Jupyter token on the set -- line above; not probing"; exit ;; esac
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Jupyter token on the set -- line above; not probing"; exit 2 ;; esac
   curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
     --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents
   printf 'Authorization: token %s\n' "$1" | curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
@@ -119,11 +119,11 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   # Stdin closes the argv channel only: it does not hide the token from set -x
   # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH' 'REPLACE_WITH_TOKEN'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the URL on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the token on the set -- line above; not probing"; exit ;; esac
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|"") echo "substitute the URL on the set -- line above; not probing"; exit 2 ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the token on the set -- line above; not probing"; exit 2 ;; esac
   curl -q -g -sS -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 "$1"
   printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H @- "$1"
 )
@@ -138,12 +138,12 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
 (
   set +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAST_MAPPED_HOST_AND_PORT' '/REPLACE_WITH_EXEMPT_PATH' '/REPLACE_WITH_PRIVATE_PATH' 'REPLACE_WITH_PRIVATE_BODY_MARKER' 'REPLACE_WITH_PORTAL_CHALLENGE_HEADER'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit; }
-  [ -n "$1" ] && [ -n "$2" ] && [ -n "$3" ] && [ -n "$4" ] && [ -n "$5" ] || { echo "all five values are required; not probing"; exit; }
-  case "$1$2$3$4$5" in *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute inside the quotes on the set -- line above; not probing"; exit ;; esac
-  case "$2:$3" in /*:/*) ;; *) echo "both paths must start with /; not probing"; exit ;; esac
+  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit 2; }
+  [ -n "$1" ] && [ -n "$2" ] && [ -n "$3" ] && [ -n "$4" ] && [ -n "$5" ] || { echo "all five values are required; not probing"; exit 2; }
+  case "$1$2$3$4$5" in *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute inside the quotes on the set -- line above; not probing"; exit 2 ;; esac
+  case "$2:$3" in /*:/*) ;; *) echo "both paths must start with /; not probing"; exit 2 ;; esac
   portal_probe() (
     # Positional values: host:port, path, private body marker, distinct portal header.
     set -- "$@" "$(curl -q -g -sS -i -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --noproxy '*' \
@@ -335,7 +335,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "62de917779c8919c34881881b2f6bc9ec179d223fa563c961395720af47b4eb8",
+  "body_sha256": "51916cf566abef4d9694b113e3bcc5b3697fe13feb07ad5870c2f065c8d6210f",
   "components": {
     "runpod": {
       "name": "RunPod documentation",

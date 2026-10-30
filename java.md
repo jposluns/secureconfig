@@ -251,7 +251,7 @@ None of these properties establishes a universal JSON body limit. Bound other re
 
 A zero generated-password log count is inconclusive: logging may suppress the message, and setting `spring.security.user.password` avoids password generation while retaining the default account. Check the deployed authentication configuration and exercise the intended login method. A custom `SecurityFilterChain` alone does not remove default-user auto-configuration, and OAuth2/OIDC does not require introducing a local `UserDetailsService`. See [Boot's security auto-configuration rules](https://docs.spring.io/spring-boot/3.5/reference/web/spring-security.html).
 
-The following deployment checks are **REASONED, not demonstrated**. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
+The following deployment checks are **REASONED, not demonstrated**. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Those local checks covered the guarded blocks below in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
 
 Paste each guarded block whole and substitute inside the single quotes. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
 
@@ -264,11 +264,11 @@ Reasoned check: run this HTTPS sweep from outside the trusted management network
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_PUBLIC_HOST/actuator'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
     *)
       for java_endpoint in health env configprops beans mappings threaddump loggers; do
         curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
@@ -309,11 +309,11 @@ Also check the separate port directly from an external machine. This block assum
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
     *)
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -334,11 +334,11 @@ Reasoned check: use an isolated test deployment with a known route that triggers
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_HOST/REPLACE_WITH_TEST_ERROR_PATH'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
     *)
       curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
         --header @- -H 'Accept: application/json' \
@@ -358,11 +358,11 @@ Reasoned check: test both anonymously and with an identity allowed through appli
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_HOST/h2-console/'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
     *)
       curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
         -w '\nanonymous: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" || true
@@ -383,11 +383,11 @@ Reasoned check: use a test upload route that accepts a multipart file field name
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_HOST/REPLACE_WITH_UPLOAD_PATH'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
     *)
       curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
         --header @- --form 'file=@./below-limit.bin' \
@@ -543,7 +543,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "ce981f9c9500e980452755576c1496447e17a68b7b780ae740296766d2061d22",
+  "body_sha256": "07a365b46486455486b144cc5fc55c997f126c992c966abebae2c5b9dec0eed2",
   "components": {
     "boot41": {
       "name": "Spring Boot",
