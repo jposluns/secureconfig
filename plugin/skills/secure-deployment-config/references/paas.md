@@ -86,7 +86,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"          # this guide's redirect check above
+  curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"         # this guide's redirect check above; http=000 with a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
 )
 # 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
 #    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
@@ -112,7 +112,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"   # no creds: want the APP's own 401/403, not a platform SSO 401
+  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"  # no creds: want the APP's own 401/403, not a platform SSO 401; http=000 with a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
 )
 #    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
 #    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
@@ -248,7 +248,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "cf6bfe3d4c93673b6945bba4c168c18964c2a41e8656729f27669dcf79ae537b",
+  "body_sha256": "a2eed1fa87e15971e47531fe5937f16b1eeeb0b8e4d45700a82179f17d963312",
   "components": {
     "render": {
       "name": "Render documentation",

@@ -355,12 +355,13 @@ ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/"                     # service root: anonymous ListBuckets denied
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/" # per bucket: anonymous listing denied
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT"
+  # -sS: when no HTTP response arrives, curl prints 000 and its own "curl: (N) ..." error line; that is inconclusive, never a denial and never proof of isolation
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/"                    # service root: anonymous ListBuckets denied
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/" # per bucket: anonymous listing denied
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT"
                                                          # a known private object: 403, never 200, and the 403 must come from MinIO (behind a proxy a 403 may be the proxy's, so probe MinIO's direct origin). Anonymous policies are set per
                                                          # bucket, so a denial at the service root does not prove any bucket is private
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9001/"                     # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9001/"                    # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
 )
 mc alias import mys3 < /path/to/REPLACE_WITH_ADMIN_ALIAS.json
 ```
@@ -648,7 +649,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8fe32dd049e56b0d19e389fd6a656d815964019097c5ae2cddfbda0a92888c15",
+  "body_sha256": "7565bb7aec0aba2b58871cc1830df6fb2aea627cd7cc69aad04ad65cac91f77a",
   "components": {
     "aistor": {
       "name": "AIStor documentation",
