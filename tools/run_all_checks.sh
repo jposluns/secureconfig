@@ -94,6 +94,80 @@ fi
 # An unchecked restore could leave a half-written bundle for every later gate to read.
 cp "$orig" site/llms-full.txt || { bad "could not restore site/llms-full.txt from $orig"; exit 1; }
 
+echo "== llms-full.txt links are absolute and name repository paths =="
+# site/llms-full.txt is served from https://secureconfig.ai/, where a relative link such as
+# (mfa.md) names a page that does not exist, so scripts/build-llms-full.sh rewrites each one to
+# https://github.com/jposluns/secureconfig/blob/main/<path> (tree/main/ for a directory). The
+# freshness gate above proves the committed file is the build's output. This one proves the
+# output still has no relative link, and that every link into this repository's main branch
+# names a file or directory present in this checkout. It reads only the working tree, so it
+# stays offline. A fenced block or a code span is code, not a link, and is skipped with the
+# same fence rule and code-span split the build uses. Heading anchors are not checked here;
+# the local-links gate below checks them in the guides the bundle is built from.
+if llms_links=$(python3 - <<'PY'
+import os
+import re
+import sys
+
+sys.path.insert(0, "tools")
+from _markdown import Fences
+
+LINK = re.compile(r"\]\(([^()\s]+)\)")
+KEEP = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.-]*:|#)")
+SELF = re.compile(r"^https://github\.com/jposluns/secureconfig/(blob|tree)/main/([^#?]+)")
+TICKS = re.compile(r"`+")
+
+
+def prose(line):
+    """The line with each code span removed, split the way the build splits it."""
+    runs = list(TICKS.finditer(line))
+    out, pos, k = [], 0, 0
+    while k < len(runs):
+        n = len(runs[k].group(0))
+        close = next((j for j in range(k + 1, len(runs)) if len(runs[j].group(0)) == n), None)
+        if close is None:
+            k += 1
+            continue
+        out.append(line[pos:runs[k].start()])
+        pos, k = runs[close].end(), close + 1
+    out.append(line[pos:])
+    return "\n".join(out)
+
+
+problems = []
+links = 0
+fences = Fences()
+with open("site/llms-full.txt", encoding="utf-8") as handle:
+    lines = handle.read().split("\n")
+for number, line in enumerate(lines, 1):
+    if fences.feed(line) or fences.inside:
+        continue
+    for target in LINK.findall(prose(line)):
+        if not KEEP.match(target):
+            problems.append(f"line {number}: relative link {target}")
+            continue
+        match = SELF.match(target)
+        if not match:
+            continue
+        links += 1
+        kind, path = match.group(1), match.group(2).rstrip("/")
+        found = os.path.isdir(path) if kind == "tree" else os.path.isfile(path)
+        if ".." in path.split("/") or not found:
+            what = "directory" if kind == "tree" else "file"
+            problems.append(f"line {number}: {target} names no {what} in this checkout")
+for problem in problems:
+    print(problem)
+if problems:
+    sys.exit(1)
+print(links)
+PY
+); then
+  ok "site/llms-full.txt has no relative link, and all $llms_links of its links into this repository's main branch name a path in this checkout"
+else
+  bad "site/llms-full.txt has a relative link, or a link into this repository that names no path here"
+  printf '%s\n' "$llms_links" | sed 's/^/          /'
+fi
+
 echo "== the plugin bundle is current =="
 # plugin/ is generated from the guides by scripts/build-plugin.sh, the same way
 # site/llms-full.txt is, and for the same reason: a bundle that has drifted from the guides ships

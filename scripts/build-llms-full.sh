@@ -39,21 +39,100 @@ fi
 
 python3 tools/version_basis.py --check
 
+# The bundle is served from https://secureconfig.ai/, where a guide's relative link such as
+# (mfa.md) resolves to a page that does not exist. So each relative link outside code is
+# rewritten to the same path in the repository on GitHub: blob/main/<path> for a file and
+# tree/main/<path>/ for a directory, keeping any #anchor. In-page anchors, links with a scheme,
+# fenced blocks and code spans stay exactly as written, using the fence rule the gates use.
+#
+# The ref is the branch name main, not a commit SHA. The build has to be offline and
+# deterministic, and the commit that will carry this file does not exist while the file is
+# being built, so a SHA could only name an earlier commit: stale from the moment it merged, and
+# a hand bump on every change. main is a constant the build knows offline, it is the ref that
+# site/llms.txt and README.md already use, and the freshness gate keeps the committed bundle
+# equal to the guides it was built from, so on main a link and the text around it describe the
+# same revision.
+#
+# A link that leaves the repository, or names a path absent from this checkout, fails the
+# build, so a broken target cannot reach the bundle as a dead GitHub URL.
+IFS= read -r -d '' absolutize <<'PY' || true
+import os
+import posixpath
+import re
+import sys
+
+sys.path.insert(0, "tools")
+from _markdown import Fences
+
+BASE = "https://github.com/jposluns/secureconfig"
+REF = "main"
+LINK = re.compile(r"\]\(([^()\s]+)\)")
+KEEP = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.-]*:|#)")
+TICKS = re.compile(r"`+")
+name = sys.argv[1]
+
+
+def absolute(target):
+    path, mark, anchor = target.partition("#")
+    clean = posixpath.normpath(path)
+    if path.startswith("/") or clean == ".." or clean.startswith("../"):
+        sys.exit(f"{name}: link {target} does not name a path inside the repository")
+    if not os.path.exists(clean) or (path.endswith("/") and not os.path.isdir(clean)):
+        sys.exit(f"{name}: link {target} names no file or directory in the repository")
+    kind = "tree" if os.path.isdir(clean) else "blob"
+    slash = "/" if path.endswith("/") else ""
+    return f"{BASE}/{kind}/{REF}/{clean}{slash}{mark}{anchor}"
+
+
+def prose(text):
+    def one(match):
+        target = match.group(1)
+        return match.group(0) if KEEP.match(target) else "](" + absolute(target) + ")"
+    return LINK.sub(one, text)
+
+
+def rewrite(line):
+    # A code span is literal text, so a link-shaped string inside one is left alone. A run of
+    # backticks with no later run of the same length on its line is literal, as in CommonMark.
+    runs = list(TICKS.finditer(line))
+    out, pos, k = [], 0, 0
+    while k < len(runs):
+        n = len(runs[k].group(0))
+        close = next((j for j in range(k + 1, len(runs)) if len(runs[j].group(0)) == n), None)
+        if close is None:
+            k += 1
+            continue
+        out.append(prose(line[pos:runs[k].start()]))
+        out.append(line[runs[k].start():runs[close].end()])
+        pos, k = runs[close].end(), close + 1
+    out.append(prose(line[pos:]))
+    return "".join(out)
+
+
+fences = Fences()
+lines = sys.stdin.buffer.read().decode("utf-8").split("\n")
+for i, line in enumerate(lines):
+    if not fences.feed(line) and not fences.inside:
+        lines[i] = rewrite(line)
+sys.stdout.buffer.write("\n".join(lines).encode("utf-8"))
+PY
+
 {
   echo "# secureconfig.ai: all guides in one file"
   echo
   echo "> Generated from https://github.com/jposluns/secureconfig (CC0 1.0, except the AIQT Guardrails material listed in .aiqt/PIN, Apache-2.0)."
   echo "> Per-guide index: https://secureconfig.ai/llms.txt"
   echo "> Each file below starts with a line such as \`==> nginx.md\` between two lines of \`=\` characters."
-  echo "> A relative file link such as \`(mfa.md)\` names the section that starts with that file name, or, for a path with no section such as \`CONTRIBUTING.md\`, that path in https://github.com/jposluns/secureconfig; neither is a page on secureconfig.ai."
+  echo "> Every link to a guide or another repository file is an absolute URL in https://github.com/jposluns/secureconfig on the \`main\` branch, not a page on secureconfig.ai. If GitHub is unreachable, a guide's text is the section below that starts with its file name."
   for f in "${files[@]}"; do
     echo
     echo "======================================================================"
     echo "==> ${f}"
     echo "======================================================================"
     echo
-    # Strip legacy front matter; retain each two-section guide whole, including JSON.
-    python3 tools/version_basis.py --no-advisory --bundle "$f"
+    # Strip legacy front matter; retain each two-section guide whole, including JSON. Then
+    # rewrite its relative links to absolute GitHub URLs, as described above.
+    python3 tools/version_basis.py --no-advisory --bundle "$f" | python3 -c "$absolutize" "$f"
   done
 } > "$out"
 
