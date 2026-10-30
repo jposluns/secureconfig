@@ -16427,7 +16427,7 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
+REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. The bash -x, history and stub runs of the cookie subshell covered an earlier form, before the no-cookie and cookie requests took the application's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
 ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
@@ -16436,10 +16436,22 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
 # Route Handler or page returns a 3xx to /login (or 401/403 if you chose the "return 401" variant); a
 # streamed redirect can instead be a 200 whose body is a client-side redirect shell, not the protected content, so read the BODY, not the status
 # alone. --noproxy so no client proxy answers. Save each body and confirm it carries NO protected payload:
-curl -q -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/api/admin   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
-curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/dashboard    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Next.js app is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/api/admin"   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
+  curl -q -g -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/dashboard"    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+)
 # POSITIVE controls, so a denial above is the auth check firing and not a route broken for everyone. Put the
-# cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
+# app's host name and then the cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
 # `better-auth.session_token` (or `__Secure-better-auth.session_token` with secure cookies) - and paste a
 # real, freshly issued cookie VALUE at each hidden prompt. Test the admin route with an admin AND a non-admin
 # cookie (authorization, not only authentication), and confirm each success body is the real protected
@@ -16450,12 +16462,18 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
-  set -- PASTE_WHOLE_BLOCK 'session'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'session'   # the same app host name as the no-cookie check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the cookie NAME: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not probing'; exit 2; }
   case "$1" in
-    ''|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) echo 'the set -- line takes the cookie NAME only (letters, digits, . _ -); not probing'; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ''|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) echo 'the set -- line takes the cookie NAME second (letters, digits, . _ -); not probing'; exit 2 ;;
   esac
   { unset -n cookie_value && unset -v cookie_value; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
@@ -16465,17 +16483,17 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
   case "$cookie_value" in
     ''|*[[:cntrl:]]*) echo 'a valid admin session cookie value is required; not probing'; exit 2 ;;
   esac
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- https://app.example.com/dashboard   # expect 200; dash-auth.txt is the dashboard, not /login
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- https://app.example.com/api/admin    # admin cookie: 200
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- "https://$1/dashboard"   # expect 200; dash-auth.txt is the dashboard, not /login
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- "https://$1/api/admin"    # admin cookie: 200
   IFS= read -r -s -p 'NON-ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
   printf '\n'
   case "$cookie_value" in
     ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; exit 2 ;;
   esac
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- https://app.example.com/api/admin   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- "https://$1/api/admin"   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
 )
 # Secret scan of the client bundle: search the FULL secret (not a prefix), require the build to exist, and
 # read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block).
@@ -16599,7 +16617,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3e3c78f3bc938c5e60dba0ea3962980482658ef33dc2bb25c1de60f31b47e539",
+  "body_sha256": "6f31f50e89f49e9023d24aa8f44d858bc55a0c1d3ad26733e48fa16d56980d9a",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",
@@ -29285,7 +29303,7 @@ AIStor retries failed delivery, but events can be permanently lost when the queu
 
 ## 8. Verify (REASONED: every unit in this section rests on the local evidence and comparison-specific declarations throughout this section, citing Sources entries including AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions). A live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md)
 
-REASONED: only local parsing, shell behaviour and arithmetic were exercised in an offline scratch clone. All eight Bash blocks in this section passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; the three JSON examples in sections 4, 4.2 and 8 parsed with Python json.loads. The shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture. The first six Bash blocks printed stub responses and forwarded their placeholders unchanged: substitute real values before a live run. The live comparisons need AIStor, KMS, a durable audit receiver, and an IdP; a live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Credentials and authenticated STS/S3 and load clients with per-node metrics collection are also required. Sources entries include AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); each comparison's declaration identifies its specific sources. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
+REASONED: only local parsing, shell behaviour and arithmetic were exercised in an offline scratch clone. All eight Bash blocks in this section passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; the three JSON examples in sections 4, 4.2 and 8 parsed with Python json.loads. The shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture. The first six Bash blocks printed stub responses and forwarded their placeholders unchanged: substitute real values before a live run. The bash -n, ShellCheck and stub runs covered the first Bash block, the exposure probes, in an earlier form, before its curls took the S3 host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on that block, and its guard has not been run. The live comparisons need AIStor, KMS, a durable audit receiver, and an IdP; a live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Credentials and authenticated STS/S3 and load clients with per-node metrics collection are also required. Sources entries include AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); each comparison's declaration identifies its specific sources. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
 
 REASONED in this authoring environment: the existing probes below are retained, but their live outcomes were not demonstrated here. A live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md.
 
@@ -29305,16 +29323,28 @@ REASONED: following block; alias JSON follows the cited mc alias import schema; 
 
 Use root credentials in `mys3` only for the administrative comparisons below. Protect both the imported file and the resulting local `mc` configuration. Importing an alias is configuration, not proof of working authentication; confirm signed operations against MinIO's own endpoint.
 
-REASONED: following block; exposure and alias-import expectations follow the cited server and anonymous-policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With a fixture alias input path, the block printed stub listener, curl, and mc responses; the recorded calls covered all four URLs and alias JSON on stdin. Real listener scope, anonymous grants versus MinIO denials, and signed authentication were not observed. Per the guide's cited MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted); MinIO `mc anonymous get-json`; AIStor `mc alias import`. The MinIO `mc anonymous get-json` entry is cited for retrieving a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions, and the AIStor `mc alias import` entry for stdin and JSON fields. The three existing citations were not reopened.
+REASONED: following block; exposure and alias-import expectations follow the cited server and anonymous-policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output on this block in an earlier form, before its four curls took the S3 host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the guard has not been run. In that earlier form, with a fixture alias input path, the block printed stub listener, curl, and mc responses; the recorded calls covered all four URLs and alias JSON on stdin. Real listener scope, anonymous grants versus MinIO denials, and signed authentication were not observed. Per the guide's cited MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted); MinIO `mc anonymous get-json`; AIStor `mc alias import`. The MinIO `mc anonymous get-json` entry is cited for retrieving a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions, and the AIStor `mc alias import` entry for stdin and JSON fields. The three existing citations were not reopened.
 
 ```bash
 ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
-curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' https://s3.example.com:9000/                     # service root: anonymous ListBuckets denied
-curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/ # per bucket: anonymous listing denied
-curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT
-                                                       # a known private object: 403, never 200, and the 403 must come from MinIO (behind a proxy a 403 may be the proxy's, so probe MinIO's direct origin). Anonymous policies are set per
-                                                       # bucket, so a denial at the service root does not prove any bucket is private
-curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' https://s3.example.com:9001/                     # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_S3_HOST'   # the host name MinIO's own S3 API answers on (its direct origin), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/"                     # service root: anonymous ListBuckets denied
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/" # per bucket: anonymous listing denied
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT"
+                                                         # a known private object: 403, never 200, and the 403 must come from MinIO (behind a proxy a 403 may be the proxy's, so probe MinIO's direct origin). Anonymous policies are set per
+                                                         # bucket, so a denial at the service root does not prove any bucket is private
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9001/"                     # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
+)
 mc alias import mys3 < /path/to/REPLACE_WITH_ADMIN_ALIAS.json
 ```
 
@@ -29601,7 +29631,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f7fbf10d4fba4505db3677d4248bc6154d9b1f96f68d295a05b804609804614b",
+  "body_sha256": "8fe32dd049e56b0d19e389fd6a656d815964019097c5ae2cddfbda0a92888c15",
   "components": {
     "aistor": {
       "name": "AIStor documentation",
@@ -44259,7 +44289,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
-**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. The /invocations runs and the bash -n result covered an earlier form, before the key and /invocations subshells took the model server's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains and exit 2 on a partial paste or a wrong value count; neither the stub runs nor bash -n was repeated on the guarded form, and the guards have not been run. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
 
 ```bash
 ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
@@ -44281,22 +44311,34 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
   # Use a short-lived key or clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the key from set -x
   # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MODEL_HOST' 'REPLACE_WITH_API_KEY'   # the public host name your proxy serves the model API on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit ;; esac
-  curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
-  printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
+  curl -q -g -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' "https://$1/v1/models"   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
+  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- "https://$1/v1/models"   # positive control: 200 with a model list, printed
 )
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_A_REAL_SERVED_MODEL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MODEL_HOST' 'REPLACE_WITH_A_REAL_SERVED_MODEL'   # the same model API host name as the key check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then a real served model name: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
-  curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
-    -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" https://models.example.com/invocations
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
+  curl -q -g -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
+    -d "{\"model\":\"$2\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" "https://$1/invocations"
 )
                                                         # vLLM /invocations needs JSON (a bare -d '{}' sends form
                                                         # content-type and fails the schema) and a REAL served model.
@@ -44314,7 +44356,7 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
 
 REASONED: mixed process-matching evidence and parser/visibility limitations from the printed expression and cited parser sources. The historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward. The pgrep line's demonstration covered only local expression matching, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line. The `pgrep` line prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4). The stub arguments `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`. The stub arguments `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`. The `pgrep` line therefore tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
 
-REASONED: following block; anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage. Bash 5.3.9 bash -n accepted all four Verify shell fences. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
+REASONED: following block; anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage. Bash 5.3.9 bash -n accepted all four Verify shell fences, the first in an earlier form, before its key and /invocations probes took the model server's host on guarded `set --` lines. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
 ```bash
 # REASONED: text-generation-webui authentication follows the cited modules/api/script.py; no container runtime is available.
@@ -44573,7 +44615,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f7fe51cf784a5f8de4d90469ce4cca4eac1c5ba21736cd73aee8df4c6a074f49",
+  "body_sha256": "d7a262aac973f5296e58350c24afcfc916e07838af8cefd0f91aca49a447b71e",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -46006,6 +46048,7 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 ```bash
 # REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in the authoring environment. Expected API status outcomes require a live check; the assessment above traces conditional public-API refusal and the workflows list route's middleware, response body and declared 200 success status; pinned source still establishes the Webhook refusal codes.
 # On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
+# The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains; those guards have not been run.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
 # owner-creation data to a live instance as a "test".
@@ -46013,9 +46056,20 @@ ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n
            # private container network), with the Postgres and task-runner ports NOT published. Loopback
            # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
 # TLS reachability (proves TLS, not authentication):
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
-  -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://n8n.example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST'   # the public host name your proxy serves n8n on (your N8N_HOST value), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
+    -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/"
+)
 # Public API auth, matched pair against the same URL: expect rejection without the n8n key
 # (for example 401) and 200 workflow JSON with a valid key; verify both outcomes on your instance.
 # The key is fed on stdin (-H @-), so it stays out of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
@@ -46023,15 +46077,21 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # account's view of the process.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_N8N_API_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_N8N_API_KEY'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
-  case "$1" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 1 ;; esac
-  u=https://n8n.example.com/api/v1/workflows
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
+  case "$2" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 2 ;; esac
+  u="https://$1/api/v1/workflows"
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$u"
-  printf 'X-N8N-API-KEY: %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
+  printf 'X-N8N-API-KEY: %s\n' "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
 )
 # no-key => expect rejection by n8n; check the observed status (a fronting proxy can also 401, so hold its
 # credential constant and vary only the n8n key). With-key => expect 200 and workflow JSON.
@@ -46042,14 +46102,20 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # Basic/JWT auth returns 401 and missing Header auth returns 403 in the pinned handler.
 # Valid calls must perform the expected action; missing/wrong calls must not. A 200 alone is not proof (a workflow can respond 200 without acting); a 404 means inactive/wrong
 # method/wrong path, not protected. For a None webhook that validates a signature in the workflow,
-# confirm an unsigned request runs no action. Pick a workflow safe to trigger, and substitute your path.
+# confirm an unsigned request runs no action. Pick a workflow safe to trigger, and substitute your n8n host and webhook path.
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_WEBHOOK_PATH'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_WEBHOOK_PATH'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the production webhook path after /webhook/: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 1 ;; esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://n8n.example.com/webhook/$1"
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 2 ;; esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://$1/webhook/$2"
 )
 ```
 
@@ -46330,7 +46396,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "9673c2069a870b71db5ed9b73904ce9c93c572c714da0142d7995c3d98178a48",
+  "body_sha256": "284a134ea8c90bb763014fc2ed80a579051aacf726319e879e68889d52a807d4",
   "components": {
     "server": {
       "name": "n8n listener source",
@@ -48336,7 +48402,7 @@ REASONED: preceding block; this Probe 1 paragraph and the listener block above i
 
 REASONED: the header shape of the three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (request headers, header/body validation) and Discovery entry (request shape). No MCP server is available in the authoring environment to answer a mismatched header with HTTP 400 and -32020, or a matching one without it. During marking review (October 2026) the four server/discover bodies in those blocks parsed as JSON, and in each the MCP-Protocol-Version header equalled the protocol version 2026-07-28 in `params._meta`, Mcp-Method equalled the body's method, clientCapabilities and clientInfo were present, and no Mcp-Name header appeared. `Mcp-Name` is deliberately absent: it is required only for `tools/call`, `resources/read`, and `prompts/get`, not `server/discover`. The `MCP-Protocol-Version` header must equal the body's `_meta` version; all three probes satisfy that requirement by construction. See Streamable HTTP and the Discovery request shape.
 
-REASONED: following block; the unauthenticated server/discover probe and well-known metadata read in the following block, and the placeholder guards of all three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries. The authoring environment has no MCP server or authorization server, so neither the fixed 401 nor an exposed discovery result was observed. During marking review (October 2026) the three blocks passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network. Unchanged, each printed its substitute-the-MCP-HTTPS-URL refusal; without its set -- line, the paste-the-whole-block refusal; shortened, its exactly-N-values refusal; and an http:// URL drew the https:// refusal. In the following block an unsubstituted Origin drew the allowed-Origin refusal and a control character the control-character refusal, and with both values substituted the stub received one POST carrying the Origin, MCP-Protocol-Version, Mcp-Method, Content-Type and Accept headers; its illustrative well-known read sits outside the subshell and reached the stub in every run. Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole subshell block.
+REASONED: following block; the unauthenticated server/discover probe and well-known metadata read in the following block, and the placeholder guards of all three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries. The authoring environment has no MCP server or authorization server, so neither the fixed 401 nor an exposed discovery result was observed. During marking review (October 2026) the three blocks passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network. Unchanged, each printed its substitute-the-MCP-HTTPS-URL refusal; without its set -- line, the paste-the-whole-block refusal; shortened, its exactly-N-values refusal; and an http:// URL drew the https:// refusal. In the following block an unsubstituted Origin drew the allowed-Origin refusal and a control character the control-character refusal, and with both values substituted the stub received one POST carrying the Origin, MCP-Protocol-Version, Mcp-Method, Content-Type and Accept headers. At the October 2026 marking review the block's well-known read sat outside the subshell, named mcp.example.com and reached the stub in every run. The well-known read now sits in its own subshell and takes the MCP server's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; that guard has not been run, and neither bash -n nor ShellCheck was re-run on the changed block. Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole subshell block.
 
 ```bash
 # REASONED: unauthenticated discovery follows MCP 2026-07-28 Authorization and Authorization Server Discovery; no live server is available.
@@ -48363,8 +48429,19 @@ REASONED: following block; the unauthenticated server/discover probe and well-kn
 # Option A only: FOLLOW the resource_metadata URL from the 401's WWW-Authenticate header WHEN PRESENT
 # (the spec permits well-known-only discovery; fall back to /.well-known/oauth-protected-resource/mcp,
 # then the root below) and confirm it names your authorization server.
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -s --noproxy '*' https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MCP_HOST'   # the host name of the MCP HTTPS URL used above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -s --noproxy '*' "https://$1/.well-known/oauth-protected-resource"   # JSON with "authorization_servers"
+)
 ```
 
 REASONED: preceding block; this Probe 2 paragraph and the unauthenticated discovery block above it. Probe 2's expected 403 and exposed discovery result rest on the guide's cited MCP specification 2026-07-28 Streamable HTTP, Discovery and Caching entries; the block above rests on the entries named in the declaration before it, which also records its local runs, and Probe 2's own local runs are recorded with the following block. **Probe 2 - REASONED, not demonstrated.** No live MCP 2026-07-28 server and valid deployment credential are available in the authoring environment. Establish the allowed-Origin positive control before interpreting the negative request. Require a real `DiscoverResult`, including `resultType:"complete"`, `supportedVersions`, `capabilities`, and the `ttlMs`/`cacheScope` caching hints required for complete discovery results. See Discovery and Caching. Fixed: changing only Origin produces `403`; exposed: the disallowed Origin still receives a discovery result. A `403` counts as an Origin rejection only after the otherwise-identical positive control succeeds. See Streamable HTTP, Security & Endpoint.
@@ -48541,7 +48618,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "14ddbe1f83f75128280ee817442324de96f6877ebcd3e4ec0b4395f20ebb6660",
+  "body_sha256": "d99b132b682dc350783345c091688d2b7eeeb6ea369daa6cc3ed88d8fc46185e",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -49769,7 +49846,7 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
   esac
 )
 # experiments/search is a POST endpoint, so each check posts a minimal body. --noproxy so no client
-# proxy answers. A 401 at mlflow.example.com can come from the fronting proxy OR from MLflow's own basic
+# proxy answers. A 401 at your public MLflow host can come from the fronting proxy OR from MLflow's own basic
 # auth, so the backend check below proves MLflow itself enforces it, not just the proxy. These are
 # MANUAL checks: each command prints its HTTP status for you to compare with the comment; curl exits 0
 # for 401/403/404 too, so shell success is NOT a pass, and an open MLflow backend answers the anonymous
@@ -49785,40 +49862,46 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
   # Each credential reaches curl on stdin via a config file (curl --config -), never
   # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MLFLOW_HOST' 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # first the public host name your proxy serves MLflow on, which is also a Host that --allowed-hosts admits, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace each value inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit ;; esac
-  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit ;; esac
-  case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}" "${2//\\/\\\\}" "${3//\\/\\\\}" "$4"
-  set -- "${1//\"/\\\"}" "${2//\"/\\\"}" "${3//\"/\\\"}" "$4"
-  curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: no credentials
-  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - https://mlflow.example.com/api/2.0/mlflow/experiments/search   # positive control: 200 with the admin password
-  printf 'user = "admin:not-the-real-password"\n' | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
+  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit 2 ;; esac
+  case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit 2 ;; esac
+  case "$5" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}" "${4//\\/\\\\}" "$5"
+  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}" "${4//\"/\\\"}" "$5"
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    "https://$1/api/2.0/mlflow/experiments/search"   # 401: no credentials
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - "https://$1/api/2.0/mlflow/experiments/search"   # positive control: 200 with the admin password
+  printf 'user = "admin:not-the-real-password"\n' | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - "https://$1/api/2.0/mlflow/experiments/search"   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
   # On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
   # MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
-  # so send the allowed Host header:
-  curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
+  # so send the allowed Host header, your MLflow host name from the set -- line:
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
     http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # 401: no credentials, on the backend
-  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
     --config - http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # backend positive control: 200 with the admin password
   # Authorization, not just authentication: experiments/search only returns results the caller may see, so
   # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
   # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
-  printf 'user = "admin:%s"\n' "$1" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$4"   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
-  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$4"   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
+    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
+  printf 'user = "%s:%s"\n' "$3" "$4" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
+    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
 )
 ```
 
-REASONED: preceding block; listener inventory, external TCP reachability, proxy/backend authentication and experiment authorization follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation.
+REASONED: preceding block; listener inventory, external TCP reachability, proxy/backend authentication and experiment authorization follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ## Common mistakes
 
@@ -49917,7 +50000,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e7125ada279291517752e5f8ec2f0b5eed39fba2b7f3af3ed17e853298c020ec",
+  "body_sha256": "ac9f6588a4d5dc4a3d32df09c82450fe806fe6fcb26084470b1e6c23805a71d4",
   "components": {
     "source": {
       "name": "MLflow pinned source",
@@ -53682,7 +53765,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The October 2026 marking review covered the Langfuse dashboard and key-pair checks in an earlier form, before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; bash -n was not re-run on the guarded block, and the new guards have not been run. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -53694,8 +53777,9 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
 ```bash
 # REASONED: these checks follow the cited vendor documentation and source readings, not live results.
 # The authoring environment has no running Langfuse,
-# Phoenix, Helicone, or OpenTelemetry Collector deployment to probe, so the shell syntax and the guard
-# branches were tested locally but the exposed-vs-fixed service responses were not.
+# Phoenix, Helicone, or OpenTelemetry Collector deployment to probe, so the shell syntax and the key guard
+# branches were tested locally in an earlier form (the Langfuse host guards have not been run), but the
+# exposed-vs-fixed service responses were not.
 # ss is a listener inventory in THIS namespace - not a firewall, NAT, or authentication check.
 ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
            # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
@@ -53705,9 +53789,20 @@ ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespac
 # Langfuse dashboard: a bare GET of / cannot tell a login page from an exposed project view (both are 200
 # and the body is discarded), so confirm it in a FRESH browser session - an unauthenticated visit must
 # land on login, not a project. The curl below is only transport reachability.
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
-  -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' https://langfuse.example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST'   # the public host name your proxy serves Langfuse on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
+)
 # Langfuse public API auth, matched pair: WITHOUT the key expect 401; WITH a valid project key (public:secret)
 # expect 200 whose JSON body carries the EXPECTED project id - the positive control. A 401/200 pair seen
 # THROUGH a reverse proxy does not prove Langfuse itself authenticated (a proxy can reject anonymous and
@@ -53721,18 +53816,24 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   # Use a short-lived project key or clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the keys from set -x
   # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST' 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'   # the same Langfuse host name as the dashboard check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the project's public and secret keys: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}" "${2//\\/\\\\}"
-  set -- "${1//\"/\\\"}" "${2//\"/\\\"}"
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit 2 ;; esac
+  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}"
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
-    -w 'projects no-key=%{http_code} exit=%{exitcode}\n' https://langfuse.example.com/api/public/projects
-  printf 'user = "%s:%s"\n' "$1" "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - https://langfuse.example.com/api/public/projects
+    -w 'projects no-key=%{http_code} exit=%{exitcode}\n' "https://$1/api/public/projects"
+  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - "https://$1/api/public/projects"
 )
 # Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat the
 # probe below WITH it, on curl's stdin as described next, and expect a 2xx - the positive
@@ -54000,7 +54101,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "109bc364d02f1fe2c4808885b0accda205afa2ca802ddfd29f2db3321e9067cc",
+  "body_sha256": "b22a5cbf0d79a6fe0d6cc51578b422e70a145e187173b8933512cc8a2f29f062",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",

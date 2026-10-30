@@ -154,7 +154,7 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
+REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. The bash -x, history and stub runs of the cookie subshell covered an earlier form, before the no-cookie and cookie requests took the application's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
 ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
@@ -163,10 +163,22 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
 # Route Handler or page returns a 3xx to /login (or 401/403 if you chose the "return 401" variant); a
 # streamed redirect can instead be a 200 whose body is a client-side redirect shell, not the protected content, so read the BODY, not the status
 # alone. --noproxy so no client proxy answers. Save each body and confirm it carries NO protected payload:
-curl -q -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/api/admin   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
-curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/dashboard    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Next.js app is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/api/admin"   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
+  curl -q -g -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/dashboard"    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+)
 # POSITIVE controls, so a denial above is the auth check firing and not a route broken for everyone. Put the
-# cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
+# app's host name and then the cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
 # `better-auth.session_token` (or `__Secure-better-auth.session_token` with secure cookies) - and paste a
 # real, freshly issued cookie VALUE at each hidden prompt. Test the admin route with an admin AND a non-admin
 # cookie (authorization, not only authentication), and confirm each success body is the real protected
@@ -177,12 +189,18 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
-  set -- PASTE_WHOLE_BLOCK 'session'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'session'   # the same app host name as the no-cookie check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the cookie NAME: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not probing'; exit 2; }
   case "$1" in
-    ''|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) echo 'the set -- line takes the cookie NAME only (letters, digits, . _ -); not probing'; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ''|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) echo 'the set -- line takes the cookie NAME second (letters, digits, . _ -); not probing'; exit 2 ;;
   esac
   { unset -n cookie_value && unset -v cookie_value; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
@@ -192,17 +210,17 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
   case "$cookie_value" in
     ''|*[[:cntrl:]]*) echo 'a valid admin session cookie value is required; not probing'; exit 2 ;;
   esac
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- https://app.example.com/dashboard   # expect 200; dash-auth.txt is the dashboard, not /login
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- https://app.example.com/api/admin    # admin cookie: 200
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- "https://$1/dashboard"   # expect 200; dash-auth.txt is the dashboard, not /login
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- "https://$1/api/admin"    # admin cookie: 200
   IFS= read -r -s -p 'NON-ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
   printf '\n'
   case "$cookie_value" in
     ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; exit 2 ;;
   esac
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- https://app.example.com/api/admin   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- "https://$1/api/admin"   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
 )
 # Secret scan of the client bundle: search the FULL secret (not a prefix), require the build to exist, and
 # read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block).
@@ -326,7 +344,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3e3c78f3bc938c5e60dba0ea3962980482658ef33dc2bb25c1de60f31b47e539",
+  "body_sha256": "6f31f50e89f49e9023d24aa8f44d858bc55a0c1d3ad26733e48fa16d56980d9a",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",

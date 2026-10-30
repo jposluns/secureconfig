@@ -118,6 +118,7 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 ```bash
 # REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in the authoring environment. Expected API status outcomes require a live check; the assessment above traces conditional public-API refusal and the workflows list route's middleware, response body and declared 200 success status; pinned source still establishes the Webhook refusal codes.
 # On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
+# The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains; those guards have not been run.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
 # owner-creation data to a live instance as a "test".
@@ -125,9 +126,20 @@ ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n
            # private container network), with the Postgres and task-runner ports NOT published. Loopback
            # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
 # TLS reachability (proves TLS, not authentication):
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
-  -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://n8n.example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST'   # the public host name your proxy serves n8n on (your N8N_HOST value), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
+    -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/"
+)
 # Public API auth, matched pair against the same URL: expect rejection without the n8n key
 # (for example 401) and 200 workflow JSON with a valid key; verify both outcomes on your instance.
 # The key is fed on stdin (-H @-), so it stays out of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
@@ -135,15 +147,21 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # account's view of the process.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_N8N_API_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_N8N_API_KEY'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
-  case "$1" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 1 ;; esac
-  u=https://n8n.example.com/api/v1/workflows
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
+  case "$2" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 2 ;; esac
+  u="https://$1/api/v1/workflows"
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$u"
-  printf 'X-N8N-API-KEY: %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
+  printf 'X-N8N-API-KEY: %s\n' "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
 )
 # no-key => expect rejection by n8n; check the observed status (a fronting proxy can also 401, so hold its
 # credential constant and vary only the n8n key). With-key => expect 200 and workflow JSON.
@@ -154,14 +172,20 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # Basic/JWT auth returns 401 and missing Header auth returns 403 in the pinned handler.
 # Valid calls must perform the expected action; missing/wrong calls must not. A 200 alone is not proof (a workflow can respond 200 without acting); a 404 means inactive/wrong
 # method/wrong path, not protected. For a None webhook that validates a signature in the workflow,
-# confirm an unsigned request runs no action. Pick a workflow safe to trigger, and substitute your path.
+# confirm an unsigned request runs no action. Pick a workflow safe to trigger, and substitute your n8n host and webhook path.
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_WEBHOOK_PATH'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_WEBHOOK_PATH'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the production webhook path after /webhook/: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 1 ;; esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://n8n.example.com/webhook/$1"
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 2 ;; esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://$1/webhook/$2"
 )
 ```
 
@@ -442,7 +466,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "9673c2069a870b71db5ed9b73904ce9c93c572c714da0142d7995c3d98178a48",
+  "body_sha256": "284a134ea8c90bb763014fc2ed80a579051aacf726319e879e68889d52a807d4",
   "components": {
     "server": {
       "name": "n8n listener source",
