@@ -320,7 +320,7 @@ AIStor retries failed delivery, but events can be permanently lost when the queu
 
 ## 8. Verify (REASONED: every unit in this section rests on the local evidence and comparison-specific declarations throughout this section, citing Sources entries including AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions). A live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md)
 
-REASONED: only local parsing, shell behaviour and arithmetic were exercised in an offline scratch clone. All eight Bash blocks in this section passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; the three JSON examples in sections 4, 4.2 and 8 parsed with Python json.loads. The shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture. The first six Bash blocks printed stub responses and forwarded their placeholders unchanged: substitute real values before a live run. The bash -n, ShellCheck and stub runs covered the first Bash block, the exposure probes, in an earlier form, before its curls took the S3 host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on that block, and its guard has not been run. The live comparisons need AIStor, KMS, a durable audit receiver, and an IdP; a live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Credentials and authenticated STS/S3 and load clients with per-node metrics collection are also required. Sources entries include AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); each comparison's declaration identifies its specific sources. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
+REASONED: only local parsing, shell behaviour and arithmetic were exercised in an offline scratch clone. All eight Bash blocks in this section passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; the three JSON examples in sections 4, 4.2 and 8 parsed with Python json.loads. The shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture. The first six Bash blocks printed stub responses and forwarded their placeholders unchanged: substitute real values before a live run. The bash -n, ShellCheck and stub runs covered the first Bash block, the exposure probes, in an earlier form, before its curls took the S3 host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on that block, and its guard has not been run. The bash -n, ShellCheck and stub runs also covered the presigned-URL and Console-disabled blocks in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form of those two blocks, whose guard refusals leave the subshell with status 2. The live comparisons need AIStor, KMS, a durable audit receiver, and an IdP; a live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Credentials and authenticated STS/S3 and load clients with per-node metrics collection are also required. Sources entries include AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); each comparison's declaration identifies its specific sources. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
 
 REASONED in this authoring environment: the existing probes below are retained, but their live outcomes were not demonstrated here. A live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md.
 
@@ -458,19 +458,19 @@ For the duration caveat, use a valid JWT expiring in approximately 20 minutes, `
 
 Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner. This block and the Console-disabled check below print the `exitcode` and `errormsg` write-out variables, which the cited curl manual dates to curl 7.75.0; use curl 7.75.0 or later.
 
-REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With curl stubbed, the literal placeholder, empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed their guard messages without invoking curl, including a short assignment under set -u. A fixture HTTPS URL reached curl via config stdin, not argv; a backslash/quote fixture was escaped in that input. Both admitted cases printed a stub response. These are local guard and formatting observations, not expiry or signature-age enforcement. Per the guide's cited AIStor `mc share download` (presigned credentials and expiry); AIStor access management (built-in policies, custom policy structure, actions, and resources); AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key). These existing citations were not reopened.
+REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With curl stubbed, the literal placeholder, empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed their guard messages without invoking curl, including a short assignment under set -u. A fixture HTTPS URL reached curl via config stdin, not argv; a backslash/quote fixture was escaped in that input. Both admitted cases printed a stub response. The bash -n, ShellCheck and stub runs recorded here covered the presigned-URL block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. These are local guard and formatting observations, not expiry or signature-age enforcement. Per the guide's cited AIStor `mc share download` (presigned credentials and expiry); AIStor access management (built-in policies, custom policy structure, actions, and resources); AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key). These existing citations were not reopened.
 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRESIGNED_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*example.com*|*[[:cntrl:]]*|"") echo "substitute the complete URL without control characters; not probing"; exit ;;
+    *REPLACE_WITH_*|*example.com*|*[[:cntrl:]]*|"") echo "substitute the complete URL without control characters; not probing"; exit 2 ;;
     https://*) ;;
-    *) echo "use the deployment HTTPS URL; not probing"; exit ;;
+    *) echo "use the deployment HTTPS URL; not probing"; exit 2 ;;
   esac
   set -- "${1//\\/\\\\}"
   set -- "${1//\"/\\\"}"
@@ -490,21 +490,21 @@ Correlate denials with AIStor's own request or audit evidence. A proxy error, ex
 
 **Console disabled, REASONED:** a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Run this on each AIStor host with permission to inspect its listeners. Supply the direct Console URL established by section 3, without credentials or query parameters, and a proven application object:
 
-REASONED: following block; Console disablement follows the cited Console settings; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With mc, ss, and curl stubbed, the literal placeholders, either empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed guard messages without external calls, including a short assignment under set -u. Valid fixtures called mc, ss, and curl in order and printed stub listener/curl responses; a failing mc printed signed S3 read failed; stop, exited 1, and called neither ss nor curl. Enabled versus disabled Console behaviour still requires the live comparison below. Per the guide's cited AIStor Console settings (disablement and browser redirection); AIStor `mc cat`. These existing citations were not reopened.
+REASONED: following block; Console disablement follows the cited Console settings; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With mc, ss, and curl stubbed, the literal placeholders, either empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed guard messages without external calls, including a short assignment under set -u. Valid fixtures called mc, ss, and curl in order and printed stub listener/curl responses; a failing mc printed signed S3 read failed; stop, exited 1, and called neither ss nor curl. The bash -n, ShellCheck and stub runs recorded here covered the Console-disabled block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. Enabled versus disabled Console behaviour still requires the live comparison below. Per the guide's cited AIStor Console settings (disablement and browser redirection); AIStor `mc cat`. These existing citations were not reopened.
 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIRECT_CONSOLE_HTTPS_URL' 'app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  [ -n "$1" ] && [ -n "$2" ] || { echo "supply both values; not probing"; exit; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  [ -n "$1" ] && [ -n "$2" ] || { echo "supply both values; not probing"; exit 2; }
   case "$1|$2" in
-    *REPLACE_WITH_*|*example.com*|*[[:cntrl:]]*) echo "substitute deployment values without control characters; not probing"; exit ;;
+    *REPLACE_WITH_*|*example.com*|*[[:cntrl:]]*) echo "substitute deployment values without control characters; not probing"; exit 2 ;;
   esac
   case "$1" in
     https://*) ;;
-    *) echo "use the deployment HTTPS Console URL; not probing"; exit ;;
+    *) echo "use the deployment HTTPS Console URL; not probing"; exit 2 ;;
   esac
   mc cat "$2" > /dev/null || { echo "signed S3 read failed; stop"; exit 1; }
   ss -tlnp
@@ -651,7 +651,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "37c808d8cad4a9b2bd6d9c55cb9afaa14ddf0f9c801d690ee2feea683ce2bf6f",
+  "body_sha256": "baa2a64118aca8409a4b333045d0efc42601c486f9e65aeb0d6edb3bfe7b55e0",
   "components": {
     "aistor": {
       "name": "AIStor documentation",

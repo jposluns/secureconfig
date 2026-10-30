@@ -86,11 +86,11 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
   # Stdin closes the argv channel only: it does not hide the passwords from
   # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CURRENT_ADMIN_PASSWORD' 'REPLACE_WITH_LONG_RANDOM_VALUE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the current admin password on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the new password on the set -- line above; not probing"; exit ;; esac
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the current admin password on the set -- line above; not probing"; exit 2 ;; esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the new password on the set -- line above; not probing"; exit 2 ;; esac
   # Both passwords reach curl on stdin via a config file (curl --config -), never
   # argv: -u admin:PASSWORD and the -d body are world-readable in /proc/<pid>/cmdline.
   # Escape backslashes then quotes for the config; the new password is JSON-escaped
@@ -125,11 +125,11 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
          -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:5000/" || true ;;
   esac
@@ -292,7 +292,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c26be5df8848ac134c74388c6608d68aa93710cdc720c9ffe1ab3548e7ed237e",
+  "body_sha256": "eb23186fa44285caae697fb95581894572df447cf1fb847722d1d1ec47896370",
   "components": {
     "source": {
       "name": "MLflow pinned source",
