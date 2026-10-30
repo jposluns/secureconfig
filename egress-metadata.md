@@ -189,10 +189,10 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
 # not a forward proxy's allow list; where a proxy is the egress control, test through it separately.
 (
   set -- SECURECONFIG_EGRESS_ALLOW_URL 'https://sts.amazonaws.com/'
-  [ "${1-}" = SECURECONFIG_EGRESS_ALLOW_URL ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = SECURECONFIG_EGRESS_ALLOW_URL ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 URL; not probing"; exit; }
-  [ -n "${1-}" ] || { echo "substitute a URL on this workload's egress allow list; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 URL; not probing"; exit 2; }
+  [ -n "${1-}" ] || { echo "substitute a URL on this workload's egress allow list; not probing"; exit 2; }
   curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' --max-time 5 "$1"
 )
 
@@ -310,7 +310,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1d30a27b2711977c882eeda8c740d41c3099dc10d3636c796ef04b63d6b47ee3",
+  "body_sha256": "ed7287acb15743a98698acc63873f39840d551f60e17cd84af36f7118c4cd54e",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
