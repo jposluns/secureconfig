@@ -54,8 +54,9 @@ WHAT THIS CATCHES
                  cases with ;& or ;;& grant no coverage.
                  A shape the scanner cannot track, such as a ) with no
                  matching ( at that point, withdraws coverage from the
-                 whole block; each finding then names the first such line
-                 and its cause.
+                 whole block; each C2-PROBE-OUTSIDE-GUARD finding then
+                 names where tracking first became uncertain (a line, or
+                 the end of the block) and its cause.
   C2-WARN-ONLY-GUARD  (--strict-guards only; NOT registered in run_all_checks)
                  an if/elif whose condition mentions REPLACE_WITH_ but whose
                  body reaches fi without exit/return, followed later in the
@@ -1994,8 +1995,10 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
             strict_toks = strict_records[record_no][token_no]
             if literals is None:
                 literals = [False] * len(toks)
-                note_uncertain(lineno, "the C2 quote scan cannot align "
-                               "this line with the shared tokenizer")
+                note_uncertain(lineno, "the C2 scan cannot tell which "
+                               "words on this line are quoted, because its "
+                               "quote-marked tokens differ from the shared "
+                               "tokenizer's")
                 kill_arms(revoke=True)
 
             # A lifted body shares the existing command numbering and C1/C3
@@ -2045,8 +2048,12 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                     elif t == ")":
                         array_depth -= 1
                     if bool(array_depth) != bool(c2_array_depth):
-                        note_uncertain(lineno, "a quoted or escaped ( or ) "
-                                       "inside an array assignment")
+                        note_uncertain(
+                            lineno, "the shared scanner and the C2 scan "
+                            "disagree on whether an array assignment is "
+                            "open, as when the shared scanner counts a "
+                            "quoted or escaped ( or ) that the C2 scan "
+                            "treats as literal text")
                     k += 1
                     continue
                 if in_dbrackets:
@@ -2056,15 +2063,20 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                         strict_buf = []
                         buf_is_literal = True
                         if not literal:
-                            note_uncertain(lineno, "a quoted or escaped ]] "
-                                           "ends a [[ test")
+                            note_uncertain(
+                                lineno, "the shared scanner took a quoted "
+                                "or escaped ]] as the end of a [[ test, but "
+                                "the C2 scan treats that token as literal "
+                                "text")
                     k += 1
                     continue
                 if t == "[[":
                     kill_arms()
                     if not literal:
-                        note_uncertain(lineno, "a quoted or escaped [[ "
-                                       "starts a test")
+                        note_uncertain(
+                            lineno, "the shared scanner took a quoted or "
+                            "escaped [[ as the start of a [[ test, but the "
+                            "C2 scan treats that token as literal text")
                     in_dbrackets = True
                     k += 1
                     continue
@@ -2075,8 +2087,11 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
                     array_depth = 1
                     c2_array_depth = 1 if literal else 0
                     if not literal:
-                        note_uncertain(lineno, "a quoted or escaped ( "
-                                       "starts an array assignment")
+                        note_uncertain(
+                            lineno, "the shared scanner took a quoted or "
+                            "escaped ( after an assignment as the start of "
+                            "an array assignment, but the C2 scan treats "
+                            "that token as literal text")
                     kill_arms()
                     k += 1
                     continue
@@ -2318,8 +2333,13 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
         finish_scope(state[0], seq + 1)
         if state[-1]:
             note_uncertain(None, "an array assignment is still open")
-    if array_depth or in_dbrackets:
-        note_uncertain(None, "an array assignment or [[ test is still open")
+    if array_depth and in_dbrackets:
+        note_uncertain(None, "an array assignment and a [[ test are still "
+                       "open")
+    elif array_depth:
+        note_uncertain(None, "an array assignment is still open")
+    elif in_dbrackets:
+        note_uncertain(None, "a [[ test is still open")
     for span in guard_spans:
         if (span["chain"]
                 and (not all(s["closed"] for s in span["chain"])
@@ -3707,8 +3727,9 @@ _C2_EXPECT_LINES = {
     "subshell-arm-boundary-tracked": [6],
 }
 
-# C2 finding text: a fence whose guard tracking became uncertain names the
-# first such line and its cause; an ordinary unguarded probe keeps its text.
+# C2 finding text: a fence whose guard tracking became uncertain names where
+# tracking first became uncertain (a line, or the end of the block) and its
+# cause; an ordinary unguarded probe keeps its text.
 _C2_DETAIL_GUARD = (
     "```bash\n"
     "case \"$1\" in\n"
@@ -3721,6 +3742,18 @@ SELF_TEST_CASES += [
     ("c2-detail-open-array-at-end", _C2_DETAIL_GUARD
      + "nc -vz -w 3 \"$1\" 443\nA=(one\n```\n",
      ["C2-PROBE-OUTSIDE-GUARD"], ()),
+    ("c2-detail-quoted-dbracket", _C2_DETAIL_GUARD
+     + "nc -vz -w 3 \"$1\" 443\necho \"[[\"\n```\n",
+     ["C2-PROBE-OUTSIDE-GUARD"], ()),
+    ("c2-detail-quoted-array-paren", _C2_DETAIL_GUARD
+     + "nc -vz -w 3 \"$1\" 443\nA= \"(\" one )\n```\n",
+     ["C2-PROBE-OUTSIDE-GUARD"], ()),
+    ("c2-detail-open-dbracket-at-end", _C2_DETAIL_GUARD
+     + "nc -vz -w 3 \"$1\" 443\n[[ -n x\n```\n",
+     ["C2-PROBE-OUTSIDE-GUARD"], ()),
+    ("c2-detail-open-array-in-cmdsub-at-end", _C2_DETAIL_GUARD
+     + "nc -vz -w 3 \"$1\" 443\nX=$(A=(one\n```\n",
+     ["C2-PROBE-OUTSIDE-GUARD"], ()),
     ("c2-detail-certain-fence",
      "```bash\ncase \"$1\" in\n  *REPLACE_WITH_*) echo \"substitute\" ;;\n"
      "esac\nnc -vz -w 3 \"$1\" 443\n```\n", ["C2-PROBE-OUTSIDE-GUARD"], ()),
@@ -3732,6 +3765,24 @@ _C2_EXPECT_DETAILS = {
         "to an open ( at that point, as when a multiline $( ... ) closes on "
         "a line of its own)"],
     "c2-detail-open-array-at-end": [
+        " (probe: nc; no probe in this block counts as guarded: guard "
+        "tracking became uncertain at the end of the block: an array "
+        "assignment is still open)"],
+    "c2-detail-quoted-dbracket": [
+        " (probe: nc; no probe in this block counts as guarded: guard "
+        "tracking became uncertain at line 6: the shared scanner took a "
+        "quoted or escaped [[ as the start of a [[ test, but the C2 scan "
+        "treats that token as literal text)"],
+    "c2-detail-quoted-array-paren": [
+        " (probe: nc; no probe in this block counts as guarded: guard "
+        "tracking became uncertain at line 6: the shared scanner took a "
+        "quoted or escaped ( after an assignment as the start of an array "
+        "assignment, but the C2 scan treats that token as literal text)"],
+    "c2-detail-open-dbracket-at-end": [
+        " (probe: nc; no probe in this block counts as guarded: guard "
+        "tracking became uncertain at the end of the block: a [[ test is "
+        "still open)"],
+    "c2-detail-open-array-in-cmdsub-at-end": [
         " (probe: nc; no probe in this block counts as guarded: guard "
         "tracking became uncertain at the end of the block: an array "
         "assignment is still open)"],
