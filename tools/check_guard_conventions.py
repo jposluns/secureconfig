@@ -94,7 +94,8 @@ WHAT THIS CATCHES
                  server. A probe whose host comes from a guarded "$1" or "$2"
                  never matches. On by default since the example-host sweep
                  (#1061 to #1064) left no Verify probe aimed at these names;
-                 --example-hosts is still accepted and changes nothing.
+                 --example-hosts is still accepted and ignored, so it never
+                 overrides --no-c4 in either order.
 
 WHAT THIS IS NOT
   This is a tripwire for the accidental case; a determined author walks
@@ -4231,8 +4232,9 @@ SELF_TEST_CASES.append((
     ["C1-MISSING-Q"], ()))
 
 # C4: Verify probes aimed at a reserved example domain. C4 is on by default;
-# most cases pass --example-hosts, which is still accepted, and the default and
-# --no-c4 cases below prove that C4 runs without it and that --no-c4 skips it.
+# most cases pass --example-hosts, which is still accepted and ignored. The
+# default and --no-c4 cases below prove that C4 runs without it and that
+# --no-c4 skips it, including when --example-hosts comes before or after it.
 _C4_GUARDED = r"""(
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block"; exit 2; }
@@ -4337,6 +4339,12 @@ SELF_TEST_CASES += [
      ["C4-EXAMPLE-HOST"], ()),
     ("c4-no-c4", "## Verify\n```bash\ncurl -q https://example.com/\n```\n",
      [], ("--no-c4",)),
+    ("c4-no-c4-then-example-hosts",
+     "## Verify\n```bash\ncurl -q https://example.com/\n```\n", [],
+     ("--no-c4", "--example-hosts")),
+    ("c4-example-hosts-then-no-c4",
+     "## Verify\n```bash\ncurl -q https://example.com/\n```\n", [],
+     ("--example-hosts", "--no-c4")),
     ("c4-inline", "## Verify\n- Run `curl -q https://app.example.com/`.\n",
      ["C4-EXAMPLE-HOST"], ("--example-hosts",)),
     ("c4-inline-outside-verify",
@@ -4502,9 +4510,9 @@ def parse_args(argv):
                          "aimed at example.com, example.net, example.org or "
                          "a subdomain")
     ap.add_argument("--example-hosts", action="store_true",
-                    dest="example_hosts", default=True,
-                    help="apply C4-EXAMPLE-HOST; already the default, kept so "
-                         "existing invocations still work")
+                    dest="example_hosts_legacy",
+                    help="accepted and ignored: C4-EXAMPLE-HOST already runs "
+                         "by default, and this flag never overrides --no-c4")
     ap.add_argument("--q-anywhere", action="store_true", dest="q_anywhere",
                     help="accept -q in any position (triage aid; curl only "
                          "honors a FIRST-position -q)")

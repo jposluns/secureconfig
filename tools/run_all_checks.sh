@@ -236,8 +236,8 @@ echo "== README guide-index categories match the site menu and site/llms.txt =="
 # and headings come from the pinned CommonMark parser that the count gate below uses (gate_parser,
 # locked in tools/requirements-gates.txt): a "##" section ends at the next level-one or level-two
 # heading in any form (ATX with spaces or tabs, indented up to three spaces, or setext), a "###"
-# category ends at the next heading of level three or higher, and a heading-shaped line inside a
-# code block is not a heading. The gate fails if the pinned parser is unavailable.
+# category ends at the next heading of level one, two or three, and a heading-shaped line inside
+# a code block is not a heading. The gate fails if the pinned parser is unavailable.
 if cat_diff=$(python3 - <<'PY'
 import re, sys
 
