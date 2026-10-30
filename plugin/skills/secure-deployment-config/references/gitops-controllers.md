@@ -415,14 +415,19 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 )
 ```
 
+REASONED: receiver status and rejection reading and the pass criteria of the guarded checks above, per
+the guide's cited Flux notification Receivers and Argo CD RBAC entries; no live Argo CD or Flux installation
+is available, so no status, rejection or response was observed.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
 version-dependent, so read it as rejected rather than a fixed code. A malformed-payload error or a
 proxy-only rejection is inconclusive; repeat against the receiver origin from an authorized location.
-Because these checks discriminate on a response rather than on silence, they take the plain form above;
-a bare reachability probe of your own public address, whose pass is nothing answering, would instead
-need the guarded-subshell form so an unsubstituted address cannot time out and read as closed.
+Because these checks discriminate on a response rather than on silence, an unsubstituted value cannot
+read as a pass; the guarded `set --` lines in the Argo CD and Flux blocks refuse an unsubstituted host
+and keep the requests off reserved example hosts. A bare reachability probe of your own public address,
+whose pass is nothing answering, needs the guarded-subshell form for a further reason: an unsubstituted
+address could otherwise time out and read as closed.
 
 ## Sources (checked September 2026)
 
@@ -685,7 +690,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "cddf7b72b78073c28f46d939065fc643e28b3437b61e13e83ab78cf6ec5be320",
+  "body_sha256": "c5a0dc32fcaa703483a70b04441dd31639830a858cb01226fa10081b0bac0f48",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",

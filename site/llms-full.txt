@@ -8778,7 +8778,7 @@ ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 rea
 )
 ```
 
-REASONED: preceding block; listener isolation, anonymous challenges and direct and through-proxy identity-header checks, per the guide's cited oauth2-proxy nginx integration, oauth2-proxy Traefik integration, Traefik forwardAuth middleware and Authelia nginx integration. No proxy, backend, IdP or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, before its anonymous-challenge curl took the app's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the new guard has not been run. Both YAML blocks parsed. Five rejected cases of the public-address guard printed refusal messages with no curl calls; a substituted address reached four curl stubs. No live outcome is observed: exposed access reaches a backend or trusts admin; fixed access isolates listeners, challenges anonymous users and admits a valid session under its real identity. After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
+REASONED: preceding block; listener isolation, anonymous challenges and direct and through-proxy identity-header checks, per the guide's cited oauth2-proxy nginx integration, oauth2-proxy Traefik integration, Traefik forwardAuth middleware and Authelia nginx integration. No proxy, backend, IdP or external probe host is available. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its anonymous-challenge curl took the app's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the new guard has not been run. Both YAML blocks parsed. Five rejected cases of the public-address guard printed refusal messages with no curl calls; a substituted address reached four curl stubs. No live outcome is observed: exposed access reaches a backend or trusts admin; fixed access isolates listeners, challenges anonymous users and admits a valid session under its real identity. After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
 
 ## Common mistakes
 
@@ -8877,7 +8877,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "b03b58e050276756606cf37f41a1b75972bfdc2946c14537349c8b0f145f9140",
+  "body_sha256": "ca6ff1084cc56d0cf57b108b816a861277a45a6c0cea7e52f3bcff79ee542124",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
@@ -14359,14 +14359,19 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 )
 ```
 
+REASONED: receiver status and rejection reading and the pass criteria of the guarded checks above, per
+the guide's cited Flux notification Receivers and Argo CD RBAC entries; no live Argo CD or Flux installation
+is available, so no status, rejection or response was observed.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
 version-dependent, so read it as rejected rather than a fixed code. A malformed-payload error or a
 proxy-only rejection is inconclusive; repeat against the receiver origin from an authorized location.
-Because these checks discriminate on a response rather than on silence, they take the plain form above;
-a bare reachability probe of your own public address, whose pass is nothing answering, would instead
-need the guarded-subshell form so an unsubstituted address cannot time out and read as closed.
+Because these checks discriminate on a response rather than on silence, an unsubstituted value cannot
+read as a pass; the guarded `set --` lines in the Argo CD and Flux blocks refuse an unsubstituted host
+and keep the requests off reserved example hosts. A bare reachability probe of your own public address,
+whose pass is nothing answering, needs the guarded-subshell form for a further reason: an unsubstituted
+address could otherwise time out and read as closed.
 
 ## Sources (checked September 2026)
 
@@ -14629,7 +14634,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "cddf7b72b78073c28f46d939065fc643e28b3437b61e13e83ab78cf6ec5be320",
+  "body_sha256": "c5a0dc32fcaa703483a70b04441dd31639830a858cb01226fa10081b0bac0f48",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -52717,7 +52722,7 @@ The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbid
 
 The proxy check is REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. The header request below takes your configured host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and the guard has not been run. The header request checks the TLS connection and authentication response, and a browser check confirms the login gates the UI.
 
-The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code. The expectation drawn from the same v2.5.5 sources is that a Fooocus process started on the host as above should show `127.0.0.1:7865` in `ss`, and that the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)). A container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and a container published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
+The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code. The expectation drawn from the same v2.5.5 sources is that a Fooocus process started on the host as above should show `127.0.0.1:7865` in `ss`, and that the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)). A container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and a container published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the port-loop block's `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
 ```bash
 # REASONED: inventory, external probes, InvokeAI authentication and proxy TLS/login follow the sources above.
@@ -52893,7 +52898,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "0da0371de77e908b8dbb9be64f492b465f4c13184005ec8fa1850d0d891a5f3e",
+  "body_sha256": "376e346bd2417a1467f7658b6b375693104f1538d5a9192424e2e20ce538c95b",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -58194,7 +58199,7 @@ REASONED: final-response header inspection follows the cited MDN header document
 # inconclusive.
 ```
 
-REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the guard has not been run. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
+REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the guard has not been run. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
 
 REASONED: shared-cache caller separation, per the guide's cited MDN Cache-Control. No deployed shared cache or authenticated A/B accounts are available; this prose supplies no local command or configuration to execute. No response sequence was observed. Exposed caching replays a previous caller's private content; fixed responses after warming the same URL belong only to their current authenticated or anonymous caller. For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
@@ -58296,7 +58301,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ef6e2c4806ac152dd53bead9c0ed6721e2013d8f6be5a1822eae91b07d82169b",
+  "body_sha256": "b2b9ce382311f0bdae7bbcefb1f917ec913b675f6fa6862cad5a002ce9cb5f4a",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
