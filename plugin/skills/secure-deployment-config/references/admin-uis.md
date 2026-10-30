@@ -79,7 +79,7 @@ RedisInsight 3.8.0's default server configuration uses `RI_APP_HOST` with a fall
 
 ## Verify
 
-REASONED: following block; panel sources below support the listener check, the anonymous front-page/data-route checks and the authenticated data-route positive control; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
+REASONED: following block; panel sources below support the listener check, the anonymous front-page/data-route checks and the authenticated data-route positive control; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes. The two `curl` checks take one panel's host name and protected path on a guarded `set --` line and refuse example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 # On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
@@ -90,17 +90,32 @@ REASONED: following block; panel sources below support the listener check, the a
 ss -tlnp                                      # panel listeners: loopback or a private address only
 
 # From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel. Read the
-# BODY, not just the status: a login page and a dashboard can both be 200.
-curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/'
-#   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
-#   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
-#   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
-# SPA panels (Grafana, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
-# the dashboard, so also request a route you know returns real data when authorized, and require it be denied
-# without credentials:
-curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTED_PATH'   # keep the quotes; substitute inside them
-#   Confirm that route returns data WITH valid auth first (a positive control); a 404, a server error, or an
-#   unsubstituted placeholder is inconclusive, not a pass.
+# BODY, not just the status: a login page and a dashboard can both be 200. Run the block once per panel.
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PANEL_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the panel's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a route you know returns real data when authorized, without its leading slash: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' -i "https://$1/"
+  #   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
+  #   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
+  #   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
+  # SPA panels (Grafana, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
+  # the dashboard, so also request a route you know returns real data when authorized, and require it be denied
+  # without credentials:
+  curl -q -g -sS --noproxy '*' -i "https://$1/$2"
+  #   Confirm that route returns data WITH valid auth first (a positive control); a 404 or a server error is
+  #   inconclusive, not a pass, and the guard above refuses an unsubstituted placeholder.
+)
 ```
 
 REASONED: preceding block; listener inventory, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; published-backend inspection follows the pinned Docker sources and this guide's assessment that a protected frontend or absent socket does not prove backend isolation. No panel deployment or second test network is available. Run the `ss` listener inventory and the published address and port inspection (`docker ps` and the port mappings) on the panel's host. Run the two `curl` checks, their authenticated positive control and any probe of a published backend port from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
@@ -191,7 +206,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "802fbbd21495c5cd5718947f74027acfbbfa92e20d724afecd5a812d6eab56d0",
+  "body_sha256": "af82072eb380d45c5ac78b7615639312ece098bfa0a87bd564790a0072e6ee93",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",
