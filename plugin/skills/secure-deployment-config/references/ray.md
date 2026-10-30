@@ -127,7 +127,7 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 
 ## Verify
 
-REASONED: following block; the complete listener inventory, all external/agent-port probes, successful token-authenticated job, rejected anonymous job and correct/mismatched-CA gRPC health checks follow the cited Ray sources; no isolated cluster, second host or deployed TLS fixture. Bash 5.3.9 bash -n accepted both Verify fences. Extracted address subshells with curl replaced by printf LOCAL_CURL accepted 192.168.50.7 and bad value; empty input, original placeholders and set -- without arguments skipped. All exited 0; skips are not reachability results. In the token-file subshell, replacing only the home token path with a disposable path and ray with printf LOCAL_RAY rejected absent, empty, directory and symlink fixtures with exit 2; a regular file containing DUMMY_NOT_A_SECRET plus LF reached the marker, exited 0 and changed mode 0644 to 0600. This demonstrates local preparation only, not either job outcome or TLS. **Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
+REASONED: following block; the complete listener inventory, all external/agent-port probes, successful token-authenticated job, rejected anonymous job and correct/mismatched-CA gRPC health checks follow the cited Ray sources; no isolated cluster, second host or deployed TLS fixture. Bash 5.3.9 bash -n accepted both Verify fences. Extracted address subshells with curl replaced by printf LOCAL_CURL accepted 192.168.50.7 and bad value; empty input, original placeholders and set -- without arguments skipped. All exited 0; skips are not reachability results. The bash -n run and the address-subshell runs recorded here covered an earlier form of both fences, whose guard refusals in the address, agent-port and direct-agent subshells ended with status 0; none was re-run on the current form, whose refusals in those subshells exit with status 2. The token-file subshell already refused with status 2 and is unchanged. In the token-file subshell, replacing only the home token path with a disposable path and ray with printf LOCAL_RAY rejected absent, empty, directory and symlink fixtures with exit 2; a regular file containing DUMMY_NOT_A_SECRET plus LF reached the marker, exited 0 and changed mode 0644 to 0600. This demonstrates local preparation only, not either job outcome or TLS. **Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
 
 ```bash
 # REASONED: Ray listener, job and TLS checks follow the cited 2.58.0 sources; no isolated cluster is available. Earlier ss observations are recorded below.
@@ -147,11 +147,11 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
 # name-resolution or local socket error is inconclusive.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
          -w 'port=8265 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8265/" || true
        curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
@@ -170,15 +170,15 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
 # exposed means a completed TCP connection (even 401/403); fixed means no TCP connection formed.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_NODE_PUBLIC_IP' '52365'   # replace inside the quotes
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the node's public address; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the node's public address; not probing"; exit 2 ;;
     *) case "$2" in
-         *REPLACE_WITH_*|""|*[!0123456789]*) echo "supply the actual numeric listener port; not probing" ;;
+         *REPLACE_WITH_*|""|*[!0123456789]*) echo "supply the actual numeric listener port; not probing"; exit 2 ;;
          *) if [ "${#2}" -gt 5 ] || [ "$2" -lt 1 ] || [ "$2" -gt 65535 ]; then
-              echo "port must be 1 to 65535; not probing"
+              echo "port must be 1 to 65535; not probing"; exit 2
             else
               curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
                 -w "port=$2 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$2/" || true
@@ -221,7 +221,7 @@ REASONED: direct-agent target selection from the cited static-route and token mi
 
 REASONED: paired exposed anonymous, fixed authenticated and fixed anonymous expectations from the cited static-route and token middleware sources; no live agent or cluster token. In an isolated exposed state with token mode off, select `anonymous`: a non-browser GET to `/logs/` should return 200 and the log directory index. With token mode on, first select `token` and supply the valid cluster token: expect the same access. Then select `anonymous` against that same live agent: expect 401. A connection error, 404, redirect, unexpected body or failed positive control is inconclusive; 403 is not the expected missing-token result. `/api/healthz` and `/api/local_raylet_healthz` are exempt and cannot discriminate token enforcement. These expectations follow the pinned static route and app-wide token middleware cited in Sources.
 
-REASONED: following block; direct-agent anonymous/token request preparation and the paired /logs/ controls follow the cited Ray sources; no live agent or cluster token. Bash 5.3.9 ran the complete subshell with curl replaced by printf LOCAL_CURL. With origin http://127.0.0.1:52365 and token mode, stdin containing an empty line, REPLACE_WITH_TOKEN or bad plus byte 0x01 plus value printed the token diagnostic without a marker; DUMMY_NOT_A_SECRET plus LF reached one marker. All exited 0. The anonymous branch accepted both that substituted origin and bad value; empty/original-placeholder origins and set -- without arguments skipped. These are local guard observations, not URL validation, HTTP status or authorization evidence. This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history, and the block's `set +x` keeps it out of `set -x` tracing; none of these hides it from the account owner or root. Do not put the token in the pasted text. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+REASONED: following block; direct-agent anonymous/token request preparation and the paired /logs/ controls follow the cited Ray sources; no live agent or cluster token. Bash 5.3.9 ran the complete subshell with curl replaced by printf LOCAL_CURL. With origin http://127.0.0.1:52365 and token mode, stdin containing an empty line, REPLACE_WITH_TOKEN or bad plus byte 0x01 plus value printed the token diagnostic without a marker; DUMMY_NOT_A_SECRET plus LF reached one marker. All exited 0. The anonymous branch accepted both that substituted origin and bad value; empty/original-placeholder origins and set -- without arguments skipped. These are local guard observations, not URL validation, HTTP status or authorization evidence. The Bash runs recorded here covered the direct-agent block in an earlier form, in which every guard refusal apart from the three token-preparation refusals ended with status 0; none was re-run on the current form, whose guard refusals all exit with status 2. This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history, and the block's `set +x` keeps it out of `set -x` tracing; none of these hides it from the account owner or root. Do not put the token in the pasted text. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 # REASONED: direct agent token controls follow the cited Ray 2.58.0 sources; no isolated multi-node cluster is available.
@@ -229,11 +229,11 @@ REASONED: following block; direct-agent anonymous/token request preparation and 
   trap - DEBUG RETURN ERR
   set +x +a +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TRUSTED_AGENT_ORIGIN' 'anonymous'   # replace inside the quotes; mode: anonymous or token
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the trusted agent origin; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the trusted agent origin; not probing"; exit 2 ;;
     *) case "$2" in
          anonymous)
            curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 \
@@ -244,12 +244,12 @@ REASONED: following block; direct-agent anonymous/token request preparation and 
            IFS= read -r -s -p 'Cluster token: ' RAY_AGENT_PROBE_TOKEN || { echo 'token read failed; not probing'; exit 2; }
            printf '\n'
            case "$RAY_AGENT_PROBE_TOKEN" in
-             *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo 'empty, placeholder or control character in token; not probing' ;;
+             *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo 'empty, placeholder or control character in token; not probing'; exit 2 ;;
              *) printf 'Authorization: Bearer %s\n' "$RAY_AGENT_PROBE_TOKEN" |
                   curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 --header @- \
                     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/logs/" || true ;;
            esac ;;
-         *) echo 'mode must be anonymous or token; not probing' ;;
+         *) echo 'mode must be anonymous or token; not probing'; exit 2 ;;
        esac ;;
   esac
 )
@@ -400,7 +400,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "00705e982caf1287b763daf4cbf22ec934a09311d02680bd0f0b338c06204c58",
+  "body_sha256": "01acc4bc09bf4a311a6603bd55081476548a46ab60f0d4755657d73843e80af9",
   "components": {
     "ray": {
       "name": "Ray pinned source",
