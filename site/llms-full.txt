@@ -13523,7 +13523,7 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line. Both tools again exited 0 without diagnostics on the block as it now stands, after the HTTP-layer probe moved under the same parse check as the TCP probe. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line. Both tools again exited 0 without diagnostics on the block as it now stands, after the HTTP-layer probe moved under the same parse check as the TCP probe and a failed `read` of the parsed endpoint was made to skip both probes. A stub run with `URL` readonly then printed the read-failure message and reached neither nc nor curl. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
@@ -13593,7 +13593,9 @@ PY
 }
 PARSED=$(parse_api_server) || { echo "could not read the API server endpoint; skipping both probes" >&2; PARSED=; }
 if [ -n "$PARSED" ]; then
-  read -r HOST PORT URL <<<"$PARSED"
+  read -r HOST PORT URL <<<"$PARSED" || { echo "could not set HOST, PORT and URL from the endpoint; skipping both probes" >&2; PARSED=; }
+fi
+if [ -n "$PARSED" ]; then
   echo "$URL"
   # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
   nc -vz -w 3 "$HOST" "$PORT"
@@ -13610,8 +13612,11 @@ fi
 # cluster provides for you. The node scans in the next block also need nmap there.
 # "succeeded" means something is listening and reachable from here, whatever it does next.
 
-# Then at the HTTP layer, with verification left ON. This probe also runs only when the
-# endpoint parsed, so it never reaches an empty URL or one left over in your shell.
+# Then at the HTTP layer, with verification left ON. This probe also runs only when PARSED
+# is non-empty. The lines above clear PARSED when the parse fails, or when `read` cannot set
+# HOST, PORT and URL from it because one of them is readonly, so neither failure sends curl
+# to an empty URL or one left over in your shell. A PARSED that is itself readonly in your
+# shell defeats this check, so run the block where it is not.
 if [ -n "$PARSED" ]; then
   # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
   curl -q --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 \
@@ -13822,7 +13827,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b7801c0c48f8c7483a0fe36bf5e7138ce601f7cc196d0b78ca5e03af96fbfbec",
+  "body_sha256": "f87c84338a250a62563c5e1667a77e930cd109632033089fc46a2bdcffbed155",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
