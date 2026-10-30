@@ -116,11 +116,24 @@ The description also documents an account-level field. Its [get-the-authenticate
 REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID Connect sources below; the protected-endpoint check needs an application deployment, which was not supplied for this metadata review. The guide records no live outcome; expected anonymous rejection is stated in the block.
 
 ```bash
+# guard-conventions: allow probe of Google's fixed public discovery URL; no reader-substituted placeholder in this probe's argv
 curl -q -s https://accounts.google.com/.well-known/openid-configuration | jq -r '.issuer, .jwks_uri'
-curl -q -sS -D - -o /dev/null https://app.example.com/admin   # unauthenticated GET: 401, or a 302 whose Location is the provider/login (not an unrelated app route), never 200 or app content
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your application is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS -D - -o /dev/null "https://$1/admin"   # unauthenticated GET: 401, or a 302 whose Location is the provider/login (not an unrelated app route), never 200 or app content
+)
 ```
 
-REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time both lines passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. Negative tests matter more than the happy path:
+REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time the block's two lines, in an earlier form whose anonymous-admin probe named app.example.com, passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. The anonymous-admin probe now takes the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on the guarded block, and the guard has not been run. Negative tests matter more than the happy path:
 
 - REASONED: allowlist refusal per the guide's cited Google OpenID Connect, Microsoft identity platform ID token claims reference, GitHub REST organization and team members, and Okta groups claim entries, with the expected outcome stated in this item. No application deployment and no provider accounts outside an allowlist are available in the authoring environment, and this item names no command, so no part of it ran locally. Sign in with a valid account outside the allowlist (a personal Gmail, another Entra tenant, a GitHub user outside the org, an Okta user outside the group): the provider authenticates, your app refuses and logs the identity.
 - REASONED: exact redirect-URI matching per the guide's cited RFC 9700 and the cited Microsoft identity platform OpenID Connect and GitHub OAuth apps authorizing entries; no client registered at any provider is available in the authoring environment, so no authorization request was sent, and this item names no command. A redirect to the edited URI is the exposed state and the provider error the fixed one. Edit `redirect_uri` in the authorization URL (add a path segment or change the host): the provider shows an error and never redirects.
@@ -254,7 +267,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "6ace922f0c1e3227889aad2c123bba1a2fb6a52c618a59195dda6d0638e6e041",
+  "body_sha256": "ea4b02da0450cf0e80d20c384c4bbf24a73468947a4229bd05d184935855e47b",
   "components": {
     "core": {
       "name": "OpenID Connect Core",
