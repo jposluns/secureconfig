@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-30
+
+- `pocketbase.md` now says that the Appwrite 2.2.0 web install handler, given a request without a retry step for an installation that already has progress steps recorded, deletes the progress file of an earlier run that ended in error or completed every step, so the request starts fresh, and otherwise refuses the request with "Installation already started" before the saved-payload comparison. The guide cites the handler lines for both paths. `TODO.md` adds row 1.388, which records that the served Appwrite documentation now documents settings from 2.3.0 to 2.6.2 and deprecates creating API keys through the Project API, against the guide's 2.2.0 basis, and leaves the basis decision open (#1059)
+
 ## 2026-10-29
 
 - `vector-databases.md` moves its Qdrant source basis from v1.19.1 to v1.20.0, with pinned anchors and source keys re-derived from the v1.20.0 files and the bind, overlay, image and release workflow statements unchanged. Section 2 now describes `enforce_internal_auth` as on by default at v1.20.0 when an API key is configured, adds `cluster.p2p.host` for binding the internal port, and updates the key rotation steps and three claims (#1057)
