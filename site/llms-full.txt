@@ -13523,7 +13523,7 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line; neither tool was re-run on the guarded block. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line. Both tools also exited 0 without diagnostics on an intermediate form whose check read HOST, PORT and URL with `read` and its field separator fixed to a space; stub runs of that form under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with the parsed URL for a normal parse and with `IFS=:` set beforehand. The same runs reached neither probe for a failed parse, a parser output without its URL field, a readonly `HOST`, `PORT`, `URL`, `PARSED` or `IFS=:`, or an integer `PARSED` after a failed parse; an integer `PARSED` given a parsed endpoint ended that shell with an arithmetic error before either probe. Fed on standard input to `bash -u -s`, the integer and readonly `PARSED` cases with a parsed endpoint abandoned the check, reached neither probe and let the next line run. A later stub run of that intermediate form with `readonly IFS=t` set beforehand reached both probes with mis-split fields, curl receiving ` 443 https://api.test/version`. Both tools exited 0 without diagnostics on the block as it now stands, whose check splits the parsed endpoint by parameter expansion rather than `read` and needs a non-empty HOST, an all-digit PORT, a URL that starts with https:// or http:// and holds no space, and the three fields to rejoin to the parsed line. Stub runs of the current span under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with host api.test, port 443 and URL https://api.test/version for a normal parse, with `IFS=:` set beforehand and with `readonly IFS=t` set beforehand. The same runs printed the failure message and reached neither probe for a failed parse, a parser output without its URL field, a nonnumeric port and an integer `PARSED` after a failed parse; a readonly `URL` or `PARSED` abandoned the check with an error, reached neither probe and let the next line run. An integer `HOST` given a single-label name, and an integer `PARSED` given a parsed endpoint, each ended that shell with an unbound-variable or arithmetic error before either probe; under `bash +u -c` the integer `HOST` case printed the failure message instead, and fed to `bash -u -s` the integer and readonly `PARSED` cases abandoned the check and let the next line run. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
@@ -13591,13 +13591,6 @@ print(p.hostname, p.port or (80 if p.scheme == "http" else 443),
       p.scheme + "://" + p.netloc)
 PY
 }
-PARSED=$(parse_api_server) || { echo "could not read the API server endpoint; skipping the probe" >&2; PARSED=; }
-if [ -n "$PARSED" ]; then
-  read -r HOST PORT URL <<<"$PARSED"
-  echo "$URL"
-  # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
-  nc -vz -w 3 "$HOST" "$PORT"
-fi
 # Parsed with python3 rather than cut with sed. A bracketed IPv6 address breaks on the
 # colons, and the failure looks exactly like the clean drop you were hoping for.
 # A bare host with no scheme is also legal in a kubeconfig, and the scheme it implies depends
@@ -13610,10 +13603,29 @@ fi
 # cluster provides for you. The node scans in the next block also need nmap there.
 # "succeeded" means something is listening and reachable from here, whatever it does next.
 
-# Then at the HTTP layer, with verification left ON.
-# guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
-curl -q --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 \
-  -w '%{http_code}\n' "$URL/version"; echo "curl exit $?"
+# Both probes sit under one check. They run only when the parse succeeded and parameter
+# expansion, not `read`, split its output into a non-empty HOST, an all-digit PORT and a URL
+# that starts with https:// or http:// and holds no space, and only when those three fields
+# rejoin to exactly the parsed line, so a failure skips both and curl never reaches an empty
+# URL or one left over in your shell.
+# The check assumes HOST, PORT, URL, PARSED and IFS carry no readonly, integer or other
+# attribute inherited from your shell; such an attribute can abandon the check or mis-assign a
+# field, so run this block in a fresh shell.
+if PARSED=$(parse_api_server) && HOST=${PARSED%% *} && URL=${PARSED#* } &&
+   PORT=${URL%% *} && URL=${URL#* } && [ "$HOST $PORT $URL" = "$PARSED" ] &&
+   [ -n "$HOST" ] && [ -n "${PORT##*[!0123456789]*}" ] &&
+   case $URL in *' '*) false ;; https://?*|http://?*) true ;; *) false ;; esac; then
+  echo "$URL"
+  # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
+  nc -vz -w 3 "$HOST" "$PORT"
+
+  # Then at the HTTP layer, with verification left ON, under the same check as the TCP probe.
+  # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
+  curl -q --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 \
+    -w '%{http_code}\n' "$URL/version"; echo "curl exit $?"
+else
+  echo "could not parse the API server endpoint into a host, a numeric port and an http or https URL; skipping both probes" >&2
+fi
 # Exit 0 with ANY status, 200, 401, 403 and 404 alike, means it answered.
 # So does exit 60: curl reached a TLS peer, received a certificate and refused to trust it.
 # That is not necessarily a completed handshake, and it does not need to be: something on
@@ -13819,7 +13831,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b763799a0190046f34dabee539b46ad963d1bb85c97742f9b023a54a30bad712",
+  "body_sha256": "ef9f4365ab81e5cd97a6afb3f1e272f4a45c687d4925ad080e1bb6131272df52",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
