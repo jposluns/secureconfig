@@ -199,6 +199,7 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
+# guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
 if curl -q -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then rc=0; else rc=$?; fi
 if [ "$rc" -eq 0 ]; then
   echo "FAIL: connected to a host outside the allow list, egress is not enforced"
@@ -309,7 +310,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "699af71d5d79b5c67124687ea84ebf13eeb0486a1476c64689d00aac743e2aae",
+  "body_sha256": "1d30a27b2711977c882eeda8c740d41c3099dc10d3636c796ef04b63d6b47ee3",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",

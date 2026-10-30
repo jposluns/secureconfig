@@ -279,12 +279,24 @@ REASONED: following block; token minting and rotation follow the guide's cited L
 )
 ```
 
-REASONED: following block; fatal hostname and CA verification with `openssl s_client -verify_hostname turn.example.com -verify_return_error`, per Sources entry OpenSSL 3.0 s_client hostname, CA and fatal verification options. No provisioned coturn exposed/fixed fixture is available. A loopback `openssl s_server` fixture opens a listener, which the authoring host forbids without an isolated network namespace; the earlier review reported that it could not create one (`unshare: unshare failed: Operation not permitted`). No listener or TLS handshake was attempted in this review. The OpenSSL fence passed `bash -n` and ShellCheck 0.11.0 without diagnostics. An OpenSSL 3.5.5 certificate-only fixture passed `openssl verify -verify_hostname turn.example.com` with exit 0 for a trusted matching certificate; checking the same certificate against `wrong.example.com` exited 2 with `hostname mismatch`. An `s_client` stub run exited 0 and recorded `-verify_hostname turn.example.com` and `-verify_return_error`; the stub did not read the CA file or connect to a service. A trusted matching certificate should pass and a mismatched certificate should fail fatally. These certificate-only and stub checks do not establish those handshake outcomes. Verify TLS separately, and require verification to be fatal so a diagnostic tool does not continue past a bad certificate:
+REASONED: following block; fatal hostname and CA verification with `openssl s_client` and its `-verify_hostname` and `-verify_return_error` options, per Sources entry OpenSSL 3.0 s_client hostname, CA and fatal verification options. No provisioned coturn exposed/fixed fixture is available. A loopback `openssl s_server` fixture opens a listener, which the authoring host forbids without an isolated network namespace; the earlier review reported that it could not create one (`unshare: unshare failed: Operation not permitted`). No listener or TLS handshake was attempted in this review. The OpenSSL fence passed `bash -n` and ShellCheck 0.11.0 without diagnostics in an earlier form that named turn.example.com. An OpenSSL 3.5.5 certificate-only fixture passed `openssl verify -verify_hostname turn.example.com` with exit 0 for a trusted matching certificate; checking the same certificate against `wrong.example.com` exited 2 with `hostname mismatch`. An `s_client` stub run of that earlier form exited 0 and recorded `-verify_hostname turn.example.com` and `-verify_return_error`; the stub did not read the CA file or connect to a service. The fence now takes the TURN server's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains and a leading hyphen or plus sign; none of `bash -n`, ShellCheck and the stub run was repeated on the guarded fence, and the guard has not been run. A trusted matching certificate should pass and a mismatched certificate should fail fatally. These certificate-only and stub checks do not establish those handshake outcomes. Verify TLS separately, and require verification to be fatal so a diagnostic tool does not continue past a bad certificate:
 
 ```bash
-openssl s_client -connect turn.example.com:5349 -servername turn.example.com \
-  -verify_hostname turn.example.com -verify_return_error \
-  -CAfile /etc/ssl/certs/ca-certificates.crt </dev/null
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_TURN_HOST'   # the TURN server's public host name, the name its certificate covers, with no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the TURN server's host name (no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  openssl s_client -connect "$1:5349" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error \
+    -CAfile /etc/ssl/certs/ca-certificates.crt </dev/null
+)
 ```
 
 REASONED: preceding block; what a deployment run of the s_client command does not prove, and separate plaintext rejection, per Sources entries OpenSSL 3.0 s_client hostname, CA and fatal verification options and coturn example configuration. No provisioned coturn exposed/fixed fixture is available. A local stand-up opens a listener, which the authoring host forbids without an isolated network namespace; the earlier review reported that it could not create one (`unshare: unshare failed: Operation not permitted`). No STUN/TURN exchange was observed in this review; exposed plaintext acceptance must become rejection on both ports while valid TLS remains usable. A successful deployment run of the preceding command proves the certificate and handshake only, not TURN authentication, peer policy, or that plaintext is refused; also send plain STUN/TURN to `3478` and to `5349` and confirm it is rejected once `no-tcp`/`no-udp` are set. A local socket binding proves neither public reachability nor TLS. Never add `-k`/`--insecure` to any of these.
@@ -428,7 +440,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "f9c6cd93a17c74ed59ff74e7d5fc42c342ec1db819215f97942aaf40d1615adb",
+  "body_sha256": "383b0687afa7e4a33a33525f4b73de3a8cb297a9c1c542e4dc07e1d6d213fc3f",
   "components": {
     "livekit": {
       "name": "LiveKit",

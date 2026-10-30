@@ -65,7 +65,7 @@ At the time of writing, the pinned Dev Mode docs require PRO or Team & Enterpris
 
 ## 6. Verify
 
-REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no run is recorded. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
+REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no run is recorded. The redirect and unauthenticated-request checks take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the unauthenticated-request check takes its protected path on the same line; the guards have not been run. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
 
 ```bash
 # 1. This guide checks HTTP->HTTPS redirection. Spot-check on / only: it does not prove HTTPS on every route/method, nor that
@@ -75,7 +75,19 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 #    clients typically follow as GET; neither page's cited passages document this HEAD response. This guide's assessment:
 #    Heroku's ACM challenge-path handling establishes no general HTTPS redirect policy, setting, application-only responsibility or status.
 #    This guide's check: require 301/302/307/308 with an https:// Location; HTTP content without that redirect fails.
-curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' http://app.example.com/          # this guide's redirect check above
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your platform serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"          # this guide's redirect check above
+)
 # 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
 #    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
 #    Protection Bypass for Automation token lets the request access the deployment without authentication,
@@ -86,7 +98,22 @@ curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' http://app.example.com/   
 #    conventions so it stays out of shell history; the query-parameter form writes it into history and logs.
 #    The status codes below are this guide's expected reading; the cited pages state none, including for the
 #    platform gate's own challenge (its SSO 401 below):
-curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/REPLACE_WITH_PROTECTED_PATH   # no creds: want the APP's own 401/403, not a platform SSO 401
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the same app host name as the redirect check above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected route without its leading slash: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"   # no creds: want the APP's own 401/403, not a platform SSO 401
+)
 #    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
 #    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
 #    reachable and that the app's own auth, not the platform gate, is what gates it.
@@ -221,7 +248,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "5f6b8398693501907b86cddff9df79690c6281ebf3d0253fdbbb934eaeac6337",
+  "body_sha256": "cf6bfe3d4c93673b6945bba4c168c18964c2a41e8656729f27669dcf79ae537b",
   "components": {
     "render": {
       "name": "Render documentation",

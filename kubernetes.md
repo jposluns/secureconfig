@@ -279,7 +279,7 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block while it still held the node scans; five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line; neither tool was re-run on the guarded block. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
@@ -292,15 +292,27 @@ kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the 
 kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}'    # the public address; DNS points here
 kubectl get certificate -A                                           # Ready=True
 # App checks, run directly with client proxies disabled (the unset below only affects LATER commands).
-curl -q --noproxy '*' -sI http://app.example.com/                       # 301 with Location: https://app.example.com/
-curl -q --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/
-                                                                        # no credentials: 401 where basic auth is set
-# Positive control: confirm the SecurityPolicy attached, and that a valid basic-auth credential (from a
-# mode-0600 ~/.netrc-style file, never argv) is ACCEPTED by the gateway - it reaches the app rather than
-# drawing the gateway's basic-auth 401. The app's own login may then answer, so the test is that you NO
-# LONGER get the gateway's 401 with `WWW-Authenticate: Basic`, not that `/` returns 2xx.
-kubectl get securitypolicy app-basic-auth -o yaml   # an Accepted "True" condition under .status.ancestors (PolicyStatus)
-curl -q --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" -D - -o /dev/null https://app.example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Gateway listener and HTTPRoute serve, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g --noproxy '*' -sI "http://$1/"                             # 301 with Location: https:// and your host name
+  curl -q -g --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' "https://$1/"
+                                                                          # no credentials: 401 where basic auth is set
+  # Positive control: confirm the SecurityPolicy attached, and that a valid basic-auth credential (from a
+  # mode-0600 ~/.netrc-style file, never argv) is ACCEPTED by the gateway - it reaches the app rather than
+  # drawing the gateway's basic-auth 401. The app's own login may then answer, so the test is that you NO
+  # LONGER get the gateway's 401 with `WWW-Authenticate: Basic`, not that `/` returns 2xx.
+  kubectl get securitypolicy app-basic-auth -o yaml   # an Accepted "True" condition under .status.ancestors (PolicyStatus)
+  curl -q -g --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" -D - -o /dev/null "https://$1/"
+)
 
 # The API server endpoint, taken WHOLE. Do not rebuild it with :6443. Managed providers
 # serve the API on 443, and a probe of 6443 times out against a cluster that is answering
@@ -318,7 +330,8 @@ unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy NO_PROXY
 
 # First at the TCP layer, because this is the only part with a clean answer. Did anything
 # accept a connection?
-PARSED=$(python3 - "$API" "$TLS" <<'PY'
+parse_api_server() {   # a function, not a multiline $(...), so the guard checker keeps its scope tracking for this block
+  python3 - "$API" "$TLS" <<'PY'
 import sys, urllib.parse
 raw, tls = sys.argv[1].strip(), sys.argv[2].strip()
 if "://" not in raw:
@@ -333,10 +346,12 @@ if not p.hostname:
 print(p.hostname, p.port or (80 if p.scheme == "http" else 443),
       p.scheme + "://" + p.netloc)
 PY
-) || { echo "could not read the API server endpoint; skipping the probe" >&2; PARSED=; }
+}
+PARSED=$(parse_api_server) || { echo "could not read the API server endpoint; skipping the probe" >&2; PARSED=; }
 if [ -n "$PARSED" ]; then
   read -r HOST PORT URL <<<"$PARSED"
   echo "$URL"
+  # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
   nc -vz -w 3 "$HOST" "$PORT"
 fi
 # Parsed with python3 rather than cut with sed. A bracketed IPv6 address breaks on the
@@ -352,6 +367,7 @@ fi
 # "succeeded" means something is listening and reachable from here, whatever it does next.
 
 # Then at the HTTP layer, with verification left ON.
+# guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
 curl -q --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 \
   -w '%{http_code}\n' "$URL/version"; echo "curl exit $?"
 # Exit 0 with ANY status, 200, 401, 403 and 404 alike, means it answered.
@@ -415,7 +431,7 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.a
                                                                      # containers; 2379 is the whole of etcd
 ```
 
-REASONED: preceding block; node, kubelet and etcd scans with complete address coverage (the Gateway/service inventory, TLS/authentication and API reachability checks sit in the block before it), per the guide's cited Kubernetes ports and protocols; Kubernetes, operating etcd clusters; Kubernetes v1.37.1 server; and Nmap host discovery. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded. No live scan ran: exposed endpoints answer untrusted sources; in the fixed state, restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families.
+REASONED: preceding block; node, kubelet and etcd scans with complete address coverage (the Gateway/service inventory, TLS/authentication and API reachability checks sit in the block before it), per the guide's cited Kubernetes ports and protocols; Kubernetes, operating etcd clusters; Kubernetes v1.37.1 server; Kubernetes v1.37.1 source, v1beta1 defaults; and Nmap host discovery. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded. No live scan ran: exposed endpoints answer untrusted sources; in the fixed state, restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families.
 For the node scans, an exposed kubelet is expected to show 10250 open and, when enabled, 10255 open;
 after private binding and network restrictions, neither should be reachable from an untrusted network,
 while an authorized cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have
@@ -559,7 +575,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "887a854abc0e1f21efe9090f6b3a6328d2b19e5748c694ec4bf5630a8799841e",
+  "body_sha256": "b763799a0190046f34dabee539b46ad963d1bb85c97742f9b023a54a30bad712",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",

@@ -148,12 +148,12 @@ Mind the client address these headers carry. At a direct internet edge the block
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the server_name), no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -174,12 +174,12 @@ sudo nginx -t && sudo systemctl reload nginx
   # Clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the password from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the server_name), no scheme, port, path or trailing dot, then the admin password: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
@@ -331,7 +331,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "88e2ef7175025abfa1d1e8d7b40265f65243b96ceb486cef6ffa8993b2ae0cf8",
+  "body_sha256": "1567c153ede312cc84063b1191cd7e4db7d0fc901daf4743d8178176f741fd6a",
   "components": {
     "nginx-source": {
       "name": "nginx source",
