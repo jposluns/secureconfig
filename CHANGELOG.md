@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-30
+
+- Verify probes in `admin-uis.md`, `agent-builders.md`, `caddy.md`, `chat-uis.md`, `cloud-identity-proxies.md`, `cors.md` and `deployment-lifecycle.md` now take the reader's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and the "illustrative example host" waivers on those probes are removed. The cors.md allowed-origin header takes the reader's origin host as a guarded value, while the forged identity header and the hostile origin stay as deliberate foreign values. Verify markers that recorded runs now say those runs covered the earlier form (#1061)
+
 ## 2026-10-29
 
 - `vector-databases.md` moves its Qdrant source basis from v1.19.1 to v1.20.0, with pinned anchors and source keys re-derived from the v1.20.0 files and the bind, overlay, image and release workflow statements unchanged. Section 2 now describes `enforce_internal_auth` as on by default at v1.20.0 when an API key is configured, adds `cluster.p2p.host` for binding the internal port, and updates the key rotation steps and three claims (#1057)

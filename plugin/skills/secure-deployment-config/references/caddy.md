@@ -137,16 +137,23 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI http://app.example.com/     # expect a redirect to https://
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # with the @admin matcher variant: 401
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"     # expect a redirect to https://
+  curl -q -g -sI "https://$1/"    # expect 401 without credentials once auth is on
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin"     # with the @admin matcher variant: 401
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin/x"   # 401 as well
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/"          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
+)
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
   # curl reads the admin password from a config stream on stdin (--config -),
@@ -156,16 +163,22 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   # Clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the password from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}"
-  set -- "${1//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin https://app.example.com/
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
                                      # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://app.example.com/
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
                                      # 413. Supply credentials: an unauthenticated probe returns 401 and
                                      # tells you nothing about max_size. Caddy's default order puts
                                      # request_body ahead of basic_auth, but the limit is enforced when a
@@ -283,7 +296,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "6433f0acb20d6d9608259f14a735e997970de79e633996679d111a99ffc25a08",
+  "body_sha256": "122230f0b6c0c8d21782bdc3db038c52b01da6884e0b5a7d9915cce5dd12e10f",
   "components": {
     "admin": {
       "name": "Caddy admin source",
