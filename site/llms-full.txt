@@ -1480,7 +1480,7 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 ## 6. Verify
 
 - REASONED: private-browsing Access check; local marking review (October 2026, Bash 5.3.9) did not run a browser comparison. A live Cloudflare origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Cloudflare account and Access application on a proxied hostname were not available to this marking review. For the visit to https://app.example.com, an exposed route is expected to serve app content anonymously; a fixed route is expected to show Access login, then serve the app after an allowed sign-in, per the guide's cited Cloudflare Zero Trust documentation and Cloudflare Access One-time PIN (login methods coexist with an IdP). A private-browsing visit to `https://app.example.com` shows the Access login page, not the app.
-- REASONED: anonymous HEAD check; local marking review (October 2026, Bash 5.3.9) ran the stated curl command against a curl stub, which printed 'stub curl args=-q -sI https://app.example.com/' (exit 0), not an HTTP response. A live Cloudflare origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Cloudflare account and Access application on a proxied hostname were not available to this marking review. An exposed route is expected to return the application's own status and headers, potentially HTTP 200; a fixed anonymous route is expected to return 302 with a team cloudflareaccess.com login location, while an allowed session reaches the app, per the guide's cited Cloudflare Zero Trust documentation and Cloudflare Access One-time PIN (login methods coexist with an IdP). HEAD prints status and headers, not content. `curl -q -sI https://app.example.com/` returns a 302 whose `location` is your team's `*.cloudflareaccess.com` login, never a 200 or your application's own content.
+- REASONED: anonymous HEAD check; local marking review (October 2026, Bash 5.3.9) ran the stated curl command, in an earlier form that named app.example.com, against a curl stub, which printed 'stub curl args=-q -sI https://app.example.com/' (exit 0), not an HTTP response. The command now carries a `REPLACE_WITH_APP_HOSTNAME` placeholder in place of that host, and the changed command has not been run. A live Cloudflare origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Cloudflare account and Access application on a proxied hostname were not available to this marking review. An exposed route is expected to return the application's own status and headers, potentially HTTP 200; a fixed anonymous route is expected to return 302 with a team cloudflareaccess.com login location, while an allowed session reaches the app, per the guide's cited Cloudflare Zero Trust documentation and Cloudflare Access One-time PIN (login methods coexist with an IdP). HEAD prints status and headers, not content. With your Access-protected application's host name in place of `REPLACE_WITH_APP_HOSTNAME`, `curl -q -sI https://REPLACE_WITH_APP_HOSTNAME/` returns a 302 whose `location` is your team's `*.cloudflareaccess.com` login, never a 200 or your application's own content.
 - REASONED: service-token GET and anonymous comparison; local marking review (October 2026, Bash 5.3.9) passed the following block through bash -n and ShellCheck 0.11.0 with no output. Five of the fourteen Bash fixtures with a curl stub printed: placeholder and empty URL, 'substitute your own application URL inside the quotes; not probing' (each exit 2); wrong sentinel, 'paste the whole block, including its set -- line; not probing' (exit 2); and one and three values, 'the set -- line needs a URL and client ID; not probing' (each exit 2). Five more of the fourteen fixtures printed: HTTP URL, 'use an https:// URL; not probing' (exit 2); placeholder ID, 'supply the client ID without control characters; not probing' (exit 2); EOF secret input, 'secret input failed; not probing' (exit 2); and empty and placeholder secrets, 'supply the secret without control characters; not probing' (each exit 2). The remaining four fixtures printed: readonly HDR, 'cannot clear HDR in this shell; not probing' (exit 2); readonly IFS, 'a readonly IFS is set in this shell; not probing' (exit 2); valid input, 'stub curl' (exit 0); and curl stub exit 7, 'stub curl' (block exit 2). No HTTP status was observed. A live Cloudflare origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a provisioned Cloudflare account, Access application and service token were not available to this marking review. On a route known to return application HTTP 200, exposed anonymous and token requests are expected to reach the app, per the guide's cited Cloudflare Access service tokens (request headers and Service Auth policy) and curl manual (stdin headers, output, redirect reporting and write-out variables). Fixed anonymous requests on that route are expected to show Access login or denial, while the valid token is expected to yield http=200 location= on that route, per the guide's cited Cloudflare Access service tokens (request headers and Service Auth policy) and curl manual (stdin headers, output, redirect reporting and write-out variables). The block discards the body, so the printed status cannot identify content. With a service token, a GET returns your application content, not the Access login. Use a route known to serve your application's content with HTTP 200. Expect `http=200 location=`; an Access login redirect, denial or transport error is not a pass. Compare with the anonymous check above: an exposed app serves the route anonymously too, so token success alone does not prove Access is enforced.
 
 REASONED: the usage and secret-handling notes for the service-token block below, per the guide's cited Cloudflare Access service tokens and curl manual entries and the block's own text, with the paste-alone warning per CONTRIBUTING rule 7's `read` exception. No Cloudflare account, Access application or service token is available, so no status or redirect destination was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 without diagnostics. In a scratch-local review, the block ran from a file with a stub curl, no network and a pseudo-terminal: unchanged placeholders printed 'substitute your own application URL inside the quotes; not probing' (exit 2); substituted dummy inputs printed 'stub curl' (exit 0); and an empty secret printed 'supply the secret without control characters; not probing' (exit 2). The same scratch-local review also ran the block from a file with the same stub curl, no network and a pseudo-terminal: readonly HDR printed 'cannot clear HDR in this shell; not probing' (exit 2), and readonly IFS printed 'a readonly IFS is set in this shell; not probing' (exit 2). The stub output is not a Cloudflare response; the expected live comparison remains anonymous denial or Access login versus application content with a valid service token. Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste the secret alone at the hidden prompt, never into the command: a multi-line paste leaves every line after the first for your shell to run. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which keeps it out of argv and shell history but does not hide it from `set -x` tracing (the block turns tracing off) or the account owner or root.
@@ -1568,7 +1568,7 @@ REASONED: following block; remote-origin HTTPS direct probe; on 2026-10-17 the c
 
 REASONED: external direct-origin outcome; local marking review (October 2026, Bash 5.3.9) used the curl stub above, not a live origin. A live origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; an external probe host, deployed origin and tunnel-host control were unavailable. As this guide's assessment, read err, not the number: `err` text reporting a refused connection to your confirmed origin address supports the fixed state only with the effective inbound-policy check and a successful allowed-vantage control. The successful allowed-vantage control, as this guide's assessment, is the tunnel-host loopback control `curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' http://127.0.0.1:3000/` returning the app's status (not 000). A remote origin's successful allowed-vantage control, as this guide's assessment, is instead one of the matching HTTPS controls above from the `cloudflared` host returning the app's status (not 000), using the combined CA bundle when `originRequest.caPool` is set. This guide's assessment is that any HTTP status (http= not 000) from that confirmed origin address means something answered directly on the app's port and Access is bypassed. As this guide's assessment, an HTTP reply from an unconfirmed address means something answers there; confirm the mapping before calling it this origin's exposure, and never treat that reply as fixed. As this guide's assessment, a timeout, no reply, resolver failure, TLS trust or hostname failure, or error whose destination is uncertain is inconclusive. As this guide's assessment, neither allowed-vantage control proves that the probed public address belongs to this origin; confirm it independently before calling a refusal fixed. Use curl 7.75.0 or newer for `%{exitcode}` and `%{errormsg}` write-out. These expectations follow the cited Create a remotely-managed tunnel; the cited curl manual (stdin headers, output, redirect reporting and write-out variables) explains the printed transfer status and error.
 
-- REASONED: no-tunnel AOP origin and its port-80 sentence; local marking review (October 2026, Bash 5.3.9) reviewed the cited Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert) and Cloudflare IP ranges (origin firewall allowlist) guidance. The same local marking review (October 2026, Bash 5.3.9) ran the port-80 block below through bash -n, ShellCheck 0.11.0 and curl-stub guard fixtures, not against a live origin. A live origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; an external probe host, deployed no-tunnel origin, Origin CA and allowed-vantage service-token control were unavailable. The no-tunnel AOP origin needs a different check, because the direct request goes to the origin's HTTPS port and its Origin CA certificate is not trusted by an ordinary client. Independently confirm that the public address supplied to `--resolve` belongs to this origin; the service-token GET shows that the app answers through Cloudflare but does not establish that address mapping. Trust the origin's server CA so a server-certificate error does not mask the result, and read the response: `curl -q -g -s --noproxy '*' --cacert REPLACE_WITH_ORIGIN_SERVER_CA --resolve app.example.com:443:REPLACE_WITH_YOUR_ORIGIN_IP -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://app.example.com/`. As this guide's assessment, AOP is working when the independently confirmed origin address refuses the missing client certificate (a TLS alert, or nginx's `400 No required SSL certificate was sent`); a failure is your application's content coming back from that confirmed address. As this guide's assessment, a refusal or reply from an unconfirmed address shows only that something answers there; confirm the mapping before calling this origin fixed or exposed. Distinguish the layers, since all three withhold content for different reasons: a firewall drop is inconclusive in this probe even when the service-token GET answers; confirm isolation with the effective inbound-policy check above. As this guide's assessment, a client-certificate refusal from the confirmed origin address indicates AOP, and a `401`/`403` from that address indicates the app's own authorization. These outcome interpretations are this guide's assessment, per the cited Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert), Cloudflare Authenticated Origin Pulls and tunnel incompatibility, and Cloudflare Origin CA certificates and direct browser trust entries. This guide's assessment of these outcomes also rests on the cited curl manual (stdin headers, output, redirect reporting and write-out variables), curl noproxy and curl globoff entries. Confirm separately that port 80 does not serve the app.
+- REASONED: no-tunnel AOP origin and its port-80 sentence; local marking review (October 2026, Bash 5.3.9) reviewed the cited Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert) and Cloudflare IP ranges (origin firewall allowlist) guidance. The same local marking review (October 2026, Bash 5.3.9) ran the port-80 block below through bash -n, ShellCheck 0.11.0 and curl-stub guard fixtures, not against a live origin. A live origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; an external probe host, deployed no-tunnel origin, Origin CA and allowed-vantage service-token control were unavailable. The no-tunnel AOP origin needs a different check, because the direct request goes to the origin's HTTPS port and its Origin CA certificate is not trusted by an ordinary client. Independently confirm that the public address supplied to `--resolve` belongs to this origin; the service-token GET shows that the app answers through Cloudflare but does not establish that address mapping. Put your app's host name in place of both `REPLACE_WITH_APP_HOSTNAME` placeholders in the following command. Trust the origin's server CA so a server-certificate error does not mask the result, and read the response: `curl -q -g -s --noproxy '*' --cacert REPLACE_WITH_ORIGIN_SERVER_CA --resolve REPLACE_WITH_APP_HOSTNAME:443:REPLACE_WITH_YOUR_ORIGIN_IP -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://REPLACE_WITH_APP_HOSTNAME/`. As this guide's assessment, AOP is working when the independently confirmed origin address refuses the missing client certificate (a TLS alert, or nginx's `400 No required SSL certificate was sent`); a failure is your application's content coming back from that confirmed address. As this guide's assessment, a refusal or reply from an unconfirmed address shows only that something answers there; confirm the mapping before calling this origin fixed or exposed. Distinguish the layers, since all three withhold content for different reasons: a firewall drop is inconclusive in this probe even when the service-token GET answers; confirm isolation with the effective inbound-policy check above. As this guide's assessment, a client-certificate refusal from the confirmed origin address indicates AOP, and a `401`/`403` from that address indicates the app's own authorization. These outcome interpretations are this guide's assessment, per the cited Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert), Cloudflare Authenticated Origin Pulls and tunnel incompatibility, and Cloudflare Origin CA certificates and direct browser trust entries. This guide's assessment of these outcomes also rests on the cited curl manual (stdin headers, output, redirect reporting and write-out variables), curl noproxy and curl globoff entries. Confirm separately that port 80 does not serve the app.
 
 REASONED: no-tunnel port-80 policy; AOP authenticates HTTPS client certificates, so an HTTP origin route must not serve app content, per the cited Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert). Check a known app route from an external host with the following block, replacing the origin IP, app hostname and route inside the quotes. On the same route, the service-token GET in the service-token block above is the allowed-vantage control and must return its success status. As this guide's assessment, a fixed origin gives an explicit refusal or only a redirect to the canonical HTTPS host from the independently confirmed origin address (the listed Sources do not prescribe a code), without app content; either fixed outcome requires that control to answer. As this guide's assessment, a timeout or no reply alone is inconclusive; app route content served over HTTP from that confirmed origin address is the exposed outcome. As this guide's assessment, app content from an unconfirmed address shows only that something answers there; confirm the mapping before calling this origin exposed. As this guide's assessment, the service-token GET proves that the application route answers through Cloudflare, but does not confirm that the public address probed on port 80 belongs to this origin; check that mapping independently before treating a refusal as fixed. Use curl 7.75.0 or newer for `%{exitcode}` and `%{errormsg}` write-out; the cited curl manual (stdin headers, output, redirect reporting and write-out variables) supports the printed status and error.
 
@@ -1686,7 +1686,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1e8550eb6cd94ecf9d8537de9b3076375db4151ec34b9c3713344eb6a4368380",
+  "body_sha256": "754fdfdabcb605796fd28f2c5c52e8e2e60ee78c565d2f8e739ccea56549de55",
   "components": {
     "token-file": {
       "name": "cloudflared token-file minimum",
@@ -7216,11 +7216,24 @@ The description also documents an account-level field. Its [get-the-authenticate
 REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID Connect sources below; the protected-endpoint check needs an application deployment, which was not supplied for this metadata review. The guide records no live outcome; expected anonymous rejection is stated in the block.
 
 ```bash
+# guard-conventions: allow probe of Google's fixed public discovery URL; no reader-substituted placeholder in this probe's argv
 curl -q -s https://accounts.google.com/.well-known/openid-configuration | jq -r '.issuer, .jwks_uri'
-curl -q -sS -D - -o /dev/null https://app.example.com/admin   # unauthenticated GET: 401, or a 302 whose Location is the provider/login (not an unrelated app route), never 200 or app content
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your application is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS -D - -o /dev/null "https://$1/admin"   # unauthenticated GET: 401, or a 302 whose Location is the provider/login (not an unrelated app route), never 200 or app content
+)
 ```
 
-REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time both lines passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. Negative tests matter more than the happy path:
+REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time the block's two lines, in an earlier form whose anonymous-admin probe named app.example.com, passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. The anonymous-admin probe now takes the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on the guarded block, and the guard has not been run. Negative tests matter more than the happy path:
 
 - REASONED: allowlist refusal per the guide's cited Google OpenID Connect, Microsoft identity platform ID token claims reference, GitHub REST organization and team members, and Okta groups claim entries, with the expected outcome stated in this item. No application deployment and no provider accounts outside an allowlist are available in the authoring environment, and this item names no command, so no part of it ran locally. Sign in with a valid account outside the allowlist (a personal Gmail, another Entra tenant, a GitHub user outside the org, an Okta user outside the group): the provider authenticates, your app refuses and logs the identity.
 - REASONED: exact redirect-URI matching per the guide's cited RFC 9700 and the cited Microsoft identity platform OpenID Connect and GitHub OAuth apps authorizing entries; no client registered at any provider is available in the authoring environment, so no authorization request was sent, and this item names no command. A redirect to the edited URI is the exposed state and the provider error the fixed one. Edit `redirect_uri` in the authorization URL (add a path segment or change the host): the provider shows an error and never redirects.
@@ -7354,7 +7367,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "6ace922f0c1e3227889aad2c123bba1a2fb6a52c618a59195dda6d0638e6e041",
+  "body_sha256": "ea4b02da0450cf0e80d20c384c4bbf24a73468947a4229bd05d184935855e47b",
   "components": {
     "core": {
       "name": "OpenID Connect Core",
@@ -8055,7 +8068,7 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 
 ## Verify
 
-- REASONED: environment-scoping comparison per the guide's cited RFC 6750 bearer token usage, with the expected 401 or 403 in production and success in staging stated in this item; no staging and production API deployment is available in the authoring environment, so no request reached a service. At marking time the command passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 with no diagnostics, and run against a stub curl from a mode-0600 header file holding a synthetic key, it passed the header file by name and the key did not appear in its arguments. A key issued to another client or environment is rejected: with the key in a mode-`0600` header file kept out of version control (never on the command line, per section 1), `curl -q -sS -o /dev/null -w '%{http_code}\n' -H @staging.header https://api.example.com/v1/status` against production returns `401` or `403`, never `200`. The same key does succeed in its own staging environment (so the denial is environment scoping, not a broken key or endpoint).
+- REASONED: environment-scoping comparison per the guide's cited RFC 6750 bearer token usage, with the expected 401 or 403 in production and success in staging stated in this item; no staging and production API deployment is available in the authoring environment, so no request reached a service. At marking time the command, in an earlier form that named api.example.com, passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 with no diagnostics, and run against a stub curl from a mode-0600 header file holding a synthetic key, it passed the header file by name and the key did not appear in its arguments. The command now carries a `REPLACE_WITH_PRODUCTION_API_HOST` placeholder in place of that host, and the changed command has not been run. Put your production API's host name in place of `REPLACE_WITH_PRODUCTION_API_HOST` in the following command. A key issued to another client or environment is rejected: with the key in a mode-`0600` header file kept out of version control (never on the command line, per section 1), `curl -q -sS -o /dev/null -w '%{http_code}\n' -H @staging.header https://REPLACE_WITH_PRODUCTION_API_HOST/v1/status` against production returns `401` or `403`, never `200`. The same key does succeed in its own staging environment (so the denial is environment scoping, not a broken key or endpoint).
 - REASONED: revocation and expiry rejection per the guide's cited RFC 6750 bearer token usage and RFC 9068 access-token profile, with the expected rejection and the client-identified log record stated in this item, so acceptance or a missing log record is the exposed state. No deployed service, token issuer or service log is available in the authoring environment, and this item names no command, so no part of it ran locally. A revoked or expired key or token is rejected the same way, and the rejection appears in the service log with the client identity.
 - REASONED: CI credential posture per the guide's cited GitHub pages on security hardening with OpenID Connect and on configuring it in AWS, Google Cloud and Azure, with the fixed state stated in this item, so a long-lived cloud key among the secrets or a missing id-token: write is the exposed state. No GitHub repository or Actions settings are available in the authoring environment, so no secrets list or workflow was read, and this item names no command and the guide gives no workflow file to parse, so no part of it ran locally. The CI job holds no long-lived cloud key: the repository's Actions secrets contain no `AWS_SECRET_ACCESS_KEY`, service-account JSON, or Azure client secret, and the workflow declares `permissions: id-token: write`.
 - REASONED: trust-condition inspection per the guide's cited AWS IAM page on configuring a role for the GitHub OIDC identity provider, Google Cloud Workload Identity Federation pages and Microsoft Entra workload identity federation pages; no AWS, Google Cloud or Azure account is available in the authoring environment, so no live trust was read. At marking time jq 1.8.1 read section 4's AWS trust policy, whose sub value met this item's criteria, while copies with the sub set to repo:example-org/*, repo:example-org/example-repo:* or a bare * and one with no sub each failed them. Run in jq on section 4's inline Google and Azure values, the same criteria found that both Azure subjects, repo:example-org/example-repo:environment:production and repo:example-org/example-repo:ref:refs/heads/main, met them. The Google principalSet binding names example-org/example-repo with no trailing wildcard but pins no branch or environment, and the attribute condition pins the owner and refs/heads/main but names no repository, so the Google check is met only by the binding and the condition together. The federation trust condition names the exact repository: the AWS `sub` condition and the Azure `subject` each contain `example-org/example-repo` and pin the branch or environment. The Google `attribute.repository` binding and its attribute condition together restrict access to `example-org/example-repo` and the branch or environment. No AWS, Azure or Google trust value ends in a wildcard (`repo:example-org/*`, `repo:example-org/example-repo:*`, or a bare `*`) that would admit another repo, branch, or environment.
@@ -8226,7 +8239,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "7ea1d0b362b531001e6c4cc89a15024a0dc1bc5cfe4ad2ac4002b38b92948f0c",
+  "body_sha256": "d1170bbe33bccef7c11e45ec72fc88f4511ca3578ae25fae1962bea61b559eb6",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",
@@ -11298,13 +11311,23 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution. This metadata-only review has no authorized deployment fixture.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.)
 
 ```bash
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI http://app.example.com/     # expect a redirect to https://
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name Traefik routes to the app (the Host rule in section 2), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"     # expect a redirect to https://
+  curl -q -g -sI "https://$1/"    # expect 401 without credentials once auth is on
+)
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
   # curl reads the admin password from a config stream on stdin (--config -),
@@ -11314,32 +11337,50 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   # Clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the password from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PASSWORD'   # the same app host name as the checks above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then the admin password: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}"
-  set -- "${1//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin https://app.example.com/
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
                                      # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://app.example.com/
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
                                      # 413. Credentials matter: app-body runs after app-auth, so an
                                      # unauthenticated probe is counted by app-rate/app-inflight but stops
                                      # at 401 before app-body buffers it. A backend with its own limit
                                      # returns the same code, so attributing the refusal needs an isolated
                                      # environment with app-body removed
 )
-seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/ | sort | uniq -c
-                                     # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
-                                     # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
-                                     # next handler on failure, so an unauthenticated flood is counted by the
-                                     # limiter, keyed on the client source. A 429 appeared. That is all this shows.
-                                     # inflightreq also returns
-                                     # 429, and an upstream under load can too, so this does not
-                                     # establish that ratelimit fired. Attributing it needs an isolated
-                                     # environment with both disabled as a baseline, then each enabled
-                                     # alone, with the arrival rate actually measured
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the same app host name as the checks above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
+                                       # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
+                                       # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
+                                       # next handler on failure, so an unauthenticated flood is counted by the
+                                       # limiter, keyed on the client source. A 429 appeared. That is all this shows.
+                                       # inflightreq also returns
+                                       # 429, and an upstream under load can too, so this does not
+                                       # establish that ratelimit fired. Attributing it needs an isolated
+                                       # environment with both disabled as a baseline, then each enabled
+                                       # alone, with the arrival rate actually measured
+)
 rm -f /tmp/under.bin /tmp/over.bin
 docker compose ps                    # only Traefik publishes ports; the app's 3000 must NOT be published
 sudo ss -tlnp                        # read the whole listener table, do not grep it down to the port you
@@ -11493,7 +11534,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "434f194c47ebf3f73de7fc3a4ce0337561293a14e42f02ae81927be1e9d558fc",
+  "body_sha256": "1a153bf3ed5647330b1ed8ff8578082353e3b977c4719c3b80cff431845e7474",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",
@@ -16541,7 +16582,7 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
+REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. The bash -x, history and stub runs of the cookie subshell covered an earlier form, before the no-cookie and cookie requests took the application's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
 ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
@@ -16550,10 +16591,22 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
 # Route Handler or page returns a 3xx to /login (or 401/403 if you chose the "return 401" variant); a
 # streamed redirect can instead be a 200 whose body is a client-side redirect shell, not the protected content, so read the BODY, not the status
 # alone. --noproxy so no client proxy answers. Save each body and confirm it carries NO protected payload:
-curl -q -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/api/admin   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
-curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' https://app.example.com/dashboard    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Next.js app is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/api/admin"   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
+  curl -q -g -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/dashboard"    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+)
 # POSITIVE controls, so a denial above is the auth check firing and not a route broken for everyone. Put the
-# cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
+# app's host name and then the cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
 # `better-auth.session_token` (or `__Secure-better-auth.session_token` with secure cookies) - and paste a
 # real, freshly issued cookie VALUE at each hidden prompt. Test the admin route with an admin AND a non-admin
 # cookie (authorization, not only authentication), and confirm each success body is the real protected
@@ -16564,12 +16617,18 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
-  set -- PASTE_WHOLE_BLOCK 'session'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'session'   # the same app host name as the no-cookie check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the cookie NAME: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not probing'; exit 2; }
   case "$1" in
-    ''|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) echo 'the set -- line takes the cookie NAME only (letters, digits, . _ -); not probing'; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ''|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) echo 'the set -- line takes the cookie NAME second (letters, digits, . _ -); not probing'; exit 2 ;;
   esac
   { unset -n cookie_value && unset -v cookie_value; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
@@ -16579,17 +16638,17 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
   case "$cookie_value" in
     ''|*[[:cntrl:]]*) echo 'a valid admin session cookie value is required; not probing'; exit 2 ;;
   esac
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- https://app.example.com/dashboard   # expect 200; dash-auth.txt is the dashboard, not /login
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- https://app.example.com/api/admin    # admin cookie: 200
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- "https://$1/dashboard"   # expect 200; dash-auth.txt is the dashboard, not /login
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- "https://$1/api/admin"    # admin cookie: 200
   IFS= read -r -s -p 'NON-ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
   printf '\n'
   case "$cookie_value" in
     ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; exit 2 ;;
   esac
-  printf 'Cookie: %s=%s\n' "$1" "$cookie_value" |
-    curl -q -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- https://app.example.com/api/admin   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
+  printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
+    curl -q -g -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- "https://$1/api/admin"   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
 )
 # Secret scan of the client bundle: search the FULL secret (not a prefix), require the build to exist, and
 # read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block).
@@ -16713,7 +16772,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3e3c78f3bc938c5e60dba0ea3962980482658ef33dc2bb25c1de60f31b47e539",
+  "body_sha256": "6f31f50e89f49e9023d24aa8f44d858bc55a0c1d3ad26733e48fa16d56980d9a",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",
@@ -19611,18 +19670,30 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 
 ## Verify
 
-REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources.
+REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
-curl -q -sI http://app.example.com/                                 # 301 to https:// (force_ssl)
-curl -q -sI https://app.example.com/ | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
-curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/dashboard    # 302 to login, or 401
-curl -q -sS -i https://app.example.com/sidekiq
-# if you run Sidekiq Web, read the headers, not just the code: Basic Auth answers 401 with a
-# WWW-Authenticate: Basic header; the Devise constraint answers 302 with a Location pointing at your
-# login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
-# the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"                                 # 301 to https:// (force_ssl)
+  curl -q -g -sI "https://$1/" | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
+  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/dashboard"    # 302 to login, or 401
+  curl -q -g -sS -i "https://$1/sidekiq"
+  # if you run Sidekiq Web, read the headers, not just the code: Basic Auth answers 401 with a
+  # WWW-Authenticate: Basic header; the Devise constraint answers 302 with a Location pointing at your
+  # login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
+  # the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
+)
 git ls-files config/master.key                                   # prints nothing
 ```
 
@@ -19706,7 +19777,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "131cbbefd3328afe905548bab00cb281e5e5c534701c22b0388741da58250e17",
+  "body_sha256": "1660ec787cfe13068dc4f7fc85dd482d84425e9fdfee190ec74d927062e63ed7",
   "components": {
     "rails": {
       "name": "Rails documentation",
@@ -20702,7 +20773,7 @@ At the time of writing, the pinned Dev Mode docs require PRO or Team & Enterpris
 
 ## 6. Verify
 
-REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no run is recorded. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
+REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no run is recorded. The redirect and unauthenticated-request checks take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the unauthenticated-request check takes its protected path on the same line; the guards have not been run. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
 
 ```bash
 # 1. This guide checks HTTP->HTTPS redirection. Spot-check on / only: it does not prove HTTPS on every route/method, nor that
@@ -20712,7 +20783,19 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 #    clients typically follow as GET; neither page's cited passages document this HEAD response. This guide's assessment:
 #    Heroku's ACM challenge-path handling establishes no general HTTPS redirect policy, setting, application-only responsibility or status.
 #    This guide's check: require 301/302/307/308 with an https:// Location; HTTP content without that redirect fails.
-curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' http://app.example.com/          # this guide's redirect check above
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your platform serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"          # this guide's redirect check above
+)
 # 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
 #    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
 #    Protection Bypass for Automation token lets the request access the deployment without authentication,
@@ -20723,7 +20806,22 @@ curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' http://app.example.com/   
 #    conventions so it stays out of shell history; the query-parameter form writes it into history and logs.
 #    The status codes below are this guide's expected reading; the cited pages state none, including for the
 #    platform gate's own challenge (its SSO 401 below):
-curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/REPLACE_WITH_PROTECTED_PATH   # no creds: want the APP's own 401/403, not a platform SSO 401
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the same app host name as the redirect check above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected route without its leading slash: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"   # no creds: want the APP's own 401/403, not a platform SSO 401
+)
 #    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
 #    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
 #    reachable and that the app's own auth, not the platform gate, is what gates it.
@@ -20858,7 +20956,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "5f6b8398693501907b86cddff9df79690c6281ebf3d0253fdbbb934eaeac6337",
+  "body_sha256": "cf6bfe3d4c93673b6945bba4c168c18964c2a41e8656729f27669dcf79ae537b",
   "components": {
     "render": {
       "name": "Render documentation",
@@ -29400,7 +29498,7 @@ AIStor retries failed delivery, but events can be permanently lost when the queu
 
 ## 8. Verify (REASONED: every unit in this section rests on the local evidence and comparison-specific declarations throughout this section, citing Sources entries including AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions). A live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md)
 
-REASONED: only local parsing, shell behaviour and arithmetic were exercised in an offline scratch clone. All eight Bash blocks in this section passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; the three JSON examples in sections 4, 4.2 and 8 parsed with Python json.loads. The shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture. The first six Bash blocks printed stub responses and forwarded their placeholders unchanged: substitute real values before a live run. The live comparisons need AIStor, KMS, a durable audit receiver, and an IdP; a live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Credentials and authenticated STS/S3 and load clients with per-node metrics collection are also required. Sources entries include AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); each comparison's declaration identifies its specific sources. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
+REASONED: only local parsing, shell behaviour and arithmetic were exercised in an offline scratch clone. All eight Bash blocks in this section passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; the three JSON examples in sections 4, 4.2 and 8 parsed with Python json.loads. The shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture. The first six Bash blocks printed stub responses and forwarded their placeholders unchanged: substitute real values before a live run. The bash -n, ShellCheck and stub runs covered the first Bash block, the exposure probes, in an earlier form, before its curls took the S3 host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on that block, and its guard has not been run. The live comparisons need AIStor, KMS, a durable audit receiver, and an IdP; a live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Credentials and authenticated STS/S3 and load clients with per-node metrics collection are also required. Sources entries include AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); each comparison's declaration identifies its specific sources. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
 
 REASONED in this authoring environment: the existing probes below are retained, but their live outcomes were not demonstrated here. A live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md.
 
@@ -29420,16 +29518,28 @@ REASONED: following block; alias JSON follows the cited mc alias import schema; 
 
 Use root credentials in `mys3` only for the administrative comparisons below. Protect both the imported file and the resulting local `mc` configuration. Importing an alias is configuration, not proof of working authentication; confirm signed operations against MinIO's own endpoint.
 
-REASONED: following block; exposure and alias-import expectations follow the cited server and anonymous-policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With a fixture alias input path, the block printed stub listener, curl, and mc responses; the recorded calls covered all four URLs and alias JSON on stdin. Real listener scope, anonymous grants versus MinIO denials, and signed authentication were not observed. Per the guide's cited MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted); MinIO `mc anonymous get-json`; AIStor `mc alias import`. The MinIO `mc anonymous get-json` entry is cited for retrieving a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions, and the AIStor `mc alias import` entry for stdin and JSON fields. The three existing citations were not reopened.
+REASONED: following block; exposure and alias-import expectations follow the cited server and anonymous-policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output on this block in an earlier form, before its four curls took the S3 host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the guard has not been run. In that earlier form, with a fixture alias input path, the block printed stub listener, curl, and mc responses; the recorded calls covered all four URLs and alias JSON on stdin. Real listener scope, anonymous grants versus MinIO denials, and signed authentication were not observed. Per the guide's cited MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted); MinIO `mc anonymous get-json`; AIStor `mc alias import`. The MinIO `mc anonymous get-json` entry is cited for retrieving a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions, and the AIStor `mc alias import` entry for stdin and JSON fields. The three existing citations were not reopened.
 
 ```bash
 ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
-curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' https://s3.example.com:9000/                     # service root: anonymous ListBuckets denied
-curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/ # per bucket: anonymous listing denied
-curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' https://s3.example.com:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT
-                                                       # a known private object: 403, never 200, and the 403 must come from MinIO (behind a proxy a 403 may be the proxy's, so probe MinIO's direct origin). Anonymous policies are set per
-                                                       # bucket, so a denial at the service root does not prove any bucket is private
-curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' https://s3.example.com:9001/                     # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_S3_HOST'   # the host name MinIO's own S3 API answers on (its direct origin), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/"                     # service root: anonymous ListBuckets denied
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/" # per bucket: anonymous listing denied
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT"
+                                                         # a known private object: 403, never 200, and the 403 must come from MinIO (behind a proxy a 403 may be the proxy's, so probe MinIO's direct origin). Anonymous policies are set per
+                                                         # bucket, so a denial at the service root does not prove any bucket is private
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9001/"                     # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
+)
 mc alias import mys3 < /path/to/REPLACE_WITH_ADMIN_ALIAS.json
 ```
 
@@ -29716,7 +29826,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f7fbf10d4fba4505db3677d4248bc6154d9b1f96f68d295a05b804609804614b",
+  "body_sha256": "8fe32dd049e56b0d19e389fd6a656d815964019097c5ae2cddfbda0a92888c15",
   "components": {
     "aistor": {
       "name": "AIStor documentation",
@@ -44374,7 +44484,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
-**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. The /invocations runs and the bash -n result covered an earlier form, before the key and /invocations subshells took the model server's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains and exit 2 on a partial paste or a wrong value count; neither the stub runs nor bash -n was repeated on the guarded form, and the guards have not been run. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
 
 ```bash
 ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
@@ -44396,22 +44506,34 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
   # Use a short-lived key or clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the key from set -x
   # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MODEL_HOST' 'REPLACE_WITH_API_KEY'   # the public host name your proxy serves the model API on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit ;; esac
-  curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' https://models.example.com/v1/models   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
-  printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
+  curl -q -g -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' "https://$1/v1/models"   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
+  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- "https://$1/v1/models"   # positive control: 200 with a model list, printed
 )
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_A_REAL_SERVED_MODEL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MODEL_HOST' 'REPLACE_WITH_A_REAL_SERVED_MODEL'   # the same model API host name as the key check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then a real served model name: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
-  curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
-    -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" https://models.example.com/invocations
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
+  curl -q -g -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
+    -d "{\"model\":\"$2\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" "https://$1/invocations"
 )
                                                         # vLLM /invocations needs JSON (a bare -d '{}' sends form
                                                         # content-type and fails the schema) and a REAL served model.
@@ -44429,7 +44551,7 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
 
 REASONED: mixed process-matching evidence and parser/visibility limitations from the printed expression and cited parser sources. The historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward. The pgrep line's demonstration covered only local expression matching, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line. The `pgrep` line prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4). The stub arguments `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`. The stub arguments `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`. The `pgrep` line therefore tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
 
-REASONED: following block; anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage. Bash 5.3.9 bash -n accepted all four Verify shell fences. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
+REASONED: following block; anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage. Bash 5.3.9 bash -n accepted all four Verify shell fences, the first in an earlier form, before its key and /invocations probes took the model server's host on guarded `set --` lines. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
 ```bash
 # REASONED: text-generation-webui authentication follows the cited modules/api/script.py; no container runtime is available.
@@ -44688,7 +44810,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f7fe51cf784a5f8de4d90469ce4cca4eac1c5ba21736cd73aee8df4c6a074f49",
+  "body_sha256": "d7a262aac973f5296e58350c24afcfc916e07838af8cefd0f91aca49a447b71e",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -46121,6 +46243,7 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 ```bash
 # REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in the authoring environment. Expected API status outcomes require a live check; the assessment above traces conditional public-API refusal and the workflows list route's middleware, response body and declared 200 success status; pinned source still establishes the Webhook refusal codes.
 # On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
+# The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains; those guards have not been run.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
 # owner-creation data to a live instance as a "test".
@@ -46128,9 +46251,20 @@ ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n
            # private container network), with the Postgres and task-runner ports NOT published. Loopback
            # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
 # TLS reachability (proves TLS, not authentication):
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
-  -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://n8n.example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST'   # the public host name your proxy serves n8n on (your N8N_HOST value), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
+    -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/"
+)
 # Public API auth, matched pair against the same URL: expect rejection without the n8n key
 # (for example 401) and 200 workflow JSON with a valid key; verify both outcomes on your instance.
 # The key is fed on stdin (-H @-), so it stays out of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
@@ -46138,15 +46272,21 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # account's view of the process.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_N8N_API_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_N8N_API_KEY'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
-  case "$1" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 1 ;; esac
-  u=https://n8n.example.com/api/v1/workflows
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
+  case "$2" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 2 ;; esac
+  u="https://$1/api/v1/workflows"
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$u"
-  printf 'X-N8N-API-KEY: %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
+  printf 'X-N8N-API-KEY: %s\n' "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
 )
 # no-key => expect rejection by n8n; check the observed status (a fronting proxy can also 401, so hold its
 # credential constant and vary only the n8n key). With-key => expect 200 and workflow JSON.
@@ -46157,14 +46297,20 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # Basic/JWT auth returns 401 and missing Header auth returns 403 in the pinned handler.
 # Valid calls must perform the expected action; missing/wrong calls must not. A 200 alone is not proof (a workflow can respond 200 without acting); a 404 means inactive/wrong
 # method/wrong path, not protected. For a None webhook that validates a signature in the workflow,
-# confirm an unsigned request runs no action. Pick a workflow safe to trigger, and substitute your path.
+# confirm an unsigned request runs no action. Pick a workflow safe to trigger, and substitute your n8n host and webhook path.
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_WEBHOOK_PATH'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_WEBHOOK_PATH'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the production webhook path after /webhook/: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 1 ;; esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://n8n.example.com/webhook/$1"
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 2 ;; esac
+  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://$1/webhook/$2"
 )
 ```
 
@@ -46445,7 +46591,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "9673c2069a870b71db5ed9b73904ce9c93c572c714da0142d7995c3d98178a48",
+  "body_sha256": "284a134ea8c90bb763014fc2ed80a579051aacf726319e879e68889d52a807d4",
   "components": {
     "server": {
       "name": "n8n listener source",
@@ -47607,26 +47753,50 @@ REASONED: following block; client-key outcomes follow the cited Qdrant security 
 
 REASONED: preceding block; frontend key comparison, and this paragraph's combined verdict, whose backend peer restriction rests on the backend-port block above. A live Qdrant stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No TLS frontend, distributed cluster, peer/non-peer vantage or valid Qdrant API key was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output. Under Bash `-u`, placeholders, empty values and a tab in the host printed `substitute the values on the set -- line above; not probing`; one value printed `the set -- line needs exactly 2 values; not probing`; omitting `set --` printed `paste the whole block, including its set -- line; not probing`. These cases exited 0 without calling the curl stub; a valid fixture printed its curl arguments and exited 0. The valid frontend fixture printed two curl calls, the keyed one with `-H @-`. The next two expected-outcome sentences follow the guide's cited Qdrant security (API key, read-only key, `api-key` header, TLS keys, ports, default insecurity); curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0; rolling documentation, checked October 2026) entries. Expected exposed anonymous access returns 200; fixed access returns 401/403 without a key and 200 with a valid key. Fixed 6335 denies or filters non-peers while accepting peers. **Exposed:** without-key returns `http=200` (no key, or a proxy that does not enforce it), or a backend port is reachable from a non-peer. **Fixed:** without-key returns `401`/`403` and with-key returns `200`, and 6335 is refused from a non-peer while a peer connects.
 
-REASONED: Weaviate and Chroma fronted checks. A live Weaviate or Chroma stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No authenticated TLS frontends or authorized identities were available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output. The curl stub printed three argument lists and exited 0, including the unchanged placeholder header-file argument; this does not validate a real header file. Expected exposed Weaviate or unprotected Chroma accepts anonymous requests; fixed frontends return 401/403 anonymously and succeed for authorized users, per the guide's cited Weaviate authentication (anonymous access, API key, OIDC variables); Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables) entries. For Weaviate and Chroma, the fronted client checks still apply:
+REASONED: Weaviate and Chroma fronted checks. A live Weaviate or Chroma stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No authenticated TLS frontends or authorized identities were available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output. The curl stub printed three argument lists and exited 0, including the unchanged placeholder header-file argument; this does not validate a real header file. Those runs covered the block in an earlier form that named weaviate.example.com and chroma.example.com; the Weaviate and Chroma requests now take their hosts on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; none of bash -n, ShellCheck and the stub was re-run on the guarded block, and the guards have not been run. Expected exposed Weaviate or unprotected Chroma accepts anonymous requests; fixed frontends return 401/403 anonymously and succeed for authorized users, per the guide's cited Weaviate authentication (anonymous access, API key, OIDC variables); Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables) entries. For Weaviate and Chroma, the fronted client checks still apply:
 
 REASONED: following block; Weaviate authentication and Chroma migration documentation distinguish native and fronting authorization; no live outcomes for these frontends are recorded.
 
 ```bash
 # --noproxy '*' so a forward proxy's CONNECT "200 Connection established" cannot masquerade as the
 # service status; -w prints the real code and exit, and -g keeps curl from globbing a substitution.
-curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://weaviate.example.com/v1/schema
-                                     # without a key: expect http=401 (Weaviate) or the fronting proxy's 401/403
-curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://chroma.example.com/
-                                     # Chroma has no native auth: expect the proxy's 401/403, never a Chroma http=200
-# Positive control: a 401/403 above proves denial, not that authorized access works, so confirm an
-# authorized request succeeds (and satisfy any auth the fronting proxy also requires). For Chroma,
-# which has no native auth, verify authorized access through the fronting proxy instead.
-curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  -H @REPLACE_WITH_AUTH_HEADER_FILE https://weaviate.example.com/v1/schema
-                                     # with a valid key (Authorization header read from a file): expect http=200
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_WEAVIATE_HOST'   # the public host name your proxy serves Weaviate on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/v1/schema"
+                                       # without a key: expect http=401 (Weaviate) or the fronting proxy's 401/403
+  # Positive control: a 401/403 above proves denial, not that authorized access works, so confirm an
+  # authorized request succeeds (and satisfy any auth the fronting proxy also requires).
+  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    -H @REPLACE_WITH_AUTH_HEADER_FILE "https://$1/v1/schema"
+                                       # with a valid key (Authorization header read from a file): expect http=200
+)
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_CHROMA_HOST'   # the public host name your proxy serves Chroma on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/"
+                                       # Chroma has no native auth: expect the proxy's 401/403, never a Chroma http=200
+  # Positive control: Chroma has no native auth, so verify authorized access through the fronting proxy instead.
+)
 ```
 
-REASONED: preceding block; Weaviate and Chroma fronted checks and this Milvus client comparison. A live Weaviate, Chroma or Milvus stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No authenticated TLS frontends, Milvus deployment or authorized identities were available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output. The curl stub printed three argument lists and exited 0, including the placeholder header-file argument. Python AST parsing of `MilvusClient(uri=...)` passed; no SDK behavior ran. Expected exposed Weaviate or unprotected Chroma accepts anonymous requests; fixed frontends return 401/403 anonymously and succeed for authorized users, per the guide's cited Weaviate authentication (anonymous access, API key, OIDC variables); Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables) entries. Expected exposed Milvus accepts an unauthenticated client; fixed Milvus rejects it while accepting the application credentials, per the guide's cited Milvus authentication (`common.security.authorizationEnabled`, default `root`/`Milvus`, `update_password`) entries. For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `authorizationEnabled` is on, and the same call with the application user's credentials must succeed.
+REASONED: preceding block; Weaviate and Chroma fronted checks and this Milvus client comparison. A live Weaviate, Chroma or Milvus stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No authenticated TLS frontends, Milvus deployment or authorized identities were available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output. The curl stub printed three argument lists and exited 0, including the placeholder header-file argument. Those bash -n, ShellCheck and stub runs covered the earlier form of the Weaviate and Chroma block, before its requests took guarded hosts, and the host guards have not been run. Python AST parsing of `MilvusClient(uri=...)` passed; no SDK behavior ran. Expected exposed Weaviate or unprotected Chroma accepts anonymous requests; fixed frontends return 401/403 anonymously and succeed for authorized users, per the guide's cited Weaviate authentication (anonymous access, API key, OIDC variables); Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables) entries. Expected exposed Milvus accepts an unauthenticated client; fixed Milvus rejects it while accepting the application credentials, per the guide's cited Milvus authentication (`common.security.authorizationEnabled`, default `root`/`Milvus`, `update_password`) entries. For Milvus, a `MilvusClient(uri=...)` call with no `token` must fail once `authorizationEnabled` is on, and the same call with the application user's credentials must succeed.
 
 REASONED: Milvus management and event-log reachability, container inventory and health controls. A live Milvus stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No Milvus deployment, container runtime, outside-administrator host or container namespace access was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output. Under Bash `-u`, placeholders, empty values and a tab in the host printed `substitute the values on the set -- line above; not probing`; one value printed `the set -- line needs exactly 2 values; not probing`; omitting `set --` printed `paste the whole block, including its set -- line; not probing`. These cases exited 0 without calling the curl stub; a valid fixture printed its curl arguments and exited 0. The sudo stub printed `SUDO <ss> <-tulnp>`; separate docker and ss stubs printed `DOCKER <compose> <ps>` and `SS <-tulnp>`, all exiting 0. Expected exposed management/event-log ports accept outside connections; fixed publication and filtering deny or filter outsiders while the private health and process-owned listener controls succeed. The exposed and fixed expectations follow the guide's cited Milvus management HTTP listener, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917); Milvus management HTTP listener, v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a) entries. The exposed and fixed expectations also follow the guide's cited Milvus encryption-zone key backup and event-log handler, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a); Milvus `/healthz` handler, v2.6.24 (commit 08c637c14373ec904dcac08e4df67279de421917) and v3.0.2 (commit 3c4448a2aee506ccd14851e742aba85f1c83188a) entries. The exposed and fixed expectations also follow the guide's cited Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats entry. Client authentication does not cover Milvus's management listener (section 4), so probe it separately. Run the backend-port block above with `9091` on its `set --` line, from a host outside your administrators' network, against the node's real address, and read it by the rules given for 6335: any sign the connection completed is a fail. Where you kept the loopback-only mapping, run it again on the Docker host against `127.0.0.1`: a completed connection there is the positive control for that mapping. With the mapping deleted, as recommended, the positive control has two parts, both inside the container. `docker compose ps` must show the `standalone` service as `healthy`, which means its in-container `curl -f http://localhost:9091/healthz` got a non-error answer. The `ss -tulnp` inventory, run in the container's network namespace, must also show that port held by the `milvus` process, because `healthy` alone says only that something answered there: another process in the namespace could hold the port, and `/healthz` can answer before every component has registered. A failed bind is only logged and Milvus keeps running, so a refused probe from outside proves nothing on its own. With a different `METRICS_PORT`, read that port in both checks. The `/eventlog` listener has no fixed port, so find any other port the Milvus process holds in the `ss -tulnp` inventory above, run inside the container's network namespace as well, and probe those ports the same way. A port missing from the inventory was only missing when you looked: the listener is created on the first request, so repeat the inventory after anything has called `/eventlog`. These probes are reasoned, not demonstrated (no Milvus deployment or container runtime in the authoring environment); expected outcomes follow the pinned v2.6.24 and v3.0.2 sources cited for the management listener.
 
@@ -47822,7 +47992,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "c0389508e1ad628213fd75a5be535d9758ee619597e2a9b0a4d5fd65f3b8b4ef",
+  "body_sha256": "80b3f3743c07d4e4fed5c4b1f270724767024406123471cab8d68b31cad285c7",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -48451,7 +48621,7 @@ REASONED: preceding block; this Probe 1 paragraph and the listener block above i
 
 REASONED: the header shape of the three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (request headers, header/body validation) and Discovery entry (request shape). No MCP server is available in the authoring environment to answer a mismatched header with HTTP 400 and -32020, or a matching one without it. During marking review (October 2026) the four server/discover bodies in those blocks parsed as JSON, and in each the MCP-Protocol-Version header equalled the protocol version 2026-07-28 in `params._meta`, Mcp-Method equalled the body's method, clientCapabilities and clientInfo were present, and no Mcp-Name header appeared. `Mcp-Name` is deliberately absent: it is required only for `tools/call`, `resources/read`, and `prompts/get`, not `server/discover`. The `MCP-Protocol-Version` header must equal the body's `_meta` version; all three probes satisfy that requirement by construction. See Streamable HTTP and the Discovery request shape.
 
-REASONED: following block; the unauthenticated server/discover probe and well-known metadata read in the following block, and the placeholder guards of all three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries. The authoring environment has no MCP server or authorization server, so neither the fixed 401 nor an exposed discovery result was observed. During marking review (October 2026) the three blocks passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network. Unchanged, each printed its substitute-the-MCP-HTTPS-URL refusal; without its set -- line, the paste-the-whole-block refusal; shortened, its exactly-N-values refusal; and an http:// URL drew the https:// refusal. In the following block an unsubstituted Origin drew the allowed-Origin refusal and a control character the control-character refusal, and with both values substituted the stub received one POST carrying the Origin, MCP-Protocol-Version, Mcp-Method, Content-Type and Accept headers; its illustrative well-known read sits outside the subshell and reached the stub in every run. Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole subshell block.
+REASONED: following block; the unauthenticated server/discover probe and well-known metadata read in the following block, and the placeholder guards of all three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries. The authoring environment has no MCP server or authorization server, so neither the fixed 401 nor an exposed discovery result was observed. During marking review (October 2026) the three blocks passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network. Unchanged, each printed its substitute-the-MCP-HTTPS-URL refusal; without its set -- line, the paste-the-whole-block refusal; shortened, its exactly-N-values refusal; and an http:// URL drew the https:// refusal. In the following block an unsubstituted Origin drew the allowed-Origin refusal and a control character the control-character refusal, and with both values substituted the stub received one POST carrying the Origin, MCP-Protocol-Version, Mcp-Method, Content-Type and Accept headers. At the October 2026 marking review the block's well-known read sat outside the subshell, named mcp.example.com and reached the stub in every run. The well-known read now sits in its own subshell and takes the MCP server's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; that guard has not been run, and neither bash -n nor ShellCheck was re-run on the changed block. Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole subshell block.
 
 ```bash
 # REASONED: unauthenticated discovery follows MCP 2026-07-28 Authorization and Authorization Server Discovery; no live server is available.
@@ -48478,8 +48648,19 @@ REASONED: following block; the unauthenticated server/discover probe and well-kn
 # Option A only: FOLLOW the resource_metadata URL from the 401's WWW-Authenticate header WHEN PRESENT
 # (the spec permits well-known-only discovery; fall back to /.well-known/oauth-protected-resource/mcp,
 # then the root below) and confirm it names your authorization server.
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -s --noproxy '*' https://mcp.example.com/.well-known/oauth-protected-resource   # JSON with "authorization_servers"
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MCP_HOST'   # the host name of the MCP HTTPS URL used above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -s --noproxy '*' "https://$1/.well-known/oauth-protected-resource"   # JSON with "authorization_servers"
+)
 ```
 
 REASONED: preceding block; this Probe 2 paragraph and the unauthenticated discovery block above it. Probe 2's expected 403 and exposed discovery result rest on the guide's cited MCP specification 2026-07-28 Streamable HTTP, Discovery and Caching entries; the block above rests on the entries named in the declaration before it, which also records its local runs, and Probe 2's own local runs are recorded with the following block. **Probe 2 - REASONED, not demonstrated.** No live MCP 2026-07-28 server and valid deployment credential are available in the authoring environment. Establish the allowed-Origin positive control before interpreting the negative request. Require a real `DiscoverResult`, including `resultType:"complete"`, `supportedVersions`, `capabilities`, and the `ttlMs`/`cacheScope` caching hints required for complete discovery results. See Discovery and Caching. Fixed: changing only Origin produces `403`; exposed: the disallowed Origin still receives a discovery result. A `403` counts as an Origin rejection only after the otherwise-identical positive control succeeds. See Streamable HTTP, Security & Endpoint.
@@ -48656,7 +48837,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "14ddbe1f83f75128280ee817442324de96f6877ebcd3e4ec0b4395f20ebb6660",
+  "body_sha256": "d99b132b682dc350783345c091688d2b7eeeb6ea369daa6cc3ed88d8fc46185e",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -49884,7 +50065,7 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
   esac
 )
 # experiments/search is a POST endpoint, so each check posts a minimal body. --noproxy so no client
-# proxy answers. A 401 at mlflow.example.com can come from the fronting proxy OR from MLflow's own basic
+# proxy answers. A 401 at your public MLflow host can come from the fronting proxy OR from MLflow's own basic
 # auth, so the backend check below proves MLflow itself enforces it, not just the proxy. These are
 # MANUAL checks: each command prints its HTTP status for you to compare with the comment; curl exits 0
 # for 401/403/404 too, so shell success is NOT a pass, and an open MLflow backend answers the anonymous
@@ -49900,40 +50081,46 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
   # Each credential reaches curl on stdin via a config file (curl --config -), never
   # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MLFLOW_HOST' 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # first the public host name your proxy serves MLflow on, which is also a Host that --allowed-hosts admits, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace each value inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit ;; esac
-  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit ;; esac
-  case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}" "${2//\\/\\\\}" "${3//\\/\\\\}" "$4"
-  set -- "${1//\"/\\\"}" "${2//\"/\\\"}" "${3//\"/\\\"}" "$4"
-  curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: no credentials
-  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - https://mlflow.example.com/api/2.0/mlflow/experiments/search   # positive control: 200 with the admin password
-  printf 'user = "admin:not-the-real-password"\n' | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - https://mlflow.example.com/api/2.0/mlflow/experiments/search   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
+  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit 2 ;; esac
+  case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit 2 ;; esac
+  case "$5" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}" "${4//\\/\\\\}" "$5"
+  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}" "${4//\"/\\\"}" "$5"
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    "https://$1/api/2.0/mlflow/experiments/search"   # 401: no credentials
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - "https://$1/api/2.0/mlflow/experiments/search"   # positive control: 200 with the admin password
+  printf 'user = "admin:not-the-real-password"\n' | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+    --config - "https://$1/api/2.0/mlflow/experiments/search"   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
   # On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
   # MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
-  # so send the allowed Host header:
-  curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
+  # so send the allowed Host header, your MLflow host name from the set -- line:
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
     http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # 401: no credentials, on the backend
-  printf 'user = "admin:%s"\n' "$1" | curl -q -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Host: mlflow.example.com' -H 'Content-Type: application/json' -d '{"max_results":1}' \
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
     --config - http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # backend positive control: 200 with the admin password
   # Authorization, not just authentication: experiments/search only returns results the caller may see, so
   # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
   # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
-  printf 'user = "admin:%s"\n' "$1" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$4"   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
-  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H 'Host: mlflow.example.com' \
-    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$4"   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
+    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
+  printf 'user = "%s:%s"\n' "$3" "$4" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
+    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
 )
 ```
 
-REASONED: preceding block; listener inventory, external TCP reachability, proxy/backend authentication and experiment authorization follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation.
+REASONED: preceding block; listener inventory, external TCP reachability, proxy/backend authentication and experiment authorization follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ## Common mistakes
 
@@ -50024,7 +50211,7 @@ Claims (full source mapping in the JSON block below):
 - verify-bind (REASONED; source, iproute2): Read every listener and require 5000 on 127.0.0.1.
 - verify-network (REASONED; curl, docs): Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.
 - verify-public-auth (REASONED; docs, curl): POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.
-- verify-backend-auth (REASONED; docs): Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.
+- verify-backend-auth (REASONED; docs): Repeat anonymous 401/admin 200 directly on loopback with the public Host header that --allowed-hosts admits; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.
 - verify-authorization (REASONED; docs): Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive.
 
 ````json
@@ -50032,7 +50219,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e7125ada279291517752e5f8ec2f0b5eed39fba2b7f3af3ed17e853298c020ec",
+  "body_sha256": "ac9f6588a4d5dc4a3d32df09c82450fe806fe6fcb26084470b1e6c23805a71d4",
   "components": {
     "source": {
       "name": "MLflow pinned source",
@@ -50165,7 +50352,7 @@ Claims (full source mapping in the JSON block below):
     "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1.", "components": ["source", "iproute2"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
     "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [1]},
     "verify-public-auth": {"text": "POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.", "components": ["docs", "curl"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-backend-auth": {"text": "Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s5b79d1871e0b", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]},
+    "verify-backend-auth": {"text": "Repeat anonymous 401/admin 200 directly on loopback with the public Host header that --allowed-hosts admits; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s5b79d1871e0b", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]},
     "verify-authorization": {"text": "Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]}
   }
 }
@@ -52317,12 +52504,24 @@ REASONED: following block; token minting and rotation follow the guide's cited L
 )
 ```
 
-REASONED: following block; fatal hostname and CA verification with `openssl s_client -verify_hostname turn.example.com -verify_return_error`, per Sources entry OpenSSL 3.0 s_client hostname, CA and fatal verification options. No provisioned coturn exposed/fixed fixture is available. A loopback `openssl s_server` fixture opens a listener, which the authoring host forbids without an isolated network namespace; the earlier review reported that it could not create one (`unshare: unshare failed: Operation not permitted`). No listener or TLS handshake was attempted in this review. The OpenSSL fence passed `bash -n` and ShellCheck 0.11.0 without diagnostics. An OpenSSL 3.5.5 certificate-only fixture passed `openssl verify -verify_hostname turn.example.com` with exit 0 for a trusted matching certificate; checking the same certificate against `wrong.example.com` exited 2 with `hostname mismatch`. An `s_client` stub run exited 0 and recorded `-verify_hostname turn.example.com` and `-verify_return_error`; the stub did not read the CA file or connect to a service. A trusted matching certificate should pass and a mismatched certificate should fail fatally. These certificate-only and stub checks do not establish those handshake outcomes. Verify TLS separately, and require verification to be fatal so a diagnostic tool does not continue past a bad certificate:
+REASONED: following block; fatal hostname and CA verification with `openssl s_client` and its `-verify_hostname` and `-verify_return_error` options, per Sources entry OpenSSL 3.0 s_client hostname, CA and fatal verification options. No provisioned coturn exposed/fixed fixture is available. A loopback `openssl s_server` fixture opens a listener, which the authoring host forbids without an isolated network namespace; the earlier review reported that it could not create one (`unshare: unshare failed: Operation not permitted`). No listener or TLS handshake was attempted in this review. The OpenSSL fence passed `bash -n` and ShellCheck 0.11.0 without diagnostics in an earlier form that named turn.example.com. An OpenSSL 3.5.5 certificate-only fixture passed `openssl verify -verify_hostname turn.example.com` with exit 0 for a trusted matching certificate; checking the same certificate against `wrong.example.com` exited 2 with `hostname mismatch`. An `s_client` stub run of that earlier form exited 0 and recorded `-verify_hostname turn.example.com` and `-verify_return_error`; the stub did not read the CA file or connect to a service. The fence now takes the TURN server's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains and a leading hyphen or plus sign; none of `bash -n`, ShellCheck and the stub run was repeated on the guarded fence, and the guard has not been run. A trusted matching certificate should pass and a mismatched certificate should fail fatally. These certificate-only and stub checks do not establish those handshake outcomes. Verify TLS separately, and require verification to be fatal so a diagnostic tool does not continue past a bad certificate:
 
 ```bash
-openssl s_client -connect turn.example.com:5349 -servername turn.example.com \
-  -verify_hostname turn.example.com -verify_return_error \
-  -CAfile /etc/ssl/certs/ca-certificates.crt </dev/null
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_TURN_HOST'   # the TURN server's public host name, the name its certificate covers, with no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the TURN server's host name (no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  openssl s_client -connect "$1:5349" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error \
+    -CAfile /etc/ssl/certs/ca-certificates.crt </dev/null
+)
 ```
 
 REASONED: preceding block; what a deployment run of the s_client command does not prove, and separate plaintext rejection, per Sources entries OpenSSL 3.0 s_client hostname, CA and fatal verification options and coturn example configuration. No provisioned coturn exposed/fixed fixture is available. A local stand-up opens a listener, which the authoring host forbids without an isolated network namespace; the earlier review reported that it could not create one (`unshare: unshare failed: Operation not permitted`). No STUN/TURN exchange was observed in this review; exposed plaintext acceptance must become rejection on both ports while valid TLS remains usable. A successful deployment run of the preceding command proves the certificate and handshake only, not TURN authentication, peer policy, or that plaintext is refused; also send plain STUN/TURN to `3478` and to `5349` and confirm it is rejected once `no-tcp`/`no-udp` are set. A local socket binding proves neither public reachability nor TLS. Never add `-k`/`--insecure` to any of these.
@@ -52466,7 +52665,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "f9c6cd93a17c74ed59ff74e7d5fc42c342ec1db819215f97942aaf40d1615adb",
+  "body_sha256": "383b0687afa7e4a33a33525f4b73de3a8cb297a9c1c542e4dc07e1d6d213fc3f",
   "components": {
     "livekit": {
       "name": "LiveKit",
@@ -53808,7 +54007,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The October 2026 marking review covered the Langfuse dashboard and key-pair checks in an earlier form, before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; bash -n was not re-run on the guarded block, and the new guards have not been run. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -53820,8 +54019,9 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
 ```bash
 # REASONED: these checks follow the cited vendor documentation and source readings, not live results.
 # The authoring environment has no running Langfuse,
-# Phoenix, Helicone, or OpenTelemetry Collector deployment to probe, so the shell syntax and the guard
-# branches were tested locally but the exposed-vs-fixed service responses were not.
+# Phoenix, Helicone, or OpenTelemetry Collector deployment to probe, so the shell syntax and the key guard
+# branches were tested locally in an earlier form (the Langfuse host guards have not been run), but the
+# exposed-vs-fixed service responses were not.
 # ss is a listener inventory in THIS namespace - not a firewall, NAT, or authentication check.
 ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
            # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
@@ -53831,9 +54031,20 @@ ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespac
 # Langfuse dashboard: a bare GET of / cannot tell a login page from an exposed project view (both are 200
 # and the body is discarded), so confirm it in a FRESH browser session - an unauthenticated visit must
 # land on login, not a project. The curl below is only transport reachability.
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
-  -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' https://langfuse.example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST'   # the public host name your proxy serves Langfuse on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
+)
 # Langfuse public API auth, matched pair: WITHOUT the key expect 401; WITH a valid project key (public:secret)
 # expect 200 whose JSON body carries the EXPECTED project id - the positive control. A 401/200 pair seen
 # THROUGH a reverse proxy does not prove Langfuse itself authenticated (a proxy can reject anonymous and
@@ -53847,18 +54058,24 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   # Use a short-lived project key or clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the keys from set -x
   # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST' 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'   # the same Langfuse host name as the dashboard check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the project's public and secret keys: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit ;; esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}" "${2//\\/\\\\}"
-  set -- "${1//\"/\\\"}" "${2//\"/\\\"}"
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit 2 ;; esac
+  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}"
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
-    -w 'projects no-key=%{http_code} exit=%{exitcode}\n' https://langfuse.example.com/api/public/projects
-  printf 'user = "%s:%s"\n' "$1" "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - https://langfuse.example.com/api/public/projects
+    -w 'projects no-key=%{http_code} exit=%{exitcode}\n' "https://$1/api/public/projects"
+  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - "https://$1/api/public/projects"
 )
 # Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat the
 # probe below WITH it, on curl's stdin as described next, and expect a 2xx - the positive
@@ -54126,7 +54343,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "109bc364d02f1fe2c4808885b0accda205afa2ca802ddfd29f2db3321e9067cc",
+  "body_sha256": "b22a5cbf0d79a6fe0d6cc51578b422e70a145e187173b8933512cc8a2f29f062",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -54564,7 +54781,7 @@ Pods can turn an exposed API into cluster compromise.
 
 ## Verify
 
-REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe) is covered by this declaration. The declaration for those probes rests on the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs. The origin guard in that stub run (marking review, October 2026) printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the first TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. During marking review (October 2026), the second TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 with dummy credentials on a pseudo-terminal, stubs for every external command and only the known credential helpers delegated to the scratch interpreter. Under bash -e before that revision, each helper exit 73, partial-output failure or empty credential stopped the calling shell at that authenticated probe, so later probes did not run. In those second-review fixtures, where every other external-command stub succeeded, each refusal skipped only its authenticated request and all later probes ran. Valid credentials reached all three authenticated curl stubs with the expected header or JSON before and after, with and without bash -e. All four empty credential cases and each helper failure were also checked without errexit before and after. With PYTHONOPTIMIZE=1 and an empty Argo token, the unchanged helper sent an empty bearer header; the revised helper refused it and skipped the Argo authenticated request, with and without bash -e. In that second review, every completed sequence reached the unchanged direct-origin placeholder refusal; all files exited 2, either at the first unhandled refusal before that revision under bash -e or at the final origin guard. These runs checked shell flow and credential encoding only, not service authentication. During marking review (October 2026), the third TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 through a pseudo-terminal with dummy credentials, stubs for every external command and only the three exact credential helpers delegated to the isolated scratch interpreter. No probe reached a service or read the host socket paths. Before this revision, under bash -e, exit 1 from ss, Temporal, stat or getfacl, and curl exits 6, 7 or 28 from each anonymous or default-account probe, stopped the file at that label and skipped the remaining probes. After this revision, under bash -e, those same cases reached every later label and the final origin-placeholder refusal. Each authenticated curl exit 6, 7 or 28, helper exit 73, partial-output failure and empty credential case reached all later probes before and after; helper refusals sent no authenticated request. Valid dummy credentials produced the expected Basic header, JSON and bearer header before and after. An empty Argo token was also refused with PYTHONOPTIMIZE=1 before and after. With a substituted origin URL, origin curl exits 6, 7 and 28 were reported before and after. The missing-set-line, short-set-line and ftp:// origin cases refused without an origin request before and after. The revised files exited 0 after their labelled continuation messages, including the final origin refusal; this status means the sequence continued, not that any service was secure. These stub runs establish shell flow and encoding only, not service authentication. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
+REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe) is covered by this declaration. The declaration for those probes rests on the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs. The origin guard in that stub run (marking review, October 2026) printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the first TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. During marking review (October 2026), the second TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 with dummy credentials on a pseudo-terminal, stubs for every external command and only the known credential helpers delegated to the scratch interpreter. Under bash -e before that revision, each helper exit 73, partial-output failure or empty credential stopped the calling shell at that authenticated probe, so later probes did not run. In those second-review fixtures, where every other external-command stub succeeded, each refusal skipped only its authenticated request and all later probes ran. Valid credentials reached all three authenticated curl stubs with the expected header or JSON before and after, with and without bash -e. All four empty credential cases and each helper failure were also checked without errexit before and after. With PYTHONOPTIMIZE=1 and an empty Argo token, the unchanged helper sent an empty bearer header; the revised helper refused it and skipped the Argo authenticated request, with and without bash -e. In that second review, every completed sequence reached the unchanged direct-origin placeholder refusal; all files exited 2, either at the first unhandled refusal before that revision under bash -e or at the final origin guard. These runs checked shell flow and credential encoding only, not service authentication. During marking review (October 2026), the third TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 through a pseudo-terminal with dummy credentials, stubs for every external command and only the three exact credential helpers delegated to the isolated scratch interpreter. No probe reached a service or read the host socket paths. Before this revision, under bash -e, exit 1 from ss, Temporal, stat or getfacl, and curl exits 6, 7 or 28 from each anonymous or default-account probe, stopped the file at that label and skipped the remaining probes. After this revision, under bash -e, those same cases reached every later label and the final origin-placeholder refusal. Each authenticated curl exit 6, 7 or 28, helper exit 73, partial-output failure and empty credential case reached all later probes before and after; helper refusals sent no authenticated request. Valid dummy credentials produced the expected Basic header, JSON and bearer header before and after. An empty Argo token was also refused with PYTHONOPTIMIZE=1 before and after. With a substituted origin URL, origin curl exits 6, 7 and 28 were reported before and after. The missing-set-line, short-set-line and ftp:// origin cases refused without an origin request before and after. The revised files exited 0 after their labelled continuation messages, including the final origin refusal; this status means the sequence continued, not that any service was secure. These stub runs establish shell flow and encoding only, not service authentication. All of the local runs above covered the block in an earlier form, before its three Airflow requests took the Airflow host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on the guarded block, and the Airflow guard has not been run. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
 live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
 The exception is the Flower unix-socket stat mode
@@ -54630,34 +54847,45 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 # the same route (the second call below), and test an API read with no token then a token at the proxy and the
 # origin. On Airflow 2 use its /api/v1/ endpoint and its own auth mechanism instead. The first call's body is
 # fixed; never type a real password into it.
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-printf '%s' '{"username":"airflow","password":"airflow"}' \
-  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -w '\nairflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token \
-      || echo 'airflow-token: exited nonzero; continuing'
-# The valid-account comparison. getpass prompts without echo on a terminal, so the username and password enter
-# neither shell history nor set -x tracing, and json.dumps escapes any double quote, backslash or control
-# character in them, so the body stays one JSON object; stdin closes the argv channel only, and the account
-# owner and root can still read the password in python3, the block's subshell and curl.
-(
-  trap - DEBUG RETURN ERR
-  set +x +a +e
-  set -- "$(python3 -I -c 'import getpass,json,sys; u=getpass.getpass("Airflow username: "); p=getpass.getpass("Airflow password: "); (u and p) or sys.exit("empty credential"); print(json.dumps({"username": u, "password": p}))'; printf '\n%s' "$?")"
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_AIRFLOW_HOST'   # the host name the Airflow API server is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *$'\n0') set -- "${1%$'\n'*}" ;;
-    *) echo "airflow-valid-token: credential helper failed; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    *)
+      case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+        example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+      esac
+      printf '%s' '{"username":"airflow","password":"airflow"}' \
+        | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+            -w '\nairflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+            -H 'Content-Type: application/json' --data-binary @- "https://$1/auth/token" \
+            || echo 'airflow-token: exited nonzero; continuing'
+      # The valid-account comparison. getpass prompts without echo on a terminal, so the username and password enter
+      # neither shell history nor set -x tracing, and json.dumps escapes any double quote, backslash or control
+      # character in them, so the body stays one JSON object; stdin closes the argv channel only, and the account
+      # owner and root can still read the password in python3, the block's subshell and curl.
+      (
+        trap - DEBUG RETURN ERR
+        set +x +a +e
+        set -- "$1" "$(python3 -I -c 'import getpass,json,sys; u=getpass.getpass("Airflow username: "); p=getpass.getpass("Airflow password: "); (u and p) or sys.exit("empty credential"); print(json.dumps({"username": u, "password": p}))'; printf '\n%s' "$?")"
+        case "$2" in
+          *$'\n0') set -- "$1" "${2%$'\n'*}" ;;
+          *) echo "airflow-valid-token: credential helper failed; not probing"; exit 2 ;;
+        esac
+        printf '%s' "$2" \
+          | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+              -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+              -H 'Content-Type: application/json' --data-binary @- "https://$1/auth/token"
+      ) || echo 'airflow-valid-token: skipped or failed; continuing'
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' "https://$1/api/v2/pools" \
+        || echo 'airflow-pools-anon: exited nonzero; continuing'
+      ;;
   esac
-  # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-  printf '%s' "$1" \
-    | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
-) || echo 'airflow-valid-token: skipped or failed; continuing'
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-  -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' https://airflow.example.com/api/v2/pools \
-  || echo 'airflow-pools-anon: exited nonzero; continuing'
+) || echo 'airflow: skipped or failed; continuing'
 
 # Temporal: a protected read against the frontend gRPC port. With an Authorizer and ClaimMapper configured this
 # is rejected without credentials (an mTLS deployment refuses the connection outright); a listing, even an empty
@@ -54959,7 +55187,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "bfa85243de9cd70b6d7521c19368a8b5291cbdc6b322c507b528314f9d6503d9",
+  "body_sha256": "02d61aca6f360da61868287c376a3f8de1c31f9ad1fac2a54a5d0b91741bc29e",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
