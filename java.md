@@ -253,7 +253,7 @@ A zero generated-password log count is inconclusive: logging may suppress the me
 
 The following deployment checks are **REASONED, not demonstrated**. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Those local checks covered the guarded blocks below in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
 
-Paste each guarded block whole and substitute inside the single quotes. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
+Paste each guarded block whole and substitute inside the single quotes. Each of the following blocks ends with `) || echo "block exit $?"`, which keeps your shell running and prints the subshell's non-zero status; every request in these blocks ends with its own `|| true`, so only a guard refusal prints a line, `block exit 2`. A block pasted whole still reports status 0 because the echo succeeds, so status 0 does not mean the check passed, and no recorded local check covered the closing echo. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
 
 For authenticated requests, prepare `./java-verify-auth.headers` as a private, mode `0600` file containing the actual request headers for a test identity, one header per line. Use the application's authentication method, such as its session cookie or an accepted authorization header. For uploads, include the matching session and valid CSRF header where required. The blocks pass that file to curl through stdin, keeping credential values out of command arguments. Protect and remove the file after testing. Curl documents [header input and transfer diagnostics](https://curl.se/docs/manpage.html).
 
@@ -281,7 +281,7 @@ Reasoned check: run this HTTPS sweep from outside the trusted management network
       done
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 Reasoned check: run this separate management-authorization sweep on the application host against the HTTP listener at `http://127.0.0.1:8081/actuator`. Adjust the port and base path in both URLs to match your management configuration. Prepare `./java-verify-auth.headers` on that host with an administrator identity accepted by the management security chain.
@@ -297,7 +297,7 @@ Reasoned check: run this separate management-authorization sweep on the applicat
       -w 'authorized %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
       "http://127.0.0.1:8081/actuator/$java_endpoint" < ./java-verify-auth.headers || true
   done
-) || true
+) || echo "block exit $?"
 ```
 
 With the private-listener layout, the public origin must not serve Actuator responses to either identity. On the reachable management listener, the example security chain should reject anonymous health requests with `401`, reject an authenticated non-administrator with `403`, and allow an administrator to receive the health response. Health itself can report an unhealthy status, commonly `503`, so successful authorization is not synonymous with HTTP `200`.
@@ -320,7 +320,7 @@ Also check the separate port directly from an external machine. This block assum
         "http://$1:8081/actuator/health" || true
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 Any HTTP response, including `401`, demonstrates that an HTTP listener is reachable on that public port. The fixed loopback binding should prevent that connection. Corroborate external failure with the existing `ss -tlnp` check on the server and a successful connection from the intended management path; an external timeout alone is inconclusive. See [management address binding](https://docs.spring.io/spring-boot/3.5/reference/actuator/monitoring.html#actuator.monitoring.customizing-management-server-address).
@@ -346,7 +346,7 @@ Reasoned check: use an isolated test deployment with a known route that triggers
         "$1?trace=true&message=true&errors=true" < ./java-verify-auth.headers || true
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 In the exposed fixture, `always` or `on-param` inclusion can reveal the controlled message, trace, or binding details. With the production settings, Boot's standard error response should omit those details and the exception class even with these parameters. Confirm the expected error status and inspect the body for the marker, stack frames, internal paths, and rejected values. An authentication response does not test error handling. Repeat with `Accept: text/html` and check custom error responses separately. See the [error-inclusion semantics](https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html) and [versioned production defaults](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html).
@@ -371,7 +371,7 @@ Reasoned check: test both anonymously and with an identity allowed through appli
         "$1" < ./java-verify-auth.headers || true
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 An enabled, reachable console can return H2 content or a redirect into it. With the console disabled, a request that passes application security should reach normal missing-route handling, typically `404`, without H2 content. A login redirect, `401`, or `403` alone does not establish absence. Confirm the effective `spring.h2.console.enabled=false` setting and absence of production devtools as well. See the [console properties](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html) and [devtools overrides](https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html#using.devtools.property-defaults).
@@ -399,7 +399,7 @@ Reasoned check: use a test upload route that accepts a multipart file field name
         "$1" < ./java-verify-auth.headers || true
       ;;
   esac
-) || true
+) || echo "block exit $?"
 ```
 
 The small upload must reach and succeed at the intended handler. With a deliberately raised limit in an isolated exposed fixture, both files should succeed; with the production limit, the larger file must be rejected because of its size. Inspect the response and server logs for that specific cause. Authentication, CSRF, missing-route, content-validation, and transport failures are not evidence of the multipart limit. A proxy rejection demonstrates the proxy limit; testing Boot's limit also requires reaching the application through an authorized path. See the [multipart limits](https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html).
@@ -543,7 +543,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "07a365b46486455486b144cc5fc55c997f126c992c966abebae2c5b9dec0eed2",
+  "body_sha256": "69a71db4c2d9b88a831e6ee628eb874bcfb0d69aef51b76ff721f534b9fce945",
   "components": {
     "boot41": {
       "name": "Spring Boot",

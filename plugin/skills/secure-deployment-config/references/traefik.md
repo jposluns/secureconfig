@@ -234,12 +234,12 @@ services:
 ```bash
 (                              # a subshell, so your own shell arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TRAEFIK_HOST' 'REPLACE_WITH_HTTPS_PORT' 'REPLACE_WITH_CANARY_HOST_HEADER'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit; }
-  if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then echo "substitute the values on the set -- line above; not probing"; exit; fi
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then echo "substitute the values on the set -- line above; not probing"; exit 2; fi
   case "$1:$2:$3" in
-    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit 2 ;;
   esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -H "Host: $3" \
@@ -254,12 +254,12 @@ A `404` for the canary also appears when the whole Docker provider is off, which
 ```bash
 (                              # a subshell, so your own shell arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_APP_HOST' 'REPLACE_WITH_HTTPS_PORT'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute the values on the set -- line above; not probing"; exit; fi
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute the values on the set -- line above; not probing"; exit 2; fi
   case "$1:$2" in
-    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit 2 ;;
   esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"
@@ -364,7 +364,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "1a153bf3ed5647330b1ed8ff8578082353e3b977c4719c3b80cff431845e7474",
+  "body_sha256": "e25c49cac81a55593946c2d1abba005054334d5d3d0a04a608ba0b279bdc4349",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",

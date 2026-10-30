@@ -89,7 +89,7 @@ only to host loopback.
 
 ## Verify
 
-REASONED: authorized-data positive control and anonymous comparison, per the guide's cited Metabase data permissions and Superset security. No BI deployment, authorized account or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while substituted URLs reached two curl stubs. Live outcomes remain unobserved: exposed access returns dashboard data anonymously; fixed access denies or challenges it while the authorized request still returns actual data. First, with valid authorization, confirm your chosen protected route returns actual dashboard DATA (a
+REASONED: authorized-data positive control and anonymous comparison, per the guide's cited Metabase data permissions and Superset security. No BI deployment, authorized account or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while substituted URLs reached two curl stubs. The bash -n, ShellCheck and stub runs recorded here covered the listener and data-route probe block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. Live outcomes remain unobserved: exposed access returns dashboard data anonymously; fixed access denies or challenges it while the authorized request still returns actual data. First, with valid authorization, confirm your chosen protected route returns actual dashboard DATA (a
 real data or API route, not the SPA HTML shell or a health endpoint): that is the positive control.
 Then, from OUTSIDE your network with no cookies, tokens, or Access credentials, run the whole block
 (substitute inside the quotes):
@@ -105,19 +105,19 @@ ss -tlnp   # every application AND proxy listener; Metabase/Superset/Redash defa
   set -- PASTE_WHOLE_BLOCK \
     'https://REPLACE_WITH_BI_HOST/' \
     'https://REPLACE_WITH_BI_HOST/REPLACE_WITH_KNOWN_PROTECTED_ROUTE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute both URLs on the set -- line above; not probing"; exit; fi
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  if [ -z "$1" ] || [ -z "$2" ]; then echo "substitute both URLs on the set -- line above; not probing"; exit 2; fi
   case "$1$2" in
-    *REPLACE_WITH_*|*example.com*) echo "substitute your own URLs on the set -- line above; not probing"; exit ;;
+    *REPLACE_WITH_*|*example.com*) echo "substitute your own URLs on the set -- line above; not probing"; exit 2 ;;
   esac
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -i "$1"   # the tool's front page
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -i "$2"   # a known protected route
 )
 ```
 
-REASONED: preceding block; listener and Docker-publication inventory, origin isolation and paired data-route authorization, per the guide's cited Docker port publishing, Metabase data permissions and Superset security. No BI deployment or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub and substituted URLs reached two. No live outcome is observed: exposed origins answer or anonymous requests disclose dashboard data; fixed origins are isolated and protected data requires authorization, with an authorized data response as the control. Accept an access denial from WHATEVER protects the route (the tool's or the reverse proxy's 401/403,
+REASONED: preceding block; listener and Docker-publication inventory, origin isolation and paired data-route authorization, per the guide's cited Docker port publishing, Metabase data permissions and Superset security. No BI deployment or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub and substituted URLs reached two. The bash -n, ShellCheck and stub runs recorded here covered the listener and data-route probe block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No live outcome is observed: exposed origins answer or anonymous requests disclose dashboard data; fixed origins are isolated and protected data requires authorization, with an authorized data response as the control. Accept an access denial from WHATEVER protects the route (the tool's or the reverse proxy's 401/403,
 a Cloudflare Access challenge, or a verified redirect into that login layer), not only the tool's own
 denial. Read the body, not just the status: a 200 login page or SPA shell proves nothing, and an
 arbitrary redirect is inconclusive; the protected route returning dashboard data with no
@@ -206,7 +206,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "50c7d98845f8c09c7c9132f667a2412bc8af5d2790e2b3f3e7f97cd2d67f793e",
+  "body_sha256": "10a3df1a6396fb40e7e7f6c40d2ee432569ac389bec5bb767a81a092d90882f4",
   "components": {
     "metabase": {
       "name": "Metabase",
