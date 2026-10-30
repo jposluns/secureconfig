@@ -134,7 +134,10 @@ separated privileges by default, and cannot reach the VM or node consoles.
 
 REASONED: this historical run overview preserves the original authoring record, not a new live comparison; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules. The exposed and fixed listener descriptions are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). The guide's cited sources for those descriptions are now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
 Webmin 2.670's own on thirty test files, and the TCP reachability probe, which is the block demonstrated
-on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
+on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. The Webmin parser's
+fixture runs and the TCP probe's loopback runs used earlier forms of those blocks, whose guard
+refusals ended with status 0; the current forms, whose guard refusals exit with status 2, have not
+been run. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
 Those expected outcomes are REASONED from the cited vendor documentation and source.
@@ -154,7 +157,7 @@ fixed means a management address only. On a Proxmox VE cluster, where the vendor
 there requires the management-only access lists and firewall below. The new-socket code tries `::`
 then `0.0.0.0`; dual-stack operation is documentation-backed and must be checked on the host.
 
-REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. These are file results only; on the Webmin host, exposed miniserv listens on every address with discovery UDP open and offers its login to any client; fixed miniserv listens on the management address only with no discovery socket, a management-network client reaches the login, and from a client outside the allow= networks the connection fails or miniserv refuses it. The exposed and fixed Webmin host behaviours are per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
+REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The bash -n, ShellCheck and refusal runs recorded here covered the parser block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. These are file results only; on the Webmin host, exposed miniserv listens on every address with discovery UDP open and offers its login to any client; fixed miniserv listens on the management address only with no discovery socket, a management-network client reaches the login, and from a client outside the allow= networks the connection fails or miniserv refuses it. The exposed and fixed Webmin host behaviours are per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
 the name and the value are trimmed, and the last occurrence of a setting wins), then applies
 miniserv's rules: `bind=*`, `bind=0`, `bind=0.0.0.0`, `bind=::`, or an empty or missing `bind=` means
@@ -168,17 +171,17 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 `/etc/webmin/restart`. Substitute the file path inside the single quotes (the package default is
 `/etc/webmin/miniserv.conf`), and paste the whole block.
 
-DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. This demonstrates file inspection, not running sockets or network isolation.
+DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. The fixture runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run. This demonstrates file inspection, not running sockets or network isolation.
 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MINISERV_CONF'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute your file on the set -- line above; not checking"; exit ;; esac
-  { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file (try sudo); not checked"; exit; }
-  command -v perl >/dev/null || { echo "perl is not installed here; not checking"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|"") echo "substitute your file on the set -- line above; not checking"; exit 2 ;; esac
+  { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file (try sudo); not checked"; exit 2; }
+  command -v perl >/dev/null || { echo "perl is not installed here; not checking"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted Perl program is meant to expand its own variables
   perl -MSocket -e '
     open(CONF, "<", $ARGV[0]) || exit 2;
@@ -247,36 +250,36 @@ default; fixed is enabled and running, with rules that allow 8006, 22 and 3128 o
 addresses, which you confirm in the datacenter and node firewall rules in the web interface. In the web interface, check
 that every administrative user, `root@pam` included, has a second factor.
 
-REASONED: this external-vantage procedure needs each server public address, a known-open control port and a host outside the allowed management network; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the TCP block through `bash -n` and ShellCheck 0.11.0 with no output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. A `timeout` stub returning 124 for the control printed `control 198.51.100.7:22 did not connect (timeout stub invoked); not probing`. Expected exposed TCP connects; fixed isolation may refuse or time out, which is only consistent with isolation after the positive control and server inventory checks. The exposed and fixed TCP expectations and that consistency qualification are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Finally, from a host that should not have access, try a TCP connection to each panel port. The block
+REASONED: this external-vantage procedure needs each server public address, a known-open control port and a host outside the allowed management network; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the TCP block through `bash -n` and ShellCheck 0.11.0 with no output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. A `timeout` stub returning 124 for the control printed `control 198.51.100.7:22 did not connect (timeout stub invoked); not probing`. The bash -n, ShellCheck and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Expected exposed TCP connects; fixed isolation may refuse or time out, which is only consistent with isolation after the positive control and server inventory checks. The exposed and fixed TCP expectations and that consistency qualification are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Finally, from a host that should not have access, try a TCP connection to each panel port. The block
 takes one IP address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot
 hide one behind a timeout on the other: run it once for each public address of the server. It also
 takes a port you know is open on that address from this host (for example SSH on 22) as the positive
 control, and stops if the control does not connect. Substitute both inside the single quotes.
 
-DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned.
+DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned. The reused loopback probe runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ONE_IP_ADDRESS' 'REPLACE_WITH_A_KNOWN_OPEN_PORT'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit ;; esac
-  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit ;; esac
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit 2 ;; esac
+  case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit 2 ;; esac
   ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
   case "$1" in
     *:*:*)
-      case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit ;; esac
-      case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit ;; esac
-      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit ;; esac ;;
-    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit; } ;;
+      case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit 2 ;; esac
+      case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit 2 ;; esac
+      case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit 2 ;; esac ;;
+    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
   esac
-  case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit ;; esac
-  { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit; }
-  command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit; }
+  case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit 2 ;; esac
+  { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit 2; }
+  command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
   err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit; }
+    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 2; }
   echo "control $1:$2 connected"
   for p in 9090 10000 20000 8006 3128; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
@@ -408,7 +411,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "2c066f6923d24629262e9e1a6145f691e44b35b8b49bdca50bdade65ccc637ad",
+  "body_sha256": "106ccf3775119900bc12082c7ceeff9bbb8a562b0aedc521db2a6cb3d8e695a0",
   "components": {
     "cockpit": {
       "name": "Cockpit",
