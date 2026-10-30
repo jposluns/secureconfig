@@ -199,21 +199,28 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
-# guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
-if curl -q -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then rc=0; else rc=$?; fi
-if [ "$rc" -eq 0 ]; then
-  echo "FAIL: connected to a host outside the allow list, egress is not enforced"
-elif [ "$rc" -eq 6 ]; then
-  echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
-elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
-  echo "request failed or timed out (curl exit $rc): inconclusive on its own. curl cannot say why it"
-  echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
-  echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
-  echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
-  echo "or the CNI's NetworkPolicy drop log or counter"
-else
-  echo "unexpected curl exit code $rc, investigate before treating this as a pass"
-fi
+# status: 1 when the connection succeeded, 3 for curl exit 6 or an unexpected code, and 0 for exit 7
+# or 28, which still needs the time_connect and deny-record evidence it prints
+(                                                   # a subshell, so the exit below ends only this check
+  # guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
+  if curl -q -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then rc=0; else rc=$?; fi
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: connected to a host outside the allow list, egress is not enforced"
+    exit 1
+  elif [ "$rc" -eq 6 ]; then
+    echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
+    exit 3
+  elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
+    echo "request failed or timed out (curl exit $rc): inconclusive on its own. curl cannot say why it"
+    echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
+    echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
+    echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
+    echo "or the CNI's NetworkPolicy drop log or counter"
+  else
+    echo "unexpected curl exit code $rc, investigate before treating this as a pass"
+    exit 3
+  fi
+)
 # confirm the metadata options actually took effect
 aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
   --query 'Reservations[].Instances[].MetadataOptions'
@@ -302,7 +309,7 @@ Claims (full source mapping in the JSON block below):
 - verify-provider-paths (REASONED; gcp, azure): Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens.
 - verify-deny (REASONED; curl, aws): Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs.
 - verify-allow (REASONED; curl, aws): A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes.
-- verify-negative (REASONED; curl): Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence.
+- verify-negative (REASONED; curl): Known-live disallowed egress must fail: curl success is a finding (block status 1), exit 6 is DNS-inconclusive (block status 3), and 7/28 need zero time_connect plus correlated deny evidence.
 - verify-options (REASONED; aws): Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes.
 
 ````json
@@ -310,7 +317,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "ed7287acb15743a98698acc63873f39840d551f60e17cd84af36f7118c4cd54e",
+  "body_sha256": "6a92c8582d1c3c29025f1367d131fff09377b51ed5c1b56d7d7a6125544be942",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -423,7 +430,7 @@ Claims (full source mapping in the JSON block below):
     "verify-provider-paths": {"text": "Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens.", "components": ["gcp", "azure"], "sources": ["gcp:sdb98c49a5970", "azure:s5301638a3c81"], "status": "REASONED", "verify": [1]},
     "verify-deny": {"text": "Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s5de42a587ed0"], "status": "REASONED", "verify": [1]},
     "verify-allow": {"text": "A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s9e5244cd7271", "aws:sb525b61fd496"], "status": "REASONED", "verify": [1]},
-    "verify-negative": {"text": "Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-negative": {"text": "Known-live disallowed egress must fail: curl success is a finding (block status 1), exit 6 is DNS-inconclusive (block status 3), and 7/28 need zero time_connect plus correlated deny evidence.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-options": {"text": "Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes.", "components": ["aws"], "sources": ["aws:s8e0b69b2747a", "aws:sb843930c4944"], "status": "REASONED", "verify": [1]}
   }
 }
