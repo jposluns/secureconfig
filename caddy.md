@@ -133,20 +133,27 @@ RuntimeDirectory=caddy
 
 The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660) says `RuntimeDirectory=caddy` creates `/run/caddy` when the unit starts, owns it according to `User=`/`Group=`, and removes it when the unit stops unless preservation is configured. The switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: this is the guide's reasoning that a restart creates the runtime directory and binds the socket in one step. After that, `caddy reload`, and the [dist unit's `ExecReload` at 33ae08ff](https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32), apply config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy`. A manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`. A change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took.
 
-## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture.)
+## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.)
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI http://app.example.com/     # expect a redirect to https://
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # with the @admin matcher variant: 401
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"     # expect a redirect to https://
+  curl -q -g -sI "https://$1/"    # expect 401 without credentials once auth is on
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin"     # with the @admin matcher variant: 401
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin/x"   # 401 as well
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/"          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
+)
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
   # curl reads the admin password from a config stream on stdin (--config -),
@@ -156,16 +163,22 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   # Clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the password from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}"
-  set -- "${1//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin https://app.example.com/
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
                                      # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://app.example.com/
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
                                      # 413. Supply credentials: an unauthenticated probe returns 401 and
                                      # tells you nothing about max_size. Caddy's default order puts
                                      # request_body ahead of basic_auth, but the limit is enforced when a
@@ -283,7 +296,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "6433f0acb20d6d9608259f14a735e997970de79e633996679d111a99ffc25a08",
+  "body_sha256": "27b14126c80ec7ee3c82f3fc5d9d03a93c4b4e99113405e98811dfb5b12893d0",
   "components": {
     "admin": {
       "name": "Caddy admin source",

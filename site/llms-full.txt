@@ -7670,7 +7670,7 @@ Vercel's protection guards a deployment from the public; it is not your applicat
 
 ## Verify
 
-REASONED: following block; the cited ALB, IAP and Azure authentication/header documentation defines origin isolation, anonymous denial and forged-header rejection. No cloud origin, IdP or external probe host can be provisioned here, so no live proxy result is recorded; the loopback and closed-port runs for this change are recorded in the declaration after the block. Expected responses and inconclusive failures are stated below.
+REASONED: following block; the cited ALB, IAP and Azure authentication/header documentation defines origin isolation, anonymous denial and forged-header rejection. No cloud origin, IdP or external probe host can be provisioned here, so no live proxy result is recorded; the loopback and closed-port runs for an earlier change are recorded in the declaration after the block. Expected responses and inconclusive failures are stated below.
 
 ```bash
 # origin direct. Run this from a host OUTSIDE your cloud network (your laptop on a public connection,
@@ -7689,16 +7689,27 @@ REASONED: following block; the cited ALB, IAP and Azure authentication/header do
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
   esac
 )
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sSI https://app.example.com/                      # via proxy, no session: 302 to the IdP, or 401/403
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -D - -H "x-amzn-oidc-identity: admin" \
-     -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
-     -H "X-Goog-Authenticated-User-Email: admin@example.com" \
-     https://app.example.com/whoami                      # status line and body: the login redirect or a 401/403, never a 200 echoing "admin"
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your identity-aware proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sSI "https://$1/"                      # via proxy, no session: 302 to the IdP, or 401/403
+  # The identity headers below are deliberately forged values, so admin@example.com stays as written.
+  curl -q -g -sS -D - -H "x-amzn-oidc-identity: admin" \
+       -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
+       -H "X-Goog-Authenticated-User-Email: admin@example.com" \
+       "https://$1/whoami"                      # status line and body: the login redirect or a 401/403, never a 200 echoing "admin"
+)
 ```
 
-REASONED: preceding block; origin isolation, anonymous and forged-header denial, plus signed-assertion discrimination, per the guide's cited AWS, Authenticate users using an Application Load Balancer, Google Cloud IAP, securing your app with signed headers, Azure App Service authentication and authorization and Cloudflare Access, validate JWTs. No cloud origin, IdP or valid assertion is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; JSON and YAML parsed, and rejected guards reached no curl stub. For this change, curl 8.18.0 ran the probe shapes against a loopback HTTP listener standing in for the example host (302 on the anonymous HEAD, 401 on `/whoami`) and against a closed loopback port. The `-sI` and `-sSI` shapes, in that curl 8.18.0 run, both printed the full status line and headers on the listener and both exited 7 on the closed port, where `-sI` printed nothing and `-sSI` printed `curl: (7) Failed to connect ...` on stderr. The forged-header probe, in that curl 8.18.0 run, printed only the body without `-D -` and the status line, headers and body with it. The altered-assertion shape, in that curl 8.18.0 run, delivered `x-amzn-oidc-data` through `--header @-` from stdin (the listener received the header; the value was a dummy, not a real assertion) and exited 7 with the connect error against the closed port. Unsubstituted, empty and two-value guard pastes again printed their refusals without reaching a curl stub, in plain bash and under set -u, and a substituted address reached the stub once. These loopback runs record curl's output shape, not vendor proxy behaviour. A synthetic JSON/base64url claim mutation preserved encoding but mismatched its unchanged HMAC signature; this does not test vendor verifiers. Live exposed bypass or forged-identity acceptance and fixed isolation, anonymous challenge, valid-assertion acceptance and altered-assertion rejection remain unobserved. After logging in, confirm that the app's own identity check reads the signed assertion (`x-amzn-oidc-data`, `x-goog-iap-jwt-assertion`, `Cf-Access-Jwt-Assertion`) and rejects a forged one. Test directly, because the proxy overwrites the header, so a through-proxy test proves nothing. The direct test, from the origin host, or a host inside the allowed security group, is to first send a request carrying a valid, unexpired assertion and confirm the app accepts it (the positive control), then send one whose signature is unchanged but a non-authorizing claim is altered while the token stays well formed (valid JSON and base64url), and require rejection. Both assertions are credentials (restoring the altered claim makes the copy valid again), so never place either in curl's argv, where other local accounts could read it through `ps` and `/proc/<pid>/cmdline`. The handling for each assertion is to hold the assertion in the positional parameters of a subshell that first runs `trap - DEBUG RETURN ERR`, then `set +x +a +e`, and refuses an empty value or one containing a control character, and to feed it to curl on stdin: `printf 'x-amzn-oidc-data: %s\n' "$1" | curl -q -sS -D - --noproxy '*' --header @- http://127.0.0.1:3000/whoami`. That handling follows CONTRIBUTING rule 7 and assumes a clean shell. That handling keeps the assertion out of argv only, not out of `set -x` tracing or your own account's view of the process, and an assertion pasted on the subshell's `set --` line still enters shell history, so clear it afterwards. Keep the token well formed, because an app that never checks the signature would still reject a token mangled into malformed JSON, which would not prove verification.
+REASONED: preceding block; origin isolation, anonymous and forged-header denial, plus signed-assertion discrimination, per the guide's cited AWS, Authenticate users using an Application Load Balancer, Google Cloud IAP, securing your app with signed headers, Azure App Service authentication and authorization and Cloudflare Access, validate JWTs. No cloud origin, IdP or valid assertion is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, before its anonymous and forged-header probes took the app's host on a guarded `set --` line; neither tool was re-run on the guarded block. JSON and YAML parsed, and rejected guards reached no curl stub. For an earlier change, curl 8.18.0 ran the probe shapes against a loopback HTTP listener standing in for the example host (302 on the anonymous HEAD, 401 on `/whoami`) and against a closed loopback port. The `-sI` and `-sSI` shapes, in that curl 8.18.0 run, both printed the full status line and headers on the listener and both exited 7 on the closed port, where `-sI` printed nothing and `-sSI` printed `curl: (7) Failed to connect ...` on stderr. The forged-header probe, in that curl 8.18.0 run, printed only the body without `-D -` and the status line, headers and body with it. The altered-assertion shape, in that curl 8.18.0 run, delivered `x-amzn-oidc-data` through `--header @-` from stdin (the listener received the header; the value was a dummy, not a real assertion) and exited 7 with the connect error against the closed port. Unsubstituted, empty and two-value guard pastes again printed their refusals without reaching a curl stub, in plain bash and under set -u, and a substituted address reached the stub once. These loopback runs record curl's output shape, not vendor proxy behaviour. Those curl 8.18.0 runs used the earlier probe form, which named the example host directly; the guarded form, which refuses example.com, example.net, example.org and their subdomains, has not been run. A synthetic JSON/base64url claim mutation preserved encoding but mismatched its unchanged HMAC signature; this does not test vendor verifiers. Live exposed bypass or forged-identity acceptance and fixed isolation, anonymous challenge, valid-assertion acceptance and altered-assertion rejection remain unobserved. After logging in, confirm that the app's own identity check reads the signed assertion (`x-amzn-oidc-data`, `x-goog-iap-jwt-assertion`, `Cf-Access-Jwt-Assertion`) and rejects a forged one. Test directly, because the proxy overwrites the header, so a through-proxy test proves nothing. The direct test, from the origin host, or a host inside the allowed security group, is to first send a request carrying a valid, unexpired assertion and confirm the app accepts it (the positive control), then send one whose signature is unchanged but a non-authorizing claim is altered while the token stays well formed (valid JSON and base64url), and require rejection. Both assertions are credentials (restoring the altered claim makes the copy valid again), so never place either in curl's argv, where other local accounts could read it through `ps` and `/proc/<pid>/cmdline`. The handling for each assertion is to hold the assertion in the positional parameters of a subshell that first runs `trap - DEBUG RETURN ERR`, then `set +x +a +e`, and refuses an empty value or one containing a control character, and to feed it to curl on stdin: `printf 'x-amzn-oidc-data: %s\n' "$1" | curl -q -sS -D - --noproxy '*' --header @- http://127.0.0.1:3000/whoami`. That handling follows CONTRIBUTING rule 7 and assumes a clean shell. That handling keeps the assertion out of argv only, not out of `set -x` tracing or your own account's view of the process, and an assertion pasted on the subshell's `set --` line still enters shell history, so clear it afterwards. Keep the token well formed, because an app that never checks the signature would still reject a token mangled into malformed JSON, which would not prove verification.
 
 - REASONED: default platform-route isolation, per the guide's cited Google Cloud IAP, enabling IAP for Cloud Run and Vercel Authentication documentation. No authorized Cloud Run or Vercel deployment and external probe host are available; live exposed and fixed responses remain unobserved. Reach the app's own default platform hostname from outside your cloud network and confirm it does not serve your app. Fetch a real app route (not just `/`) at your Cloud Run `run.app` URL or your Vercel production domain: use the following block, and read the status line, headers, and body together. A pass is the platform's own challenge, never your app's content: for Cloud Run a 302 redirect to a Google or IAP sign-in, or a 401 from IAP (IAP returns 401 rather than a 302 when the request does not advertise HTML, i.e. no `Accept: text/html` header); for Vercel the Vercel authentication page. A 200 serving your app's own content means the platform URL bypasses the proxy; a 404 or a transport error is inconclusive, never a pass, because a missing service also returns 404.
 
@@ -7831,7 +7842,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "22f2fd604f017df8f417cfa1fb0defc9a9056c2e50b0df8aa36694a037f0fa26",
+  "body_sha256": "8c7f8caa3bb743f0c07477d15c78361745e7a13f68ba1332581ffdde5fa1da73",
   "components": {
     "aws": {
       "name": "AWS ALB",
@@ -10410,20 +10421,27 @@ RuntimeDirectory=caddy
 
 The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660) says `RuntimeDirectory=caddy` creates `/run/caddy` when the unit starts, owns it according to `User=`/`Group=`, and removes it when the unit stops unless preservation is configured. The switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: this is the guide's reasoning that a restart creates the runtime directory and binds the socket in one step. After that, `caddy reload`, and the [dist unit's `ExecReload` at 33ae08ff](https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32), apply config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy`. A manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`. A change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took.
 
-## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture.)
+## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.)
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI http://app.example.com/     # expect a redirect to https://
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI https://app.example.com/    # expect 401 without credentials once auth is on
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin     # with the @admin matcher variant: 401
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/admin/x   # 401 as well
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://app.example.com/          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"     # expect a redirect to https://
+  curl -q -g -sI "https://$1/"    # expect 401 without credentials once auth is on
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin"     # with the @admin matcher variant: 401
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin/x"   # 401 as well
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/"          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
+)
 head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 (
   # curl reads the admin password from a config stream on stdin (--config -),
@@ -10433,16 +10451,22 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   # Clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the password from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}"
-  set -- "${1//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin https://app.example.com/
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
                                      # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://app.example.com/
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
                                      # 413. Supply credentials: an unauthenticated probe returns 401 and
                                      # tells you nothing about max_size. Caddy's default order puts
                                      # request_body ahead of basic_auth, but the limit is enforced when a
@@ -10560,7 +10584,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "6433f0acb20d6d9608259f14a735e997970de79e633996679d111a99ffc25a08",
+  "body_sha256": "27b14126c80ec7ee3c82f3fc5d9d03a93c4b4e99113405e98811dfb5b12893d0",
   "components": {
     "admin": {
       "name": "Caddy admin source",
@@ -21990,7 +22014,7 @@ Where a system cannot revoke immediately, such as a session cached until its own
 
 ## Verify
 
-REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed.
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.
 
 ```bash
 # From a second network, not the host itself:
@@ -22017,14 +22041,35 @@ REASONED: outside-network scans, DNS retirement and certificate inspection; no d
                                                     # same reading: a scan that did not run is not a clean scan
   esac
 )
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI https://retired-preview.example.com/          # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-for t in A AAAA CNAME; do echo "$t:"; dig +short retired-preview.example.com "$t"; done   # checks your configured resolver only, so it is not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-openssl s_client -connect app.example.com:443 -servername app.example.com \
-  -verify_hostname app.example.com -verify_return_error </dev/null \
-  | openssl x509 -noout -enddate                        # run from outside on a schedule
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_RETIRED_HOST'   # the retired preview or service host name whose DNS record you removed, no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the retired host name (no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "https://$1/"          # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
+  for t in A AAAA CNAME; do echo "$t:"; dig +short "$1" "$t"; done   # checks your configured resolver only, so it is not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
+)
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the live app's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  openssl s_client -connect "$1:443" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error </dev/null \
+    | openssl x509 -noout -enddate                        # run from outside on a schedule
+)
 ```
 
 ## Sources (checked September 2026)
@@ -22150,7 +22195,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "b390364c7320c3853f2e09c7c6e35930a3c030b2c6d3e2e4404f48f46d9e5d19",
+  "body_sha256": "b87e3954c530f86356a71f60581f93b50a22f35a396539784350ab334ad563d8",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
@@ -47244,7 +47289,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Qdrant source v1.19.1, Weaviate source v1.39.6, Milvus v2.6.24 and v3.0.2, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.2, plus 5 more recorded bases; 3 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked October 2026. The guide records 77 claims, all reasoned from cited sources.
+Written against Qdrant source v1.20.0, Weaviate source v1.39.6, Milvus v2.6.24 and v3.0.2, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.2, plus 5 more recorded bases; 3 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked October 2026. The guide records 77 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -47262,7 +47307,7 @@ Each server listens on plain TCP; publish only a reverse proxy ([nginx.md](nginx
 | Chroma | 8000 |
 | pgvector | 5432 (it is PostgreSQL) |
 
-Qdrant and Chroma bind every IPv4 interface by default in their official images, and Weaviate opens several listeners that ignore `--host` wherever it runs (as of Qdrant v1.19.1, Chroma 1.5.9 and Weaviate v1.39.6):
+Qdrant and Chroma bind every IPv4 interface by default in their official images, and Weaviate opens several listeners that ignore `--host` wherever it runs (as of Qdrant v1.20.0, Chroma 1.5.9 and Weaviate v1.39.6):
 
 - **Qdrant**'s compiled-in configuration sets `service.host: 0.0.0.0`. It then merges `config/config`, `config/$RUN_MODE` (`RUN_MODE` defaults to `development`) and `config/local` from the working directory, then, in a build with the `deb` feature, `/etc/qdrant/config`, then `--config-path`, then `QDRANT__`-prefixed environment variables; any later layer can set the host. The repository's `config/development.yaml` narrows it to `127.0.0.1`, so a binary started from a checkout's root with `RUN_MODE` unset or `development` listens on loopback unless a later layer sets it; the official image sets `RUN_MODE=production`, whose `config/production.yaml` keeps `0.0.0.0`, and its entrypoint starts `./qdrant` with no arguments.
 - **Chroma**'s `chroma run` without a config file binds `localhost`, its `--host` default. Given a config file, it binds the file's `listen_address`, or `0.0.0.0` when the file sets none, after merging `CHROMA_`-prefixed environment variables. The official `chromadb/chroma` image runs `chroma run /config.yaml` with a file that sets only `persist_path`, so the container listens on `0.0.0.0:8000` unless a `CHROMA_`-prefixed variable sets the address or port.
@@ -47285,9 +47330,9 @@ tls:
 
 Environment equivalents: `QDRANT__SERVICE__API_KEY` and `QDRANT__SERVICE__READ_ONLY_API_KEY`. Clients send the key in the `api-key` header (or `Authorization: Bearer`); the two are interchangeable for the client REST and gRPC API. Qdrant's own docs say that enabling the key without TLS is insecure; terminate TLS either in Qdrant as above or at a proxy in front.
 
-An API key protects the client API. It does not protect the internal cluster port, 6335. The security page states that "Internal gRPC uses port 6335 by default if running in distributed mode" and that, in versions before v1.20.0, internal communication channels "are not protected by an API key nor bearer tokens by default". The page also says: "You must ensure that this port is not publicly reachable and can only be used for node communication." Through v1.17.x this is not a gap a key can close. Qdrant v1.18.0 added `service.enforce_internal_auth`: with it set, the receiving peer verifies the forwarded `api_key` on internal p2p requests, so a key can gate 6335 on v1.18.0 and later. The security page says the setting is "Enabled by default as of v1.20.0", so the setting is off by default from v1.18.0 to v1.19.x, and says "Enforcing authentication does not replace network isolation for the internal port", so do not rely on the setting in place of the network restriction below. `read_only_api_key` does not cover 6335 either, and confirming that 6333 returns 401 without a key tells you nothing about 6335: in distributed mode 6335 answers a peer with no API key or bearer token (peer TLS, when enabled, authenticates the channel by certificate; a key applies to the internal channel only where `enforce_internal_auth` is set, on v1.18.0 and later). A reader who sets a key, sees 6333 return 401, and concludes the deployment is authenticated is therefore wrong about 6335.
+An API key protects the client API. Whether a key also protects the internal cluster port, 6335, depends on the Qdrant version and on `service.enforce_internal_auth`. The security page states that "Internal gRPC uses port 6335 by default if running in distributed mode" and that, in versions before v1.20.0, internal communication channels "are not protected by an API key nor bearer tokens by default". The page also says: "You must ensure that this port is not publicly reachable and can only be used for node communication." Through v1.17.x no key setting closes that gap. Qdrant v1.18.0 added `service.enforce_internal_auth`: with it set, the receiving peer verifies the forwarded `api_key` on internal p2p requests, so a key can gate 6335 on v1.18.0 and later. The security page says the setting is "Enabled by default as of v1.20.0", so the setting is off by default from v1.18.0 to v1.19.x and on by default in v1.20.0, the Qdrant release this guide's source basis records, and says "Enforcing authentication does not replace network isolation for the internal port", so do not rely on the setting in place of the network restriction below. On v1.20.0 the default enforcement has an effect only where an API key is configured: without an API key, the security page says, "Qdrant installs no authentication layer and the setting has no effect". As of v1.19.2 the internal API accepts only `api_key` or `alt_api_key` and rejects the read-only key and every JWT, so on v1.20.0 a cluster with only `read_only_api_key` set is still subject to enforcement but has no key the internal API accepts, and that cluster loses peer-to-peer communication unless `api_key` is set or `enforce_internal_auth` is set to `false`. Confirming that 6333 returns 401 without a key tells you nothing about 6335: in distributed mode 6335 answers a peer with no API key or bearer token wherever internal enforcement is not in effect (peer TLS, when enabled, authenticates the channel by certificate). Internal enforcement is not in effect with no API key configured, before v1.18.0, on v1.18.0 to v1.19.x without `enforce_internal_auth` set, or on v1.20.0 with `enforce_internal_auth` set to `false`. A reader who sets a key, sees 6333 return 401, and concludes that 6335 is authenticated is therefore wrong unless internal enforcement is in effect, and even with enforcement 6335 still has to be restricted to peers.
 
-Restrict 6335 to your cluster peers at the network layer, with a host firewall, a cloud security group, or by simply not publishing the container port to any address a non-peer can reach. Allow inbound 6335 only from your other peers' addresses and deny every other source, including other machines on the same private network. A node not running in cluster mode does not open 6335 at all; note that a single initial node started WITH cluster mode enabled does open the internal listener, so "single host" is not by itself a guarantee that 6335 is absent, which is why V1 and the 6335 probe still apply. In a cluster you cannot bind it to `127.0.0.1`, because peers on other hosts must reach it, so bind it to the private cluster interface and firewall it to peers. TLS on the peer channel does not remove this requirement; turn it on as well, but it authenticates and encrypts the channel rather than making an exposed port safe to reach:
+Restrict 6335 to your cluster peers at the network layer, with a host firewall, a cloud security group, or by simply not publishing the container port to any address a non-peer can reach. Allow inbound 6335 only from your other peers' addresses and deny every other source, including other machines on the same private network. A node not running in cluster mode does not open 6335 at all; note that a single initial node started WITH cluster mode enabled does open the internal listener, so "single host" is not by itself a guarantee that 6335 is absent, which is why V1 and the 6335 probe still apply. In a cluster you cannot bind it to `127.0.0.1`, because peers on other hosts must reach it, so bind it to the private cluster interface and firewall it to peers. The internal listener binds to `service.host` unless `cluster.p2p.host` is set, a setting the security page documents as available as of v1.19.2. On v1.20.0, set `cluster.p2p.host` to the node's private cluster IP address, because the security page says "The value must be an IP address", and give the node a peer URI (`--uri`) on that same address, since the page says the peer URI "must point to the same address". For example, a node whose private cluster address is 10.0.0.5 sets `cluster.p2p.host: 10.0.0.5` and starts with `--uri http://10.0.0.5:6335`, and 6335 is still firewalled to peers. TLS on the peer channel does not remove this requirement; turn it on as well, but it authenticates and encrypts the channel rather than making an exposed port safe to reach:
 
 ```yaml
 cluster:
@@ -47295,7 +47340,7 @@ cluster:
     enable_tls: true
 ```
 
-`cluster.p2p.enable_tls` is separate from `service.enable_tls`: the first secures peer-to-peer traffic, the second the client API. Enabling `cluster.p2p.enable_tls` also requires a `ca_cert` in the `tls:` block, the CA that validates peer certificates; the security page marks `ca_cert: ./tls/cacert.pem` as required for peer TLS. Provision that CA and set the field before you enable peer TLS. Qdrant carries a compiled default path (`./tls/cacert.pem`), so a missing entry does not always fail at startup, but relying on an unprovisioned default is fragile and the vendor marks it required. Set both TLS settings in distributed mode, apply the configuration on every peer, and restart the peers one at a time. To rotate the client API key without downtime, set the new key as `service.alt_api_key` on each peer and restart one at a time; `alt_api_key` (available as of Qdrant v1.17.0) is an additional accepted client key and, like `api_key`, gates the client API; it reaches the internal channel only where `enforce_internal_auth` is set, on v1.18.0 and later. The peer-channel and rotation settings can be version-dependent, so confirm them against the security page for the Qdrant version you run.
+`cluster.p2p.enable_tls` is separate from `service.enable_tls`: the first secures peer-to-peer traffic, the second the client API. Enabling `cluster.p2p.enable_tls` also requires a `ca_cert` in the `tls:` block, the CA that validates peer certificates; the security page marks `ca_cert: ./tls/cacert.pem` as required for peer TLS. Provision that CA and set the field before you enable peer TLS. Qdrant carries a compiled default path (`./tls/cacert.pem`), so a missing entry does not always fail at startup, but relying on an unprovisioned default is fragile and the vendor marks it required. Set both TLS settings in distributed mode, apply the configuration on every peer, and restart the peers one at a time. To rotate the client API key without downtime, set the new key as `service.alt_api_key` on each peer and restart one at a time; `alt_api_key` (available as of Qdrant v1.17.0) is an additional accepted client key and, like `api_key`, gates the client API. As of v1.19.2 a peer with `api_key` unset sends `alt_api_key` on internal requests, and the receiving peer checks that key only where internal enforcement is in effect (`enforce_internal_auth` set on v1.18.0 to v1.19.x, or left at its v1.20.0 default). The security page says that in a cluster with only `alt_api_key` set, v1.19.0 and v1.19.1 do not forward `alt_api_key` on internal requests, so v1.20.0 peers reject requests from those versions; such a cluster that runs v1.19.0 or v1.19.1 must, in the page's words, "Upgrade to v1.19.2 first, and then to v1.20.0". With enforcement on, the v1.20.0 default, set the new key as `alt_api_key` on every peer before promoting it to `api_key`, because the security page says every peer must accept the key its peers send. In the promoting rolling restart, set the new key as `api_key` and keep the old key as `alt_api_key` on each peer, since the security page says to "Keep the old key as alt_api_key until every peer uses the new key"; remove the old key only in a further rolling restart, after every peer uses the new key. The peer-channel and rotation settings can be version-dependent, so confirm them against the security page for the Qdrant version you run.
 
 ## 3. Weaviate: disable anonymous access, then authorize
 
@@ -47515,8 +47560,8 @@ The October 2026 date records the guide-wide documentation check. Items, or part
 - Milvus internal listeners (pinned tag v3.0.2): the listener that binds only the port, each component's listener, routing-only interceptors and internal-TLS option (query node, data node, streaming node, mix coordinator, proxy internal port), the interceptors that pass calls without metadata, one-way internal TLS, the default ports with `authorizationEnabled` and `internaltlsEnabled` off. Milvus internal listeners (pinned tag v3.0.2), continued: standalone enabling all five components, the query node's `Search` and `Query`, `credentials.NewServerTLSFromFile` returning nil credentials with the load error and otherwise building a `tls.Config` that sets only the server certificate, requiring no client certificate (grpc-go v1.82.2, the version in go.mod). The built `tls.Config` requires no client certificate because `tls.Config.ClientAuth` defaults to `NoClientCert`, the zero value of `ClientAuthType` (Go standard library go1.26.6, the go directive in go.mod). Milvus internal listeners (pinned tag v3.0.2), continued: gRPC serving plaintext when the credentials are nil. Milvus internal listeners sources (pinned tag v3.0.2): https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/netutil/listener.go#L11-L35, https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/netutil/listener.go#L92-L103, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L123-L126. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L246, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L243-L253, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L268. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/datanode/service.go#L82-L85, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/datanode/service.go#L127, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/datanode/service.go#L148. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/streamingnode/service.go#L106-L109, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/streamingnode/service.go#L345, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/streamingnode/service.go#L355. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/mixcoord/service.go#L97-L100, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/mixcoord/service.go#L212, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/mixcoord/service.go#L234. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/proxy/listener_manager.go#L56-L58, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/proxy/service.go#L461, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/proxy/service.go#L482. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/interceptor/cluster_interceptor.go#L34-L48, https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/interceptor/server_id_interceptor.go#L36-L54, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/utils/util.go#L39-L63. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L357, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L457, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L458, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L690. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L978, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1155-L1162, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1165, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1442. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/cmd/milvus/util.go#L142-L147, https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/proto/query_coord.proto#L109-L147, https://github.com/grpc/grpc-go/blob/v1.82.2/credentials/tls.go#L302-L308, https://github.com/grpc/grpc-go/blob/v1.82.2/credentials/tls.go#L222-L257. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/golang/go/blob/go1.26.6/src/crypto/tls/common.go#L348-L354, https://github.com/golang/go/blob/go1.26.6/src/crypto/tls/common.go#L698-L700 and https://github.com/grpc/grpc-go/blob/v1.82.2/internal/transport/http2_server.go#L151-L167
 - Milvus internal listeners (pinned tag v2.6.24): the listener that binds only the port, each component's listener, routing-only interceptors and internal-TLS option (query node, data node, streaming node, mix coordinator, proxy internal port), the interceptors that pass calls without metadata, one-way internal TLS, the default ports with `authorizationEnabled` and `internaltlsEnabled` off. Milvus internal listeners (pinned tag v2.6.24), continued: standalone enabling all five components, the query node's `Search` and `Query`, `credentials.NewServerTLSFromFile` returning nil credentials with the load error and otherwise building a `tls.Config` that sets only the server certificate, requiring no client certificate (grpc-go v1.82.1, the version in go.mod). The built `tls.Config` requires no client certificate because `tls.Config.ClientAuth` defaults to `NoClientCert`, the zero value of `ClientAuthType` (Go standard library go1.25.8, the go directive in go.mod). Milvus internal listeners (pinned tag v2.6.24), continued: gRPC serving plaintext when the credentials are nil. Milvus internal listeners sources (pinned tag v2.6.24): https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/netutil/listener.go#L11-L35, https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/netutil/listener.go#L92-L103, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L93-L96. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L190, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L187-L197, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L212. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/datanode/service.go#L83-L86, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/datanode/service.go#L128, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/datanode/service.go#L149. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/streamingnode/service.go#L108-L111, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/streamingnode/service.go#L352, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/streamingnode/service.go#L362. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/mixcoord/service.go#L99-L102, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/mixcoord/service.go#L214, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/mixcoord/service.go#L236. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/proxy/listener_manager.go#L58-L60, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/proxy/service.go#L441, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/proxy/service.go#L461. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/interceptor/cluster_interceptor.go#L34-L48, https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/interceptor/server_id_interceptor.go#L36-L54, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/utils/util.go#L41-L66. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L309, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L396, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L397, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L623. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L880, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1036-L1043, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1046, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1322. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/cmd/milvus/util.go#L143-L148, https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/proto/query_coord.proto#L107-L145, https://github.com/grpc/grpc-go/blob/v1.82.1/credentials/tls.go#L302-L308, https://github.com/grpc/grpc-go/blob/v1.82.1/credentials/tls.go#L222-L257. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/golang/go/blob/go1.25.8/src/crypto/tls/common.go#L335-L341, https://github.com/golang/go/blob/go1.25.8/src/crypto/tls/common.go#L681-L683 and https://github.com/grpc/grpc-go/blob/v1.82.1/internal/transport/http2_server.go#L151-L167
 - Milvus TLS documentation, internal TLS "For now only one-way tls is supported" (milvus-docs pinned commit cee60f10e2b794fbaf9bd6a02d5f129335218dfa): https://github.com/milvus-io/milvus-docs/blob/cee60f10e2b794fbaf9bd6a02d5f129335218dfa/site/en/adminGuide/tls.md#L215
-- Qdrant security (API key, read-only key, `api-key` header, TLS keys, ports, default insecurity): https://qdrant.tech/documentation/security/
-- Qdrant compiled-in defaults and overlay order (`service.host`, `http_port`, `grpc_port`; `config/config`, `config/$RUN_MODE` defaulting to `development`, `config/local`, `/etc/qdrant/config` in `deb` builds, `--config-path`, `QDRANT__` variables), the development and production overlays, and the image's `RUN_MODE=production` with an entrypoint that runs `./qdrant $@`. Qdrant defaults, overlays, image and release workflow, continued: the release workflow that builds `qdrant/qdrant` from the root `Dockerfile` (pinned tag v1.19.1). Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.19.1): https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L22, https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L292-L329, https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L330-L334. Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.19.1), continued: https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L352, https://github.com/qdrant/qdrant/blob/v1.19.1/config/development.yaml#L13-L15, https://github.com/qdrant/qdrant/blob/v1.19.1/config/production.yaml#L3-L5, https://github.com/qdrant/qdrant/blob/v1.19.1/Dockerfile#L225-L246. Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.19.1), continued: https://github.com/qdrant/qdrant/blob/v1.19.1/tools/entrypoint.sh#L21 and https://github.com/qdrant/qdrant/blob/v1.19.1/.github/workflows/docker-image.yml#L47-L55
+- Qdrant security (API key, read-only key, `api-key` header, TLS keys, ports, default insecurity, `enforce_internal_auth` on by default as of v1.20.0, `cluster.p2p.host` as of v1.19.2, `alt_api_key` rotation): https://qdrant.tech/documentation/security/
+- Qdrant compiled-in defaults and overlay order (`service.host`, `http_port`, `grpc_port`; `config/config`, `config/$RUN_MODE` defaulting to `development`, `config/local`, `/etc/qdrant/config` in `deb` builds, `--config-path`, `QDRANT__` variables), the development and production overlays, and the image's `RUN_MODE=production` with an entrypoint that runs `./qdrant $@`. Qdrant defaults, overlays, image and release workflow, continued: the release workflow that builds `qdrant/qdrant` from the root `Dockerfile` (pinned tag v1.20.0). Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.20.0): https://github.com/qdrant/qdrant/blob/v1.20.0/src/settings.rs#L25, https://github.com/qdrant/qdrant/blob/v1.20.0/src/settings.rs#L318-L355, https://github.com/qdrant/qdrant/blob/v1.20.0/config/config.yaml#L390-L394. Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.20.0), continued: https://github.com/qdrant/qdrant/blob/v1.20.0/config/config.yaml#L412, https://github.com/qdrant/qdrant/blob/v1.20.0/config/development.yaml#L13-L15, https://github.com/qdrant/qdrant/blob/v1.20.0/config/production.yaml#L3-L5, https://github.com/qdrant/qdrant/blob/v1.20.0/Dockerfile#L225-L246. Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.20.0), continued: https://github.com/qdrant/qdrant/blob/v1.20.0/tools/entrypoint.sh#L21 and https://github.com/qdrant/qdrant/blob/v1.20.0/.github/workflows/docker-image.yml#L48-L56
 - Weaviate authentication (anonymous access, API key, OIDC variables): https://docs.weaviate.io/deploy/configuration/authentication
 - Weaviate authorization (admin list, RBAC availability): https://docs.weaviate.io/deploy/configuration/authorization and RBAC configuration (`AUTHORIZATION_RBAC_ENABLED`, `AUTHORIZATION_RBAC_ROOT_USERS`): https://docs.weaviate.io/deploy/configuration/configuring-rbac
 - Weaviate environment variables (`AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED` default, `GRPC_PORT` default): https://docs.weaviate.io/deploy/configuration/env-vars
@@ -47581,7 +47626,7 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- q: Qdrant source (v1.19.1)
+- q: Qdrant source (v1.20.0)
 - w: Weaviate source (v1.39.6)
 - m2: Milvus (v2.6.24)
 - m3: Milvus (v3.0.2)
@@ -47612,14 +47657,14 @@ Components (recorded basis):
 Claims (full source mapping in the JSON block below):
 
 - private-publication (REASONED; docker): Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.
-- qdrant-ports (REASONED; qd): Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.
+- qdrant-ports (REASONED; qd): Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer, and binds service.host unless cluster.p2p.host (v1.19.2 and later) is set.
 - qdrant-bind (REASONED; q): Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.
 - qdrant-image (REASONED; q): Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.
 - qdrant-client-auth (REASONED; qd): Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.
 - qdrant-client-tls (REASONED; qd): service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.
-- qdrant-peer-auth (REASONED; qd): Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, default-on only from v1.20.0; enforcement does not replace the peer-only network restriction.
+- qdrant-peer-auth (REASONED; qd): Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, default-on from v1.20.0 but without effect when no API key is configured, so under enforcement a cluster with only read_only_api_key loses peer traffic; enforcement does not replace the peer-only network restriction.
 - qdrant-peer-tls (REASONED; qd): cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.
-- qdrant-rotation (REASONED; qd): alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.
+- qdrant-rotation (REASONED; qd): alt_api_key accepts an additional client key from v1.17.0 and is checked internally only under enforce_internal_auth from v1.18.0 (default-on from v1.20.0); rotate peer-by-peer, setting the new key on every peer before promoting it, keeping the old key as alt_api_key until every peer uses the new key, and upgrading an alt_api_key-only cluster on v1.19.0 or v1.19.1 to v1.19.2 first.
 - weaviate-precedence (REASONED; w): File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.
 - weaviate-rest (REASONED; w, goflags): Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.
 - weaviate-image (REASONED; w, wd): Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.
@@ -47694,18 +47739,18 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "2e4f0210c9d7ffab3f58646abbfed725eb95a3a5ea807a0d8163a6d9dd7498f5",
+  "body_sha256": "c0389508e1ad628213fd75a5be535d9758ee619597e2a9b0a4d5fd65f3b8b4ef",
   "components": {
     "q": {
       "name": "Qdrant source",
-      "basis": "v1.19.1",
+      "basis": "v1.20.0",
       "sources": {
-        "s7548c65a0e83": "https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L292-L329",
-        "sd309f5848ac4": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L330-L334",
-        "s6b9ad7f6f7ac": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/development.yaml#L13-L15",
-        "sc0a948c10fcb": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/production.yaml#L3-L5",
-        "s6463d266f693": "https://github.com/qdrant/qdrant/blob/v1.19.1/Dockerfile#L225-L246",
-        "sfbd6a604b16a": "https://github.com/qdrant/qdrant/blob/v1.19.1/tools/entrypoint.sh#L21"
+        "s9ba3219e58b6": "https://github.com/qdrant/qdrant/blob/v1.20.0/src/settings.rs#L318-L355",
+        "sd40ccfe472fa": "https://github.com/qdrant/qdrant/blob/v1.20.0/config/config.yaml#L390-L394",
+        "s13127d2b209f": "https://github.com/qdrant/qdrant/blob/v1.20.0/config/development.yaml#L13-L15",
+        "s1a27322fe3be": "https://github.com/qdrant/qdrant/blob/v1.20.0/config/production.yaml#L3-L5",
+        "s44110a9ab1e1": "https://github.com/qdrant/qdrant/blob/v1.20.0/Dockerfile#L225-L246",
+        "s207f4baf8240": "https://github.com/qdrant/qdrant/blob/v1.20.0/tools/entrypoint.sh#L21"
       }
     },
     "w": {
@@ -48086,14 +48131,14 @@ Claims (full source mapping in the JSON block below):
   },
   "claims": {
     "private-publication": {"text": "Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.", "components": ["docker"], "sources": ["docker:s1e53417c513d"], "status": "REASONED"},
-    "qdrant-ports": {"text": "Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-bind": {"text": "Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.", "components": ["q"], "sources": ["q:s7548c65a0e83", "q:sd309f5848ac4"], "status": "REASONED"},
-    "qdrant-image": {"text": "Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.", "components": ["q"], "sources": ["q:s6b9ad7f6f7ac", "q:sc0a948c10fcb", "q:s6463d266f693", "q:sfbd6a604b16a"], "status": "REASONED"},
+    "qdrant-ports": {"text": "Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer, and binds service.host unless cluster.p2p.host (v1.19.2 and later) is set.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-bind": {"text": "Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.", "components": ["q"], "sources": ["q:s9ba3219e58b6", "q:sd40ccfe472fa"], "status": "REASONED"},
+    "qdrant-image": {"text": "Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.", "components": ["q"], "sources": ["q:s13127d2b209f", "q:s1a27322fe3be", "q:s44110a9ab1e1", "q:s207f4baf8240"], "status": "REASONED"},
     "qdrant-client-auth": {"text": "Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
     "qdrant-client-tls": {"text": "service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-peer-auth": {"text": "Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, default-on only from v1.20.0; enforcement does not replace the peer-only network restriction.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-peer-auth": {"text": "Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, default-on from v1.20.0 but without effect when no API key is configured, so under enforcement a cluster with only read_only_api_key loses peer traffic; enforcement does not replace the peer-only network restriction.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
     "qdrant-peer-tls": {"text": "cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-rotation": {"text": "alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-rotation": {"text": "alt_api_key accepts an additional client key from v1.17.0 and is checked internally only under enforce_internal_auth from v1.18.0 (default-on from v1.20.0); rotate peer-by-peer, setting the new key on every peer before promoting it, keeping the old key as alt_api_key until every peer uses the new key, and upgrading an alt_api_key-only cluster on v1.19.0 or v1.19.1 to v1.19.2 first.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
     "weaviate-precedence": {"text": "File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.", "components": ["w"], "sources": ["w:s8c45722d725f", "w:sb916723717de", "w:s7c30e1e2c554", "w:s85b7b3e8fa18", "w:s8c05965785ea", "w:sbd0d3c32cae6", "w:s8a57e655e250", "w:s0ba20e752b37"], "status": "REASONED"},
     "weaviate-rest": {"text": "Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.", "components": ["w", "goflags"], "sources": ["w:sa1cbcde2f024", "w:s122708a42282", "w:s5b7738072d06", "w:s71035079ef45", "w:s7b8a55a31a45", "w:sc6fc7e030ce0", "w:s8e5bf5d887cc", "goflags:sbd8f9e746696"], "status": "REASONED"},
     "weaviate-image": {"text": "Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.", "components": ["w", "wd"], "sources": ["w:se5771dfe00cc", "wd:sa066265b9009"], "status": "REASONED"},
@@ -50188,7 +50233,7 @@ authority and contain it at the infrastructure layer, not with login alone:
 
 ## Verify
 
-REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well.
+REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 # REASONED: listener inventory, Dify publication and TCP checks follow the cited pinned Compose,
@@ -50236,12 +50281,23 @@ docker compose ps --format json                 # run in dify/docker: no Publish
 # Editor/console and Dify /install: confirm in a FRESH, UNAUTHENTICATED BROWSER SESSION, not by status
 # code - all four are SPAs serving the same 200 + HTML shell logged in or not, so a curl of / cannot
 # tell an open editor from a login page and it discards the /install form you must read. In the browser,
-# an unauthenticated editor visit must land on a login route, and https://dify.example.com/install must
+# an unauthenticated editor visit must land on a login route, and /install on your Dify host must
 # show "already set up" or redirect to login, NEVER an open create-admin form (an open form means the
 # first visitor owns the instance). The curl below is only a transport-reachability note:
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
-  -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' https://builder.example.com/
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_BUILDER_HOST'   # the builder's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
+)
 #
 # App API auth, tested against the app on its LOOPBACK address so your fronting reverse proxy (section 2)
 # is out of the path, one MATCHED pair per app: WITHOUT the key expect that app's OWN rejection, WITH a
@@ -50492,7 +50548,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "0fd0e34d51b21b3dcaf54b2d66d771032f176988bc02453cfa4687e491c64b5f",
+  "body_sha256": "03b38059c9ce3626a772b1c55118e76b124f45601a4d35f767a3f5f0eee983ce",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
@@ -53215,17 +53271,27 @@ ss -tlnp   # read every listener; 3001/3210/3000: each UI on 127.0.0.1 only
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3210/" ;;
   esac
 )
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' https://chat.example.com/api/some-endpoint  # without a key/token: 401; 000 and curl's error mean no answer, never a pass
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sSI https://chat.example.com/                     # via the proxy: TLS, login required
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_CHAT_HOST'   # the public host name your proxy serves the chat UI on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api/some-endpoint"  # without a key/token: 401; 000 and curl's error mean no answer, never a pass
+  curl -q -g -sSI "https://$1/"                     # via the proxy: TLS, login required
+)
 # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is
 #   NOT listed in AUTH_ALLOWED_EMAILS; expect rejection at registration, before any account or session
 #   is created (AUTH_ALLOWED_EMAILS gates new registration; it does not revoke an already-registered
 #   user's existing session)
 ```
 
-REASONED: preceding block; isolation comparison, listener and external-reachability checks, API authentication, proxy TLS/login, LobeChat registration and multi-user isolation follow the cited UI binding/authentication references, LobeChat AUTH_ALLOWED_EMAILS source, AnythingLLM workspace roles and linked pgvector guidance. No live UI/RAG deployment, external test path or paired identities are available. The anonymous API probe's flags were run locally with curl 8.18.0 against loopback stub listeners, not a UI, and a closed loopback port: the old `-s` form printed only the response body for a 401 and for a 200, and nothing for the closed port (exit 7), while the `-sS -o /dev/null -w '%{http_code}\n'` form printed `401`, `200`, and `000` with curl's connection error. That `000` is the value those runs observed, not a cited one: the installed curl 8.18.0 manual describes `http_code` only as "The numerical response code that was found in the last retrieved HTTP(S) or FTP(s) transfer." The proxy probe uses `-sSI` rather than `-sI` because the manual says `-s` shows no error messages and `-S` with it shows an error message if curl fails, so a TLS, DNS or connection failure prints curl's error instead of nothing. Run locally with curl 8.18.0 against a closed loopback port, the `-sI` form exited 7 and printed nothing, and the `-sSI` form exited 7 and printed curl's connection error. For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared assistant over shared documents), verify isolation at the data layer, not only at login. First, as user A, ask a question whose answer lives only in user A's documents or past conversations and confirm A's own document supplies the answer, the positive control that retrieval works at all; then ask the same question as user B and confirm B gets nothing of A's. A retrieval step that searches every user's embeddings without enforcing per-document access hands one user's content into another's session even though each logged in separately; scope retrieval to the requesting user's own documents or workspace, and where the store is pgvector the tenant row-level-security check in [vector-databases.md](vector-databases.md) is the store-side half. A retrieval filter alone does not isolate conversation history, memory, or a shared cache; check each of those the same way. This isolation check is REASONED, not demonstrated: the authoring environment has no live multi-user RAG deployment. Its expected isolation rests on the cited AnythingLLM workspace-role documentation and the pgvector row-level-security guidance linked above.
+REASONED: preceding block; isolation comparison, listener and external-reachability checks, API authentication, proxy TLS/login, LobeChat registration and multi-user isolation follow the cited UI binding/authentication references, LobeChat AUTH_ALLOWED_EMAILS source, AnythingLLM workspace roles and linked pgvector guidance. No live UI/RAG deployment, external test path or paired identities are available. The anonymous API probe's flags were run locally with curl 8.18.0 against loopback stub listeners, not a UI, and a closed loopback port: the old `-s` form printed only the response body for a 401 and for a 200, and nothing for the closed port (exit 7), while the `-sS -o /dev/null -w '%{http_code}\n'` form printed `401`, `200`, and `000` with curl's connection error. That `000` is the value those runs observed, not a cited one: the installed curl 8.18.0 manual describes `http_code` only as "The numerical response code that was found in the last retrieved HTTP(S) or FTP(s) transfer." The proxy probe uses `-sSI` rather than `-sI` because the manual says `-s` shows no error messages and `-S` with it shows an error message if curl fails, so a TLS, DNS or connection failure prints curl's error instead of nothing. Run locally with curl 8.18.0 against a closed loopback port, the `-sI` form exited 7 and printed nothing, and the `-sSI` form exited 7 and printed curl's connection error. Those curl 8.18.0 runs covered the earlier form of the two probes, before the probes took the chat host on a guarded `set --` line and gained `-g`; the guarded block, which refuses example.com, example.net, example.org and their subdomains, has not been run. For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared assistant over shared documents), verify isolation at the data layer, not only at login. First, as user A, ask a question whose answer lives only in user A's documents or past conversations and confirm A's own document supplies the answer, the positive control that retrieval works at all; then ask the same question as user B and confirm B gets nothing of A's. A retrieval step that searches every user's embeddings without enforcing per-document access hands one user's content into another's session even though each logged in separately; scope retrieval to the requesting user's own documents or workspace, and where the store is pgvector the tenant row-level-security check in [vector-databases.md](vector-databases.md) is the store-side half. A retrieval filter alone does not isolate conversation history, memory, or a shared cache; check each of those the same way. This isolation check is REASONED, not demonstrated: the authoring environment has no live multi-user RAG deployment. Its expected isolation rests on the cited AnythingLLM workspace-role documentation and the pgvector row-level-security guidance linked above.
 
 ## Common mistakes
 
@@ -53328,7 +53394,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a12ba20e03b73756fa1b2ad16a33335b1431479a11d59fb8c1cf78f5065f0c67",
+  "body_sha256": "1093f83ba01187f1dc4a488e2fc08ad036b36c0023b7923a6c4b71ff8748dbb4",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",
@@ -55229,7 +55295,7 @@ RedisInsight 3.8.0's default server configuration uses `RI_APP_HOST` with a fall
 
 ## Verify
 
-REASONED: following block; panel sources below support the listener check, the anonymous front-page/data-route checks and the authenticated data-route positive control; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
+REASONED: following block; panel sources below support the listener check, the anonymous front-page/data-route checks and the authenticated data-route positive control; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes. The two `curl` checks take one panel's host name and protected path on a guarded `set --` line and refuse example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
 # On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
@@ -55240,17 +55306,32 @@ REASONED: following block; panel sources below support the listener check, the a
 ss -tlnp                                      # panel listeners: loopback or a private address only
 
 # From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel. Read the
-# BODY, not just the status: a login page and a dashboard can both be 200.
-curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/'
-#   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
-#   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
-#   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
-# SPA panels (Grafana, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
-# the dashboard, so also request a route you know returns real data when authorized, and require it be denied
-# without credentials:
-curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTED_PATH'   # keep the quotes; substitute inside them
-#   Confirm that route returns data WITH valid auth first (a positive control); a 404, a server error, or an
-#   unsubstituted placeholder is inconclusive, not a pass.
+# BODY, not just the status: a login page and a dashboard can both be 200. Run the block once per panel.
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PANEL_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the panel's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a route you know returns real data when authorized, without its leading slash: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sS --noproxy '*' -i "https://$1/"
+  #   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
+  #   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
+  #   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
+  # SPA panels (Grafana, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
+  # the dashboard, so also request a route you know returns real data when authorized, and require it be denied
+  # without credentials:
+  curl -q -g -sS --noproxy '*' -i "https://$1/$2"
+  #   Confirm that route returns data WITH valid auth first (a positive control); a 404 or a server error is
+  #   inconclusive, not a pass, and the guard above refuses an unsubstituted placeholder.
+)
 ```
 
 REASONED: preceding block; listener inventory, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; published-backend inspection follows the pinned Docker sources and this guide's assessment that a protected frontend or absent socket does not prove backend isolation. No panel deployment or second test network is available. Run the `ss` listener inventory and the published address and port inspection (`docker ps` and the port mappings) on the panel's host. Run the two `curl` checks, their authenticated positive control and any probe of a published backend port from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
@@ -55341,7 +55422,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "802fbbd21495c5cd5718947f74027acfbbfa92e20d724afecd5a812d6eab56d0",
+  "body_sha256": "af82072eb380d45c5ac78b7615639312ece098bfa0a87bd564790a0072e6ee93",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",
@@ -57927,13 +58008,33 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Verify
 
-**REASONED:** not demonstrated against a deployed API: no Express or FastAPI deployment or browser session is available here, so which origins real CORS middleware echoes rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials. For this change both pipelines ran with curl 8.18.0: against a loopback listener answering 200 with the listed origin's headers, each printed the status line with both Access-Control headers and exited 0. Both pipelines also ran for this change with curl 8.18.0 against a closed loopback port, where each printed `curl: (7) Failed to connect ...` on stderr and its inconclusive line (the same pipelines without the pipefail subshell exited 1 with empty output, and silently under the old `-s`). Both pipelines also ran for this change with curl 8.18.0 against a stub curl that printed `HTTP/1.1 200 OK`, wrote a transfer error to stderr and returned 18: the pipeline without pipefail exited 0 as if it had passed, while the `set -o pipefail` subshell (the convention litellm.md and search-engines.md use) exited 18, so its `|| echo` printed the inconclusive line. The runs against the loopback listener, the closed loopback port and the stub curl record the pipelines' behaviour, not any deployed middleware's CORS decisions.
+**REASONED:** not demonstrated against a deployed API: no Express or FastAPI deployment or browser session is available here, so which origins real CORS middleware echoes rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials. For an earlier change both pipelines ran with curl 8.18.0: against a loopback listener answering 200 with the listed origin's headers, each printed the status line with both Access-Control headers and exited 0. Both pipelines also ran for an earlier change with curl 8.18.0 against a closed loopback port, where each printed `curl: (7) Failed to connect ...` on stderr and its inconclusive line (the same pipelines without the pipefail subshell exited 1 with empty output, and silently under the old `-s`). Both pipelines also ran for an earlier change with curl 8.18.0 against a stub curl that printed `HTTP/1.1 200 OK`, wrote a transfer error to stderr and returned 18: the pipeline without pipefail exited 0 as if it had passed, while the `set -o pipefail` subshell (the convention litellm.md and search-engines.md use) exited 18, so its `|| echo` printed the inconclusive line. The runs against the loopback listener, the closed loopback port and the stub curl record the pipelines' behaviour, not any deployed middleware's CORS decisions. Those curl 8.18.0 runs covered the earlier form of both pipelines, which named api.example.com and an app.example.com origin directly; the pipelines now take the API host and your app's origin host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and the guarded form has not been run.
 
 ```bash
-(set -o pipefail; curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -iE 'HTTP/|access-control') || echo "inconclusive: the transfer failed or printed no status line; not a pass"
-# expect: a 2xx status line matching the own-origin probe below, and no Access-Control-Allow-Origin echoing the hostile origin; any other status, a proxy's lone "HTTP/1.1 200 Connection established" line, the inconclusive line, or empty output is inconclusive, not a pass
-(set -o pipefail; curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -iE 'HTTP/|access-control') || echo "inconclusive: the transfer failed or printed no status line; not a pass"
-# expect: a 2xx status line, your origin in Access-Control-Allow-Origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_API_HOST' 'REPLACE_WITH_YOUR_APP_HOST'   # the API's public host name, then the host name of the https:// origin your app is served from, each with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your API's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your app's origin host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own origin host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  # Both probes request /data: change that path to a route your app's browser code calls.
+  # The hostile origin https://evil.example is deliberately foreign; keep it as written.
+  (set -o pipefail; curl -q -g -sS -o /dev/null -D - "https://$1/data" -H "Origin: https://evil.example" | grep -iE 'HTTP/|access-control') || echo "inconclusive: the transfer failed or printed no status line; not a pass"
+  # expect: a 2xx status line matching the own-origin probe below, and no Access-Control-Allow-Origin echoing the hostile origin; any other status, a proxy's lone "HTTP/1.1 200 Connection established" line, the inconclusive line, or empty output is inconclusive, not a pass
+  (set -o pipefail; curl -q -g -sS -o /dev/null -D - "https://$1/data" -H "Origin: https://$2" | grep -iE 'HTTP/|access-control') || echo "inconclusive: the transfer failed or printed no status line; not a pass"
+  # expect: a 2xx status line, your origin in Access-Control-Allow-Origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
+)
 ```
 
 ## Sources (checked September 2026)
@@ -57983,7 +58084,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "e1f0889efbf42d205153b01c1703985e0adaf22bbdeae98adfdc235cf7209229",
+  "body_sha256": "4eb498c163564288a1a734ade027cb506d9098181e5fa4014417c10580878351",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",
@@ -64145,7 +64246,11 @@ else the `_APP_DB_ADAPTER` variable's default as the install task passes it, whi
 unless the task replaced it for an existing installation, and disables the other choices when one
 is locked. The page's script posts the choice as `database`, falling back to `postgresql`. The
 install handler accepts only those three values, requires an unlocked choice to be a supported and
-enabled database, and sets `_APP_DB_ADAPTER` to the locked database or else the choice. When a
+enabled database, and sets `_APP_DB_ADAPTER` to the locked database or else the choice. For a
+request without a retry step whose installation already has progress steps recorded, the handler
+deletes the progress file of an earlier run that ended in error or completed every step, so the
+request starts fresh, and otherwise sets the installer lock to an error status and answers
+"Installation already started" (409, or an error event on a stream) before any comparison. When a
 resumed installation has a saved payload and the earlier run recorded no error, the handler
 compares the stored fields with the request and refuses a mismatch, such as a nonempty posted
 `database` that differs from a stored `database`, by setting the installer lock to an error status
@@ -64169,6 +64274,7 @@ For the install handler, see the
 [web installer database validation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157),
 [web installer supported database values](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206),
 [web installer database adapter input](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243),
+[web installer resumed progress check](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L198-L221),
 [web installer resumed payload comparison](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L245-L282),
 [web installer resumed database input](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L311),
 [web installer environment preparation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L318-L320), and
@@ -64667,6 +64773,7 @@ The October 2026 date in this heading is the guide-wide documentation check, whi
 - [Appwrite 2.2.0 web installer database validation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157).
 - [Appwrite 2.2.0 web installer supported database values (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Runtime/State.php#L204-L206).
 - [Appwrite 2.2.0 web installer database adapter input (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243).
+- [Appwrite 2.2.0 web installer resumed progress check (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L198-L221).
 - [Appwrite 2.2.0 web installer resumed payload comparison (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L245-L282).
 - [Appwrite 2.2.0 web installer resumed database input (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L311).
 - [Appwrite 2.2.0 web installer environment preparation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L318-L320).
@@ -64809,7 +64916,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-10",
-  "body_sha256": "8056bc3f19a4e6194e72b81a859723fbfc60526359cb07a0b4ca6bad9a1af093",
+  "body_sha256": "c0bd90c09c8d36f139dea8577e944c170d8d387028a815cca909998525cb0f20",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -64897,6 +65004,7 @@ Claims (full source mapping in the JSON block below):
         "s6fb9b6903781": "https://github.com/appwrite/appwrite/blob/2.2.0/app/views/install/installer/js/modules/progress.js#L370",
         "s7d56eff0a7da": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L146-L157",
         "s9abe0896e1d5": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L234-L243",
+        "s79f740b03171": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L198-L221",
         "s2fa48cd8d192": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L245-L282",
         "s9f909d25dbd8": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L311",
         "s4cf4607fb9ae": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Installer/Http/Installer/Install.php#L318-L320",
@@ -65084,7 +65192,7 @@ Claims (full source mapping in the JSON block below):
     "source-limits-appwrite-adapter": {"text": "Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to the MariaDB, Mongo, MySQL and Postgres adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:s2ac9cf2424b0", "appwrite:s72725b186c05", "appwrite:sa6bf00f7f610", "appwrite:s5b95ad04c9e2", "appwrite:s8a44ff629c40"], "status": "REASONED"},
     "source-limits-appwrite-dev": {"text": "Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql, a development default, not a production default; the root Compose file, which the install task reads as its Compose template, passes the variable to the appwrite service without a value. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a", "appwrite:s8e5272615f2e", "appwrite:s8830e89f7a80", "appwrite:sd886b53afa75", "appwrite:scbf0003fdebc", "appwrite:s08213afcf157"], "status": "REASONED"},
     "source-limits-appwrite-console": {"text": "Appwrite 2.2.0's console variables endpoint reports _APP_DB_ADAPTER through its response model with a mariadb fallback while pool registration falls back to postgresql, so by source reading without a run an unset or empty variable gives Postgres console and database pools and a reported mariadb. Both read a set variable; this guide advises not relying on the reported value to identify the adapter.", "components": ["appwrite", "utopia-php-system"], "sources": ["appwrite:sc259dcc33931", "appwrite:s95ace139c972", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:sd2a7f2cd5865", "utopia-php-system:s432a4a7a96bf"], "status": "REASONED"},
-    "source-limits-appwrite-install-env": {"text": "Appwrite 2.2.0's install task writes _APP_DB_ADAPTER to .env, unless reusing a configuration, from a prompt answer, its database (default postgresql, or detected) or the web installer's choice (default postgresql). Its Compose generator keeps only the chosen database service and, this guide reasons, the value-less entry, which the first detection step skips; how Compose resolves it is unknown.", "components": ["appwrite"], "sources": ["appwrite:sb5b101f2f04e", "appwrite:s33547558ebc8", "appwrite:s0a6edcec1f26", "appwrite:sa737cb84c634", "appwrite:s7bb5907c66bd", "appwrite:s64b48746c27d", "appwrite:sdd1a89cf3815", "appwrite:s48bedca5fd4a", "appwrite:s2a7f2bc4e834", "appwrite:sde11935a99de", "appwrite:sd886b53afa75", "appwrite:s06b2c6eab43d", "appwrite:s805902cec1bc", "appwrite:s6fb9b6903781", "appwrite:s7d56eff0a7da", "appwrite:s9abe0896e1d5", "appwrite:sae5eb7c54f35", "appwrite:s743783a2e7c4", "appwrite:s7bba5f7d026a", "appwrite:s20f9a45c1ae4", "appwrite:s1b716f6425c4", "appwrite:s61db43082b23", "appwrite:sa319cbeaf14d", "appwrite:s0397bb7a7d9a", "appwrite:sad8784f8e9a9", "appwrite:s9f909d25dbd8", "appwrite:s2fa48cd8d192", "appwrite:s4cf4607fb9ae", "appwrite:s65c6e1b53177"], "status": "REASONED"},
+    "source-limits-appwrite-install-env": {"text": "Appwrite 2.2.0's install task writes _APP_DB_ADAPTER to .env, unless reusing a configuration, from a prompt answer, its database (default postgresql, or detected) or the web installer's choice (default postgresql). Its Compose generator keeps only the chosen database service and, this guide reasons, the value-less entry, which the first detection step skips; how Compose resolves it is unknown.", "components": ["appwrite"], "sources": ["appwrite:sb5b101f2f04e", "appwrite:s33547558ebc8", "appwrite:s0a6edcec1f26", "appwrite:sa737cb84c634", "appwrite:s7bb5907c66bd", "appwrite:s64b48746c27d", "appwrite:sdd1a89cf3815", "appwrite:s48bedca5fd4a", "appwrite:s2a7f2bc4e834", "appwrite:sde11935a99de", "appwrite:sd886b53afa75", "appwrite:s06b2c6eab43d", "appwrite:s805902cec1bc", "appwrite:s6fb9b6903781", "appwrite:s7d56eff0a7da", "appwrite:s9abe0896e1d5", "appwrite:sae5eb7c54f35", "appwrite:s743783a2e7c4", "appwrite:s7bba5f7d026a", "appwrite:s20f9a45c1ae4", "appwrite:s1b716f6425c4", "appwrite:s61db43082b23", "appwrite:sa319cbeaf14d", "appwrite:s0397bb7a7d9a", "appwrite:sad8784f8e9a9", "appwrite:s9f909d25dbd8", "appwrite:s2fa48cd8d192", "appwrite:s79f740b03171", "appwrite:s4cf4607fb9ae", "appwrite:s65c6e1b53177"], "status": "REASONED"},
     "source-limits-adapter-docs": {"text": "At the time of writing, Appwrite's environment documentation lists MariaDB and MongoDB and gives _APP_DB_ADAPTER a mongodb default, conflicting with Appwrite 2.2.0, which defaults to postgresql, a value that page does not list.", "components": ["appwrite-docs", "appwrite"], "sources": ["appwrite-docs:s2bf9a4746d28", "appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca"], "status": "REASONED"}
   }
 }
