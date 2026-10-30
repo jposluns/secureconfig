@@ -1479,7 +1479,7 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 
 ## 6. Verify
 
-- REASONED: private-browsing Access check; local marking review (October 2026, Bash 5.3.9) did not run a browser comparison. A live Cloudflare origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Cloudflare account and Access application on a proxied hostname were not available to this marking review. For the visit to https://app.example.com, an exposed route is expected to serve app content anonymously; a fixed route is expected to show Access login, then serve the app after an allowed sign-in, per the guide's cited Cloudflare Zero Trust documentation and Cloudflare Access One-time PIN (login methods coexist with an IdP). A private-browsing visit to `https://app.example.com` shows the Access login page, not the app.
+- REASONED: private-browsing Access check; local marking review (October 2026, Bash 5.3.9) did not run a browser comparison. A live Cloudflare origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Cloudflare account and Access application on a proxied hostname were not available to this marking review. For the visit to `https://REPLACE_WITH_APP_HOSTNAME/`, an exposed route is expected to serve app content anonymously; a fixed route is expected to show Access login, then serve the app after an allowed sign-in, per the guide's cited Cloudflare Zero Trust documentation and Cloudflare Access One-time PIN (login methods coexist with an IdP). With your Access-protected application's host name in place of `REPLACE_WITH_APP_HOSTNAME`, a private-browsing visit to `https://REPLACE_WITH_APP_HOSTNAME/` shows the Access login page, not the app.
 - REASONED: anonymous HEAD check; local marking review (October 2026, Bash 5.3.9) ran the stated curl command, in an earlier form that named app.example.com, against a curl stub, which printed 'stub curl args=-q -sI https://app.example.com/' (exit 0), not an HTTP response. The command now carries a `REPLACE_WITH_APP_HOSTNAME` placeholder in place of that host, and the changed command has not been run. A live Cloudflare origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Cloudflare account and Access application on a proxied hostname were not available to this marking review. An exposed route is expected to return the application's own status and headers, potentially HTTP 200; a fixed anonymous route is expected to return 302 with a team cloudflareaccess.com login location, while an allowed session reaches the app, per the guide's cited Cloudflare Zero Trust documentation and Cloudflare Access One-time PIN (login methods coexist with an IdP). HEAD prints status and headers, not content. With your Access-protected application's host name in place of `REPLACE_WITH_APP_HOSTNAME`, `curl -q -sI https://REPLACE_WITH_APP_HOSTNAME/` returns a 302 whose `location` is your team's `*.cloudflareaccess.com` login, never a 200 or your application's own content.
 - REASONED: service-token GET and anonymous comparison; local marking review (October 2026, Bash 5.3.9) passed the following block through bash -n and ShellCheck 0.11.0 with no output. Five of the fourteen Bash fixtures with a curl stub printed: placeholder and empty URL, 'substitute your own application URL inside the quotes; not probing' (each exit 2); wrong sentinel, 'paste the whole block, including its set -- line; not probing' (exit 2); and one and three values, 'the set -- line needs a URL and client ID; not probing' (each exit 2). Five more of the fourteen fixtures printed: HTTP URL, 'use an https:// URL; not probing' (exit 2); placeholder ID, 'supply the client ID without control characters; not probing' (exit 2); EOF secret input, 'secret input failed; not probing' (exit 2); and empty and placeholder secrets, 'supply the secret without control characters; not probing' (each exit 2). The remaining four fixtures printed: readonly HDR, 'cannot clear HDR in this shell; not probing' (exit 2); readonly IFS, 'a readonly IFS is set in this shell; not probing' (exit 2); valid input, 'stub curl' (exit 0); and curl stub exit 7, 'stub curl' (block exit 2). No HTTP status was observed. A live Cloudflare origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a provisioned Cloudflare account, Access application and service token were not available to this marking review. On a route known to return application HTTP 200, exposed anonymous and token requests are expected to reach the app, per the guide's cited Cloudflare Access service tokens (request headers and Service Auth policy) and curl manual (stdin headers, output, redirect reporting and write-out variables). Fixed anonymous requests on that route are expected to show Access login or denial, while the valid token is expected to yield http=200 location= on that route, per the guide's cited Cloudflare Access service tokens (request headers and Service Auth policy) and curl manual (stdin headers, output, redirect reporting and write-out variables). The block discards the body, so the printed status cannot identify content. With a service token, a GET returns your application content, not the Access login. Use a route known to serve your application's content with HTTP 200. Expect `http=200 location=`; an Access login redirect, denial or transport error is not a pass. Compare with the anonymous check above: an exposed app serves the route anonymously too, so token success alone does not prove Access is enforced.
 
@@ -1686,7 +1686,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "754fdfdabcb605796fd28f2c5c52e8e2e60ee78c565d2f8e739ccea56549de55",
+  "body_sha256": "e7bbf889165e1f98f2780e4c21f68877b75909cc34c3413c6c4be934fb4136e7",
   "components": {
     "token-file": {
       "name": "cloudflared token-file minimum",
@@ -20726,7 +20726,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Render documentation (no recorded version), Next.js pinned documentation v16.4.2, Next.js environment variables 15, Express request protocol 5.x, Django proxy security setting 6.1, and MySQL client connection options 8.4; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
+Written against Render documentation (no recorded version), Next.js pinned documentation v16.4.2, Next.js environment variables 15, Express request protocol 5.x, Django proxy security setting 6.1, MySQL client connection options 8.4, and curl curl-8_14_1; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -20794,7 +20794,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"          # this guide's redirect check above
+  curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"         # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
 )
 # 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
 #    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
@@ -20820,7 +20820,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"   # no creds: want the APP's own 401/403, not a platform SSO 401
+  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"  # no creds: want the APP's own 401/403, not a platform SSO 401; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
 )
 #    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
 #    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
@@ -20895,6 +20895,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 - Railway public-networking headers and request handling (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L16-L17
 - Railway GET redirect status and POST conversion (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L37-L38. The two complete entries state: "Plain HTTP GET requests will be redirected to HTTPS with a `301` response." and "Plain HTTP POST requests will be converted to GET requests." This guide's assessment: these entries state none of the following: HEAD behaviour, a POST status code or a configurable redirect toggle.
 - Railway HTTP POST redirect status and client method change (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/troubleshooting/405-method-not-allowed.md#L8-L18. The page states: "This occurs because your request was made using HTTP. Railway will attempt to redirect your insecure request with a 301 Moved Permanently status code." It continues: "When an HTTP client encounters a 301 Moved Permanently redirect, the client will follow the redirect." It then says that, according to the HTTP/1.1 specifications, "the client will typically change the request method from POST to GET when it follows the redirect to the new URL". The page's line 8 places this in "a POST request to your application" that "is redirected to a GET request". This guide's assessment: these lines state no HEAD behaviour or configurable redirect toggle.
+- curl curl-8_14_1 (checked October 2026): [-S restores error messages with -s (4-19)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19).
 
 
 <!-- version-basis:start -->
@@ -20923,6 +20924,7 @@ Components (recorded basis):
 - express: Express request protocol (5.x)
 - django: Django proxy security setting (6.1)
 - mysql-client: MySQL client connection options (8.4)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the JSON block below):
 
@@ -20947,8 +20949,8 @@ Claims (full source mapping in the JSON block below):
 - spaces-secrets (REASONED; spaces): Use Settings secrets for sensitive values, never repository/README metadata; variables remain publicly readable.
 - spaces-static (REASONED; spaces): Static Spaces expose both variables and secrets to client JavaScript through window.huggingface.variables; keep backend/provider credentials in Docker/Gradio Spaces or another server-side service.
 - spaces-dev (REASONED; spaces, spaces-pinned): At the time of writing, the pinned Dev Mode docs require PRO or Team &amp; Enterprise. The Dev Mode Docker image starts the application as a subprocess and starts an SSH server for local editors and terminals and a VS Code server for in-product VS Code Web. Dev Mode exposes the running Space as a standard SSH host; clients use the Space subdomain shown in the Dev Mode controls as the username at ssh.hf.space, and local VS Code uses Remote - SSH to connect to the same host. SSH requires adding the machine's SSH public key to the user's Hugging Face account; these docs do not establish which users or roles may connect, or the access control for in-product VS Code Web. This guide's assessment: access into the running container is materially more access than the app itself, so treat an unattended Dev Mode session the same as any other exposed admin path.
-- verify-redirect (REASONED; vercel, render, fly-pinned, railway, heroku): This guide's HTTP HEAD / check requires 301/302/307/308 with an https:// Location; Vercel documents 308 and Fly HTTP handlers 301 with force_https. Spot-check proves neither every route/method nor secure-cookie proxy awareness; Render's HTTPS status (not its static-rule 301), Railway HEAD status and Heroku's general redirect policy/setting/app-only responsibility/status remain unestablished.
-- verify-app-auth (REASONED; vercel): Disable Vercel deployment protection or use its documented Protection Bypass for Automation, the x-vercel-protection-bypass header or query parameter carrying the project's generated secret, to isolate app auth; no Render or Fly equivalent is cited. This guide's expected reading: anonymous protected requests get the app's 401/403, valid app credentials a 2xx, and a platform SSO 401 is not app enforcement.
+- verify-redirect (REASONED; vercel, render, fly-pinned, railway, heroku, curl): This guide's HTTP HEAD / check requires 301/302/307/308 with an https:// Location; Vercel documents 308 and Fly HTTP handlers 301 with force_https. Spot-check proves neither every route/method nor secure-cookie proxy awareness; Render's HTTPS status (not its static-rule 301), Railway HEAD status and Heroku's general redirect policy/setting/app-only responsibility/status remain unestablished.
+- verify-app-auth (REASONED; vercel, curl): Disable Vercel deployment protection or use its documented Protection Bypass for Automation, the x-vercel-protection-bypass header or query parameter carrying the project's generated secret, to isolate app auth; no Render or Fly equivalent is cited. This guide's expected reading: anonymous protected requests get the app's 401/403, valid app credentials a 2xx, and a platform SSO 401 is not app enforcement.
 - verify-secrets (REASONED; render, fly, vercel, nextjs-pinned): Scan history, working tree and deployed client JS, source maps, generated config and runtime values for every credential type; no matches is evidence, not proof. The scan procedure is this guide's, delegated to secrets.md; the pinned Next.js v16.4.2 lines document only the NEXT_PUBLIC_ build-time inlining and off-by-default production browser source maps that motivate the bundle scan.
 
 ````json
@@ -20956,7 +20958,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "cf6bfe3d4c93673b6945bba4c168c18964c2a41e8656729f27669dcf79ae537b",
+  "body_sha256": "edf4590729c1f57d1b09ab47feca6655bfde0f97a0025e9d1fe10821b7893f14",
   "components": {
     "render": {
       "name": "Render documentation",
@@ -21098,6 +21100,13 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s823c0bfaaafa": "https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_ssl-mode"
       }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s07916104bf60": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19"
+      }
     }
   },
   "claims": {
@@ -21122,8 +21131,8 @@ Claims (full source mapping in the JSON block below):
     "spaces-secrets": {"text": "Use Settings secrets for sensitive values, never repository/README metadata; variables remain publicly readable.", "components": ["spaces"], "sources": ["spaces:sda0c810c053d", "spaces:sd5ec2b2772e0"], "status": "REASONED"},
     "spaces-static": {"text": "Static Spaces expose both variables and secrets to client JavaScript through window.huggingface.variables; keep backend/provider credentials in Docker/Gradio Spaces or another server-side service.", "components": ["spaces"], "sources": ["spaces:sda0c810c053d"], "status": "REASONED"},
     "spaces-dev": {"text": "At the time of writing, the pinned Dev Mode docs require PRO or Team & Enterprise. The Dev Mode Docker image starts the application as a subprocess and starts an SSH server for local editors and terminals and a VS Code server for in-product VS Code Web. Dev Mode exposes the running Space as a standard SSH host; clients use the Space subdomain shown in the Dev Mode controls as the username at ssh.hf.space, and local VS Code uses Remote - SSH to connect to the same host. SSH requires adding the machine's SSH public key to the user's Hugging Face account; these docs do not establish which users or roles may connect, or the access control for in-product VS Code Web. This guide's assessment: access into the running container is materially more access than the app itself, so treat an unattended Dev Mode session the same as any other exposed admin path.", "components": ["spaces", "spaces-pinned"], "sources": ["spaces:sda0c810c053d", "spaces-pinned:s5d393b019bad", "spaces-pinned:sd1ae2b703a70"], "status": "REASONED"},
-    "verify-redirect": {"text": "This guide's HTTP HEAD / check requires 301/302/307/308 with an https:// Location; Vercel documents 308 and Fly HTTP handlers 301 with force_https. Spot-check proves neither every route/method nor secure-cookie proxy awareness; Render's HTTPS status (not its static-rule 301), Railway HEAD status and Heroku's general redirect policy/setting/app-only responsibility/status remain unestablished.", "components": ["vercel", "render", "fly-pinned", "railway", "heroku"], "sources": ["vercel:s2b470a6bc853", "vercel:s3e7832fd3031", "render:s5b8400c2a2ba", "fly-pinned:s4324a02dbc42", "railway:sbf08758c106a", "railway:s844d338bd121", "heroku:s0c5bf300cef4", "render:s22963948fc90", "render:s4935cea7a2ea", "heroku:sa86eb06bbd4a", "railway:sdd5e5ed1be54"], "status": "REASONED", "verify": [1]},
-    "verify-app-auth": {"text": "Disable Vercel deployment protection or use its documented Protection Bypass for Automation, the x-vercel-protection-bypass header or query parameter carrying the project's generated secret, to isolate app auth; no Render or Fly equivalent is cited. This guide's expected reading: anonymous protected requests get the app's 401/403, valid app credentials a 2xx, and a platform SSO 401 is not app enforcement.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96", "vercel:s845513031876", "vercel:sc1588029e14e"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "This guide's HTTP HEAD / check requires 301/302/307/308 with an https:// Location; Vercel documents 308 and Fly HTTP handlers 301 with force_https. Spot-check proves neither every route/method nor secure-cookie proxy awareness; Render's HTTPS status (not its static-rule 301), Railway HEAD status and Heroku's general redirect policy/setting/app-only responsibility/status remain unestablished.", "components": ["vercel", "render", "fly-pinned", "railway", "heroku", "curl"], "sources": ["vercel:s2b470a6bc853", "vercel:s3e7832fd3031", "render:s5b8400c2a2ba", "fly-pinned:s4324a02dbc42", "railway:sbf08758c106a", "railway:s844d338bd121", "heroku:s0c5bf300cef4", "render:s22963948fc90", "render:s4935cea7a2ea", "heroku:sa86eb06bbd4a", "railway:sdd5e5ed1be54", "curl:s07916104bf60"], "status": "REASONED", "verify": [1]},
+    "verify-app-auth": {"text": "Disable Vercel deployment protection or use its documented Protection Bypass for Automation, the x-vercel-protection-bypass header or query parameter carrying the project's generated secret, to isolate app auth; no Render or Fly equivalent is cited. This guide's expected reading: anonymous protected requests get the app's 401/403, valid app credentials a 2xx, and a platform SSO 401 is not app enforcement.", "components": ["vercel", "curl"], "sources": ["vercel:se6089d5c4e96", "vercel:s845513031876", "vercel:sc1588029e14e", "curl:s07916104bf60"], "status": "REASONED", "verify": [1]},
     "verify-secrets": {"text": "Scan history, working tree and deployed client JS, source maps, generated config and runtime values for every credential type; no matches is evidence, not proof. The scan procedure is this guide's, delegated to secrets.md; the pinned Next.js v16.4.2 lines document only the NEXT_PUBLIC_ build-time inlining and off-by-default production browser source maps that motivate the bundle scan.", "components": ["render", "fly", "vercel", "nextjs-pinned"], "sources": ["render:s213783ba6209", "fly:s29502d5e8321", "vercel:s2b470a6bc853", "nextjs-pinned:s0e3d2cd2248e", "nextjs-pinned:sf7cfdc553311"], "status": "REASONED", "verify": [1]}
   }
 }
@@ -29196,7 +29205,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against AIStor documentation (no recorded version); 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources.
+Written against AIStor documentation (no recorded version) and curl curl-8_14_1; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -29533,12 +29542,13 @@ ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/"                     # service root: anonymous ListBuckets denied
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/" # per bucket: anonymous listing denied
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT"
+  # -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: a 000 status beside a "curl: (N) ..." error line means no HTTP response arrived; that is inconclusive, never a denial and never proof of isolation
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/"                    # service root: anonymous ListBuckets denied
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/" # per bucket: anonymous listing denied
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT"
                                                          # a known private object: 403, never 200, and the 403 must come from MinIO (behind a proxy a 403 may be the proxy's, so probe MinIO's direct origin). Anonymous policies are set per
                                                          # bucket, so a denial at the service root does not prove any bucket is private
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9001/"                     # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
+  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9001/"                    # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
 )
 mc alias import mys3 < /path/to/REPLACE_WITH_ADMIN_ALIAS.json
 ```
@@ -29633,7 +29643,7 @@ For the duration caveat, use a valid JWT expiring in approximately 20 minutes, `
 
 **Presigned URLs, REASONED:** a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Use a known private fixture and signing credentials that remain valid throughout the comparison. Confirm ordinary signed reads before and after each trial.
 
-Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner.
+Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner. This block and the Console-disabled check below print the `exitcode` and `errormsg` write-out variables, which the cited curl manual dates to curl 7.75.0; use curl 7.75.0 or later.
 
 REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With curl stubbed, the literal placeholder, empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed their guard messages without invoking curl, including a short assignment under set -u. A fixture HTTPS URL reached curl via config stdin, not argv; a backslash/quote fixture was escaped in that input. Both admitted cases printed a stub response. These are local guard and formatting observations, not expiry or signature-age enforcement. Per the guide's cited AIStor `mc share download` (presigned credentials and expiry); AIStor access management (built-in policies, custom policy structure, actions, and resources); AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key). These existing citations were not reopened.
 
@@ -29755,6 +29765,7 @@ REASONED from the cited AIStor documentation: OIDC role-policy and claim-policy 
 - AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key): https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html
 - AIStor metrics v3 (active and queued requests): https://docs.min.io/aistor/operations/monitoring/metrics-and-alerts/metrics-v3/
 - AIStor release artifacts (server and client RELEASE baselines): https://docs.min.io/aistor/operations/release-artifacts/
+- curl curl-8_14_1 (checked October 2026): [-S restores error messages with -s (4-19)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19); [errormsg and exitcode added in 7.75.0 (75-79)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 
 
 <!-- version-basis:start -->
@@ -29773,6 +29784,7 @@ Components (recorded basis):
 - aistor: AIStor documentation (unknown)
 - console: MinIO console source (f0b91e5504663c4672da451877857b57c3345295)
 - aws: AWS signature-condition semantics (unknown)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the JSON block below):
 
@@ -29810,15 +29822,15 @@ Claims (full source mapping in the JSON block below):
 - audit-webhook (REASONED; aistor): Enable HTTPS webhook with authentication value supplied verbatim, certificate verification and persistent audit queue; restart every node.
 - audit-kafka (REASONED; aistor): Kafka TLS defaults off; explicitly enable verified TLS and supported SASL with topic-scoped credentials; example PLAIN is only over TLS.
 - audit-queue (REASONED; aistor): Persistent per-node queue needs service read/write/list access; delivery retries can lose events when full, and webhook 2xx proves acknowledgement rather than durability.
-- verify-exposure (REASONED; aistor): Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.
+- verify-exposure (REASONED; aistor, curl): Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.
 - verify-scope (REASONED; aistor): Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded.
 - verify-encryption (REASONED; aistor): New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state.
 - verify-retention (REASONED; aistor): Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable.
 - verify-audit (REASONED; aistor): Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit.
 - verify-oidc (REASONED; aistor): Fresh mapped STS credentials must read only the app fixture versus a broad-policy control; also test an unmapped identity and explicit duration beyond shorter JWT/default.
-- verify-url-expiry (REASONED; aistor): Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.
-- verify-signature-age (REASONED; aistor, aws): One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.
-- verify-console (REASONED; aistor): After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.
+- verify-url-expiry (REASONED; aistor, curl): Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.
+- verify-signature-age (REASONED; aistor, aws, curl): One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.
+- verify-console (REASONED; aistor, curl): After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.
 - verify-concurrency (REASONED; aistor): Four-node budget 64 should constrain admission to 16 per node under saturating signed load; compare measured inflight/waiting metrics with automatic sizing, not RPS or a guessed rejection code.
 
 ````json
@@ -29826,7 +29838,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8fe32dd049e56b0d19e389fd6a656d815964019097c5ae2cddfbda0a92888c15",
+  "body_sha256": "37c808d8cad4a9b2bd6d9c55cb9afaa14ddf0f9c801d690ee2feea683ce2bf6f",
   "components": {
     "aistor": {
       "name": "AIStor documentation",
@@ -29893,6 +29905,14 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s724c81d09245": "https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html"
       }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s07916104bf60": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19",
+        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79"
+      }
     }
   },
   "claims": {
@@ -29930,15 +29950,15 @@ Claims (full source mapping in the JSON block below):
     "audit-webhook": {"text": "Enable HTTPS webhook with authentication value supplied verbatim, certificate verification and persistent audit queue; restart every node.", "components": ["aistor"], "sources": ["aistor:s5ffb30993d29", "aistor:s8b922d2cc573"], "status": "REASONED"},
     "audit-kafka": {"text": "Kafka TLS defaults off; explicitly enable verified TLS and supported SASL with topic-scoped credentials; example PLAIN is only over TLS.", "components": ["aistor"], "sources": ["aistor:s077155dd0d0a", "aistor:s624eb11b369c"], "status": "REASONED"},
     "audit-queue": {"text": "Persistent per-node queue needs service read/write/list access; delivery retries can lose events when full, and webhook 2xx proves acknowledgement rather than durability.", "components": ["aistor"], "sources": ["aistor:sfc2a9f6aaa82", "aistor:s8b922d2cc573"], "status": "REASONED"},
-    "verify-exposure": {"text": "Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.", "components": ["aistor"], "sources": ["aistor:sb91d4a3416c9", "aistor:sb9d5614881d7", "aistor:s832ebbd6b12d", "aistor:s410c1a1103fc", "aistor:sedcc92753b24", "aistor:s5e54dfb548ff", "aistor:sce35ebdaa862", "aistor:sfc2a9f6aaa82", "aistor:s077155dd0d0a", "aistor:s5ffb30993d29", "aistor:s010df9b91c3e", "aistor:sd117ab9c22cf"], "status": "REASONED", "verify": [1]},
+    "verify-exposure": {"text": "Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.", "components": ["aistor", "curl"], "sources": ["aistor:sb91d4a3416c9", "aistor:sb9d5614881d7", "aistor:s832ebbd6b12d", "aistor:s410c1a1103fc", "aistor:sedcc92753b24", "aistor:s5e54dfb548ff", "aistor:sce35ebdaa862", "aistor:sfc2a9f6aaa82", "aistor:s077155dd0d0a", "aistor:s5ffb30993d29", "aistor:s010df9b91c3e", "aistor:sd117ab9c22cf", "curl:s07916104bf60"], "status": "REASONED", "verify": [1]},
     "verify-scope": {"text": "Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded.", "components": ["aistor"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aistor:s060498cf1d28", "aistor:s8aab14fd9241"], "status": "REASONED", "verify": [2]},
     "verify-encryption": {"text": "New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state.", "components": ["aistor"], "sources": ["aistor:sa1b121169978", "aistor:s0c9db42c9d8d", "aistor:s725b0aa69279"], "status": "REASONED", "verify": [3]},
     "verify-retention": {"text": "Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable.", "components": ["aistor"], "sources": ["aistor:s79346e27156b", "aistor:sb375aff8811f", "aistor:s0c9db42c9d8d"], "status": "REASONED", "verify": [4, 5]},
     "verify-audit": {"text": "Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit.", "components": ["aistor"], "sources": ["aistor:s7eb5037577a9", "aistor:s624eb11b369c", "aistor:s8b922d2cc573"], "status": "REASONED", "verify": [6]},
     "verify-oidc": {"text": "Fresh mapped STS credentials must read only the app fixture versus a broad-policy control; also test an unmapped identity and explicit duration beyond shorter JWT/default.", "components": ["aistor"], "sources": ["aistor:s72c067e99d16", "aistor:s53d35aac0c14"], "status": "REASONED"},
-    "verify-url-expiry": {"text": "Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.", "components": ["aistor"], "sources": ["aistor:s19e2a1dc1a62"], "status": "REASONED", "verify": [7]},
-    "verify-signature-age": {"text": "One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.", "components": ["aistor", "aws"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aws:s724c81d09245"], "status": "REASONED", "verify": [7]},
-    "verify-console": {"text": "After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.", "components": ["aistor"], "sources": ["aistor:s410c1a1103fc", "aistor:s060498cf1d28"], "status": "REASONED", "verify": [8]},
+    "verify-url-expiry": {"text": "Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.", "components": ["aistor", "curl"], "sources": ["aistor:s19e2a1dc1a62", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [7]},
+    "verify-signature-age": {"text": "One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.", "components": ["aistor", "aws", "curl"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aws:s724c81d09245", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [7]},
+    "verify-console": {"text": "After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.", "components": ["aistor", "curl"], "sources": ["aistor:s410c1a1103fc", "aistor:s060498cf1d28", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [8]},
     "verify-concurrency": {"text": "Four-node budget 64 should constrain admission to 16 per node under saturating signed load; compare measured inflight/waiting metrics with automatic sizing, not RPS or a guessed rejection code.", "components": ["aistor"], "sources": ["aistor:sedcc92753b24", "aistor:s4e625044ee38"], "status": "REASONED"}
   }
 }
@@ -49948,7 +49968,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MLflow pinned source v3.16.1, MLflow security middleware minimum 3.5.0, Docker Engine loopback publication minimum 28.0.0, nginx proxy implementation release-1.28.0, Caddy reverse proxy parser v2.11.4, oauth2-proxy documentation v7.15.4, and Authelia source v4.39.28, plus 2 more recorded bases; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
+Written against MLflow pinned source v3.16.1, MLflow security middleware minimum 3.5.0, Docker Engine loopback publication minimum 28.0.0, nginx proxy implementation release-1.28.0, Caddy reverse proxy parser v2.11.4, oauth2-proxy documentation v7.15.4, and Authelia source v4.39.28, plus 3 more recorded bases; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -49966,7 +49986,7 @@ The CLI help for `--host` says it plainly: "This is NOT a security setting". Do 
 
 ## 2. TLS from a fronting proxy
 
-`mlflow server` has no dedicated certificate flags (though `--uvicorn-opts` can forward `--ssl-keyfile`/`--ssl-certfile` to Uvicorn). Terminate TLS in nginx or Caddy per [nginx.md](nginx.md)/[caddy.md](caddy.md) with `proxy_pass http://127.0.0.1:5000` or `reverse_proxy 127.0.0.1:5000`, a certificate from [free-certificates.md](free-certificates.md), and `--allowed-hosts` set to the public hostname; or use a tunnel or tailnet ([cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md)). Point clients at `MLFLOW_TRACKING_URI=https://mlflow.example.com`, and never set `MLFLOW_TRACKING_INSECURE_TLS=true` in production (MLflow's own docs say the same).
+`mlflow server` has no dedicated certificate flags (though in MLflow v3.16.1 `--uvicorn-opts` forwards its options to the default Uvicorn server, for which Uvicorn 0.54.0 documents `--ssl-keyfile`/`--ssl-certfile`; MLflow rejects `--uvicorn-opts` with `--dev`, `--gunicorn-opts` or `--waitress-opts`, and `--gunicorn-opts` or `--waitress-opts` runs gunicorn or waitress instead of Uvicorn). Terminate TLS in nginx or Caddy per [nginx.md](nginx.md)/[caddy.md](caddy.md) with `proxy_pass http://127.0.0.1:5000` or `reverse_proxy 127.0.0.1:5000`, a certificate from [free-certificates.md](free-certificates.md), and `--allowed-hosts` set to the public hostname; or use a tunnel or tailnet ([cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md)). Point clients at `MLFLOW_TRACKING_URI=https://mlflow.example.com`, and never set `MLFLOW_TRACKING_INSECURE_TLS=true` in production (MLflow's own docs say the same).
 
 ## 3. Turn on the built-in basic auth
 
@@ -50141,6 +50161,8 @@ REASONED: preceding block; listener inventory, external TCP reachability, proxy/
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
 - MLflow `--host` option, default `127.0.0.1`, and `--port`, default `5000`, which the `MLFLOW_HOST` and `MLFLOW_PORT` environment variables override (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180
 - MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): <https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541>
+- MLflow v3.16.1 `--uvicorn-opts` forwarding to the default Uvicorn server (checked October 2026): [`--uvicorn-opts` option and `MLFLOW_UVICORN_OPTS`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L454-L459), [only one of `--gunicorn-opts`, `--waitress-opts` or `--uvicorn-opts`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L317-L325), [`--dev` refuses `--uvicorn-opts`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L602-L608), [Uvicorn unless gunicorn or waitress options are given](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L409-L411), [Uvicorn command selection](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L437-L441) and [`shlex.split` options placed after `-m uvicorn`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L303-L327).
+- Uvicorn 0.54.0 `--ssl-keyfile` and `--ssl-certfile` HTTPS options (checked October 2026): [settings documentation](https://github.com/encode/uvicorn/blob/0.54.0/docs/settings.md#L128-L134) and [command-line option definitions](https://github.com/encode/uvicorn/blob/0.54.0/uvicorn/main.py#L310-L317).
 - nginx release-1.28.0 proxy directive registration (checked October 2026; `proxy_pass` takes one upstream argument): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310
 - Caddy v2.11.4 `reverse_proxy` parser (checked October 2026): [directive registration](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40) and [upstream syntax](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62).
 - iproute2 v6.12.0 `ss` manual (checked October 2026): [numeric output](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34), [listening sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44), [process display](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163), and [TCP sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375).
@@ -50178,6 +50200,7 @@ Components (recorded basis):
 - authelia-source: Authelia source (v4.39.28)
 - curl: curl minimum write-out version (7.75.0)
 - iproute2: iproute2 ss manual (v6.12.0)
+- uvicorn: Uvicorn source (0.54.0)
 
 Claims (full source mapping in the JSON block below):
 
@@ -50189,7 +50212,7 @@ Claims (full source mapping in the JSON block below):
 - host-allowlist (REASONED; docs): Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.
 - cors (REASONED; docs): Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.
 - middleware-disable (REASONED; docs): Do not use --disable-security-middleware outside a test.
-- tls (REASONED; docs, nginx, caddy): There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.
+- tls (REASONED; docs, source, uvicorn, nginx, caddy): There are no dedicated server TLS flags; MLflow v3.16.1 --uvicorn-opts can forward Uvicorn 0.54.0 --ssl-keyfile/--ssl-certfile to the default Uvicorn server, not with --dev, --gunicorn-opts or --waitress-opts. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.
 - client-tls (REASONED; docs): Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.
 - auth-app (REASONED; docs): Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.
 - csrf-key (REASONED; docs): Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.
@@ -50219,7 +50242,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "ac9f6588a4d5dc4a3d32df09c82450fe806fe6fcb26084470b1e6c23805a71d4",
+  "body_sha256": "c26be5df8848ac134c74388c6608d68aa93710cdc720c9ffe1ab3548e7ed237e",
   "components": {
     "source": {
       "name": "MLflow pinned source",
@@ -50232,7 +50255,13 @@ Claims (full source mapping in the JSON block below):
         "s99d30948902f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L85-L86",
         "s687f1c9977cd": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L94-L105",
         "s1661739df39d": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/environment_variables.py#L493-L503",
-        "s5801c6ac1ac2": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/rest_utils.py#L254-L292"
+        "s5801c6ac1ac2": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/rest_utils.py#L254-L292",
+        "s4a930b35f97e": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L454-L459",
+        "s3df936d1e2ff": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L317-L325",
+        "sea0054295867": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L602-L608",
+        "sf711a9bb7d38": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L409-L411",
+        "s25614af41a95": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L437-L441",
+        "sa1678567912a": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L303-L327"
       }
     },
     "middleware-min": {
@@ -50319,6 +50348,14 @@ Claims (full source mapping in the JSON block below):
         "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
         "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375"
       }
+    },
+    "uvicorn": {
+      "name": "Uvicorn source",
+      "basis": "0.54.0",
+      "sources": {
+        "s1a2858bce328": "https://github.com/encode/uvicorn/blob/0.54.0/docs/settings.md#L128-L134",
+        "s6ad833b4b583": "https://github.com/encode/uvicorn/blob/0.54.0/uvicorn/main.py#L310-L317"
+      }
     }
   },
   "claims": {
@@ -50330,7 +50367,7 @@ Claims (full source mapping in the JSON block below):
     "host-allowlist": {"text": "Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
     "cors": {"text": "Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
     "middleware-disable": {"text": "Do not use --disable-security-middleware outside a test.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
-    "tls": {"text": "There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.", "components": ["docs", "nginx", "caddy"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609", "nginx:s6dfa81e36717", "caddy:s52039756d4f4", "caddy:s9dde4a2bda4c"], "status": "REASONED"},
+    "tls": {"text": "There are no dedicated server TLS flags; MLflow v3.16.1 --uvicorn-opts can forward Uvicorn 0.54.0 --ssl-keyfile/--ssl-certfile to the default Uvicorn server, not with --dev, --gunicorn-opts or --waitress-opts. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.", "components": ["docs", "source", "uvicorn", "nginx", "caddy"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609", "source:s4a930b35f97e", "source:s3df936d1e2ff", "source:sea0054295867", "source:sf711a9bb7d38", "source:s25614af41a95", "source:sa1678567912a", "uvicorn:s1a2858bce328", "uvicorn:s6ad833b4b583", "nginx:s6dfa81e36717", "caddy:s52039756d4f4", "caddy:s9dde4a2bda4c"], "status": "REASONED"},
     "client-tls": {"text": "Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "auth-app": {"text": "Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
     "csrf-key": {"text": "Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},

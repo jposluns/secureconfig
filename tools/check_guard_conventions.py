@@ -78,7 +78,7 @@ WHAT THIS CATCHES
                  file and documented stdin forms pass; a waiver uses the
                  same preceding-comment mechanism as curl's C3 checks.
 
-  C4-EXAMPLE-HOST  (--example-hosts only; NOT yet registered in run_all_checks)
+  C4-EXAMPLE-HOST  (on by default and run by run_all_checks; --no-c4 skips it)
                  in a fenced shell block inside a Verify section, or in an
                  inline Verify command in a guide the C3 inline scan covers
                  (a guide listed in tools/version_basis_guides.txt), a
@@ -97,8 +97,10 @@ WHAT THIS CATCHES
                  resolve to hosts the
                  reader does not run, so the probe reports on someone else's
                  server. A probe whose host comes from a guarded "$1" or "$2"
-                 never matches. Opt-in until the guides' remaining Verify
-                 probes take the reader's host.
+                 never matches. On by default since the example-host sweep
+                 (#1061 to #1064) left no Verify probe aimed at these names;
+                 --example-hosts is still accepted and ignored, so it never
+                 overrides --no-c4 in either order.
 
 WHAT THIS IS NOT
   This is a tripwire for the accidental case; a determined author walks
@@ -130,7 +132,7 @@ SCOPE
 
   In enrolled guides (tools/version_basis_guides.txt), Verify-section inline
   code spans also run through the SAME command walk, retaining only C3
-  credential findings and, under --example-hosts, C4-EXAMPLE-HOST findings.
+  credential findings and, unless --no-c4 is given, C4-EXAMPLE-HOST findings.
   Section selection and metadata masking come from
   check_verify_marking.guide_context, which scan_guide itself uses. Matched
   equal-length backticks, including double backticks and multiline spans,
@@ -2513,7 +2515,7 @@ def _scan_inline(path, text, findings, stats, opts):
         found, local = [], Stats()
         # Reuse the entire fenced command walk, including wrappers, command
         # substitutions and argument ownership. Only C3 findings apply here,
-        # plus C4 under --example-hosts; an inline span has no C4 waiver.
+        # plus C4 unless --no-c4 is given; an inline span has no C4 waiver.
         _analyze_fence(path, "sh", line, [span], found, local, opts,
                        verify=opts.example_hosts)
         stats.unparseable += local.unparseable
@@ -4346,8 +4348,10 @@ SELF_TEST_CASES.append((
     "~~~bash\nenv --future-option curl https://example.com/\n~~~\n",
     ["C1-MISSING-Q"], ()))
 
-# C4: Verify probes aimed at a reserved example domain. Every case passes
-# --example-hosts except the one proving the check is opt-in.
+# C4: Verify probes aimed at a reserved example domain. C4 is on by default;
+# most cases pass --example-hosts, which is still accepted and ignored. The
+# default and --no-c4 cases below prove that C4 runs without it and that
+# --no-c4 skips it, including when --example-hosts comes before or after it.
 _C4_GUARDED = r"""(
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block"; exit 2; }
@@ -4448,15 +4452,27 @@ SELF_TEST_CASES += [
      "```\n", ["C4-EXAMPLE-HOST"], ("--example-hosts",)),
     ("c4-outside-verify", "## Setup\n```bash\ncurl -q https://example.com/\n"
      "```\n", [], ("--example-hosts",)),
-    ("c4-opt-in", "## Verify\n```bash\ncurl -q https://example.com/\n```\n",
-     [], ()),
+    ("c4-default", "## Verify\n```bash\ncurl -q https://example.com/\n```\n",
+     ["C4-EXAMPLE-HOST"], ()),
+    ("c4-no-c4", "## Verify\n```bash\ncurl -q https://example.com/\n```\n",
+     [], ("--no-c4",)),
+    ("c4-no-c4-then-example-hosts",
+     "## Verify\n```bash\ncurl -q https://example.com/\n```\n", [],
+     ("--no-c4", "--example-hosts")),
+    ("c4-example-hosts-then-no-c4",
+     "## Verify\n```bash\ncurl -q https://example.com/\n```\n", [],
+     ("--example-hosts", "--no-c4")),
     ("c4-inline", "## Verify\n- Run `curl -q https://app.example.com/`.\n",
      ["C4-EXAMPLE-HOST"], ("--example-hosts",)),
     ("c4-inline-outside-verify",
      "## Setup\n- Run `curl -q https://app.example.com/`.\n", [],
      ("--example-hosts",)),
-    ("c4-inline-opt-in",
-     "## Verify\n- Run `curl -q https://app.example.com/`.\n", [], ()),
+    ("c4-inline-default",
+     "## Verify\n- Run `curl -q https://app.example.com/`.\n",
+     ["C4-EXAMPLE-HOST"], ()),
+    ("c4-inline-no-c4",
+     "## Verify\n- Run `curl -q https://app.example.com/`.\n", [],
+     ("--no-c4",)),
 ]
 
 
@@ -4613,11 +4629,15 @@ def parse_args(argv):
                     help="demote convention 2: skip C2-PROBE-OUTSIDE-GUARD "
                          "(tracked-row fallback if the idiom rule proves "
                          "noisy on real guides)")
+    ap.add_argument("--no-c4", action="store_false", dest="example_hosts",
+                    default=True,
+                    help="skip C4-EXAMPLE-HOST, on by default: a Verify probe "
+                         "aimed at example.com, example.net, example.org or "
+                         "a subdomain")
     ap.add_argument("--example-hosts", action="store_true",
-                    dest="example_hosts",
-                    help="also apply C4-EXAMPLE-HOST: a Verify probe aimed "
-                         "at example.com, example.net, example.org or a "
-                         "subdomain (opt-in until the guide sweep lands)")
+                    dest="example_hosts_legacy",
+                    help="accepted and ignored: C4-EXAMPLE-HOST already runs "
+                         "by default, and this flag never overrides --no-c4")
     ap.add_argument("--q-anywhere", action="store_true", dest="q_anywhere",
                     help="accept -q in any position (triage aid; curl only "
                          "honors a FIRST-position -q)")
