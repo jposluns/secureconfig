@@ -112,18 +112,18 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n.
+   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2.
 
    ```bash
    (
      set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLIENT_CONFIG_DIR'
-     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
      shift
-     [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+     [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
      case "$1" in
-       *REPLACE_WITH_*|"") echo "substitute the client's config/log directory inside the quotes above; not probing"; exit ;;
+       *REPLACE_WITH_*|"") echo "substitute the client's config/log directory inside the quotes above; not probing"; exit 2 ;;
      esac
-     [ -d "$1" ] || { echo "not a directory: $1; not probing"; exit; }
+     [ -d "$1" ] || { echo "not a directory: $1; not probing"; exit 2; }
      if env LC_ALL=C grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[[:print:]]+|Bearer[[:space:]]+[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~+/-]{20,}' -- "$1/"; then
        echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store"
      else
@@ -238,7 +238,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "e1cb1d653551a3a0dd5fdaabcd86022e0a7435b5b8a8a72d9ac8c1138885826e",
+  "body_sha256": "d8a8c267089b216ab52c965c5c4070ad9a95222f2e0ecace73e2a2ff80371241",
   "components": {
     "mcp": {
       "name": "MCP",

@@ -124,7 +124,7 @@ location /mcp {
 
 ## Verify
 
-REASONED: following block; the ss listener inventory and the guarded direct-origin probe, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding) and curl manual entry (exitcode and errormsg, both added in curl 7.75.0). During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. The direct-origin comparison requires an MCP 2026-07-28 server, fronting layer and second probe host, unavailable in the authoring environment, so neither the exposed result (any HTTP code from your address) nor the fixed one (a refusal or timeout reaching your address, or an answer only from the fronting layer) was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0, then ran with stub ss and curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with the set -- line shortened, or given a second value under IFS=0, the exactly-1-value refusal. The stub curl in that marking-review run (October 2026), with no network and 198.51.100.7 substituted, received http://198.51.100.7:3000/mcp. The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
+REASONED: following block; the ss listener inventory and the guarded direct-origin probe, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding) and curl manual entry (exitcode and errormsg, both added in curl 7.75.0). During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. The direct-origin comparison requires an MCP 2026-07-28 server, fronting layer and second probe host, unavailable in the authoring environment, so neither the exposed result (any HTTP code from your address) nor the fixed one (a refusal or timeout reaching your address, or an answer only from the fronting layer) was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0, then ran with stub ss and curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with the set -- line shortened, or given a second value under IFS=0, the exactly-1-value refusal. The stub curl in that marking-review run (October 2026), with no network and 198.51.100.7 substituted, received http://198.51.100.7:3000/mcp. The bash -n, ShellCheck and stub runs recorded here covered the listener block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
 
 ```bash
 # REASONED: listener isolation follows the cited deployment guidance; no live MCP 2026-07-28 server is available.
@@ -135,11 +135,11 @@ ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
 # from the remote address is inconclusive, never a pass.
 (                                                      # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -s -o /dev/null --noproxy '*' -X POST --connect-timeout 5 --max-time 20 \
          -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/mcp" ;;
   esac
@@ -366,7 +366,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d99b132b682dc350783345c091688d2b7eeeb6ea369daa6cc3ed88d8fc46185e",
+  "body_sha256": "1346807c224e3b788bd4ec84642e0ae15f04368f526a7f6537e99361197b246b",
   "components": {
     "mcp": {
       "name": "MCP",
