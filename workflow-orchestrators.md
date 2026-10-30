@@ -218,7 +218,7 @@ Pods can turn an exposed API into cluster compromise.
 
 REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe) is covered by this declaration. The declaration for those probes rests on the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs. The origin guard in that stub run (marking review, October 2026) printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the first TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. During marking review (October 2026), the second TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 with dummy credentials on a pseudo-terminal, stubs for every external command and only the known credential helpers delegated to the scratch interpreter. Under bash -e before that revision, each helper exit 73, partial-output failure or empty credential stopped the calling shell at that authenticated probe, so later probes did not run. In those second-review fixtures, where every other external-command stub succeeded, each refusal skipped only its authenticated request and all later probes ran. Valid credentials reached all three authenticated curl stubs with the expected header or JSON before and after, with and without bash -e. All four empty credential cases and each helper failure were also checked without errexit before and after. With PYTHONOPTIMIZE=1 and an empty Argo token, the unchanged helper sent an empty bearer header; the revised helper refused it and skipped the Argo authenticated request, with and without bash -e. In that second review, every completed sequence reached the unchanged direct-origin placeholder refusal; all files exited 2, either at the first unhandled refusal before that revision under bash -e or at the final origin guard. These runs checked shell flow and credential encoding only, not service authentication. During marking review (October 2026), the third TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 through a pseudo-terminal with dummy credentials, stubs for every external command and only the three exact credential helpers delegated to the isolated scratch interpreter. No probe reached a service or read the host socket paths. Before this revision, under bash -e, exit 1 from ss, Temporal, stat or getfacl, and curl exits 6, 7 or 28 from each anonymous or default-account probe, stopped the file at that label and skipped the remaining probes. After this revision, under bash -e, those same cases reached every later label and the final origin-placeholder refusal. Each authenticated curl exit 6, 7 or 28, helper exit 73, partial-output failure and empty credential case reached all later probes before and after; helper refusals sent no authenticated request. Valid dummy credentials produced the expected Basic header, JSON and bearer header before and after. An empty Argo token was also refused with PYTHONOPTIMIZE=1 before and after. With a substituted origin URL, origin curl exits 6, 7 and 28 were reported before and after. The missing-set-line, short-set-line and ftp:// origin cases refused without an origin request before and after. The revised files exited 0 after their labelled continuation messages, including the final origin refusal; this status means the sequence continued, not that any service was secure. These stub runs establish shell flow and encoding only, not service authentication. All of the local runs above covered the block in an earlier form, before its three Airflow requests took the Airflow host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on the guarded block, and the Airflow guard has not been run. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
 live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
-no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
+no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED. None of the local runs recorded above covered the current closing echoes: in the latest form those runs covered, the prefect-auth, airflow-valid-token, argo-auth and origin subshells ended with an echo of `skipped or failed; continuing` that printed no status, and the airflow subshell did not exist. All five guarded subshells now end with an echo of the form `) || echo "origin: block exit $?; continuing"`, each with its own label, which keeps the reader's shell running and prints the subshell's non-zero status, such as `origin: block exit 2; continuing` after a guard refusal. The block pasted whole still reports status 0 because that echo succeeds, and no recorded bash -n, ShellCheck, stub or pseudo-terminal run covered the closing echo.
 The exception is the Flower unix-socket stat mode
 and named-ACL checks, demonstrated without a container and recorded after the block. Each names its expected
 exposed and fixed result so it discriminates against a live instance, based on the cited vendor documentation
@@ -262,7 +262,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
         -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
         -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
-) || echo 'prefect-auth: skipped or failed; continuing'
+) || echo "prefect-auth: block exit $?; continuing"
 
 # dagster-webserver 1.13.24's build_middleware() and build_graphql_middleware() add no authentication,
 # so test whether /graphql at the origin answers an anonymous query.
@@ -314,13 +314,13 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
           | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
               -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
               -H 'Content-Type: application/json' --data-binary @- "https://$1/auth/token"
-      ) || echo 'airflow-valid-token: skipped or failed; continuing'
+      ) || echo "airflow-valid-token: block exit $?; continuing"
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' "https://$1/api/v2/pools" \
         || echo 'airflow-pools-anon: exited nonzero; continuing'
       ;;
   esac
-) || echo 'airflow: skipped or failed; continuing'
+) || echo "airflow: block exit $?; continuing"
 
 # Temporal: a protected read against the frontend gRPC port. With an Authorizer and ClaimMapper configured this
 # is rejected without credentials (an mTLS deployment refuses the connection outright); a listing, even an empty
@@ -390,7 +390,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
         --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
         https://argo.internal:2746/api/v1/workflows/argo
-) || echo 'argo-auth: skipped or failed; continuing'
+) || echo "argo-auth: block exit $?; continuing"
 
 # Direct-origin reachability from an UNTRUSTED vantage (run from OUTSIDE your network). Paste the whole block and
 # substitute your origin URL inside the quotes; any HTTP response means the origin is published and is itself the
@@ -409,7 +409,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
         -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" ;;
     *) echo "give an http:// or https:// URL; not probing"; exit 2 ;;
   esac
-) || echo 'origin: skipped or failed; continuing'
+) || echo "origin: block exit $?; continuing"
 ```
 
 REASONED: preceding block; every probe in the block above, summarized here as findings, per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow running in Docker; Temporal, self-hosted security; Temporal, Web UI configuration reference; Flower configuration; and Argo anonymous fallback when server mode is enabled. It adds no probe of its own; that block's local runs are recorded in the declaration before it, and no orchestrator was available in the authoring environment to show either state. Exposed, a listing answers without a credential; fixed, the anonymous call is refused while the matched authorized call succeeds. A DAG list, flow run, task graph, repository, or worker pool that renders without a credential is a finding; so
@@ -622,7 +622,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "02d61aca6f360da61868287c376a3f8de1c31f9ad1fac2a54a5d0b91741bc29e",
+  "body_sha256": "4c6954657a6f8f950e16125138512d16ac19ab524be2a8b888ac44f7037ffcc7",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",

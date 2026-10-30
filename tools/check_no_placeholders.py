@@ -28,11 +28,12 @@ from pathlib import Path
 # Do not match a prefix of a longer token or an unsupported id suffix.
 # A sentence-ending dot is punctuation; a dot followed by an ASCII alphanumeric
 # extends an id. Underscores join identifiers only next to ASCII alphanumerics.
+# PR and version markers are runs of three or more N, so #NNNN is one marker.
 PLACEHOLDER = re.compile(
-    r"(?<![A-Za-z0-9])(?<![A-Za-z0-9]_)#NNN(?![A-Za-z0-9]|_[A-Za-z0-9])"
+    r"(?<![A-Za-z0-9])(?<![A-Za-z0-9]_)#N{3,}(?![A-Za-z0-9]|_[A-Za-z0-9])"
     r"|(?<![A-Za-z0-9.])(?<![A-Za-z0-9]_)[0-9]\.NEW(?:-[A-Z]+)?"
     r"(?![A-Za-z0-9]|-[A-Za-z0-9]|_[A-Za-z0-9]|\.[A-Za-z0-9])"
-    r"|(?<![A-Za-z0-9])(?<![A-Za-z0-9]_)[0-9]+\.[0-9]+\.NNN"
+    r"|(?<![A-Za-z0-9])(?<![A-Za-z0-9]_)[0-9]+\.[0-9]+\.N{3,}"
     r"(?![A-Za-z0-9]|_[A-Za-z0-9])"
     r"|Done in this draft"
 )

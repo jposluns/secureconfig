@@ -24494,17 +24494,17 @@ For the MySQL client:
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "supply exactly 2 values; not connecting"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "supply exactly 2 values; not connecting"; exit 2; }
   case "$1$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
       mysql --protocol=TCP --host="$1" --port=3306 --user=app -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2"
       ;;
@@ -24521,23 +24521,23 @@ The existing `batch` account's `REQUIRE X509` also needs a client certificate an
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 2; }
   case "$1$2$3$4" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
-      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "certificate must be readable"; exit 1; }
-      [ -f "$4" ] || { echo "key must be a regular file"; exit 1; }
-      [ -r "$4" ] || { echo "key must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
+      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "certificate must be readable"; exit 2; }
+      [ -f "$4" ] || { echo "key must be a regular file"; exit 2; }
+      [ -r "$4" ] || { echo "key must be readable"; exit 2; }
       mysql --protocol=TCP --host="$1" --port=3306 --user=batch -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" \
         --ssl-cert="$3" --ssl-key="$4"
@@ -24552,7 +24552,7 @@ Apply the same MariaDB client substitution when appropriate. Restrict access to 
 
 REASONED: service scope for every check in this section, from the authoring limitations recorded in this paragraph and the vendor documentation cited at each check below. Service behavior below is **REASONED, not demonstrated**. The authoring environment has a read-only filesystem, no MySQL/MariaDB client or server binaries, no Docker/Podman runtime, and no supplied writable deployment or database credentials. No available authorized environment could reproduce the exposed and fixed service states.
 
-DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
+DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. The bash -n, ShellCheck and guard-only runs recorded in this paragraph, at marking time and originally, covered the five guarded blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
 
 DEMONSTRATED: the in-memory INI parse recorded in this paragraph, re-run at marking time against both states: all five INI fragments parsed with Python 3.14.4 configparser in strict mode (`ConfigParser(strict=True)`, other arguments at their defaults). The control fragments in that marking-time re-run against both states used the same parser and options: a control fragment repeating `require_secure_transport` under `[mysqld]` was rejected with DuplicateOptionError, and a control fragment placing that option before any section header was rejected with MissingSectionHeaderError. Vendor option acceptance stays with the reasoned native checks, as stated. All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
 
@@ -24578,18 +24578,18 @@ Run the following from the application's permitted source host. Replace the prod
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRODUCT' 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "supply exactly 3 values; not connecting"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "supply exactly 3 values; not connecting"; exit 2; }
   case "$1$2$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -f "$3" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "CA must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -f "$3" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "CA must be readable"; exit 2; }
       case "$1" in
         mysql)
           mysql --protocol=TCP --host="$2" --port=3306 --user=app -p \
@@ -24617,7 +24617,7 @@ Run the following from the application's permitted source host. Replace the prod
             echo "inspect the refusal and requirements; failure alone is not a pass"
           fi
           ;;
-        *) echo "product must be mysql or mariadb"; exit 1 ;;
+        *) echo "product must be mysql or mariadb"; exit 2 ;;
       esac
       ;;
   esac
@@ -24637,23 +24637,23 @@ For the existing `batch` account, compare a connection with its valid client cer
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_HOST' 'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_CERT_FILE' 'REPLACE_WITH_CLIENT_KEY_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "supply exactly 4 values; not connecting"; exit 2; }
   case "$1$2$3$4" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 1; }
-      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 1; }
-      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 1; }
-      [ -f "$2" ] || { echo "CA must be a regular file"; exit 1; }
-      [ -r "$2" ] || { echo "CA must be readable"; exit 1; }
-      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 1; }
-      [ -r "$3" ] || { echo "certificate must be readable"; exit 1; }
-      [ -f "$4" ] || { echo "key must be a regular file"; exit 1; }
-      [ -r "$4" ] || { echo "key must be readable"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ -n "$2" ] || { echo "argument 2 is empty; not connecting"; exit 2; }
+      [ -n "$3" ] || { echo "argument 3 is empty; not connecting"; exit 2; }
+      [ -n "$4" ] || { echo "argument 4 is empty; not connecting"; exit 2; }
+      [ -f "$2" ] || { echo "CA must be a regular file"; exit 2; }
+      [ -r "$2" ] || { echo "CA must be readable"; exit 2; }
+      [ -f "$3" ] || { echo "certificate must be a regular file"; exit 2; }
+      [ -r "$3" ] || { echo "certificate must be readable"; exit 2; }
+      [ -f "$4" ] || { echo "key must be a regular file"; exit 2; }
+      [ -r "$4" ] || { echo "key must be readable"; exit 2; }
       mysql --no-defaults --no-login-paths --protocol=TCP --host="$1" --port=3306 --user=batch -p \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" \
         --ssl-cert="$3" --ssl-key="$4" --connect-timeout=5 \
@@ -24685,15 +24685,15 @@ Run on the database server, using its actual `hostname` output:
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_SERVER_HOSTNAME'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not connecting"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly 1 value; not connecting"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly 1 value; not connecting"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace every placeholder; not connecting"; exit 1 ;;
+      echo "replace every placeholder; not connecting"; exit 2 ;;
     *)
-      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 1; }
-      [ "$(hostname)" = "$1" ] || { echo "run on the named database server"; exit 1; }
+      [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
+      [ "$(hostname)" = "$1" ] || { echo "run on the named database server"; exit 2; }
       ss -tlnp
       ;;
   esac
@@ -25022,7 +25022,7 @@ Claims (full source mapping in the JSON block below):
 - verify-weak (REASONED; mysql, maria): Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin.
 - verify-reuse (REASONED; mysql, maria): After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed.
 - visibility (REASONED; mysql): SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary.
-- local-guards (DEMONSTRATED; mysql, maria): Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated.
+- local-guards (DEMONSTRATED; mysql, maria): Historical invalid-input and valid-dispatch checks tested guards only, in an earlier form whose guard refusals exited with status 1; the current form was not re-run, and no database behavior was simulated.
 - local-ini (DEMONSTRATED; mysql, maria): Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved.
 
 ````json
@@ -25030,7 +25030,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "304ca71ddf0b6dbae6ada9c057d9e3ebb7cfb3dc988899f92b89dd1a7213fdc6",
+  "body_sha256": "114343102b74ab877f9c1c7cbd7167e95f792e65940b053cc8146dce10fbcb17",
   "components": {
     "mysql": {
       "name": "MySQL reference",
@@ -25231,7 +25231,7 @@ Claims (full source mapping in the JSON block below):
     "verify-weak": {"text": "Weak password accepted without validation must be rejected with validation while a fresh compliant password succeeds under the same auth plugin.", "components": ["mysql", "maria"], "sources": ["mysql:sd3caefce406e", "maria:s9e17c3adbc4f", "maria:s1e467414669c"], "status": "REASONED"},
     "verify-reuse": {"text": "After two compliant passwords, reuse of the first must fail only with recorded protection; a third fresh password must succeed.", "components": ["mysql", "maria"], "sources": ["mysql:sf95e18b15977", "maria:sf9fb4aa4058e"], "status": "REASONED"},
     "visibility": {"text": "SHOW DATABASES visibility follows privileges and can broaden through global grants; hiding names is not an access boundary.", "components": ["mysql"], "sources": ["mysql:s72c17cae9130"], "status": "REASONED"},
-    "local-guards": {"text": "Historical invalid-input and valid-dispatch checks tested guards only; no database behavior was simulated.", "components": ["mysql", "maria"], "sources": ["mysql:s156681123604", "maria:s368aa92bc449"], "status": "DEMONSTRATED", "evidence": "Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated."},
+    "local-guards": {"text": "Historical invalid-input and valid-dispatch checks tested guards only, in an earlier form whose guard refusals exited with status 1; the current form was not re-run, and no database behavior was simulated.", "components": ["mysql", "maria"], "sources": ["mysql:s156681123604", "maria:s368aa92bc449"], "status": "DEMONSTRATED", "evidence": "Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated."},
     "local-ini": {"text": "Historical in-memory INI parsing checked structure only; native configuration acceptance and restart behavior remain unobserved.", "components": ["mysql", "maria"], "sources": ["mysql:s58e2db31fec2", "maria:sa80a8ed71629"], "status": "DEMONSTRATED", "evidence": "All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance."}
   }
 }
@@ -25558,7 +25558,7 @@ ss -tlnp
 
 Read every relevant listener. The exposed state includes an unintended wildcard or public listener. The fixed state listens only on loopback or deliberately selected private addresses. Check the actual configured ports, including any non-default ports, and inspect firewall rules separately. A private listener alone does not prove remote firewall behavior. See [network hardening](https://www.mongodb.com/docs/manual/administration/security-checklist/).
 
-### Guarded connection probes (REASONED: all five connection modes, options, substitution and paste guards; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; stub runs printed STUB_MONGOSH with the expected arguments for all five modes, while invalid values, omitted or shortened assignments and an unknown mode exited 1 with guard messages. Expected comparison: plaintext acceptance, anonymous access and missing-certificate acceptance must change as the corresponding controls are enabled; authenticated TLS remains the positive control. These deployment outcomes remain unobserved in this run, per the guide's cited mongosh connection, TLS, authentication, and password-prompt options; Bash redirection and noclobber behavior.)
+### Guarded connection probes (REASONED: all five connection modes, options, substitution and paste guards; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; stub runs printed STUB_MONGOSH with the expected arguments for all five modes, while invalid values, omitted or shortened assignments and an unknown mode exited 1 with guard messages. These runs covered an earlier form of the block, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected comparison: plaintext acceptance, anonymous access and missing-certificate acceptance must change as the corresponding controls are enabled; authenticated TLS remains the positive control. These deployment outcomes remain unobserved in this run, per the guide's cited mongosh connection, TLS, authentication, and password-prompt options; Bash redirection and noclobber behavior.)
 
 Use the whole Bash block below. Substitute inside the single quotes on its `set --` lines. Supply all six values even when a mode does not use every value. Use the real hostname covered by the server certificate and a valid application client PEM, never a cluster-member PEM.
 
@@ -25575,11 +25575,11 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_PEM' \
     'REPLACE_WITH_APP_USER' 'REPLACE_WITH_APP_DB'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || {
-    echo "paste the whole block, including set --; not probing"; exit 1;
+    echo "paste the whole block, including set --; not probing"; exit 2;
   }
   shift
   [ "$#" -eq 6 ] || {
-    echo "the set -- line needs exactly 6 values; not probing"; exit 1;
+    echo "the set -- line needs exactly 6 values; not probing"; exit 2;
   }
   check_values() {
     while [ "$#" -gt 0 ]; do
@@ -25590,7 +25590,7 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
       shift
     done
   }
-  check_values "$@" || exit 1
+  check_values "$@" || exit 2
 
   case "$1" in
     plaintext)
@@ -25612,12 +25612,12 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
     missing-certificate)
       mongosh --norc --host "$2" --port 27017 --tls \
         --tlsCAFile "$3" --eval 'db.runCommand({ping: 1})' ;;
-    *) echo "unknown mode; not probing"; exit 1 ;;
+    *) echo "unknown mode; not probing"; exit 2 ;;
   esac
 )
 ```
 
-### Plaintext versus TLS (REASONED: plaintext and authenticated TLS comparison; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; plaintext and scram dispatch printed STUB_MONGOSH with their respective arguments. Expected comparison: plaintext ping succeeds when allowed and fails under requireTLS while authenticated TLS succeeds. These deployment outcomes remain unobserved in this run, per the guide's cited Configuration-file startup and network, TLS, and security options; Connectivity probe using ping.)
+### Plaintext versus TLS (REASONED: plaintext and authenticated TLS comparison; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; plaintext and scram dispatch printed STUB_MONGOSH with their respective arguments. Those runs of the connection block covered an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected comparison: plaintext ping succeeds when allowed and fails under requireTLS while authenticated TLS succeeds. These deployment outcomes remain unobserved in this run, per the guide's cited Configuration-file startup and network, TLS, and security options; Connectivity probe using ping.)
 
 **REASONED:** no `mongod`, `mongosh`, Docker, or Podman is available.
 
@@ -25736,7 +25736,7 @@ In the exposed comparison, database-wide `readWrite` allows those operations and
 
 The command shapes and results are documented under [find](https://www.mongodb.com/docs/manual/reference/command/find/), [insert](https://www.mongodb.com/docs/manual/reference/command/insert/), [update](https://www.mongodb.com/docs/manual/reference/command/update/), and [delete](https://www.mongodb.com/docs/manual/reference/command/delete/). The required actions are documented under [privilege actions](https://www.mongodb.com/docs/manual/reference/privilege-actions/).
 
-### Authentication-source restrictions (REASONED: clientSource, serverAddress, identity inspection and positive controls; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Node.js syntax parsing exited 0 without diagnostics; scram and tls dispatch printed STUB_MONGOSH with the respective arguments; a JavaScript stub printed STUB_DB runCommand with connectionStatus. Expected comparison: authentication succeeds on both paths before restriction and only on the permitted source or listener afterward, with TLS reachability held constant. These deployment outcomes remain unobserved in this run, per the guide's cited Update users and apply authentication restrictions; Authenticated identities reported by connectionStatus.)
+### Authentication-source restrictions (REASONED: clientSource, serverAddress, identity inspection and positive controls; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Node.js syntax parsing exited 0 without diagnostics; scram and tls dispatch printed STUB_MONGOSH with the respective arguments; a JavaScript stub printed STUB_DB runCommand with connectionStatus. Those runs of the connection block covered an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected comparison: authentication succeeds on both paths before restriction and only on the permitted source or listener afterward, with TLS reachability held constant. These deployment outcomes remain unobserved in this run, per the guide's cited Update users and apply authentication restrictions; Authenticated identities reported by connectionStatus.)
 
 **REASONED:** no `mongod`, `mongosh`, Docker, or Podman, or separate permitted and excluded source hosts, is available.
 
@@ -25754,7 +25754,7 @@ db.runCommand({connectionStatus: 1});
 
 Confirm the expected application user and authentication database, then run the collection checks. Test `serverAddress` on its own: hold the permitted source, valid credentials, and client certificate constant, and connect through both an allowed listener address and a reachable listener address you will exclude. Before `serverAddress` is applied, authentication must succeed through both, which proves the excluded listener is reachable. After applying `serverAddress`, authentication must fail through the excluded listener and continue to succeed through the allowed one; MongoDB matches `serverAddress` against the address that accepted the connection. Repeating the probes through permitted listeners only would pass with `serverAddress` omitted, so it does not demonstrate the restriction, and a TLS error or timeout against the excluded listener does not either. See [source and listener address matching](https://www.mongodb.com/docs/manual/reference/method/db.updateuser/#authentication-restrictions) and [authenticated identity reporting](https://www.mongodb.com/docs/manual/reference/command/connectionstatus/).
 
-### x.509 identity and certificate requirement (REASONED: registered, unregistered and missing client certificates, identity and role controls; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, x509 and missing-certificate stub dispatch printed STUB_MONGOSH with the respective arguments; x509 passed the literal $external database; a generated local certificate returned subject=CN=probe.internal from openssl x509 -subject -nameopt RFC2253. Expected comparison: a trusted subject fails authentication before registration and succeeds afterward; missing certificates pass TLS only before mandatory-certificate enforcement. These deployment outcomes remain unobserved in this run, per the guide's cited Register and authenticate x.509 client identities; Configure TLS and client-certificate validation; mongosh connection, TLS, authentication, and password-prompt options.)
+### x.509 identity and certificate requirement (REASONED: registered, unregistered and missing client certificates, identity and role controls; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, x509 and missing-certificate stub dispatch printed STUB_MONGOSH with the respective arguments; x509 passed the literal $external database; a generated local certificate returned subject=CN=probe.internal from openssl x509 -subject -nameopt RFC2253. Those runs of the connection block covered an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected comparison: a trusted subject fails authentication before registration and succeeds afterward; missing certificates pass TLS only before mandatory-certificate enforcement. These deployment outcomes remain unobserved in this run, per the guide's cited Register and authenticate x.509 client identities; Configure TLS and client-certificate validation; mongosh connection, TLS, authentication, and password-prompt options.)
 
 **REASONED:** no `mongod`, `mongosh`, Docker, or Podman, or deployment-issued client certificates, is available.
 
@@ -25842,7 +25842,7 @@ Create a Queryable Encryption collection with an `encryptedFields` definition an
 
 | Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| Service behavior | REASONED: deployment-comparison inventory; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local Bash and JavaScript syntax checks exited 0, shell and JavaScript guard fixtures rejected unchanged placeholders, and stub dispatch tested argument construction only. The comparisons specified in this row remain unobserved, per the guide's cited sources (part 1 of 3): MongoDB security checklist and Community authentication support; Configure TLS and client-certificate validation; Create custom roles and understand their scope; Update users and apply authentication restrictions. The guide's cited sources for the same unobserved comparisons as part 1 (part 2 of 3): Register and authenticate x.509 client identities; Internal membership authentication and certificate requirements; MongoDB 8.0 Enterprise auditing; MongoDB 8.0 server parameters (auditAuthorizationSuccess, redactClientLogData). The guide's cited sources for the same unobserved comparisons as part 1 (part 3 of 3): MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure; MongoDB 8.0 client-side field level encryption; MongoDB 8.0 Queryable Encryption. REASONED from the cited MongoDB documentation; not demonstrated | On an authorized isolated deployment with MongoDB binaries, certificates, listener-inspection permission, and permitted/excluded source hosts, demonstrate (part 1 of 2): exposed versus fixed listener binding, plaintext/TLS behavior, unauthenticated collection access with a valid client certificate, collection-role allows and denials. The same demonstration on that authorized isolated deployment is to cover (part 2 of 2): user source/listener restrictions, registered/unregistered/missing client-certificate cases, membership credentials, and member/router source restrictions. Record commands, versions, responses, and positive controls. The sections 5 to 9 controls are also REASONED: on an authorized MongoDB Enterprise deployment with an audit destination, encryption keys or a KMIP endpoint, and an encryption-capable driver, additionally demonstrate (part 1 of 2): audit records for authentication and authorization events with auditAuthorizationSuccess off and on, diagnostic-log redaction of a canary value. The same demonstration on that authorized MongoDB Enterprise deployment is to cover (part 2 of 2): encrypted versus plaintext storage fixtures under local-key and KMIP configurations, and CSFLE and Queryable Encryption field ciphertext with a permitted encrypted query and a rejected plaintext write. |
+| Service behavior | REASONED: deployment-comparison inventory; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local Bash and JavaScript syntax checks exited 0, shell and JavaScript guard fixtures rejected unchanged placeholders, and stub dispatch tested argument construction only. Those runs of the connection block covered an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The comparisons specified in this row remain unobserved, per the guide's cited sources (part 1 of 3): MongoDB security checklist and Community authentication support; Configure TLS and client-certificate validation; Create custom roles and understand their scope; Update users and apply authentication restrictions. The guide's cited sources for the same unobserved comparisons as part 1 (part 2 of 3): Register and authenticate x.509 client identities; Internal membership authentication and certificate requirements; MongoDB 8.0 Enterprise auditing; MongoDB 8.0 server parameters (auditAuthorizationSuccess, redactClientLogData). The guide's cited sources for the same unobserved comparisons as part 1 (part 3 of 3): MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure; MongoDB 8.0 client-side field level encryption; MongoDB 8.0 Queryable Encryption. REASONED from the cited MongoDB documentation; not demonstrated | On an authorized isolated deployment with MongoDB binaries, certificates, listener-inspection permission, and permitted/excluded source hosts, demonstrate (part 1 of 2): exposed versus fixed listener binding, plaintext/TLS behavior, unauthenticated collection access with a valid client certificate, collection-role allows and denials. The same demonstration on that authorized isolated deployment is to cover (part 2 of 2): user source/listener restrictions, registered/unregistered/missing client-certificate cases, membership credentials, and member/router source restrictions. Record commands, versions, responses, and positive controls. The sections 5 to 9 controls are also REASONED: on an authorized MongoDB Enterprise deployment with an audit destination, encryption keys or a KMIP endpoint, and an encryption-capable driver, additionally demonstrate (part 1 of 2): audit records for authentication and authorization events with auditAuthorizationSuccess off and on, diagnostic-log redaction of a canary value. The same demonstration on that authorized MongoDB Enterprise deployment is to cover (part 2 of 2): encrypted versus plaintext storage fixtures under local-key and KMIP configurations, and CSFLE and Queryable Encryption field ciphertext with a permitted encrypted query and a rejected plaintext write. |
 
 ## 5. Enable Enterprise auditing with deliberate event coverage
 
@@ -26050,7 +26050,7 @@ Claims (full source mapping in the JSON block below):
 - x509-identity (REASONED; docs, shell): Register the exact RFC2253 subject in $external with the application role and use MONGODB-X509; without a username mongosh uses the certificate subject. TLS validation alone does not authenticate a MongoDB user.
 - x509-client-certificate (REASONED; docs): Application certificates must be current, satisfy CA requirements and contain digitalSignature and clientAuth; keep subjects and membership attributes separate from server/member certificates to avoid internal privileges.
 - x509-source (REASONED; docs): Apply source restrictions separately to the $external subject; restrictions on a SCRAM identity do not transfer to the certificate identity.
-- local-guards (DEMONSTRATED; bash, docs): Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded.
+- local-guards (DEMONSTRATED; bash, docs): Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded. The shell guard tests covered an earlier form whose refusals exited with status 1; the current form was not re-run.
 - verify-listeners (REASONED; docs): Inspect all database/router listeners and configured ports; unintended wildcard/public binds are exposed. Private binds require separate firewall checks; the recorded netlink refusal establishes nothing about listeners.
 - verify-dispatch (REASONED; shell, bash): Use the whole guarded six-value connection block, real certificate hostname and application PEM; --norc prevents shell startup authentication. Guards assume normal Bash builtins and cannot distinguish inherited exact marker/count arguments.
 - verify-plaintext (REASONED; docs, shell): Plaintext ping succeeds when plaintext is accepted and must fail under requireTLS while a same-endpoint authenticated TLS control succeeds; timeout/refusal alone is inconclusive and ping does not prove authorization.
@@ -26102,7 +26102,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "90baf221c6abcb60fcc7c572518e792918b2a7b56644d8271cc900c74b58b523",
+  "body_sha256": "6e261f19e17f8c67b4d035b60d5136fa4e204bfa582d36bd7675c81729222b93",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
@@ -26241,7 +26241,7 @@ Claims (full source mapping in the JSON block below):
     "x509-identity": {"text": "Register the exact RFC2253 subject in $external with the application role and use MONGODB-X509; without a username mongosh uses the certificate subject. TLS validation alone does not authenticate a MongoDB user.", "components": ["docs", "shell"], "sources": ["docs:s85f35d70e6ed", "shell:s5ed633d4d270"], "status": "REASONED"},
     "x509-client-certificate": {"text": "Application certificates must be current, satisfy CA requirements and contain digitalSignature and clientAuth; keep subjects and membership attributes separate from server/member certificates to avoid internal privileges.", "components": ["docs"], "sources": ["docs:s0b650ef2f8d8"], "status": "REASONED"},
     "x509-source": {"text": "Apply source restrictions separately to the $external subject; restrictions on a SCRAM identity do not transfer to the certificate identity.", "components": ["docs"], "sources": ["docs:s6a592c920ac2", "docs:s85f35d70e6ed"], "status": "REASONED"},
-    "local-guards": {"text": "Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded.", "components": ["bash", "docs"], "sources": ["bash:s9900e479e21e", "docs:sb59a2357999d"], "status": "DEMONSTRATED", "evidence": "Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access."},
+    "local-guards": {"text": "Recorded local placeholder and JavaScript guard tests rejected invalid inputs before database access; shell argument tracing did not verify MongoDB behavior. Tool versions are unrecorded. The shell guard tests covered an earlier form whose refusals exited with status 1; the current form was not re-run.", "components": ["bash", "docs"], "sources": ["bash:s9900e479e21e", "docs:sb59a2357999d"], "status": "DEMONSTRATED", "evidence": "Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access."},
     "verify-listeners": {"text": "Inspect all database/router listeners and configured ports; unintended wildcard/public binds are exposed. Private binds require separate firewall checks; the recorded netlink refusal establishes nothing about listeners.", "components": ["docs"], "sources": ["docs:s8c3f376f412d", "docs:s22791f6f25b1"], "status": "REASONED", "verify": [1]},
     "verify-dispatch": {"text": "Use the whole guarded six-value connection block, real certificate hostname and application PEM; --norc prevents shell startup authentication. Guards assume normal Bash builtins and cannot distinguish inherited exact marker/count arguments.", "components": ["shell", "bash"], "sources": ["shell:s5ed633d4d270", "bash:s9900e479e21e"], "status": "REASONED", "verify": [2]},
     "verify-plaintext": {"text": "Plaintext ping succeeds when plaintext is accepted and must fail under requireTLS while a same-endpoint authenticated TLS control succeeds; timeout/refusal alone is inconclusive and ping does not prove authorization.", "components": ["docs", "shell"], "sources": ["docs:s22791f6f25b1", "docs:seee0e2f961d6", "shell:s5ed633d4d270"], "status": "REASONED", "verify": [2]},
@@ -30084,7 +30084,7 @@ Run this in a private directory, using a new output pathname:
 ( umask 077
   if [ -e ./definitions.redacted.json ] || [ -L ./definitions.redacted.json ]; then
     echo "choose a new export pathname; refusing to overwrite"
-    exit 1
+    exit 2
   fi
   rabbitmqadmin --config "$HOME/.rabbitmqadmin.conf" --node secureconfig \
     --use-tls --tls-ca-cert-file /etc/rabbitmq/tls/ca.pem \
@@ -30168,7 +30168,7 @@ The Erlang cookie is a shared secret granting powerful node and CLI access. On t
 
 Restart the node through your deployment's service manager after applying listener configuration, including the separate epmd lifecycle change where needed.
 
-## 5. Verify (REASONED: all checks 1-9, their fences, instructions, expected outcomes and authoring-record tables in this section; a live RabbitMQ stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No live exposed/fixed broker, external vantage, allowed administration/application/cluster peers, matching cookies, broker logs or multi-node TLS comparison was established. Per the guide's cited sources this declaration lists in four parts, the exposed and fixed outcomes are those stated at each step. The guide's cited sources this declaration lists (1 of 4): RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions; RabbitMQ virtual hosts and logical isolation; RabbitMQ CLI user, vhost, permission, and tag commands; RabbitMQ management listeners, HTTPS, and roles. The guide's cited sources this declaration lists (2 of 4): RabbitMQ HTTP API authentication and endpoints; RabbitMQ TLS, peer verification, certificate usage, and verification depth; RabbitMQ networking, epmd lifecycle, private bindings, and distribution ports; RabbitMQ diagnostics, remote node selection, and authenticated ping. The guide's cited sources this declaration lists (3 of 4): RabbitMQ CLI authentication and Erlang cookie handling; RabbitMQ definitions imports, sensitive exports, and export transformations; RabbitMQ administration CLI v2 configuration and TLS flags; RabbitMQ inter-node TLS (distribution over TLS); Erlang/OTP 27 distribution over TLS; RabbitMQ queues, durability, and exclusive queue behaviour. The guide's cited sources this declaration lists (4 of 4): RabbitMQ channel exceptions and access-refused errors; Pika TLS context and client certificate example; Pika connection parameters; Pika blocking connection and channel methods; Pika authentication and authorization exceptions; curl password prompts, TLS validation, and diagnostic flags. The exposed and fixed outcomes (1 of 2) per the guide's cited sources this declaration lists: excessive grants and forbidden connections versus scoped grants and denied connections with successful authorized controls; wildcard or public listeners and broad cookie modes versus private bindings and owner-only cookies. The exposed and fixed outcomes (2 of 2) per the guide's cited sources this declaration lists: optional versus required client certificates; unwanted versus approved definitions; plaintext versus authenticated TLS distribution; unrestricted versus tenant-scoped topic operations. Marking review ran 19 Bash blocks through bash -n and ShellCheck 0.11.0 with no findings, and an SC2086 canary produced its expected diagnostic. Stub-only Verify execution exercised argument dispatch and 32 guard refusals under bash -u, printing the corresponding refusal without external commands; valid substitutions reached only stubs. Both embedded Python programs parsed; the TOML example and four INI key/value structures parsed, without native schema validation. The reduced-export overwrite guard reached a stub for an absent path and refused both an existing file and a dangling symlink. Seven reduced-export JSON fixtures printed the empty-sections success, not a definitions object, or review required for each of the five nonempty sections. These local results do not demonstrate broker behaviour. Native RabbitMQ configuration parsing was not run in the October 2026 marking review and remains an open gap. All original absence statements and local-check counts below are historical authoring records, not new host observations; the original test receipts were not reauthenticated.)
+## 5. Verify (REASONED: all checks 1-9, their fences, instructions, expected outcomes and authoring-record tables in this section; a live RabbitMQ stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No live exposed/fixed broker, external vantage, allowed administration/application/cluster peers, matching cookies, broker logs or multi-node TLS comparison was established. Per the guide's cited sources this declaration lists in four parts, the exposed and fixed outcomes are those stated at each step. The guide's cited sources this declaration lists (1 of 4): RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions; RabbitMQ virtual hosts and logical isolation; RabbitMQ CLI user, vhost, permission, and tag commands; RabbitMQ management listeners, HTTPS, and roles. The guide's cited sources this declaration lists (2 of 4): RabbitMQ HTTP API authentication and endpoints; RabbitMQ TLS, peer verification, certificate usage, and verification depth; RabbitMQ networking, epmd lifecycle, private bindings, and distribution ports; RabbitMQ diagnostics, remote node selection, and authenticated ping. The guide's cited sources this declaration lists (3 of 4): RabbitMQ CLI authentication and Erlang cookie handling; RabbitMQ definitions imports, sensitive exports, and export transformations; RabbitMQ administration CLI v2 configuration and TLS flags; RabbitMQ inter-node TLS (distribution over TLS); Erlang/OTP 27 distribution over TLS; RabbitMQ queues, durability, and exclusive queue behaviour. The guide's cited sources this declaration lists (4 of 4): RabbitMQ channel exceptions and access-refused errors; Pika TLS context and client certificate example; Pika connection parameters; Pika blocking connection and channel methods; Pika authentication and authorization exceptions; curl password prompts, TLS validation, and diagnostic flags. The exposed and fixed outcomes (1 of 2) per the guide's cited sources this declaration lists: excessive grants and forbidden connections versus scoped grants and denied connections with successful authorized controls; wildcard or public listeners and broad cookie modes versus private bindings and owner-only cookies. The exposed and fixed outcomes (2 of 2) per the guide's cited sources this declaration lists: optional versus required client certificates; unwanted versus approved definitions; plaintext versus authenticated TLS distribution; unrestricted versus tenant-scoped topic operations. Marking review ran 19 Bash blocks through bash -n and ShellCheck 0.11.0 with no findings, and an SC2086 canary produced its expected diagnostic. Stub-only Verify execution exercised argument dispatch and 32 guard refusals under bash -u, printing the corresponding refusal without external commands; valid substitutions reached only stubs. Both embedded Python programs parsed; the TOML example and four INI key/value structures parsed, without native schema validation. The reduced-export overwrite guard reached a stub for an absent path and refused both an existing file and a dangling symlink. The bash -n, ShellCheck and stub runs recorded here covered the section 1 reduced-export block and the guarded blocks of checks 3 to 6 in an earlier form, whose overwrite and placeholder refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Seven reduced-export JSON fixtures printed the empty-sections success, not a definitions object, or review required for each of the five nonempty sections. These local results do not demonstrate broker behaviour. Native RabbitMQ configuration parsing was not run in the October 2026 marking review and remains an open gap. All original absence statements and local-check counts below are historical authoring records, not new host observations; the original test receipts were not reauthenticated.)
 
 Historical authoring record: service behaviour was not demonstrated in the authoring environment. The original review recorded the nine service checks below as REASONED: RabbitMQ/Erlang binaries, `rabbitmqadmin`, Pika, Docker, and Podman were absent, and no broker or external peer test environment was supplied; this marking review does not reassert those historical host observations. Expected service outcomes remain REASONED from the Sources entries named in the section declaration.
 
@@ -30212,7 +30212,7 @@ From an external non-peer host, target the broker's public address:
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 public address; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the public address; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the public address; not probing"; exit 2 ;;
     *)
       for p in 4369 25672 15672 15671 5671; do
         nc -vz -w 5 "$1" "$p"
@@ -30234,7 +30234,7 @@ From hosts allowed by the corresponding firewall rules, target the private addre
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 private address; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the private address; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the private address; not probing"; exit 2 ;;
     *)
       # Run from an allowed cluster/CLI host.
       for p in 4369 25672; do nc -vz -w 5 "$1" "$p"; done
@@ -30259,7 +30259,7 @@ From an allowed CLI host with its owner-only matching cookie file, also require 
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 node name; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the broker node name; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the broker node name; not probing"; exit 2 ;;
     *)
       sudo rabbitmq-diagnostics -n "$1" ping
     ;;
@@ -30291,7 +30291,7 @@ For removed plaintext AMQP, first demonstrate a connection to its old listener i
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 hostname; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the management hostname; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the management hostname; not probing"; exit 2 ;;
     *)
 
       # Username only: curl prompts for the password.
@@ -30332,7 +30332,7 @@ An exposed management listener can still require authentication: external reacha
   shift
   [ "$#" -eq 1 ] || { echo "need exactly 1 hostname; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the AMQP hostname; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the AMQP hostname; not probing"; exit 2 ;;
     *)
 
       # Keep stdin open to allow a delayed TLS rejection to arrive.
@@ -30373,10 +30373,10 @@ The positive control declares, binds, publishes, and retrieves a message as `app
   shift
   [ "$#" -eq 2 ] || { echo "need hostname and existing ungranted vhost; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the AMQP hostname; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the AMQP hostname; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|"") echo "substitute the ungranted vhost; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|"") echo "substitute the ungranted vhost; not probing"; exit 2 ;;
         *)
           python3 - "$1" "$2" <<'PY'
 import getpass
@@ -30540,8 +30540,8 @@ Local authoring checks, completed without a broker:
 
 | Check | Observed result |
 |---|---|
-| Bash parsing and ShellCheck | All runnable Bash blocks passed `bash -n` and ShellCheck 0.11.0; an intentional SC2086 canary confirmed that lint diagnostics were active. |
-| Placeholder guards | 32 cases stopped locally under `bash -u`: unreplaced values, each empty value, embedded `REPLACE_WITH_*`, marker-only assignment, and omitted assignment with inherited non-marker arguments. |
+| Bash parsing and ShellCheck | All runnable Bash blocks passed `bash -n` and ShellCheck 0.11.0; an intentional SC2086 canary confirmed that lint diagnostics were active. These runs covered the section 1 reduced-export block and the guarded blocks of checks 3 to 6 in an earlier form, whose overwrite and placeholder refusals exited with status 1, and were not re-run on the current form. |
+| Placeholder guards | 32 cases stopped locally under `bash -u`: unreplaced values, each empty value, embedded `REPLACE_WITH_*`, marker-only assignment, and omitted assignment with inherited non-marker arguments. These cases ran against an earlier form, whose placeholder refusals exited with status 1; none was re-run on the current form, whose placeholder refusals exit with status 2. |
 | TOML | The example parsed with Python `tomllib`. |
 | Embedded Python | Both programs passed Python syntax parsing. |
 | RabbitMQ configuration | Key/value structure checked locally and settings traced to current vendor docs; native configuration/schema parsing remains unconfirmed because RabbitMQ and Erlang were absent at authoring. |
@@ -30713,7 +30713,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0ad631b2caa2abb9f0722b358fa7995ec6f08d74a2ad32d72ab13d4dec392106",
+  "body_sha256": "a4c2141cce5d073507d891f1fa3bdf5ef1ed43dc7c2ab8ccbe9a2ebad73d62e7",
   "components": {
     "source": {
       "name": "RabbitMQ source",
@@ -41751,9 +41751,9 @@ Add C4's explicit origin only if required, and remove inherited unwanted origins
 
 REASONED: service-comparison scope from the cited v0.34.2 sources; no authorized live deployment or external observer. No service was started or contacted for these checks. All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
 
-REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
+REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. The fresh bash -n and ShellCheck run and the historical guard-only tests covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
 
-REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
+REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. Those runs covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The V6 arms that stop when the result directory cannot be created or protected are not guard refusals and still exit with status 1. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
 
 REASONED: comparison procedure from the cited service and proxy sources; isolated exposed/fixed deployments, identities and observers are unavailable. Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
 
@@ -41764,12 +41764,12 @@ REASONED: comparison procedure from the cited service and proxy sources; isolate
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'ollama.service' 'REPLACE_WITH_CONTAINER_NAME_OR_NONE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not inspecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not inspecting"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "supply unit and container name or NONE"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "supply unit and container name or NONE"; exit 2; }
   case "$1|$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:space:]]*)
-      echo "replace both values; not inspecting"; exit 1 ;;
+      echo "replace both values; not inspecting"; exit 2 ;;
     *)
       systemctl cat -- "$1"
       systemctl show --property=User,Group,UMask,Environment,MainPID -- "$1"
@@ -41801,12 +41801,12 @@ Expected behavior follows C1's [Docker publication reference](https://docs.docke
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|*'<'*|*'>'*|*example.com*|""|*@*|*/*|*\?*|*\#*|*[[:space:]]*|203.0.113.*|198.51.100.*|192.0.2.*|*2001:db8*)
-      echo "supply the real deployment address; not probing"; exit 1 ;;
+      echo "supply the real deployment address; not probing"; exit 2 ;;
     *)
       curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -41872,33 +41872,33 @@ The following reusable probe reads the client configuration on stdin, keeping cr
 (
   set +x
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'POST' 'REPLACE_WITH_BODY_FILE_OR_DEV_NULL' 'REPLACE_WITH_CURL_CONFIG_FILE' 'application/json'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 5 ] || { echo "supply URL, method, body file, client config, and content type"; exit 1; }
+  [ "$#" -eq 5 ] || { echo "supply URL, method, body file, client config, and content type"; exit 2; }
   case "$1|$2|$3|$4|$5" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:cntrl:]]*)
-      echo "replace every value; not probing"; exit 1 ;;
+      echo "replace every value; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 1 ;;
+        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 2 ;;
         https://*|http://127.0.0.1:11434/*|http://localhost:11434/*) ;;
-        *) echo "use HTTPS, or the administrative loopback endpoint"; exit 1 ;;
+        *) echo "use HTTPS, or the administrative loopback endpoint"; exit 2 ;;
       esac
       case "$2" in
         GET|HEAD|OPTIONS)
-          [ "$3" = /dev/null ] || { echo "use /dev/null for this method"; exit 1; } ;;
+          [ "$3" = /dev/null ] || { echo "use /dev/null for this method"; exit 2; } ;;
         POST|DELETE) ;;
-        *) echo "unsupported test method"; exit 1 ;;
+        *) echo "unsupported test method"; exit 2 ;;
       esac
       case "$5" in
         application/json|application/octet-stream) ;;
-        *) echo "choose the fixture content type"; exit 1 ;;
+        *) echo "choose the fixture content type"; exit 2 ;;
       esac
-      [ -r "$3" ] || { echo "body file is unreadable"; exit 1; }
-      [ -r "$4" ] || { echo "client config is unreadable"; exit 1; }
+      [ -r "$3" ] || { echo "body file is unreadable"; exit 2; }
+      [ -r "$4" ] || { echo "client config is unreadable"; exit 2; }
       case "$(< "$4")" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-          echo "replace placeholders in the client config; not probing"; exit 1 ;;
+          echo "replace placeholders in the client config; not probing"; exit 2 ;;
       esac
       case "$2" in
         HEAD) set -- "$4" --head --url "$1" ;;
@@ -41987,23 +41987,23 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 (
   set +x
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_CHAT_URL' 'REPLACE_WITH_CHAT_BODY_FILE' 'REPLACE_WITH_CURL_CONFIG_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "supply URL, body file, and client config"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "supply URL, body file, and client config"; exit 2; }
   case "$1|$2|$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:cntrl:]]*)
-      echo "replace every value; not probing"; exit 1 ;;
+      echo "replace every value; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 1 ;;
+        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 2 ;;
         https://*/api/chat) ;;
-        *) echo "use the HTTPS chat URL"; exit 1 ;;
+        *) echo "use the HTTPS chat URL"; exit 2 ;;
       esac
-      [ -r "$2" ] || { echo "body file is unreadable"; exit 1; }
-      [ -r "$3" ] || { echo "client config is unreadable"; exit 1; }
+      [ -r "$2" ] || { echo "body file is unreadable"; exit 2; }
+      [ -r "$3" ] || { echo "client config is unreadable"; exit 2; }
       case "$(< "$3")" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-          echo "replace placeholders in the client config; not probing"; exit 1 ;;
+          echo "replace placeholders in the client config; not probing"; exit 2 ;;
       esac
       ollama_probe_dir=$(mktemp -d) || { echo "cannot create result directory"; exit 1; }
       chmod 700 "$ollama_probe_dir" || { echo "cannot protect results"; exit 1; }
@@ -42461,7 +42461,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "3b96351b23d24a17e9deef1a0a8e32768456d048ea2466d43dd7f6c4901e0a1f",
+  "body_sha256": "3e9cfc601c839facec9bc660caa3d2fbc41b0f12d0ab422318fb537160afa53d",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -51522,15 +51522,15 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 ## Verify
 
-REASONED: Verify overview and the historical run record, per the guide's cited SearxNG server settings, LocalAI getting started, Text Embeddings Inference CLI arguments, LangServe README at commit `27e57af`, Mem0 REST API, Onyx basic authentication, Docker packet filtering and firewalls, Docker Compose ps, curl manual and GNU grep 3.12 manual, exit status (checked October 2026). The GNU manual documents statuses 0 for a selected line, 1 for no selected lines and 2 for an error; the house runs observed statuses in Bash, dash and BusyBox ash and did not record which grep implementation or version ran. In local marking review (October 2026, Bash 5.3.9), bash -n and ShellCheck 0.11.0 on check 1 exited 0 without output; a placeholder fixture was recorded with `grep_exit=0`, a clean fixture printed `grep_exit=1`, and a missing fixture printed `grep_exit=2`. Bash, dash and BusyBox ash, with and without `set -u`, printed the token and `grep_exit=0` for the exposed fixture and `grep_exit=1` for the fixed fixture. Check 2 bash -n and ShellCheck 0.11.0 exited 0 without output; stub ss printed `-tlnp`, and stub docker printed `compose config` and `compose ps --format json`. In dash and BusyBox ash, checks 6 and 7 printed `run this block in bash; not probing` with and without exported `BASH_VERSION`, with trap diagnostics on stderr and no curl stub call. Stubbed checks 3 to 7 printed `not probing` for empty or placeholder values and `STUB curl` or `STUB nc` for substituted values. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expected exposed outcomes are an anonymous protected response or a reachable direct port; fixed outcomes are anonymous rejection or direct refusal, with application output through a configured authorized ingress when valid credentials are used. Bash check 1 wrong-marker and short-count fixtures printed `paste the whole block, including its set -- line; not checking` and `the set -- line needs exactly 1 value; not checking`; its filename-placeholder fixture printed `substitute the file name on the set -- line above; not checking` and exited 1. A direct grep of a fixture printed `<fixture path>:2:REPLACE_WITH_TOKEN`. These local runs establish guard and placeholder-scan behaviour only; none establishes live service behaviour. An external vantage, TLS exchange, configured authorized ingress and valid credentials were not tested; their availability is unknown, so the positive control remains an expectation, not an observation. **Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Check 7's five-value guard, changed in #475, was exercised in `bash` on 2026-10-13 (UTC) against a stub curl: one and two headers reached curl only on stdin, and a line feed, carriage return or placeholder in either header was refused before any curl call; it was not re-run in `dash` or BusyBox `ash`. Check 6's slice guard, added in #478, was exercised on 2026-10-13 (UTC) against a stub curl: `bash` reached the stub unchanged, and `dash` and BusyBox `ash` printed "run this block in bash; not probing" before any curl call, with and without `BASH_VERSION` exported; in those shells checks 6 and 7 now stop at that guard before their placeholder guards run. Every bash -n, ShellCheck, fixture and stub run recorded in this overview for checks 1 and 3 to 7 covered an earlier form of those blocks, in which every guard refusal ended with status 0 except the placeholder refusals of checks 1 and 3, which exit with status 1; none was re-run on the current form, in which the refusals that ended with status 0 exit with status 2. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. Historical authoring note: the authoring environment had no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
+REASONED: Verify overview and the historical run record, per the guide's cited SearxNG server settings, LocalAI getting started, Text Embeddings Inference CLI arguments, LangServe README at commit `27e57af`, Mem0 REST API, Onyx basic authentication, Docker packet filtering and firewalls, Docker Compose ps, curl manual and GNU grep 3.12 manual, exit status (checked October 2026). The GNU manual documents statuses 0 for a selected line, 1 for no selected lines and 2 for an error; the house runs observed statuses in Bash, dash and BusyBox ash and did not record which grep implementation or version ran. In local marking review (October 2026, Bash 5.3.9), bash -n and ShellCheck 0.11.0 on check 1 exited 0 without output; a placeholder fixture was recorded with `grep_exit=0`, a clean fixture printed `grep_exit=1`, and a missing fixture printed `grep_exit=2`. Bash, dash and BusyBox ash, with and without `set -u`, printed the token and `grep_exit=0` for the exposed fixture and `grep_exit=1` for the fixed fixture. Check 2 bash -n and ShellCheck 0.11.0 exited 0 without output; stub ss printed `-tlnp`, and stub docker printed `compose config` and `compose ps --format json`. In dash and BusyBox ash, checks 6 and 7 printed `run this block in bash; not probing` with and without exported `BASH_VERSION`, with trap diagnostics on stderr and no curl stub call. Stubbed checks 3 to 7 printed `not probing` for empty or placeholder values and `STUB curl` or `STUB nc` for substituted values. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expected exposed outcomes are an anonymous protected response or a reachable direct port; fixed outcomes are anonymous rejection or direct refusal, with application output through a configured authorized ingress when valid credentials are used. Bash check 1 wrong-marker and short-count fixtures printed `paste the whole block, including its set -- line; not checking` and `the set -- line needs exactly 1 value; not checking`; its filename-placeholder fixture printed `substitute the file name on the set -- line above; not checking` and exited 1. A direct grep of a fixture printed `<fixture path>:2:REPLACE_WITH_TOKEN`. These local runs establish guard and placeholder-scan behaviour only; none establishes live service behaviour. An external vantage, TLS exchange, configured authorized ingress and valid credentials were not tested; their availability is unknown, so the positive control remains an expectation, not an observation. **Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Check 7's five-value guard, changed in #475, was exercised in `bash` on 2026-10-13 (UTC) against a stub curl: one and two headers reached curl only on stdin, and a line feed, carriage return or placeholder in either header was refused before any curl call; it was not re-run in `dash` or BusyBox `ash`. Check 6's slice guard, added in #478, was exercised on 2026-10-13 (UTC) against a stub curl: `bash` reached the stub unchanged, and `dash` and BusyBox `ash` printed "run this block in bash; not probing" before any curl call, with and without `BASH_VERSION` exported; in those shells checks 6 and 7 now stop at that guard before their placeholder guards run. Every bash -n, ShellCheck, fixture and stub run recorded in this overview for checks 1 and 3 to 7 covered an earlier form of those blocks, in which every guard refusal ended with status 0 except the placeholder refusals of checks 1 and 3, which exited with status 1; none was re-run on the current form, in which every guard refusal exits with status 2. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. Historical authoring note: the authoring environment had no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
 
-REASONED: Complete-block copy and guard guidance, per the guide's cited curl manual and Docker packet filtering and firewalls. In local marking review (October 2026, Bash 5.3.9), the single-quoted `$(printf SHOULD_NOT_RUN)` value appeared literally in the stub curl URL; the empty, placeholder, wrong-marker and short-count cases in checks 3 to 7 printed `not probing` before any stub call, while substituted values printed `STUB curl` or `STUB nc`. The stub runs recorded here covered checks 3 to 7 in an earlier form, in which every guard refusal ended with status 0 except the check 3 placeholder refusal, which exits with status 1; none was re-run on the current form, in which the refusals that ended with status 0 exit with status 2. The run did not test a deployed service or a pasted fragment below the guard. An external vantage, TLS exchange, configured authorized ingress and valid credentials were not tested; their availability is unknown. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. An exposed direct port is expected to answer, while a fixed direct port is expected to refuse; the authorized ingress control requires a configured route and valid credentials and was not run. Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line, and the guard lines below check that marker and count the values, so a fragment that keeps those lines but drops or shortens the `set --` line stops instead of running on whatever arguments your own shell already held. A fragment pasted from below the guard lines is not guarded at all, which is why the instruction is to paste whole blocks. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
+REASONED: Complete-block copy and guard guidance, per the guide's cited curl manual and Docker packet filtering and firewalls. In local marking review (October 2026, Bash 5.3.9), the single-quoted `$(printf SHOULD_NOT_RUN)` value appeared literally in the stub curl URL; the empty, placeholder, wrong-marker and short-count cases in checks 3 to 7 printed `not probing` before any stub call, while substituted values printed `STUB curl` or `STUB nc`. The stub runs recorded here covered checks 3 to 7 in an earlier form, in which every guard refusal ended with status 0 except the check 3 placeholder refusal, which exited with status 1; none was re-run on the current form, in which every guard refusal exits with status 2. The run did not test a deployed service or a pasted fragment below the guard. An external vantage, TLS exchange, configured authorized ingress and valid credentials were not tested; their availability is unknown. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. An exposed direct port is expected to answer, while a fixed direct port is expected to refuse; the authorized ingress control requires a configured route and valid credentials and was not run. Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line, and the guard lines below check that marker and count the values, so a fragment that keeps those lines but drops or shortens the `set --` line stops instead of running on whatever arguments your own shell already held. A fragment pasted from below the guard lines is not guarded at all, which is why the instruction is to paste whole blocks. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
 
 ### 1. Reject unfinished configuration and probe values
 
-REASONED: For each configuration or environment file you edited, the expected matched, clean and error statuses follow GNU grep 3.12 manual, exit status (checked October 2026); the local marking review (October 2026, Bash 5.3.9) recorded the check 1 fixture outputs in the Verify overview. The recorded runs used an earlier form of check 1, whose marker and count refusals ended with status 0; the current form, whose marker and count refusals exit with status 2, has not been run. The cited manual documents GNU grep; the house runs did not record which grep implementation or version ran. Any other status (2 in GNU grep; greater than 2 in other implementations, per the same entry) is inconclusive. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Run this for each configuration or environment file you edited:
+REASONED: For each configuration or environment file you edited, the expected matched, clean and error statuses follow GNU grep 3.12 manual, exit status (checked October 2026); the local marking review (October 2026, Bash 5.3.9) recorded the check 1 fixture outputs in the Verify overview. The recorded runs used an earlier form of check 1, whose marker and count refusals ended with status 0 and whose filename-placeholder refusal exited with status 1; the current form, whose guard refusals all exit with status 2, has not been run. The cited manual documents GNU grep; the house runs did not record which grep implementation or version ran. Any other status (2 in GNU grep; greater than 2 in other implementations, per the same entry) is inconclusive. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Run this for each configuration or environment file you edited:
 
-DEMONSTRATED: following block; placeholder-scan expectations follow GNU grep 3.12 manual, exit status (checked October 2026), and the recorded local exercise. Local marking review (October 2026, Bash 5.3.9) output is recorded in the Verify overview; the grep version in those house runs remains unknown. In a renewed local marking review (October 2026), Bash 5.3.9, dash and BusyBox ash 1.37.0 ran the whole block against a stub grep and fixtures. In each shell, wrong-marker and missing-set-line cases printed `paste the whole block, including its set -- line; not checking` and exited 0; short-count and long-count cases printed `the set -- line needs exactly 1 value; not checking` and exited 0; placeholder and empty filename cases printed `substitute the file name on the set -- line above; not checking` and exited 1. The renewed runs covered check 1 in an earlier form, whose marker and count refusals ended with status 0; none was re-run on the current form, whose marker and count refusals exit with status 2. In each shell, the exposed fixture printed `exposed.conf:2:REPLACE_WITH_TOKEN` then `grep_exit=0` and exited 0; the clean fixture printed only `grep_exit=1` and exited 0; the missing-file fixture printed `grep: missing.conf: No such file or directory` then `grep_exit=2` and exited 0. The stub supplied the grep outputs and statuses; these renewed runs establish shell control flow, while the earlier recorded fixture runs establish the exposed and clean scan observations in all three shells and the missing-file status in Bash.
+DEMONSTRATED: following block; placeholder-scan expectations follow GNU grep 3.12 manual, exit status (checked October 2026), and the recorded local exercise. Local marking review (October 2026, Bash 5.3.9) output is recorded in the Verify overview; the grep version in those house runs remains unknown. In a renewed local marking review (October 2026), Bash 5.3.9, dash and BusyBox ash 1.37.0 ran the whole block against a stub grep and fixtures. In each shell, wrong-marker and missing-set-line cases printed `paste the whole block, including its set -- line; not checking` and exited 0; short-count and long-count cases printed `the set -- line needs exactly 1 value; not checking` and exited 0; placeholder and empty filename cases printed `substitute the file name on the set -- line above; not checking` and exited 1. The renewed runs covered check 1 in an earlier form, whose marker and count refusals ended with status 0 and whose filename-placeholder refusal exited with status 1; none was re-run on the current form, whose guard refusals all exit with status 2. In each shell, the exposed fixture printed `exposed.conf:2:REPLACE_WITH_TOKEN` then `grep_exit=0` and exited 0; the clean fixture printed only `grep_exit=1` and exited 0; the missing-file fixture printed `grep: missing.conf: No such file or directory` then `grep_exit=2` and exited 0. The stub supplied the grep outputs and statuses; these renewed runs establish shell control flow, while the earlier recorded fixture runs establish the exposed and clean scan observations in all three shells and the missing-file status in Bash.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -51539,18 +51539,18 @@ DEMONSTRATED: following block; placeholder-scan expectations follow GNU grep 3.1
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking"; exit 2 ;;
     *) if grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"; then grep_rc=0; else grep_rc=$?; fi
        printf 'grep_exit=%s\n' "$grep_rc" ;;
   esac
 )
 ```
 
-DEMONSTRATED: Check 1 exposed fixture and unchanged filename guard, per the recorded local marking review (October 2026, Bash 5.3.9) in the Verify overview and renewed local marking review (October 2026, Bash 5.3.9, dash and BusyBox ash 1.37.0) (stub grep; shell control flow only): Bash, dash and BusyBox ash each printed the token and `grep_exit=0` for an exposed fixture. The same local marking reviews (stub grep; shell control flow only) record that a direct grep of a fixture printed `<fixture path>:2:REPLACE_WITH_TOKEN`; the filename and line in dash and BusyBox ash came only from the stub grep. The same local marking reviews (stub grep; shell control flow only) record that Bash, dash and BusyBox ash each printed `substitute the file name on the set -- line above; not checking` for the unchanged filename. The recorded runs used an earlier form of check 1, whose marker and count refusals ended with status 0; the current form, whose marker and count refusals exit with status 2, has not been run. GNU grep 3.12 manual, exit status (checked October 2026) documents the match status. The house runs did not record which grep implementation or version ran. **Broken:** unresolved values print their filename, line number, and placeholder token, followed by `grep_exit=0`. Stop and replace them. An unchanged filename placeholder prints `substitute the file name on the set -- line above; not checking`.
+DEMONSTRATED: Check 1 exposed fixture and unchanged filename guard, per the recorded local marking review (October 2026, Bash 5.3.9) in the Verify overview and renewed local marking review (October 2026, Bash 5.3.9, dash and BusyBox ash 1.37.0) (stub grep; shell control flow only): Bash, dash and BusyBox ash each printed the token and `grep_exit=0` for an exposed fixture. The same local marking reviews (stub grep; shell control flow only) record that a direct grep of a fixture printed `<fixture path>:2:REPLACE_WITH_TOKEN`; the filename and line in dash and BusyBox ash came only from the stub grep. The same local marking reviews (stub grep; shell control flow only) record that Bash, dash and BusyBox ash each printed `substitute the file name on the set -- line above; not checking` for the unchanged filename. The recorded runs used an earlier form of check 1, whose marker and count refusals ended with status 0 and whose filename-placeholder refusal exited with status 1; the current form, whose guard refusals all exit with status 2, has not been run. GNU grep 3.12 manual, exit status (checked October 2026) documents the match status. The house runs did not record which grep implementation or version ran. **Broken:** unresolved values print their filename, line number, and placeholder token, followed by `grep_exit=0`. Stop and replace them. An unchanged filename placeholder prints `substitute the file name on the set -- line above; not checking`.
 
-DEMONSTRATED: Check 1 fixed and unreadable fixture outcomes, per the recorded local marking review (October 2026, Bash 5.3.9) in the Verify overview and renewed local marking review (October 2026, Bash 5.3.9, dash and BusyBox ash 1.37.0) (stub grep; shell control flow only): Bash, dash and BusyBox ash each printed only `grep_exit=1` for a clean fixture. The same local marking reviews (stub grep; shell control flow only) record that Bash printed `grep_exit=2` for a missing fixture, and dash and BusyBox ash reached the same `grep_exit=2` path only with a stub grep. The recorded runs used an earlier form of check 1, whose marker and count refusals ended with status 0; the current form, whose marker and count refusals exit with status 2, has not been run. GNU grep 3.12 manual, exit status (checked October 2026) documents no-match and error statuses. The house runs did not record which grep implementation or version ran. **Fixed:** no placeholder matches print, followed by `grep_exit=1`. A file-read error is inconclusive, not a clean scan. This check prints only the matched placeholder tokens, rather than complete secret-bearing lines.
+DEMONSTRATED: Check 1 fixed and unreadable fixture outcomes, per the recorded local marking review (October 2026, Bash 5.3.9) in the Verify overview and renewed local marking review (October 2026, Bash 5.3.9, dash and BusyBox ash 1.37.0) (stub grep; shell control flow only): Bash, dash and BusyBox ash each printed only `grep_exit=1` for a clean fixture. The same local marking reviews (stub grep; shell control flow only) record that Bash printed `grep_exit=2` for a missing fixture, and dash and BusyBox ash reached the same `grep_exit=2` path only with a stub grep. The recorded runs used an earlier form of check 1, whose marker and count refusals ended with status 0 and whose filename-placeholder refusal exited with status 1; the current form, whose guard refusals all exit with status 2, has not been run. GNU grep 3.12 manual, exit status (checked October 2026) documents no-match and error statuses. The house runs did not record which grep implementation or version ran. **Fixed:** no placeholder matches print, followed by `grep_exit=1`. A file-read error is inconclusive, not a clean scan. This check prints only the matched placeholder tokens, rather than complete secret-bearing lines.
 
-REASONED: Address and request guard behaviour in checks 3 to 7, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics for each of checks 3 to 7. In local marking review (October 2026, Bash 5.3.9), runs of each block printed `not probing` for empty and `REPLACE_WITH_` values before any stub call; substituted values printed `STUB curl` in checks 3, 5, 6 and 7 and `STUB nc` in check 4. Wrong markers printed `paste the whole block, including its set -- line; not probing`; short counts printed `the set -- line needs exactly 2 values; not probing` in checks 3 and 4, with 3, 4 or 5 values respectively in checks 5, 6 and 7. The bash -n, ShellCheck and stub runs recorded here covered checks 3 to 7 in an earlier form, in which every guard refusal ended with status 0 except the check 3 placeholder refusal, which exits with status 1; none was re-run on the current form, in which the refusals that ended with status 0 exit with status 2. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expected exposure is a direct answer; a fixed direct path refuses, per the guide's cited Docker packet filtering and firewalls. An external vantage, TLS exchange, authorized ingress and valid credentials were not checked; their availability is unknown. These guards are prerequisites, not deployment evidence. The address guards below likewise print `not probing` when required values are empty or still contain `REPLACE_WITH_`. Substituted values enter the probe arm. This is a prerequisite, not evidence that the deployment is private.
+REASONED: Address and request guard behaviour in checks 3 to 7, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics for each of checks 3 to 7. In local marking review (October 2026, Bash 5.3.9), runs of each block printed `not probing` for empty and `REPLACE_WITH_` values before any stub call; substituted values printed `STUB curl` in checks 3, 5, 6 and 7 and `STUB nc` in check 4. Wrong markers printed `paste the whole block, including its set -- line; not probing`; short counts printed `the set -- line needs exactly 2 values; not probing` in checks 3 and 4, with 3, 4 or 5 values respectively in checks 5, 6 and 7. The bash -n, ShellCheck and stub runs recorded here covered checks 3 to 7 in an earlier form, in which every guard refusal ended with status 0 except the check 3 placeholder refusal, which exited with status 1; none was re-run on the current form, in which every guard refusal exits with status 2. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expected exposure is a direct answer; a fixed direct path refuses, per the guide's cited Docker packet filtering and firewalls. An external vantage, TLS exchange, authorized ingress and valid credentials were not checked; their availability is unknown. These guards are prerequisites, not deployment evidence. The address guards below likewise print `not probing` when required values are empty or still contain `REPLACE_WITH_`. Substituted values enter the probe arm. This is a prerequisite, not evidence that the deployment is private.
 
 ### 2. Inventory listeners, the merged Compose model, and running publications (REASONED: Listener and publication inventory, per the guide's cited Docker packet filtering and firewalls, Compose networking, Compose merge rules and Docker Compose ps. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Stub ss and docker printed their invocations; no live inventory or real Compose JSON shape was observed. Historical authoring note: no container runtime was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect unintended listeners or publications when exposed, and only intended ingress or loopback publications when fixed; errors and empty inventories remain inconclusive.)
 
@@ -51573,19 +51573,19 @@ A Docker publication implemented through DNAT may not appear in host `ss` output
 
 A Compose error, missing service, stopped application, or empty inventory is not a pass. `docker compose config` describes the intended configuration; it does not prove running containers were recreated with it. Its output can contain secrets, so inspect it privately.
 
-### 3. Probe the application's direct ports from another host (REASONED: Direct HTTP reachability, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. The bash -n, ShellCheck and fixture runs recorded here covered check 3 in an earlier form, whose marker and count refusals ended with status 0; none was re-run on the current form, whose marker and count refusals exit with status 2. Historical authoring note: no container runtime or second host was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect an HTTP response or completed connection when exposed, and refusal corroborated by inventory and working ingress when fixed; timeout or http=000 alone is inconclusive.)
+### 3. Probe the application's direct ports from another host (REASONED: Direct HTTP reachability, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. The bash -n, ShellCheck and fixture runs recorded here covered check 3 in an earlier form, whose marker and count refusals ended with status 0 and whose placeholder refusal exited with status 1; none was re-run on the current form, whose guard refusals all exit with status 2. Historical authoring note: no container runtime or second host was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect an HTTP response or completed connection when exposed, and refusal corroborated by inventory and working ingress when fixed; timeout or http=000 alone is inconclusive.)
 
 **Reasoned, not demonstrated, including the cross-host vantage** (historical authoring note: no container runtime and no second host in the authoring environment). Probe every application or dashboard port found in check 2, using its actual host port. Include reachable LAN addresses and public IPv4/IPv6 addresses; bracket an IPv6 literal used in the HTTP URL. Exclude the intentionally public TLS ingress. The outcomes below rest on two sources: the curl manual for what its exit status, error text and timing actually report, and Docker's packet-filtering page for how a published port interacts with a host firewall, which is what makes a refusal meaningful rather than incidental.
 
 ```bash
-# REASONED: Direct HTTP reachability, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. The bash -n, ShellCheck and fixture runs recorded here covered check 3 in an earlier form, whose marker and count refusals ended with status 0; none was re-run on the current form, whose marker and count refusals exit with status 2. Historical authoring note: no container runtime or second host was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect an HTTP response or completed connection when exposed, and refusal corroborated by inventory and working ingress when fixed; timeout or http=000 alone is inconclusive.
+# REASONED: Direct HTTP reachability, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. The bash -n, ShellCheck and fixture runs recorded here covered check 3 in an earlier form, whose marker and count refusals ended with status 0 and whose placeholder refusal exited with status 1; none was re-run on the current form, whose guard refusals all exit with status 2. Historical authoring note: no container runtime or second host was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect an HTTP response or completed connection when exposed, and refusal corroborated by inventory and working ingress when fixed; timeout or http=000 alone is inconclusive.
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1:$2" in
-    *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
          "http://$1:$2/" ;;
@@ -51980,7 +51980,7 @@ Claims (full source mapping in the JSON block below):
 - onyx-secrets (REASONED; onyx-data): Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure.
 - mfa (REASONED; mem0, onyx): Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials.
 - secrets (REASONED; localai, tei-docs, mem0, onyx-data): Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication.
-- verify-placeholder (DEMONSTRATED; curl, grep): Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved.
+- verify-placeholder (DEMONSTRATED; curl, grep): Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved. The guard runs covered an earlier form whose placeholder refusal exited with status 1; the current form was not re-run.
 - verify-guards (REASONED; curl): Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits.
 - verify-inventory (REASONED; docker): Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass.
 - verify-direct (REASONED; curl, docker): Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not.
@@ -51998,7 +51998,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "ac857ba76f8586534cc404f49d67416432a67d52d93af4b4a2ec6baf3c3a59cb",
+  "body_sha256": "bd6e7a22538a97466cad1cef9fbad02d0e1627dc0e193a0ab8fb3b5ade201575",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -52251,7 +52251,7 @@ Claims (full source mapping in the JSON block below):
     "onyx-secrets": {"text": "Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure.", "components": ["onyx-data"], "sources": ["onyx-data:s991ce173678a"], "status": "REASONED"},
     "mfa": {"text": "Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials.", "components": ["mem0", "onyx"], "sources": ["mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED"},
     "secrets": {"text": "Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication.", "components": ["localai", "tei-docs", "mem0", "onyx-data"], "sources": ["localai:sac7ce142c7f6", "tei-docs:s013618141267", "mem0:s37e3935419ed", "onyx-data:s991ce173678a"], "status": "REASONED"},
-    "verify-placeholder": {"text": "Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved.", "components": ["curl", "grep"], "sources": ["curl:s2b2686afaf41", "grep:sa8d467168870"], "status": "DEMONSTRATED", "evidence": "printed the token and `grep_exit=0` for the exposed fixture and `grep_exit=1` for the fixed fixture", "verify": [1]},
+    "verify-placeholder": {"text": "Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved. The guard runs covered an earlier form whose placeholder refusal exited with status 1; the current form was not re-run.", "components": ["curl", "grep"], "sources": ["curl:s2b2686afaf41", "grep:sa8d467168870"], "status": "DEMONSTRATED", "evidence": "printed the token and `grep_exit=0` for the exposed fixture and `grep_exit=1` for the fixed fixture", "verify": [1]},
     "verify-guards": {"text": "Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"},
     "verify-inventory": {"text": "Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass.", "components": ["docker"], "sources": ["docker:s351180c6678f", "docker:se716ad33db1f", "docker:s3e97c2c250b6"], "status": "REASONED", "verify": [2]},
     "verify-direct": {"text": "Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not.", "components": ["curl", "docker"], "sources": ["curl:s2b2686afaf41", "docker:s351180c6678f"], "status": "REASONED", "verify": [3]},
@@ -54165,11 +54165,11 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
 # REASONED: Phoenix read-API authentication follows the cited documentation and source; no Phoenix instance is available.
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PHOENIX_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "https://$1/v1/projects" \
          -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n'
        ;;
@@ -54177,7 +54177,7 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
 )
 ```
 
-REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
+REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. The bash -n and stub runs recorded here covered an earlier form of this block, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
 is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login page, a `415`, or a transport
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
@@ -54392,7 +54392,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "b22a5cbf0d79a6fe0d6cc51578b422e70a145e187173b8933512cc8a2f29f062",
+  "body_sha256": "ac6aae2726cf301025195a2f207306adbd69adcc2aef41253575ba3831c9218f",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -54832,7 +54832,7 @@ Pods can turn an exposed API into cluster compromise.
 
 REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe) is covered by this declaration. The declaration for those probes rests on the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs. The origin guard in that stub run (marking review, October 2026) printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the first TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. During marking review (October 2026), the second TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 with dummy credentials on a pseudo-terminal, stubs for every external command and only the known credential helpers delegated to the scratch interpreter. Under bash -e before that revision, each helper exit 73, partial-output failure or empty credential stopped the calling shell at that authenticated probe, so later probes did not run. In those second-review fixtures, where every other external-command stub succeeded, each refusal skipped only its authenticated request and all later probes ran. Valid credentials reached all three authenticated curl stubs with the expected header or JSON before and after, with and without bash -e. All four empty credential cases and each helper failure were also checked without errexit before and after. With PYTHONOPTIMIZE=1 and an empty Argo token, the unchanged helper sent an empty bearer header; the revised helper refused it and skipped the Argo authenticated request, with and without bash -e. In that second review, every completed sequence reached the unchanged direct-origin placeholder refusal; all files exited 2, either at the first unhandled refusal before that revision under bash -e or at the final origin guard. These runs checked shell flow and credential encoding only, not service authentication. During marking review (October 2026), the third TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 through a pseudo-terminal with dummy credentials, stubs for every external command and only the three exact credential helpers delegated to the isolated scratch interpreter. No probe reached a service or read the host socket paths. Before this revision, under bash -e, exit 1 from ss, Temporal, stat or getfacl, and curl exits 6, 7 or 28 from each anonymous or default-account probe, stopped the file at that label and skipped the remaining probes. After this revision, under bash -e, those same cases reached every later label and the final origin-placeholder refusal. Each authenticated curl exit 6, 7 or 28, helper exit 73, partial-output failure and empty credential case reached all later probes before and after; helper refusals sent no authenticated request. Valid dummy credentials produced the expected Basic header, JSON and bearer header before and after. An empty Argo token was also refused with PYTHONOPTIMIZE=1 before and after. With a substituted origin URL, origin curl exits 6, 7 and 28 were reported before and after. The missing-set-line, short-set-line and ftp:// origin cases refused without an origin request before and after. The revised files exited 0 after their labelled continuation messages, including the final origin refusal; this status means the sequence continued, not that any service was secure. These stub runs establish shell flow and encoding only, not service authentication. All of the local runs above covered the block in an earlier form, before its three Airflow requests took the Airflow host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on the guarded block, and the Airflow guard has not been run. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
 live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
-no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
+no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED. None of the local runs recorded above covered the current closing echoes: in the latest form those runs covered, the prefect-auth, airflow-valid-token, argo-auth and origin subshells ended with an echo of `skipped or failed; continuing` that printed no status, and the airflow subshell did not exist. All five guarded subshells now end with an echo of the form `) || echo "origin: block exit $?; continuing"`, each with its own label, which keeps the reader's shell running and prints the subshell's non-zero status, such as `origin: block exit 2; continuing` after a guard refusal. The block pasted whole still reports status 0 because that echo succeeds, and no recorded bash -n, ShellCheck, stub or pseudo-terminal run covered the closing echo.
 The exception is the Flower unix-socket stat mode
 and named-ACL checks, demonstrated without a container and recorded after the block. Each names its expected
 exposed and fixed result so it discriminates against a live instance, based on the cited vendor documentation
@@ -54876,7 +54876,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
         -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
         -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
-) || echo 'prefect-auth: skipped or failed; continuing'
+) || echo "prefect-auth: block exit $?; continuing"
 
 # dagster-webserver 1.13.24's build_middleware() and build_graphql_middleware() add no authentication,
 # so test whether /graphql at the origin answers an anonymous query.
@@ -54928,13 +54928,13 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
           | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
               -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
               -H 'Content-Type: application/json' --data-binary @- "https://$1/auth/token"
-      ) || echo 'airflow-valid-token: skipped or failed; continuing'
+      ) || echo "airflow-valid-token: block exit $?; continuing"
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' "https://$1/api/v2/pools" \
         || echo 'airflow-pools-anon: exited nonzero; continuing'
       ;;
   esac
-) || echo 'airflow: skipped or failed; continuing'
+) || echo "airflow: block exit $?; continuing"
 
 # Temporal: a protected read against the frontend gRPC port. With an Authorizer and ClaimMapper configured this
 # is rejected without credentials (an mTLS deployment refuses the connection outright); a listing, even an empty
@@ -55004,7 +55004,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
         --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
         https://argo.internal:2746/api/v1/workflows/argo
-) || echo 'argo-auth: skipped or failed; continuing'
+) || echo "argo-auth: block exit $?; continuing"
 
 # Direct-origin reachability from an UNTRUSTED vantage (run from OUTSIDE your network). Paste the whole block and
 # substitute your origin URL inside the quotes; any HTTP response means the origin is published and is itself the
@@ -55023,7 +55023,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
         -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" ;;
     *) echo "give an http:// or https:// URL; not probing"; exit 2 ;;
   esac
-) || echo 'origin: skipped or failed; continuing'
+) || echo "origin: block exit $?; continuing"
 ```
 
 REASONED: preceding block; every probe in the block above, summarized here as findings, per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow running in Docker; Temporal, self-hosted security; Temporal, Web UI configuration reference; Flower configuration; and Argo anonymous fallback when server mode is enabled. It adds no probe of its own; that block's local runs are recorded in the declaration before it, and no orchestrator was available in the authoring environment to show either state. Exposed, a listing answers without a credential; fixed, the anonymous call is refused while the matched authorized call succeeds. A DAG list, flow run, task graph, repository, or worker pool that renders without a credential is a finding; so
@@ -55236,7 +55236,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "02d61aca6f360da61868287c376a3f8de1c31f9ad1fac2a54a5d0b91741bc29e",
+  "body_sha256": "4c6954657a6f8f950e16125138512d16ac19ab524be2a8b888ac44f7037ffcc7",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
