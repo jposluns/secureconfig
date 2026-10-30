@@ -62378,9 +62378,11 @@ debugger". Do not publish 25 unless you use email triggers.
 
 ## Verify
 
-REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request, TCP control and per-port paths; sample and replaced file fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found". No deployment was available for this review; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed/fixed expectations below that are not recorded as demonstrated remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
+REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request, TCP control and per-port paths; sample and replaced file fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found". The inventory block has no guard refusals; for the five other blocks, the bash -n, ShellCheck, stub and fixture runs recorded here covered an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No deployment was available for this review; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed/fixed expectations below that are not recorded as demonstrated remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
 the TCP reachability probe's outcomes on loopback; the NocoDB key check's logic was exercised with a
-stand-in for `docker exec`. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
+stand-in for `docker exec`. Those demonstrations and the stand-in run used earlier forms of their
+blocks, whose guard refusals ended with status 0; the current forms, whose guard refusals exit with
+status 2, have not been run. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
 Appsmith and Budibase ship for production as container images and the authoring host has no container
 runtime. NocoDB also cannot run here outside a container: its server calls `listen` with no host, so it
 can only bind every interface, which the host forbids; the same applies to Windmill's default bind.
@@ -62485,7 +62487,7 @@ REASONED: The login block passed bash -n, its JSON parsed, and a curl stub recei
 published default, not a secret, so it is fine in the request body. Substitute the base URL (for
 example the Caddy address on port 80) inside the single quotes.
 
-DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password. This does not demonstrate external isolation.
+DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password. This does not demonstrate external isolation. The loopback run used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
 
 ```bash
 (
@@ -62776,7 +62778,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "f705ff054c79fc5ebab4bb53bcc6b4837ae983c2b05cc02a2e6fc1d414463f4a",
+  "body_sha256": "4445135aeff9a69c546025d69a08818433c0db7e46a1e9981b758c044fb5cd9e",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -63113,7 +63115,10 @@ separated privileges by default, and cannot reach the VM or node consoles.
 
 REASONED: this historical run overview preserves the original authoring record, not a new live comparison; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules. The exposed and fixed listener descriptions are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). The guide's cited sources for those descriptions are now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
 Webmin 2.670's own on thirty test files, and the TCP reachability probe, which is the block demonstrated
-on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
+on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. The Webmin parser's
+fixture runs and the TCP probe's loopback runs used earlier forms of those blocks, whose guard
+refusals ended with status 0; the current forms, whose guard refusals exit with status 2, have not
+been run. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
 Those expected outcomes are REASONED from the cited vendor documentation and source.
@@ -63232,7 +63237,7 @@ hide one behind a timeout on the other: run it once for each public address of t
 takes a port you know is open on that address from this host (for example SSH on 22) as the positive
 control, and stops if the control does not connect. Substitute both inside the single quotes.
 
-DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned.
+DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned. The reused loopback probe runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
 
 ```bash
 (
@@ -63387,7 +63392,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "bccba735363df019ba95e224223c893462a98a9e47d3d12e9f76f02db3dacc96",
+  "body_sha256": "106ccf3775119900bc12082c7ceeff9bbb8a562b0aedc521db2a6cb3d8e695a0",
   "components": {
     "cockpit": {
       "name": "Cockpit",
