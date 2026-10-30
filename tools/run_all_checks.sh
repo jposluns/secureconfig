@@ -331,11 +331,11 @@ count_re = re.compile(
 
 
 def section_of(heading):
-    m = re.search(rf"^## {re.escape(heading)}[ \t]*$", readme, re.M)
+    m = re.search(rf"^##[ \t]+{re.escape(heading)}[ \t]*$", readme, re.M)
     if not m:
         return None
     rest = readme[m.end():]
-    m2 = re.search(r"^## ", rest, re.M)
+    m2 = re.search(r"^##[ \t]", rest, re.M)
     return rest[:m2.start()] if m2 else rest
 
 
