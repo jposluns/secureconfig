@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-30
 
+- The gate suite now fails when `README.md`'s stated guide count or category count differs from the corpus, comparing the guide count with the root guides outside `not_a_guide` (which the README guide index must list exactly once each) and the category count with the "###" headings of the guide index. The gate also fails closed if the count sentence in the "What this is" section is missing or reworded, or if a copy of the count sentence in any letter case appears anywhere else in `README.md` outside HTML comments (#1058)
 - `pocketbase.md` now says that the Appwrite 2.2.0 web install handler, given a request without a retry step for an installation that already has progress steps recorded, deletes the progress file of an earlier run that ended in error or completed every step, so the request starts fresh, and otherwise refuses the request with "Installation already started" before the saved-payload comparison. The guide cites the handler lines for both paths. `TODO.md` adds row 1.388, which records that the served Appwrite documentation now documents settings from 2.3.0 to 2.6.2 and deprecates creating API keys through the Project API, against the guide's 2.2.0 basis, and leaves the basis decision open (#1059)
 
 ## 2026-10-29
