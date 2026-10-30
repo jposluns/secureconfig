@@ -139,31 +139,43 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 ## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test.)
 
 ```bash
-curl -q -g -sI --noproxy '*' http://example.com/    # expect 301 with an https:// Location
-curl -q -g -sI --noproxy '*' https://example.com/   # succeeds without -k; shows helmet's headers
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI --noproxy '*' "http://$1/"    # expect 301 with an https:// Location
+  curl -q -g -sI --noproxy '*' "https://$1/"   # succeeds without -k; shows helmet's headers
 
-# Auth: probe a REAL protected route (not a placeholder like /api, which often 404s), show the
-# status, and disable client proxies so a denial is attributable. A denial from ANY layer (the app,
-# or a proxy/Access in front) is the pass; the positive control proves auth actually gates rather
-# than the route being broken for everyone.
-curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' 'https://example.com/REPLACE_WITH_PROTECTED_PATH'
-                                     # expect 401 or 403 with no credentials
-curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' \
-  -b REPLACE_WITH_SESSION_COOKIE_FILE 'https://example.com/REPLACE_WITH_PROTECTED_PATH'
-                                     # expect 200 with a valid session (cookie read from a file, not argv;
-                                     # for a bearer-token route use -H @REPLACE_WITH_AUTH_HEADER_FILE instead of -b)
+  # Auth: probe a REAL protected route (not a placeholder like /api, which often 404s), show the
+  # status, and disable client proxies so a denial is attributable. A denial from ANY layer (the app,
+  # or a proxy/Access in front) is the pass; the positive control proves auth actually gates rather
+  # than the route being broken for everyone.
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"
+                                       # expect 401 or 403 with no credentials
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' \
+    -b REPLACE_WITH_SESSION_COOKIE_FILE "https://$1/REPLACE_WITH_PROTECTED_PATH"
+                                       # expect 200 with a valid session (cookie read from a file, not argv;
+                                       # for a bearer-token route use -H @REPLACE_WITH_AUTH_HEADER_FILE instead of -b)
 
-ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
-           # ingress the platform's required address and port from section 1
-# trust proxy: add a temporary route that echoes req.ip, then remove it after this check
-#   app.get('/whoami', (req, res) => res.send(req.ip))
-curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.com/whoami
-                                     # req.ip must be your real client IP, never 203.0.113.9: echoing the
-                                     # forged value means `trust proxy` is too broad and trusts a
-                                     # client-set header. This checks req.ip scoping only, not that the
-                                     # proxy strips headers, and does not cover X-Forwarded-Host or -Proto.
-                                     # An overwriting proxy can also mask a too-broad setting, so a clean
-                                     # result here does not prove the trust boundary by itself
+  ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
+             # ingress the platform's required address and port from section 1
+  # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
+  #   app.get('/whoami', (req, res) => res.send(req.ip))
+  curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' "https://$1/whoami"
+                                       # req.ip must be your real client IP, never 203.0.113.9: echoing the
+                                       # forged value means `trust proxy` is too broad and trusts a
+                                       # client-set header. This checks req.ip scoping only, not that the
+                                       # proxy strips headers, and does not cover X-Forwarded-Host or -Proto.
+                                       # An overwriting proxy can also mask a too-broad setting, so a clean
+                                       # result here does not prove the trust boundary by itself
+)
 ```
 
 ## Sources (checked September 2026)
@@ -280,7 +292,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "b3977cb40924950b3c47b20ceeebef524a05ea6ed2978cfb1f2fe521515fa3b6",
+  "body_sha256": "992a9b097ca577dfbb3f777202fed424a50554432afda67ae62bd492db86e0eb",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",

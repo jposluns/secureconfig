@@ -294,15 +294,27 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
 ## 9. Verify (REASONED: redirect, TLS, cookie-API and listener expectations follow the Sources below; no deployment outcomes are recorded. The authoring environment has no .NET runtime, container runtime or deployed application, as recorded below.)
 
 ```bash
-curl -q -g --noproxy '*' -sI http://example.com/         # expect 307 or 308 with a https:// Location
-curl -q -g --noproxy '*' -sI https://example.com/        # succeeds without -k; shows Strict-Transport-Security
-curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' https://example.com/api   # protected [ApiController] API using the cookie scheme: 401 without a cookie
-ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g --noproxy '*' -sI "http://$1/"         # expect 307 or 308 with a https:// Location
+  curl -q -g --noproxy '*' -sI "https://$1/"        # succeeds without -k; shows Strict-Transport-Security
+  curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"   # protected [ApiController] API using the cookie scheme: 401 without a cookie
+  ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
+)
 ```
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons)
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added, so the guarded section 9 block needs a bash -n re-run before the guarded block's syntax counts as checked. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
@@ -581,7 +593,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "bee0e36f3d600abe468fdc097d3f6c1661c9b5080d527851f6b0ff0c104104e9",
+  "body_sha256": "117ca33cc85c07e2247155b61d06267038949b812c44050f3ce363fabdfcf073",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",

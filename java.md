@@ -231,10 +231,22 @@ None of these properties establishes a universal JSON body limit. Bound other re
 ## 8. Verify (REASONED: TLS, authentication, listener and generated-user checks follow the Spring Sources below; no deployment outcomes are recorded. The authoring environment limitations are recorded below: no runnable Spring Boot fixture, Maven, Gradle or container runtime.)
 
 ```bash
-curl -q -g -sI --noproxy '*' https://example.com/        # succeeds without -k; shows Strict-Transport-Security
-curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' https://example.com/api   # 401, or 302 to the login page, without credentials
-ss -tlnp   # read every listener; java: behind a proxy: 127.0.0.1 only
-grep -c "Using generated security password" app.log   # a positive count records password generation; zero does not prove the default user is absent
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI --noproxy '*' "https://$1/"        # succeeds without -k; shows Strict-Transport-Security
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/api"   # 401, or 302 to the login page, without credentials
+  ss -tlnp   # read every listener; java: behind a proxy: 127.0.0.1 only
+  grep -c "Using generated security password" app.log   # a positive count records password generation; zero does not prove the default user is absent
+)
 ```
 
 A zero generated-password log count is inconclusive: logging may suppress the message, and setting `spring.security.user.password` avoids password generation while retaining the default account. Check the deployed authentication configuration and exercise the intended login method. A custom `SecurityFilterChain` alone does not remove default-user auto-configuration, and OAuth2/OIDC does not require introducing a local `UserDetailsService`. See [Boot's security auto-configuration rules](https://docs.spring.io/spring-boot/3.5/reference/web/spring-security.html).
@@ -531,7 +543,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "69ee69cdbea9a402716700d59f3152ee6216d69619f3200aac7dcea85778011f",
+  "body_sha256": "7777e37debccc35ef1dbf1f0b36612ad64188e095a27f79d26d7b6e10ba6faee",
   "components": {
     "boot41": {
       "name": "Spring Boot",
