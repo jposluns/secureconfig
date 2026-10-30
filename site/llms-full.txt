@@ -261,7 +261,7 @@ Sources for these checks are listed in [README.sources.md](README.sources.md), n
 
 ## Scope and currency
 
-The guides use placeholders that you must replace. `example.com` and `app.example.com` stand in for a name, and `203.0.113.10` for an address, wherever the value is configuration or illustration. That is usually a wrong value that fails visibly, though not always: an unreplaced certificate SAN generates a perfectly valid certificate for the wrong address. Where leaving the placeholder in place would instead look like a passing check, the guides use a `REPLACE_WITH_A_NAME` form and the check itself rejects the unsubstituted value rather than trusting it to fail. The verification checklist above uses that second form for exactly that reason. Configuration syntax was checked against the vendor documentation cited in each guide as of September 2026; directives and dashboard menu locations change, so verify version-specific items against the current documentation for your installed version. Each guide lists its sources.
+The guides use placeholders that you must replace. `example.com` and `app.example.com` stand in for a name, and `203.0.113.10` for an address, wherever the value is configuration or illustration. That is usually a wrong value that fails visibly, though not always: an unreplaced certificate SAN generates a perfectly valid certificate for the wrong address. Where leaving the placeholder in place would instead look like a passing check, the guides use a `REPLACE_WITH_A_NAME` form and the check itself rejects the unsubstituted value rather than trusting it to fail. The verification checklist above uses the `REPLACE_WITH_YOUR_HOST` form but carries no guard: an unsubstituted name in checks 2 and 3 normally fails to resolve, subject to the resolver and proxy exceptions that the checklist's opening paragraph names, and check 4 also requires the refusal to come from the server, which a lookup failure does not show.
 
 Scope: deployment exposure, including TLS, human and machine authentication, MFA, access restrictions, secrets, and inbound and outbound network access, from first deployment through teardown. General application security, including injection, deserialization, and business logic flaws, belongs to the OWASP resources linked throughout the guides. LLM-specific application risks such as prompt injection are covered by the [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/). To propose a tool or guide, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -9537,38 +9537,54 @@ Mind the client address these headers carry. At a direct internet edge the block
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI http://example.com/        # expect 301 with a https:// Location
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -sI --max-time 10 https://example.com/       # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
-# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/                        # if section 3's auth is applied: an uncredentialed request must be 401/403, never 200
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the server_name), no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  curl -q -g -sI "http://$1/"        # expect 301 with a https:// Location
+  curl -q -g -sI --max-time 10 "https://$1/"       # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
+  curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 10 "https://$1/"                        # if section 3's auth is applied: an uncredentialed request must be 401/403, never 200
+)
 (
   # The admin password reaches curl through a config file on stdin (curl
   # --config -), never through argv: -u admin:PASSWORD is world-readable via
   # ps and /proc/<pid>/cmdline on a shared host. Paste the whole parenthesised
-  # block, including its set -- line. (The TLS-floor and size-prep steps sit
-  # inside the same block only so the password is entered once.)
+  # block, including its set -- line. (The TLS-floor, size-prep and rate-limit
+  # steps sit inside the same block only so the host and password are entered
+  # once.)
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The password you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the password from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the server_name), no scheme, port, path or trailing dot, then the admin password: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit ;; esac
-  set -- "${1//\\/\\\\}"
-  set -- "${1//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 --config - https://example.com/   # with credentials: your app's response, never 401
-  curl -q -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 https://example.com/   # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+  set -- "$1" "${2//\\/\\\\}"
+  set -- "$1" "${2//\"/\\\"}"
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 10 --config - "https://$1/"   # with credentials: your app's response, never 401
+  curl -q -g -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 "https://$1/"   # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
   head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 20 --config - --data-binary @/tmp/under.bin https://example.com/
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 20 --config - --data-binary @/tmp/under.bin "https://$1/"
                                     # positive control: must be your app's normal response to this POST
                                     # (for example 200/204/405), never 413. A 401 means the credentials, not
                                     # the size limit, were exercised, and a 000 means transport failed: either voids the control
-  printf 'user = "admin:%s"\n' "$1" | curl -q -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  https://example.com/
+  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
                                     # 413. The 9M control is the discriminating half: nginx's default
                                     # client_max_body_size is 1m, so 9M is refused until `10m` is set,
                                     # while 11M returns 413 either way. Neither status says WHICH layer
@@ -9576,8 +9592,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/  
                                     # attribute it to nginx, set `client_max_body_size 0` in an isolated
                                     # environment, which disables the check entirely; commenting the
                                     # directive out only restores the 1m default and still returns 413
-)
-seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://example.com/ | sort | uniq -c
+  seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
                                     # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
                                     # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
                                     # phase, so an unauthenticated flood still exercises the limiter, which
@@ -9589,6 +9604,7 @@ seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://
                                     # establish that either nginx limiter fired. Attributing it needs an
                                     # isolated environment with both limiters disabled as a baseline,
                                     # then each enabled alone, with the arrival rate actually measured
+)
 rm -f /tmp/under.bin /tmp/over.bin
 ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
                                     # above pass while the app also answers directly on port 3000,
@@ -9705,7 +9721,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "cda5da25b68be964b3a9cd0b24fc6021dcc527501fe09cac30281402beb032de",
+  "body_sha256": "88e2ef7175025abfa1d1e8d7b40265f65243b96ceb486cef6ffa8993b2ae0cf8",
   "components": {
     "nginx-source": {
       "name": "nginx source",
@@ -13404,18 +13420,14 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure, Gateway TLS/authentication, API targeting and access, and node/kubelet scans, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Kubernetes v1.37.1 server, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block while it still held the node scans; five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
-The existing commands state the expected workload and API outcomes. For the node scans, an exposed
-kubelet is expected to show 10250 open and, when enabled, 10255 open; after private binding and
-network restrictions, neither should be reachable from an untrusted network, while an authorized
-cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have no kubelet listener
-even from that authorized client. Check every configured address family and retain an authorized
-positive control so an unavailable node is not mistaken for successful isolation. The pinned
-listener/default sources below support these expectations; no live result is claimed.
+The existing commands state the expected workload and API outcomes: exposed endpoints answer
+untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
+expectations, with their sources, are stated after the next block, in the marker for that block.
 
 ```bash
-# REASONED: workload, API and kubelet exposure checks follow the cited documentation and pinned listener sources;
+# REASONED: workload and API exposure checks follow the cited documentation;
 # no Kubernetes cluster or isolated network namespace is available.
 kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the Gateway's Service
 kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}'    # the public address; DNS points here
@@ -13476,8 +13488,8 @@ fi
 # port the cluster was never using, where a refusal proves nothing.
 # A context with no user entry would make the TLS jsonpath error out; every real one names
 # a user, and kubectl says so if yours does not.
-# This step needs python3, nc and nmap on the machine you run it from, none of which the
-# cluster provides for you.
+# This step needs python3 and nc on the machine you run it from, neither of which the
+# cluster provides for you. The node scans in the next block also need nmap there.
 # "succeeded" means something is listening and reachable from here, whatever it does next.
 
 # Then at the HTTP layer, with verification left ON.
@@ -13502,7 +13514,9 @@ curl -q --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 \
 # SOMETHING answered, and on a network like that it may not be the thing you aimed at; the
 # unset above defeats a configured proxy and nothing defeats a transparent one except
 # testing from somewhere else.
+```
 
+```bash
 # Scan the control-plane nodes FIRST, because a worker shows 6443 and 2379 closed while
 # the control-plane host serves both, and a scan of a worker alone therefore passes on an
 # exposed control plane. Then scan every node that has a public address, worker nodes
@@ -13514,14 +13528,42 @@ curl -q --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 \
 kubectl get nodes -o wide          # control-plane nodes and workers alike, but see below
 kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.addresses[*].address}{"\n"}{end}'
                                    # -o wide prints only the FIRST external address per node
-nmap -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 REPLACE_WITH_ONE_NODE_ADDRESS
-nmap -6 -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 REPLACE_WITH_ITS_IPV6_ADDRESS
+# Paste each subshell below with its value substituted inside the quotes, and the IPv6 one only for a
+# node that has an IPv6 address. A scan that names no host, or a name that failed to resolve, scanned
+# nothing and is inconclusive, never closed.
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ONE_NODE_ADDRESS'   # one public address of the node: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|-*|*[[:space:][:cntrl:]]*) echo "substitute one public address of the node inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  nmap -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 "$1"
+)
+(                                       # the same scan over IPv6
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ITS_IPV6_ADDRESS'   # the same node's IPv6 address: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|-*|*[[:space:][:cntrl:]]*) echo "substitute the node's IPv6 address inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  nmap -6 -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 "$1"
+)
                                                                      # every one closed or filtered from
                                                                      # outside. 10250 runs commands in
                                                                      # containers; 2379 is the whole of etcd
 ```
 
-REASONED: preceding block; Gateway/service inventory, TLS/authentication, API reachability and complete node/etcd address coverage, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Kubernetes, operating etcd clusters, Nmap host discovery and Amazon EKS cluster endpoint access. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five YAML blocks parsed and the embedded endpoint parser produced five expected host/port/URL results and two input failures. No live scan ran: exposed endpoints answer untrusted sources; fixed workloads use the authenticated Gateway and restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families. One name is not one address and one node is not the cluster. Repeat the scan for every node that has a
+REASONED: preceding block; node, kubelet and etcd scans with complete address coverage (the Gateway/service inventory, TLS/authentication and API reachability checks sit in the block before it), per the guide's cited Kubernetes ports and protocols; Kubernetes, operating etcd clusters; Kubernetes v1.37.1 server; and Nmap host discovery. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded. No live scan ran: exposed endpoints answer untrusted sources; in the fixed state, restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families.
+For the node scans, an exposed kubelet is expected to show 10250 open and, when enabled, 10255 open;
+after private binding and network restrictions, neither should be reachable from an untrusted network,
+while an authorized cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have
+no kubelet listener even from that authorized client. Check every configured address family and retain
+an authorized positive control so an unavailable node is not mistaken for successful isolation. The
+pinned listener/default sources below support these expectations; no live result is claimed.
+One name is not one address and one node is not the cluster. Repeat the scan for every node that has a
 public address, worker nodes included, and every address each one answers on, in both families: a host
 filtered on IPv4 while it answers on IPv6 passes every check above and is still reachable. The
 `kubectl get svc` line catches NodePort Services that exist, but nothing here probes the 30000 to 32767
@@ -13658,7 +13700,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "935ffbfc0b695e5bb6ccd081afcab4a2a3fa0e6ff2ca5344cd81359c763d4dff",
+  "body_sha256": "887a854abc0e1f21efe9090f6b3a6328d2b19e5748c694ec4bf5630a8799841e",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -13866,8 +13908,8 @@ Claims (full source mapping in the JSON block below):
     "verify-proxies": {"text": "Disable curl config and configured proxies for direct probes; a transparent TLS middlebox can still answer for an unreachable target.", "components": ["curl"], "sources": ["curl:s2b2686afaf41", "curl:s7d4a6e627b1b"], "status": "REASONED", "verify": [1]},
     "verify-api-tcp": {"text": "Outside allowed ranges, nc success proves something accepted TCP; corroborate failed probes with provider ranges and multiple vantage points.", "components": ["kubernetes", "eks"], "sources": ["kubernetes:sd59fb2f35cd7", "eks:s9724ce882930"], "status": "REASONED", "verify": [1]},
     "verify-api-http": {"text": "Any HTTP status with curl exit 0 means answered; exit 60 means a TLS peer answered, 7 failed connect, 28 is ambiguous timeout and 6 is DNS failure, not privacy proof.", "components": ["curl", "eks"], "sources": ["curl:s7d4a6e627b1b", "eks:s9724ce882930"], "status": "REASONED", "verify": [1]},
-    "verify-node-scan": {"text": "Scan control-plane hosts first and every public node address in both families; workers alone miss API/etcd and separate etcd hosts are absent from kubectl nodes.", "components": ["kubernetes", "nmap"], "sources": ["kubernetes:sd59fb2f35cd7", "kubernetes:s01f081fed0ff", "nmap:sb7d0e7eb5141", "nmap:s1818abeb3f92", "nmap:s79c95712dd8d"], "status": "REASONED", "verify": [1]},
-    "verify-kubelet": {"text": "Untrusted clients should reach neither kubelet port after isolation, while authorized clients still reach 10250; readOnlyPort=0 should leave no 10255 listener even for authorized clients.", "components": ["kubelet"], "sources": ["kubelet:s98cf98130201", "kubelet:s3fc405855b4a"], "status": "REASONED", "verify": [1]}
+    "verify-node-scan": {"text": "Scan control-plane hosts first and every public node address in both families; workers alone miss API/etcd and separate etcd hosts are absent from kubectl nodes.", "components": ["kubernetes", "nmap"], "sources": ["kubernetes:sd59fb2f35cd7", "kubernetes:s01f081fed0ff", "nmap:sb7d0e7eb5141", "nmap:s1818abeb3f92", "nmap:s79c95712dd8d"], "status": "REASONED", "verify": [2]},
+    "verify-kubelet": {"text": "Untrusted clients should reach neither kubelet port after isolation, while authorized clients still reach 10250; readOnlyPort=0 should leave no 10255 listener even for authorized clients.", "components": ["kubelet"], "sources": ["kubelet:s98cf98130201", "kubelet:s3fc405855b4a"], "status": "REASONED", "verify": [2]}
   }
 }
 ````
@@ -47170,7 +47212,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Qdrant source v1.19.1, Weaviate source v1.39.6, Milvus v2.6.24 and v3.0.2, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.2, plus 5 more recorded bases; 3 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked October 2026. The guide records 77 claims, all reasoned from cited sources.
+Written against Qdrant source v1.20.0, Weaviate source v1.39.6, Milvus v2.6.24 and v3.0.2, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.2, plus 5 more recorded bases; 3 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked October 2026. The guide records 77 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -47188,7 +47230,7 @@ Each server listens on plain TCP; publish only a reverse proxy ([nginx.md](nginx
 | Chroma | 8000 |
 | pgvector | 5432 (it is PostgreSQL) |
 
-Qdrant and Chroma bind every IPv4 interface by default in their official images, and Weaviate opens several listeners that ignore `--host` wherever it runs (as of Qdrant v1.19.1, Chroma 1.5.9 and Weaviate v1.39.6):
+Qdrant and Chroma bind every IPv4 interface by default in their official images, and Weaviate opens several listeners that ignore `--host` wherever it runs (as of Qdrant v1.20.0, Chroma 1.5.9 and Weaviate v1.39.6):
 
 - **Qdrant**'s compiled-in configuration sets `service.host: 0.0.0.0`. It then merges `config/config`, `config/$RUN_MODE` (`RUN_MODE` defaults to `development`) and `config/local` from the working directory, then, in a build with the `deb` feature, `/etc/qdrant/config`, then `--config-path`, then `QDRANT__`-prefixed environment variables; any later layer can set the host. The repository's `config/development.yaml` narrows it to `127.0.0.1`, so a binary started from a checkout's root with `RUN_MODE` unset or `development` listens on loopback unless a later layer sets it; the official image sets `RUN_MODE=production`, whose `config/production.yaml` keeps `0.0.0.0`, and its entrypoint starts `./qdrant` with no arguments.
 - **Chroma**'s `chroma run` without a config file binds `localhost`, its `--host` default. Given a config file, it binds the file's `listen_address`, or `0.0.0.0` when the file sets none, after merging `CHROMA_`-prefixed environment variables. The official `chromadb/chroma` image runs `chroma run /config.yaml` with a file that sets only `persist_path`, so the container listens on `0.0.0.0:8000` unless a `CHROMA_`-prefixed variable sets the address or port.
@@ -47211,9 +47253,9 @@ tls:
 
 Environment equivalents: `QDRANT__SERVICE__API_KEY` and `QDRANT__SERVICE__READ_ONLY_API_KEY`. Clients send the key in the `api-key` header (or `Authorization: Bearer`); the two are interchangeable for the client REST and gRPC API. Qdrant's own docs say that enabling the key without TLS is insecure; terminate TLS either in Qdrant as above or at a proxy in front.
 
-An API key protects the client API. It does not protect the internal cluster port, 6335. The security page states that "Internal gRPC uses port 6335 by default if running in distributed mode" and that, in versions before v1.20.0, internal communication channels "are not protected by an API key nor bearer tokens by default". The page also says: "You must ensure that this port is not publicly reachable and can only be used for node communication." Through v1.17.x this is not a gap a key can close. Qdrant v1.18.0 added `service.enforce_internal_auth`: with it set, the receiving peer verifies the forwarded `api_key` on internal p2p requests, so a key can gate 6335 on v1.18.0 and later. The security page says the setting is "Enabled by default as of v1.20.0", so the setting is off by default from v1.18.0 to v1.19.x, and says "Enforcing authentication does not replace network isolation for the internal port", so do not rely on the setting in place of the network restriction below. `read_only_api_key` does not cover 6335 either, and confirming that 6333 returns 401 without a key tells you nothing about 6335: in distributed mode 6335 answers a peer with no API key or bearer token (peer TLS, when enabled, authenticates the channel by certificate; a key applies to the internal channel only where `enforce_internal_auth` is set, on v1.18.0 and later). A reader who sets a key, sees 6333 return 401, and concludes the deployment is authenticated is therefore wrong about 6335.
+An API key protects the client API. Whether a key also protects the internal cluster port, 6335, depends on the Qdrant version and on `service.enforce_internal_auth`. The security page states that "Internal gRPC uses port 6335 by default if running in distributed mode" and that, in versions before v1.20.0, internal communication channels "are not protected by an API key nor bearer tokens by default". The page also says: "You must ensure that this port is not publicly reachable and can only be used for node communication." Through v1.17.x no key setting closes that gap. Qdrant v1.18.0 added `service.enforce_internal_auth`: with it set, the receiving peer verifies the forwarded `api_key` on internal p2p requests, so a key can gate 6335 on v1.18.0 and later. The security page says the setting is "Enabled by default as of v1.20.0", so the setting is off by default from v1.18.0 to v1.19.x and on by default in v1.20.0, the Qdrant release this guide's source basis records, and says "Enforcing authentication does not replace network isolation for the internal port", so do not rely on the setting in place of the network restriction below. On v1.20.0 the default enforcement has an effect only where an API key is configured: without an API key, the security page says, "Qdrant installs no authentication layer and the setting has no effect". As of v1.19.2 the internal API accepts only `api_key` or `alt_api_key` and rejects the read-only key and every JWT, so on v1.20.0 a cluster with only `read_only_api_key` set is still subject to enforcement but has no key the internal API accepts, and that cluster loses peer-to-peer communication unless `api_key` is set or `enforce_internal_auth` is set to `false`. Confirming that 6333 returns 401 without a key tells you nothing about 6335: in distributed mode 6335 answers a peer with no API key or bearer token wherever internal enforcement is not in effect (peer TLS, when enabled, authenticates the channel by certificate). Internal enforcement is not in effect with no API key configured, before v1.18.0, on v1.18.0 to v1.19.x without `enforce_internal_auth` set, or on v1.20.0 with `enforce_internal_auth` set to `false`. A reader who sets a key, sees 6333 return 401, and concludes that 6335 is authenticated is therefore wrong unless internal enforcement is in effect, and even with enforcement 6335 still has to be restricted to peers.
 
-Restrict 6335 to your cluster peers at the network layer, with a host firewall, a cloud security group, or by simply not publishing the container port to any address a non-peer can reach. Allow inbound 6335 only from your other peers' addresses and deny every other source, including other machines on the same private network. A node not running in cluster mode does not open 6335 at all; note that a single initial node started WITH cluster mode enabled does open the internal listener, so "single host" is not by itself a guarantee that 6335 is absent, which is why V1 and the 6335 probe still apply. In a cluster you cannot bind it to `127.0.0.1`, because peers on other hosts must reach it, so bind it to the private cluster interface and firewall it to peers. TLS on the peer channel does not remove this requirement; turn it on as well, but it authenticates and encrypts the channel rather than making an exposed port safe to reach:
+Restrict 6335 to your cluster peers at the network layer, with a host firewall, a cloud security group, or by simply not publishing the container port to any address a non-peer can reach. Allow inbound 6335 only from your other peers' addresses and deny every other source, including other machines on the same private network. A node not running in cluster mode does not open 6335 at all; note that a single initial node started WITH cluster mode enabled does open the internal listener, so "single host" is not by itself a guarantee that 6335 is absent, which is why V1 and the 6335 probe still apply. In a cluster you cannot bind it to `127.0.0.1`, because peers on other hosts must reach it, so bind it to the private cluster interface and firewall it to peers. The internal listener binds to `service.host` unless `cluster.p2p.host` is set, a setting the security page documents as available as of v1.19.2. On v1.20.0, set `cluster.p2p.host` to the node's private cluster IP address, because the security page says "The value must be an IP address", and give the node a peer URI (`--uri`) on that same address, since the page says the peer URI "must point to the same address". For example, a node whose private cluster address is 10.0.0.5 sets `cluster.p2p.host: 10.0.0.5` and starts with `--uri http://10.0.0.5:6335`, and 6335 is still firewalled to peers. TLS on the peer channel does not remove this requirement; turn it on as well, but it authenticates and encrypts the channel rather than making an exposed port safe to reach:
 
 ```yaml
 cluster:
@@ -47221,7 +47263,7 @@ cluster:
     enable_tls: true
 ```
 
-`cluster.p2p.enable_tls` is separate from `service.enable_tls`: the first secures peer-to-peer traffic, the second the client API. Enabling `cluster.p2p.enable_tls` also requires a `ca_cert` in the `tls:` block, the CA that validates peer certificates; the security page marks `ca_cert: ./tls/cacert.pem` as required for peer TLS. Provision that CA and set the field before you enable peer TLS. Qdrant carries a compiled default path (`./tls/cacert.pem`), so a missing entry does not always fail at startup, but relying on an unprovisioned default is fragile and the vendor marks it required. Set both TLS settings in distributed mode, apply the configuration on every peer, and restart the peers one at a time. To rotate the client API key without downtime, set the new key as `service.alt_api_key` on each peer and restart one at a time; `alt_api_key` (available as of Qdrant v1.17.0) is an additional accepted client key and, like `api_key`, gates the client API; it reaches the internal channel only where `enforce_internal_auth` is set, on v1.18.0 and later. The peer-channel and rotation settings can be version-dependent, so confirm them against the security page for the Qdrant version you run.
+`cluster.p2p.enable_tls` is separate from `service.enable_tls`: the first secures peer-to-peer traffic, the second the client API. Enabling `cluster.p2p.enable_tls` also requires a `ca_cert` in the `tls:` block, the CA that validates peer certificates; the security page marks `ca_cert: ./tls/cacert.pem` as required for peer TLS. Provision that CA and set the field before you enable peer TLS. Qdrant carries a compiled default path (`./tls/cacert.pem`), so a missing entry does not always fail at startup, but relying on an unprovisioned default is fragile and the vendor marks it required. Set both TLS settings in distributed mode, apply the configuration on every peer, and restart the peers one at a time. To rotate the client API key without downtime, set the new key as `service.alt_api_key` on each peer and restart one at a time; `alt_api_key` (available as of Qdrant v1.17.0) is an additional accepted client key and, like `api_key`, gates the client API. As of v1.19.2 a peer with `api_key` unset sends `alt_api_key` on internal requests, and the receiving peer checks that key only where internal enforcement is in effect (`enforce_internal_auth` set on v1.18.0 to v1.19.x, or left at its v1.20.0 default). The security page says that in a cluster with only `alt_api_key` set, v1.19.0 and v1.19.1 do not forward `alt_api_key` on internal requests, so v1.20.0 peers reject requests from those versions; such a cluster that runs v1.19.0 or v1.19.1 must, in the page's words, "Upgrade to v1.19.2 first, and then to v1.20.0". With enforcement on, the v1.20.0 default, set the new key as `alt_api_key` on every peer before promoting it to `api_key`, because the security page says every peer must accept the key its peers send. In the promoting rolling restart, set the new key as `api_key` and keep the old key as `alt_api_key` on each peer, since the security page says to "Keep the old key as alt_api_key until every peer uses the new key"; remove the old key only in a further rolling restart, after every peer uses the new key. The peer-channel and rotation settings can be version-dependent, so confirm them against the security page for the Qdrant version you run.
 
 ## 3. Weaviate: disable anonymous access, then authorize
 
@@ -47441,8 +47483,8 @@ The October 2026 date records the guide-wide documentation check. Items, or part
 - Milvus internal listeners (pinned tag v3.0.2): the listener that binds only the port, each component's listener, routing-only interceptors and internal-TLS option (query node, data node, streaming node, mix coordinator, proxy internal port), the interceptors that pass calls without metadata, one-way internal TLS, the default ports with `authorizationEnabled` and `internaltlsEnabled` off. Milvus internal listeners (pinned tag v3.0.2), continued: standalone enabling all five components, the query node's `Search` and `Query`, `credentials.NewServerTLSFromFile` returning nil credentials with the load error and otherwise building a `tls.Config` that sets only the server certificate, requiring no client certificate (grpc-go v1.82.2, the version in go.mod). The built `tls.Config` requires no client certificate because `tls.Config.ClientAuth` defaults to `NoClientCert`, the zero value of `ClientAuthType` (Go standard library go1.26.6, the go directive in go.mod). Milvus internal listeners (pinned tag v3.0.2), continued: gRPC serving plaintext when the credentials are nil. Milvus internal listeners sources (pinned tag v3.0.2): https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/netutil/listener.go#L11-L35, https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/netutil/listener.go#L92-L103, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L123-L126. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L246, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L243-L253, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L268. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/datanode/service.go#L82-L85, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/datanode/service.go#L127, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/datanode/service.go#L148. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/streamingnode/service.go#L106-L109, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/streamingnode/service.go#L345, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/streamingnode/service.go#L355. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/mixcoord/service.go#L97-L100, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/mixcoord/service.go#L212, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/mixcoord/service.go#L234. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/proxy/listener_manager.go#L56-L58, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/proxy/service.go#L461, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/proxy/service.go#L482. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/interceptor/cluster_interceptor.go#L34-L48, https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/interceptor/server_id_interceptor.go#L36-L54, https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/utils/util.go#L39-L63. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L357, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L457, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L458, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L690. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L978, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1155-L1162, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1165, https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1442. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/milvus-io/milvus/blob/v3.0.2/cmd/milvus/util.go#L142-L147, https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/proto/query_coord.proto#L109-L147, https://github.com/grpc/grpc-go/blob/v1.82.2/credentials/tls.go#L302-L308, https://github.com/grpc/grpc-go/blob/v1.82.2/credentials/tls.go#L222-L257. Milvus internal listeners sources (pinned tag v3.0.2), continued: https://github.com/golang/go/blob/go1.26.6/src/crypto/tls/common.go#L348-L354, https://github.com/golang/go/blob/go1.26.6/src/crypto/tls/common.go#L698-L700 and https://github.com/grpc/grpc-go/blob/v1.82.2/internal/transport/http2_server.go#L151-L167
 - Milvus internal listeners (pinned tag v2.6.24): the listener that binds only the port, each component's listener, routing-only interceptors and internal-TLS option (query node, data node, streaming node, mix coordinator, proxy internal port), the interceptors that pass calls without metadata, one-way internal TLS, the default ports with `authorizationEnabled` and `internaltlsEnabled` off. Milvus internal listeners (pinned tag v2.6.24), continued: standalone enabling all five components, the query node's `Search` and `Query`, `credentials.NewServerTLSFromFile` returning nil credentials with the load error and otherwise building a `tls.Config` that sets only the server certificate, requiring no client certificate (grpc-go v1.82.1, the version in go.mod). The built `tls.Config` requires no client certificate because `tls.Config.ClientAuth` defaults to `NoClientCert`, the zero value of `ClientAuthType` (Go standard library go1.25.8, the go directive in go.mod). Milvus internal listeners (pinned tag v2.6.24), continued: gRPC serving plaintext when the credentials are nil. Milvus internal listeners sources (pinned tag v2.6.24): https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/netutil/listener.go#L11-L35, https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/netutil/listener.go#L92-L103, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L93-L96. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L190, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L187-L197, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L212. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/datanode/service.go#L83-L86, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/datanode/service.go#L128, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/datanode/service.go#L149. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/streamingnode/service.go#L108-L111, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/streamingnode/service.go#L352, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/streamingnode/service.go#L362. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/mixcoord/service.go#L99-L102, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/mixcoord/service.go#L214, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/mixcoord/service.go#L236. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/proxy/listener_manager.go#L58-L60, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/proxy/service.go#L441, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/proxy/service.go#L461. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/interceptor/cluster_interceptor.go#L34-L48, https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/interceptor/server_id_interceptor.go#L36-L54, https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/utils/util.go#L41-L66. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L309, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L396, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L397, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L623. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L880, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1036-L1043, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1046, https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1322. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/milvus-io/milvus/blob/v2.6.24/cmd/milvus/util.go#L143-L148, https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/proto/query_coord.proto#L107-L145, https://github.com/grpc/grpc-go/blob/v1.82.1/credentials/tls.go#L302-L308, https://github.com/grpc/grpc-go/blob/v1.82.1/credentials/tls.go#L222-L257. Milvus internal listeners sources (pinned tag v2.6.24), continued: https://github.com/golang/go/blob/go1.25.8/src/crypto/tls/common.go#L335-L341, https://github.com/golang/go/blob/go1.25.8/src/crypto/tls/common.go#L681-L683 and https://github.com/grpc/grpc-go/blob/v1.82.1/internal/transport/http2_server.go#L151-L167
 - Milvus TLS documentation, internal TLS "For now only one-way tls is supported" (milvus-docs pinned commit cee60f10e2b794fbaf9bd6a02d5f129335218dfa): https://github.com/milvus-io/milvus-docs/blob/cee60f10e2b794fbaf9bd6a02d5f129335218dfa/site/en/adminGuide/tls.md#L215
-- Qdrant security (API key, read-only key, `api-key` header, TLS keys, ports, default insecurity): https://qdrant.tech/documentation/security/
-- Qdrant compiled-in defaults and overlay order (`service.host`, `http_port`, `grpc_port`; `config/config`, `config/$RUN_MODE` defaulting to `development`, `config/local`, `/etc/qdrant/config` in `deb` builds, `--config-path`, `QDRANT__` variables), the development and production overlays, and the image's `RUN_MODE=production` with an entrypoint that runs `./qdrant $@`. Qdrant defaults, overlays, image and release workflow, continued: the release workflow that builds `qdrant/qdrant` from the root `Dockerfile` (pinned tag v1.19.1). Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.19.1): https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L22, https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L292-L329, https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L330-L334. Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.19.1), continued: https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L352, https://github.com/qdrant/qdrant/blob/v1.19.1/config/development.yaml#L13-L15, https://github.com/qdrant/qdrant/blob/v1.19.1/config/production.yaml#L3-L5, https://github.com/qdrant/qdrant/blob/v1.19.1/Dockerfile#L225-L246. Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.19.1), continued: https://github.com/qdrant/qdrant/blob/v1.19.1/tools/entrypoint.sh#L21 and https://github.com/qdrant/qdrant/blob/v1.19.1/.github/workflows/docker-image.yml#L47-L55
+- Qdrant security (API key, read-only key, `api-key` header, TLS keys, ports, default insecurity, `enforce_internal_auth` on by default as of v1.20.0, `cluster.p2p.host` as of v1.19.2, `alt_api_key` rotation): https://qdrant.tech/documentation/security/
+- Qdrant compiled-in defaults and overlay order (`service.host`, `http_port`, `grpc_port`; `config/config`, `config/$RUN_MODE` defaulting to `development`, `config/local`, `/etc/qdrant/config` in `deb` builds, `--config-path`, `QDRANT__` variables), the development and production overlays, and the image's `RUN_MODE=production` with an entrypoint that runs `./qdrant $@`. Qdrant defaults, overlays, image and release workflow, continued: the release workflow that builds `qdrant/qdrant` from the root `Dockerfile` (pinned tag v1.20.0). Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.20.0): https://github.com/qdrant/qdrant/blob/v1.20.0/src/settings.rs#L25, https://github.com/qdrant/qdrant/blob/v1.20.0/src/settings.rs#L318-L355, https://github.com/qdrant/qdrant/blob/v1.20.0/config/config.yaml#L390-L394. Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.20.0), continued: https://github.com/qdrant/qdrant/blob/v1.20.0/config/config.yaml#L412, https://github.com/qdrant/qdrant/blob/v1.20.0/config/development.yaml#L13-L15, https://github.com/qdrant/qdrant/blob/v1.20.0/config/production.yaml#L3-L5, https://github.com/qdrant/qdrant/blob/v1.20.0/Dockerfile#L225-L246. Qdrant defaults, overlays, image and release workflow sources (pinned tag v1.20.0), continued: https://github.com/qdrant/qdrant/blob/v1.20.0/tools/entrypoint.sh#L21 and https://github.com/qdrant/qdrant/blob/v1.20.0/.github/workflows/docker-image.yml#L48-L56
 - Weaviate authentication (anonymous access, API key, OIDC variables): https://docs.weaviate.io/deploy/configuration/authentication
 - Weaviate authorization (admin list, RBAC availability): https://docs.weaviate.io/deploy/configuration/authorization and RBAC configuration (`AUTHORIZATION_RBAC_ENABLED`, `AUTHORIZATION_RBAC_ROOT_USERS`): https://docs.weaviate.io/deploy/configuration/configuring-rbac
 - Weaviate environment variables (`AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED` default, `GRPC_PORT` default): https://docs.weaviate.io/deploy/configuration/env-vars
@@ -47507,7 +47549,7 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- q: Qdrant source (v1.19.1)
+- q: Qdrant source (v1.20.0)
 - w: Weaviate source (v1.39.6)
 - m2: Milvus (v2.6.24)
 - m3: Milvus (v3.0.2)
@@ -47538,14 +47580,14 @@ Components (recorded basis):
 Claims (full source mapping in the JSON block below):
 
 - private-publication (REASONED; docker): Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.
-- qdrant-ports (REASONED; qd): Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.
+- qdrant-ports (REASONED; qd): Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer, and binds service.host unless cluster.p2p.host (v1.19.2 and later) is set.
 - qdrant-bind (REASONED; q): Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.
 - qdrant-image (REASONED; q): Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.
 - qdrant-client-auth (REASONED; qd): Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.
 - qdrant-client-tls (REASONED; qd): service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.
-- qdrant-peer-auth (REASONED; qd): Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, default-on only from v1.20.0; enforcement does not replace the peer-only network restriction.
+- qdrant-peer-auth (REASONED; qd): Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, default-on from v1.20.0 but without effect when no API key is configured, so under enforcement a cluster with only read_only_api_key loses peer traffic; enforcement does not replace the peer-only network restriction.
 - qdrant-peer-tls (REASONED; qd): cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.
-- qdrant-rotation (REASONED; qd): alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.
+- qdrant-rotation (REASONED; qd): alt_api_key accepts an additional client key from v1.17.0 and is checked internally only under enforce_internal_auth from v1.18.0 (default-on from v1.20.0); rotate peer-by-peer, setting the new key on every peer before promoting it, keeping the old key as alt_api_key until every peer uses the new key, and upgrading an alt_api_key-only cluster on v1.19.0 or v1.19.1 to v1.19.2 first.
 - weaviate-precedence (REASONED; w): File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.
 - weaviate-rest (REASONED; w, goflags): Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.
 - weaviate-image (REASONED; w, wd): Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.
@@ -47620,18 +47662,18 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "2e4f0210c9d7ffab3f58646abbfed725eb95a3a5ea807a0d8163a6d9dd7498f5",
+  "body_sha256": "c0389508e1ad628213fd75a5be535d9758ee619597e2a9b0a4d5fd65f3b8b4ef",
   "components": {
     "q": {
       "name": "Qdrant source",
-      "basis": "v1.19.1",
+      "basis": "v1.20.0",
       "sources": {
-        "s7548c65a0e83": "https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L292-L329",
-        "sd309f5848ac4": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L330-L334",
-        "s6b9ad7f6f7ac": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/development.yaml#L13-L15",
-        "sc0a948c10fcb": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/production.yaml#L3-L5",
-        "s6463d266f693": "https://github.com/qdrant/qdrant/blob/v1.19.1/Dockerfile#L225-L246",
-        "sfbd6a604b16a": "https://github.com/qdrant/qdrant/blob/v1.19.1/tools/entrypoint.sh#L21"
+        "s9ba3219e58b6": "https://github.com/qdrant/qdrant/blob/v1.20.0/src/settings.rs#L318-L355",
+        "sd40ccfe472fa": "https://github.com/qdrant/qdrant/blob/v1.20.0/config/config.yaml#L390-L394",
+        "s13127d2b209f": "https://github.com/qdrant/qdrant/blob/v1.20.0/config/development.yaml#L13-L15",
+        "s1a27322fe3be": "https://github.com/qdrant/qdrant/blob/v1.20.0/config/production.yaml#L3-L5",
+        "s44110a9ab1e1": "https://github.com/qdrant/qdrant/blob/v1.20.0/Dockerfile#L225-L246",
+        "s207f4baf8240": "https://github.com/qdrant/qdrant/blob/v1.20.0/tools/entrypoint.sh#L21"
       }
     },
     "w": {
@@ -48012,14 +48054,14 @@ Claims (full source mapping in the JSON block below):
   },
   "claims": {
     "private-publication": {"text": "Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.", "components": ["docker"], "sources": ["docker:s1e53417c513d"], "status": "REASONED"},
-    "qdrant-ports": {"text": "Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-bind": {"text": "Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.", "components": ["q"], "sources": ["q:s7548c65a0e83", "q:sd309f5848ac4"], "status": "REASONED"},
-    "qdrant-image": {"text": "Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.", "components": ["q"], "sources": ["q:s6b9ad7f6f7ac", "q:sc0a948c10fcb", "q:s6463d266f693", "q:sfbd6a604b16a"], "status": "REASONED"},
+    "qdrant-ports": {"text": "Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer, and binds service.host unless cluster.p2p.host (v1.19.2 and later) is set.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-bind": {"text": "Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.", "components": ["q"], "sources": ["q:s9ba3219e58b6", "q:sd40ccfe472fa"], "status": "REASONED"},
+    "qdrant-image": {"text": "Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.", "components": ["q"], "sources": ["q:s13127d2b209f", "q:s1a27322fe3be", "q:s44110a9ab1e1", "q:s207f4baf8240"], "status": "REASONED"},
     "qdrant-client-auth": {"text": "Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
     "qdrant-client-tls": {"text": "service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-peer-auth": {"text": "Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, default-on only from v1.20.0; enforcement does not replace the peer-only network restriction.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-peer-auth": {"text": "Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, default-on from v1.20.0 but without effect when no API key is configured, so under enforcement a cluster with only read_only_api_key loses peer traffic; enforcement does not replace the peer-only network restriction.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
     "qdrant-peer-tls": {"text": "cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-rotation": {"text": "alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-rotation": {"text": "alt_api_key accepts an additional client key from v1.17.0 and is checked internally only under enforce_internal_auth from v1.18.0 (default-on from v1.20.0); rotate peer-by-peer, setting the new key on every peer before promoting it, keeping the old key as alt_api_key until every peer uses the new key, and upgrading an alt_api_key-only cluster on v1.19.0 or v1.19.1 to v1.19.2 first.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
     "weaviate-precedence": {"text": "File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.", "components": ["w"], "sources": ["w:s8c45722d725f", "w:sb916723717de", "w:s7c30e1e2c554", "w:s85b7b3e8fa18", "w:s8c05965785ea", "w:sbd0d3c32cae6", "w:s8a57e655e250", "w:s0ba20e752b37"], "status": "REASONED"},
     "weaviate-rest": {"text": "Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.", "components": ["w", "goflags"], "sources": ["w:sa1cbcde2f024", "w:s122708a42282", "w:s5b7738072d06", "w:s71035079ef45", "w:s7b8a55a31a45", "w:sc6fc7e030ce0", "w:s8e5bf5d887cc", "goflags:sbd8f9e746696"], "status": "REASONED"},
     "weaviate-image": {"text": "Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.", "components": ["w", "wd"], "sources": ["w:se5771dfe00cc", "wd:sa066265b9009"], "status": "REASONED"},
@@ -60049,51 +60091,63 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
 # host's real document root (nginx `root` / Apache DocumentRoot); the check is INCONCLUSIVE unless the plant
 # lands. mktemp creates the probe exclusively so it never clobbers a real file, and only that file is
 # removed. --noproxy so no client proxy answers; the body is shown so leaked content is visible:
-DOCROOT=/var/www/html
-if probe=$(sudo mktemp "$DOCROOT/.env.probeXXXXXX" 2>/dev/null); then
-  # mktemp makes it root-only (0600); chmod so the web-server worker can READ it, or its 403 is a FILE
-  # PERMISSION denial (not the deny rule) and the check would false-pass with no rule configured:
-  if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
-    for p in "/${probe##*/}" /.git/config /config.php.bak /db.sql; do
-      curl -q -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://example.com$p"
-    done
-    # every line must be 403 or 404 and must NOT print PLANTED-SECRET. The .env.probe* line is the POSITIVE
-    # CONTROL (a world-readable real file under the deny rules), so its 403/404 is the rule, not permissions
-    # or absence; a bare 404 on the others could be absence, so plant one at each to be sure
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  DOCROOT=/var/www/html
+  if probe=$(sudo mktemp "$DOCROOT/.env.probeXXXXXX" 2>/dev/null); then
+    # mktemp makes it root-only (0600); chmod so the web-server worker can READ it, or its 403 is a FILE
+    # PERMISSION denial (not the deny rule) and the check would false-pass with no rule configured:
+    if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
+      for p in "/${probe##*/}" /.git/config /config.php.bak /db.sql; do
+        curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://$1$p"
+      done
+      # every line must be 403 or 404 and must NOT print PLANTED-SECRET. The .env.probe* line is the POSITIVE
+      # CONTROL (a world-readable real file under the deny rules), so its 403/404 is the rule, not permissions
+      # or absence; a bare 404 on the others could be absence, so plant one at each to be sure
+    else
+      echo "inconclusive: could not prepare the probe file"
+    fi
+    sudo rm -f "$probe"
   else
-    echo "inconclusive: could not prepare the probe file"
+    echo "inconclusive: could not create a probe under $DOCROOT; point it at the writable document root"
   fi
-  sudo rm -f "$probe"
-else
-  echo "inconclusive: could not create a probe under $DOCROOT; point it at the writable document root"
-fi
-# uploads/backups directory: an existing, non-empty, index-less dir must NOT return a 200 autoindex under
-# Options -Indexes. Plant a throwaway file so a listing would actually reveal something; inconclusive if the
-# directory does not exist:
-if u=$(sudo mktemp "$DOCROOT/uploads/listcheckXXXXXX" 2>/dev/null); then
-  curl -q -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' https://example.com/uploads/   # 403/404, never a 200 listing
-  sudo rm -f "$u"
-else
-  echo "inconclusive: $DOCROOT/uploads does not exist or is not writable"
-fi
+  # uploads/backups directory: an existing, non-empty, index-less dir must NOT return a 200 autoindex under
+  # Options -Indexes. Plant a throwaway file so a listing would actually reveal something; inconclusive if the
+  # directory does not exist:
+  if u=$(sudo mktemp "$DOCROOT/uploads/listcheckXXXXXX" 2>/dev/null); then
+    curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/"   # 403/404, never a 200 listing
+    sudo rm -f "$u"
+  else
+    echo "inconclusive: $DOCROOT/uploads does not exist or is not writable"
+  fi
 
-acme="$DOCROOT/.well-known/acme-challenge"
-if sudo test -d "$acme" && tok=$(sudo mktemp "$acme/probeXXXXXX" 2>/dev/null); then
-  if printf 'probe' | sudo tee "$tok" >/dev/null && sudo chmod 0644 "$tok"; then   # readable, or a 403 is a permission denial not the exemption
-    name=${tok##*/}
-    curl -q -sS --noproxy '*' "https://example.com/.well-known/acme-challenge/$name"   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
-    curl -q -sS --noproxy '*' "http://example.com/.well-known/acme-challenge/$name"    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+  acme="$DOCROOT/.well-known/acme-challenge"
+  if sudo test -d "$acme" && tok=$(sudo mktemp "$acme/probeXXXXXX" 2>/dev/null); then
+    if printf 'probe' | sudo tee "$tok" >/dev/null && sudo chmod 0644 "$tok"; then   # readable, or a 403 is a permission denial not the exemption
+      name=${tok##*/}
+      curl -q -g -sS --noproxy '*' "https://$1/.well-known/acme-challenge/$name"   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
+      curl -q -g -sS --noproxy '*' "http://$1/.well-known/acme-challenge/$name"    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+    else
+      echo "inconclusive: could not prepare the challenge file"
+    fi
+    sudo rm -f "$tok"
   else
-    echo "inconclusive: could not prepare the challenge file"
+    echo "inconclusive: $acme does not exist"
   fi
-  sudo rm -f "$tok"
-else
-  echo "inconclusive: $acme does not exist"
-fi
-curl -q -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' https://example.com/.well-known-backup/config
-# must be 403 or 404: a directory that only starts with "well-known" must not inherit the exemption. A bare
-# 404 is inconclusive here (nothing is there); create a real .well-known-backup/config to be certain a
-# served 200 would be the finding, then remove it
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config"
+  # must be 403 or 404: a directory that only starts with "well-known" must not inherit the exemption. A bare
+  # 404 is inconclusive here (nothing is there); create a real .well-known-backup/config to be certain a
+  # served 200 would be the finding, then remove it
+)
 
 for d in .next/static build dist; do
   [ -d "$d" ] || { echo "$d: absent, nothing scanned"; continue; }
@@ -60106,11 +60160,11 @@ done
 # a bundler can split or encode a value, so scan for the literal secret as well
 ```
 
-REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
-REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
-against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and replace
-`example.com` with its served hostname. On an isolated test host, run before and after enabling the
+REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and put its
+served host name on the block's `set --` line. On an isolated test host, run before and after enabling the
 deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
 return 403 or 404 without that body. A failed plant or curl transfer is inconclusive.
 
@@ -60118,25 +60172,38 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
 # REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
 # runtime is available, and network restrictions prevent installing one. Expected exposed/fixed
 # outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
-# references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only.
-DOCROOT=/var/www/html
-for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
-  template="$DOCROOT/probeXXXXXX"
-  [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
-  if probe=$(sudo mktemp --suffix="$suffix" "$template" 2>/dev/null); then
-    if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
-      p="/${probe##*/}"
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -w "  <= %{http_code} $p\n" "https://example.com$p" || echo "inconclusive: curl failed"
-      # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
+# references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
+# block before its host guard was added.
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, port, path or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  DOCROOT=/var/www/html
+  for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
+    template="$DOCROOT/probeXXXXXX"
+    [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
+    if probe=$(sudo mktemp --suffix="$suffix" "$template" 2>/dev/null); then
+      if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
+        p="/${probe##*/}"
+        curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+          -w "  <= %{http_code} $p\n" "https://$1$p" || echo "inconclusive: curl failed"
+        # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
+      else
+        echo "inconclusive: could not prepare $probe"
+      fi
+      sudo rm -f "$probe"
     else
-      echo "inconclusive: could not prepare $probe"
+      echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
     fi
-    sudo rm -f "$probe"
-  else
-    echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
-  fi
-done
+  done
+)
 ```
 
 ## Sources (checked September 2026)
@@ -60234,7 +60301,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "fd1133924c8a8c3c139bfd6faba35d6da0e1507f3c364206f16afd9b6260b7f7",
+  "body_sha256": "30beed1a2fad13a9f82808d2dfd9ff2ef3ab79fe18bb5be1e4ee897c2b24f0db",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -61024,35 +61091,59 @@ BIMI is optional display metadata that shows a brand logo in supporting clients;
 
 ## Verify
 
-REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
+REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard was added; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
 
 ```bash
 # REASONED: DNS and TLS expectations follow the cited RFCs; no DNS control, SMTP endpoint, or container runtime is available.
-# Inspect the published records (replace names; take the DKIM selector from a real signature).
+# Inspect the published records. Substitute your own names inside the quotes on the set -- line below,
+# taking the DKIM selector from the s= tag of a real signature. The block refuses example.com,
+# example.net, example.org and their subdomains: example.com publishes real DNS records of its own, so
+# an unsubstituted run would show another domain's policy.
 # These read DNS and TLS state; they do not evaluate SPF or DMARC or prove a service listener.
-dig +noall +answer TXT bounce.example.com
-dig +noall +answer TXT tx202609._domainkey.example.com
-dig +noall +answer CNAME tx202609._domainkey.example.com
-dig +noall +answer TXT _dmarc.example.com
-dig +noall +answer TXT _mta-sts.example.com
-dig +noall +answer TXT _smtp._tls.example.com
-dig +noall +answer TXT default._bimi.example.com
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MAIL_DOMAIN' 'REPLACE_WITH_YOUR_BOUNCE_DOMAIN' 'REPLACE_WITH_YOUR_DKIM_SELECTOR' 'REPLACE_WITH_YOUR_SUBMISSION_HOST'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values: mail domain, bounce domain, DKIM selector and submission host; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your mail domain (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your bounce (Return-Path) domain, the name that carries its SPF record, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your DKIM selector, the s= tag of a real signature, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$4" in
+    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your submission host name (no scheme, port, path or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '|%s|%s|%s|' "$1" "$2" "$4" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+    *'|example.com|'*|*'|example.net|'*|*'|example.org|'*|*'.example.com|'*|*'.example.net|'*|*'.example.org|'*) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own names on the set -- line above; not probing"; exit 2 ;;
+  esac
+  dig +noall +answer TXT "$2"
+  dig +noall +answer TXT "$3._domainkey.$1"
+  dig +noall +answer CNAME "$3._domainkey.$1"
+  dig +noall +answer TXT "_dmarc.$1"
+  dig +noall +answer TXT "_mta-sts.$1"
+  dig +noall +answer TXT "_smtp._tls.$1"
+  dig +noall +answer TXT "default._bimi.$1"
 
-# Submission must complete TLS with a validated certificate before AUTH. -verify_return_error
-# matters because s_client otherwise continues past a verification failure. This confirms TLS is
-# available, not that AUTH is gated on it; the discriminating check, reasoned here, is the negative
-# one: a plaintext or post-stripped-STARTTLS AUTH attempt must be refused, where the exposed state
-# accepts it.
-openssl s_client -connect smtp.example.com:587 -starttls smtp \
-  -servername smtp.example.com -verify_hostname smtp.example.com \
-  -verify_return_error -min_protocol TLSv1.2 </dev/null
+  # Submission must complete TLS with a validated certificate before AUTH. -verify_return_error
+  # matters because s_client otherwise continues past a verification failure. This confirms TLS is
+  # available, not that AUTH is gated on it; the discriminating check, reasoned here, is the negative
+  # one: a plaintext or post-stripped-STARTTLS AUTH attempt must be refused, where the exposed state
+  # accepts it.
+  openssl s_client -connect "$4:587" -starttls smtp \
+    -servername "$4" -verify_hostname "$4" \
+    -verify_return_error -min_protocol TLSv1.2 </dev/null
 
-openssl s_client -connect smtp.example.com:465 \
-  -servername smtp.example.com -verify_hostname smtp.example.com \
-  -verify_return_error -min_protocol TLSv1.2 </dev/null
+  openssl s_client -connect "$4:465" \
+    -servername "$4" -verify_hostname "$4" \
+    -verify_return_error -min_protocol TLSv1.2 </dev/null
+)
 ```
 
-REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314, RFC 9989, RFC 8601 and RFC 2505. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
+REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314, RFC 9989, RFC 8601 and RFC 2505. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard was added; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ## Common mistakes
 
@@ -61153,7 +61244,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "fba28ff4026087f7c7b3ad2fd7e4eaef5fa2569f199c262c469a1f5112f09ba6",
+  "body_sha256": "f5e2531ecc3d1456148d92965e49a66aef6a8de28b4b0c230ff4b523d72821df",
   "components": {
     "spf": {
       "name": "SPF",
