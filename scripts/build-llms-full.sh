@@ -42,19 +42,25 @@ python3 tools/version_basis.py --check
 # The bundle is served from https://secureconfig.ai/, where a guide's relative link such as
 # (mfa.md) resolves to a page that does not exist. So each relative link outside code is
 # rewritten to the same path in the repository on GitHub: blob/main/<path> for a file and
-# tree/main/<path>/ for a directory, keeping any #anchor. In-page anchors, links with a scheme,
-# fenced blocks and code spans stay exactly as written, using the fence rule the gates use.
+# tree/main/<path>/ for a directory, keeping any #anchor. That covers an inline link or image,
+# with or without angle brackets or a title, and a link reference definition such as
+# [m]: mfa.md. In-page anchors, links with a scheme, fenced blocks and code spans stay exactly
+# as written, using the fence rule the gates use.
 #
 # The ref is the branch name main, not a commit SHA. The build has to be offline and
 # deterministic, and the commit that will carry this file does not exist while the file is
 # being built, so a SHA could only name an earlier commit: stale from the moment it merged, and
-# a hand bump on every change. main is a constant the build knows offline, it is the ref that
-# site/llms.txt and README.md already use, and the freshness gate keeps the committed bundle
-# equal to the guides it was built from, so on main a link and the text around it describe the
-# same revision.
+# a hand bump on every change. The branch name main is a constant the build knows offline, it
+# is the ref that site/llms.txt and README.md already use, and the freshness gate keeps the
+# committed bundle equal to the guides it was built from, so on main a link and the text around
+# it describe the same revision.
 #
 # A link that leaves the repository, or names a path absent from this checkout, fails the
-# build, so a broken target cannot reach the bundle as a dead GitHub URL.
+# build, so a broken target cannot reach the bundle as a dead GitHub URL. After the rewrite,
+# any link target that is not absolute, a scheme or an in-page anchor also fails the build:
+# a relative HTML attribute such as href or src, any srcset, a definition whose target is on
+# the next line, and a relative inline target that holds parentheses or whitespace. The gate in
+# tools/run_all_checks.sh applies the same rule to the built file.
 IFS= read -r -d '' absolutize <<'PY' || true
 import os
 import posixpath
@@ -66,13 +72,25 @@ from _markdown import Fences
 
 BASE = "https://github.com/jposluns/secureconfig"
 REF = "main"
-LINK = re.compile(r"\]\(([^()\s]+)\)")
 KEEP = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.-]*:|#)")
 TICKS = re.compile(r"`+")
+# An inline link or image target, bare or in angle brackets, followed by a title or ")".
+INLINE = re.compile(r"(\]\([ \t]*)(?:<([^<>\n]*)>|([^\s<>()]+)(?=[ \t]|\)))")
+# A link reference definition at the start of a line, inside a block quote or list item or not.
+DEFINE = re.compile(r"^([ \t>]*(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)*\[[^\]]+\]:[ \t]*)(?:<([^<>\n]*)>|(\S+))")
+# Where a target starts in each form that is certified after the rewrite, as the gate does.
+OPEN = re.compile(r"\]\([ \t]*<?")
+OPEN_DEFINE = re.compile(r"^[ \t>]*(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)*\[[^\]]+\]:[ \t]*<?")
+ATTRIBUTE = re.compile(
+    r"(?i)(?<![\w-])(href|src|srcset|poster|action|formaction|cite|data|background)[ \t]*=[ \t]*[\"']?"
+)
+TARGET = re.compile(r"[^\s<>()\"']*")
 name = sys.argv[1]
 
 
 def absolute(target):
+    if not target or any(c.isspace() for c in target):
+        sys.exit(f'{name}: link target "{target}" is empty or holds whitespace, so it cannot be rewritten')
     path, mark, anchor = target.partition("#")
     clean = posixpath.normpath(path)
     if path.startswith("/") or clean == ".." or clean.startswith("../"):
@@ -84,11 +102,36 @@ def absolute(target):
     return f"{BASE}/{kind}/{REF}/{clean}{slash}{mark}{anchor}"
 
 
-def prose(text):
-    def one(match):
-        target = match.group(1)
-        return match.group(0) if KEEP.match(target) else "](" + absolute(target) + ")"
-    return LINK.sub(one, text)
+def swap(match):
+    head, angled, bare = match.groups()
+    target = bare if angled is None else angled
+    if not KEEP.match(target):
+        target = absolute(target)
+    return head + (target if angled is None else f"<{target}>")
+
+
+def uncertified(text, first):
+    """Each target left in text that is not absolute, a scheme or an in-page anchor."""
+    starts = [match.end() for match in OPEN.finditer(text)]
+    define = OPEN_DEFINE.match(text) if first else None
+    if define:
+        starts.append(define.end())
+    found = [target for target in (TARGET.match(text, s).group(0) for s in starts) if not KEEP.match(target)]
+    for match in ATTRIBUTE.finditer(text):
+        target = TARGET.match(text, match.end()).group(0)
+        if match.group(1).lower() == "srcset" or not KEEP.match(target):
+            found.append(f"{match.group(1)}={target}")
+    return found
+
+
+def prose(text, first):
+    # Only the text before a line's first code span can start a reference definition.
+    text = INLINE.sub(swap, text)
+    if first:
+        text = DEFINE.sub(swap, text, count=1)
+    for target in uncertified(text, first):
+        sys.exit(f'{name}: link target "{target}" cannot be certified as absolute, a scheme or an in-page anchor, and the build does not rewrite its form')
+    return text
 
 
 def rewrite(line):
@@ -102,10 +145,10 @@ def rewrite(line):
         if close is None:
             k += 1
             continue
-        out.append(prose(line[pos:runs[k].start()]))
+        out.append(prose(line[pos:runs[k].start()], not out))
         out.append(line[runs[k].start():runs[close].end()])
         pos, k = runs[close].end(), close + 1
-    out.append(prose(line[pos:]))
+    out.append(prose(line[pos:], not out))
     return "".join(out)
 
 
