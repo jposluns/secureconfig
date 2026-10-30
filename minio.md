@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against AIStor documentation (no recorded version); 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources.
+Written against AIStor documentation (no recorded version) and curl curl-8_14_1; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -355,7 +355,7 @@ ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  # -sS: when no HTTP response arrives, curl prints 000 and its own "curl: (N) ..." error line; that is inconclusive, never a denial and never proof of isolation
+  # -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: a 000 status beside a "curl: (N) ..." error line means no HTTP response arrived; that is inconclusive, never a denial and never proof of isolation
   curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/"                    # service root: anonymous ListBuckets denied
   curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/" # per bucket: anonymous listing denied
   curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT"
@@ -456,7 +456,7 @@ For the duration caveat, use a valid JWT expiring in approximately 20 minutes, `
 
 **Presigned URLs, REASONED:** a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Use a known private fixture and signing credentials that remain valid throughout the comparison. Confirm ordinary signed reads before and after each trial.
 
-Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner.
+Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner. This block and the Console-disabled check below print the `exitcode` and `errormsg` write-out variables, which the cited curl manual dates to curl 7.75.0; use curl 7.75.0 or later.
 
 REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With curl stubbed, the literal placeholder, empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed their guard messages without invoking curl, including a short assignment under set -u. A fixture HTTPS URL reached curl via config stdin, not argv; a backslash/quote fixture was escaped in that input. Both admitted cases printed a stub response. These are local guard and formatting observations, not expiry or signature-age enforcement. Per the guide's cited AIStor `mc share download` (presigned credentials and expiry); AIStor access management (built-in policies, custom policy structure, actions, and resources); AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key). These existing citations were not reopened.
 
@@ -578,6 +578,7 @@ REASONED from the cited AIStor documentation: OIDC role-policy and claim-policy 
 - AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key): https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html
 - AIStor metrics v3 (active and queued requests): https://docs.min.io/aistor/operations/monitoring/metrics-and-alerts/metrics-v3/
 - AIStor release artifacts (server and client RELEASE baselines): https://docs.min.io/aistor/operations/release-artifacts/
+- curl curl-8_14_1 (checked October 2026): [-S restores error messages with -s (4-19)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19); [errormsg and exitcode added in 7.75.0 (75-79)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 
 
 <!-- version-basis:start -->
@@ -596,6 +597,7 @@ Components (recorded basis):
 - aistor: AIStor documentation (unknown)
 - console: MinIO console source (f0b91e5504663c4672da451877857b57c3345295)
 - aws: AWS signature-condition semantics (unknown)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the JSON block below):
 
@@ -633,15 +635,15 @@ Claims (full source mapping in the JSON block below):
 - audit-webhook (REASONED; aistor): Enable HTTPS webhook with authentication value supplied verbatim, certificate verification and persistent audit queue; restart every node.
 - audit-kafka (REASONED; aistor): Kafka TLS defaults off; explicitly enable verified TLS and supported SASL with topic-scoped credentials; example PLAIN is only over TLS.
 - audit-queue (REASONED; aistor): Persistent per-node queue needs service read/write/list access; delivery retries can lose events when full, and webhook 2xx proves acknowledgement rather than durability.
-- verify-exposure (REASONED; aistor): Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.
+- verify-exposure (REASONED; aistor, curl): Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.
 - verify-scope (REASONED; aistor): Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded.
 - verify-encryption (REASONED; aistor): New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state.
 - verify-retention (REASONED; aistor): Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable.
 - verify-audit (REASONED; aistor): Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit.
 - verify-oidc (REASONED; aistor): Fresh mapped STS credentials must read only the app fixture versus a broad-policy control; also test an unmapped identity and explicit duration beyond shorter JWT/default.
-- verify-url-expiry (REASONED; aistor): Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.
-- verify-signature-age (REASONED; aistor, aws): One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.
-- verify-console (REASONED; aistor): After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.
+- verify-url-expiry (REASONED; aistor, curl): Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.
+- verify-signature-age (REASONED; aistor, aws, curl): One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.
+- verify-console (REASONED; aistor, curl): After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.
 - verify-concurrency (REASONED; aistor): Four-node budget 64 should constrain admission to 16 per node under saturating signed load; compare measured inflight/waiting metrics with automatic sizing, not RPS or a guessed rejection code.
 
 ````json
@@ -649,7 +651,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "7565bb7aec0aba2b58871cc1830df6fb2aea627cd7cc69aad04ad65cac91f77a",
+  "body_sha256": "37c808d8cad4a9b2bd6d9c55cb9afaa14ddf0f9c801d690ee2feea683ce2bf6f",
   "components": {
     "aistor": {
       "name": "AIStor documentation",
@@ -716,6 +718,14 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s724c81d09245": "https://docs.aws.amazon.com/AmazonS3/latest/developerguide/bucket-policy-s3-sigv4-conditions.html"
       }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s07916104bf60": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19",
+        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79"
+      }
     }
   },
   "claims": {
@@ -753,15 +763,15 @@ Claims (full source mapping in the JSON block below):
     "audit-webhook": {"text": "Enable HTTPS webhook with authentication value supplied verbatim, certificate verification and persistent audit queue; restart every node.", "components": ["aistor"], "sources": ["aistor:s5ffb30993d29", "aistor:s8b922d2cc573"], "status": "REASONED"},
     "audit-kafka": {"text": "Kafka TLS defaults off; explicitly enable verified TLS and supported SASL with topic-scoped credentials; example PLAIN is only over TLS.", "components": ["aistor"], "sources": ["aistor:s077155dd0d0a", "aistor:s624eb11b369c"], "status": "REASONED"},
     "audit-queue": {"text": "Persistent per-node queue needs service read/write/list access; delivery retries can lose events when full, and webhook 2xx proves acknowledgement rather than durability.", "components": ["aistor"], "sources": ["aistor:sfc2a9f6aaa82", "aistor:s8b922d2cc573"], "status": "REASONED"},
-    "verify-exposure": {"text": "Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.", "components": ["aistor"], "sources": ["aistor:sb91d4a3416c9", "aistor:sb9d5614881d7", "aistor:s832ebbd6b12d", "aistor:s410c1a1103fc", "aistor:sedcc92753b24", "aistor:s5e54dfb548ff", "aistor:sce35ebdaa862", "aistor:sfc2a9f6aaa82", "aistor:s077155dd0d0a", "aistor:s5ffb30993d29", "aistor:s010df9b91c3e", "aistor:sd117ab9c22cf"], "status": "REASONED", "verify": [1]},
+    "verify-exposure": {"text": "Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.", "components": ["aistor", "curl"], "sources": ["aistor:sb91d4a3416c9", "aistor:sb9d5614881d7", "aistor:s832ebbd6b12d", "aistor:s410c1a1103fc", "aistor:sedcc92753b24", "aistor:s5e54dfb548ff", "aistor:sce35ebdaa862", "aistor:sfc2a9f6aaa82", "aistor:s077155dd0d0a", "aistor:s5ffb30993d29", "aistor:s010df9b91c3e", "aistor:sd117ab9c22cf", "curl:s07916104bf60"], "status": "REASONED", "verify": [1]},
     "verify-scope": {"text": "Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded.", "components": ["aistor"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aistor:s060498cf1d28", "aistor:s8aab14fd9241"], "status": "REASONED", "verify": [2]},
     "verify-encryption": {"text": "New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state.", "components": ["aistor"], "sources": ["aistor:sa1b121169978", "aistor:s0c9db42c9d8d", "aistor:s725b0aa69279"], "status": "REASONED", "verify": [3]},
     "verify-retention": {"text": "Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable.", "components": ["aistor"], "sources": ["aistor:s79346e27156b", "aistor:sb375aff8811f", "aistor:s0c9db42c9d8d"], "status": "REASONED", "verify": [4, 5]},
     "verify-audit": {"text": "Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit.", "components": ["aistor"], "sources": ["aistor:s7eb5037577a9", "aistor:s624eb11b369c", "aistor:s8b922d2cc573"], "status": "REASONED", "verify": [6]},
     "verify-oidc": {"text": "Fresh mapped STS credentials must read only the app fixture versus a broad-policy control; also test an unmapped identity and explicit duration beyond shorter JWT/default.", "components": ["aistor"], "sources": ["aistor:s72c067e99d16", "aistor:s53d35aac0c14"], "status": "REASONED"},
-    "verify-url-expiry": {"text": "Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.", "components": ["aistor"], "sources": ["aistor:s19e2a1dc1a62"], "status": "REASONED", "verify": [7]},
-    "verify-signature-age": {"text": "One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.", "components": ["aistor", "aws"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aws:s724c81d09245"], "status": "REASONED", "verify": [7]},
-    "verify-console": {"text": "After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.", "components": ["aistor"], "sources": ["aistor:s410c1a1103fc", "aistor:s060498cf1d28"], "status": "REASONED", "verify": [8]},
+    "verify-url-expiry": {"text": "Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.", "components": ["aistor", "curl"], "sources": ["aistor:s19e2a1dc1a62", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [7]},
+    "verify-signature-age": {"text": "One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.", "components": ["aistor", "aws", "curl"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aws:s724c81d09245", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [7]},
+    "verify-console": {"text": "After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.", "components": ["aistor", "curl"], "sources": ["aistor:s410c1a1103fc", "aistor:s060498cf1d28", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [8]},
     "verify-concurrency": {"text": "Four-node budget 64 should constrain admission to 16 per node under saturating signed load; compare measured inflight/waiting metrics with automatic sizing, not RPS or a guessed rejection code.", "components": ["aistor"], "sources": ["aistor:sedcc92753b24", "aistor:s4e625044ee38"], "status": "REASONED"}
   }
 }

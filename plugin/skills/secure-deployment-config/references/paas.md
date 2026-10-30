@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Render documentation (no recorded version), Next.js pinned documentation v16.4.2, Next.js environment variables 15, Express request protocol 5.x, Django proxy security setting 6.1, and MySQL client connection options 8.4; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
+Written against Render documentation (no recorded version), Next.js pinned documentation v16.4.2, Next.js environment variables 15, Express request protocol 5.x, Django proxy security setting 6.1, MySQL client connection options 8.4, and curl curl-8_14_1; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -86,7 +86,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"         # this guide's redirect check above; http=000 with a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
+  curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"         # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
 )
 # 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
 #    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
@@ -112,7 +112,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"  # no creds: want the APP's own 401/403, not a platform SSO 401; http=000 with a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
+  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"  # no creds: want the APP's own 401/403, not a platform SSO 401; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
 )
 #    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
 #    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
@@ -187,6 +187,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 - Railway public-networking headers and request handling (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L16-L17
 - Railway GET redirect status and POST conversion (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L37-L38. The two complete entries state: "Plain HTTP GET requests will be redirected to HTTPS with a `301` response." and "Plain HTTP POST requests will be converted to GET requests." This guide's assessment: these entries state none of the following: HEAD behaviour, a POST status code or a configurable redirect toggle.
 - Railway HTTP POST redirect status and client method change (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/troubleshooting/405-method-not-allowed.md#L8-L18. The page states: "This occurs because your request was made using HTTP. Railway will attempt to redirect your insecure request with a 301 Moved Permanently status code." It continues: "When an HTTP client encounters a 301 Moved Permanently redirect, the client will follow the redirect." It then says that, according to the HTTP/1.1 specifications, "the client will typically change the request method from POST to GET when it follows the redirect to the new URL". The page's line 8 places this in "a POST request to your application" that "is redirected to a GET request". This guide's assessment: these lines state no HEAD behaviour or configurable redirect toggle.
+- curl curl-8_14_1 (checked October 2026): [-S restores error messages with -s (4-19)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19).
 
 
 <!-- version-basis:start -->
@@ -215,6 +216,7 @@ Components (recorded basis):
 - express: Express request protocol (5.x)
 - django: Django proxy security setting (6.1)
 - mysql-client: MySQL client connection options (8.4)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the JSON block below):
 
@@ -239,8 +241,8 @@ Claims (full source mapping in the JSON block below):
 - spaces-secrets (REASONED; spaces): Use Settings secrets for sensitive values, never repository/README metadata; variables remain publicly readable.
 - spaces-static (REASONED; spaces): Static Spaces expose both variables and secrets to client JavaScript through window.huggingface.variables; keep backend/provider credentials in Docker/Gradio Spaces or another server-side service.
 - spaces-dev (REASONED; spaces, spaces-pinned): At the time of writing, the pinned Dev Mode docs require PRO or Team &amp; Enterprise. The Dev Mode Docker image starts the application as a subprocess and starts an SSH server for local editors and terminals and a VS Code server for in-product VS Code Web. Dev Mode exposes the running Space as a standard SSH host; clients use the Space subdomain shown in the Dev Mode controls as the username at ssh.hf.space, and local VS Code uses Remote - SSH to connect to the same host. SSH requires adding the machine's SSH public key to the user's Hugging Face account; these docs do not establish which users or roles may connect, or the access control for in-product VS Code Web. This guide's assessment: access into the running container is materially more access than the app itself, so treat an unattended Dev Mode session the same as any other exposed admin path.
-- verify-redirect (REASONED; vercel, render, fly-pinned, railway, heroku): This guide's HTTP HEAD / check requires 301/302/307/308 with an https:// Location; Vercel documents 308 and Fly HTTP handlers 301 with force_https. Spot-check proves neither every route/method nor secure-cookie proxy awareness; Render's HTTPS status (not its static-rule 301), Railway HEAD status and Heroku's general redirect policy/setting/app-only responsibility/status remain unestablished.
-- verify-app-auth (REASONED; vercel): Disable Vercel deployment protection or use its documented Protection Bypass for Automation, the x-vercel-protection-bypass header or query parameter carrying the project's generated secret, to isolate app auth; no Render or Fly equivalent is cited. This guide's expected reading: anonymous protected requests get the app's 401/403, valid app credentials a 2xx, and a platform SSO 401 is not app enforcement.
+- verify-redirect (REASONED; vercel, render, fly-pinned, railway, heroku, curl): This guide's HTTP HEAD / check requires 301/302/307/308 with an https:// Location; Vercel documents 308 and Fly HTTP handlers 301 with force_https. Spot-check proves neither every route/method nor secure-cookie proxy awareness; Render's HTTPS status (not its static-rule 301), Railway HEAD status and Heroku's general redirect policy/setting/app-only responsibility/status remain unestablished.
+- verify-app-auth (REASONED; vercel, curl): Disable Vercel deployment protection or use its documented Protection Bypass for Automation, the x-vercel-protection-bypass header or query parameter carrying the project's generated secret, to isolate app auth; no Render or Fly equivalent is cited. This guide's expected reading: anonymous protected requests get the app's 401/403, valid app credentials a 2xx, and a platform SSO 401 is not app enforcement.
 - verify-secrets (REASONED; render, fly, vercel, nextjs-pinned): Scan history, working tree and deployed client JS, source maps, generated config and runtime values for every credential type; no matches is evidence, not proof. The scan procedure is this guide's, delegated to secrets.md; the pinned Next.js v16.4.2 lines document only the NEXT_PUBLIC_ build-time inlining and off-by-default production browser source maps that motivate the bundle scan.
 
 ````json
@@ -248,7 +250,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "a2eed1fa87e15971e47531fe5937f16b1eeeb0b8e4d45700a82179f17d963312",
+  "body_sha256": "edf4590729c1f57d1b09ab47feca6655bfde0f97a0025e9d1fe10821b7893f14",
   "components": {
     "render": {
       "name": "Render documentation",
@@ -390,6 +392,13 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s823c0bfaaafa": "https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_ssl-mode"
       }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s07916104bf60": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19"
+      }
     }
   },
   "claims": {
@@ -414,8 +423,8 @@ Claims (full source mapping in the JSON block below):
     "spaces-secrets": {"text": "Use Settings secrets for sensitive values, never repository/README metadata; variables remain publicly readable.", "components": ["spaces"], "sources": ["spaces:sda0c810c053d", "spaces:sd5ec2b2772e0"], "status": "REASONED"},
     "spaces-static": {"text": "Static Spaces expose both variables and secrets to client JavaScript through window.huggingface.variables; keep backend/provider credentials in Docker/Gradio Spaces or another server-side service.", "components": ["spaces"], "sources": ["spaces:sda0c810c053d"], "status": "REASONED"},
     "spaces-dev": {"text": "At the time of writing, the pinned Dev Mode docs require PRO or Team & Enterprise. The Dev Mode Docker image starts the application as a subprocess and starts an SSH server for local editors and terminals and a VS Code server for in-product VS Code Web. Dev Mode exposes the running Space as a standard SSH host; clients use the Space subdomain shown in the Dev Mode controls as the username at ssh.hf.space, and local VS Code uses Remote - SSH to connect to the same host. SSH requires adding the machine's SSH public key to the user's Hugging Face account; these docs do not establish which users or roles may connect, or the access control for in-product VS Code Web. This guide's assessment: access into the running container is materially more access than the app itself, so treat an unattended Dev Mode session the same as any other exposed admin path.", "components": ["spaces", "spaces-pinned"], "sources": ["spaces:sda0c810c053d", "spaces-pinned:s5d393b019bad", "spaces-pinned:sd1ae2b703a70"], "status": "REASONED"},
-    "verify-redirect": {"text": "This guide's HTTP HEAD / check requires 301/302/307/308 with an https:// Location; Vercel documents 308 and Fly HTTP handlers 301 with force_https. Spot-check proves neither every route/method nor secure-cookie proxy awareness; Render's HTTPS status (not its static-rule 301), Railway HEAD status and Heroku's general redirect policy/setting/app-only responsibility/status remain unestablished.", "components": ["vercel", "render", "fly-pinned", "railway", "heroku"], "sources": ["vercel:s2b470a6bc853", "vercel:s3e7832fd3031", "render:s5b8400c2a2ba", "fly-pinned:s4324a02dbc42", "railway:sbf08758c106a", "railway:s844d338bd121", "heroku:s0c5bf300cef4", "render:s22963948fc90", "render:s4935cea7a2ea", "heroku:sa86eb06bbd4a", "railway:sdd5e5ed1be54"], "status": "REASONED", "verify": [1]},
-    "verify-app-auth": {"text": "Disable Vercel deployment protection or use its documented Protection Bypass for Automation, the x-vercel-protection-bypass header or query parameter carrying the project's generated secret, to isolate app auth; no Render or Fly equivalent is cited. This guide's expected reading: anonymous protected requests get the app's 401/403, valid app credentials a 2xx, and a platform SSO 401 is not app enforcement.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96", "vercel:s845513031876", "vercel:sc1588029e14e"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "This guide's HTTP HEAD / check requires 301/302/307/308 with an https:// Location; Vercel documents 308 and Fly HTTP handlers 301 with force_https. Spot-check proves neither every route/method nor secure-cookie proxy awareness; Render's HTTPS status (not its static-rule 301), Railway HEAD status and Heroku's general redirect policy/setting/app-only responsibility/status remain unestablished.", "components": ["vercel", "render", "fly-pinned", "railway", "heroku", "curl"], "sources": ["vercel:s2b470a6bc853", "vercel:s3e7832fd3031", "render:s5b8400c2a2ba", "fly-pinned:s4324a02dbc42", "railway:sbf08758c106a", "railway:s844d338bd121", "heroku:s0c5bf300cef4", "render:s22963948fc90", "render:s4935cea7a2ea", "heroku:sa86eb06bbd4a", "railway:sdd5e5ed1be54", "curl:s07916104bf60"], "status": "REASONED", "verify": [1]},
+    "verify-app-auth": {"text": "Disable Vercel deployment protection or use its documented Protection Bypass for Automation, the x-vercel-protection-bypass header or query parameter carrying the project's generated secret, to isolate app auth; no Render or Fly equivalent is cited. This guide's expected reading: anonymous protected requests get the app's 401/403, valid app credentials a 2xx, and a platform SSO 401 is not app enforcement.", "components": ["vercel", "curl"], "sources": ["vercel:se6089d5c4e96", "vercel:s845513031876", "vercel:sc1588029e14e", "curl:s07916104bf60"], "status": "REASONED", "verify": [1]},
     "verify-secrets": {"text": "Scan history, working tree and deployed client JS, source maps, generated config and runtime values for every credential type; no matches is evidence, not proof. The scan procedure is this guide's, delegated to secrets.md; the pinned Next.js v16.4.2 lines document only the NEXT_PUBLIC_ build-time inlining and off-by-default production browser source maps that motivate the bundle scan.", "components": ["render", "fly", "vercel", "nextjs-pinned"], "sources": ["render:s213783ba6209", "fly:s29502d5e8321", "vercel:s2b470a6bc853", "nextjs-pinned:s0e3d2cd2248e", "nextjs-pinned:sf7cfdc553311"], "status": "REASONED", "verify": [1]}
   }
 }
