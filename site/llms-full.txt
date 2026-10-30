@@ -8773,11 +8773,11 @@ ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 rea
 (                                             # a subshell, so your own script arguments are untouched
   set +e   # expected refusals must not skip later probes under an inherited set -e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) for p in 3000 4180 9091; do   # app, oauth2-proxy, Authelia: each must be unreachable from another host
          curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
            -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/"
@@ -8802,7 +8802,7 @@ ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 rea
 )
 ```
 
-REASONED: preceding block; listener isolation, anonymous challenges and direct and through-proxy identity-header checks, per the guide's cited oauth2-proxy nginx integration, oauth2-proxy Traefik integration, Traefik forwardAuth middleware and Authelia nginx integration. No proxy, backend, IdP or external probe host is available. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its anonymous-challenge curl took the app's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the new guard has not been run. Both YAML blocks parsed. Five rejected cases of the public-address guard printed refusal messages with no curl calls; a substituted address reached four curl stubs. No live outcome is observed: exposed access reaches a backend or trusts admin; fixed access isolates listeners, challenges anonymous users and admits a valid session under its real identity. After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
+REASONED: preceding block; listener isolation, anonymous challenges and direct and through-proxy identity-header checks, per the guide's cited oauth2-proxy nginx integration, oauth2-proxy Traefik integration, Traefik forwardAuth middleware and Authelia nginx integration. No proxy, backend, IdP or external probe host is available. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its anonymous-challenge curl took the app's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the new guard has not been run. Both YAML blocks parsed. Five rejected cases of the public-address guard printed refusal messages with no curl calls; a substituted address reached four curl stubs. The bash -n, ShellCheck and stub runs recorded here covered the public-address block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No live outcome is observed: exposed access reaches a backend or trusts admin; fixed access isolates listeners, challenges anonymous users and admits a valid session under its real identity. After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
 
 ## Common mistakes
 
@@ -8901,7 +8901,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "ca6ff1084cc56d0cf57b108b816a861277a45a6c0cea7e52f3bcff79ee542124",
+  "body_sha256": "838773955498d06428786c5037b277d36d8e6d770f3a8b5ded4fbe4b7ba8e186",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
@@ -17105,11 +17105,11 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
          -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/" || true ;;   # run from a machine OUTSIDE the server's network: the diagnostic listener (section 5) must be UNREACHABLE (a refusal or timeout, never a 200)
   esac
@@ -17216,7 +17216,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "73da41c84e8fc6d8d03da557b8d9b87151f5ab20360f84a39df42943b95e6ec9",
+  "body_sha256": "100efc49fa547c357a9e4c5f9709f433d71a5c80e6d0e1692c036cc68be0314f",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
@@ -20008,11 +20008,11 @@ sudo ss -6 -tulnp                 # IPv6 TCP and UDP listeners: only intended on
 sudo ufw status verbose           # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
 (                                 # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) nc -vz -w 3 "$1" 22 ;;   # from an address outside the admin range: must fail to connect
     # as this guide's assessment, a refusal or timeout only means THIS connection failed, not that the host firewall denied it (a host with
     # no sshd listening refuses too): confirm SSH works from an allowed source and read `ufw status`/`--list-all`
@@ -20168,7 +20168,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "ce06a5b97d707b06dd8ddcbfdee22c09bc74d59bd3d111dc084525acd27ebfa6",
+  "body_sha256": "16eff2aea7e4e9fc85785cfc8368e6fae769d3bcbe50c2d5c3f883795b67d4de",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
@@ -53036,7 +53036,7 @@ Build the image from the pinned checkout and run that local build, not the GHCR 
 
 The image build excludes `auth.json`, so mount it read-only at `/content/app/auth.json`: `-v /srv/fooocus/auth.json:/content/app/auth.json:ro` with `docker run`, or `- /srv/fooocus/auth.json:/content/app/auth.json:ro` under the service's `volumes:` in `docker-compose.yml`. Fooocus runs in the image as its unprivileged `user` account, so the host file must be owned by that account's uid and readable by no other account. Read the uid from the image you built: on the `docker build . -t fooocus` path, `docker run --rm --entrypoint id fooocus -u user` prints it; on the Compose path, run `docker compose build` and then `docker run --rm --entrypoint id ghcr.io/lllyasviel/fooocus -u user`, which reads the local build Compose tagged with that name. Then `sudo chown` the file to that uid and `sudo chmod 0400` it. Read from the source and not observed on a running server (above), an unreadable file should stop Fooocus from starting, and a malformed file or an empty list should start it with no login, so check for the login prompt. Under rootless Docker or user-namespace remapping the host-side owner differs; this guide has not checked that case.
 
-## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence in an earlier form, before the proxy check took its host on a guarded set -- line; bash -n was not re-run on the guarded fence, and the new guard has not been run. In the extracted port-loop subshell with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so neither exit status nor this guard validates an address or service exposure)
+## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence in an earlier form, before the proxy check took its host on a guarded set -- line; bash -n was not re-run on the guarded fence, and the new guard has not been run. In the extracted port-loop subshell with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so neither exit status nor this guard validates an address or service exposure. The bash -n and stub runs recorded here covered the port-loop subshell in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2)
 
 None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. The checks remain REASONED from the cited vendor documentation and pinned sources, as detailed below.
 
@@ -53059,11 +53059,11 @@ ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each serv
 # Run it once with your public IPv4 address, then again with your public IPv6 address in brackets.
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) for p in 8188 7860 9090 7865; do                         # ComfyUI, SD WebUI, InvokeAI, Fooocus
          curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
            -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/" || :
@@ -53222,7 +53222,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "376e346bd2417a1467f7658b6b375693104f1538d5a9192424e2e20ce538c95b",
+  "body_sha256": "79ba501c18a7f592fd41a35cf64eb814e419912ff460791fcb839f297d30395f",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -57910,11 +57910,11 @@ ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0
 # value; copy this whole block, not just the command below
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) docker -H "tcp://$1:2375" info ;;       # must fail: connection refused or filtered
     # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
     # never opened a connection is inconclusive, not a pass
@@ -58077,7 +58077,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c4dc794757d55928e74658158ec7ed3409da83bd881b564a79333a33fc31f7d1",
+  "body_sha256": "a24013a853886f7ace8c795caa1c6a31bf9719dbfedcf47d07dae522b20c522f",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -65764,7 +65764,7 @@ unpublished wherever these run.
 
 ## Verify
 
-REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
+REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. The bash -n run recorded here covered the guarded probe block in an earlier form, whose guard refusals left the subshell with status 0; bash -n was not re-run on the current form of that block, whose guard refusals leave the subshell with status 2. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
 without an isolated network namespace, and has none. No exposed or fixed service was run.
 Each names its expected exposed and fixed result so
 it discriminates when run against a live instance, based on the cited vendor documentation and pinned sources. Run each
@@ -65790,7 +65790,7 @@ Exposed, a forwarder supplies a reachable non-loopback listener; fixed, no unaut
 path remains while the local browser endpoint still answers. The pinned socket factories and HTTP
 handler below establish these expected results.
 
-REASONED: the guard and substitution instructions for the DevTools, Grid, browserless and Playwright probes, per the guide's cited curl diagnostic variables entry (pinned tag curl-8_14_1) and Chromium 154.0.8037.57 host check entry. During marking review (October 2026) the guarded block ran in bash 5.3.9 with a stub curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with two values, the exactly-1-value refusal. The guarded block's marking-review testing (October 2026, bash 5.3.9, stub curl, no network) also showed that, with 203.0.113.10 substituted, the stub received http://203.0.113.10:9222/json/version, and the 4444/status and 3000/pressure edits reached the stub as written. No endpoint was probed, so the exposed and fixed results below remain unobserved. For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
+REASONED: the guard and substitution instructions for the DevTools, Grid, browserless and Playwright probes, per the guide's cited curl diagnostic variables entry (pinned tag curl-8_14_1) and Chromium 154.0.8037.57 host check entry. During marking review (October 2026) the guarded block ran in bash 5.3.9 with a stub curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with two values, the exactly-1-value refusal. The guarded block's marking-review testing (October 2026, bash 5.3.9, stub curl, no network) also showed that, with 203.0.113.10 substituted, the stub received http://203.0.113.10:9222/json/version, and the 4444/status and 3000/pressure edits reached the stub as written. The stub runs recorded here covered the guarded block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No endpoint was probed, so the exposed and fixed results below remain unobserved. For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
 forces a real substitution, and read the write-out. Replace `9222` in the curl URL with the actual
 externally forwarded port if different. For the local positive control, run the same guarded block
 inside the browser's network namespace with its actual loopback address and DevTools port.
@@ -65802,18 +65802,18 @@ REASONED: following block; external discovery/authentication probes and local po
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
     *) curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:9222/json/version" ;;
   esac
 )
 ```
 
-REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries. The same REASONED marking also rests on the guide's cited browserless pressure API entry, Playwright Docker entry, Playwright BrowserType.launchServer and connect entry, Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
+REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries. The same REASONED marking also rests on the guide's cited browserless pressure API entry, Playwright Docker entry, Playwright BrowserType.launchServer and connect entry, Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The guard-branch stub runs covered the guarded block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
 a `200` JSON body containing `webSocketDebuggerUrl`. Fixed, the external request cannot reach that
 endpoint while the local positive control still returns it. A `404` from approval mode is not a pass.
 A connection refused or a timeout that happened during the connect is consistent with
@@ -65966,7 +65966,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "8042e04b35c377a5c99099702d50f3efbd4cd939ef58b435acd13b55a6165d58",
+  "body_sha256": "c308bf3c69ad03d227fe1a8eb27eb04d1d2b20999e0e6030393a9db716ec3fe7",
   "components": {
     "chromium": {
       "name": "Chromium",
