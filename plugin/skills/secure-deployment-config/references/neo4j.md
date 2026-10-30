@@ -32,7 +32,7 @@ For a packaged, isolated first start, block network access and retain the loopba
 
 ```bash
 (
-  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 1; }
+  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
   cypher-shell -a bolt://localhost:7687 -u neo4j --change-password
 )
 ```
@@ -244,11 +244,11 @@ Enable HTTP request logging only when an HTTP/HTTPS connector is in use. It does
 
 REASONED: every service comparison in this Verify section, per the guide's cited Configure network connectors (Neo4j 5), Cypher Shell prompts, environment credentials, history, parameters, and timeouts, OpenSSL 3 TLS probe options, TLS 1.3 client-certificate validation and alerts, Transactional HTTP API deprecation and Query API availability entries and the other entries listed under Sources. During marking review (October 2026) neo4j, cypher-shell, docker and podman were still absent from the authoring environment, with no network access to obtain them; the local checks that did run are recorded in the next paragraph. **Service verification status: REASONED, not demonstrated.** The authoring environment has no Neo4j server, Cypher Shell, Docker, or Podman available, and no authorized running deployment was supplied. All service comparisons below require capabilities missing here. Run exposed/fixed comparisons only in disposable test deployments. Record server, edition, client, and plugin versions alongside results.
 
-REASONED: local syntax, guard and fragment-parsing checks only, which observe no Neo4j service. During marking review (October 2026) they were repeated: bash -n under bash 5.3.9 and ShellCheck 0.11.0 passed all seven shell blocks. The guard checks during marking review (October 2026), with stub ss, openssl, curl and cypher-shell and no network, showed that each of the six guarded blocks refused unchanged, partial and miscounted input and example.com or angle-bracket hosts, and that each block that clears NEO4J_PASSWORD refused when it was readonly. The cluster block, during marking review (October 2026), also refused a malformed DNS name, port or URI, and with locally generated fixtures its three s_client calls reached the stub, while openssl verify accepted member.crt and rejected untrusted.crt (error 20) against ca.pem. The eight configuration fragments, during marking review (October 2026), showed no malformed lines or duplicate keys. Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run.
+REASONED: local syntax, guard and fragment-parsing checks only, which observe no Neo4j service. During marking review (October 2026) they were repeated: bash -n under bash 5.3.9 and ShellCheck 0.11.0 passed all seven shell blocks. The guard checks during marking review (October 2026), with stub ss, openssl, curl and cypher-shell and no network, showed that each of the six guarded blocks refused unchanged, partial and miscounted input and example.com or angle-bracket hosts, and that each block that clears NEO4J_PASSWORD refused when it was readonly. The cluster block, during marking review (October 2026), also refused a malformed DNS name, port or URI, and with locally generated fixtures its three s_client calls reached the stub, while openssl verify accepted member.crt and rejected untrusted.crt (error 20) against ca.pem. The eight configuration fragments, during marking review (October 2026), showed no malformed lines or duplicate keys. Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run. The bash -n, ShellCheck, guard and stub runs recorded in this paragraph covered an earlier form of the section 1 block and the six guarded blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2.
 
-REASONED: guard behaviour only, with stub commands and no Neo4j service. During marking review (October 2026) each guarded block, pasted whole with a hostname substituted inside the quotes, reached only its stub commands, and unchanged or without its set -- line it refused. A substituted value containing one literal apostrophe made the listener block a syntax error that ran nothing, and its ss line pasted alone ran unguarded. A shadowed builtin was not tested. For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
+REASONED: guard behaviour only, with stub commands and no Neo4j service. During marking review (October 2026) each guarded block, pasted whole with a hostname substituted inside the quotes, reached only its stub commands, and unchanged or without its set -- line it refused. A substituted value containing one literal apostrophe made the listener block a syntax error that ran nothing, and its ss line pasted alone ran unguarded. A shadowed builtin was not tested. Those stub runs covered an earlier form of each guarded block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
 
-REASONED: per the guide's cited SSL framework and certificate-verified connection schemes entry; no Cypher Shell or Neo4j TLS service is available in the authoring environment, so a +s connection failing on an untrusted certificate (fixed) and a +ssc connection succeeding regardless (exposed) were not observed. During marking review (October 2026), with stubs, the Verify blocks passed bolt+s:// URIs to cypher-shell everywhere except the deliberate plaintext bolt:// test. Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for a certificate-verified direct connection. The `+ssc` variants, including `neo4j+ssc://`, skip certificate verification and do not establish server identity; reserve them for development. The checks below use direct Bolt to avoid routing discovery obscuring the result. Install the signing CA in the Cypher Shell client's trust store when necessary; OpenSSL's `-CAfile` and curl's `--cacert` do not configure Cypher Shell's trust. See [TLS connection schemes](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
+REASONED: per the guide's cited SSL framework and certificate-verified connection schemes entry; no Cypher Shell or Neo4j TLS service is available in the authoring environment, so a +s connection failing on an untrusted certificate (fixed) and a +ssc connection succeeding regardless (exposed) were not observed. During marking review (October 2026), with stubs, the Verify blocks passed bolt+s:// URIs to cypher-shell everywhere except the deliberate plaintext bolt:// test. Those stub runs covered an earlier form of the guarded blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for a certificate-verified direct connection. The `+ssc` variants, including `neo4j+ssc://`, skip certificate verification and do not establish server identity; reserve them for development. The checks below use direct Bolt to avoid routing discovery obscuring the result. Install the signing CA in the Cypher Shell client's trust store when necessary; OpenSSL's `-CAfile` and curl's `--cacert` do not configure Cypher Shell's trust. See [TLS connection schemes](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
 
 ### Listener inventory
 
@@ -257,13 +257,13 @@ REASONED: per the guide's cited SSL framework and certificate-verified connectio
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
       # Run inside the Neo4j service's network namespace.
@@ -274,7 +274,7 @@ REASONED: per the guide's cited SSL framework and certificate-verified connectio
 )
 ```
 
-REASONED: preceding block; the listener inventory block above and these port expectations, per the guide's cited Ports, Enterprise online backup and Configure network connectors (Neo4j 5) entries. During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. No Neo4j installation is available in the authoring environment, so neither an exposed 7474 listener nor the fixed inventory was observed. During marking review (October 2026) the block ran with a stub ss and no network: it refused unchanged, partial, miscounted, example.com and angle-bracket input, and reached ss -tlnp only with neo4j-1.internal substituted. Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
+REASONED: preceding block; the listener inventory block above and these port expectations, per the guide's cited Ports, Enterprise online backup and Configure network connectors (Neo4j 5) entries. During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. No Neo4j installation is available in the authoring environment, so neither an exposed 7474 listener nor the fixed inventory was observed. During marking review (October 2026) the block ran with a stub ss and no network: it refused unchanged, partial, miscounted, example.com and angle-bracket input, and reached ss -tlnp only with neo4j-1.internal substituted. Those stub runs covered an earlier form of the block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
 
 REASONED: per the guide's cited Neo4j 5.26 (LTS) Enterprise cluster and monitoring ports, cluster settings and configuration reference entries; no Enterprise standalone server, cluster or Docker host is available in the authoring environment. No listener inventory was obtained, so nothing is recorded about these ports. **REASONED, Enterprise listener comparisons:** also read every listener for 5000 (discovery v1 only), 6000, 7000, and 7688 (server-side routing), including configured replacement ports and IPv6 bindings. In the exposed disposable state, a widened shared host can expose these even on a standalone server; in the fixed single-server state, expect loopback binds. In a cluster, expect the intended private binds and peer-reachable advertised addresses, with firewall access confined to members. Under `V2_ONLY`, do not require 5000; discovery shares 6000. Check 2004 only if Prometheus is enabled, on loopback or the explicitly restricted monitoring interface. There should be no inbound Graphite 2003 listener from enabling its exporter; investigate any JMX 3637 or debugger 5005 listener against the JVM configuration. Inspect the container's namespace as well as host publication rules for Docker. These expectations follow the [5.26 ports inventory](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [setting defaults](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/).
 
@@ -292,32 +292,32 @@ Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies t
 (
   set +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_DNS_NAME' 'REPLACE_WITH_CLUSTER_PORT' 'REPLACE_WITH_BOLT_TLS_URI'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "expected a DNS name, cluster port, and Bolt TLS URI; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "expected a DNS name, cluster port, and Bolt TLS URI; not probing"; exit 2; }
   case "$1|$2|$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-      echo "substitute all three values inside the quotes; not probing"; exit 1 ;;
+      echo "substitute all three values inside the quotes; not probing"; exit 2 ;;
   esac
   case "$1" in
-    ""|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-]*) echo "supply the member's certificate DNS name; not probing"; exit 1 ;;
+    ""|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-]*) echo "supply the member's certificate DNS name; not probing"; exit 2 ;;
   esac
   case "$2" in
-    ""|*[!0123456789]*) echo "supply a numeric cluster port; not probing"; exit 1 ;;
+    ""|*[!0123456789]*) echo "supply a numeric cluster port; not probing"; exit 2 ;;
   esac
   [ "${#2}" -le 5 ] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || {
-    echo "cluster port must be 1 through 65535; not probing"; exit 1;
+    echo "cluster port must be 1 through 65535; not probing"; exit 2;
   }
   case "$3" in
     bolt+s://?*) ;;
-    *) echo "supply a direct bolt+s:// URI; not probing"; exit 1 ;;
+    *) echo "supply a direct bolt+s:// URI; not probing"; exit 2 ;;
   esac
   [ -r ca.pem ] && [ -r member.crt ] && [ -r member.key ] &&
     [ -r member-chain.pem ] && [ -r untrusted.crt ] &&
     [ -r untrusted.key ] && [ -r untrusted-chain.pem ] || {
-      echo "provide the CA, both certificates, keys, and issuing chains; not probing"; exit 1;
+      echo "provide the CA, both certificates, keys, and issuing chains; not probing"; exit 2;
     }
-  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD; not probing"; exit 1; }
+  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD; not probing"; exit 2; }
 
   echo "(a) No client certificate"
   timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
@@ -361,17 +361,17 @@ The OpenSSL command and Cypher Shell checks below assume `client_auth=NONE`. If 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 1; }
-      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 1; }
+      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
 
       openssl s_client -connect "$1:7687" -servername "$1" \
         -verify_hostname "$1" -verify_return_error -CAfile ca.pem </dev/null
@@ -410,16 +410,16 @@ The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
-      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 1; }
+      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
       cypher-shell -a "bolt+s://$1:7687" -u catalog_app -d neo4j --history disable
       ;;
   esac
@@ -554,17 +554,17 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 1; }
-      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 1; }
+      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert ca.pem -H 'Content-Type: application/json' \
         --data '{"statement":"RETURN 1 AS ok"}' \
@@ -588,17 +588,17 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 1; }
-      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 1; }
+      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert ca.pem -H 'Content-Type: application/json' \
         --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \
@@ -787,7 +787,7 @@ Claims (full source mapping in the JSON block below):
 - query-secrets (REASONED; docs): Disable parameter and early raw logging and enable literal obfuscation; clearQueryCaches makes dynamic literal changes affect cached queries.
 - error-obfuscation (REASONED; errors5, errors-current): obfuscate_errors arrived in 5.26.21 and current-series 2026.01.3; do not add it on older versions, and treat obfuscated logs as sensitive.
 - http-log (REASONED; docs): Community optional HTTP request logging applies only with HTTP/HTTPS and does not supply equivalent Bolt, query or security auditing.
-- local-guards (DEMONSTRATED; docs): Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated.
+- local-guards (DEMONSTRATED; docs): Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. Those checks covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form was not re-run.
 - tls-schemes (REASONED; docs): neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options.
 - verify-listeners (REASONED; docs, cluster, docker): Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient.
 - verify-cluster-tls (REASONED; cluster, openssl, tls, timeout): Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake.
@@ -817,7 +817,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6129030086ca1ddfe97abbcbb5b3979b4f366986e71a8bb4ad7cbf216142b312",
+  "body_sha256": "a3a2acb7b9a1ae76a699b7a3727baccc004e6ea73c27604d93a7f35883b2fff9",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",
@@ -1065,7 +1065,7 @@ Claims (full source mapping in the JSON block below):
     "query-secrets": {"text": "Disable parameter and early raw logging and enable literal obfuscation; clearQueryCaches makes dynamic literal changes affect cached queries.", "components": ["docs"], "sources": ["docs:s849558d7ac94", "docs:s9f0fd7367ed5"], "status": "REASONED"},
     "error-obfuscation": {"text": "obfuscate_errors arrived in 5.26.21 and current-series 2026.01.3; do not add it on older versions, and treat obfuscated logs as sensitive.", "components": ["errors5", "errors-current"], "sources": ["errors5:s213150a93a9b", "errors-current:sf356a53bcdde"], "status": "REASONED"},
     "http-log": {"text": "Community optional HTTP request logging applies only with HTTP/HTTPS and does not supply equivalent Bolt, query or security auditing.", "components": ["docs"], "sources": ["docs:s849558d7ac94"], "status": "REASONED"},
-    "local-guards": {"text": "Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated.", "components": ["docs"], "sources": ["docs:s27aabf32542c"], "status": "DEMONSTRATED", "evidence": "Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks."},
+    "local-guards": {"text": "Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. Those checks covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form was not re-run.", "components": ["docs"], "sources": ["docs:s27aabf32542c"], "status": "DEMONSTRATED", "evidence": "Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks."},
     "tls-schemes": {"text": "neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options.", "components": ["docs"], "sources": ["docs:s9114febb4116", "docs:s27aabf32542c"], "status": "REASONED"},
     "verify-listeners": {"text": "Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient.", "components": ["docs", "cluster", "docker"], "sources": ["docs:s6e25ca2b57e6", "docs:sb0ddc8887396", "cluster:s0a9b520e7dd9", "cluster:s213150a93a9b", "docker:s67d863435d75"], "status": "REASONED", "verify": [1]},
     "verify-cluster-tls": {"text": "Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake.", "components": ["cluster", "openssl", "tls", "timeout"], "sources": ["cluster:s3b91bd83988a", "cluster:s213150a93a9b", "openssl:s00aaf106164f", "tls:se28608fb71a7", "timeout:s8844a42d0596"], "status": "REASONED", "verify": [2]},

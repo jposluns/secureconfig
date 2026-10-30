@@ -22871,7 +22871,7 @@ At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-
 
 REASONED: service-check scope from the authoring limitations recorded in this paragraph and the PostgreSQL and pgAudit documentation cited at each check below. This revision's service checks are **REASONED, not demonstrated**. The authoring environment has psql 18.6 and PostgreSQL server binaries, but is read-only and has no authorized writable test deployment. Neither Docker nor Podman was found on `PATH`. Missing binaries are not the reason for the service-test limitation. Earlier execution evidence is not recorded in this file; this does not establish whether a previous author ran the earlier probes.
 
-REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy). The PostgreSQL configuration parse was re-run at marking time with the PostgreSQL 18.6 server binary installed outside PATH at /usr/lib/postgresql/18/bin: postgres -C returned all 14 values from the combined TLS, logging and preload fragments with exit 0, and an ssl=not_a_boolean control was rejected with exit 1 (parameter "ssl" requires a Boolean value); no server was started. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
+REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy). The PostgreSQL configuration parse was re-run at marking time with the PostgreSQL 18.6 server binary installed outside PATH at /usr/lib/postgresql/18/bin: postgres -C returned all 14 values from the combined TLS, logging and preload fragments with exit 0, and an ssl=not_a_boolean control was rejected with exit 1 (parameter "ssl" requires a Boolean value); no server was started. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. The bash -n, ShellCheck, guard and argument runs recorded in this paragraph covered an earlier form of both blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
 
 REASONED: deployment-demonstration procedure per the cited PostgreSQL documentation; no isolated disposable deployment is available in the authoring environment, so this remains the required procedure rather than a recorded run. Demonstrate exposed configurations only in an isolated disposable deployment. Record the server/client versions, fixture, commands, output, and relevant server logs for both states. A DNS error, timeout, missing CA file, or unrelated authentication failure does not prove enforcement.
 
@@ -22886,27 +22886,27 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DB_HOST' 'REPLACE_WITH_CA_FILE' 'app' 'tls'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "supply host, CA file, role and mode; not probing"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "supply host, CA file, role and mode; not probing"; exit 2; }
   case "$2" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 2 ;;
   esac
   case "$2" in
-    *"'"*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
-    *[[:space:]]*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+    *"'"*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 2 ;;
+    *[[:space:]]*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 2 ;;
   esac
   case "$3" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 2 ;;
   esac
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:-]*) echo "use a single hostname or IP address; not probing"; exit 1 ;;
+        *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:-]*) echo "use a single hostname or IP address; not probing"; exit 2 ;;
       esac
-      [ -f "$2" ] || { echo "CA file is missing; not probing"; exit 1; }
-      [ -r "$2" ] || { echo "CA file is unreadable; not probing"; exit 1; }
+      [ -f "$2" ] || { echo "CA file is missing; not probing"; exit 2; }
+      [ -r "$2" ] || { echo "CA file is unreadable; not probing"; exit 2; }
       case "$4" in
         tls|wrong)
           psql -X -W -v ON_ERROR_STOP=1 \
@@ -22927,7 +22927,7 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
           psql -X -W -v ON_ERROR_STOP=1 \
             "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5"
           ;;
-        *) echo "choose tls, wrong, scram, plaintext or sql; not probing"; exit 1 ;;
+        *) echo "choose tls, wrong, scram, plaintext or sql; not probing"; exit 2 ;;
       esac
       ;;
   esac
@@ -22956,11 +22956,11 @@ Run on the database host, substituting the intended bind address. Inspect every 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_EXPECTED_BIND_ADDRESS'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply the expected bind address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply the expected bind address; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 2 ;;
     *)
       printf 'Expected listener address: %s; inspect every returned row.\n' "$1"
       ss -tlnp 'sport = :5432'
@@ -23372,7 +23372,7 @@ Claims (full source mapping in the JSON block below):
 - verify-logs (REASONED; docs): Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.
 - verify-audit (REASONED; audit): Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.
 - diagnostics (REASONED; docs): pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.
-- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact.
+- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact. Those checks covered an earlier form of both blocks, whose refusals exited with status 1; the current form was not re-run.
 - local-parsing (DEMONSTRATED; docs): Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.
 - verify-default-grants (REASONED; docs): Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.
 
@@ -23381,7 +23381,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "b9ac3fa7ed07e0d9e4a599213b464181597708feefb1281709092094cf1fbbd9",
+  "body_sha256": "8018336c8f86ebc4dc36cad369e52769012d7902b3145554c8b191d3b2468ff0",
   "components": {
     "init": {
       "name": "PostgreSQL initdb source",
@@ -23531,7 +23531,7 @@ Claims (full source mapping in the JSON block below):
     "verify-logs": {"text": "Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.", "components": ["docs"], "sources": ["docs:sf1b3da55ebd5"], "status": "REASONED"},
     "verify-audit": {"text": "Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.", "components": ["audit"], "sources": ["audit:s1825bbe4f88c"], "status": "REASONED"},
     "diagnostics": {"text": "pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.", "components": ["docs"], "sources": ["docs:seed379369be7", "docs:s8754b96a6114", "docs:s3b6607ed7b1a", "docs:s2ab6c4aebc59"], "status": "REASONED"},
-    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
+    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact. Those checks covered an earlier form of both blocks, whose refusals exited with status 1; the current form was not re-run.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
     "local-parsing": {"text": "Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.", "components": ["docs"], "sources": ["docs:s55cbaf1aa910"], "status": "DEMONSTRATED", "evidence": "PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected."},
     "verify-default-grants": {"text": "Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.", "components": ["docs"], "sources": ["docs:s04e81888353f"], "status": "REASONED"}
   }
@@ -33703,7 +33703,7 @@ For a packaged, isolated first start, block network access and retain the loopba
 
 ```bash
 (
-  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 1; }
+  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
   cypher-shell -a bolt://localhost:7687 -u neo4j --change-password
 )
 ```
@@ -33915,11 +33915,11 @@ Enable HTTP request logging only when an HTTP/HTTPS connector is in use. It does
 
 REASONED: every service comparison in this Verify section, per the guide's cited Configure network connectors (Neo4j 5), Cypher Shell prompts, environment credentials, history, parameters, and timeouts, OpenSSL 3 TLS probe options, TLS 1.3 client-certificate validation and alerts, Transactional HTTP API deprecation and Query API availability entries and the other entries listed under Sources. During marking review (October 2026) neo4j, cypher-shell, docker and podman were still absent from the authoring environment, with no network access to obtain them; the local checks that did run are recorded in the next paragraph. **Service verification status: REASONED, not demonstrated.** The authoring environment has no Neo4j server, Cypher Shell, Docker, or Podman available, and no authorized running deployment was supplied. All service comparisons below require capabilities missing here. Run exposed/fixed comparisons only in disposable test deployments. Record server, edition, client, and plugin versions alongside results.
 
-REASONED: local syntax, guard and fragment-parsing checks only, which observe no Neo4j service. During marking review (October 2026) they were repeated: bash -n under bash 5.3.9 and ShellCheck 0.11.0 passed all seven shell blocks. The guard checks during marking review (October 2026), with stub ss, openssl, curl and cypher-shell and no network, showed that each of the six guarded blocks refused unchanged, partial and miscounted input and example.com or angle-bracket hosts, and that each block that clears NEO4J_PASSWORD refused when it was readonly. The cluster block, during marking review (October 2026), also refused a malformed DNS name, port or URI, and with locally generated fixtures its three s_client calls reached the stub, while openssl verify accepted member.crt and rejected untrusted.crt (error 20) against ca.pem. The eight configuration fragments, during marking review (October 2026), showed no malformed lines or duplicate keys. Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run.
+REASONED: local syntax, guard and fragment-parsing checks only, which observe no Neo4j service. During marking review (October 2026) they were repeated: bash -n under bash 5.3.9 and ShellCheck 0.11.0 passed all seven shell blocks. The guard checks during marking review (October 2026), with stub ss, openssl, curl and cypher-shell and no network, showed that each of the six guarded blocks refused unchanged, partial and miscounted input and example.com or angle-bracket hosts, and that each block that clears NEO4J_PASSWORD refused when it was readonly. The cluster block, during marking review (October 2026), also refused a malformed DNS name, port or URI, and with locally generated fixtures its three s_client calls reached the stub, while openssl verify accepted member.crt and rejected untrusted.crt (error 20) against ca.pem. The eight configuration fragments, during marking review (October 2026), showed no malformed lines or duplicate keys. Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run. The bash -n, ShellCheck, guard and stub runs recorded in this paragraph covered an earlier form of the section 1 block and the six guarded blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2.
 
-REASONED: guard behaviour only, with stub commands and no Neo4j service. During marking review (October 2026) each guarded block, pasted whole with a hostname substituted inside the quotes, reached only its stub commands, and unchanged or without its set -- line it refused. A substituted value containing one literal apostrophe made the listener block a syntax error that ran nothing, and its ss line pasted alone ran unguarded. A shadowed builtin was not tested. For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
+REASONED: guard behaviour only, with stub commands and no Neo4j service. During marking review (October 2026) each guarded block, pasted whole with a hostname substituted inside the quotes, reached only its stub commands, and unchanged or without its set -- line it refused. A substituted value containing one literal apostrophe made the listener block a syntax error that ran nothing, and its ss line pasted alone ran unguarded. A shadowed builtin was not tested. Those stub runs covered an earlier form of each guarded block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
 
-REASONED: per the guide's cited SSL framework and certificate-verified connection schemes entry; no Cypher Shell or Neo4j TLS service is available in the authoring environment, so a +s connection failing on an untrusted certificate (fixed) and a +ssc connection succeeding regardless (exposed) were not observed. During marking review (October 2026), with stubs, the Verify blocks passed bolt+s:// URIs to cypher-shell everywhere except the deliberate plaintext bolt:// test. Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for a certificate-verified direct connection. The `+ssc` variants, including `neo4j+ssc://`, skip certificate verification and do not establish server identity; reserve them for development. The checks below use direct Bolt to avoid routing discovery obscuring the result. Install the signing CA in the Cypher Shell client's trust store when necessary; OpenSSL's `-CAfile` and curl's `--cacert` do not configure Cypher Shell's trust. See [TLS connection schemes](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
+REASONED: per the guide's cited SSL framework and certificate-verified connection schemes entry; no Cypher Shell or Neo4j TLS service is available in the authoring environment, so a +s connection failing on an untrusted certificate (fixed) and a +ssc connection succeeding regardless (exposed) were not observed. During marking review (October 2026), with stubs, the Verify blocks passed bolt+s:// URIs to cypher-shell everywhere except the deliberate plaintext bolt:// test. Those stub runs covered an earlier form of the guarded blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for a certificate-verified direct connection. The `+ssc` variants, including `neo4j+ssc://`, skip certificate verification and do not establish server identity; reserve them for development. The checks below use direct Bolt to avoid routing discovery obscuring the result. Install the signing CA in the Cypher Shell client's trust store when necessary; OpenSSL's `-CAfile` and curl's `--cacert` do not configure Cypher Shell's trust. See [TLS connection schemes](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
 
 ### Listener inventory
 
@@ -33928,13 +33928,13 @@ REASONED: per the guide's cited SSL framework and certificate-verified connectio
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
       # Run inside the Neo4j service's network namespace.
@@ -33945,7 +33945,7 @@ REASONED: per the guide's cited SSL framework and certificate-verified connectio
 )
 ```
 
-REASONED: preceding block; the listener inventory block above and these port expectations, per the guide's cited Ports, Enterprise online backup and Configure network connectors (Neo4j 5) entries. During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. No Neo4j installation is available in the authoring environment, so neither an exposed 7474 listener nor the fixed inventory was observed. During marking review (October 2026) the block ran with a stub ss and no network: it refused unchanged, partial, miscounted, example.com and angle-bracket input, and reached ss -tlnp only with neo4j-1.internal substituted. Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
+REASONED: preceding block; the listener inventory block above and these port expectations, per the guide's cited Ports, Enterprise online backup and Configure network connectors (Neo4j 5) entries. During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. No Neo4j installation is available in the authoring environment, so neither an exposed 7474 listener nor the fixed inventory was observed. During marking review (October 2026) the block ran with a stub ss and no network: it refused unchanged, partial, miscounted, example.com and angle-bracket input, and reached ss -tlnp only with neo4j-1.internal substituted. Those stub runs covered an earlier form of the block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
 
 REASONED: per the guide's cited Neo4j 5.26 (LTS) Enterprise cluster and monitoring ports, cluster settings and configuration reference entries; no Enterprise standalone server, cluster or Docker host is available in the authoring environment. No listener inventory was obtained, so nothing is recorded about these ports. **REASONED, Enterprise listener comparisons:** also read every listener for 5000 (discovery v1 only), 6000, 7000, and 7688 (server-side routing), including configured replacement ports and IPv6 bindings. In the exposed disposable state, a widened shared host can expose these even on a standalone server; in the fixed single-server state, expect loopback binds. In a cluster, expect the intended private binds and peer-reachable advertised addresses, with firewall access confined to members. Under `V2_ONLY`, do not require 5000; discovery shares 6000. Check 2004 only if Prometheus is enabled, on loopback or the explicitly restricted monitoring interface. There should be no inbound Graphite 2003 listener from enabling its exporter; investigate any JMX 3637 or debugger 5005 listener against the JVM configuration. Inspect the container's namespace as well as host publication rules for Docker. These expectations follow the [5.26 ports inventory](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [setting defaults](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/).
 
@@ -33963,32 +33963,32 @@ Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies t
 (
   set +e
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_DNS_NAME' 'REPLACE_WITH_CLUSTER_PORT' 'REPLACE_WITH_BOLT_TLS_URI'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "expected a DNS name, cluster port, and Bolt TLS URI; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "expected a DNS name, cluster port, and Bolt TLS URI; not probing"; exit 2; }
   case "$1|$2|$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-      echo "substitute all three values inside the quotes; not probing"; exit 1 ;;
+      echo "substitute all three values inside the quotes; not probing"; exit 2 ;;
   esac
   case "$1" in
-    ""|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-]*) echo "supply the member's certificate DNS name; not probing"; exit 1 ;;
+    ""|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-]*) echo "supply the member's certificate DNS name; not probing"; exit 2 ;;
   esac
   case "$2" in
-    ""|*[!0123456789]*) echo "supply a numeric cluster port; not probing"; exit 1 ;;
+    ""|*[!0123456789]*) echo "supply a numeric cluster port; not probing"; exit 2 ;;
   esac
   [ "${#2}" -le 5 ] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || {
-    echo "cluster port must be 1 through 65535; not probing"; exit 1;
+    echo "cluster port must be 1 through 65535; not probing"; exit 2;
   }
   case "$3" in
     bolt+s://?*) ;;
-    *) echo "supply a direct bolt+s:// URI; not probing"; exit 1 ;;
+    *) echo "supply a direct bolt+s:// URI; not probing"; exit 2 ;;
   esac
   [ -r ca.pem ] && [ -r member.crt ] && [ -r member.key ] &&
     [ -r member-chain.pem ] && [ -r untrusted.crt ] &&
     [ -r untrusted.key ] && [ -r untrusted-chain.pem ] || {
-      echo "provide the CA, both certificates, keys, and issuing chains; not probing"; exit 1;
+      echo "provide the CA, both certificates, keys, and issuing chains; not probing"; exit 2;
     }
-  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD; not probing"; exit 1; }
+  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD; not probing"; exit 2; }
 
   echo "(a) No client certificate"
   timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
@@ -34032,17 +34032,17 @@ The OpenSSL command and Cypher Shell checks below assume `client_auth=NONE`. If 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 1; }
-      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 1; }
+      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
 
       openssl s_client -connect "$1:7687" -servername "$1" \
         -verify_hostname "$1" -verify_return_error -CAfile ca.pem </dev/null
@@ -34081,16 +34081,16 @@ The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
-      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 1; }
+      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
       cypher-shell -a "bolt+s://$1:7687" -u catalog_app -d neo4j --history disable
       ;;
   esac
@@ -34225,17 +34225,17 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 1; }
-      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 1; }
+      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert ca.pem -H 'Content-Type: application/json' \
         --data '{"statement":"RETURN 1 AS ok"}' \
@@ -34259,17 +34259,17 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "expected exactly one hostname; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute the hostname inside the quotes; not probing"
-      exit 1
+      exit 2
       ;;
     *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 1; }
-      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 1; }
+      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
       curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert ca.pem -H 'Content-Type: application/json' \
         --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \
@@ -34458,7 +34458,7 @@ Claims (full source mapping in the JSON block below):
 - query-secrets (REASONED; docs): Disable parameter and early raw logging and enable literal obfuscation; clearQueryCaches makes dynamic literal changes affect cached queries.
 - error-obfuscation (REASONED; errors5, errors-current): obfuscate_errors arrived in 5.26.21 and current-series 2026.01.3; do not add it on older versions, and treat obfuscated logs as sensitive.
 - http-log (REASONED; docs): Community optional HTTP request logging applies only with HTTP/HTTPS and does not supply equivalent Bolt, query or security auditing.
-- local-guards (DEMONSTRATED; docs): Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated.
+- local-guards (DEMONSTRATED; docs): Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. Those checks covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form was not re-run.
 - tls-schemes (REASONED; docs): neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options.
 - verify-listeners (REASONED; docs, cluster, docker): Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient.
 - verify-cluster-tls (REASONED; cluster, openssl, tls, timeout): Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake.
@@ -34488,7 +34488,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6129030086ca1ddfe97abbcbb5b3979b4f366986e71a8bb4ad7cbf216142b312",
+  "body_sha256": "a3a2acb7b9a1ae76a699b7a3727baccc004e6ea73c27604d93a7f35883b2fff9",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",
@@ -34736,7 +34736,7 @@ Claims (full source mapping in the JSON block below):
     "query-secrets": {"text": "Disable parameter and early raw logging and enable literal obfuscation; clearQueryCaches makes dynamic literal changes affect cached queries.", "components": ["docs"], "sources": ["docs:s849558d7ac94", "docs:s9f0fd7367ed5"], "status": "REASONED"},
     "error-obfuscation": {"text": "obfuscate_errors arrived in 5.26.21 and current-series 2026.01.3; do not add it on older versions, and treat obfuscated logs as sensitive.", "components": ["errors5", "errors-current"], "sources": ["errors5:s213150a93a9b", "errors-current:sf356a53bcdde"], "status": "REASONED"},
     "http-log": {"text": "Community optional HTTP request logging applies only with HTTP/HTTPS and does not supply equivalent Bolt, query or security auditing.", "components": ["docs"], "sources": ["docs:s849558d7ac94"], "status": "REASONED"},
-    "local-guards": {"text": "Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated.", "components": ["docs"], "sources": ["docs:s27aabf32542c"], "status": "DEMONSTRATED", "evidence": "Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks."},
+    "local-guards": {"text": "Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. Those checks covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form was not re-run.", "components": ["docs"], "sources": ["docs:s27aabf32542c"], "status": "DEMONSTRATED", "evidence": "Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks."},
     "tls-schemes": {"text": "neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options.", "components": ["docs"], "sources": ["docs:s9114febb4116", "docs:s27aabf32542c"], "status": "REASONED"},
     "verify-listeners": {"text": "Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient.", "components": ["docs", "cluster", "docker"], "sources": ["docs:s6e25ca2b57e6", "docs:sb0ddc8887396", "cluster:s0a9b520e7dd9", "cluster:s213150a93a9b", "docker:s67d863435d75"], "status": "REASONED", "verify": [1]},
     "verify-cluster-tls": {"text": "Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake.", "components": ["cluster", "openssl", "tls", "timeout"], "sources": ["cluster:s3b91bd83988a", "cluster:s213150a93a9b", "openssl:s00aaf106164f", "tls:se28608fb71a7", "timeout:s8844a42d0596"], "status": "REASONED", "verify": [2]},
@@ -34907,9 +34907,9 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 
 **REASONED:** the service-level checks V1 to V6, per the 15 Sources entries that this paragraph names. The first five of the 15 Sources entries are memcached documentation, binary protocol SASL authentication; memcached documentation, TLS; memcached documentation, configuring the server (`-l`, `-U`, exposure warning); memcached 1.6.42 security release notes; and memcached 1.6.45 security and crash fixes. The sixth to ninth of the 15 Sources entries are memcached UDP reflection and amplification advisory; memcached 1.6.45 man page, network, account, resource, flush, and shutdown options; memcached protocol reference (`-Y` text protocol authentication); and memcached 1.5.15 release notes, ASCII authentication and binary idle timeout fix. The tenth to fifteenth of the 15 Sources entries are memcached 1.6.45 CLI help, defaults, effective settings, and signal handling; memcached 1.6.45 text command enforcement; memcached 1.6.45 binary authentication, statistics, and flush enforcement; memcached TLS design and certificate reload; memcached basic text command semantics; and memcached binary requests and responses. The authoring environment has no memcached binary, no container runtime and no network access to obtain either, and no available authorized service environment for reproducing these states, so no exposed or fixed service state was observed; each step records its local runs and its expected exposed and fixed outcomes. Throwaway certificates were generated for the local OpenSSL checks recorded below; a TLS-enabled memcached service, configured authentication service and separate network observers remain unavailable. Expected outcomes come from the linked vendor sources; no live outcome is claimed.
 
-**REASONED:** the syntax, lint and guard-validation record for the guide's 11 shell blocks only, not memcached; syntax and lint passes have no exposed-state comparison. The following local runs were recorded during marking review (October 2026) under bash 5.3.9 with logging stubs for memcached, ps, ss, nc and openssl first on PATH and no network. All 11 blocks passed `bash -n` and ShellCheck 0.11.0 with no findings, and `check_guard_conventions.py --strict-guards` on this guide printed PASS for 11 fences, 5 of them guard fences. Each of the five guarded blocks rejected six invalid values and two incomplete-assignment cases under `bash -u`; valid inputs reached instrumented probes. The rejected cases ran no stubs; valid cases reached the stubs with the block's arguments. This tests the guards, not memcached. Memcached startup/configuration parsing remains undemonstrated.
+**REASONED:** the syntax, lint and guard-validation record for the guide's 11 shell blocks only, not memcached; syntax and lint passes have no exposed-state comparison. The following local runs were recorded during marking review (October 2026) under bash 5.3.9 with logging stubs for memcached, ps, ss, nc and openssl first on PATH and no network. All 11 blocks passed `bash -n` and ShellCheck 0.11.0 with no findings, and `check_guard_conventions.py --strict-guards` on this guide printed PASS for 11 fences, 5 of them guard fences. Each of the five guarded blocks rejected six invalid values and two incomplete-assignment cases under `bash -u`; valid inputs reached instrumented probes. The rejected cases ran no stubs; valid cases reached the stubs with the block's arguments. This tests the guards, not memcached. The bash -n, ShellCheck, scanner and stub runs recorded here covered an earlier form of the five guarded blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Memcached startup/configuration parsing remains undemonstrated.
 
-**REASONED:** the paste, quoting and builtin assumptions for every guarded block; only the V2 cases below were recorded during marking review (October 2026), and additional V2 interactive paste runs during marking review (October 2026) under bash 5.3.9 piped the block followed by `echo SESSION_SURVIVED` into `bash --norc --noprofile -i` with a stub nc first on PATH and no network. With the parentheses and unchanged placeholder, stdout printed `replace the address; not probing` then `SESSION_SURVIVED`; without the parentheses, it printed the refusal line and the guard's exit closed the shell before `SESSION_SURVIVED`. With 10.0.0.5 and the parentheses, stdout printed `STUB nc -vz -w 5 10.0.0.5 11211`, `TCP connection failed; inspect the error and matched positive control`, then `SESSION_SURVIVED`. The previously recorded V2 runs were under bash 5.3.9 with a stub nc and no network; not memcached. A literal apostrophe inside the quotes on the `set --` line made `bash -n` fail with unexpected EOF, and the same value with the apostrophe shell-escaped parsed. With the builtin `[`, two values on the `set --` line were refused with `supply exactly one address; not probing`; with `[` shadowed by a shell function, the same block probed 10.0.0.5. The probe lines pasted without the guards ran nc against an empty target, or against `REPLACE_WITH_REAL_TARGET_IP` held by the calling shell, both of which the whole block refuses. Paste each complete block, including its parentheses, marker, and count checks. Substitute inside the single quotes on the `set --` line. Do not insert a literal apostrophe there without shell escaping. The guards assume normal shell builtins; fragments pasted below the guards are not protected.
+**REASONED:** the paste, quoting and builtin assumptions for every guarded block; only the V2 cases below were recorded during marking review (October 2026), and additional V2 interactive paste runs during marking review (October 2026) under bash 5.3.9 piped the block followed by `echo SESSION_SURVIVED` into `bash --norc --noprofile -i` with a stub nc first on PATH and no network. With the parentheses and unchanged placeholder, stdout printed `replace the address; not probing` then `SESSION_SURVIVED`; without the parentheses, it printed the refusal line and the guard's exit closed the shell before `SESSION_SURVIVED`. With 10.0.0.5 and the parentheses, stdout printed `STUB nc -vz -w 5 10.0.0.5 11211`, `TCP connection failed; inspect the error and matched positive control`, then `SESSION_SURVIVED`. The previously recorded V2 runs were under bash 5.3.9 with a stub nc and no network; not memcached. All V2 runs recorded here covered an earlier form of the V2 block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. A literal apostrophe inside the quotes on the `set --` line made `bash -n` fail with unexpected EOF, and the same value with the apostrophe shell-escaped parsed. With the builtin `[`, two values on the `set --` line were refused with `supply exactly one address; not probing`; with `[` shadowed by a shell function, the same block probed 10.0.0.5. The probe lines pasted without the guards ran nc against an empty target, or against `REPLACE_WITH_REAL_TARGET_IP` held by the calling shell, both of which the whole block refuses. Paste each complete block, including its parentheses, marker, and count checks. Substitute inside the single quotes on the `set --` line. Do not insert a literal apostrophe there without shell escaping. The guards assume normal shell builtins; fragments pasted below the guards are not protected.
 
 ### V1. Inspect the release, process identity, arguments, and every listener
 
@@ -34918,15 +34918,15 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MEMCACHED_PID'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly one PID; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly one PID; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace the PID; not probing"; exit 1 ;;
+      echo "replace the PID; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *[!0123456789]*|0) echo "supply a positive numeric PID; not probing"; exit 1 ;;
+        *[!0123456789]*|0) echo "supply a positive numeric PID; not probing"; exit 2 ;;
         *)
           memcached -V
           memcached -h
@@ -34939,7 +34939,7 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 )
 ```
 
-**REASONED:** preceding block; the `memcached -V`, `memcached -h`, `ps` and `ss -tlnup` inventory in the preceding block and the release, option and account checks in this paragraph, per the guide's cited memcached 1.6.42 security release notes, memcached 1.6.45 security and crash fixes, memcached 1.6.45 CLI help and memcached 1.6.45 man page entries. No memcached executable or service process exists in the authoring environment, and no host listener was read. During marking review (October 2026) the block ran under `bash -u` with stub memcached, ps and ss: PID 1234 reached `memcached -V`, `memcached -h`, `ps -o pid=,user=,group=,args= -p 1234` and `ss -tlnup` in that order, and invalid PIDs were refused before any stub ran. Expected exposed outcome: a release without the cited fixes or their backports, `-S` or `-Z` missing for the SASL/TLS deployment, or another process account; fixed: the fixes present, both options advertised and the dedicated account. Confirm the package's security-fix status, including distribution backports; a version string alone is insufficient. Confirm `-S` and `-Z` are advertised for the SASL/TLS deployment. The running process must use the intended dedicated account.
+**REASONED:** preceding block; the `memcached -V`, `memcached -h`, `ps` and `ss -tlnup` inventory in the preceding block and the release, option and account checks in this paragraph, per the guide's cited memcached 1.6.42 security release notes, memcached 1.6.45 security and crash fixes, memcached 1.6.45 CLI help and memcached 1.6.45 man page entries. No memcached executable or service process exists in the authoring environment, and no host listener was read. During marking review (October 2026) the block ran under `bash -u` with stub memcached, ps and ss: PID 1234 reached `memcached -V`, `memcached -h`, `ps -o pid=,user=,group=,args= -p 1234` and `ss -tlnup` in that order, and invalid PIDs were refused before any stub ran. Those stub runs covered an earlier form of the V1 block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Expected exposed outcome: a release without the cited fixes or their backports, `-S` or `-Z` missing for the SASL/TLS deployment, or another process account; fixed: the fixes present, both options advertised and the dedicated account. Confirm the package's security-fix status, including distribution backports; a version string alone is insufficient. Confirm `-S` and `-Z` are advertised for the SASL/TLS deployment. The running process must use the intended dedicated account.
 
 **REASONED:** the listener comparison in this paragraph, per the guide's cited memcached 1.6.45 man page and memcached UDP reflection and amplification advisory entries. No memcached service, published container port or second network position exists in the authoring environment, so no listener was read; the stub run of the V1 block is recorded in the previous paragraph. The expected exposed and fixed outcomes are those stated here. Read every listener: TCP 11211 on loopback or the intended private address only, no memcached UDP socket, and no unexpected address-specific port or published listener. An exposed comparison has a wildcard/unintended listener or UDP enabled; a fixed comparison has only the intended listeners while an allowed client's protected operation still succeeds. Use V2 and V6 as the positive controls. The [man page](https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1) and [DDoS advisory](https://docs.memcached.org/advisories/ddos/) define the expected configuration.
 
@@ -34954,12 +34954,12 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_REAL_TARGET_IP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|-*|*[[:space:]]*)
-      echo "replace the address; not probing"; exit 1 ;;
+      echo "replace the address; not probing"; exit 2 ;;
     *)
       if nc -vz -w 5 "$1" 11211; then
         echo "TCP connection succeeded; compare the observer and expected policy"
@@ -34971,11 +34971,11 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 )
 ```
 
-**REASONED:** preceding block; the `nc -vz -w 5` TCP probe in the preceding block, run from both observers, and the comparison in this paragraph, per the guide's cited memcached documentation, configuring the server entry. No deployed cache and no separate allowed and disallowed network observers exist in the authoring environment. During marking review (October 2026) the block ran under `bash -u` with a stub nc: 10.0.0.5 reached `nc -vz -w 5 10.0.0.5 11211`, a stub exit of 0 printed the succeeded line and 1 the failed line, and the placeholder, an empty value, an angle-bracketed value, an example.com name, an option-like value and a value containing a space were refused before nc ran. The expected exposed and fixed outcomes are those stated here. On an isolated test network, the exposed comparison allows the otherwise disallowed observer to connect. After fixing the bind/firewall, that observer must receive refusal or timeout while the allowed observer can still connect and complete V6's application request. Do not create public exposure to obtain a baseline.
+**REASONED:** preceding block; the `nc -vz -w 5` TCP probe in the preceding block, run from both observers, and the comparison in this paragraph, per the guide's cited memcached documentation, configuring the server entry. No deployed cache and no separate allowed and disallowed network observers exist in the authoring environment. During marking review (October 2026) the block ran under `bash -u` with a stub nc: 10.0.0.5 reached `nc -vz -w 5 10.0.0.5 11211`, a stub exit of 0 printed the succeeded line and 1 the failed line, and the placeholder, an empty value, an angle-bracketed value, an example.com name, an option-like value and a value containing a space were refused before nc ran. Those stub runs covered an earlier form of the V2 block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. The expected exposed and fixed outcomes are those stated here. On an isolated test network, the exposed comparison allows the otherwise disallowed observer to connect. After fixing the bind/firewall, that observer must receive refusal or timeout while the allowed observer can still connect and complete V6's application request. Do not create public exposure to obtain a baseline.
 
 **REASONED:** the observer positions and targets in this paragraph, per the guide's cited memcached documentation, configuring the server entry. No deployed cache or second network position exists in the authoring environment, so this has no local part beyond the V2 block runs recorded two paragraphs above. Expected: the loopback or private positive control connects, and once the bind and firewall are fixed the outside probe of each non-loopback or public address does not. For loopback-only service, the positive control runs on the service host against `127.0.0.1`; the outside probe targets the host's actual non-loopback address. For a private remote-client deployment, test the actual private endpoint from both relevant network positions, and any public address or port mapping separately.
 
-**REASONED:** the timeout caveat in this paragraph, per the guide's cited memcached documentation, configuring the server entry. No deployed cache, firewall or second network position exists in the authoring environment. During marking review (October 2026) the V2 block with a stub nc exiting 1 printed `TCP connection failed; inspect the error and matched positive control`; the block branches only on the exit status of nc, so its own output does not separate a timeout from a refusal or a wrong target. Expected: a timeout is inconclusive in either comparison until paired with V1 listener and firewall evidence. A timeout alone proves nothing about isolation: a wrong target, unavailable service, or broken route can produce it. Correlate the pair with V1's process/listener evidence and the effective firewall rules. This follows the vendor's [network isolation guidance](https://docs.memcached.org/serverguide/configuring/).
+**REASONED:** the timeout caveat in this paragraph, per the guide's cited memcached documentation, configuring the server entry. No deployed cache, firewall or second network position exists in the authoring environment. During marking review (October 2026) the V2 block with a stub nc exiting 1 printed `TCP connection failed; inspect the error and matched positive control`; the block branches only on the exit status of nc, so its own output does not separate a timeout from a refusal or a wrong target. That stub run covered an earlier form of the V2 block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Expected: a timeout is inconclusive in either comparison until paired with V1 listener and firewall evidence. A timeout alone proves nothing about isolation: a wrong target, unavailable service, or broken route can produce it. Correlate the pair with V1's process/listener evidence and the effective firewall rules. This follows the vendor's [network isolation guidance](https://docs.memcached.org/serverguide/configuring/).
 
 ### V3. Retain the loopback text probe for its applicable configuration
 
@@ -34984,14 +34984,14 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK '127.0.0.1'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace the address; not probing"; exit 1 ;;
+      echo "replace the address; not probing"; exit 2 ;;
     *)
-      [ "$1" = 127.0.0.1 ] || { echo "this probe is only for loopback; not probing"; exit 1; }
+      [ "$1" = 127.0.0.1 ] || { echo "this probe is only for loopback; not probing"; exit 2; }
       printf 'stats\r\nquit\r\n' | nc -w 5 "$1" 11211
       printf 'stats settings\r\nquit\r\n' | nc -w 5 "$1" 11211
       ;;
@@ -34999,23 +34999,23 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 )
 ```
 
-**REASONED:** preceding block; the two text requests in the preceding block and the outcomes in this paragraph, per the guide's cited memcached protocol reference, memcached basic text command semantics, memcached 1.6.45 binary authentication, statistics, and flush enforcement, and memcached documentation, TLS entries. No loopback memcached service exists in the authoring environment. During marking review (October 2026) the block ran under `bash -u` with a stub nc: the shipped 127.0.0.1 value sent `stats\r\nquit\r\n` and then `stats settings\r\nquit\r\n` to port 11211, and 10.0.0.5 and 127.0.0.2 printed `this probe is only for loopback; not probing` without running nc. The expected outcomes on the applicable listener and on the combined deployment are those stated here. Expect statistics terminated by `END` on the applicable text listener. On the combined private-address SASL/TLS deployment, this probe fails for independent reasons: nothing need listen on loopback, `-S` rejects text `stats`, and `-Z` requires TLS. That failure proves none of those controls individually. Pair it with V1's listener evidence and V6's successful authenticated request. See the [text protocol](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt) and [binary dispatcher](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c).
+**REASONED:** preceding block; the two text requests in the preceding block and the outcomes in this paragraph, per the guide's cited memcached protocol reference, memcached basic text command semantics, memcached 1.6.45 binary authentication, statistics, and flush enforcement, and memcached documentation, TLS entries. No loopback memcached service exists in the authoring environment. During marking review (October 2026) the block ran under `bash -u` with a stub nc: the shipped 127.0.0.1 value sent `stats\r\nquit\r\n` and then `stats settings\r\nquit\r\n` to port 11211, and 10.0.0.5 and 127.0.0.2 printed `this probe is only for loopback; not probing` without running nc. Those stub runs covered an earlier form of the V3 block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. The expected outcomes on the applicable listener and on the combined deployment are those stated here. Expect statistics terminated by `END` on the applicable text listener. On the combined private-address SASL/TLS deployment, this probe fails for independent reasons: nothing need listen on loopback, `-S` rejects text `stats`, and `-Z` requires TLS. That failure proves none of those controls individually. Pair it with V1's listener evidence and V6's successful authenticated request. See the [text protocol](https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt) and [binary dispatcher](https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c).
 
 ### V4. Verify TLS, certificate identity, and the existing mutual-TLS option
 
-**REASONED:** following block; no TLS-enabled memcached service is available. The local V4 stub run recorded during marking review (October 2026) under `bash -u` refused a missing `ca.pem` and, with a readable `ca.pem`, reached the stub `openssl s_client -connect 10.0.0.5:11211 -CAfile ca.pem -verify_ip 10.0.0.5 -verify_return_error` command. This records argument construction and the file guard, not a TLS handshake. Provide the trusted CA as `ca.pem` and the actual server IPv4 address:
+**REASONED:** following block; no TLS-enabled memcached service is available. The local V4 stub run recorded during marking review (October 2026) under `bash -u` refused a missing `ca.pem` and, with a readable `ca.pem`, reached the stub `openssl s_client -connect 10.0.0.5:11211 -CAfile ca.pem -verify_ip 10.0.0.5 -verify_return_error` command. This records argument construction and the file guard, not a TLS handshake. That stub run covered an earlier form of the V4 block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Provide the trusted CA as `ca.pem` and the actual server IPv4 address:
 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SERVER_IPV4'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|-*|*[[:space:]]*)
-      echo "replace the address; not probing"; exit 1 ;;
+      echo "replace the address; not probing"; exit 2 ;;
     *)
-      [ -r ca.pem ] || { echo "provide the trusted CA file ca.pem; not probing"; exit 1; }
+      [ -r ca.pem ] || { echo "provide the trusted CA file ca.pem; not probing"; exit 2; }
       timeout 10 openssl s_client -connect "$1:11211" -CAfile ca.pem -verify_ip "$1" \
         -verify_return_error </dev/null
       ;;
@@ -35023,11 +35023,11 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 )
 ```
 
-**REASONED:** preceding block; the V4 guard, OpenSSL command construction, certificate identity and DNS adaptation here, per the guide's cited memcached documentation, TLS entry; `-verify_ip` and `-verify_hostname` identity checks and `-CAfile` trusted-certificate file per the cited OpenSSL 3.0 verification options entry. The basis for `-verify_ip` and `-verify_hostname` being `s_client` options and `-verify_return_error` typically aborting on a verification error is the cited OpenSSL 3.0 `s_client` verification options and `-verify_return_error` entry. Local marking review (October 2026, Bash 5.3.9) ran `bash -n` and ShellCheck 0.11.0 with Bash selected; both exited 0 without findings. Under `bash -u`, a stubbed `timeout` and `openssl` run refused a missing marker with `paste the whole block; not probing` and missing or extra values with `supply exactly one address; not probing`, each at exit 1 before either stub ran. The same stubbed run under `bash -u` refused placeholder, angle-bracket, example.com, empty, option-like and spaced values with `replace the address; not probing`, and a missing CA with `provide the trusted CA file ca.pem; not probing`, each at exit 1 before either stub ran. The valid 10.0.0.5 fixture exited 0 and printed `timeout 10 openssl s_client -connect 10.0.0.5:11211 -CAfile ca.pem -verify_ip 10.0.0.5 -verify_return_error`. Local OpenSSL 3.5.5 `openssl x509 -noout -checkip` and `-checkhost` checks printed `IP 10.0.0.5 does match certificate`, `IP 10.0.0.6 does NOT match certificate`, `Hostname cache.example.com does match certificate` and `Hostname other.example.com does NOT match certificate`; the corresponding exits were 0, 1, 0 and 1. These local checks did not exercise a handshake. A live memcached stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. A compatible TLS application client for the V6 request is also needed, and its availability is unknown. The exposed service would fail the TLS handshake or present the wrong identity; the fixed service must complete trusted CA and matching IP or DNS verification and the V6 application request. For the original `10.0.0.5` example, the certificate needs an iPAddress SAN for `10.0.0.5`. `-verify_ip` binds trust to that address. For a DNS SAN, adapt the guarded block to the actual name and use `-verify_hostname` with that name instead. Chain checks alone accept other identities signed by the same CA.
+**REASONED:** preceding block; the V4 guard, OpenSSL command construction, certificate identity and DNS adaptation here, per the guide's cited memcached documentation, TLS entry; `-verify_ip` and `-verify_hostname` identity checks and `-CAfile` trusted-certificate file per the cited OpenSSL 3.0 verification options entry. The basis for `-verify_ip` and `-verify_hostname` being `s_client` options and `-verify_return_error` typically aborting on a verification error is the cited OpenSSL 3.0 `s_client` verification options and `-verify_return_error` entry. Local marking review (October 2026, Bash 5.3.9) ran `bash -n` and ShellCheck 0.11.0 with Bash selected; both exited 0 without findings. Under `bash -u`, a stubbed `timeout` and `openssl` run refused a missing marker with `paste the whole block; not probing` and missing or extra values with `supply exactly one address; not probing`, each at exit 1 before either stub ran. The same stubbed run under `bash -u` refused placeholder, angle-bracket, example.com, empty, option-like and spaced values with `replace the address; not probing`, and a missing CA with `provide the trusted CA file ca.pem; not probing`, each at exit 1 before either stub ran. The valid 10.0.0.5 fixture exited 0 and printed `timeout 10 openssl s_client -connect 10.0.0.5:11211 -CAfile ca.pem -verify_ip 10.0.0.5 -verify_return_error`. The bash -n, ShellCheck and stubbed runs above covered an earlier form of the V4 block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Local OpenSSL 3.5.5 `openssl x509 -noout -checkip` and `-checkhost` checks printed `IP 10.0.0.5 does match certificate`, `IP 10.0.0.6 does NOT match certificate`, `Hostname cache.example.com does match certificate` and `Hostname other.example.com does NOT match certificate`; the corresponding exits were 0, 1, 0 and 1. These local checks did not exercise a handshake. A live memcached stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. A compatible TLS application client for the V6 request is also needed, and its availability is unknown. The exposed service would fail the TLS handshake or present the wrong identity; the fixed service must complete trusted CA and matching IP or DNS verification and the V6 application request. For the original `10.0.0.5` example, the certificate needs an iPAddress SAN for `10.0.0.5`. `-verify_ip` binds trust to that address. For a DNS SAN, adapt the guarded block to the actual name and use `-verify_hostname` with that name instead. Chain checks alone accept other identities signed by the same CA.
 
 **REASONED:** the public-trust alternative and hostname check here, per the guide's cited memcached documentation, TLS entry; the `-verify_hostname` identity check, `-CAfile` and default trusted-certificate file per the cited OpenSSL 3.0 verification options entry. The basis for `-verify_hostname` being an `s_client` option and `-verify_return_error` typically aborting on a verification error is the cited OpenSSL 3.0 `s_client` verification options and `-verify_return_error` entry. Local marking review (October 2026) ran OpenSSL 3.5.5 `s_client -help`, which exited 0 and listed `-verify_hostname` and `-verify_ip`. The same local marking review (October 2026) recorded that a server certificate signed by a locally generated CA passed `openssl verify -CAfile`, printing `OK` for the server certificate, while `openssl x509 -checkhost` printed `Hostname cache.example.com does match certificate` at exit 0 and `Hostname other.example.com does NOT match certificate` at exit 1. A publicly trusted certificate and a live TLS endpoint were not tested; their availability is unknown. A live memcached stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. A compatible TLS application client for the V6 request is also needed, and its availability is unknown. Expected exposed: a trusted chain for the wrong DNS name can pass a chain-only check, which is why the step uses `-verify_hostname`: set to the service's DNS name, it fails hostname verification for a certificate issued to another name, and `-verify_return_error` typically aborts the handshake; fixed: the trusted chain and matching DNS identity verify, followed by a successful V6 request. Omit `-CAfile` only for a publicly trusted certificate whose issuer is already in the system store. On that path, use `-verify_hostname` with the certificate's DNS name rather than expecting an iPAddress SAN.
 
-**REASONED:** the plaintext and TLS service comparison and inconclusive results here, per the guide's cited memcached documentation, TLS and memcached basic text command semantics entries. The basis for `s_client` proceeding past verification errors unless `-verify_return_error` is used, so a bare handshake shows only that TLS is present, is the cited OpenSSL 3.0 `s_client` verification options and `-verify_return_error` entry. Local marking review (October 2026) ran the preceding V4 block through `bash -n` and ShellCheck 0.11.0 with no findings; its valid stub fixture printed `timeout 10 openssl s_client -connect 10.0.0.5:11211 -CAfile ca.pem -verify_ip 10.0.0.5 -verify_return_error` and exited 0. A live memcached stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No live TLS handshake or V6 request was observed. A compatible TLS application client for the V6 request is also needed, and its availability is unknown. Expected exposed: plaintext cannot complete the TLS handshake; fixed: trusted certificate and matching identity verify and the authorized V6 request succeeds. A timeout or absent CA file establishes neither state. A reachable plaintext comparison cannot complete this TLS handshake; the fixed TLS endpoint must complete certificate and identity verification and then support V6's application request. A bare handshake without the proper trust and identity checks establishes only that TLS is present. A timeout or missing certificate file is inconclusive.
+**REASONED:** the plaintext and TLS service comparison and inconclusive results here, per the guide's cited memcached documentation, TLS and memcached basic text command semantics entries. The basis for `s_client` proceeding past verification errors unless `-verify_return_error` is used, so a bare handshake shows only that TLS is present, is the cited OpenSSL 3.0 `s_client` verification options and `-verify_return_error` entry. Local marking review (October 2026) ran the preceding V4 block through `bash -n` and ShellCheck 0.11.0 with no findings; its valid stub fixture printed `timeout 10 openssl s_client -connect 10.0.0.5:11211 -CAfile ca.pem -verify_ip 10.0.0.5 -verify_return_error` and exited 0. Those bash -n, ShellCheck and stub runs covered an earlier form of the V4 block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. A live memcached stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No live TLS handshake or V6 request was observed. A compatible TLS application client for the V6 request is also needed, and its availability is unknown. Expected exposed: plaintext cannot complete the TLS handshake; fixed: trusted certificate and matching identity verify and the authorized V6 request succeeds. A timeout or absent CA file establishes neither state. A reachable plaintext comparison cannot complete this TLS handshake; the fixed TLS endpoint must complete certificate and identity verification and then support V6's application request. A bare handshake without the proper trust and identity checks establishes only that TLS is present. A timeout or missing certificate file is inconclusive.
 
 **REASONED:** the default client-certificate setting and mode 2 comparison here, per the guide's cited memcached documentation, TLS entry. Local marking review (October 2026) ran OpenSSL 3.5.5 `s_client -help`, which exited 0 and listed `-cert` and `-key`; no client certificate exchange ran. A live memcached stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. A configured mode 2 service, approved client certificate and key, and compatible application client are also needed, and their availability is unknown. Expected exposed: the default mode allows the application request without a client certificate; fixed: mode 2 refuses that request without a client certificate while the approved certificate completes it. s_client's `Verification: OK` (server-certificate verification) alone does not distinguish these outcomes. The example matches the default server behavior, which does not require client certificates. With `-o ssl_verify_mode=2`, add `-cert` and `-key` pointing to the approved client certificate and key files. Compare a valid client certificate with an omitted certificate against the same service. Only the valid client must complete an application request. `Verification: OK` describes server-certificate verification and can still print when the server subsequently refuses the client.
 
@@ -35044,14 +35044,14 @@ Replace the address with `127.0.0.1` only after confirming that this port belong
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DISPOSABLE_LOOPBACK_IP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
-      echo "replace the disposable cache address; not probing"; exit 1 ;;
+      echo "replace the disposable cache address; not probing"; exit 2 ;;
     *)
-      [ "$1" = 127.0.0.1 ] || { echo "use the disposable loopback cache; not probing"; exit 1; }
+      [ "$1" = 127.0.0.1 ] || { echo "use the disposable loopback cache; not probing"; exit 2; }
       printf 'set sc:probe 0 300 2\r\nok\r\nget sc:probe\r\nquit\r\n' | nc -w 5 "$1" 11211
       sleep 2
       printf 'flush_all\r\nget sc:probe\r\nquit\r\n' | nc -w 5 "$1" 11211
@@ -35208,14 +35208,14 @@ Claims (full source mapping in the JSON block below):
 - verify-watch (REASONED; stable): Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W.
 - verify-shutdown (REASONED; protocol, stable): Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache.
 - verify-auth (REASONED; docs, stable, protocol): Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20.
-- local-guards (DEMONSTRATED; stable, docs): Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior.
+- local-guards (DEMONSTRATED; stable, docs): Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior. Those checks covered an earlier form of the five guarded blocks, whose refusals exited with status 1; the current form was not re-run.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bc88cc20fa9ce02c64a72207396c52ec8ba6b80175fb3880e06ea1b4de7ede0",
+  "body_sha256": "16fc5984db6d91a442e349e5bc0cad36e7a04eadef3698d4c6e28345cef5c4b3",
   "components": {
     "stable": {
       "name": "memcached source",
@@ -35330,7 +35330,7 @@ Claims (full source mapping in the JSON block below):
     "verify-watch": {"text": "Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W.", "components": ["stable"], "sources": ["stable:sd40dab94f516"], "status": "REASONED", "verify": [5]},
     "verify-shutdown": {"text": "Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache.", "components": ["protocol", "stable"], "sources": ["protocol:s625682583be8", "stable:sd40dab94f516"], "status": "REASONED", "verify": [5]},
     "verify-auth": {"text": "Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20.", "components": ["docs", "stable", "protocol"], "sources": ["docs:s3b05fd21e910", "stable:sceaaea90ec60", "protocol:s625682583be8"], "status": "REASONED"},
-    "local-guards": {"text": "Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:s57f57201fc31"], "status": "DEMONSTRATED", "evidence": "Each of the five guarded blocks rejected six invalid values and two incomplete-assignment cases under `bash -u`; valid inputs reached instrumented probes."}
+    "local-guards": {"text": "Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior. Those checks covered an earlier form of the five guarded blocks, whose refusals exited with status 1; the current form was not re-run.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:s57f57201fc31"], "status": "DEMONSTRATED", "evidence": "Each of the five guarded blocks rejected six invalid values and two incomplete-assignment cases under `bash -u`; valid inputs reached instrumented probes."}
   }
 }
 ````
