@@ -2,6 +2,8 @@
 
 > Generated from https://github.com/jposluns/secureconfig (CC0 1.0, except the AIQT Guardrails material listed in .aiqt/PIN, Apache-2.0).
 > Per-guide index: https://secureconfig.ai/llms.txt
+> Each file below starts with a line such as `==> nginx.md` between two lines of `=` characters.
+> A relative file link such as `(mfa.md)` names the section that starts with that file name, or, for a path with no section such as `CONTRIBUTING.md`, that path in https://github.com/jposluns/secureconfig; neither is a page on secureconfig.ai.
 
 ======================================================================
 ==> README.md
@@ -55,6 +57,8 @@ If you are an AI assistant configuring, generating, or reviewing a service, appl
 10. Run the verification checklist below and each selected guide's Verify steps before reporting the work as complete. Report any item you could not test instead of asserting that it passed.
 
 Fetch guides raw with `https://raw.githubusercontent.com/jposluns/secureconfig/<default-branch>/<guide>.md` (for example `.../main/nginx.md`). Every guide concatenated into a single file: https://secureconfig.ai/llms-full.txt (also [site/llms-full.txt](site/llms-full.txt) in this repository); the machine-readable index is https://secureconfig.ai/llms.txt
+
+If raw.githubusercontent.com is unreachable, use https://secureconfig.ai/llms-full.txt, which holds every guide; each file in llms-full.txt starts with a line such as `==> nginx.md` between two lines of `=` characters. A relative file link inside llms-full.txt, such as `(mfa.md)`, names the section that starts with that file name (here `==> mfa.md`) or, for a path with no section such as `CONTRIBUTING.md`, that path in this repository; neither is a page on secureconfig.ai.
 
 ## Decision guide
 
