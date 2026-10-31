@@ -91,7 +91,7 @@ Basic authentication is single-factor, and this guide finds no lighttpd entry in
 
 ## 4. Verify
 
-REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. The block classifies its two authentication requests and exits once at the end: 1 if the site root answers a 2xx without credentials or the request carrying another Host answers 200, otherwise 3 if either answers anything but 401 or the configuration test, the reload or a curl or ss command fails, and 0 when both answer 401. The redirect headers and the listener list stay for you to judge, and its last line says so.
+REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. The block classifies its two authentication requests and exits once at the end: 1 if the site root answers a 2xx without credentials or the request carrying another Host answers 200, otherwise 3 if either answers anything but 401 or the configuration test, the reload or a curl or ss command fails, otherwise 2 if `ss` is not installed, and otherwise 0 when both answer 401. The redirect headers and the listener list stay for you to judge, and its last line says so.
 
 REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous. The block takes the site's host name and a protected path on its guarded `set --` line, refuses example.com, example.net, example.org and their subdomains, and only then runs the configuration test and reload. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes; no stub or deployment run of it is recorded here.
 
@@ -110,7 +110,7 @@ REASONED: configuration, redirect, authentication, listener inventory and altern
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is not installed), which outranks 0
   if sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd; then :; else
     echo "configuration test or reload exit $?: the requests below may test the configuration lighttpd was already running; inconclusive"; set -- "$1" "$2" 3
   fi
@@ -131,8 +131,13 @@ REASONED: configuration, redirect, authentication, listener inventory and altern
   # Read every listener rather than filtering to the ports you expect. The checks above prove
   # the front door asks for credentials; they do not prove it is the only door, and a filtered
   # list cannot show you a port you did not think of.
-  ss -tlnp ||
-    { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+  if command -v ss >/dev/null; then
+    ss -tlnp ||
+      { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$3" in 0) set -- "$1" "$2" 2 ;; esac
+  fi
 
   # `auth.require` can sit at the top level or inside a `$HTTP["host"]` conditional, and a
   # conditional one applies only to the hosts it names. If yours is conditional, a request
@@ -268,7 +273,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "c7382f55429aaa14da2ce74e71ab4ec0b2b78411c0c9dc00373fc6fd11426bb8",
+  "body_sha256": "e31bb0c598eed51db1658616ad8c360d7d4e2db6bec37fefe34292486d55b4d1",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",

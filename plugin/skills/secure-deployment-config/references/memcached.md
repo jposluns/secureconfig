@@ -142,9 +142,10 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 
 ### V1. Inspect the release, process identity, arguments, and every listener
 
-**REASONED:** no memcached executable or service process is available here. On the service host, first ensure `memcached` resolves to the same installed executable used by the service. Supply its actual PID. Run listener inspection with enough privilege to identify the process and in its network namespace; also inspect host-side published ports for container deployments.
-
 ```bash
+# On the service host, first ensure memcached resolves to the same installed executable used by the service.
+# Supply its actual PID. Run listener inspection with enough privilege to identify the process and in its
+# network namespace; also inspect host-side published ports for container deployments.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MEMCACHED_PID'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -158,11 +159,16 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
         *[!0123456789]*|0) echo "supply a positive numeric PID; not probing"; exit 2 ;;
         *)
           command -v memcached > /dev/null || { echo "memcached is not on PATH: put the executable the service runs first on PATH; not probing"; exit 2; }
-          set -- "$1" 0                 # the 2nd value is the block's status so far: 3 (a command failed) outranks 0; this block classifies no finding
+          set -- "$1" 0                 # the 2nd value is the block's status so far: 3 (a command failed) outranks 2 (ss is not installed), which outranks 0; this block classifies no finding
           memcached -V || { echo "memcached -V exit $?; inconclusive"; set -- "$1" 3; }
           memcached -h || { echo "memcached -h exit $?; inconclusive"; set -- "$1" 3; }
           ps -o pid=,user=,group=,args= -p "$1" || { echo "ps exit $?: no process $1 was listed; inconclusive"; set -- "$1" 3; }
-          ss -tlnup || { echo "ss -tlnup exit $?: the listener list failed; inconclusive"; set -- "$1" 3; }
+          if command -v ss >/dev/null; then
+            ss -tlnup || { echo "ss -tlnup exit $?: the listener list failed; inconclusive"; set -- "$1" 3; }
+          else
+            echo "ss is not installed here; not listing sockets"
+            case "$2" in 0) set -- "$1" 2 ;; esac
+          fi
           echo "block exit $2; the release, the options memcached -h lists, the process account and every listener are not classified, so judge them yourself"
           exit "$2"
           ;;
@@ -172,7 +178,7 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
 )
 ```
 
-**REASONED:** preceding block; the `memcached -V`, `memcached -h`, `ps` and `ss -tlnup` inventory in the preceding block and the release, option and account checks in this paragraph, per the guide's cited memcached 1.6.42 security release notes, memcached 1.6.45 security and crash fixes, memcached 1.6.45 CLI help and memcached 1.6.45 man page entries. No memcached executable or service process exists in the authoring environment, and no host listener was read. During marking review (October 2026) the block ran under `bash -u` with stub memcached, ps and ss: PID 1234 reached `memcached -V`, `memcached -h`, `ps -o pid=,user=,group=,args= -p 1234` and `ss -tlnup` in that order, and invalid PIDs were refused before any stub ran. Those stub runs covered an earlier form of the V1 block, whose refusals exited with status 1; the current form, which refuses a memcached missing from PATH, exits 3 when any of the four commands fails and otherwise 0, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes, and no stub run of it is recorded here. Expected exposed outcome: a release without the cited fixes or their backports, `-S` or `-Z` missing for the SASL/TLS deployment, or another process account; fixed: the fixes present, both options advertised and the dedicated account. Confirm the package's security-fix status, including distribution backports; a version string alone is insufficient. Confirm `-S` and `-Z` are advertised for the SASL/TLS deployment. The running process must use the intended dedicated account.
+**REASONED:** preceding block; the `memcached -V`, `memcached -h`, `ps` and `ss -tlnup` inventory in the preceding block and the release, option and account checks in this paragraph, per the guide's cited memcached 1.6.42 security release notes, memcached 1.6.45 security and crash fixes, memcached 1.6.45 CLI help and memcached 1.6.45 man page entries. No memcached executable or service process exists in the authoring environment, and no host listener was read. During marking review (October 2026) the block ran under `bash -u` with stub memcached, ps and ss: PID 1234 reached `memcached -V`, `memcached -h`, `ps -o pid=,user=,group=,args= -p 1234` and `ss -tlnup` in that order, and invalid PIDs were refused before any stub ran. Those stub runs covered an earlier form of the V1 block, whose refusals exited with status 1; the current form, which refuses a memcached missing from PATH, exits 3 when any of the four commands fails, otherwise 2 when `ss` is not installed, and otherwise 0, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes, and no stub run of it is recorded here. Expected exposed outcome: a release without the cited fixes or their backports, `-S` or `-Z` missing for the SASL/TLS deployment, or another process account; fixed: the fixes present, both options advertised and the dedicated account. Confirm the package's security-fix status, including distribution backports; a version string alone is insufficient. Confirm `-S` and `-Z` are advertised for the SASL/TLS deployment. The running process must use the intended dedicated account.
 
 **REASONED:** the listener comparison in this paragraph, per the guide's cited memcached 1.6.45 man page and memcached UDP reflection and amplification advisory entries. No memcached service, published container port or second network position exists in the authoring environment, so no listener was read; the stub run of the V1 block is recorded in the previous paragraph. The expected exposed and fixed outcomes are those stated here. Read every listener: TCP 11211 on loopback or the intended private address only, no memcached UDP socket, and no unexpected address-specific port or published listener. An exposed comparison has a wildcard/unintended listener or UDP enabled; a fixed comparison has only the intended listeners while an allowed client's protected operation still succeeds. Use V2 and V6 as the positive controls. The [man page](https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1) and [DDoS advisory](https://docs.memcached.org/advisories/ddos/) define the expected configuration.
 
@@ -511,7 +517,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "e8b5941597780ee7c7e06e2fb9e2b28c1734c4e764fa3d30a15f1f1f287f68fa",
+  "body_sha256": "4e27f0f58a56cef3e279bbd3d0e6a34fc6401f868c7f9a11bb92650fee5a6297",
   "components": {
     "stable": {
       "name": "memcached source",
