@@ -27182,12 +27182,13 @@ GET app:probe
 
 ## 8. Verify (REASONED: deployment and HA comparisons from cited Redis documentation and pinned sources; no Redis runtime, live topology or permitted socket inspection.)
 
-REASONED: the deployment checks below, from the cited Redis documentation and pinned sources; they are not demonstrated. The authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and denies socket inspection. No live deployment was supplied. Shell syntax and placeholder rejection were checked locally; Redis configuration parsing remains unconfirmed, and exposed/fixed runtime behaviour is REASONED from the cited documentation and pinned sources. Those local checks covered an earlier form of the guarded shell blocks, whose refusals exited with status 1 and whose probes set no status of their own. The current form of every shell block in this section is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026 under bash 5.3.9, with stand-ins for `ss`, `redis-cli`, `nc`, `openssl` and `timeout`; no Redis process or network was involved. Each block now exits once with one status: 1 for a finding, which outranks 3 for a failed command or an inconclusive result; 2 for a refusal before any probe; and 0 otherwise. Once its probes run, its last line names what it leaves for you to judge.
+REASONED: the deployment checks below, from the cited Redis documentation and pinned sources; they are not demonstrated. The authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and denies socket inspection. No live deployment was supplied. Shell syntax and placeholder rejection were checked locally; Redis configuration parsing remains unconfirmed, and exposed/fixed runtime behaviour is REASONED from the cited documentation and pinned sources. Those local checks covered an earlier form of the guarded shell blocks, whose refusals exited with status 1 and whose probes set no status of their own. The current form of every shell block in this section is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026 under bash 5.3.9, with stand-ins for `ss`, `redis-cli`, `nc`, `openssl` and `timeout`; no Redis process or network was involved. Each block now exits once with one status: 1 for a finding, which outranks 3 for a failed command or an inconclusive result; 2 for a refusal before any probe; and 0 otherwise. Once its probes run, its last line names what it leaves for you to judge. The two listener inventories refuse with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, and the replica-certificate, cluster-bus certificate and peer-name checks refuse with status 2 when a CA, certificate or key file they read is not readable. A failed negative probe counts as the expected rejection only when its error names a certificate-related TLS alert or, for a plaintext request or the replica check's request without a client certificate, a closed or reset connection; any other failure is inconclusive. Which error text `redis-cli` and OpenSSL print for each rejection is this guide's assessment, not observed here, so a real rejection worded otherwise reads as inconclusive.
 
 **REASONED: listener inventory.** On the Redis host, inspect every listener:
 
 ```bash
 (                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   if ss -tlnp; then
     echo "unclassified observation: read every listener above; for the local-only configuration, Redis TCP listeners belong on loopback"
     exit 0
@@ -27218,7 +27219,8 @@ For the local-only configuration, Redis TCP listeners should be on loopback. An 
   printf '%s' "$4"
   case "$3:$4" in
     0:*|*PONG*|*NOAUTH*) echo "FINDING: the plaintext ping got a RESP reply, so plaintext Redis is still available at this endpoint"; set -- 1 "$2" ;;
-    *) echo "no RESP reply recognized to the plaintext ping (redis-cli exit $3); the TLS ping below decides whether that is the pass"; set -- 0 "$2" ;;
+    *'Server closed the connection'*|*'Connection reset by peer'*) echo "no RESP reply recognized to the plaintext ping (redis-cli exit $3); the TLS ping below decides whether that is the pass"; set -- 0 "$2" ;;
+    *) echo "the plaintext ping got neither a RESP reply nor a closed or reset connection (redis-cli exit $3), as a timeout, resolution failure, refusal or local error does; inconclusive"; set -- 3 "$2" ;;
   esac
   set -- "$1" "$2" "$(if redis-cli --tls --cacert /etc/redis/tls/ca.crt -h "$2" -p 6379 ping 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # status, host, redis-cli's exit status, then its output
@@ -27391,6 +27393,7 @@ Require `tls-replication` to be `yes`, `master_host` and `master_port` to identi
 
 ```bash
 (                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   if ss -tnp; then
     echo "unclassified observation: find the replica process's established connection to the recorded primary address and TLS port above; without process information the list cannot show which process owns it"
     exit 0
@@ -27419,6 +27422,9 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
     *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
   if [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then :; else echo "port must be 1-65535; not probing"; exit 2; fi
+  if [ -r /etc/redis/tls/ha-ca.crt ] && [ -r /etc/redis/tls/client.crt ] && [ -r /etc/redis/tls/client.key ]; then :; else
+    echo "the CA, client certificate and key files named below must be readable here; not probing"; exit 2
+  fi
   unset REDISCLI_AUTH || exit 2
   printf '\nNo client certificate\n'
   set -- 0 "$1" "$2" "$(if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
@@ -27433,6 +27439,8 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
   case "$4:$5" in
     0:*|*NOAUTH*|*PONG*) echo "FINDING: the request without a client certificate reached Redis, so this listener does not require one"; set -- 1 "$2" "$3" ;;
     124:*) echo "the request without a client certificate timed out, which does not demonstrate rejection; inconclusive"; set -- 3 "$2" "$3" ;;
+    *'alert handshake failure'*|*'alert bad certificate'*|*'alert certificate unknown'*|*'alert unknown ca'*|*'alert certificate required'*|*'Server closed the connection'*|*'Connection reset by peer'*) echo "the request without a client certificate ended with a certificate-related TLS alert or a closed connection, the rejection shape" ;;
+    *) echo "the request without a client certificate failed without a certificate-related TLS alert or a closed connection (a local file, name-resolution or connection error, for example); inconclusive"; set -- 3 "$2" "$3" ;;
   esac
   printf '\nTrusted client certificate, positive control\n'
   set -- "$1" "$2" "$3" "$(if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
@@ -27455,7 +27463,7 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
 )
 ```
 
-With `tls-auth-clients yes`, require a TLS certificate rejection for the first request and `NOAUTH` for the trusted-certificate positive control. In the isolated comparison with `tls-auth-clients no`, both requests reach `NOAUTH`. This tests the data listener's certificate requirement, which also applies to incoming replicas; it does not authenticate a replication session. A timeout, missing certificate file, or unreachable endpoint is inconclusive.
+REASONED: preceding block; the replica-certificate check above, which no live primary/replica pair or certificate fixtures were available to run. With `tls-auth-clients yes`, require a TLS certificate rejection for the first request and `NOAUTH` for the trusted-certificate positive control. In the isolated comparison with `tls-auth-clients no`, both requests reach `NOAUTH`. This tests the data listener's certificate requirement, which also applies to incoming replicas; it does not authenticate a replication session. A missing or unreadable CA, certificate or key file is refused with status 2 before any request; a timeout, an unreachable endpoint or another failure without a certificate-related TLS alert or closed connection is inconclusive.
 
 To confirm current synchronization, write a fresh disposable value at an authorized primary Redis prompt:
 
@@ -27492,28 +27500,44 @@ These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU 
   case "$3" in
     *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 2 ;;
   esac
+  if [ -r /etc/redis/tls/ha-ca.crt ] && [ -r /etc/redis/tls/untrusted-client.crt ] && [ -r /etc/redis/tls/untrusted-client.key ] &&
+    [ -r /etc/redis/tls/ha-client.crt ] && [ -r /etc/redis/tls/ha-client.key ]; then :; else
+    echo "the CA, untrusted and trusted certificate and key files named below must be readable here; not probing"; exit 2
+  fi
   set -- 0 "$@"                         # the 1st value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   printf '\nNo client certificate\n'
-  if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
-      -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt </dev/null; then
+  set -- "$1" "$2" "$3" "$4" "$(if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
+      -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # status, host, port, peer name, the probe's exit status, then its output
+  printf '%s' "$6"
+  if [ "$5" = 0 ]; then
     echo "probe exit=0; inspect the handshake result"
-    echo "FINDING: the handshake completed without a client certificate, so the bus does not require one"; set -- 1 "$2" "$3" "$4"
   else
-    set -- "$1" "$2" "$3" "$4" "$?"
     printf 'probe exit=%s; inspect the TLS error\n' "$5"
-    if [ "$5" = 124 ]; then echo "a timeout does not demonstrate that the bus rejects a missing client certificate; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4"; fi
   fi
+  case "$5:$6" in
+    0:*) echo "FINDING: the handshake completed without a client certificate, so the bus does not require one"; set -- 1 "$2" "$3" "$4" ;;
+    124:*) echo "a timeout does not demonstrate that the bus rejects a missing client certificate; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+    *'alert handshake failure'*|*'alert bad certificate'*|*'alert certificate unknown'*|*'alert unknown ca'*|*'alert certificate required'*) echo "the TLS error names a certificate-related alert, the rejection shape" ;;
+    *) echo "the TLS error names no certificate-related alert (a local file, connection, protocol-version or server-verification error, for example); inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+  esac
   printf '\nUntrusted client certificate\n'
-  if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
+  set -- "$1" "$2" "$3" "$4" "$(if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
       -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
-      -cert /etc/redis/tls/untrusted-client.crt -key /etc/redis/tls/untrusted-client.key </dev/null; then
+      -cert /etc/redis/tls/untrusted-client.crt -key /etc/redis/tls/untrusted-client.key </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # status, host, port, peer name, the probe's exit status, then its output
+  printf '%s' "$6"
+  if [ "$5" = 0 ]; then
     echo "probe exit=0; inspect the handshake result"
-    echo "FINDING: the handshake completed with the untrusted client certificate, so the bus accepts it"; set -- 1 "$2" "$3" "$4"
   else
-    set -- "$1" "$2" "$3" "$4" "$?"
     printf 'probe exit=%s; inspect the TLS error\n' "$5"
-    if [ "$5" = 124 ]; then echo "a timeout does not demonstrate that the bus rejects the untrusted certificate; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4"; fi
   fi
+  case "$5:$6" in
+    0:*) echo "FINDING: the handshake completed with the untrusted client certificate, so the bus accepts it"; set -- 1 "$2" "$3" "$4" ;;
+    124:*) echo "a timeout does not demonstrate that the bus rejects the untrusted certificate; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+    *'alert handshake failure'*|*'alert bad certificate'*|*'alert certificate unknown'*|*'alert unknown ca'*|*'alert certificate required'*) echo "the TLS error names a certificate-related alert, the rejection shape" ;;
+    *) echo "the TLS error names no certificate-related alert (a local file, connection, protocol-version or server-verification error, for example); inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+  esac
   printf '\nTrusted client certificate, positive control\n'
   if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
       -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
@@ -27550,7 +27574,8 @@ An exposed plaintext bus has no TLS certificate gate and will fail the TLS posit
   printf '%s' "$4"
   case "$3:$4" in
     0:*|*NOAUTH*) echo "FINDING: the plaintext request got a RESP reply, so plaintext Redis protocol is available at this endpoint"; set -- 1 "$2" ;;
-    *) echo "no RESP reply recognized to the plaintext request (exit $3); a timeout, resolution error or refusal alone proves nothing, so the TLS requests below decide"; set -- 0 "$2" ;;
+    *'Server closed the connection'*|*'Connection reset by peer'*) echo "no RESP reply recognized to the plaintext request (exit $3); a timeout, resolution error or refusal alone proves nothing, so the TLS requests below decide"; set -- 0 "$2" ;;
+    *) echo "the plaintext request got neither a RESP reply nor a closed or reset connection (exit $3), as a timeout, resolution failure, refusal or local error does; inconclusive"; set -- 3 "$2" ;;
   esac
   set -- "$1" "$2" "$(if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
         --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
@@ -27581,7 +27606,7 @@ Any RESP reply to the first request proves plaintext Redis protocol is available
 
 One Sentinel can demonstrate its incoming listener. Outgoing TLS, peer discovery, and failover need a live Sentinel/data-node topology and independent connection evidence; success on 26379 does not prove those outgoing connections use TLS. See the [pinned outgoing connection and advertisement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
 
-REASONED: preceding block; the Sentinel shell block above, whose Redis behaviour was not demonstrated. The Sentinel shell block above passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour. Those checks covered an earlier form of the block, whose refusals exited with status 1 and whose requests set no status. The current form, whose refusals exit with status 2 and whose requests feed one exit status, is covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by the 31 October 2026 stub runs recorded at the start of this section. Its authenticated request now runs under `timeout --foreground`, so that its hidden password prompt can read from your terminal.
+REASONED: preceding block; the Sentinel shell block above, whose Redis behaviour was not demonstrated. The Sentinel shell block above passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour. Those checks covered an earlier form of the block, whose refusals exited with status 1 and whose requests set no status. The current form, whose refusals exit with status 2 and whose requests feed one exit status, is covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by the 31 October 2026 stub runs recorded at the start of this section. Its authenticated request now runs under `timeout --foreground`; that this lets its hidden password prompt read from your terminal is this guide's assessment, with no cited source, and was not observed against a live Sentinel.
 
 **REASONED: enforced HA peer identity, Redis 8.10+, section 15.** No Redis 8.10 runtime, certificate fixtures, or HA endpoints were available. Prepare two otherwise valid client certificates signed by the same trusted CA: one matching the configured HA identity and one that does not match it through either SAN or CN fallback. Keep certificate purpose, validity, CA trust, and Redis credentials constant.
 
@@ -27620,24 +27645,30 @@ REASONED: following block; the peer-name comparison, from the cited pinned ident
     unrestricted|restricted) ;;
     *) echo "substitute unrestricted or restricted, this run's phase; not probing"; exit 2 ;;
   esac
+  if [ -r /etc/redis/tls/ha-ca.crt ] && [ -r /etc/redis/tls/wrong-name-client.crt ] && [ -r /etc/redis/tls/wrong-name-client.key ] &&
+    [ -r /etc/redis/tls/matching-name-client.crt ] && [ -r /etc/redis/tls/matching-name-client.key ]; then :; else
+    echo "the CA, wrong-name and matching-name certificate and key files named below must be readable here; not probing"; exit 2
+  fi
   set -- 0 "$@"                         # the 1st value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   printf '\nSame CA, wrong peer name\n'
-  if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
       -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
-      -cert /etc/redis/tls/wrong-name-client.crt -key /etc/redis/tls/wrong-name-client.key </dev/null; then
+      -cert /etc/redis/tls/wrong-name-client.crt -key /etc/redis/tls/wrong-name-client.key </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # status, host, port, peer name, phase, the probe's exit status, then its output
+  printf '%s' "$7"
+  if [ "$6" = 0 ]; then
     echo "probe exit=0; inspect the handshake result"
-    if [ "$5" = restricted ]; then
-      echo "FINDING: the wrong-name certificate was accepted with the setting enabled, which fails this enforcement check"; set -- 1 "$2" "$3" "$4" "$5"
-    fi
   else
-    set -- "$1" "$2" "$3" "$4" "$5" "$?"
     printf 'probe exit=%s; inspect the TLS error\n' "$6"
-    if [ "$5" = unrestricted ]; then
-      echo "without the name restriction both handshakes must complete; inconclusive"; set -- 3 "$2" "$3" "$4" "$5"
-    elif [ "$6" = 124 ]; then
-      echo "a timeout does not demonstrate rejection of the wrong-name certificate; inconclusive"; set -- 3 "$2" "$3" "$4" "$5"
-    fi
   fi
+  case "$5:$6:$7" in
+    restricted:0:*) echo "FINDING: the wrong-name certificate was accepted with the setting enabled, which fails this enforcement check"; set -- 1 "$2" "$3" "$4" "$5" ;;
+    unrestricted:0:*) ;;
+    unrestricted:*) echo "without the name restriction both handshakes must complete; inconclusive"; set -- 3 "$2" "$3" "$4" "$5" ;;
+    restricted:124:*) echo "a timeout does not demonstrate rejection of the wrong-name certificate; inconclusive"; set -- 3 "$2" "$3" "$4" "$5" ;;
+    *'alert handshake failure'*|*'alert bad certificate'*|*'alert certificate unknown'*|*'alert unknown ca'*|*'alert certificate required'*) echo "the TLS error names a certificate-related alert, the rejection shape" ;;
+    *) echo "the TLS error names no certificate-related alert (a local file, connection, protocol-version or server-verification error, for example); inconclusive"; set -- 3 "$2" "$3" "$4" "$5" ;;
+  esac
   printf '\nSame CA, matching peer name, positive control\n'
   if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
       -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
@@ -28023,7 +28054,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "881c1b9db0c1c30ca7e34b79cc470b9444b50854a160aa1d892f90b55ef045a4",
+  "body_sha256": "ee89829ca74260df94adbf933a10301bd2a16f42be369244818a8e779b3ded09",
   "components": {
     "r60": {
       "name": "Redis configuration",
@@ -39192,7 +39223,7 @@ The upstream image bakes in no configuration file and declares no `EXPOSE`. With
 
 REASONED: the shell and HTTP mechanics of the download, bundle, listener and Turso checks rest on the GNU Bash bash-5.3, GNU grep v3.12 and curl curl-8_14_1 entries in Sources; this is source reasoning, not a new run. Bash documents `set --` and `shift`, quoted positional arguments and counts, unset-only expansion, prefix/suffix removal, conditional lists, loops, tests, patterns and subshells; these are the primitives used by this guide's marker, count, URL and directory checks. Bash documents `trap -`, `unset -n`/`-v`, readonly failure, `set +x +a +e`, `read -r -s -p`, `printf`, redirections and pipelines; the block's `< /dev/tty` is this guide's procedure and requires a usable controlling terminal at that path, whose operating-system availability these manuals do not establish. The token-handling conclusions below are this guide's assessment under these assumptions; hidden input is not itself history suppression. The clean-shell assumption in CONTRIBUTING rule 7 still applies; paste whole blocks, never a token as a shell command.
 
-REASONED: following block; this overview and the download probe below. The probe needs a served application, and none was available during marking review (October 2026), which ran only local commands; per the guide's cited SQLite serverless architecture and SQLite temporary and sidecar file naming entries, the expected exposed outcome is `200` or `206` for `app.db` or a sidecar once the control answers, and the fixed outcome `404` or the application's catch-all. The probe block passed `bash -n` and ShellCheck 0.11.0 with no findings in that review. The probe block's guards were exercised during marking review (October 2026) under bash 5.3.9 with a Bash curl stub. The written placeholder, non-HTTPS scheme, missing host, empty or nondigit port, multiple port colons, origin path, query, fragment, userinfo or space, empty or placeholder prefix, relative prefix, double slash, prefix query, fragment or space, wrong value count and omitted initial `set --` each printed the corresponding refusal and exited 2 without calling curl. Valid root and `/static/` fixtures exited 0 and called the stub five and nine times respectively; its synthetic HTTP 200 output does not establish live-service behavior. Those runs covered an earlier form whose requests set no exit status. The current form exits 1 when `app.db` or a sidecar answers 200 or 206, otherwise 3 when the control or a sidecar request gets no HTTP response, and otherwise 0, printing any other status for you to judge against the application's catch-all. It is covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026 under bash 5.3.9 with a curl stand-in. The bundle scan, git inventory and `stat` re-runs from that review are recorded at their steps. The bundle scan and the git inventory were demonstrated on the authoring host in exposed and fixed states. The `stat` check is REASONED for ownership: the earlier plain-file marking review did not exercise a SQLite connection, but the 15 October 2026 local marking review re-observed WAL and rollback-journal modes on open connections with Python SQLite 3.46.1; ownership by a separate account remains unexercised. The paragraph after the `stat` step records these observations. The download probe, the LiteFS/Litestream listener check and the Turso check are REASONED, each marked at its step with the capability that was missing. Their expected outcomes are this guide's assessment using the cited service facts and shell, curl and grep primitives; the manuals do not establish deployed outcomes or exhaustive guard coverage. Use Bash and curl with the behaviour documented here at bash-5.3 and curl-8_14_1; the cited curl page dates `exitcode` and `errormsg` to 7.75.0 but does not establish compatibility of these complete checks with every release from that version onward; never add `-k`. Substitute inside the single quotes and paste each complete subshell.
+REASONED: following block; this overview and the download probe below. The probe needs a served application, and none was available during marking review (October 2026), which ran only local commands; per the guide's cited SQLite serverless architecture and SQLite temporary and sidecar file naming entries, the expected exposed outcome is `200` or `206` for `app.db` or a sidecar once the control answers, and the fixed outcome `404` or the application's catch-all. The probe block passed `bash -n` and ShellCheck 0.11.0 with no findings in that review. The probe block's guards were exercised during marking review (October 2026) under bash 5.3.9 with a Bash curl stub. The written placeholder, non-HTTPS scheme, missing host, empty or nondigit port, multiple port colons, origin path, query, fragment, userinfo or space, empty or placeholder prefix, relative prefix, double slash, prefix query, fragment or space, wrong value count and omitted initial `set --` each printed the corresponding refusal and exited 2 without calling curl. Valid root and `/static/` fixtures exited 0 and called the stub five and nine times respectively; its synthetic HTTP 200 output does not establish live-service behavior. Those runs covered an earlier form whose requests set no exit status. The current form exits 1 when `app.db` or a sidecar answers 200 or 206, otherwise 3 when the control, `app.db` or a sidecar request gets no HTTP response, and otherwise 0, printing any other status for you to judge against the application's catch-all. It is covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026 under bash 5.3.9 with a curl stand-in. The bundle scan, git inventory and `stat` re-runs from that review are recorded at their steps. The bundle scan and the git inventory were demonstrated on the authoring host in exposed and fixed states. The `stat` check is REASONED for ownership: the earlier plain-file marking review did not exercise a SQLite connection, but the 15 October 2026 local marking review re-observed WAL and rollback-journal modes on open connections with Python SQLite 3.46.1; ownership by a separate account remains unexercised. The paragraph after the `stat` step records these observations. The download probe, the LiteFS/Litestream listener check and the Turso check are REASONED, each marked at its step with the capability that was missing. Their expected outcomes are this guide's assessment using the cited service facts and shell, curl and grep primitives; the manuals do not establish deployed outcomes or exhaustive guard coverage. Use Bash and curl with the behaviour documented here at bash-5.3 and curl-8_14_1; the cited curl page dates `exitcode` and `errormsg` to 7.75.0 but does not establish compatibility of these complete checks with every release from that version onward; never add `-k`. Substitute inside the single quotes and paste each complete subshell.
 
 ```bash
 # Needs a served application, which opens a listener; the authoring host forbids that without an isolated network namespace, and none was available.
@@ -39298,30 +39329,38 @@ REASONED: the scan limits and token-format assertion are only partly demonstrate
 
 REASONED: interpretation of the unchanged bundle commands, from the GNU grep v3.12 and Bash bash-5.3 entries in Sources. `grep -rlF -f - --` recursively searches the selected directories for fixed patterns read one per stdin line and prints matching file names; `grep -rlE` uses an extended regular expression instead, with the listed characters and repetitions chosen by this guide as a heuristic. Recursion follows command-line symlinks but skips symlinks encountered below them. The default binary-input heuristic can suppress output and change whether patterns match; the manual does not establish a complete binary-secret scan. GNU grep reports 0 for a match, 1 for no selected lines and 2 for an error in these invocations, which do not use `-q`. This guide requires both printed statuses to be 1, no diagnostic errors, and confirmation of the intended directories before treating the scan as clean within its stated limits; 2 or any other unexpected status is inconclusive, not clean. Bash makes the first printed status a pipeline status: normally grep's status, but with inherited `pipefail` a failed `printf` can affect it too. The block then exits 1 when either printed status is 0, 0 when both are 1, and 3 otherwise; that summary status is not a substitute for reading both printed scan statuses.
 
-DEMONSTRATED: re-run during marking review (October 2026) with git 2.53.0 in throwaway repositories outside any checkout. With `app.db` committed before an `app.db*` rule, `git check-ignore -v` listed only the three sidecars while `git ls-files` printed `app.db` and `git log` printed its commit; with the rule in place and `app.db` never committed, `git check-ignore -v` listed all four paths and the other two commands printed nothing. These runs covered an earlier form of three top-level commands with no status of their own; the current form was re-run on 31 October 2026 with git 2.53.0 in three new throwaway repositories and exited 1 for the tracked and the history-only repository and 0 for the never-committed one. Confirm the database is not tracked in git, not only that a rule exists (ignore rules do not apply to already-tracked files):
+DEMONSTRATED: re-run during marking review (October 2026) with git 2.53.0 in throwaway repositories outside any checkout. With `app.db` committed before an `app.db*` rule, `git check-ignore -v` listed only the three sidecars while `git ls-files` printed `app.db` and `git log` printed its commit; with the rule in place and `app.db` never committed, `git check-ignore -v` listed all four paths and the other two commands printed nothing. These runs covered an earlier form of three top-level commands with no status of their own, and a first 31 October 2026 re-run with git 2.53.0 covered a later form that named `app.db` and its sidecars in the block itself. The current form takes the database path on its `set --` line, refuses with status 2 when that line is missing, has the wrong number of values or is unsubstituted, and derives the `-wal`, `-shm` and `-journal` paths from it. It is covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026 under bash 5.3.9, and it was re-run that day with git 2.53.0 in three further throwaway repositories with `app.db` on its `set --` line, exiting 1 for the tracked and the history-only repository and 0 for the never-committed one. Substitute the database's path in the repository inside the quotes. Confirm the database is not tracked in git, not only that a rule exists (ignore rules do not apply to already-tracked files):
 
-DEMONSTRATED: following block; the recorded three throwaway repositories distinguish tracked, historical and never-committed database files. The current form's re-run is recorded in the paragraph above.
+DEMONSTRATED: following block; the recorded three throwaway repositories distinguish tracked, historical and never-committed database files. The current form's re-run, with `app.db` on its `set --` line, is recorded in the paragraph above.
 
 ```bash
 (                                       # a subshell, so the exits below end only the subshell
   set +e                                # errexit off here, so a git command that ends nonzero is classified below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
-  if git check-ignore -v app.db app.db-wal app.db-shm app.db-journal; then :; else   # substitute the real repository paths; exit 1 only means no path is ignored
-    set -- "$1" "$?"
-    case "$2" in 1) ;; *) echo "git check-ignore exit $2; inconclusive"; set -- 3 ;; esac
-    set -- "$1"
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DATABASE_PATH'   # the database's path in this repository, such as app.db or data/app.db; its -wal, -shm and -journal sidecars are derived from it
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not checking"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "exactly one database path required; not checking"; exit 2; }
+  case "$1" in ""|*REPLACE_WITH_*) echo "substitute the database path; not checking"; exit 2 ;; esac
+  set -- 0 "$1" "$1-wal" "$1-shm" "$1-journal"   # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0; then the database and its sidecars
+  if git check-ignore -v -- "${@:2}"; then :; else   # exit 1 only means no path is ignored
+    set -- "$1" "$?" "${@:2}"
+    case "$2" in 1) ;; *) echo "git check-ignore exit $2; inconclusive"; set -- 3 "${@:2}" ;; esac
+    set -- "$1" "${@:3}"
   fi
-  set -- "$1" "$(if git ls-files -- app.db app.db-wal app.db-shm app.db-journal; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # status, git's exit status, then its output
+  set -- "$1" "$(if git ls-files -- "${@:2}"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:2}"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}" "${@:3}"   # status, git's exit status, its output, then the database and its sidecars
   printf '%s' "$3"   # any output is a tracked database or sidecar
   if [ "$2" != 0 ]; then
-    echo "git ls-files exit $2; inconclusive"; [ "$1" = 1 ] || set -- 3
+    echo "git ls-files exit $2; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"
   elif [ -n "$3" ]; then
-    echo "FINDING: git tracks the database or sidecar listed above"; set -- 1
+    echo "FINDING: git tracks the database or sidecar listed above"; set -- 1 "${@:2}"
   fi
-  set -- "$1" "$(if git log --all --oneline -- app.db app.db-wal app.db-shm app.db-journal; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${@:4}"
+  set -- "$1" "$(if git log --all --oneline -- "${@:2}"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # status, git's exit status, then its output
-  printf '%s' "$3" | head   # any output is a copy in history; handle per secrets.md
+  if printf '%s' "$3" | head; then :; else   # any output is a copy in history; handle per secrets.md
+    echo "showing the git log output failed with exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"
+  fi
   if [ "$2" != 0 ]; then
     echo "git log exit $2; inconclusive"; [ "$1" = 1 ] || set -- 3
   elif [ -n "$3" ]; then
@@ -39358,7 +39397,7 @@ REASONED: preceding block; the `stat` check above and the combined account of th
   - DEMONSTRATED: re-run during marking review (October 2026) with `tok` a nameref to `PATH` in the calling shell: the block then current found `grep` and printed `0` for both lines, while the block before this change, taken from the guide's git history, printed `grep: command not found` and `127` for both. With `tok` a nameref to `PATH` in the calling shell, the block scanned as in the placeholder run, printed `0` for both lines, and left `PATH` intact. The block before this change wrote the token into `PATH`, so `grep` was not found and both lines printed `127`.
   - DEMONSTRATED: re-run during marking review (October 2026) with `declare -l tok` in the calling shell and a mixed-case placeholder: the block then current printed `0` for both lines, while the block before this change, taken from the guide's git history, printed `token-literal exit: 1` and `jwt-shape exit: 0`. With `declare -l tok` inherited, the block printed `0` for both lines. The block before this change lower-cased the token and printed `token-literal exit: 1`, a false clean result with the token in the bundle.
   - DEMONSTRATED: re-run during marking review (October 2026) with `IFS` readonly in the calling shell: the block then current printed the refusal quoted here, without prompting, and exited 2, while the block before this change, taken from the guide's git history, reported `IFS: readonly variable`, prompted, and printed `0` for both lines. With `IFS` readonly in the calling shell, the block refused before prompting: `a readonly IFS is set in this shell; not scanning` (exit 2). The block before this change prompted and scanned with the readonly `IFS` in force.
-- DEMONSTRATED: re-run during marking review (October 2026) with git 2.53.0 in three throwaway repositories outside any checkout, each holding `app.db` and its three sidecars as plain files; the exposed and fixed observations are in the items below. **Git inventory.** It was run in three throwaway repositories. These runs, and those in the items below, covered an earlier form of three top-level commands; the current form's 31 October 2026 re-run is recorded before the block.
+- DEMONSTRATED: re-run during marking review (October 2026) with git 2.53.0 in three throwaway repositories outside any checkout, each holding `app.db` and its three sidecars as plain files; the exposed and fixed observations are in the items below. **Git inventory.** It was run in three throwaway repositories. These runs, and those in the items below, covered an earlier form of three top-level commands that named `app.db` and its sidecars directly; the current form takes the database path on its `set --` line, and its 31 October 2026 re-run is recorded before the block.
   - DEMONSTRATED: exposed state, re-run during marking review (October 2026): `git check-ignore -v` listed `app.db-wal`, `app.db-shm` and `app.db-journal` against `.gitignore:1:app.db*` but not `app.db`, `git ls-files` printed `app.db`, and `git log` printed its commit; the fixed comparison is the last item. With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.
   - DEMONSTRATED: exposed state, re-run during marking review (October 2026): after a commit of `git rm --cached app.db`, `git ls-files` printed nothing and `git log` printed both commits touching `app.db`; the fixed comparison is the last item. After `git rm --cached`, `git log` still printed both commits touching it.
   - DEMONSTRATED: fixed state, re-run during marking review (October 2026): `git check-ignore -v` listed all four paths against `.gitignore:1:app.db*`, and `git ls-files` and `git log` printed nothing. With the rule in place and the file never committed, only the rule matches printed.
@@ -39561,7 +39600,7 @@ Claims (full source mapping in the JSON block below):
 - proxy (REASONED; litefs): LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary.
 - verify-download (REASONED; sqlite-rolling, bash, curl): Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.
 - verify-bundle (DEMONSTRATED; turso, bash, grep-docs): Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths. The runs covered an earlier form, whose result arms ended with status 0; the current form was re-run on 31 October 2026.
-- verify-git (DEMONSTRATED; sqlite-rolling): Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. Those runs covered an earlier form; the current form was re-run with git 2.53.0 on 31 October 2026.
+- verify-git (DEMONSTRATED; sqlite-rolling): Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Those runs, and a first git 2.53.0 re-run, covered earlier forms naming app.db directly; gate passes, stub runs and a git 2.53.0 re-run on 31 October 2026 cover the current form, which takes the database path on its set -- line.
 - verify-modes (REASONED; sqlite-rolling, coreutils): SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. Those runs covered an earlier form; gate passes and stub runs cover the current one.
 - verify-listeners (REASONED; litefs, litestream, mcp, bash, curl): Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.
 - verify-turso (REASONED; turso, bash, curl): Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.
@@ -39572,7 +39611,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "4723e75af2839bc602e7bb1aa899c115f35953baf52bad74e398bfb2cf4ab55c",
+  "body_sha256": "4785f14f45950e880e2680eac9113b5ef638445543132a560b529c7b8f2953d3",
   "components": {
     "sqlite-rolling": {
       "name": "SQLite documentation (rolling)",
@@ -39827,7 +39866,7 @@ Claims (full source mapping in the JSON block below):
     "proxy": {"text": "LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary.", "components": ["litefs"], "sources": ["litefs:s2b80fdf8adbe", "litefs:sc0568fe7e0ee", "litefs:sf0d31f900082"], "status": "REASONED"},
     "verify-download": {"text": "Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.", "components": ["sqlite-rolling", "bash", "curl"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8962e63cfb20", "bash:s8a27e686ddfb", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:s2f1ff2f6cacd"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths. The runs covered an earlier form, whose result arms ended with status 0; the current form was re-run on 31 October 2026.", "components": ["turso", "bash", "grep-docs"], "sources": ["turso:sb32fd9c679e1", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8a27e686ddfb", "bash:s213f6d8d1f07", "bash:sf9757e9fd6e8", "bash:s8cbc1b4709e2", "bash:s3255eca7e496", "bash:s252aa2e81179", "bash:s8447036b2114", "bash:s5cab49305f3d", "bash:s6e8ae812c1c3", "bash:sb38bf74a89b0", "bash:s260459961fbc", "bash:s8c59508bd4c8", "bash:s8016d1aecfca", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s80e3246e96d8", "grep-docs:s1733b640052b", "grep-docs:s99f121f5426a", "grep-docs:sbc8d05ab659b", "grep-docs:sfdd7a73eab39", "grep-docs:s7f9dc35e81c5", "grep-docs:s5170317ddea8", "grep-docs:sc08d6af4d642", "grep-docs:scd528c854b46", "grep-docs:sb8be8b716426", "grep-docs:s5d5af9297df2", "grep-docs:se99a83dba3c5"], "status": "DEMONSTRATED", "evidence": "A bundle carrying the placeholder printed `dist/app.js` before `token-literal exit: 0` and again before `jwt-shape exit: 0`, and a clean bundle printed `1` for both.", "verify": [2]},
-    "verify-git": {"text": "Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. Those runs covered an earlier form; the current form was re-run with git 2.53.0 on 31 October 2026.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.", "verify": [3]},
+    "verify-git": {"text": "Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Those runs, and a first git 2.53.0 re-run, covered earlier forms naming app.db directly; gate passes, stub runs and a git 2.53.0 re-run on 31 October 2026 cover the current form, which takes the database path on its set -- line.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.", "verify": [3]},
     "verify-modes": {"text": "SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. Those runs covered an earlier form; gate passes and stub runs cover the current one.", "components": ["sqlite-rolling", "coreutils"], "sources": ["sqlite-rolling:sf3d7f8391994", "coreutils:s247df4545dc0", "coreutils:sfd49553ab6e5", "coreutils:sbd6f7cad7bf4", "coreutils:s3e55a7242c33"], "status": "REASONED", "verify": [4]},
     "verify-listeners": {"text": "Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.", "components": ["litefs", "litestream", "mcp", "bash", "curl"], "sources": ["litefs:s694a6ba8eafa", "litestream:sa5dddf04652c", "mcp:sa5dddf04652c", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:s2f1ff2f6cacd"], "status": "REASONED", "verify": [5]},
     "verify-turso": {"text": "Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.", "components": ["turso", "bash", "curl"], "sources": ["turso:se409838a474a", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8962e63cfb20", "bash:s8a27e686ddfb", "bash:s213f6d8d1f07", "bash:sf9757e9fd6e8", "bash:s8cbc1b4709e2", "bash:s3255eca7e496", "bash:s252aa2e81179", "bash:s8447036b2114", "bash:s5cab49305f3d", "bash:s6e8ae812c1c3", "bash:sb38bf74a89b0", "bash:s260459961fbc", "bash:s8c59508bd4c8", "bash:s8016d1aecfca", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s80e3246e96d8", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:sd3b039bafbf6", "curl:s3db522258e44"], "status": "REASONED", "verify": [6]},
