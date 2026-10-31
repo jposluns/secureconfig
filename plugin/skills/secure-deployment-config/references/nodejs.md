@@ -136,7 +136,7 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 - This guide advises: never set `NODE_TLS_REJECT_UNAUTHORIZED=0`, which disables certificate validation for TLS connections in the Node.js process, and never pass `rejectUnauthorized: false`, which disables server-certificate verification for that client connection. Never configure an `https.Agent` with `rejectUnauthorized: false`: requests using that agent inherit its TLS option. The agent reach is this guide's assessment of Node.js's documented request, agent and TLS options.
 - For an internal CA or self-signed server, this guide advises instead: set `NODE_EXTRA_CA_CERTS=/path/ca.crt` before starting Node.js, pointing at a PEM file of trusted certificates (see [self-signed.md](self-signed.md)). Node.js adds these to its well-known root CAs at launch; changing the variable at runtime has no effect on the current process. An explicit `ca` option prevents use of both the well-known and extra CAs for that TLS or HTTPS client or server, and Node.js ignores the variable when run as setuid root or with Linux file capabilities.
 
-## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test.)
+## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test. The block refuses with status 2 if tr is not installed and exits 3 before probing if tr fails. At the end it exits 2 when ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -147,7 +147,11 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  command -v tr >/dev/null || { echo "tr is not installed here; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # tr's exit status, then your host name in lower case
+  case "$4" in 0) ;; *) echo "tr exit $4: your host name could not be folded to lower case, so the checks on it cannot run; not probing, inconclusive"; exit 3 ;; esac
+  case "$5" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$2" in
@@ -342,7 +346,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "b445964be8197cb5a3b18330d9958d503c27032c29dba82417512f3351753d1a",
+  "body_sha256": "77147f785bc93875a5fa3ffd0130264d53513c000125059de42b0a8d67ecc803",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",

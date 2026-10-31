@@ -106,14 +106,14 @@ Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsuppor
 
 ## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
-REASONED: both blocks below and the exit statuses described here are read from the code of each
-block and the cited Apache documentation; this guide records no run of either.
 Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
 the status code is printed and you compare it. The first block takes your host name, an
 unconfigured name and a protected path on its `set --` line, and refuses with status 2 if any is
 left unsubstituted or malformed, or if the unconfigured name is your own host name in any letter
 case. That comparison cannot see your other ServerName and ServerAlias values, so check the name
-against them yourself. The block then runs the configuration test and reload, classifies its
+against them yourself. It also refuses with status 2 if `tr` is not installed, and exits 3
+before probing if `tr` fails while folding a name to lower case. The block then runs the
+configuration test and reload, classifies its
 requests to the site root and to the unconfigured name, records each outcome as it runs, and
 exits once at the end. It exits 1 if either request answers 200, otherwise 3 if either answers anything
 but 401 or the configuration test, the reload or one of its curl or ss commands fails, otherwise
@@ -130,14 +130,21 @@ otherwise, because you judge the vhost list it prints.
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  command -v tr >/dev/null || { echo "tr is not installed here; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # tr's exit status, then your host name in lower case
+  case "$4" in 0) ;; *) echo "tr exit $4: your host name could not be folded to lower case, so the checks on it cannot run; not probing, inconclusive"; exit 3 ;; esac
+  case "$5" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute a name your certificate covers that no ServerName or ServerAlias matches (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
-    "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # tr's exit status, then the unconfigured name in lower case
+  case "$6" in 0) ;; *) echo "tr exit $6: the unconfigured name could not be folded to lower case, so the check against your host name cannot run; not probing, inconclusive"; exit 3 ;; esac
+  case "$7" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
+    "$5") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$3" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
@@ -302,7 +309,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "b03c96bdca29ba966bc46ac2de86c4e824ab57fc2e382fd228832e1c2d097564",
+  "body_sha256": "08ffb36c971895d8aea7267d72e37e4f52c5c8964a4207dbdb6d7ef8fb18ba3b",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",

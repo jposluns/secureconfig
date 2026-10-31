@@ -131,7 +131,7 @@ python -m http.server -b 127.0.0.1 8000
 
 Reach it through an SSH tunnel, including one that runs over your tailnet, never a public bind.
 
-## 6. Verify (REASONED: TLS, authentication and listener expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Python application, proxy or managed ingress to test.)
+## 6. Verify (REASONED: TLS, authentication and listener expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Python application, proxy or managed ingress to test. The block refuses with status 2 if tr is not installed and exits 3 before probing if tr fails. At the end it exits 2 when ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -142,7 +142,11 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  command -v tr >/dev/null || { echo "tr is not installed here; not probing"; exit 2; }
+  set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # tr's exit status, then your host name in lower case
+  case "$3" in 0) ;; *) echo "tr exit $3: your host name could not be folded to lower case, so the checks on it cannot run; not probing, inconclusive"; exit 3 ;; esac
+  case "$4" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$2" in
@@ -323,7 +327,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "0fe0f55d533652cf6eddfe7ae913678f552915abf64fddc7d94f1741824a9da0",
+  "body_sha256": "bf40bdd68929537bcf5fcc43a33b22541ccab9b66162610585b362e3732e96cd",
   "components": {
     "django": {
       "name": "Django documentation",
