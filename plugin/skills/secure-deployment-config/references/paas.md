@@ -75,54 +75,83 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 #    clients typically follow as GET; neither page's cited passages document this HEAD response. This guide's assessment:
 #    Heroku's ACM challenge-path handling establishes no general HTTPS redirect policy, setting, application-only responsibility or status.
 #    This guide's check: require 301/302/307/308 with an https:// Location; HTTP content without that redirect fails.
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your platform serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"         # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your platform serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$(if curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n\n'*}"   # curl's exit status, then the headers and the http= line
+    set -- "$1" "$2" "$3" "${3##*$'\n'}"         # the same values, then the http= line alone
+    printf '%s\n' "$3"
+    case "$2:$4" in
+      0:http=301|0:http=302|0:http=307|0:http=308)
+        case "$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # header names ignore letter case
+          *$'\n''location: https://'*|*$'\n''location:https://'*) exit 0 ;;
+          *) echo "FINDING: a ${4#http=} redirect without an https:// Location, which this guide's check requires"; exit 1 ;;
+        esac ;;
+      0:http=000) echo "http=000: no HTTP response arrived; inconclusive"; exit 3 ;;
+      0:*) echo "FINDING: HTTP ${4#http=} instead of a 301, 302, 307 or 308 with an https:// Location, so HTTP content is served without that redirect"; exit 1 ;;
+      *) echo "curl exit $2: the redirect request failed; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
+  #    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
+  #    Protection Bypass for Automation token lets the request access the deployment without authentication,
+  #    sent as the x-vercel-protection-bypass HTTP header or query parameter carrying the project's generated
+  #    secret. Disable deployment protection (or use that bypass) so only application auth is in play. That
+  #    bypass is Vercel's; no Render or Fly equivalent is cited here, so do not assume one exists. If you use
+  #    the bypass secret, send it as the header, supplied from a file with -H @file per this guide's
+  #    conventions so it stays out of shell history; the query-parameter form writes it into history and logs.
+  #    The status codes below are this guide's expected reading; the cited pages state none, including for the
+  #    platform gate's own challenge (its SSO 401 below):
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the same app host name as the redirect check above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected route without its leading slash: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in
+      ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"  # no creds: want the APP's own 401/403, not a platform SSO 401; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the http= line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      0:http=2??) echo "FINDING: $2 answered ${4#http=} with no credentials, so nothing rejected the unauthenticated request"; exit 1 ;;
+      0:http=000) echo "http=000: no HTTP response arrived; inconclusive, not a rejection"; exit 3 ;;
+      0:*) echo "unclassified observation: ${4#http=} with no credentials; a 401 or 403 is the pass only if your app sent it, not a platform SSO gate, so judge which did"; exit 0 ;;
+      *) echo "curl exit $3: the unauthenticated request failed; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  #    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
+  #    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
+  #    reachable and that the app's own auth, not the platform gate, is what gates it.
+  # 3. Secrets: run secrets.md's history and working-tree scans AND grep the DEPLOYED client bundle (JS, source maps,
+  #    generated config, runtime-injected values) for every credential type, not just private keys. No matches is evidence, not proof.
+  #    Why the deployed bundle: as the Next.js case, the pinned v16.4.2 docs say NEXT_PUBLIC_ values are inlined into
+  #    the JavaScript bundle delivered to the client at build time, and production browser source maps are disabled
+  #    unless productionBrowserSourceMaps opts in. What to grep and which credential types are this guide's procedure,
+  #    delegated to secrets.md, not taken from the cited pages.
+  echo "block exit $1; a protected-path answer other than a 2xx, the credentialed positive control and the step 3 secret scans are not classified, so judge them yourself"
+  exit "$1"
 )
-# 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
-#    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
-#    Protection Bypass for Automation token lets the request access the deployment without authentication,
-#    sent as the x-vercel-protection-bypass HTTP header or query parameter carrying the project's generated
-#    secret. Disable deployment protection (or use that bypass) so only application auth is in play. That
-#    bypass is Vercel's; no Render or Fly equivalent is cited here, so do not assume one exists. If you use
-#    the bypass secret, send it as the header, supplied from a file with -H @file per this guide's
-#    conventions so it stays out of shell history; the query-parameter form writes it into history and logs.
-#    The status codes below are this guide's expected reading; the cited pages state none, including for the
-#    platform gate's own challenge (its SSO 401 below):
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the same app host name as the redirect check above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected route without its leading slash: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in
-    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"  # no creds: want the APP's own 401/403, not a platform SSO 401; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
-)
-#    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
-#    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
-#    reachable and that the app's own auth, not the platform gate, is what gates it.
-# 3. Secrets: run secrets.md's history and working-tree scans AND grep the DEPLOYED client bundle (JS, source maps,
-#    generated config, runtime-injected values) for every credential type, not just private keys. No matches is evidence, not proof.
-#    Why the deployed bundle: as the Next.js case, the pinned v16.4.2 docs say NEXT_PUBLIC_ values are inlined into
-#    the JavaScript bundle delivered to the client at build time, and production browser source maps are disabled
-#    unless productionBrowserSourceMaps opts in. What to grep and which credential types are this guide's procedure,
-#    delegated to secrets.md, not taken from the cited pages.
 ```
 
 ## Sources (checked September 2026)
@@ -250,7 +279,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "edf4590729c1f57d1b09ab47feca6655bfde0f97a0025e9d1fe10821b7893f14",
+  "body_sha256": "2eba93a838ed49a65c7478ebde6537ebc9137e2175a68a96b6a4fc9c01adbf26",
   "components": {
     "render": {
       "name": "Render documentation",
