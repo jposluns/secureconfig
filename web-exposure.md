@@ -158,77 +158,98 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   DOCROOT=/var/www/html
+  result=0                              # 3 once any step is inconclusive or a removal fails; the block exits with it after its cleanup
   if probe=$(sudo mktemp "$DOCROOT/.env.probeXXXXXX" 2>/dev/null); then
     # mktemp makes it root-only (0600); chmod so the web-server worker can READ it, or its 403 is a FILE
     # PERMISSION denial (not the deny rule) and the check would false-pass with no rule configured:
     if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
       for p in "/${probe##*/}" /.git/config /config.php.bak /db.sql; do
-        curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://$1$p"
+        curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://$1$p" || result=3
       done
       # every line must be 403 or 404 and must NOT print PLANTED-SECRET. The .env.probe* line is the POSITIVE
       # CONTROL (a world-readable real file under the deny rules), so its 403/404 is the rule, not permissions
       # or absence; a bare 404 on the others could be absence, so plant one at each to be sure
     else
       echo "inconclusive: could not prepare the probe file"
+      result=3
     fi
-    sudo rm -f "$probe"
+    sudo rm -f "$probe" || result=3
   else
     echo "inconclusive: could not create a probe under $DOCROOT; point it at the writable document root"
+    result=3
   fi
   # uploads/backups directory: an existing, non-empty, index-less dir must NOT return a 200 autoindex under
   # Options -Indexes. Plant a throwaway file so a listing would actually reveal something; inconclusive if the
   # directory does not exist:
   if u=$(sudo mktemp "$DOCROOT/uploads/listcheckXXXXXX" 2>/dev/null); then
-    curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/"   # 403/404, never a 200 listing
-    sudo rm -f "$u"
+    curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/" || result=3   # 403/404, never a 200 listing
+    sudo rm -f "$u" || result=3
   else
     echo "inconclusive: $DOCROOT/uploads does not exist or is not writable"
+    result=3
   fi
 
   acme="$DOCROOT/.well-known/acme-challenge"
   if sudo test -d "$acme" && tok=$(sudo mktemp "$acme/probeXXXXXX" 2>/dev/null); then
     if printf 'probe' | sudo tee "$tok" >/dev/null && sudo chmod 0644 "$tok"; then   # readable, or a 403 is a permission denial not the exemption
       name=${tok##*/}
-      curl -q -g -sS --noproxy '*' "https://$1/.well-known/acme-challenge/$name"   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
-      curl -q -g -sS --noproxy '*' "http://$1/.well-known/acme-challenge/$name"    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+      curl -q -g -sS --noproxy '*' "https://$1/.well-known/acme-challenge/$name" || result=3   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
+      curl -q -g -sS --noproxy '*' "http://$1/.well-known/acme-challenge/$name" || result=3    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
     else
       echo "inconclusive: could not prepare the challenge file"
+      result=3
     fi
-    sudo rm -f "$tok"
+    sudo rm -f "$tok" || result=3
   else
     echo "inconclusive: $acme does not exist"
+    result=3
   fi
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config"
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config" || result=3
   # must be 403 or 404: a directory that only starts with "well-known" must not inherit the exemption. A bare
   # 404 is inconclusive here (nothing is there); create a real .well-known-backup/config to be certain a
   # served 200 would be the finding, then remove it
+  exit "$result"                        # after every cleanup attempt above: 3 if any step was inconclusive or a removal failed, else 0
 )
 
-for d in .next/static build dist; do
-  [ -d "$d" ] || { echo "$d: absent, nothing scanned"; continue; }
-  grep -rn "sk-\|AKIA\|ghp_\|sb_secret_\|-----BEGIN" "$d"; echo "$d exit: $?"
-done
+(                                       # a subshell, so the exit below ends only this check
+  result=0 scanned=0
+  for d in .next/static build dist; do
+    [ -d "$d" ] || { echo "$d: absent, nothing scanned"; continue; }
+    scanned=1
+    if grep -rn "sk-\|AKIA\|ghp_\|sb_secret_\|-----BEGIN" "$d"; then rc=0; else rc=$?; fi; echo "$d exit: $rc"
+    case $rc in
+      0) result=1 ;;                                # a match is a finding, and it outranks an error
+      1) ;;
+      *) [ "$result" -eq 1 ] || result=3 ;;         # a grep error is inconclusive
+    esac
+  done
+  [ "$scanned" -eq 1 ] || result=3                  # no directory existed, so nothing was scanned
+  exit "$result"
+)
 # run against the built client bundle, not the source. Exit 1 with no output is clean, exit 0
 # is a match, and exit 2 is a grep failure that is NOT clean. Do not send the errors to
 # /dev/null and read silence as a pass: a missing directory is an error (exit 2), and
 # discarding its error message leaves silence, which looks exactly like success. A clean result is evidence, not proof:
 # a bundler can split or encode a value, so scan for the literal secret as well
+# The block itself exits 1 when any directory matched, 3 when a grep failed or no directory existed,
+# and 0 otherwise.
 ```
 
-REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its result arms with status 0; the current form, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1, was not re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
-REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0; the current form, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed, was not re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
 against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and put its
 served host name on the block's `set --` line. On an isolated test host, run before and after enabling the
 deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
-return 403 or 404 without that body. A failed plant or curl transfer is inconclusive.
+return 403 or 404 without that body. A failed plant or curl transfer is inconclusive. The block attempts to remove every plant, and it exits 3 when a step was inconclusive or a removal failed.
 
 ```bash
 # REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
 # runtime is available, and network restrictions prevent installing one. Expected exposed/fixed
 # outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
 # references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
-# block before its host guard was added.
+# block before its host guard was added. That form's inconclusive arms ended with status 0; this form,
+# which exits 3 after attempting its cleanup when a step is inconclusive or a removal fails, was not re-checked.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -241,6 +262,7 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   DOCROOT=/var/www/html
+  result=0                              # 3 once any plant or transfer is inconclusive or a removal fails; the block exits with it after its cleanup
   for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
     template="$DOCROOT/probeXXXXXX"
     [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
@@ -248,16 +270,19 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
       if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
         p="/${probe##*/}"
         curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-          -w "  <= %{http_code} $p\n" "https://$1$p" || echo "inconclusive: curl failed"
+          -w "  <= %{http_code} $p\n" "https://$1$p" || { echo "inconclusive: curl failed"; result=3; }
         # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
       else
         echo "inconclusive: could not prepare $probe"
+        result=3
       fi
-      sudo rm -f "$probe"
+      sudo rm -f "$probe" || result=3
     else
       echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
+      result=3
     fi
   done
+  exit "$result"                        # after every removal was attempted: 3 if any step was inconclusive or a removal failed, else 0
 )
 ```
 
@@ -349,14 +374,14 @@ Claims (full source mapping in the JSON block below):
 - verify-lookalike (REASONED; nginx, apache, caddy, caddy-rolling): Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.
 - verify-bundle (REASONED; next, vite, cra, grep): Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.
 - verify-backup (REASONED; nginx, apache, caddy, caddy-rolling): Known previously deployed backup URLs should return 403 or 404 without the file contents.
-- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution.
+- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Only shell syntax and suffix creation were checked, on an earlier form whose inconclusive arms exited 0, not on this form or a server.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "5bb241183147f348632c15456f61edc141d0f385f6cf9e81d64cac6da0e65f28",
+  "body_sha256": "3fa29a0cb0557f181a4b8f660f0515483f5375fceff0e23f212d5384278c6363",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -503,7 +528,7 @@ Claims (full source mapping in the JSON block below):
     "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [1]},
     "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
-    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [2]}
+    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Only shell syntax and suffix creation were checked, on an earlier form whose inconclusive arms exited 0, not on this form or a server.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [2]}
   }
 }
 ````

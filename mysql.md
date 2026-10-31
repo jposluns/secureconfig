@@ -373,7 +373,7 @@ Apply the same MariaDB client substitution when appropriate. Restrict access to 
 
 REASONED: service scope for every check in this section, from the authoring limitations recorded in this paragraph and the vendor documentation cited at each check below. Service behavior below is **REASONED, not demonstrated**. The authoring environment has a read-only filesystem, no MySQL/MariaDB client or server binaries, no Docker/Podman runtime, and no supplied writable deployment or database credentials. No available authorized environment could reproduce the exposed and fixed service states.
 
-DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. The bash -n, ShellCheck and guard-only runs recorded in this paragraph, at marking time and originally, covered the five guarded blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
+DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. The bash -n, ShellCheck and guard-only runs recorded in this paragraph, at marking time and originally, covered the five guarded blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. That earlier form of the two section 5 blocks with a positive control also exited with status 1 after a failed positive control, where the current form exits with status 3. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
 
 DEMONSTRATED: the in-memory INI parse recorded in this paragraph, re-run at marking time against both states: all five INI fragments parsed with Python 3.14.4 configparser in strict mode (`ConfigParser(strict=True)`, other arguments at their defaults). The control fragments in that marking-time re-run against both states used the same parser and options: a control fragment repeating `require_secure_transport` under `[mysqld]` was rejected with DuplicateOptionError, and a control fragment placing that option before any section header was rejected with MissingSectionHeaderError. Vendor option acceptance stays with the reasoned native checks, as stated. All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
 
@@ -416,7 +416,7 @@ Run the following from the application's permitted source host. Replace the prod
           mysql --protocol=TCP --host="$2" --port=3306 --user=app -p \
             --connect-timeout=5 --ssl-mode=VERIFY_IDENTITY --ssl-ca="$3" \
             -e "SELECT 1; SELECT CURRENT_USER(); SHOW SESSION STATUS LIKE 'Ssl_cipher';" \
-            || { echo "positive control failed; stop"; exit 1; }
+            || { echo "positive control failed; stop"; exit 3; }
           if mysql --protocol=TCP --host="$2" --port=3306 --user=app -p \
             --connect-timeout=5 --ssl-mode=DISABLED -e 'SELECT 1;'
           then
@@ -429,7 +429,7 @@ Run the following from the application's permitted source host. Replace the prod
           mariadb --protocol=TCP --host="$2" --port=3306 --user=app -p \
             --connect-timeout=5 --ssl --ssl-verify-server-cert --ssl-ca="$3" \
             -e "SELECT 1; SELECT CURRENT_USER(); SHOW SESSION STATUS LIKE 'Ssl_cipher';" \
-            || { echo "positive control failed; stop"; exit 1; }
+            || { echo "positive control failed; stop"; exit 3; }
           if mariadb --protocol=TCP --host="$2" --port=3306 --user=app -p \
             --connect-timeout=5 --disable-ssl -e 'SELECT 1;'
           then
@@ -479,7 +479,7 @@ For the existing `batch` account, compare a connection with its valid client cer
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" \
         --ssl-cert="$3" --ssl-key="$4" --connect-timeout=5 \
         -e "SELECT 1; SELECT CURRENT_USER(); SHOW SESSION STATUS LIKE 'Ssl_cipher';" \
-        || { echo "certificate positive control failed; stop"; exit 1; }
+        || { echo "certificate positive control failed; stop"; exit 3; }
       if mysql --no-defaults --no-login-paths --protocol=TCP \
         --host="$1" --port=3306 --user=batch -p --connect-timeout=5 \
         --ssl-mode=VERIFY_IDENTITY --ssl-ca="$2" -e 'SELECT 1;'
@@ -851,7 +851,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "114343102b74ab877f9c1c7cbd7167e95f792e65940b053cc8146dce10fbcb17",
+  "body_sha256": "9d27a3234852d6e1e0ea36d68c6f9f1a19687c191ca507c1d8a10e670d032620",
   "components": {
     "mysql": {
       "name": "MySQL reference",
