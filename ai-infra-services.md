@@ -232,7 +232,6 @@ REASONED: Address and request guard behaviour in checks 3 to 7, per the guide's 
 **Reasoned, not demonstrated** (historical authoring note: no container runtime in the authoring environment). Run on the deployment host. For Compose, use the exact project, file selection, overrides, environment, and profiles used to start the deployment. Add those same options to these commands where needed. What makes an inventory readable rather than guesswork is documented: Compose ps reports the running publication fields, Compose merge rules govern how an override's port list combines with the base, and Compose networking establishes that services reach each other with no host publication at all; all three are in Sources:
 
 ```bash
-# REASONED: Listener and publication inventory, per the guide's cited Docker packet filtering and firewalls, Compose networking, Compose merge rules and Docker Compose ps. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Stub ss and docker printed their invocations; no live inventory or real Compose JSON shape was observed. Those runs covered an earlier form that ran the three commands at top level; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, which exits with status 3 when one fails or the running inventory lists no service, otherwise 2 when `ss` is not installed, else 0. On 2026-10-31 the current form also passed bash -n and ShellCheck 0.11.0 and ran whole against stub `ss` and `docker` with no network, with `ss` present and passing, present and failing, and missing; no live run of it is recorded. Historical authoring note: no container runtime was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect unintended listeners or publications when exposed, and only intended ingress or loopback publications when fixed; errors and empty inventories remain inconclusive.
 (                              # a subshell, so the exit below ends only the subshell
   set -- 0                     # the block's status so far: 3 (a command failed or the inventory is empty), else 2 (ss is not installed), else 0
   if command -v ss >/dev/null; then   # a missing ss refuses this part with status 2
@@ -750,7 +749,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "74cf8762d308ec286a15fb9d888168cab6a60c45ab3693e5643b3cf157dc4b0a",
+  "body_sha256": "de0dfa1a5037134a4de95a4470920dc895107e99760cecbcd5ab0b1fe4d766fa",
   "components": {
     "searx": {
       "name": "SearxNG documentation",

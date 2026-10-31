@@ -117,7 +117,7 @@ Verification status: the checks below were demonstrated on loopback against Stre
 # REASONED: whole-block scope includes wildcard binding, unavailable in the recorded loopback runs; demonstrated sub-results and source reasoning are recorded below.
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found a required tool missing), which outranks 0, so the block ends with 2 only when no part recorded 1 or 3
   if command -v ss >/dev/null; then     # a missing ss refuses this part with status 2, ranked as above
     ss -tlnp   # listeners on the origin host; 8501 must be 127.0.0.1 behind a proxy, not a public interface
                # (loopback runs saw 127.0.0.1:8501; the default wildcard bind is REASONED: the host forbids it)
@@ -330,7 +330,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "7d7fa0bf7ea78cdcc9d4bb6224a0e0cbcd2153951ca68229c53bb6a0dcf5f838",
+  "body_sha256": "590cba4aa7e0fd0fda73fb29f0a0bbe61f25782b8bc4ae13ac6cb3993d326537",
   "components": {
     "streamlit": {
       "name": "Streamlit",
