@@ -141,10 +141,15 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
   set -- 0                              # the block's status so far: 3 (inconclusive) outranks 2 (a part refused its input), which outranks 0; no answer here is classified
+  # A failed haproxy -c records 3, not 2: the configuration test is the check the verify-config claim names, not a guard on your setup.
   sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   case "$?" in 0) ;; *) echo "haproxy -c or reload exit $?: the requests below may test the configuration HAProxy was already running; inconclusive"; set -- 3 ;; esac
-  # REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell was checked
-  # but the exposed-vs-fixed responses were not. A transport, TLS, or
+  # REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell of an earlier
+  # form of this block was checked but the exposed-vs-fixed responses were not. The current form is covered by
+  # the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on
+  # 2026-10-31 with Bash 5.3.9, stub curl, sudo, haproxy, systemctl, rm and ss, a pty for the hidden prompt and
+  # no network; no HAProxy answered them. A missing ss records 2 only when nothing else was recorded, and an ss
+  # that runs and fails records 3. A transport, TLS, or
   # DNS error is inconclusive, never a pass.
   (
     trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -192,6 +197,7 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
         echo 'payload write failed'; set -- "$1" 3 "$3" "$4"
       fi
       rm -rf -- "$3"
+      case "$?" in 0) ;; *) echo "rm exit $?: the temp dir $3 could not be removed; inconclusive"; set -- "$1" 3 "$3" "$4" ;; esac
     fi
     # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
     # sets here; a chunked upload advertises none and is not covered. A backend can return 413 too, so to
@@ -200,10 +206,14 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
     exit "$2"
   )
   case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0 - the checks above pass while
-             # the backend also answers directly on 3000, bypassing HAProxy's TLS and auth. Confirm the runtime
-             # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
-  case "$?" in 0) ;; *) echo "ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  if command -v ss >/dev/null; then     # no other part needs ss, so a missing ss records 2 only when nothing else was recorded
+    ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0 - the checks above pass while
+               # the backend also answers directly on 3000, bypassing HAProxy's TLS and auth. Confirm the runtime
+               # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
+    case "$?" in 0) ;; *) echo "ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"; case "$1" in 0) set -- 2 ;; esac
+  fi
   echo "block exit $1; no answer in this block is classified: judge the redirect headers, the no-creds, bad-creds, valid, under and over codes and the listener table yourself against the comments above"
   exit "$1"
 )
@@ -286,18 +296,22 @@ every line after the first for your shell to run.
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls no-cert= line
   printf '%s\n' "$8"
-  case "$7" in
-    0) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
-    35|56) ;;                           # curl's TLS handshake and receive errors, where a server's certificate rejection surfaces
+  case "$7:$8" in
+    0:*) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    "35:mtls no-cert=000 "*|"56:mtls no-cert=000 "*) ;;   # rejected at TLS with no HTTP status received; reading curl's handshake (35) and receive (56) errors as the server's certificate rejection is reasoned, not sourced
+    *:"mtls no-cert=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    *:"mtls no-cert="???" "*) echo "FINDING: the request without a client certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$2" --key "$3" \
     -o /dev/null -w 'mtls untrusted=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls untrusted= line
   printf '%s\n' "$8"
-  case "$7" in
-    0) echo "FINDING: the request with the untrusted certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
-    35|56) ;;
+  case "$7:$8" in
+    0:*) echo "FINDING: the request with the untrusted certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    "35:mtls untrusted=000 "*|"56:mtls untrusted=000 "*) ;;
+    *:"mtls untrusted=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    *:"mtls untrusted="???" "*) echo "FINDING: the request with the untrusted certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$4" --key "$5" \
@@ -328,10 +342,10 @@ every line after the first for your shell to run.
   case "$2" in 0) ;; *) echo "socat exit $2: the authorized show info request failed; inconclusive"; set -- 3 ;; esac
   set -- "$1" "$(if sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # unauthorized identity: expect permission denied
   set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"                           # socat's exit status, then what it printed
-  printf '%s\n' "$3"
+  printf '%s\n' "${3%$'\n'}"                                          # without its own final line feed, so no blank line follows
   case "$2:$3" in
     0:*) echo "FINDING: the nobody account connected to the runtime socket"; set -- 1 ;;
-    *"ermission denied"*) ;;
+    *"connect("*"ermission denied"*) ;;                               # socat's own connect error, not any permission error
     *) echo "socat exit $2 without a permission denial; inconclusive"; set -- 3 ;;
   esac
   echo "block exit $1; the socket's mode and owner in the ls -l line and the show info output are not classified, so judge them yourself"
@@ -416,7 +430,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2b6b74106fc6cae7210fe7f6af1c7f6296119efab5b23e466cb4fa31e3f2bd6f",
+  "body_sha256": "cff77b199a7e9e747450a79955f1b7008b445a0c2bf202c79cd4ca870879b87d",
   "components": {
     "haproxy": {
       "name": "HAProxy",

@@ -11244,10 +11244,15 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
   set -- 0                              # the block's status so far: 3 (inconclusive) outranks 2 (a part refused its input), which outranks 0; no answer here is classified
+  # A failed haproxy -c records 3, not 2: the configuration test is the check the verify-config claim names, not a guard on your setup.
   sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   case "$?" in 0) ;; *) echo "haproxy -c or reload exit $?: the requests below may test the configuration HAProxy was already running; inconclusive"; set -- 3 ;; esac
-  # REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell was checked
-  # but the exposed-vs-fixed responses were not. A transport, TLS, or
+  # REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell of an earlier
+  # form of this block was checked but the exposed-vs-fixed responses were not. The current form is covered by
+  # the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on
+  # 2026-10-31 with Bash 5.3.9, stub curl, sudo, haproxy, systemctl, rm and ss, a pty for the hidden prompt and
+  # no network; no HAProxy answered them. A missing ss records 2 only when nothing else was recorded, and an ss
+  # that runs and fails records 3. A transport, TLS, or
   # DNS error is inconclusive, never a pass.
   (
     trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
@@ -11295,6 +11300,7 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
         echo 'payload write failed'; set -- "$1" 3 "$3" "$4"
       fi
       rm -rf -- "$3"
+      case "$?" in 0) ;; *) echo "rm exit $?: the temp dir $3 could not be removed; inconclusive"; set -- "$1" 3 "$3" "$4" ;; esac
     fi
     # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
     # sets here; a chunked upload advertises none and is not covered. A backend can return 413 too, so to
@@ -11303,10 +11309,14 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
     exit "$2"
   )
   case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0 - the checks above pass while
-             # the backend also answers directly on 3000, bypassing HAProxy's TLS and auth. Confirm the runtime
-             # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
-  case "$?" in 0) ;; *) echo "ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  if command -v ss >/dev/null; then     # no other part needs ss, so a missing ss records 2 only when nothing else was recorded
+    ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0 - the checks above pass while
+               # the backend also answers directly on 3000, bypassing HAProxy's TLS and auth. Confirm the runtime
+               # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
+    case "$?" in 0) ;; *) echo "ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"; case "$1" in 0) set -- 2 ;; esac
+  fi
   echo "block exit $1; no answer in this block is classified: judge the redirect headers, the no-creds, bad-creds, valid, under and over codes and the listener table yourself against the comments above"
   exit "$1"
 )
@@ -11389,18 +11399,22 @@ every line after the first for your shell to run.
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls no-cert= line
   printf '%s\n' "$8"
-  case "$7" in
-    0) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
-    35|56) ;;                           # curl's TLS handshake and receive errors, where a server's certificate rejection surfaces
+  case "$7:$8" in
+    0:*) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    "35:mtls no-cert=000 "*|"56:mtls no-cert=000 "*) ;;   # rejected at TLS with no HTTP status received; reading curl's handshake (35) and receive (56) errors as the server's certificate rejection is reasoned, not sourced
+    *:"mtls no-cert=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    *:"mtls no-cert="???" "*) echo "FINDING: the request without a client certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$2" --key "$3" \
     -o /dev/null -w 'mtls untrusted=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls untrusted= line
   printf '%s\n' "$8"
-  case "$7" in
-    0) echo "FINDING: the request with the untrusted certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
-    35|56) ;;
+  case "$7:$8" in
+    0:*) echo "FINDING: the request with the untrusted certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    "35:mtls untrusted=000 "*|"56:mtls untrusted=000 "*) ;;
+    *:"mtls untrusted=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    *:"mtls untrusted="???" "*) echo "FINDING: the request with the untrusted certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$4" --key "$5" \
@@ -11431,10 +11445,10 @@ every line after the first for your shell to run.
   case "$2" in 0) ;; *) echo "socat exit $2: the authorized show info request failed; inconclusive"; set -- 3 ;; esac
   set -- "$1" "$(if sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # unauthorized identity: expect permission denied
   set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"                           # socat's exit status, then what it printed
-  printf '%s\n' "$3"
+  printf '%s\n' "${3%$'\n'}"                                          # without its own final line feed, so no blank line follows
   case "$2:$3" in
     0:*) echo "FINDING: the nobody account connected to the runtime socket"; set -- 1 ;;
-    *"ermission denied"*) ;;
+    *"connect("*"ermission denied"*) ;;                               # socat's own connect error, not any permission error
     *) echo "socat exit $2 without a permission denial; inconclusive"; set -- 3 ;;
   esac
   echo "block exit $1; the socket's mode and owner in the ls -l line and the show info output are not classified, so judge them yourself"
@@ -11519,7 +11533,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2b6b74106fc6cae7210fe7f6af1c7f6296119efab5b23e466cb4fa31e3f2bd6f",
+  "body_sha256": "cff77b199a7e9e747450a79955f1b7008b445a0c2bf202c79cd4ca870879b87d",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -11751,7 +11765,7 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker and ss and no network, which ran the guards and every exit status; no Traefik answered them.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker, sudo, rm and ss and no network, which ran the guards and every exit status; no Traefik answered them. The first block records 2 for a missing `ss` only when nothing else was recorded, because none of its other parts needs `ss`, and 3 when `sudo ss -tlnp` runs and fails.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -11813,6 +11827,7 @@ than the client, so set it explicitly if you want a per-client cap.
       echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; set -- "$1" "$2" 3
     fi
     rm -f /tmp/under.bin /tmp/over.bin
+    case "$?" in 0) ;; *) echo "rm exit $?: /tmp/under.bin and /tmp/over.bin could not be removed; inconclusive"; set -- "$1" "$2" 3 ;; esac
     exit "$3"
   )
   case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
@@ -11843,11 +11858,15 @@ than the client, so set it explicitly if you want a per-client cap.
   case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
   docker compose ps                     # only Traefik publishes ports; the app's 3000 must NOT be published
   case "$?" in 0) ;; *) echo "docker compose ps exit $?; inconclusive"; set -- 3 ;; esac
-  sudo ss -tlnp                         # read the whole listener table, do not grep it down to the port you
+  if command -v ss >/dev/null; then     # no other part needs ss, so a missing ss records 2 only when nothing else was recorded
+    sudo ss -tlnp                       # read the whole listener table, do not grep it down to the port you
                                         # expect (that hides an unexpected listener): only Traefik should
                                         # answer on the host. A backend answering on 3000 directly bypasses
                                         # Traefik's TLS and its authentication middleware
-  case "$?" in 0) ;; *) echo "sudo ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+    case "$?" in 0) ;; *) echo "sudo ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"; case "$1" in 0) set -- 2 ;; esac
+  fi
   echo "block exit $1; no answer in this block is classified: judge the redirect and 401 headers, the 1M and 11M codes, the flood counts and both listings yourself against the comments above"
   exit "$1"
 )
@@ -11877,12 +11896,13 @@ services:
   esac
   set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -H "Host: $3" \
-    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # curl's exit status, then everything it printed
   printf '%s' "$5"
-  case "$4:$5" in
-    0:*"http=404 exit="*) echo "pass: Traefik answered 404 for the canary, so it ignored the unlabelled container"; set -- 0 ;;
-    0:*"http=200 exit="*|0:*"http=502 exit="*|0:*"http=504 exit="*) echo "FINDING: Traefik routed the unlabelled canary (expected on the exposed calibration fixture; anywhere else an exposure to remove)"; set -- 1 ;;
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'}"              # the same, without the final line feed, so the last line is curl's http= line and the body cannot stand in for it
+  case "$4:${5##*$'\n'}" in
+    "0:http=404 exit="*) echo "pass: Traefik answered 404 for the canary, so it ignored the unlabelled container"; set -- 0 ;;
+    "0:http=200 exit="*|"0:http=502 exit="*|"0:http=504 exit="*) echo "FINDING: Traefik routed the unlabelled canary (expected on the exposed calibration fixture; anywhere else an exposure to remove)"; set -- 1 ;;
     0:*) echo "the canary's answer is neither the 404 pass nor a 200, 502 or 504 route; inconclusive"; set -- 3 ;;
     *) echo "curl exit $4: the canary request failed; inconclusive"; set -- 3 ;;
   esac
@@ -11906,11 +11926,12 @@ A `404` for the canary also appears when the whole Docker provider is off, which
     *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit 2 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then everything it printed
   printf '%s' "$4"
-  case "$3:$4" in
-    0:*"http=404 exit="*) echo "the app answered 404, so the provider is not routing it; inconclusive, and a canary 404 means nothing until it does"; set -- 3 ;;
+  set -- "$1" "$2" "$3" "${4%$'\n'}"              # the same, without the final line feed, so the last line is curl's http= line and the body cannot stand in for it
+  case "$3:${4##*$'\n'}" in
+    "0:http=404 exit="*) echo "the app answered 404, so the provider is not routing it; inconclusive, and a canary 404 means nothing until it does"; set -- 3 ;;
     0:*) echo "the app answered, so the provider is routing it"; set -- 0 ;;
     *) echo "curl exit $3: the request failed, and a connection failure means the provider is not routing the app; inconclusive"; set -- 3 ;;
   esac
@@ -12004,7 +12025,7 @@ Claims (full source mapping in the JSON block below):
 - verify-redirect (REASONED; traefik-docs): HTTP should redirect to HTTPS.
 - verify-auth (REASONED; traefik-docs): Unauthenticated HTTPS should return 401 once auth is attached.
 - verify-size (REASONED; middleware, traefik-docs): Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal.
-- observed-429 (DEMONSTRATED; middleware): The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established.
+- observed-429 (DEMONSTRATED; middleware): The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established; recorded on an earlier form of the flood probe, before it took a guarded host and ran inside the first block's single subshell.
 - verify-rate (REASONED; middleware, traefik-basicauth-source): Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.
 - verify-isolation (REASONED; docker): Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik.
 - verify-acme (REASONED; traefik-docs): Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT.
@@ -12017,7 +12038,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "45c8f66a0cf74647f528c4d0788a833bd3bda121428e961c7f90c5ce5e7ae102",
+  "body_sha256": "c46f287255a06982b63efb655972f340f118ed51d38f2e045bbb8ebd033c8b82",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",
@@ -12131,7 +12152,7 @@ Claims (full source mapping in the JSON block below):
     "verify-redirect": {"text": "HTTP should redirect to HTTPS.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Unauthenticated HTTPS should return 401 once auth is attached.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "verify-size": {"text": "Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal.", "components": ["middleware", "traefik-docs"], "sources": ["middleware:sd987195d64dd", "traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
-    "observed-429": {"text": "The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "DEMONSTRATED", "evidence": "A 429 appeared. That is all this shows."},
+    "observed-429": {"text": "The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established; recorded on an earlier form of the flood probe, before it took a guarded host and ran inside the first block's single subshell.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "DEMONSTRATED", "evidence": "A 429 appeared. That is all this shows."},
     "verify-rate": {"text": "Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.", "components": ["middleware", "traefik-basicauth-source"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca", "traefik-basicauth-source:s5f9a13d720c8"], "status": "REASONED", "verify": [1]},
     "verify-isolation": {"text": "Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED", "verify": [1]},
     "verify-acme": {"text": "Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
@@ -17177,11 +17198,12 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; the listener inventory, with the anonymous route, authorized route and client-secret checks in the three blocks after it, each marked in its own first line. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. Those bash -x, history and stub runs covered earlier forms, when all four checks shared one block: the cookie subshell before it took the application's host on a guarded `set --` line, and the secret scan while its FINDING and error arms ended with status 0. The current forms of the four blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss, real grep on a scratch build directory, a pty for the hidden prompts and no network, which ran the guards and every status below; the tracing and history runs were not repeated. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, a hidden-prompt read included. The secret scan exits 1 when grep finds the secret and 0 when it does not; the route answers and the listener table are left unclassified, and each block's last line names what it leaves for you to judge. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
+REASONED: following block; the listener inventory, with the anonymous route, authorized route and client-secret checks in the three blocks after it, each marked in its own first line. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. Those bash -x, history and stub runs covered earlier forms, when all four checks shared one block: the cookie subshell before it took the application's host on a guarded `set --` line, and the secret scan while its FINDING and error arms ended with status 0. The current forms of the four blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss, real grep on a scratch build directory, a pty for the hidden prompts and no network, which ran the guards and every status below; the tracing and history runs were not repeated. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, a hidden-prompt read included. The listener inventory refuses with status 2 when `ss` is not installed, and an `ss` that runs and fails gives 3. The secret scan exits 1 when grep finds the secret and 0 when it does not; the route answers and the listener table are left unclassified, and each block's last line names what it leaves for you to judge. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
 (                                       # a subshell, so the exits below end only the subshell
   set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }   # a missing ss is a guard refusal; an ss that runs and fails is 3 below
   ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
              # firewall or the platform ingress, so confirm external reachability separately
   case "$?" in
@@ -17406,7 +17428,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "65ccf8079b8b6c39567c745f0e0ae97b8a2337255357f2a31f47878776179e9b",
+  "body_sha256": "8f3d707084d4e7018d33cca7265eecbbb8412b7fcf45051ddac0af69588587bb",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",
@@ -55139,7 +55161,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-REASONED: following block; the listener inventory, with the Langfuse checks and the Collector OTLP/HTTP probe in the two blocks after it, each marked in its own first line, per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) an earlier form, which held all three checks in one block, passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network. With the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. That review covered the Langfuse checks before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the Collector probe while it targeted a fixed illustrative host. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss and no network, which ran the guards and every exit status. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. The Langfuse and Collector blocks exit 1 for an anonymous 2xx; the Langfuse block exits 3 for any other anonymous answer than 401 or a keyed answer other than a 2xx, and the Collector block exits 0 for 401 or 403 and 3 for any other answer. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, and its last line names what it leaves for you to judge. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the listener inventory, with the Langfuse checks and the Collector OTLP/HTTP probe in the two blocks after it, each marked in its own first line, per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) an earlier form, which held all three checks in one block, passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network. With the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. That review covered the Langfuse checks before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the Collector probe while it targeted a fixed illustrative host. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss and no network, which ran the guards and every exit status. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. The Langfuse and Collector blocks exit 1 for an anonymous 2xx; the Langfuse block exits 3 for any other anonymous answer than 401 or a keyed answer other than a 2xx, and the Collector block exits 0 for 401 or 403 and 3 for any other answer. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, and its last line names what it leaves for you to judge. The listener inventory refuses with status 2 when `ss` is not installed, and an `ss` that runs and fails gives 3. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -55152,6 +55174,7 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
 # ss is a listener inventory in THIS namespace - not a firewall, NAT, or authentication check.
 (                                       # a subshell, so the exits below end only the subshell
   set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }   # a missing ss is a guard refusal; an ss that runs and fails is 3 below
   ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
              # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
              # binds [::] regardless of PHOENIX_HOST) and a port here can still be published by DNAT, so
@@ -55230,8 +55253,9 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
       -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - "https://$1/api/public/projects"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then the response body and its projects with-key= line
     printf '%s' "$6"
-    case "$5:$6" in
-      0:*"projects with-key=2"*) ;;
+    set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'}"   # the same, without the final line feed, so the last line is the projects with-key= line
+    case "$5:${6##*$'\n'}" in
+      "0:projects with-key=2"*) ;;
       0:*) echo "the request with the key did not get a 2xx, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
       *) echo "curl exit $5: the request with the key failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
     esac
@@ -55253,13 +55277,13 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
 # receiver only; test each enabled OTLP/gRPC receiver separately, and note the Phoenix check further below
 # targets a DIFFERENT server, not this Collector.
 # Never add the credential with -H or -u, which put it in curl's argv, where ps and /proc/<pid>/cmdline
-# show it. For bearertokenauth, pipe printf 'Authorization: Bearer %s\n' "$1" into the probe and add
-# --header @- to its options; for basicauth, pipe printf 'user = "%s"\n' "$1" into it, with "$1" as
+# show it. For bearertokenauth, pipe printf 'Authorization: Bearer %s\n' "$2" into the probe and add
+# --header @- to its options; for basicauth, pipe printf 'user = "%s"\n' "$2" into it, with "$2" as
 # user:password, and add --config -. Keep -q as curl's first option in either case. Run that repeat in a
 # subshell built like the Langfuse block above, in a fresh, clean shell (CONTRIBUTING rule 7):
-# trap - DEBUG RETURN ERR first, the credential on its
+# trap - DEBUG RETURN ERR first, the Collector host first and the credential second on its
 # set -- line, a refusal of a placeholder, an empty value or a control character, and for basicauth a
-# backslash and then a double quote escaped in "$1" before the printf. The credential on that set -- line
+# backslash and then a double quote escaped in "$2" before the printf. The credential on that set -- line
 # enters shell history, so clear that line afterward. Stdin closes the argv channel only: it does not
 # hide the credential from set -x tracing or your own account's view of the process.
 (                                       # a subshell, so your own script arguments are untouched
@@ -55541,7 +55565,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "1e54a9a74f0281fc7c4a2a1f46e61b14338d4566d6121797dc76625692a2bc2b",
+  "body_sha256": "47c25de5aed6255532f0b055817262e49769244d5dadef1d731431c08c444a2c",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",

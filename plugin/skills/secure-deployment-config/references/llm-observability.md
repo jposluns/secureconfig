@@ -170,7 +170,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-REASONED: following block; the listener inventory, with the Langfuse checks and the Collector OTLP/HTTP probe in the two blocks after it, each marked in its own first line, per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) an earlier form, which held all three checks in one block, passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network. With the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. That review covered the Langfuse checks before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the Collector probe while it targeted a fixed illustrative host. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss and no network, which ran the guards and every exit status. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. The Langfuse and Collector blocks exit 1 for an anonymous 2xx; the Langfuse block exits 3 for any other anonymous answer than 401 or a keyed answer other than a 2xx, and the Collector block exits 0 for 401 or 403 and 3 for any other answer. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, and its last line names what it leaves for you to judge. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the listener inventory, with the Langfuse checks and the Collector OTLP/HTTP probe in the two blocks after it, each marked in its own first line, per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) an earlier form, which held all three checks in one block, passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network. With the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. That review covered the Langfuse checks before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the Collector probe while it targeted a fixed illustrative host. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss and no network, which ran the guards and every exit status. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. The Langfuse and Collector blocks exit 1 for an anonymous 2xx; the Langfuse block exits 3 for any other anonymous answer than 401 or a keyed answer other than a 2xx, and the Collector block exits 0 for 401 or 403 and 3 for any other answer. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, and its last line names what it leaves for you to judge. The listener inventory refuses with status 2 when `ss` is not installed, and an `ss` that runs and fails gives 3. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -183,6 +183,7 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
 # ss is a listener inventory in THIS namespace - not a firewall, NAT, or authentication check.
 (                                       # a subshell, so the exits below end only the subshell
   set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }   # a missing ss is a guard refusal; an ss that runs and fails is 3 below
   ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
              # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
              # binds [::] regardless of PHOENIX_HOST) and a port here can still be published by DNAT, so
@@ -261,8 +262,9 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
       -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - "https://$1/api/public/projects"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then the response body and its projects with-key= line
     printf '%s' "$6"
-    case "$5:$6" in
-      0:*"projects with-key=2"*) ;;
+    set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'}"   # the same, without the final line feed, so the last line is the projects with-key= line
+    case "$5:${6##*$'\n'}" in
+      "0:projects with-key=2"*) ;;
       0:*) echo "the request with the key did not get a 2xx, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
       *) echo "curl exit $5: the request with the key failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
     esac
@@ -284,13 +286,13 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
 # receiver only; test each enabled OTLP/gRPC receiver separately, and note the Phoenix check further below
 # targets a DIFFERENT server, not this Collector.
 # Never add the credential with -H or -u, which put it in curl's argv, where ps and /proc/<pid>/cmdline
-# show it. For bearertokenauth, pipe printf 'Authorization: Bearer %s\n' "$1" into the probe and add
-# --header @- to its options; for basicauth, pipe printf 'user = "%s"\n' "$1" into it, with "$1" as
+# show it. For bearertokenauth, pipe printf 'Authorization: Bearer %s\n' "$2" into the probe and add
+# --header @- to its options; for basicauth, pipe printf 'user = "%s"\n' "$2" into it, with "$2" as
 # user:password, and add --config -. Keep -q as curl's first option in either case. Run that repeat in a
 # subshell built like the Langfuse block above, in a fresh, clean shell (CONTRIBUTING rule 7):
-# trap - DEBUG RETURN ERR first, the credential on its
+# trap - DEBUG RETURN ERR first, the Collector host first and the credential second on its
 # set -- line, a refusal of a placeholder, an empty value or a control character, and for basicauth a
-# backslash and then a double quote escaped in "$1" before the printf. The credential on that set -- line
+# backslash and then a double quote escaped in "$2" before the printf. The credential on that set -- line
 # enters shell history, so clear that line afterward. Stdin closes the argv channel only: it does not
 # hide the credential from set -x tracing or your own account's view of the process.
 (                                       # a subshell, so your own script arguments are untouched
@@ -572,7 +574,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "1e54a9a74f0281fc7c4a2a1f46e61b14338d4566d6121797dc76625692a2bc2b",
+  "body_sha256": "47c25de5aed6255532f0b055817262e49769244d5dadef1d731431c08c444a2c",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",

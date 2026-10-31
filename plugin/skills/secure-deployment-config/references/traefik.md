@@ -141,7 +141,7 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker and ss and no network, which ran the guards and every exit status; no Traefik answered them.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker, sudo, rm and ss and no network, which ran the guards and every exit status; no Traefik answered them. The first block records 2 for a missing `ss` only when nothing else was recorded, because none of its other parts needs `ss`, and 3 when `sudo ss -tlnp` runs and fails.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -203,6 +203,7 @@ than the client, so set it explicitly if you want a per-client cap.
       echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; set -- "$1" "$2" 3
     fi
     rm -f /tmp/under.bin /tmp/over.bin
+    case "$?" in 0) ;; *) echo "rm exit $?: /tmp/under.bin and /tmp/over.bin could not be removed; inconclusive"; set -- "$1" "$2" 3 ;; esac
     exit "$3"
   )
   case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
@@ -233,11 +234,15 @@ than the client, so set it explicitly if you want a per-client cap.
   case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
   docker compose ps                     # only Traefik publishes ports; the app's 3000 must NOT be published
   case "$?" in 0) ;; *) echo "docker compose ps exit $?; inconclusive"; set -- 3 ;; esac
-  sudo ss -tlnp                         # read the whole listener table, do not grep it down to the port you
+  if command -v ss >/dev/null; then     # no other part needs ss, so a missing ss records 2 only when nothing else was recorded
+    sudo ss -tlnp                       # read the whole listener table, do not grep it down to the port you
                                         # expect (that hides an unexpected listener): only Traefik should
                                         # answer on the host. A backend answering on 3000 directly bypasses
                                         # Traefik's TLS and its authentication middleware
-  case "$?" in 0) ;; *) echo "sudo ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+    case "$?" in 0) ;; *) echo "sudo ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"; case "$1" in 0) set -- 2 ;; esac
+  fi
   echo "block exit $1; no answer in this block is classified: judge the redirect and 401 headers, the 1M and 11M codes, the flood counts and both listings yourself against the comments above"
   exit "$1"
 )
@@ -267,12 +272,13 @@ services:
   esac
   set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -H "Host: $3" \
-    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # curl's exit status, then everything it printed
   printf '%s' "$5"
-  case "$4:$5" in
-    0:*"http=404 exit="*) echo "pass: Traefik answered 404 for the canary, so it ignored the unlabelled container"; set -- 0 ;;
-    0:*"http=200 exit="*|0:*"http=502 exit="*|0:*"http=504 exit="*) echo "FINDING: Traefik routed the unlabelled canary (expected on the exposed calibration fixture; anywhere else an exposure to remove)"; set -- 1 ;;
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'}"              # the same, without the final line feed, so the last line is curl's http= line and the body cannot stand in for it
+  case "$4:${5##*$'\n'}" in
+    "0:http=404 exit="*) echo "pass: Traefik answered 404 for the canary, so it ignored the unlabelled container"; set -- 0 ;;
+    "0:http=200 exit="*|"0:http=502 exit="*|"0:http=504 exit="*) echo "FINDING: Traefik routed the unlabelled canary (expected on the exposed calibration fixture; anywhere else an exposure to remove)"; set -- 1 ;;
     0:*) echo "the canary's answer is neither the 404 pass nor a 200, 502 or 504 route; inconclusive"; set -- 3 ;;
     *) echo "curl exit $4: the canary request failed; inconclusive"; set -- 3 ;;
   esac
@@ -296,11 +302,12 @@ A `404` for the canary also appears when the whole Docker provider is off, which
     *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit 2 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then everything it printed
   printf '%s' "$4"
-  case "$3:$4" in
-    0:*"http=404 exit="*) echo "the app answered 404, so the provider is not routing it; inconclusive, and a canary 404 means nothing until it does"; set -- 3 ;;
+  set -- "$1" "$2" "$3" "${4%$'\n'}"              # the same, without the final line feed, so the last line is curl's http= line and the body cannot stand in for it
+  case "$3:${4##*$'\n'}" in
+    "0:http=404 exit="*) echo "the app answered 404, so the provider is not routing it; inconclusive, and a canary 404 means nothing until it does"; set -- 3 ;;
     0:*) echo "the app answered, so the provider is routing it"; set -- 0 ;;
     *) echo "curl exit $3: the request failed, and a connection failure means the provider is not routing the app; inconclusive"; set -- 3 ;;
   esac
@@ -394,7 +401,7 @@ Claims (full source mapping in the JSON block below):
 - verify-redirect (REASONED; traefik-docs): HTTP should redirect to HTTPS.
 - verify-auth (REASONED; traefik-docs): Unauthenticated HTTPS should return 401 once auth is attached.
 - verify-size (REASONED; middleware, traefik-docs): Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal.
-- observed-429 (DEMONSTRATED; middleware): The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established.
+- observed-429 (DEMONSTRATED; middleware): The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established; recorded on an earlier form of the flood probe, before it took a guarded host and ran inside the first block's single subshell.
 - verify-rate (REASONED; middleware, traefik-basicauth-source): Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.
 - verify-isolation (REASONED; docker): Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik.
 - verify-acme (REASONED; traefik-docs): Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT.
@@ -407,7 +414,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "45c8f66a0cf74647f528c4d0788a833bd3bda121428e961c7f90c5ce5e7ae102",
+  "body_sha256": "c46f287255a06982b63efb655972f340f118ed51d38f2e045bbb8ebd033c8b82",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",
@@ -521,7 +528,7 @@ Claims (full source mapping in the JSON block below):
     "verify-redirect": {"text": "HTTP should redirect to HTTPS.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Unauthenticated HTTPS should return 401 once auth is attached.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "verify-size": {"text": "Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal.", "components": ["middleware", "traefik-docs"], "sources": ["middleware:sd987195d64dd", "traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
-    "observed-429": {"text": "The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "DEMONSTRATED", "evidence": "A 429 appeared. That is all this shows."},
+    "observed-429": {"text": "The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established; recorded on an earlier form of the flood probe, before it took a guarded host and ran inside the first block's single subshell.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "DEMONSTRATED", "evidence": "A 429 appeared. That is all this shows."},
     "verify-rate": {"text": "Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.", "components": ["middleware", "traefik-basicauth-source"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca", "traefik-basicauth-source:s5f9a13d720c8"], "status": "REASONED", "verify": [1]},
     "verify-isolation": {"text": "Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED", "verify": [1]},
     "verify-acme": {"text": "Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
