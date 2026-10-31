@@ -188,7 +188,6 @@ access cannot bypass that gateway.
 ```
 
 ```bash
-# REASONED: public-origin reachability follows the cited SurrealDB bind and TLS documentation; no external test path is available in the authoring environment.
 # Origin reachability from an UNTRUSTED network - ANY HTTP answer proves the origin is reachable (a finding):
 # no other result passes, because a refusal, timeout, TLS or transport failure is inconclusive, so this block
 # exits 1 or 3, never 0, and 2 if it refuses its input.
@@ -212,10 +211,10 @@ access cannot bypass that gateway.
 )
 ```
 
-REASONED: listener inventory, health and anonymous/authenticated database-info queries (the first block above), public-origin reachability (the second) and TLS interpretation follow the cited SurrealDB bind, health, SQL/authentication and TLS documentation. No running deployment, system-user JWT, external test path or deployment certificate is available. These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
-the expected exposed and fixed outcomes follow the cited SurrealDB documentation. Confirm the TLS certificate chain wherever
+REASONED: preceding block; public-origin reachability and TLS interpretation follow the cited SurrealDB bind and TLS documentation; no external test path or deployment certificate is available in the authoring environment, so no reachability result is recorded.
+The first block's listener inventory, health check and anonymous/authenticated database-info queries are declared by its own leading comment and follow the cited SurrealDB bind, health and SQL/authentication documentation; no running deployment or system-user JWT is available for them. Confirm the TLS certificate chain wherever
 TLS terminates with normal validation (a trusted CA for private PKI); never use `-k`.
-Paste the JWT alone at the hidden prompt: a multi-line paste leaves every line after the first for your
+Paste the JWT alone at the first block's hidden prompt: a multi-line paste leaves every line after the first for your
 shell to run.
 
 ## Sources (checked September 2026)
@@ -300,7 +299,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "bc7f77d15feeb4f0dbecad5fe20c2f70a063ae867f47347fe58a45b11f91781e",
+  "body_sha256": "459f36e687df9e694f27873783e47a43dda2bdc29b6e13ada3c4f6b5080e1d87",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",

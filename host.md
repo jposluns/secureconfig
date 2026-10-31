@@ -98,7 +98,7 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing
 
 ## 4. Verify
 
-REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; the authoring environment has no authorized target host or external probe machine.
+REASONED: listener and firewall inventory; no exposed/fixed run is recorded in this guide. Expectations follow the cited iproute2, UFW and firewalld sources; the authoring environment has no authorized target host.
 
 ```bash
 (                                 # a subshell, so the exit below ends only the subshell; run it on the host you are checking
@@ -109,6 +109,7 @@ REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed 
   if command -v ufw > /dev/null || [ -x /usr/sbin/ufw ]; then
     sudo ufw status verbose || { echo "ufw status exit $?: the firewall status failed; inconclusive"; set -- 3; }   # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
   else
+    # with no ufw, as on a firewalld host, this block never exits 0: it exits 2, or 3 if a listener list failed
     echo "ufw is not installed here, so its status was not read: on a firewalld system read the zone with firewall-cmd --list-all as section 2 shows; not checking"
     case "$1" in 0) set -- 2 ;; esac
   fi
@@ -143,7 +144,6 @@ REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed 
 ```
 
 ```bash
-# REASONED: key-only login and PAM MFA comparisons follow the cited OpenSSH, TOTP and Duo sources; no authorized target host is available in the authoring environment.
 # Run this block from a second terminal before closing your working session. Both checks are read-and-judge, and
 # neither ssh exit status is a result: the keys-only check passes by failing, and the MFA check is judged by
 # its prompts, so the block always exits 0.
@@ -158,7 +158,7 @@ REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed 
 )
 ```
 
-REASONED: the listener and firewall inventory, disallowed-source SSH reachability, key-only login and PAM MFA comparisons in the three blocks above follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; no authorized target host or external probe machine is available, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session. The `nc -vz -w 3` form is sourced for Ubuntu noble netcat-openbsd; CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative, but the fetched Ncat source is a later master commit, so this guide has not established the packaged version's option behaviour. Check the installed `nc` variant before treating this probe as evidence.
+REASONED: preceding block; key-only login and PAM MFA comparisons follow the cited OpenSSH, TOTP and Duo sources; no authorized target host is available in the authoring environment, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session. The inventory and the disallowed-source SSH reachability probe in the first two blocks carry their own declarations. The second block's `nc -vz -w 3` form is sourced for Ubuntu noble netcat-openbsd; CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative, but the fetched Ncat source is a later master commit, so this guide has not established the packaged version's option behaviour. Check the installed `nc` variant before treating that probe as evidence.
 
 ## Sources (checked September 2026)
 
@@ -300,7 +300,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "ec469b7cdb1c79108bc438e5b6f2e429929ddabd0145ead5a0af7fb446bfcc51",
+  "body_sha256": "0c0805d21fbc978935484bd9d27939fba4c7574207ae41c1f8d43280677877af",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",

@@ -127,7 +127,9 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 # search with 200. If you front MLflow with an identity-aware proxy (Cloudflare Access etc., the MFA
 # option in step 3) instead of plain basic auth, the public https probes also need that proxy's own
 # credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
-# backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
+# backend 401/403. Behind such a proxy the three public requests, which send no service-token headers, get
+# that proxy's redirect or denial, so this block cannot exit 0 there; its four backend requests still show
+# MLflow's own enforcement. The credentials below reach curl through a config file on stdin (curl --config -),
 # never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
 # the argv channel only, not shell history, set -x tracing, or your own
 # account's view of the process. Substitute each password INSIDE the
@@ -244,14 +246,14 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 ```
 
 ```bash
-# REASONED: external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment.
 # Run this block from another machine, checking the port is unreachable from outside. The pass is that no TCP
 # connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
 # route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
 # handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
-# The block exits 0 for curl exit 7 or 28 with time_connect 0.000000, 1 for a handshake or an http code, 3 for
-# any other failure and 2 if it refuses its input. A local socket error can also exit 7, so read err before
-# taking 0 as the pass.
+# The block exits 0 for curl exit 7 or 28 with time_connect 0.000000 and an err that opens "Failed to connect to"
+# or "Connection timed out" (curl 8.18.0's connection-level wording; other wording reads as 3), 1 for a handshake
+# or an http code, 3 for any other failure, a resolver timeout included, and 2 if it refuses its input. A local
+# socket error can also exit 7 with "Failed to connect to", so read err before taking 0 as the pass.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -265,7 +267,7 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
   set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"     # curl's exit status, then its write-out line
   printf '%s' "$3"
   case "$2:$3" in
-    7:'http=000 time_connect=0.000000 '*|28:'http=000 time_connect=0.000000 '*) echo "no TCP connection formed (curl exit $2); the pass, if err names a refusal, no route or a connect timeout"; set -- 0 ;;
+    7:'http=000 time_connect=0.000000 '*' err=Failed to connect to '*|28:'http=000 time_connect=0.000000 '*' err=Failed to connect to '*|28:'http=000 time_connect=0.000000 '*' err=Connection timed out '*) echo "no TCP connection formed (curl exit $2); the pass, if err names a refusal, no route or a connect timeout"; set -- 0 ;;
     *:'http=000 time_connect=0.000000 '*) echo "curl exit $2 with no connection: a name-resolution or local error; inconclusive"; set -- 3 ;;
     *:http=*) echo "FINDING: the handshake completed or the port answered (a non-zero time_connect or an http code), so port 5000 is reachable from this machine"; set -- 1 ;;
     *) echo "curl exit $2 printed no write-out line; inconclusive"; set -- 3 ;;
@@ -275,7 +277,7 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 )
 ```
 
-REASONED: listener inventory, proxy/backend authentication and experiment authorization in the first block above, and external TCP reachability in the second, follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the current form of both blocks, that guard included, is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted.
+REASONED: preceding block; external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment, so no reachability result is recorded. The first block's listener inventory, proxy/backend authentication and experiment authorization are declared by its own leading comment and follow the cited MLflow host/binding and authentication documentation; no deployed server, credentials or experiment-permission fixture is available for them. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the current form of both blocks, that guard included, is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted.
 
 ## Common mistakes
 
@@ -377,7 +379,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "ba1ac094ec96250b42e080c29920542c234b80252e4d3d791c2062e74aa12ec1",
+  "body_sha256": "e3f8fc1dce7b410a14b3c39fbbee153739d3f142382bd027a84054fdcdea7fb3",
   "components": {
     "source": {
       "name": "MLflow pinned source",
