@@ -6639,7 +6639,7 @@ REASONED: following block; steps 2 to 5 per the Keycloak hostname, reverse proxy
   #    section 3 restricts the master realm to your administrators' range, so probing it here
   #    would test the wrong thing and tell you nothing about the realm your applications use.
   # python3 reads the discovery document straight from curl through a pipe, never from a shell capture,
-  # which would silently drop a NUL byte, and exits 4 for an issuer that is not a string or holds a NUL byte.
+  # which would drop a NUL byte, and exits 4 for an issuer that is not a string or holds a NUL byte.
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS "https://$1/realms/$2/.well-known/openid-configuration" | python3 -c 'import json,sys; d=json.load(sys.stdin.buffer); i=d["issuer"]; isinstance(i, str) or sys.exit(4); chr(0) in i and sys.exit(4); print(i)'; then printf '\n%s %s' "${PIPESTATUS[0]}" "${PIPESTATUS[1]}"; else printf '\n%s %s' "${PIPESTATUS[0]}" "${PIPESTATUS[1]}"; fi)"
   set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's and python3's exit statuses, then all python3 printed, ending in print's own newline
   set -- "$1" "$2" "$3" "$4" "${5%% *}" "$6" "${5#* }"   # curl's exit status, python3's output, then python3's exit status
@@ -7034,7 +7034,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "7ec0645126cf0260fa5f538df533c2a55e29f22b92979fa529b05c4880625ad8",
+  "body_sha256": "bffdeccf2553dc6f0c94efe32cf25c0662c08aaafb9a2d04e1e769c3aa598c02",
   "components": {
     "keycloak-admin-cli": {
       "name": "Keycloak Admin CLI",
