@@ -252,8 +252,6 @@ REASONED: per the guide's cited SSL framework and certificate-verified connectio
 
 ### Listener inventory
 
-**REASONED: requires the Neo4j service's network namespace and, for the Enterprise comparisons, a standalone Enterprise server and an Enterprise cluster, unavailable in the authoring environment.** Run this block inside that namespace. The substituted hostname identifies the deployment being inspected; it does not make `ss` inspect a remote machine.
-
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEO4J_HOST'
@@ -268,6 +266,7 @@ REASONED: per the guide's cited SSL framework and certificate-verified connectio
   esac
   # Run inside the Neo4j service's network namespace.
   # The hostname is a confirmation only; ss does not connect to it.
+  command -v ss >/dev/null 2>&1 || { echo "ss is not installed here; not listing sockets"; exit 2; }
   set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"     # the hostname, the listener table, then ss's exit status
   printf '%s' "$2"
@@ -294,7 +293,7 @@ REASONED: per the guide's cited SSL framework and certificate-verified connectio
 )
 ```
 
-REASONED: preceding block; the listener inventory block above and these port expectations, per the guide's cited Ports, Enterprise online backup and Configure network connectors (Neo4j 5) entries. During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. No Neo4j installation is available in the authoring environment, so neither an exposed 7474 listener nor the fixed inventory was observed. During marking review (October 2026) the block ran with a stub ss and no network: it refused unchanged, partial, miscounted, example.com and angle-bracket input, and reached ss -tlnp only with neo4j-1.internal substituted. Those stub runs covered an earlier form of the block, whose refusals exited with status 1. The block now exits 1 when a listener is on port 7474, exits 3 when `ss` fails or the table is empty, and otherwise 0, leaving the other listeners for you to judge; this form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the drafting stub runs recorded with the local checks above. Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
+REASONED: preceding block; the listener inventory block above and these port expectations, per the guide's cited Ports, Enterprise online backup and Configure network connectors (Neo4j 5) entries. The block requires the Neo4j service's network namespace and, for the Enterprise comparisons, a standalone Enterprise server and an Enterprise cluster, all unavailable in the authoring environment. Run the block inside that namespace; the substituted hostname identifies the deployment being inspected and does not make `ss` inspect a remote machine. During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. No Neo4j installation is available in the authoring environment, so neither an exposed 7474 listener nor the fixed inventory was observed. During marking review (October 2026) the block ran with a stub ss and no network: it refused unchanged, partial, miscounted, example.com and angle-bracket input, and reached ss -tlnp only with neo4j-1.internal substituted. Those stub runs covered an earlier form of the block, whose refusals exited with status 1. The block now exits 1 when a listener is on port 7474, exits 3 when `ss` or `awk` fails or the table is empty, refuses with status 2 when `ss` is not installed, and otherwise exits 0, leaving the other listeners for you to judge; this form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the drafting stub runs recorded with the local checks above. Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
 
 REASONED: per the guide's cited Neo4j 5.26 (LTS) Enterprise cluster and monitoring ports, cluster settings and configuration reference entries; no Enterprise standalone server, cluster or Docker host is available in the authoring environment. No listener inventory was obtained, so nothing is recorded about these ports. **REASONED, Enterprise listener comparisons:** also read every listener for 5000 (discovery v1 only), 6000, 7000, and 7688 (server-side routing), including configured replacement ports and IPv6 bindings. In the exposed disposable state, a widened shared host can expose these even on a standalone server; in the fixed single-server state, expect loopback binds. In a cluster, expect the intended private binds and peer-reachable advertised addresses, with firewall access confined to members. Under `V2_ONLY`, do not require 5000; discovery shares 6000. Check 2004 only if Prometheus is enabled, on loopback or the explicitly restricted monitoring interface. There should be no inbound Graphite 2003 listener from enabling its exporter; investigate any JMX 3637 or debugger 5005 listener against the JVM configuration. Inspect the container's namespace as well as host publication rules for Docker. These expectations follow the [5.26 ports inventory](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [setting defaults](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/).
 
@@ -302,7 +301,7 @@ REASONED: per the guide's cited Neo4j 5.26 (LTS) Enterprise cluster and monitori
 
 **REASONED, not demonstrated: the authoring host forbids opening listeners without an isolated network namespace, and has none.** A disposable Enterprise cluster and its certificates are required. A listener inventory does not prove TLS or peer authentication. The vendor's [Nmap cipher enumeration](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config) establishes that TLS is offered, not rejection of unauthenticated peers. The OpenSSL procedure below is reasoned from the [documented cluster mutual-authentication policy](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config); it is not a vendor-documented cluster-port check.
 
-Run from an allowed peer location against each member and every active cluster listener: 6000, 7000, 5000 when discovery v1 runs, and 7688 when server-side routing runs, or their configured replacements. Substitute the member's certificate DNS name, cluster port, and direct client Bolt TLS URI inside the quotes. The Bolt URI uses the client connector, normally 7687, not the cluster port. Install the Bolt signing CA in Cypher Shell's trust store as described above; the command assumes section 3's Bolt policy and prompts for the administrator password.
+REASONED: the probe targets and the values the block below takes, per the guide's cited Neo4j 5.26 ports inventory and cluster SSL policy entries; no disposable Enterprise cluster is available in the authoring environment. Run from an allowed peer location against each member and every active cluster listener: 6000, 7000, 5000 when discovery v1 runs, and 7688 when server-side routing runs, or their configured replacements. Substitute the member's certificate DNS name, cluster port, direct client Bolt TLS URI, and `none` or `require` for the members' current client_auth policy inside the quotes. The Bolt URI uses the client connector, normally 7687, not the cluster port. Install the Bolt signing CA in Cypher Shell's trust store as described above; the command assumes section 3's Bolt policy and prompts for the administrator password.
 
 Provide `ca.pem` containing the cluster server's trusted signing CA; `member.crt` and `member.key` for a trusted test member; and `untrusted.crt` and `untrusted.key` for an otherwise valid certificate signed by a different CA absent from every member's trust directory. Both certificates need the EKUs above, current validity, and matching keys. Supply each issuing chain in `member-chain.pem` or `untrusted-chain.pem`, starting with the issuing CA; for direct root issuance, use that root certificate. Keep the private keys protected and do not add the untrusted CA to the cluster's trust directory.
 
@@ -344,8 +343,9 @@ Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies t
   unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD; not probing"; exit 2; }
   set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # Each probe below reads as: alert (a received fatal TLS alert), held (a completed handshake, no alert,
-  # and the connection still open when the 15s wait expired), closed (a completed handshake, no alert,
-  # then the connection ended), or neither.
+  # and the connection still open when the 15s wait expired, exit 124), closed (a completed handshake,
+  # no alert, then a clean end, exit 0), failed (a completed handshake, no alert, then any other exit
+  # status, such as a reset), or neither. The probe's exit status is kept beside its reading.
 
   echo "(a) No client certificate"
   set -- "$1" "$2" "$3" "$4" "$5" "$(if timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
@@ -355,12 +355,19 @@ Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies t
   printf '%s\n' "$6"
   printf 'no-client exit=%s\n' "$7"
   case "$6" in
-    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert ;;
-    *'CONNECTION ESTABLISHED'*) if [ "$7" = 124 ]; then set -- "$1" "$2" "$3" "$4" "$5" held; else set -- "$1" "$2" "$3" "$4" "$5" closed; fi ;;
-    *) set -- "$1" "$2" "$3" "$4" "$5" neither ;;
+    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert "$7" ;;
+    *'CONNECTION ESTABLISHED'*)
+      case "$7" in
+        124) set -- "$1" "$2" "$3" "$4" "$5" held "$7" ;;
+        0) set -- "$1" "$2" "$3" "$4" "$5" closed "$7" ;;
+        *) set -- "$1" "$2" "$3" "$4" "$5" failed "$7" ;;
+      esac ;;
+    *) set -- "$1" "$2" "$3" "$4" "$5" neither "$7" ;;
   esac
   case "$4:$6" in
-    require:alert|none:held|none:closed) echo "(a) $6, as $4 should give; correlate a generic alert with the member's logs" ;;
+    require:alert) echo "(a) $6, as $4 should give; correlate a generic alert with the member's logs" ;;
+    none:held|none:closed) echo "(a) $6, as $4 should give; this shows only that the client_auth=NONE baseline behaved as declared, not that mutual TLS works" ;;
+    *:failed) echo "(a) failed: the handshake completed, then the client exited $7 without a received alert or an expired 15s wait, an operational failure such as a reset rather than a certificate rejection; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
     require:held) echo "FINDING: (a) completed the handshake without a client certificate and was not rejected within 15s"; set -- "$1" "$2" "$3" "$4" 1 ;;
     require:closed) echo "(a) closed: the connection ended after the handshake without a received alert, so correlate it with the member's logs; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
     none:alert) echo "(a) alert under none, where the baseline should complete the handshake; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
@@ -376,12 +383,19 @@ Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies t
   printf '%s\n' "$6"
   printf 'untrusted-client exit=%s\n' "$7"
   case "$6" in
-    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert ;;
-    *'CONNECTION ESTABLISHED'*) if [ "$7" = 124 ]; then set -- "$1" "$2" "$3" "$4" "$5" held; else set -- "$1" "$2" "$3" "$4" "$5" closed; fi ;;
-    *) set -- "$1" "$2" "$3" "$4" "$5" neither ;;
+    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert "$7" ;;
+    *'CONNECTION ESTABLISHED'*)
+      case "$7" in
+        124) set -- "$1" "$2" "$3" "$4" "$5" held "$7" ;;
+        0) set -- "$1" "$2" "$3" "$4" "$5" closed "$7" ;;
+        *) set -- "$1" "$2" "$3" "$4" "$5" failed "$7" ;;
+      esac ;;
+    *) set -- "$1" "$2" "$3" "$4" "$5" neither "$7" ;;
   esac
   case "$4:$6" in
-    require:alert|none:held|none:closed) echo "(b) $6, as $4 should give; correlate a generic alert with the member's logs" ;;
+    require:alert) echo "(b) $6, as $4 should give; correlate a generic alert with the member's logs" ;;
+    none:held|none:closed) echo "(b) $6, as $4 should give; this shows only that the client_auth=NONE baseline behaved as declared, not that mutual TLS works" ;;
+    *:failed) echo "(b) failed: the handshake completed, then the client exited $7 without a received alert or an expired 15s wait, an operational failure such as a reset rather than a certificate rejection; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
     require:held) echo "FINDING: (b) completed the handshake with a certificate from an untrusted CA and was not rejected within 15s"; set -- "$1" "$2" "$3" "$4" 1 ;;
     require:closed) echo "(b) closed: the connection ended after the handshake without a received alert, so correlate it with the member's logs; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
     none:alert) echo "(b) alert under none, where the baseline should complete the handshake; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
@@ -397,12 +411,18 @@ Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies t
   printf '%s\n' "$6"
   printf 'trusted-client exit=%s\n' "$7"
   case "$6" in
-    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert ;;
-    *'CONNECTION ESTABLISHED'*) if [ "$7" = 124 ]; then set -- "$1" "$2" "$3" "$4" "$5" held; else set -- "$1" "$2" "$3" "$4" "$5" closed; fi ;;
-    *) set -- "$1" "$2" "$3" "$4" "$5" neither ;;
+    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert "$7" ;;
+    *'CONNECTION ESTABLISHED'*)
+      case "$7" in
+        124) set -- "$1" "$2" "$3" "$4" "$5" held "$7" ;;
+        0) set -- "$1" "$2" "$3" "$4" "$5" closed "$7" ;;
+        *) set -- "$1" "$2" "$3" "$4" "$5" failed "$7" ;;
+      esac ;;
+    *) set -- "$1" "$2" "$3" "$4" "$5" neither "$7" ;;
   esac
   case "$6" in
     held|closed) echo "(c) $6: the trusted member completed the handshake, as both policies should give" ;;
+    failed) echo "(c) failed: the handshake completed, then the client exited $7 without a received alert or an expired 15s wait, an operational failure such as a reset; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
     *) echo "(c) $6: the trusted member did not complete the handshake, so the positive control failed; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
   esac
 
@@ -676,12 +696,16 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
     "https://$1:7473/db/neo4j/query/v2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
   printf '%s' "$3"
-  set -- "$1" "$2" "$3" "$4" "${3##*http=}"
-  set -- "$1" "$2" "$3" "$4" "${5%%[!0123456789]*}"   # ..., then the HTTP code
-  case "$4:$5" in
-    0:401) echo "the anonymous query was refused with 401" ;;
-    0:2??) echo "FINDING: the anonymous query was accepted with HTTP $5, so authentication is not enforced"; set -- "$1" 1 ;;
-    0:*) echo "HTTP $5 for the anonymous query is neither the 401 pass nor an accepted query, and a 404 does not prove authentication enforcement; inconclusive"; set -- "$1" 3 ;;
+  set -- "$1" "$2" "$(if printf '%s' "$3" | tr -d ' \t\r\n\133\135'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*http=}"   # the response without white space or square brackets and tr's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}" ""   # ..., the HTTP code, tr's exit status, then the result marks
+  case "$3" in *'"errors":'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}e" ;; esac   # an errors member
+  case "$3" in *'"values":1}'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}r" ;; esac   # the value ok=1
+  case "$4:$6:$5:$7" in
+    0:0:401:*) echo "the anonymous query was refused with 401" ;;
+    0:0:2??:r) echo "FINDING: the anonymous query was accepted with HTTP $5, so authentication is not enforced"; set -- "$1" 1 ;;
+    0:0:2??:*) echo "HTTP $5 for the anonymous query without the ok=1 result alone (an errors member, or an empty or malformed body) is neither the 401 pass nor an accepted query, since HTTP success alone is not enough; inconclusive"; set -- "$1" 3 ;;
+    0:0:*) echo "HTTP $5 for the anonymous query is neither the 401 pass nor an accepted query, and a 404 does not prove authentication enforcement; inconclusive"; set -- "$1" 3 ;;
+    0:*) echo "tr exit $6: the anonymous response could not be processed; inconclusive"; set -- "$1" 3 ;;
     *) echo "curl exit $4: the anonymous request failed, and a connection or TLS failure does not prove authentication enforcement; inconclusive"; set -- "$1" 3 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -692,12 +716,13 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
     "https://$1:7473/db/neo4j/query/v2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
   printf '%s' "$3"
-  set -- "$1" "$2" "$(printf '%s' "$3" | tr -d ' \t\r\n\133\135')" "$4" "${3##*http=}"   # the response without white space or square brackets, curl's exit status, then the HTTP code
-  set -- "$1" "$2" "$3" "$4" "${5%%[!0123456789]*}"
-  case "$4:$5:$3" in
-    0:2??:*'"errors":'*) echo "HTTP $5 with an errors member: the authenticated query did not return ok=1, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-    0:2??:*'"values":1}'*) echo "the authenticated query returned ok=1" ;;
-    0:*) echo "HTTP $5 without the expected ok=1 result, and a Query API 202 alone does not prove query success, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  set -- "$1" "$2" "$(if printf '%s' "$3" | tr -d ' \t\r\n\133\135'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*http=}"   # the response without white space or square brackets and tr's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # ..., the HTTP code, then tr's exit status
+  case "$4:$6:$5:$3" in
+    0:0:2??:*'"errors":'*) echo "HTTP $5 with an errors member: the authenticated query did not return ok=1, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:0:2??:*'"values":1}'*) echo "the authenticated query returned ok=1" ;;
+    0:0:*) echo "HTTP $5 without the expected ok=1 result, and a Query API 202 alone does not prove query success, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) echo "tr exit $6: the authenticated response could not be processed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     *) echo "curl exit $4: the authenticated request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
   echo "block exit $2; the response headers and bodies are not classified beyond the checks above, so judge them yourself"
@@ -732,12 +757,16 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
     "https://$1:7473/db/neo4j/tx/commit"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
   printf '%s' "$3"
-  set -- "$1" "$2" "$3" "$4" "${3##*legacy-no-auth=}"
-  set -- "$1" "$2" "$3" "$4" "${5%%[!0123456789]*}"   # ..., then the HTTP code
-  case "$4:$5" in
-    0:401) echo "the anonymous legacy query was refused with 401" ;;
-    0:2??) echo "FINDING: the anonymous legacy query was accepted with HTTP $5, so authentication is not enforced"; set -- "$1" 1 ;;
-    0:*) echo "HTTP $5 for the anonymous legacy query is neither the 401 pass nor an accepted query (a missing endpoint proves nothing); inconclusive"; set -- "$1" 3 ;;
+  set -- "$1" "$2" "$(if printf '%s' "$3" | tr -d ' \t\r\n\133\135'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*legacy-no-auth=}"   # the response without white space or square brackets and tr's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}" ""   # ..., the HTTP code, tr's exit status, then the result marks
+  case "$3" in *'"errors":}'*|*'"errors":,'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}e" ;; esac   # an empty errors array
+  case "$3" in *'"row":1,'*|*'"row":1}'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}r" ;; esac      # the row ok=1
+  case "$4:$6:$5:$7" in
+    0:0:401:*) echo "the anonymous legacy query was refused with 401" ;;
+    0:0:2??:er) echo "FINDING: the anonymous legacy query was accepted with HTTP $5, so authentication is not enforced"; set -- "$1" 1 ;;
+    0:0:2??:*) echo "HTTP $5 for the anonymous legacy query without ok=1 and an empty errors array (an error-only, empty or malformed body) is neither the 401 pass nor an accepted query, since HTTP success alone is not enough; inconclusive"; set -- "$1" 3 ;;
+    0:0:*) echo "HTTP $5 for the anonymous legacy query is neither the 401 pass nor an accepted query (a missing endpoint proves nothing); inconclusive"; set -- "$1" 3 ;;
+    0:*) echo "tr exit $6: the anonymous legacy response could not be processed; inconclusive"; set -- "$1" 3 ;;
     *) echo "curl exit $4: the anonymous legacy request failed (a TLS error or connection failure proves nothing); inconclusive"; set -- "$1" 3 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -748,13 +777,14 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
     "https://$1:7473/db/neo4j/tx/commit"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
   printf '%s' "$3"
-  set -- "$1" "$2" "$(printf '%s' "$3" | tr -d ' \t\r\n\133\135')" "$4" "${3##*legacy-auth=}"   # the response without white space or square brackets, curl's exit status, then the HTTP code
-  set -- "$1" "$2" "$3" "$4" "${5%%[!0123456789]*}" ""
-  case "$3" in *'"errors":}'*|*'"errors":,'*) set -- "$1" "$2" "$3" "$4" "$5" "${6}e" ;; esac   # an empty errors array
-  case "$3" in *'"row":1,'*|*'"row":1}'*) set -- "$1" "$2" "$3" "$4" "$5" "${6}r" ;; esac      # the row ok=1
-  case "$4:$5:$6" in
-    0:2??:er) echo "the authenticated legacy query returned ok=1 with an empty errors array" ;;
-    0:*) echo "HTTP $5 without ok=1 and an empty errors array, and HTTP 200 alone does not demonstrate query success, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  set -- "$1" "$2" "$(if printf '%s' "$3" | tr -d ' \t\r\n\133\135'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*legacy-auth=}"   # the response without white space or square brackets and tr's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}" ""   # ..., the HTTP code, tr's exit status, then the result marks
+  case "$3" in *'"errors":}'*|*'"errors":,'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}e" ;; esac   # an empty errors array
+  case "$3" in *'"row":1,'*|*'"row":1}'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}r" ;; esac      # the row ok=1
+  case "$4:$6:$5:$7" in
+    0:0:2??:er) echo "the authenticated legacy query returned ok=1 with an empty errors array" ;;
+    0:0:*) echo "HTTP $5 without ok=1 and an empty errors array, and HTTP 200 alone does not demonstrate query success, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) echo "tr exit $6: the authenticated legacy response could not be processed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     *) echo "curl exit $4: the authenticated legacy request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
   echo "block exit $2; the response headers and bodies are not classified beyond the checks above, so judge them yourself"
@@ -964,7 +994,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6017997e7fbb5e72ea6e3e7eaca4c889dc8dcd8364a3c1c9c4c91c9c090711c8",
+  "body_sha256": "ba535cc541041a3ac24773556ccbcc3c9fffa7db0ceba5138378450bf1867057",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",
