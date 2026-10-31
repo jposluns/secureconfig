@@ -89,36 +89,61 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 
 ## Verify (REASONED: listener and backing-store inventory, Sentry/GlitchTip registration, redirect handling, disposable signup, off-host backing-port reachability and HTTP-to-HTTPS routing comparisons follow the cited tracker sources; no live tracker, backing stores, authorized signup fixture or external host. Bash 5.3.9 bash -n accepted both Verify fences. With curl replaced by printf LOCAL_CURL in the complete registration subshell, https://fixture.internal/api/chat reached one marker and exit 0; empty input, original placeholders, set -- without arguments and bad value printed guard diagnostics with exit 2 and no marker. This tests those guards only, not registration, protocol reachability, redirects or TLS)
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state.
+Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state. The bash -n and stub runs recorded in the heading covered both blocks in an earlier form: the inventory then ran `sudo ss -tlnp` at top level, and the registration block took one value and ended with curl's own status. They were not repeated on the current form, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block.
 
 ```bash
 # REASONED: listener expectations follow the cited vendor sources; no container runtime is available.
-sudo ss -tlnp    # the tracker's own port only, on a private address: 9000 for Sentry, 8000 for
-                 # GlitchTip; and no PostgreSQL, Redis, Kafka, or ClickHouse port published beside it
+(                  # a subshell, so the exit below ends only the subshell
+  set -- 0         # this block's status: 3 if ss fails, otherwise 0, because you judge the listeners it prints
+  if sudo ss -tlnp; then :; else   # the tracker's own port only, on a private address: 9000 for Sentry, 8000 for
+                                   # GlitchTip; and no PostgreSQL, Redis, Kafka, or ClickHouse port published beside it
+    echo "sudo ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- 3
+  fi
+  echo "block exit $1; the listeners above are not classified, so judge them against the comments yourself"
+  exit "$1"
+)
 ```
 
 REASONED: following block; registration and backing-port checks follow the cited Sentry and GlitchTip sources; no container runtime is available.
 
 ```bash
-# Registration discriminator against the plaintext listener. Substitute the URL inside the single
-# quotes on the set -- line and paste the whole block so the guard runs; read the body, since an
-# open form and a closed one can both return 200.
+# Registration discriminator against the plaintext listener, or a backing-store reachability probe.
+# Substitute the URL inside the single quotes on the set -- line, then web for the tracker's web
+# listener or store for a backing-store port probed from off-host, and paste the whole block so the
+# guard runs; with web, read the body, since an open form and a closed one can both return 200.
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_REGISTER_URL'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_REGISTER_URL' 'REPLACE_WITH_web_OR_store'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute a full URL on the set -- line above; not probing"; exit 2 ;;
     http://*|https://*) : ;;
     *) echo "expected an http:// or https:// URL; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+  case "$2" in
+    web|store) : ;;
+    *) echo "substitute web (the tracker's web listener) or store (a backing-store port, probed from off-host) as the second value on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$2" "${3##*$'\n'}" "${3%$'\n'*}"       # web or store, then curl's exit status and its output
+  printf '%s' "$3"
+  set -- "$1" "$2" "${3%$'\n'}"
+  set -- "$1" "$2" "${3##*$'\n'}"                # web or store, curl's exit status, then its http= exit= err= line
+  case "$1:$2:$3" in
+    web:0:"http=3"??" "*|web:0:"http=404 "*) echo "a redirect or a 404 is inconclusive, never the fixed state (for Sentry, add -L to follow the redirect to the served login page)"; set -- 3 ;;
+    web:0:*) echo "unclassified observation: read the body above for a create-account path or signup form"; set -- 0 ;;
+    store:7:*) echo "curl exit 7: the connection failed; when err shows a refusal from this vantage, that is the closed, fixed state"; set -- 0 ;;
+    store:0:*|store:8:*|store:52:*|store:56:*) echo "FINDING: curl exit $2 after the backing store accepted the connection, so its port is reachable from here"; set -- 1 ;;
+    *) echo "curl exit $2: a transport failure or a TLS error is inconclusive; read the err field above"; set -- 3 ;;
+  esac
+  echo "block exit $1; the body and the err field above are not classified beyond this, so read them yourself"
+  exit "$1"
 )
 ```
 
-Point that block at Sentry's `http://tracker.example.com:9000/`: because the bundled config sets `SENTRY_SINGLE_ORGANIZATION`, `/auth/register/` redirects to the organization login, so follow the redirect (add `-L`) to the served login page, where an instance with registration on presents a create-account path and a closed one (the default) does not. For GlitchTip's `http://tracker.example.com:8000/`, an instance with `ENABLE_USER_REGISTRATION=True` accepts a new account through its signup, and one set `False` refuses after the first user exists; confirm by attempting a throwaway registration in an operator-controlled test, never against a shared instance. For each backing store, run the same guarded block against its port from off-host: those ports speak their own protocols, not HTTP, so read the connection outcome in the `exit` and `err` fields (a refused connection is the closed, fixed state; an accepted one is reachable) rather than any HTTP status. The `ss` inventory shows what Docker has published on the host, but a container port can be reachable through Docker's forwarding without a matching host socket, so the off-host probe is what proves it closed. Distinguish the public HTTPS proxy from the direct backend ports, and confirm plain HTTP to the web redirects to that proxy rather than serving the app. A reachable login page alone proves only that the port is open, not that registration or the backing stores are closed.
+Point that block, with `web`, at Sentry's `http://tracker.example.com:9000/`: because the bundled config sets `SENTRY_SINGLE_ORGANIZATION`, `/auth/register/` redirects to the organization login, so follow the redirect (add `-L`) to the served login page, where an instance with registration on presents a create-account path and a closed one (the default) does not. For GlitchTip's `http://tracker.example.com:8000/`, an instance with `ENABLE_USER_REGISTRATION=True` accepts a new account through its signup, and one set `False` refuses after the first user exists; confirm by attempting a throwaway registration in an operator-controlled test, never against a shared instance. For each backing store, run the same guarded block with `store` against its port from off-host: those ports speak their own protocols, not HTTP, so read the connection outcome in the `exit` and `err` fields (a refused connection is the closed, fixed state; an accepted one is reachable) rather than any HTTP status. With `web`, the block exits 3 for a failed request, a redirect or a `404` and otherwise 0, leaving the body for you to read; with `store`, it exits 0 for curl exit 7, 1 for curl exit 0, 8, 52 or 56, which curl reports only after the connection was accepted, and 3 for any other failure, such as a timeout, which can come before or after the connection. The `ss` inventory shows what Docker has published on the host, but a container port can be reachable through Docker's forwarding without a matching host socket, so the off-host probe is what proves it closed. Distinguish the public HTTPS proxy from the direct backend ports, and confirm plain HTTP to the web redirects to that proxy rather than serving the app. A reachable login page alone proves only that the port is open, not that registration or the backing stores are closed.
 
 ## Common mistakes
 
@@ -195,7 +220,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4dc4dda9ced1d601b8d45a8c9f506889a0ca4bf10c1d140303e4ab0c17a2c66e",
+  "body_sha256": "ef36e7251cfdded4c1aeec79ba9807c38f0dc10cb8615ec0dd521efde411f518",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",
