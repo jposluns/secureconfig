@@ -116,28 +116,83 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
-ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sI "http://$1/"                                 # 301 to https:// (force_ssl)
-  curl -q -g -sI "https://$1/" | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
-  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/dashboard"    # 302 to login, or 401
-  curl -q -g -sS -i "https://$1/sidekiq"
-  # if you run Sidekiq Web, read the headers, not just the code: Basic Auth answers 401 with a
-  # WWW-Authenticate: Basic header; the Devise constraint answers 302 with a Location pointing at your
-  # login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
-  # the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                                               # the 2nd value is this part's status so far, ranked as above
+    curl -q -g -sI "http://$1/" ||                              # 301 to https:// (force_ssl)
+      { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+    set -- "$1" "$2" "$(if curl -q -g -sI "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"               # curl's exit status, then the headers
+    printf '%s' "$4" | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
+    [ "$3" = 0 ] || { echo "curl exit $3: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+    set -- "$1" "$2" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/dashboard"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"              # curl's exit status, then the HTTP code
+    printf '%s\n' "$4"                                          # 302 to login, or 401
+    case "$3:$4" in
+      0:302|0:401) ;;
+      0:2??) echo "FINDING: /dashboard answered $4 with no credentials"; set -- "$1" 1 ;;
+      0:*) echo "HTTP $4 from /dashboard is neither a 302 to login, a 401 nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the /dashboard request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -sS -i -w '\n%{http_code}' "https://$1/sidekiq"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"               # curl's exit status, then the response and its HTTP code
+    set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"          # this part's status, curl's exit status, the response, then the HTTP code
+    printf '%s\n' "$4"
+    # if you run Sidekiq Web, read the headers, not just the code: Basic Auth answers 401 with a
+    # WWW-Authenticate: Basic header; the Devise constraint answers 302 with a Location pointing at your
+    # login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
+    # the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
+    case "$3:$5" in
+      0:200)
+        if printf '%s' "$4" | grep -i sidekiq > /dev/null; then
+          echo "FINDING: /sidekiq answered 200 with a page that names Sidekiq, so the dashboard is exposed"; set -- "$1" 1
+        else
+          echo "HTTP 200 from /sidekiq with a page that does not name Sidekiq; read it yourself; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+        fi ;;
+      0:*) ;;
+      *) echo "curl exit $3: the /sidekiq request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; puma/ruby: 127.0.0.1:3000 only (the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address on 3000 as loopback)
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  if [ -f config/application.rb ]; then
+    set -- "$1" "$(if git ls-files config/master.key; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # git prints nothing
+    set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                  # status, git's output, then git's exit status
+    if [ "$3" != 0 ]; then
+      echo "git ls-files exit $3 (run this in the app's repository); inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"
+    elif [ -n "$2" ]; then
+      printf '%s' "$2"; echo "FINDING: config/master.key is tracked by git"; set -- 1 "$2" "$3"
+    else
+      echo "config/master.key is not tracked by git"
+    fi
+  else                                                        # a guard: git ls-files resolves the path against this directory
+    echo "no config/application.rb here: run this block from the Rails app's root directory, where git ls-files looks for config/master.key; not checking"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
+  echo "block exit $1; the redirect and HTTPS headers, a /sidekiq answer other than 200, and listeners on ports other than 3000 are not classified, so judge them yourself"
+  exit "$1"
 )
-git ls-files config/master.key                                   # prints nothing
 ```
 
 ## Sources (checked September 2026)
@@ -220,7 +275,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1660ec787cfe13068dc4f7fc85dd482d84425e9fdfee190ec74d927062e63ed7",
+  "body_sha256": "874129ff33ca9c02b34457c1707ead550f16bbad728d7c1464081e16a72d0765",
   "components": {
     "rails": {
       "name": "Rails documentation",
