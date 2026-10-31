@@ -216,7 +216,7 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
   printf '%s\n' "$4"                    # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
   case "$3" in
     0) ;;
-    7) echo "curl exit 7: nothing accepted the connection on 127.0.0.1:6060, so no local diagnostic listener is enabled" ;;
+    7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above shows any 6060 listener on another address" ;;
     *) echo "curl exit $3: the local diagnostic request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -248,13 +248,15 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
   set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # curl's exit status, then its diag_6060 line
   printf '%s\n' "$3"
   case "$3" in
-    'diag_6060 http=000 '*) ;;
-    *) echo "FINDING: the diagnostic listener answered HTTP from outside, so it is reachable"; exit 1 ;;
+    'diag_6060 http=000 '*)
+      case "$2" in
+        7|28) set -- "$1" 0 ;;          # a refusal or a timeout: the pass
+        *) echo "curl exit $2 is neither a refusal nor a timeout; inconclusive"; set -- "$1" 3 ;;
+      esac ;;
+    *) echo "FINDING: the diagnostic listener answered HTTP from outside, so it is reachable"; set -- "$1" 1 ;;
   esac
-  case "$2" in
-    7|28) exit 0 ;;                     # a refusal or a timeout: the pass
-    *) echo "curl exit $2 is neither a refusal nor a timeout; inconclusive"; exit 3 ;;
-  esac
+  echo "block exit $2; the err text is not classified: a refusal or timeout passes only if err names the server's address, not a local socket or resolver error, so judge it yourself"
+  exit "$2"
 )
 ```
 
@@ -358,7 +360,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "fcde5e2fe51292e5869921bccf8db3477814b1361c175bc8cbf7ba0a60c56685",
+  "body_sha256": "c952a51b8e8b30de35f34e8c88a23c6fdf31aab2c7baf8059b5458a2fbc8063a",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",

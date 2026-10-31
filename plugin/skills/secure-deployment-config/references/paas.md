@@ -95,8 +95,8 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
     printf '%s\n' "$3"
     case "$2:$4" in
       0:http=301|0:http=302|0:http=307|0:http=308)
-        case "$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # header names ignore letter case
-          *$'\n''location: https://'*|*$'\n''location:https://'*) exit 0 ;;
+        case "$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | tr -d ' \t')" in   # header names ignore letter case, and spaces and tabs are deleted, so any of them may follow location:
+          *$'\n''location:https://'*) exit 0 ;;
           *) echo "FINDING: a ${4#http=} redirect without an https:// Location, which this guide's check requires"; exit 1 ;;
         esac ;;
       0:http=000) echo "http=000: no HTTP response arrived; inconclusive"; exit 3 ;;
@@ -279,7 +279,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "2eba93a838ed49a65c7478ebde6537ebc9137e2175a68a96b6a4fc9c01adbf26",
+  "body_sha256": "3d96152884624d8f1c20707895b1d312d53ff6661ae06aa7f37c030ebbb563f0",
   "components": {
     "render": {
       "name": "Render documentation",
