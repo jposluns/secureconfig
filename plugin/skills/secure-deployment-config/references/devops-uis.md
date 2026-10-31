@@ -123,10 +123,26 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ## Verify
 
-REASONED: following block; panel, Docker daemon and GitLab sources below support these listener/login, 2375/2376 and password-file checks. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: following block; listener check, per the panel, Docker daemon and GitLab sources below, which also support the panel-login, 2375/2376 and password-file checks in the three blocks after it; each of the four blocks carries its own marker and exit status. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; that guard and the Docker block's address and certificate-file guards have been run only under stubs, without network access.
 
 ```bash
-ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
+(                                                   # a subshell, so the exits below end only this check
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:(9443|9000|8000|3000|81|3001|2375|2376)$/ && (index($4, "0.0.0.0:") == 1 || index($4, "*:") == 1 || index($4, "[::]:") == 1) { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 9443, 9000, 8000, 3000, 81, 3001, 2375 or 2376 is bound to a wildcard address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  echo "block exit $1; a listener on those ports bound to a specific non-loopback address, and every listener on other ports, is not classified, so judge it yourself"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: panel-login check from the cited Portainer, Jenkins and Gitea sources; no deployed panel or external test network is available, the guard has been run only under stubs, and no live result is recorded.
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PANEL_HOST'   # the public host name your proxy serves one panel on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them, and run the block once per panel
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -138,41 +154,90 @@ ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"
+  set -- "$1" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"                    # the host, curl's exit status, then the HTTP code
+  printf '%s\n' "$3"
                                                                     # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                     # this panel is behind a proxy holding a real certificate, so
                                                                     # a check that skips verification proves nothing about it
+  case "$2:$3" in
+    0:401|0:403) set -- "$1" 0 ;;
+    0:3??) echo "HTTP $3, a redirect: unclassified observation; it passes only when it leads to the panel's login page, so follow it yourself"; set -- "$1" 0 ;;
+    0:2??) echo "HTTP $3: unclassified observation; open the page yourself, because a dashboard, or host, container or repository data shown without a login, is a finding"; set -- "$1" 0 ;;
+    0:*) echo "HTTP $3 is neither a 401 or 403 refusal, a redirect nor a page to judge; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $2: the request failed, a certificate that did not verify included, since this check keeps certificate verification on; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; a redirect or a 2xx page is not classified, so judge it as the line above says"
+  exit "$2"
 )
+```
+
+```bash
+# REASONED: Docker 2375 refusal and 2376 client-certificate comparisons from the cited Docker daemon sources; no daemon, certificate fixture or external test network is available, and no live result is recorded.
 # clears a pre-set declare -i or -l attribute, and any stale
 # value; copy this whole block, not just the command below
 (                                                   # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # the address the daemon answers on, for both 2375 and 2376: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) docker -H "tcp://$1:2375" info ;;       # must fail: connection refused or filtered
+  esac
+  set -- "$1" 0                                     # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (the 2376 part refused), which outranks 0
+  if env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH docker -H "tcp://$1:2375" info; then   # must fail: connection refused or filtered; env -u drops the TLS settings exported in the setup above
+    echo "FINDING: the Docker API answered on 2375 without TLS"; set -- "$1" 1
+  else
+    set -- "$1" "$2" "$?"                           # the address, the status so far, then docker's exit status
     # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
     # never opened a connection is inconclusive, not a pass
-  esac
+    case "$3" in
+      126|127) echo "docker exit $3: the docker client could not run, so no connection was opened; inconclusive"; set -- "$1" 3 ;;
+      *) echo "docker exit $3: unclassified observation; it is the pass only if the error above shows the remote host refused or filtered the connection"; set -- "$1" "$2" ;;
+    esac
+  fi
+  if [ -r ca.pem ] && [ -r client-cert.pem ] && [ -r client-key.pem ]; then
+    set -- "$1" "$2" "$(if env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
+      curl -q -g -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem "https://$1:2376/_ping"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"  # the address, the status so far, curl's exit status, then the HTTP code
+    printf '%s\n' "$4"
+                                                    # must fail the handshake on the CLIENT certificate. Do not use
+                                                    # `docker ... info` here: without `--tlsverify` it fails for the
+                                                    # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
+                                                    # can silently supply the very certificate the check is meant to lack
+    case "$3" in
+      0) echo "FINDING: 2376 answered HTTP $4 without a client certificate, so the daemon does not require one"; set -- "$1" 1 ;;
+      6|7|28) echo "curl exit $3: the request without a client certificate never reached the handshake; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: unclassified observation; it is the pass only if curl's error above shows the handshake failed on the client certificate"; set -- "$1" "$2" ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
+      "https://$1:2376/_ping"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # positive control: 200 with the right client certificate
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"  # the address, the status so far, curl's exit status, then the HTTP code
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      0:200) ;;
+      0:*) echo "HTTP $4 with the client certificate is not the 200 positive control; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the request with the client certificate failed, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2"
+  else                                              # a guard: the 2376 checks rely on the setup's certificate files in this directory
+    echo "ca.pem, client-cert.pem and client-key.pem are not all readable in this directory, so the 2376 checks did not run; not probing 2376"
+    [ "$2" = 0 ] && set -- "$1" 2
+  fi
+  echo "block exit $2; docker's error on 2375 and curl's error on 2376 without a client certificate are not classified, so read them as the lines above say"
+  exit "$2"
 )
-env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
-  curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem https://203.0.113.10:2376/_ping
-                                                                  # must fail the handshake on the CLIENT certificate. Do not use
-                                                                  # `docker ... info` here: without `--tlsverify` it fails for the
-                                                                  # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
-                                                                  # can silently supply the very certificate the check is meant to lack
-# guard-conventions: allow probe of a fixed illustrative target; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
-  https://203.0.113.10:2376/_ping                                 # positive control: 200 with the right client certificate
+```
 
+```bash
 # GitLab CE: initial root password file check (needs Docker access; the container is named gitlab)
 # absence does not prove the password was rotated; presence means rotate root now
 # status: 1 when the file is present, 3 when the check did not run, 0 when the file is absent
 (                                                   # a subshell, so the exit below ends only this check
-  if state=$(docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null); then
-    case "$state" in
+  set -- "$(if docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1%%$'\n'*}" "${1##*$'\n'}"              # the container's reply, then docker exec's exit status
+  if [ "$2" = 0 ]; then
+    case "$1" in
       PRESENT) echo 'initial_root_password present: rotate root and remove it'; exit 1 ;;
       ABSENT)  echo 'initial_root_password absent' ;;
       *)       echo 'the check did not run (unexpected reply from the gitlab container): not a result'; exit 3 ;;
@@ -184,7 +249,7 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.
 )
 ```
 
-REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons, and the GitLab initial-password-file check follow the cited panel, Docker daemon and GitLab sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
+REASONED: preceding block; the GitLab initial-password-file check follows the cited GitLab source, and the listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons in the blocks above follow the cited panel and Docker daemon sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding. Each of the four blocks exits 1 for a finding, 3 for a failed or inconclusive check and otherwise 0, and a guard refusal exits 2; the Docker block also reports 2 when its certificate files are missing and nothing else in it was found or inconclusive. The last line of the listener, panel-login and Docker blocks names what each leaves for you to judge.
 
 ## Sources (checked September 2026)
 
@@ -318,7 +383,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e2df46b37ec9984b326cf26a776fb2bee084dc5868d86d04d791a96745a7f233",
+  "body_sha256": "32a8f20c985adc31a08be4451c760edf40f0f61cdb97cada2fa4bb710640466c",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -544,10 +609,10 @@ Claims (full source mapping in the JSON block below):
     "nodered-secret": {"text": "Set credentialSecret yourself; otherwise generated, and stored credentials depend on it.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
     "nodered-private": {"text": "Keep editor private with fronting MFA; it has the power of its flows.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
     "verify-listeners": {"text": "Read every panel/API listener; expect loopback or absence, never wildcard exposure.", "components": ["portainer", "dokploy", "npm", "kuma", "docker"], "sources": ["portainer:s3e163c7d3c38", "dokploy:sc2cc854c9b7e", "npm:se553d384e783", "kuma:s05b853ba300b", "docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
-    "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:sfec17fde7bb0"], "status": "REASONED", "verify": [1]},
-    "verify-docker-plain": {"text": "Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.", "components": ["docker"], "sources": ["docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
-    "verify-docker-mtls": {"text": "2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.", "components": ["docker"], "sources": ["docker:sfe15a8156c18"], "status": "REASONED", "verify": [1]},
-    "verify-gitlab": {"text": "Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED", "verify": [1]}
+    "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:sfec17fde7bb0"], "status": "REASONED", "verify": [2]},
+    "verify-docker-plain": {"text": "Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.", "components": ["docker"], "sources": ["docker:s1b5ec54421b0"], "status": "REASONED", "verify": [3]},
+    "verify-docker-mtls": {"text": "2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.", "components": ["docker"], "sources": ["docker:sfe15a8156c18"], "status": "REASONED", "verify": [3]},
+    "verify-gitlab": {"text": "Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED", "verify": [4]}
   }
 }
 ````
