@@ -164,10 +164,10 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sI --noproxy '*' -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the headers, the HTTP code and the redirect URL
   set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and the redirect URL
-  printf '%s' "$6"                     # expect 301 with an https:// Location
+  printf '%s' "$6"                     # expect a redirect to an https:// Location: 301 from section 1's code, while a fronting proxy or platform may use another 3xx
   case "$5:$7" in
-    "0:301 https://"*) ;;
-    0:*) echo "HTTP ${7%% *} with redirect URL '${7#* }' is not the expected 301 to an https:// Location; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    0:3??" https://"*) ;;
+    0:*) echo "HTTP ${7%% *} with redirect URL '${7#* }' is not the expected redirect to an https:// Location; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
     *) echo "curl exit $5: the redirect request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
   curl -q -g -sI --noproxy '*' "https://$1/"   # succeeds without -k; shows helmet's headers
@@ -177,14 +177,15 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   # status, and disable client proxies so a denial is attributable. A denial from ANY layer (the app,
   # or a proxy/Access in front) is the pass; the positive control proves auth actually gates rather
   # than the route being broken for everyone.
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code
-  printf '%s\n' "$6"
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code} %{redirect_url}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code and the redirect URL
+  printf '%s\n' "${6%% *}"
                                        # expect 401 or 403 with no credentials
   case "$5:$6" in
-    0:401|0:403) ;;
-    0:2??) echo "FINDING: the protected path answered $6 with no credentials"; set -- "$1" "$2" "$3" 1 ;;
-    0:*) echo "HTTP $6 with no credentials is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    "0:401 "*|"0:403 "*) ;;
+    0:2??" "*) echo "FINDING: the protected path answered ${6%% *} with no credentials"; set -- "$1" "$2" "$3" 1 ;;
+    0:3??" "?*) echo "unclassified observation: with no credentials the protected path answered ${6%% *} with a redirect to '${6#* }'; a redirect to the login page of a gate in front of the app is that gate's denial and the pass, and a redirect anywhere else is not, so judge it yourself" ;;
+    0:*) echo "HTTP ${6%% *} with no credentials is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
     *) echo "curl exit $5: the request with no credentials failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' -b "$3" "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -217,7 +218,7 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
     0:*) echo "unclassified observation: /whoami did not echo 203.0.113.9; read its answer above, because a clean result does not prove the trust boundary by itself" ;;
     *) echo "curl exit $5: the /whoami request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
-  echo "block exit $4; the HTTPS headers, the listener list and a clean /whoami answer are not classified, so judge them yourself"
+  echo "block exit $4; the HTTPS headers, the Location of a redirect answered with no credentials, the listener list and a clean /whoami answer are not classified, so judge them yourself"
   exit "$4"
 )
 ```
@@ -336,7 +337,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "bcad9e306657b64610e4849c1a5ebd5fd360acbe2db7b849a6539049ff3468d8",
+  "body_sha256": "2b0bf0a0327dfb09e9ea4e3ebe94bfbaff03c05228b44a636b47201a6d9f1f30",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",

@@ -129,7 +129,7 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
     set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # the status so far, jq's exit status, then the issuer and jwks_uri lines
     printf '%s' "$3"
     if [ "$2" != 0 ]; then
-      echo "jq exit $2: the discovery document could not be read; inconclusive"; set -- 3
+      echo "jq exit $2: the discovery check could not run; inconclusive"; set -- 3
     elif [ -z "$3" ]; then
       echo "jq printed nothing, and empty output means a failed fetch, not a pass; inconclusive"; set -- 3
     fi
@@ -164,7 +164,7 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
 )
 ```
 
-REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time the block's two lines, in an earlier form whose anonymous-admin probe named app.example.com, passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. The anonymous-admin probe now takes the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and both probes now run in one subshell that classifies them and exits with one status. Neither bash -n nor ShellCheck was re-run on the guarded or the classifying block, and this guide records no run of the guard or the classification. Negative tests matter more than the happy path:
+REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time the block's two lines, in an earlier form whose anonymous-admin probe named app.example.com, passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. The anonymous-admin probe now takes the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and both probes now run in one subshell that classifies them and exits with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. Negative tests matter more than the happy path:
 
 - REASONED: allowlist refusal per the guide's cited Google OpenID Connect, Microsoft identity platform ID token claims reference, GitHub REST organization and team members, and Okta groups claim entries, with the expected outcome stated in this item. No application deployment and no provider accounts outside an allowlist are available in the authoring environment, and this item names no command, so no part of it ran locally. Sign in with a valid account outside the allowlist (a personal Gmail, another Entra tenant, a GitHub user outside the org, an Okta user outside the group): the provider authenticates, your app refuses and logs the identity.
 - REASONED: exact redirect-URI matching per the guide's cited RFC 9700 and the cited Microsoft identity platform OpenID Connect and GitHub OAuth apps authorizing entries; no client registered at any provider is available in the authoring environment, so no authorization request was sent, and this item names no command. A redirect to the edited URI is the exposed state and the provider error the fixed one. Edit `redirect_uri` in the authorization URL (add a path segment or change the host): the provider shows an error and never redirects.
@@ -298,7 +298,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "8e341d040c2fca9538a6e66b60a89fa2815e5d4730ced3c5a14b93417df16f1f",
+  "body_sha256": "d38eef98f545484ad8ead702f590f63cf754780c59b4287fba9c20bfe39096de",
   "components": {
     "core": {
       "name": "OpenID Connect Core",

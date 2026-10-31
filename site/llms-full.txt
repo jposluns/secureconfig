@@ -7233,7 +7233,7 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
     set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # the status so far, jq's exit status, then the issuer and jwks_uri lines
     printf '%s' "$3"
     if [ "$2" != 0 ]; then
-      echo "jq exit $2: the discovery document could not be read; inconclusive"; set -- 3
+      echo "jq exit $2: the discovery check could not run; inconclusive"; set -- 3
     elif [ -z "$3" ]; then
       echo "jq printed nothing, and empty output means a failed fetch, not a pass; inconclusive"; set -- 3
     fi
@@ -7268,7 +7268,7 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
 )
 ```
 
-REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time the block's two lines, in an earlier form whose anonymous-admin probe named app.example.com, passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. The anonymous-admin probe now takes the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and both probes now run in one subshell that classifies them and exits with one status. Neither bash -n nor ShellCheck was re-run on the guarded or the classifying block, and this guide records no run of the guard or the classification. Negative tests matter more than the happy path:
+REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time the block's two lines, in an earlier form whose anonymous-admin probe named app.example.com, passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. The anonymous-admin probe now takes the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and both probes now run in one subshell that classifies them and exits with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. Negative tests matter more than the happy path:
 
 - REASONED: allowlist refusal per the guide's cited Google OpenID Connect, Microsoft identity platform ID token claims reference, GitHub REST organization and team members, and Okta groups claim entries, with the expected outcome stated in this item. No application deployment and no provider accounts outside an allowlist are available in the authoring environment, and this item names no command, so no part of it ran locally. Sign in with a valid account outside the allowlist (a personal Gmail, another Entra tenant, a GitHub user outside the org, an Okta user outside the group): the provider authenticates, your app refuses and logs the identity.
 - REASONED: exact redirect-URI matching per the guide's cited RFC 9700 and the cited Microsoft identity platform OpenID Connect and GitHub OAuth apps authorizing entries; no client registered at any provider is available in the authoring environment, so no authorization request was sent, and this item names no command. A redirect to the edited URI is the exposed state and the provider error the fixed one. Edit `redirect_uri` in the authorization URL (add a path segment or change the host): the provider shows an error and never redirects.
@@ -7402,7 +7402,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "8e341d040c2fca9538a6e66b60a89fa2815e5d4730ced3c5a14b93417df16f1f",
+  "body_sha256": "d38eef98f545484ad8ead702f590f63cf754780c59b4287fba9c20bfe39096de",
   "components": {
     "core": {
       "name": "OpenID Connect Core",
@@ -11865,10 +11865,10 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sI --noproxy '*' -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the headers, the HTTP code and the redirect URL
   set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and the redirect URL
-  printf '%s' "$6"                     # expect 301 with an https:// Location
+  printf '%s' "$6"                     # expect a redirect to an https:// Location: 301 from section 1's code, while a fronting proxy or platform may use another 3xx
   case "$5:$7" in
-    "0:301 https://"*) ;;
-    0:*) echo "HTTP ${7%% *} with redirect URL '${7#* }' is not the expected 301 to an https:// Location; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    0:3??" https://"*) ;;
+    0:*) echo "HTTP ${7%% *} with redirect URL '${7#* }' is not the expected redirect to an https:// Location; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
     *) echo "curl exit $5: the redirect request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
   curl -q -g -sI --noproxy '*' "https://$1/"   # succeeds without -k; shows helmet's headers
@@ -11878,14 +11878,15 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   # status, and disable client proxies so a denial is attributable. A denial from ANY layer (the app,
   # or a proxy/Access in front) is the pass; the positive control proves auth actually gates rather
   # than the route being broken for everyone.
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code
-  printf '%s\n' "$6"
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code} %{redirect_url}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code and the redirect URL
+  printf '%s\n' "${6%% *}"
                                        # expect 401 or 403 with no credentials
   case "$5:$6" in
-    0:401|0:403) ;;
-    0:2??) echo "FINDING: the protected path answered $6 with no credentials"; set -- "$1" "$2" "$3" 1 ;;
-    0:*) echo "HTTP $6 with no credentials is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    "0:401 "*|"0:403 "*) ;;
+    0:2??" "*) echo "FINDING: the protected path answered ${6%% *} with no credentials"; set -- "$1" "$2" "$3" 1 ;;
+    0:3??" "?*) echo "unclassified observation: with no credentials the protected path answered ${6%% *} with a redirect to '${6#* }'; a redirect to the login page of a gate in front of the app is that gate's denial and the pass, and a redirect anywhere else is not, so judge it yourself" ;;
+    0:*) echo "HTTP ${6%% *} with no credentials is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
     *) echo "curl exit $5: the request with no credentials failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' -b "$3" "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -11918,7 +11919,7 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
     0:*) echo "unclassified observation: /whoami did not echo 203.0.113.9; read its answer above, because a clean result does not prove the trust boundary by itself" ;;
     *) echo "curl exit $5: the /whoami request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
-  echo "block exit $4; the HTTPS headers, the listener list and a clean /whoami answer are not classified, so judge them yourself"
+  echo "block exit $4; the HTTPS headers, the Location of a redirect answered with no credentials, the listener list and a clean /whoami answer are not classified, so judge them yourself"
   exit "$4"
 )
 ```
@@ -12037,7 +12038,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "bcad9e306657b64610e4849c1a5ebd5fd360acbe2db7b849a6539049ff3468d8",
+  "body_sha256": "2b0bf0a0327dfb09e9ea4e3ebe94bfbaff03c05228b44a636b47201a6d9f1f30",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",
@@ -12884,7 +12885,7 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 
 ## 4. Verify
 
-REASONED: publication, redirect, authentication and external isolation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker networking sources and linked proxy guides; the authoring environment has no authorized deployment or external probe hosts. For the unauthenticated API probe, expect 401 from Caddy or nginx basic auth; Caddy `forward_auth` admits auth-service 2xx, but its rejection status is not established by the fetched lines. Expect 401/403 from nginx `auth_request`; the cited Authelia nginx configuration converts its 401 to a 302 login redirect. Traefik `forwardAuth` passes through its auth service's non-2xx status, including a login redirect; Traefik `basicAuth` calls `RequireAuth`, whose response the fetched lines do not show, so 401 is this guide's expectation rather than a status established by the fetched middleware. For Cloudflare Access, this guide expects a 302 login redirect in the configuration described in [cloudflare.md](cloudflare.md); the fetched Cloudflare lines do not establish that status. A 3xx passes only when its printed location is the gate's own login portal (for Cloudflare Access, your team's `*.cloudflareaccess.com`), never the application's own login. The command fails on any 2xx; any status other than the gate's expected rejection or a 3xx to its portal is not a pass; and an authorized request must succeed separately. The redirect and unauthenticated API curls take the app's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: publication, redirect, authentication and external isolation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker networking sources and linked proxy guides; the authoring environment has no authorized deployment or external probe hosts. For the unauthenticated API probe, expect 401 from Caddy or nginx basic auth; Caddy `forward_auth` admits auth-service 2xx, but its rejection status is not established by the fetched lines. Expect 401/403 from nginx `auth_request`; the cited Authelia nginx configuration converts its 401 to a 302 login redirect. Traefik `forwardAuth` passes through its auth service's non-2xx status, including a login redirect; Traefik `basicAuth` calls `RequireAuth`, whose response the fetched lines do not show, so 401 is this guide's expectation rather than a status established by the fetched middleware. For Cloudflare Access, this guide expects a 302 login redirect in the configuration described in [cloudflare.md](cloudflare.md); the fetched Cloudflare lines do not establish that status. A 3xx passes only when its printed location is the gate's own login portal (for Cloudflare Access, your team's `*.cloudflareaccess.com`), never the application's own login. The command fails on any 2xx; any status other than the gate's expected rejection or a 3xx to its portal is not a pass; and an authorized request must succeed separately. The redirect and unauthenticated API curls take the app's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; this guide records no run of the guard or the classification.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -12906,7 +12907,7 @@ REASONED: publication, redirect, authentication and external isolation checks; n
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
-    set -- "$1" "$2" "$(if curl -q -g -sI -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$(if curl -q -g -sI --noproxy '*' -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"         # curl's exit status, then the headers, the HTTP code and the redirect URL
     set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and the redirect URL
     printf '%s' "$4"                    # expect a redirect to https:// with Caddy automatic HTTPS, or after configuring nginx or Traefik to redirect
@@ -13079,7 +13080,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "4787c1795c3542dbb80ec0cfaa3493bf07599279013925db5047543f5701c08b",
+  "body_sha256": "05584e952ee0f99af0fb3f81ad5a04e674de4a90371d811178cef526b43b3d64",
   "components": {
     "boundary": {
       "name": "Docker Engine minimum boundary",
@@ -58803,17 +58804,17 @@ REASONED: final-response header inspection follows the cited MDN header document
   # the fetch fails; otherwise 0, leaving every header value for you to judge.
   if [ "$1" != 0 ]; then
     echo "curl exit $1: the fetch failed; inconclusive"; set -- 3
-  elif printf '%s' "$2" | awk '{ sub(/\r$/, "") } /^HTTP\// { seen = 1; sts = csp = nosniff = ref = perm = xfo = fa = 0; next } { i = index($0, ":"); if (i < 2) next; n = tolower(substr($0, 1, i - 1)); v = tolower(substr($0, i + 1)) } n == "strict-transport-security" { sts = 1 } n == "content-security-policy" { csp = 1; if (index(v, "frame-ancestors")) fa = 1 } n == "x-content-type-options" { nosniff = 1 } n == "referrer-policy" { ref = 1 } n == "permissions-policy" { perm = 1 } n == "x-frame-options" { xfo = 1 } END { if (!seen) exit 3; m = 0; if (!sts) { print "FINDING: strict-transport-security is missing from the final response"; m = 1 }; if (!csp) { print "FINDING: content-security-policy is missing from the final response"; m = 1 }; if (!nosniff) { print "FINDING: x-content-type-options is missing from the final response"; m = 1 }; if (!ref) { print "FINDING: referrer-policy is missing from the final response"; m = 1 }; if (!perm) { print "FINDING: permissions-policy is missing from the final response"; m = 1 }; if (!xfo && !fa) { print "FINDING: the final response has no deny-framing policy: neither x-frame-options nor a frame-ancestors directive in an enforcing content-security-policy"; m = 1 }; exit m }'; then
+  elif printf '%s' "$2" | awk '{ sub(/\r$/, "") } /^HTTP\// { seen = 1; sts = csp = nosniff = ref = perm = xfo = fa = 0; next } { i = index($0, ":"); if (i < 2) next; n = tolower(substr($0, 1, i - 1)); v = tolower(substr($0, i + 1)) } n == "strict-transport-security" { sts = 1 } n == "content-security-policy" { csp = 1; gsub(/ /, "", v); gsub(/\t/, "", v); if (index(";" v, ";frame-ancestors")) fa = 1 } n == "x-content-type-options" { nosniff = 1 } n == "referrer-policy" { ref = 1 } n == "permissions-policy" { perm = 1 } n == "x-frame-options" { xfo = 1 } END { if (!seen) exit 3; m = 0; if (!sts) { print "FINDING: strict-transport-security is missing from the final response"; m = 1 }; if (!csp) { print "FINDING: content-security-policy is missing from the final response"; m = 1 }; if (!nosniff) { print "FINDING: x-content-type-options is missing from the final response"; m = 1 }; if (!ref) { print "FINDING: referrer-policy is missing from the final response"; m = 1 }; if (!perm) { print "FINDING: permissions-policy is missing from the final response"; m = 1 }; if (!xfo && !fa) { print "FINDING: the final response has no deny-framing policy: neither x-frame-options nor a frame-ancestors directive in an enforcing content-security-policy"; m = 1 }; exit m }'; then
     set -- 0
   else
-    case "$?" in 1) set -- 1 ;; *) echo "awk found no response in curl's output; inconclusive"; set -- 3 ;; esac
+    case "$?" in 1) set -- 1 ;; 3) echo "awk found no response in curl's output; inconclusive"; set -- 3 ;; *) echo "awk exit $?: the header check could not run; inconclusive"; set -- 3 ;; esac
   fi
   echo "block exit $1; the header values are not classified, so judge them yourself against the comments above"
   exit "$1"
 )
 ```
 
-REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and before the block classified the final response's headers and exited with one status. Neither tool was re-run on the guarded or the classifying block, and this guide records no run of the guard or the classification. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
+REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and before the block classified the final response's headers and exited with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
 
 REASONED: shared-cache caller separation, per the guide's cited MDN Cache-Control. No deployed shared cache or authenticated A/B accounts are available; this prose supplies no local command or configuration to execute. No response sequence was observed. Exposed caching replays a previous caller's private content; fixed responses after warming the same URL belong only to their current authenticated or anonymous caller. For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
@@ -58915,7 +58916,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ff28b828b4c9c1d0eb3f82051748e51482c2190fecaa731bde2523580f959255",
+  "body_sha256": "0787ce9587443c0d327a7279b256be57f69795611c8a0de26ddd0dcf95a93b46",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
