@@ -699,7 +699,7 @@ There are two fixes, and you can use both:
 
 ## Verify
 
-REASONED: following block; this introduction and the TCP and UDP listener inventory below for every port it names, per the guide's cited node_exporter v1.12.1 source, Alertmanager v0.34.1 README, Pushgateway v1.11.3 README, Jaeger v2.21.0 ports and dskit pinned wildcard listener construction entries. No second host and no isolated network namespace were available, so no wildcard bind was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9, and its two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. That review covered an earlier form of the block, two top-level commands with no exit status of their own; the current form, which runs both in a subshell that exits 1 for a named port on a wildcard address and 3 when either inventory fails, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes. Exposed, a listed port shows a wildcard bind; fixed, loopback or a private address. The non-Loki loopback HTTP runs on 127.0.0.1 against the versions named at the top
+REASONED: following block; this introduction and the TCP and UDP listener inventory below for every port it names, per the guide's cited node_exporter v1.12.1 source, Alertmanager v0.34.1 README, Pushgateway v1.11.3 README, Jaeger v2.21.0 ports, dskit pinned wildcard listener construction and sudo sudoers manual, secure_path entries. No second host and no isolated network namespace were available, so no wildcard bind was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9, and its two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. That review covered an earlier form of the block, two top-level commands with no exit status of their own; the current form, which runs both in a subshell that exits 2 before either inventory when ss is not installed, 1 for a named port on a wildcard address and 3 when either inventory fails, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes. Stub runs of the current form (October 2026, bash 5.3.9, with sudo and ss replaced by stubs, under inherited set -e, a readonly variable and a declare -i variable) exited 0 with a passing ss that listed only loopback binds, 3 with a failing ss, and 2 with no ss on PATH, printing "ss is not installed here; not listing sockets" once. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH, so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it. Exposed, a listed port shows a wildcard bind; fixed, loopback or a private address. The non-Loki loopback HTTP runs on 127.0.0.1 against the versions named at the top
 are declared DEMONSTRATED at the credential block below and were not repeated in this marking review. Those loopback runs used an earlier form of the credential block, whose guard refusals ended with status 0 and whose results set no exit status; the current form, whose guard refusals exit with status 2 and which exits 1, 3 or 0 on its two results, has not been run against a service, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. All Loki checks are REASONED: the authoring host
 forbids opening listeners without an isolated network namespace, and has none. The default
 all-interfaces binds were not observed, so they are
@@ -711,11 +711,12 @@ too: the authoring environment had no second host, so the refusal or timeout exp
 observed. On the host:
 
 ```bash
-# REASONED: listener inventory expectations follow the cited sources and recorded loopback runs; wildcard binds and Loki listeners were not observed.
+# Listener inventory expectations follow the cited sources and recorded loopback runs; wildcard binds and Loki listeners were not observed.
 (                 # a subshell, so the exit below ends only the subshell
   set +e          # errexit off here, so each result below is recorded instead of ending the block
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   set -- 0 "$(if sudo ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), the TCP table, then its exit status
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0; a missing ss exited 2 above, before either inventory), the TCP table, then its exit status
   printf '%s' "$2"   # loopback or a private address only: 9100 9093 9094 9091 3100 9095 7946, and
                      # Jaeger's 16686 16685 4317 4318 14250 14268 9411 5778 5779 13133 27777 27778 8888
   [ "$3" = 0 ] || { echo "sudo ss -tlnp exit $3: the TCP inventory failed; inconclusive"; set -- 3 "$2" "$3"; }
@@ -738,7 +739,7 @@ observed. On the host:
 )
 ```
 
-REASONED: preceding block; the expected inventory results for every TCP and UDP port the block names, per the same cited listener sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. That stub run used an earlier form of the following block, whose guard refusals ended with status 0, and was not repeated on the current form, whose guard refusals exit with status 2 and which exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
+REASONED: following block; its guard's recorded stub run and the off-host probe this paragraph introduces, per the guide's cited listener and authentication sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. That stub run used an earlier form of the following block, whose guard refusals ended with status 0, and was not repeated on the current form, whose guard refusals exit with status 2 and which exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
 and likewise for the others. Fixed means a loopback or private address. Then probe from a host that
 should not have access. The block refuses to run until you substitute the address.
 
@@ -1220,6 +1221,7 @@ from your own account's view of the process.
 - Loki v3.7.8 compactor handler prefix on both servers: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1928-L1933
 - [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 
 
 <!-- version-basis:start -->
@@ -1357,7 +1359,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "c9958df1ec85d47979216de4cd201b1297cac02fa2e35698574f4846fc29f24c",
+  "body_sha256": "dd8a9fff6cd4cca65840fdfe34de78714834956e02d70c1c8cb63b4f4c0794f1",
   "components": {
     "node": {
       "name": "node_exporter",
