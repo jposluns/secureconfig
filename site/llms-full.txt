@@ -7831,53 +7831,108 @@ REASONED: following block; the cited ALB, IAP and Azure authentication/header do
 # not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code means the origin
 # answered. A resolver failure, a local socket error, or a timeout that did not come from the remote
 # address is inconclusive, never a pass.
-(                                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
-  esac
-)
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your identity-aware proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sSI "https://$1/"                      # via proxy, no session: 302 to the IdP, or 401/403
-  # The identity headers below are deliberately forged values, so admin@example.com stays as written.
-  curl -q -g -sS -D - -H "x-amzn-oidc-identity: admin" \
-       -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
-       -H "X-Goog-Authenticated-User-Email: admin@example.com" \
-       "https://$1/whoami"                      # status line and body: the login redirect or a 401/403, never a 200 echoing "admin"
+(                                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"           # curl's exit status, then its http= line
+    printf '%s\n' "$3"
+    case "$3" in
+      'http=000 '*) ;;
+      *) echo "FINDING: an HTTP code means the origin answered"; exit 1 ;;
+    esac
+    case "$2" in
+      7|28) echo "unclassified observation: read err above, which must name a refusal or timeout reaching YOUR address"; exit 0 ;;
+      *) echo "curl exit $2 is neither a refusal nor a timeout; inconclusive, never a pass"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your identity-aware proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$(if curl -q -g -sSI -w 'http=%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # via proxy, no session: 302 to the IdP, or 401/403
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n\n'*}"   # curl's exit status, then the headers and the http= line
+    set -- "$1" "$2" "$3" "$4" "${4##*$'\n'}"         # the same values, then the http= line alone
+    printf '%s\n' "$4"
+    case "$3:$5" in
+      0:http=401|0:http=403) ;;
+      0:http=302) echo "unclassified observation: read the Location above, which must be your identity provider's sign-in" ;;
+      0:http=2??) echo "FINDING: the proxy answered ${5#http=} to a request with no session"; set -- "$1" 1 ;;
+      0:*) echo "HTTP ${5#http=} with no session is neither a 302 to the IdP, a 401 or 403, nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the request with no session failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    # The identity headers below are deliberately forged values, so admin@example.com stays as written.
+    set -- "$1" "$2" "$(if curl -q -g -sS -D - -w '\nhttp=%{http_code}\n' -H "x-amzn-oidc-identity: admin" \
+         -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
+         -H "X-Goog-Authenticated-User-Email: admin@example.com" \
+         "https://$1/whoami"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # status line and body: the login redirect or a 401/403, never a 200 echoing "admin"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n\n'*}"   # curl's exit status, then the response and the http= line
+    set -- "$1" "$2" "$3" "$4" "${4##*$'\n'}"         # the same values, then the http= line alone
+    printf '%s\n' "$4"
+    case "$3:$5" in
+      0:http=401|0:http=403) ;;
+      0:http=302) echo "unclassified observation: read the Location above, which must be the login redirect" ;;
+      0:http=200)
+        case "${4#*$'\r\n\r\n'}" in       # the response body only: the text after the blank line that ends the headers
+          *admin*) echo "FINDING: /whoami answered 200 echoing admin, so the app trusted the forged identity headers"; set -- "$1" 1 ;;
+          *) echo "HTTP 200 from /whoami without admin is neither the login redirect, a 401 or 403, nor the forged identity; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac ;;
+      0:*) echo "HTTP ${5#http=} for the forged headers is neither the login redirect, a 401 or 403, nor a 200; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the forged-header request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the origin's err text on a refusal or timeout, each 302 Location and the other response headers are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; origin isolation, anonymous and forged-header denial, plus signed-assertion discrimination, per the guide's cited AWS, Authenticate users using an Application Load Balancer, Google Cloud IAP, securing your app with signed headers, Azure App Service authentication and authorization and Cloudflare Access, validate JWTs. No cloud origin, IdP or valid assertion is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, before its anonymous and forged-header probes took the app's host on a guarded `set --` line; neither tool was re-run on the guarded block. JSON and YAML parsed, and rejected guards reached no curl stub. For an earlier change, curl 8.18.0 ran the probe shapes against a loopback HTTP listener standing in for the example host (302 on the anonymous HEAD, 401 on `/whoami`) and against a closed loopback port. The `-sI` and `-sSI` shapes, in that curl 8.18.0 run, both printed the full status line and headers on the listener and both exited 7 on the closed port, where `-sI` printed nothing and `-sSI` printed `curl: (7) Failed to connect ...` on stderr. The forged-header probe, in that curl 8.18.0 run, printed only the body without `-D -` and the status line, headers and body with it. The altered-assertion shape, in that curl 8.18.0 run, delivered `x-amzn-oidc-data` through `--header @-` from stdin (the listener received the header; the value was a dummy, not a real assertion) and exited 7 with the connect error against the closed port. Unsubstituted, empty and two-value guard pastes again printed their refusals without reaching a curl stub, in plain bash and under set -u, and a substituted address reached the stub once. These loopback runs record curl's output shape, not vendor proxy behaviour. Those curl 8.18.0 runs used the earlier probe form, which named the example host directly; the guarded form, which refuses example.com, example.net, example.org and their subdomains, has not been run. The bash -n, ShellCheck, guard-paste and stub runs recorded here covered the origin-direct subshell in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form of that subshell, whose guard refusals leave the subshell with status 2. A synthetic JSON/base64url claim mutation preserved encoding but mismatched its unchanged HMAC signature; this does not test vendor verifiers. Live exposed bypass or forged-identity acceptance and fixed isolation, anonymous challenge, valid-assertion acceptance and altered-assertion rejection remain unobserved. After logging in, confirm that the app's own identity check reads the signed assertion (`x-amzn-oidc-data`, `x-goog-iap-jwt-assertion`, `Cf-Access-Jwt-Assertion`) and rejects a forged one. Test directly, because the proxy overwrites the header, so a through-proxy test proves nothing. The direct test, from the origin host, or a host inside the allowed security group, is to first send a request carrying a valid, unexpired assertion and confirm the app accepts it (the positive control), then send one whose signature is unchanged but a non-authorizing claim is altered while the token stays well formed (valid JSON and base64url), and require rejection. Both assertions are credentials (restoring the altered claim makes the copy valid again), so never place either in curl's argv, where other local accounts could read it through `ps` and `/proc/<pid>/cmdline`. The handling for each assertion is to hold the assertion in the positional parameters of a subshell that first runs `trap - DEBUG RETURN ERR`, then `set +x +a +e`, and refuses an empty value or one containing a control character, and to feed it to curl on stdin: `printf 'x-amzn-oidc-data: %s\n' "$1" | curl -q -sS -D - --noproxy '*' --header @- http://127.0.0.1:3000/whoami`. That handling follows CONTRIBUTING rule 7 and assumes a clean shell. That handling keeps the assertion out of argv only, not out of `set -x` tracing or your own account's view of the process, and an assertion pasted on the subshell's `set --` line still enters shell history, so clear it afterwards. Keep the token well formed, because an app that never checks the signature would still reject a token mangled into malformed JSON, which would not prove verification.
+REASONED: preceding block; origin isolation, anonymous and forged-header denial, plus signed-assertion discrimination, per the guide's cited AWS, Authenticate users using an Application Load Balancer, Google Cloud IAP, securing your app with signed headers, Azure App Service authentication and authorization and Cloudflare Access, validate JWTs. No cloud origin, IdP or valid assertion is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, before its anonymous and forged-header probes took the app's host on a guarded `set --` line. JSON and YAML parsed, and rejected guards reached no curl stub. For an earlier change, curl 8.18.0 ran the probe shapes against a loopback HTTP listener standing in for the example host (302 on the anonymous HEAD, 401 on `/whoami`) and against a closed loopback port. The `-sI` and `-sSI` shapes, in that curl 8.18.0 run, both printed the full status line and headers on the listener and both exited 7 on the closed port, where `-sI` printed nothing and `-sSI` printed `curl: (7) Failed to connect ...` on stderr. The forged-header probe, in that curl 8.18.0 run, printed only the body without `-D -` and the status line, headers and body with it. The altered-assertion shape, in that curl 8.18.0 run, delivered `x-amzn-oidc-data` through `--header @-` from stdin (the listener received the header; the value was a dummy, not a real assertion) and exited 7 with the connect error against the closed port. Unsubstituted, empty and two-value guard pastes again printed their refusals without reaching a curl stub, in plain bash and under set -u, and a substituted address reached the stub once. These loopback runs record curl's output shape, not vendor proxy behaviour. Those curl 8.18.0 runs used the earlier probe form, which named the example host directly; the guarded form, which refuses example.com, example.net, example.org and their subdomains, has not been run. The bash -n, ShellCheck, guard-paste and stub runs recorded here covered the origin-direct subshell in an earlier form, whose guard refusals left the subshell with status 0; in the current form its guard refusals leave the subshell with status 2. The current block, which runs that subshell and the anonymous and forged-header probes in one outer subshell that exits once with their combined status, passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. A synthetic JSON/base64url claim mutation preserved encoding but mismatched its unchanged HMAC signature; this does not test vendor verifiers. Live exposed bypass or forged-identity acceptance and fixed isolation, anonymous challenge, valid-assertion acceptance and altered-assertion rejection remain unobserved. After logging in, confirm that the app's own identity check reads the signed assertion (`x-amzn-oidc-data`, `x-goog-iap-jwt-assertion`, `Cf-Access-Jwt-Assertion`) and rejects a forged one. Test directly, because the proxy overwrites the header, so a through-proxy test proves nothing. The direct test, from the origin host, or a host inside the allowed security group, is to first send a request carrying a valid, unexpired assertion and confirm the app accepts it (the positive control), then send one whose signature is unchanged but a non-authorizing claim is altered while the token stays well formed (valid JSON and base64url), and require rejection. Both assertions are credentials (restoring the altered claim makes the copy valid again), so never place either in curl's argv, where other local accounts could read it through `ps` and `/proc/<pid>/cmdline`. The handling for each assertion is to hold the assertion in the positional parameters of a subshell that first runs `trap - DEBUG RETURN ERR`, then `set +x +a +e`, and refuses an empty value or one containing a control character, and to feed it to curl on stdin: `printf 'x-amzn-oidc-data: %s\n' "$1" | curl -q -sS -D - --noproxy '*' --header @- http://127.0.0.1:3000/whoami`. That handling follows CONTRIBUTING rule 7 and assumes a clean shell. That handling keeps the assertion out of argv only, not out of `set -x` tracing or your own account's view of the process, and an assertion pasted on the subshell's `set --` line still enters shell history, so clear it afterwards. Keep the token well formed, because an app that never checks the signature would still reject a token mangled into malformed JSON, which would not prove verification.
 
 - REASONED: default platform-route isolation, per the guide's cited Google Cloud IAP, enabling IAP for Cloud Run and Vercel Authentication documentation. No authorized Cloud Run or Vercel deployment and external probe host are available; live exposed and fixed responses remain unobserved. Reach the app's own default platform hostname from outside your cloud network and confirm it does not serve your app. Fetch a real app route (not just `/`) at your Cloud Run `run.app` URL or your Vercel production domain: use the following block, and read the status line, headers, and body together. A pass is the platform's own challenge, never your app's content: for Cloud Run a 302 redirect to a Google or IAP sign-in, or a 401 from IAP (IAP returns 401 rather than a 302 when the request does not advertise HTML, i.e. no `Accept: text/html` header); for Vercel the Vercel authentication page. A 200 serving your app's own content means the platform URL bypasses the proxy; a 404 or a transport error is inconclusive, never a pass, because a missing service also returns 404.
 
-  REASONED: default platform-route probe, per the same cited Google Cloud IAP and Vercel Authentication documentation; no authorized deployment and external probe host are available for live exposed/fixed checks. In local Bash and Bash with set -u, the unsubstituted, empty, missing-set-line (with a caller URL), zero-value, two-value and embedded-placeholder cases each printed a refusal without reaching the curl stub; a substituted URL reached it once with the expected arguments. Ten values under IFS=0 with set -u were also refused. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. The bash -n, ShellCheck and stub runs recorded here covered the platform-route block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. These local checks do not establish platform behaviour. Substitute the full URL of a real app route inside the quotes, keeping them. This anonymous request carries no secret, so no trap clearing is needed.
+  REASONED: default platform-route probe, per the same cited Google Cloud IAP and Vercel Authentication documentation; no authorized deployment and external probe host are available for live exposed/fixed checks. In local Bash and Bash with set -u, the unsubstituted, empty, missing-set-line (with a caller URL), zero-value, two-value and embedded-placeholder cases each printed a refusal without reaching the curl stub; a substituted URL reached it once with the expected arguments. Ten values under IFS=0 with set -u were also refused. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. The bash -n, ShellCheck and stub runs recorded here covered the platform-route block in an earlier form, whose guard refusals left the subshell with status 0. The current form, whose guard refusals leave the subshell with status 2 and which exits 3 on a 404 or a failed request, passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. These local checks do not establish platform behaviour. Substitute the full URL of a real app route inside the quotes, keeping them. This anonymous request carries no secret, so no trap clearing is needed.
 
   ```bash
   (                                       # a subshell, so your own script arguments are untouched
+    set +e                                # errexit off here, so the request's status is classified below instead of ending the block
     set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_YOUR_PLATFORM_URL/an-app-route'
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
     shift
     [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
     case "$1" in
       *REPLACE_WITH_*|*YOUR_PLATFORM_URL*|"") echo "substitute your own app route URL on the set -- line above; not probing"; exit 2 ;;
-      *) curl -q -g -sS --noproxy '*' -D - "$1" ;;
     esac
+    set -- "$1" "$(if curl -q -g -sS --noproxy '*' -D - -w '\nhttp=%{http_code}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n\n'*}"   # curl's exit status, then the response and the http= line
+    set -- "$1" "$2" "$3" "${3##*$'\n'}"         # the same values, then the http= line alone
+    printf '%s\n' "$3"
+    case "$2:$4" in
+      0:http=404) echo "HTTP 404: a missing service also returns 404; inconclusive, never a pass"; set -- 3 ;;
+      0:*) set -- 0 ;;
+      *) echo "curl exit $2: a transport error; inconclusive, never a pass"; set -- 3 ;;
+    esac
+    echo "block exit $1; any answer but a 404 is not classified: read the status line, headers and body above, where the platform's own challenge is the pass and your app's content means the platform URL bypasses the proxy"
+    exit "$1"
   )
   ```
 
@@ -7995,7 +8050,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "97b6c744e603f4e7acf95fbe3ca5d6b2a6e5b8dd927c29aae80a94839c3bf4a5",
+  "body_sha256": "07d92d0589ebe9e2ce5d57dff712f8212b24976325f97f4e6ff45b436aa0488d",
   "components": {
     "aws": {
       "name": "AWS ALB",
@@ -17594,6 +17649,7 @@ Defer the full header catalogue and values to [headers.md](https://github.com/jp
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
+  set +e                                # errexit off here, so a check that ends nonzero is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -17604,26 +17660,71 @@ Defer the full header catalogue and values to [headers.md](https://github.com/jp
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   curl -q -g -sI "http://$1/"         # expect 301 with a https:// Location
+  set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
+  [ "$3" = 0 ] || { echo "curl exit $3: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
   curl -q -g -sI "https://$1/"        # succeeds without -k
-  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"   # 401 or 403 without credentials
+  set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
+  [ "$3" = 0 ] || { echo "curl exit $3: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"                    # 401 or 403 without credentials
+  case "$3:$4" in
+    0:401|0:403) ;;
+    0:2??) echo "FINDING: /api answered $4 without credentials"; set -- "$1" 1 ;;
+    0:*) echo "HTTP $4 from /api is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the /api request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
   ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/   # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
-  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"   # diagnostics must never be routed on your PUBLIC app: expect 404, never 200
+  set -- "$1" "$2" "$?"                 # the 3rd value is ss's exit status
+  [ "$3" = 0 ] || { echo "ss -tlnp exit $3: the listener list failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"                    # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
+  case "$3" in
+    0) ;;
+    7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above shows any 6060 listener on another address" ;;
+    *) echo "curl exit $3: the local diagnostic request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"                    # diagnostics must never be routed on your PUBLIC app: expect 404, never 200
+  case "$3:$4" in
+    0:404) ;;
+    0:200) echo "FINDING: /debug/pprof/ answered 200 on your public app"; set -- "$1" 1 ;;
+    0:*) echo "HTTP $4 from /debug/pprof/ is neither the 404 pass nor the 200 finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the /debug/pprof/ request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the redirect and HTTPS headers, the listener list and the local diagnostic answer are not classified, so judge them yourself"
+  exit "$2"
 )
 ```
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
+  set +e                                # errexit off here, so the probe's status is classified below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/" || true ;;   # run from a machine OUTSIDE the server's network: the diagnostic listener (section 5) must be UNREACHABLE (a refusal or timeout, never a 200)
   esac
+  set -- "$1" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+       -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # run from a machine OUTSIDE the server's network: the diagnostic listener (section 5) must be UNREACHABLE (a refusal or timeout, never a 200)
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # curl's exit status, then its diag_6060 line
+  printf '%s\n' "$3"
+  case "$3" in
+    'diag_6060 http=000 '*)
+      case "$2" in
+        7|28) set -- "$1" 0 ;;          # a refusal or a timeout: the pass
+        *) echo "curl exit $2 is neither a refusal nor a timeout; inconclusive"; set -- "$1" 3 ;;
+      esac ;;
+    *) echo "FINDING: the diagnostic listener answered HTTP from outside, so it is reachable"; set -- "$1" 1 ;;
+  esac
+  echo "block exit $2; the err text is not classified: a refusal or timeout passes only if err names the server's address, not a local socket or resolver error, so judge it yourself"
+  exit "$2"
 )
 ```
 
@@ -17727,7 +17828,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "100efc49fa547c357a9e4c5f9709f433d71a5c80e6d0e1692c036cc68be0314f",
+  "body_sha256": "c952a51b8e8b30de35f34e8c88a23c6fdf31aab2c7baf8059b5458a2fbc8063a",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
@@ -21349,54 +21450,83 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 #    clients typically follow as GET; neither page's cited passages document this HEAD response. This guide's assessment:
 #    Heroku's ACM challenge-path handling establishes no general HTTPS redirect policy, setting, application-only responsibility or status.
 #    This guide's check: require 301/302/307/308 with an https:// Location; HTTP content without that redirect fails.
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your platform serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"         # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your platform serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$(if curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n\n'*}"   # curl's exit status, then the headers and the http= line
+    set -- "$1" "$2" "$3" "${3##*$'\n'}"         # the same values, then the http= line alone
+    printf '%s\n' "$3"
+    case "$2:$4" in
+      0:http=301|0:http=302|0:http=307|0:http=308)
+        case "$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | tr -d ' \t')" in   # header names ignore letter case, and spaces and tabs are deleted, so any of them may follow location:
+          *$'\n''location:https://'*) exit 0 ;;
+          *) echo "FINDING: a ${4#http=} redirect without an https:// Location, which this guide's check requires"; exit 1 ;;
+        esac ;;
+      0:http=000) echo "http=000: no HTTP response arrived; inconclusive"; exit 3 ;;
+      0:*) echo "FINDING: HTTP ${4#http=} instead of a 301, 302, 307 or 308 with an https:// Location, so HTTP content is served without that redirect"; exit 1 ;;
+      *) echo "curl exit $2: the redirect request failed; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
+  #    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
+  #    Protection Bypass for Automation token lets the request access the deployment without authentication,
+  #    sent as the x-vercel-protection-bypass HTTP header or query parameter carrying the project's generated
+  #    secret. Disable deployment protection (or use that bypass) so only application auth is in play. That
+  #    bypass is Vercel's; no Render or Fly equivalent is cited here, so do not assume one exists. If you use
+  #    the bypass secret, send it as the header, supplied from a file with -H @file per this guide's
+  #    conventions so it stays out of shell history; the query-parameter form writes it into history and logs.
+  #    The status codes below are this guide's expected reading; the cited pages state none, including for the
+  #    platform gate's own challenge (its SSO 401 below):
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the same app host name as the redirect check above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected route without its leading slash: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in
+      ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"  # no creds: want the APP's own 401/403, not a platform SSO 401; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the http= line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      0:http=2??) echo "FINDING: $2 answered ${4#http=} with no credentials, so nothing rejected the unauthenticated request"; exit 1 ;;
+      0:http=000) echo "http=000: no HTTP response arrived; inconclusive, not a rejection"; exit 3 ;;
+      0:*) echo "unclassified observation: ${4#http=} with no credentials; a 401 or 403 is the pass only if your app sent it, not a platform SSO gate, so judge which did"; exit 0 ;;
+      *) echo "curl exit $3: the unauthenticated request failed; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  #    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
+  #    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
+  #    reachable and that the app's own auth, not the platform gate, is what gates it.
+  # 3. Secrets: run secrets.md's history and working-tree scans AND grep the DEPLOYED client bundle (JS, source maps,
+  #    generated config, runtime-injected values) for every credential type, not just private keys. No matches is evidence, not proof.
+  #    Why the deployed bundle: as the Next.js case, the pinned v16.4.2 docs say NEXT_PUBLIC_ values are inlined into
+  #    the JavaScript bundle delivered to the client at build time, and production browser source maps are disabled
+  #    unless productionBrowserSourceMaps opts in. What to grep and which credential types are this guide's procedure,
+  #    delegated to secrets.md, not taken from the cited pages.
+  echo "block exit $1; a protected-path answer other than a 2xx, the credentialed positive control and the step 3 secret scans are not classified, so judge them yourself"
+  exit "$1"
 )
-# 2. Your APP's own auth must reject an unauthenticated request, NOT the platform deployment-protection gate.
-#    Vercel documents that Deployment Protection requires authentication for all requests, and that a valid
-#    Protection Bypass for Automation token lets the request access the deployment without authentication,
-#    sent as the x-vercel-protection-bypass HTTP header or query parameter carrying the project's generated
-#    secret. Disable deployment protection (or use that bypass) so only application auth is in play. That
-#    bypass is Vercel's; no Render or Fly equivalent is cited here, so do not assume one exists. If you use
-#    the bypass secret, send it as the header, supplied from a file with -H @file per this guide's
-#    conventions so it stays out of shell history; the query-parameter form writes it into history and logs.
-#    The status codes below are this guide's expected reading; the cited pages state none, including for the
-#    platform gate's own challenge (its SSO 401 below):
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the same app host name as the redirect check above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected route without its leading slash: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in
-    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"  # no creds: want the APP's own 401/403, not a platform SSO 401; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
-)
-#    Then repeat with a valid application credential (your app's session cookie or API token, supplied from a file with
-#    -b or -H @file so it stays out of shell history) and require a 2xx: that positive control proves the endpoint is
-#    reachable and that the app's own auth, not the platform gate, is what gates it.
-# 3. Secrets: run secrets.md's history and working-tree scans AND grep the DEPLOYED client bundle (JS, source maps,
-#    generated config, runtime-injected values) for every credential type, not just private keys. No matches is evidence, not proof.
-#    Why the deployed bundle: as the Next.js case, the pinned v16.4.2 docs say NEXT_PUBLIC_ values are inlined into
-#    the JavaScript bundle delivered to the client at build time, and production browser source maps are disabled
-#    unless productionBrowserSourceMaps opts in. What to grep and which credential types are this guide's procedure,
-#    delegated to secrets.md, not taken from the cited pages.
 ```
 
 ## Sources (checked September 2026)
@@ -21524,7 +21654,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "edf4590729c1f57d1b09ab47feca6655bfde0f97a0025e9d1fe10821b7893f14",
+  "body_sha256": "3d96152884624d8f1c20707895b1d312d53ff6661ae06aa7f37c030ebbb563f0",
   "components": {
     "render": {
       "name": "Render documentation",
@@ -68387,18 +68517,18 @@ Open the guide before relying on either, because defaults change between release
 
 ## Verify
 
-REASONED: inventory completeness only; no deployment interface, container-namespace or routing inventory was available for reconciliation. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. An exposed route may be absent from the host listing, and private binding alone cannot establish complete coverage, per the guide's cited `ss` manual and Docker port publishing. **This is a baseline inventory, not a security check, and not a proof of completeness.** It gives you a
+REASONED: inventory completeness only; no deployment interface, container-namespace or routing inventory was available for reconciliation. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. An exposed route may be absent from the host listing, and private binding alone cannot establish complete coverage, per the guide's cited `ss` manual and Docker port publishing. **This is a baseline inventory, not a security check, and not a proof of completeness.** It gives you a
 list of the listeners and routes it discovered. It cannot establish that the list is complete: a
 container on a bridge network publishes no host port and holds its sockets in another network
 namespace, and a container on routed IPv6 accepts traffic on its own address whatever the host
 publishes. Reconcile what you find here against your interface addresses, container addresses and
 namespaces, and your routing and publishing configuration before believing the inventory is whole.
 
-REASONED: limits of socket inventory; no application endpoints or authorized and unauthorized identity fixtures were available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. Exposed and fixed authentication can produce the same socket listing, so the service guide must test access separately, per the guide's cited `ss` manual. It establishes nothing at all about whether those services are safe to expose, and no checklist on an
+REASONED: limits of socket inventory; no application endpoints or authorized and unauthorized identity fixtures were available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. Exposed and fixed authentication can produce the same socket listing, so the service guide must test access separately, per the guide's cited `ss` manual. It establishes nothing at all about whether those services are safe to expose, and no checklist on an
 index page can. That claim belongs to each service's own guide, and even there the Verify blocks are
 worked examples over sampled URLs, not an enumeration of your application's sensitive routes.
 
-**REASONED:** following block; not demonstrated. Historical authoring note: this page previously recorded no run. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. The block rests on the
+**REASONED:** following block; not demonstrated. Historical authoring note: this page previously recorded no run. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. The block rests on the
 guide's cited `ss` manual and Docker `container ls`, and on this index's consistency with the guides
 it cites; it is not an observation. A discriminating run needs a service bound on every interface (the
 exposed state, a `0.0.0.0` or `[::]` local address) and the same service bound to loopback (the fixed
@@ -68406,27 +68536,60 @@ state, `127.0.0.1` or `::1`). A live TCP/UDP test service stand-up opens a liste
 network namespace, and none was available.
 
 ```bash
-sudo ss -tlnp                    # listening TCP sockets, with the owning process
-sudo ss -tlunp                   # again including UDP, which Memcached and WireGuard answer on
-sudo ss -aunp                    # all UDP sockets, including non-listening sockets
-docker ps --format '{{.Names}}\t{{.Ports}}'   # published container ports, which the host view can miss
+(                                       # one subshell, so one exit status covers every command: 3 if any of them fails, otherwise 0
+  set +e                                # errexit off here, so a command that fails is recorded below instead of ending the block
+  set -- 0 "$(if sudo ss -tlnp 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"    # listening TCP sockets, with the owning process
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # the block's status so far, ss's exit status, then its output
+  printf '%s' "$3"
+  case "$2:$3" in
+    0:*'Cannot open netlink socket'*|0:) echo "ss -tlnp printed a netlink diagnostic or nothing, so the command failed; inconclusive"; set -- 3 ;;
+    0:*) ;;
+    *) echo "ss -tlnp exit $2: the command failed; inconclusive"; set -- 3 ;;
+  esac
+  set -- "$1" "$(if sudo ss -tlunp 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # again including UDP, which Memcached and WireGuard answer on
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"
+  printf '%s' "$3"
+  case "$2:$3" in
+    0:*'Cannot open netlink socket'*|0:) echo "ss -tlunp printed a netlink diagnostic or nothing, so the command failed; inconclusive"; set -- 3 ;;
+    0:*) ;;
+    *) echo "ss -tlunp exit $2: the command failed; inconclusive"; set -- 3 ;;
+  esac
+  set -- "$1" "$(if sudo ss -aunp 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"    # all UDP sockets, including non-listening sockets
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"
+  printf '%s' "$3"
+  case "$2:$3" in
+    0:*'Cannot open netlink socket'*|0:) echo "ss -aunp printed a netlink diagnostic or nothing, so the command failed; inconclusive"; set -- 3 ;;
+    0:*) ;;
+    *) echo "ss -aunp exit $2: the command failed; inconclusive"; set -- 3 ;;
+  esac
+  if command -v docker > /dev/null; then
+    set -- "$1" "$(if docker ps --format '{{.Names}}\t{{.Ports}}' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # published container ports, which the host view can miss
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"
+    printf '%s' "$3"
+    [ "$2" = 0 ] || { echo "docker ps exit $2: the command failed; inconclusive"; set -- 3; }
+  else
+    echo "no docker command here, so no Docker-published container ports were listed; list any other container runtime's published ports yourself"
+  fi
+  echo "block exit $1; every socket and container row above is yours to read against the four conditions below, and the list is not proof of completeness"
+  exit "$1"
+)
 ```
 
-REASONED: preceding block; the entire TCP/UDP and Docker inventory block, plus repeating UDP inventory during activity. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback addresses when fixed; dynamic media or relay sockets may be absent while idle, per the guide's cited `ss` manual, Docker `container ls`, and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (realtime-voice-infra.md). Repeat the [all-UDP-sockets check](https://man7.org/linux/man-pages/man8/ss.8.html) during active calls or
+REASONED: preceding block; the entire TCP/UDP and Docker inventory block, plus repeating UDP inventory during activity. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback addresses when fixed; dynamic media or relay sockets may be absent while idle, per the guide's cited `ss` manual, Docker `container ls`, and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (realtime-voice-infra.md). Repeat the [all-UDP-sockets check](https://man7.org/linux/man-pages/man8/ss.8.html) during active calls or
 relay allocations, because media and relay sockets may be absent while idle.
 
-REASONED: namespace and error interpretation; no deployment container-namespace inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. Host output can omit an exposed container socket, and empty or failed output cannot establish the fixed state, per the guide's cited `ss` manual. `ss` reports sockets in its own network namespace, so a container's listeners are not all visible from
+REASONED: namespace and error interpretation; no deployment container-namespace inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. Host output can omit an exposed container socket, and empty or failed output cannot establish the fixed state, per the guide's cited `ss` manual. `ss` reports sockets in its own network namespace, so a container's listeners are not all visible from
 the host. A diagnostic such as `Cannot open netlink socket` means the command failed: empty output with
 a zero exit status is not a pass.
 
-REASONED: authorized target and vantage selection; no second machine on a different network or deployment address inventory was available. Locally, the guarded block passed bash -n and ShellCheck 0.11.0 silently (exit 0). With sudo and nmap stubbed, ordinary Bash and set -u each rejected unchanged placeholders, either empty value, one or three values, `<ip>`, example.com, 192.0.2.256, 192.0.2, host.internal, 2001:db8::g, 2001:db8, 2001:db8:1, 2001:db8:::1, 2001:db8::12345, 1::2::3, ::: and an omitted set -- line with a not scanning message (exit 2), without calling nmap. Each mode also rejected 2001:db8::1: and :1:2:3:4:5:6:7 with `give a literal IPv6 address without a single leading or trailing colon; not scanning` (exit 2), without calling nmap, for 20 refusals and 24 total cases per mode. With 192.0.2.1 and 2001:db8::1, each mode printed `nmap <-Pn> <-p-> <192.0.2.1>`, `nmap <-Pn> <-6> <-p-> <2001:db8::1>`, `nmap <-Pn> <-sU> <--top-ports> <100> <192.0.2.1>` and `nmap <-Pn> <-6> <-sU> <--top-ports> <100> <2001:db8::1>`, one line each in order (exit 0). Each mode also accepted 192.0.2.1 paired separately with 2001:db8:0:0:0:0:0:1, ::1 and fe80::1:2:3:4:5:6, printing the same four lines with that IPv6 address in both IPv6 arguments (exit 0). These are local guard and argument observations, not a live scan. A public listener should report open and a privately bound port closed or filtered from that second network, but a wrong substituted target makes either result inconclusive, per the guide's cited Nmap legal issues and Nmap target specification. From a second machine on a different network, against a host **you own or are authorized to test**.
+REASONED: authorized target and vantage selection; no second machine on a different network or deployment address inventory was available. Locally, an earlier form of the guarded block, whose exit status was the last scan's, passed bash -n and ShellCheck 0.11.0 silently (exit 0). With sudo and nmap stubbed, ordinary Bash and set -u each rejected unchanged placeholders, either empty value, one or three values, `<ip>`, example.com, 192.0.2.256, 192.0.2, host.internal, 2001:db8::g, 2001:db8, 2001:db8:1, 2001:db8:::1, 2001:db8::12345, 1::2::3, ::: and an omitted set -- line with a not scanning message (exit 2), without calling nmap. Each mode also rejected 2001:db8::1: and :1:2:3:4:5:6:7 with `give a literal IPv6 address without a single leading or trailing colon; not scanning` (exit 2), without calling nmap, for 20 refusals and 24 total cases per mode. With 192.0.2.1 and 2001:db8::1, each mode printed `nmap <-Pn> <-p-> <192.0.2.1>`, `nmap <-Pn> <-6> <-p-> <2001:db8::1>`, `nmap <-Pn> <-sU> <--top-ports> <100> <192.0.2.1>` and `nmap <-Pn> <-6> <-sU> <--top-ports> <100> <2001:db8::1>`, one line each in order (exit 0). Each mode also accepted 192.0.2.1 paired separately with 2001:db8:0:0:0:0:0:1, ::1 and fe80::1:2:3:4:5:6, printing the same four lines with that IPv6 address in both IPv6 arguments (exit 0). These are local guard and argument observations on that earlier form, not a live scan. The current form of the guarded block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. A public listener should report open and a privately bound port closed or filtered from that second network, but a wrong substituted target makes either result inconclusive, per the guide's cited Nmap legal issues and Nmap target specification. From a second machine on a different network, against a host **you own or are authorized to test**.
 Run these against every public address the host answers on, not just one; a host with several
 interfaces or a NAT address beside an elastic address has several inbound paths. Substitute a literal
 address inside the single quotes. The guarded block refuses its placeholders before Nmap runs.
 The IPv6 guard rejects malformed hex-and-colon syntax, but still accepts a syntactically valid address for the wrong host.
 Check the target Nmap prints before you read the result.
 
-**REASONED:** following block; not demonstrated. Historical authoring note: this page previously recorded no run. Locally, the guarded block passed bash -n and ShellCheck 0.11.0 silently (exit 0). With sudo and nmap stubbed, ordinary Bash and set -u each rejected unchanged placeholders, either empty value, one or three values, `<ip>`, example.com, 192.0.2.256, 192.0.2, host.internal, 2001:db8::g, 2001:db8, 2001:db8:1, 2001:db8:::1, 2001:db8::12345, 1::2::3, ::: and an omitted set -- line with a not scanning message (exit 2), without calling nmap. Each mode also rejected 2001:db8::1: and :1:2:3:4:5:6:7 with `give a literal IPv6 address without a single leading or trailing colon; not scanning` (exit 2), without calling nmap, for 20 refusals and 24 total cases per mode. With 192.0.2.1 and 2001:db8::1, each mode printed `nmap <-Pn> <-p-> <192.0.2.1>`, `nmap <-Pn> <-6> <-p-> <2001:db8::1>`, `nmap <-Pn> <-sU> <--top-ports> <100> <192.0.2.1>` and `nmap <-Pn> <-6> <-sU> <--top-ports> <100> <2001:db8::1>`, one line each in order (exit 0). Each mode also accepted 192.0.2.1 paired separately with 2001:db8:0:0:0:0:0:1, ::1 and fe80::1:2:3:4:5:6, printing the same four lines with that IPv6 address in both IPv6 arguments (exit 0). These are local guard and argument observations, not a live scan. The block rests on the
+**REASONED:** following block; not demonstrated. Historical authoring note: this page previously recorded no run. Locally, an earlier form of the guarded block, whose exit status was the last scan's, passed bash -n and ShellCheck 0.11.0 silently (exit 0). With sudo and nmap stubbed, ordinary Bash and set -u each rejected unchanged placeholders, either empty value, one or three values, `<ip>`, example.com, 192.0.2.256, 192.0.2, host.internal, 2001:db8::g, 2001:db8, 2001:db8:1, 2001:db8:::1, 2001:db8::12345, 1::2::3, ::: and an omitted set -- line with a not scanning message (exit 2), without calling nmap. Each mode also rejected 2001:db8::1: and :1:2:3:4:5:6:7 with `give a literal IPv6 address without a single leading or trailing colon; not scanning` (exit 2), without calling nmap, for 20 refusals and 24 total cases per mode. With 192.0.2.1 and 2001:db8::1, each mode printed `nmap <-Pn> <-p-> <192.0.2.1>`, `nmap <-Pn> <-6> <-p-> <2001:db8::1>`, `nmap <-Pn> <-sU> <--top-ports> <100> <192.0.2.1>` and `nmap <-Pn> <-6> <-sU> <--top-ports> <100> <2001:db8::1>`, one line each in order (exit 0). Each mode also accepted 192.0.2.1 paired separately with 2001:db8:0:0:0:0:0:1, ::1 and fe80::1:2:3:4:5:6, printing the same four lines with that IPv6 address in both IPv6 arguments (exit 0). These are local guard and argument observations on that earlier form, not a live scan. The current form of the guarded block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. The block rests on the
 guide's cited Nmap port specification, Nmap host discovery, Nmap target specification, Nmap scan techniques and Nmap miscellaneous options, and on
 this index's consistency with the guides it cites; it is not an observation. A discriminating run needs
 a publicly bound listener that the scan reports `open` (exposed) and the same port reported `closed` or
@@ -68437,6 +68600,7 @@ available.
 ```bash
 (
   # Substitute both addresses inside the single quotes; the guard rejects the placeholders before Nmap runs.
+  set +e                            # errexit off here, so a scan that fails is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_A_LITERAL_IPV4_ADDRESS' 'REPLACE_WITH_A_LITERAL_IPV6_ADDRESS'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not scanning'; exit 2; }
   shift
@@ -68459,33 +68623,40 @@ available.
     *::*) [ "${#3}" -le 7 ] ;;
     *) [ "${#3}" -eq 7 ] ;;
   esac || { echo 'give a literal IPv6 address with eight groups, or fewer groups and one double colon; not scanning'; exit 2; }
-  sudo nmap -Pn -p- "$1"            # TCP over IPv4
-  sudo nmap -Pn -6 -p- "$2"         # TCP over IPv6, which the line above never covers
-  sudo nmap -Pn -sU --top-ports 100 "$1"      # UDP, preliminary only
-  sudo nmap -Pn -6 -sU --top-ports 100 "$2"   # UDP over IPv6
+  set -- "$1" "$2" 0                # the 3rd value is the block's status so far: 3 once a scan fails, otherwise 0
+  sudo nmap -Pn -p- "$1" ||         # TCP over IPv4
+    { echo "sudo nmap exit $?: the IPv4 TCP scan failed; inconclusive"; set -- "$1" "$2" 3; }
+  sudo nmap -Pn -6 -p- "$2" ||      # TCP over IPv6, which the line above never covers
+    { echo "sudo nmap exit $?: the IPv6 TCP scan failed; inconclusive"; set -- "$1" "$2" 3; }
+  sudo nmap -Pn -sU --top-ports 100 "$1" ||      # UDP, preliminary only
+    { echo "sudo nmap exit $?: the IPv4 UDP scan failed; inconclusive"; set -- "$1" "$2" 3; }
+  sudo nmap -Pn -6 -sU --top-ports 100 "$2" ||   # UDP over IPv6
+    { echo "sudo nmap exit $?: the IPv6 UDP scan failed; inconclusive"; set -- "$1" "$2" 3; }
+  echo "block exit $3; open, closed and filtered ports are not classified, so read each scan's report as the text after this block describes"
+  exit "$3"
 )
 ```
 
-REASONED: preceding block; all four IPv4/IPv6 TCP/UDP scan commands and interpretation of the top-100 UDP sample. Locally, the guarded block passed bash -n and ShellCheck 0.11.0 silently (exit 0). With sudo and nmap stubbed, ordinary Bash and set -u each rejected unchanged placeholders, either empty value, one or three values, `<ip>`, example.com, 192.0.2.256, 192.0.2, host.internal, 2001:db8::g, 2001:db8, 2001:db8:1, 2001:db8:::1, 2001:db8::12345, 1::2::3, ::: and an omitted set -- line with a not scanning message (exit 2), without calling nmap. Each mode also rejected 2001:db8::1: and :1:2:3:4:5:6:7 with `give a literal IPv6 address without a single leading or trailing colon; not scanning` (exit 2), without calling nmap, for 20 refusals and 24 total cases per mode. With 192.0.2.1 and 2001:db8::1, each mode printed `nmap <-Pn> <-p-> <192.0.2.1>`, `nmap <-Pn> <-6> <-p-> <2001:db8::1>`, `nmap <-Pn> <-sU> <--top-ports> <100> <192.0.2.1>` and `nmap <-Pn> <-6> <-sU> <--top-ports> <100> <2001:db8::1>`, one line each in order (exit 0). Each mode also accepted 192.0.2.1 paired separately with 2001:db8:0:0:0:0:0:1, ::1 and fe80::1:2:3:4:5:6, printing the same four lines with that IPv6 address in both IPv6 arguments (exit 0). These are local guard and argument observations, not a live scan. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No second network was available. Expect open for the exposed port and closed or filtered for a privately bound port from that network; UDP open|filtered remains ambiguous, per the guide's cited Nmap port specification, Nmap host discovery, Nmap target specification, Nmap scan techniques and Nmap miscellaneous options. UDP scanning needs privilege and returns `open|filtered` when it cannot distinguish the two, so a
+REASONED: preceding block; all four IPv4/IPv6 TCP/UDP scan commands and interpretation of the top-100 UDP sample. Locally, an earlier form of the guarded block, whose exit status was the last scan's, passed bash -n and ShellCheck 0.11.0 silently (exit 0). With sudo and nmap stubbed, ordinary Bash and set -u each rejected unchanged placeholders, either empty value, one or three values, `<ip>`, example.com, 192.0.2.256, 192.0.2, host.internal, 2001:db8::g, 2001:db8, 2001:db8:1, 2001:db8:::1, 2001:db8::12345, 1::2::3, ::: and an omitted set -- line with a not scanning message (exit 2), without calling nmap. Each mode also rejected 2001:db8::1: and :1:2:3:4:5:6:7 with `give a literal IPv6 address without a single leading or trailing colon; not scanning` (exit 2), without calling nmap, for 20 refusals and 24 total cases per mode. With 192.0.2.1 and 2001:db8::1, each mode printed `nmap <-Pn> <-p-> <192.0.2.1>`, `nmap <-Pn> <-6> <-p-> <2001:db8::1>`, `nmap <-Pn> <-sU> <--top-ports> <100> <192.0.2.1>` and `nmap <-Pn> <-6> <-sU> <--top-ports> <100> <2001:db8::1>`, one line each in order (exit 0). Each mode also accepted 192.0.2.1 paired separately with 2001:db8:0:0:0:0:0:1, ::1 and fe80::1:2:3:4:5:6, printing the same four lines with that IPv6 address in both IPv6 arguments (exit 0). These are local guard and argument observations on that earlier form, not a live scan. The current form of the guarded block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No second network was available. Expect open for the exposed port and closed or filtered for a privately bound port from that network; UDP open|filtered remains ambiguous, per the guide's cited Nmap port specification, Nmap host discovery, Nmap target specification, Nmap scan techniques and Nmap miscellaneous options. UDP scanning needs privilege and returns `open|filtered` when it cannot distinguish the two, so a
 clean-looking UDP result is weaker evidence than a clean TCP one. Treat the top-100 scan as a first
 pass and probe the UDP ports your own inventory names.
 
-REASONED: scope of the four inventory conditions; no deployment process, address, route or service-test inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. The exposed state has unexplained listeners or routes; the inventory-fixed state accounts for them without establishing application security, per the guide's cited `ss` manual and Nmap target specification. Four things to establish, and none of them is "the service is secure":
+REASONED: scope of the four inventory conditions; no deployment process, address, route or service-test inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. The exposed state has unexplained listeners or routes; the inventory-fixed state accounts for them without establishing application security, per the guide's cited `ss` manual and Nmap target specification. Four things to establish, and none of them is "the service is secure":
 
-1. REASONED: attribution; no deployment process inventory or kernel WireGuard interface was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. An exposed inventory contains unattributed sockets; a reconciled one assigns each to a process or kernel service without requiring a process name for WireGuard. That exposed and reconciled inventory comparison is per the guide's cited `ss` manual, IANA Service Name and Transport Protocol Port Number Registry, and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (tunnels.md). **Every listening socket is attributed**, to a named owning process or to an identified kernel
+1. REASONED: attribution; no deployment process inventory or kernel WireGuard interface was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. An exposed inventory contains unattributed sockets; a reconciled one assigns each to a process or kernel service without requiring a process name for WireGuard. That exposed and reconciled inventory comparison is per the guide's cited `ss` manual, IANA Service Name and Transport Protocol Port Number Registry, and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (tunnels.md). **Every listening socket is attributed**, to a named owning process or to an identified kernel
    service or interface. Kernel WireGuard is the case that breaks process attribution: it owns its UDP
    socket in the kernel, so `ss -p` names no process and `sudo` does not create one. A port appearing
    in the table above is a hint about which guides to read, not an identification of what is running.
-2. REASONED: bind-address review; no deployment bind-address inventory was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect wildcard addresses in the exposed fixture and loopback addresses in the fixed fixture; deliberate private or tailnet bindings still need deployment context, per the guide's cited `ss` manual. **Every socket's bind address is deliberate.** `127.0.0.1`, `::1`, a private address or a tailnet
+2. REASONED: bind-address review; no deployment bind-address inventory was available. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect wildcard addresses in the exposed fixture and loopback addresses in the fixed fixture; deliberate private or tailnet bindings still need deployment context, per the guide's cited `ss` manual. **Every socket's bind address is deliberate.** `127.0.0.1`, `::1`, a private address or a tailnet
    address, unless you can say why it is public.
-3. REASONED: route reconciliation; no deployment hostname, container-address, tunnel or proxy-route inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the guarded block passed bash -n and ShellCheck 0.11.0 silently (exit 0). With sudo and nmap stubbed, ordinary Bash and set -u each rejected unchanged placeholders, either empty value, one or three values, `<ip>`, example.com, 192.0.2.256, 192.0.2, host.internal, 2001:db8::g, 2001:db8, 2001:db8:1, 2001:db8:::1, 2001:db8::12345, 1::2::3, ::: and an omitted set -- line with a not scanning message (exit 2), without calling nmap. Each mode also rejected 2001:db8::1: and :1:2:3:4:5:6:7 with `give a literal IPv6 address without a single leading or trailing colon; not scanning` (exit 2), without calling nmap, for 20 refusals and 24 total cases per mode. With 192.0.2.1 and 2001:db8::1, each mode printed `nmap <-Pn> <-p-> <192.0.2.1>`, `nmap <-Pn> <-6> <-p-> <2001:db8::1>`, `nmap <-Pn> <-sU> <--top-ports> <100> <192.0.2.1>` and `nmap <-Pn> <-6> <-sU> <--top-ports> <100> <2001:db8::1>`, one line each in order (exit 0). Each mode also accepted 192.0.2.1 paired separately with 2001:db8:0:0:0:0:0:1, ::1 and fe80::1:2:3:4:5:6, printing the same four lines with that IPv6 address in both IPv6 arguments (exit 0). These are local guard and argument observations, not a live scan. An exposed route may remain reachable through a tunnel while a host scan shows no inbound port; the inventory-fixed state lists each route separately. That exposed and inventory-fixed route comparison is per the guide's cited Nmap target specification and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (tunnels.md, cloudflare.md and tailscale.md). **Every inbound route is inventoried, not just the ones a port scan finds.** A scan of your public
+3. REASONED: route reconciliation; no deployment hostname, container-address, tunnel or proxy-route inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, an earlier form of the guarded block, whose exit status was the last scan's, passed bash -n and ShellCheck 0.11.0 silently (exit 0). With sudo and nmap stubbed, ordinary Bash and set -u each rejected unchanged placeholders, either empty value, one or three values, `<ip>`, example.com, 192.0.2.256, 192.0.2, host.internal, 2001:db8::g, 2001:db8, 2001:db8:1, 2001:db8:::1, 2001:db8::12345, 1::2::3, ::: and an omitted set -- line with a not scanning message (exit 2), without calling nmap. Each mode also rejected 2001:db8::1: and :1:2:3:4:5:6:7 with `give a literal IPv6 address without a single leading or trailing colon; not scanning` (exit 2), without calling nmap, for 20 refusals and 24 total cases per mode. With 192.0.2.1 and 2001:db8::1, each mode printed `nmap <-Pn> <-p-> <192.0.2.1>`, `nmap <-Pn> <-6> <-p-> <2001:db8::1>`, `nmap <-Pn> <-sU> <--top-ports> <100> <192.0.2.1>` and `nmap <-Pn> <-6> <-sU> <--top-ports> <100> <2001:db8::1>`, one line each in order (exit 0). Each mode also accepted 192.0.2.1 paired separately with 2001:db8:0:0:0:0:0:1, ::1 and fe80::1:2:3:4:5:6, printing the same four lines with that IPv6 address in both IPv6 arguments (exit 0). These are local guard and argument observations on that earlier form, not a live scan. The current form of the guarded block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. An exposed route may remain reachable through a tunnel while a host scan shows no inbound port; the inventory-fixed state lists each route separately. That exposed and inventory-fixed route comparison is per the guide's cited Nmap target specification and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (tunnels.md, cloudflare.md and tailscale.md). **Every inbound route is inventoried, not just the ones a port scan finds.** A scan of your public
    address says nothing about an outbound tunnel. An application on loopback reached through
    [tunnels.md](https://github.com/jposluns/secureconfig/blob/main/tunnels.md), [cloudflare.md](https://github.com/jposluns/secureconfig/blob/main/cloudflare.md) or [tailscale.md](https://github.com/jposluns/secureconfig/blob/main/tailscale.md) is exposed
    at that hostname while your host shows no open inbound port at all. List every hostname, every
    literal address the host answers on including container addresses, every tunnel, proxy and alternate
    virtual host, and every URL path a proxy routes to a different backend. Each is its own route, and a
    scan by hostname does not cover a request made to a bare address.
-4. REASONED: service-guide coverage by route; no deployment route inventory or completed service-guide results were available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. Exposed and fixed application authentication can leave the socket listing unchanged, so each route needs its service checks, per the guide's cited `ss` manual and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources". **Each reachable service has been through its own guide**, by every route from condition 3, not only
+4. REASONED: service-guide coverage by route; no deployment route inventory or completed service-guide results were available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, an earlier form of the inventory block, run as four top-level commands, passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations on that earlier form, not socket observations. The current form of the inventory block passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. Exposed and fixed application authentication can leave the socket listing unchanged, so each route needs its service checks, per the guide's cited `ss` manual and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources". **Each reachable service has been through its own guide**, by every route from condition 3, not only
    the ones the scan surfaced. Those guides are where the authentication and TLS checks live.
 
 Then keep going: enumerate your own sensitive routes and request each one anonymously and as an
