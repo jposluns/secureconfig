@@ -126,8 +126,8 @@ REASONED: certificate inventory and HTTPS/certificate inspection follow the cite
   set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
   sudo certbot certificates ||          # what is issued and when it expires
     { echo "certbot certificates exit $?: the certificate list could not be read; inconclusive"; set -- "$1" 3; }
-  curl -q -sI "https://$1/" ||          # succeeds without -k
-    { echo "curl exit $?: HTTPS with certificate verification failed; inconclusive"; set -- "$1" 3; }
+  curl -q -g -sI "https://$1/" ||       # succeeds with normal certificate verification
+    { echo "curl exit $?: the HTTPS request, made with certificate verification, failed; inconclusive"; set -- "$1" 3; }
   set -- "$1" "$2" "$(if openssl s_client -connect "$1:443" -servername "$1" \
     -verify_hostname "$1" -verify_return_error </dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # s_client's own status, captured before x509 reads its output
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, s_client's output, then its exit status
@@ -257,7 +257,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "8819d3677ed53e76712df76eeac890f6d692ec73fa05cf2710c703e4161714cc",
+  "body_sha256": "ebba1404b6534e017c86c9cc8137e110cab3df32769afabfa1e0252ab4b3e5a4",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
