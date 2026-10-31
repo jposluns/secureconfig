@@ -17,6 +17,33 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-31 on the `ss` listener inventories, isolation probes run from another host and the
+  #1106 proxy decisions (#1129).** The maintainer gave three rulings through AskUserQuestion in an attended session at
+  about 12:50Z that day. No reasoning was recorded beyond the terms below. The third confirms the two proxy decisions
+  of 2026-10-31 that "Proxy decisions awaiting maintainer review" below records, and each of those two proxy decisions
+  is now a maintainer ruling. Those entries keep their wording; this entry records the outcome.
+  - The `ss` listener inventories. A Verify listener inventory checks `command -v ss` before it runs `ss`, and refuses
+    with status 2 when `ss` is missing, under CONTRIBUTING.md rule 6's refusal for a missing required tool. An `ss`
+    that runs and fails stays at status 3. The refusal uses one message in every inventory:
+    `ss is not installed here; not listing sockets`. New batches apply this ruling, and a sweep updates the
+    inventories already merged; #1129 is the sweep's first batch.
+  - Isolation probes run from another host. When such a probe gets no connection, with curl exit 7 or with no TCP
+    connection formed, it may record status 0 rather than 3, with a message that the result is consistent with
+    isolation but not proof. The message tells the reader to corroborate the result, for example with an
+    enforcement-point deny record, the `err` text or a `time_connect` of 0.000000.
+  - The two proxy decisions of 2026-10-31 (#1106). The maintainer confirmed both. This confirms "Proxy decision of
+    2026-10-31 on where a Verify block's status 2 ends and status 3 begins, for the maintainer's later review (#1106)"
+    and "Proxy decision of 2026-10-31 on the unit of a Verify block's status, for the maintainer's later review
+    (#1106)". Under them, the failure of a check the block makes before relying on something is status 2 when it
+    reflects the reader's setup, the failure of an operation the block attempts after its checks passed is status 3,
+    and the block whose status rule 6 governs is the fence the reader pastes. The point the second of those entries
+    left for the maintainer's review, how rule 6's sentence on a block wrapped in `) || echo "block exit $?"` relates
+    to the fence as the unit, is settled by the fourth ruling below, which deletes that sentence.
+  - The `) || echo "block exit $?"` wrapper. The maintainer gave a fourth ruling in an attended session at about
+    13:52Z that day, choosing "Retire the wrap sentence". The pasted fence's own final status governs, so a trailing
+    `) || echo "block exit $?"` wrapper that forces status 0 is no longer allowed. Its effect, applied in the same
+    change as this entry: CONTRIBUTING.md rule 6 no longer has the sentence that described that wrapper, and the rest
+    of rule 6 is unchanged. No guide changes here.
 - **Maintainer ruling of 2026-10-30 on the exit status of a Verify block's result arms (#1083).** The maintainer
   chose option B of the p400a plan, which inventoried result arms that report a finding or a failed check but leave
   the block's status at 0. The ruling was recorded in the orchestrator's store on 2026-10-30 and is entered here

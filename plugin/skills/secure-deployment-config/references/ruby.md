@@ -118,7 +118,7 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found ss missing), which outranks 0
   (                                     # a subshell, so your own script arguments are untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -167,14 +167,19 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
     exit "$2"
   )
   case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
-  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
-  printf '%s' "$2"   # read every listener; puma/ruby: 127.0.0.1:3000 only (the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address on 3000 as loopback)
-  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
-  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
-    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  if command -v ss >/dev/null; then
+    set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+    set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+    printf '%s' "$2"   # read every listener; puma/ruby: 127.0.0.1:3000 only (the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address on 3000 as loopback)
+    [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+    if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+      echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    else
+      case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    fi
   else
-    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
   fi
   if [ -f config/application.rb ]; then
     set -- "$1" "$(if git ls-files config/master.key; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # git prints nothing
@@ -275,7 +280,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "874129ff33ca9c02b34457c1707ead550f16bbad728d7c1464081e16a72d0765",
+  "body_sha256": "a8f7ae01c5a0b59d5f1ee134f18e2e0a4ebcc6b0a7d696140c02450a29be723a",
   "components": {
     "rails": {
       "name": "Rails documentation",

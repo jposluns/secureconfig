@@ -294,7 +294,7 @@ Use a valid virtual key whose `allowed_routes` includes `/v1/models`. Substitute
 # short-lived key or clear that history line afterward.)
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found ss missing), which outranks 0
   (
     trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VIRTUAL_KEY'
@@ -340,17 +340,22 @@ Use a valid virtual key whose `allowed_routes` includes `/v1/models`. Substitute
   # Expected: no-key and bad-key => 401 from LiteLLM; good-key => 200 with the model list (a 200 without a
   # key is the finding). Then repeat the good-key request through the public https ingress to confirm the
   # TLS front works. A transport error (exit != 0) is inconclusive, not a pass.
-  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
-  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
-  printf '%s' "$2"   # a listener inventory in THIS network namespace, not a firewall/NAT/publication check:
-                     # confirm 4000 is loopback-only here, then from ANOTHER host confirm 4000 is refused
-                     # externally (a Docker DNAT publication need not appear in this list at all). The check
-                     # below also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback.
-  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
-  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:4000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
-    echo "FINDING: a listener on port 4000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  if command -v ss >/dev/null; then
+    set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+    set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+    printf '%s' "$2"   # a listener inventory in THIS network namespace, not a firewall/NAT/publication check:
+                       # confirm 4000 is loopback-only here, then from ANOTHER host confirm 4000 is refused
+                       # externally (a Docker DNAT publication need not appear in this list at all). The check
+                       # below also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback.
+    [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+    if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:4000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+      echo "FINDING: a listener on port 4000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    else
+      case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    fi
   else
-    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
   fi
   echo "block exit $1; listeners on other ports, a Docker publication this list cannot show, the outside-host check of port 4000 and the repeat through your HTTPS ingress are not classified, so judge them yourself"
   exit "$1"
@@ -359,9 +364,9 @@ Use a valid virtual key whose `allowed_routes` includes `/v1/models`. Substitute
 
 The `/v1/models` comparison tests authentication and listing, not successful inference or model authorization. Complete the inference comparisons below too. Inspect IPv4 and IPv6 reachability, published container ports, and any separate metrics listener.
 
-### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. The bash -n run covered both fences, and the stub runs the request fence, in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. These observations establish neither file-content validation nor API acceptance)
+### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. The bash -n run covered both fences, and the stub runs the request fence, in an earlier form, whose guard refusals exited with status 1; the current forms, whose guard refusals exit with status 2, are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes. These observations establish neither file-content validation nor API acceptance)
 
-**REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result. The bash -n and stub runs recorded in the heading above also predate the change that makes both Verify shell fences report their result in their exit status (1 for a finding, 2 for a guard refusal, 3 for a failed or inconclusive check, 0 for a pass or a named unclassified observation), so none of them covered the current form.
+**REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result. The bash -n and stub runs recorded in the heading above also predate the change that makes both Verify shell fences report their result in their exit status (1 for a finding, 2 for a guard refusal, 3 for a failed or inconclusive check, 0 for a pass or a named unclassified observation), so none of them covered the current form; the gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Since then the backend block also exits 2 when `ss` is missing, unless another part found something or was inconclusive.
 
 Before running it, provision a mode-0600 header file in a private directory containing `Authorization: Bearer ` followed by the appropriate test or administrative key. Use an empty header file for unauthenticated requests. Prepare the JSON body in another protected file, substituting its placeholders before use; `{}` suffices for GET, which ignores that file. Keep URLs free of credentials. The block captures responses privately because management responses can contain keys.
 
@@ -587,7 +592,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "83700efd94f3db0aabc6509b2031fc9b343fc511d9acc120346a53356c420368",
+  "body_sha256": "aa805b577405999041d920d670227a3db3edf0e11a7362a5933e9926791742ee",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",

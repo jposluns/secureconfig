@@ -138,7 +138,7 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found ss missing), which outranks 0
   caddy validate --config /etc/caddy/Caddyfile ||
     { echo "caddy validate exit $?: the configuration did not validate; inconclusive"; set -- 3; }
   (                                     # a subshell, so your own script arguments are untouched
@@ -246,24 +246,29 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
     exit "$3"
   )
   case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
-  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
-  printf '%s' "$2"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. Every check above
+  if command -v ss >/dev/null; then
+    set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+    set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+    printf '%s' "$2"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. Every check above
                                        # passes while the app also answers directly on port 3000, which
                                        # bypasses Caddy's TLS and its authentication. The admin API on TCP: only a loopback
                                        # address, such as 127.0.0.1:2019 or [::1]:2019, never a
                                        # public address. A missing 2019 line is not a pass on its own: it also
                                        # means you moved it to a unix socket or set admin off, so confirm which
-  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
-  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
-    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+    if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+      echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    else
+      case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    fi
+    if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+      echo "FINDING: a listener on port 2019, the admin API's default, is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    else
+      case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    fi
   else
-    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
-  fi
-  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
-    echo "FINDING: a listener on port 2019, the admin API's default, is bound to a non-loopback address"; set -- 1 "$2" "$3"
-  else
-    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 "" "" ;; *) set -- "$1" "" "" ;; esac   # an empty listener table, so the checks below read no listeners
   fi
   if ls -l /run/caddy/admin.sock; then  # if you bound it to a unix socket: it exists and is owner-restricted
                                        # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
@@ -377,7 +382,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "83a3ee34d1989cb9762c885217ee3d5ab3fe88d7d318dc876be25e75ead5d84e",
+  "body_sha256": "e446c4d8530f3ebb9a31012407fedc405c0296beb14dfa7c5bd6af6bafed86c4",
   "components": {
     "admin": {
       "name": "Caddy admin source",
