@@ -128,7 +128,7 @@ REASONED: following block; listener check, per the panel, Docker daemon and GitL
 ```bash
 (                                                   # a subshell, so the exits below end only this check
   command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
-  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0; a missing ss has already exited 2 above), then the listeners
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
   printf '%s' "$2"   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
   [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- 3 "$2" "$3"; }
@@ -384,7 +384,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "92836000a612cd95c5c6a6bc9b5b0c44ffca8fb99aeb4a90967d8611d70c671d",
+  "body_sha256": "bab58b17be5faca94ba017924b1c15d036af5e7c1a1b56add3f898549dc2141c",
   "components": {
     "portainer": {
       "name": "Portainer",

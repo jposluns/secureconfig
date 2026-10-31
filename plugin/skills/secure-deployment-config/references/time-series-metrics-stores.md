@@ -125,16 +125,16 @@ Bind every listener to loopback or a private interface, and put authentication a
 
 ## Verify
 
-REASONED: following block; every probe in this section, including the TCP and UDP listener inventory below for each port it names. Every probe in this section, including the TCP and UDP listener inventory below for each port it names, rests on the guide's cited InfluxDB 2.x configuration options, InfluxDB 1.x configuration, VictoriaMetrics v1.152.0 single-node HTTP fallback, VictoriaMetrics v1.152.0-cluster HTTP fallback binds, and QuestDB HTTP server, PostgreSQL wire protocol, ingestion and minimal HTTP server entries. No InfluxDB, VictoriaMetrics or QuestDB listener ran. During marking review (October 2026) all three Verify blocks passed bash -n under bash 5.3.9, and the inventory's two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Those runs covered all three blocks in earlier forms, whose exit statuses did not classify their results; none was repeated on the current forms, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. Exposed, a listed port shows a public or wildcard bind; fixed, only its intended private address. The inventory block exits 1 when a port it names is bound to a wildcard address, 3 when either ss command fails, 2 when ss is not installed, so neither table is listed, and otherwise 0, leaving public and private addresses for you to judge. Its ss check searches your own PATH, while sudo may search another (its secure_path setting, where one is configured), so where the two differ the block can refuse although sudo would find ss, or pass the check and then exit 3 when sudo cannot run ss. Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
+REASONED: following block; every probe in this section, including the TCP and UDP listener inventory below for each port it names. Every probe in this section, including the TCP and UDP listener inventory below for each port it names, rests on the guide's cited InfluxDB 2.x configuration options, InfluxDB 1.x configuration, VictoriaMetrics v1.152.0 single-node HTTP fallback, VictoriaMetrics v1.152.0-cluster HTTP fallback binds, and QuestDB HTTP server, PostgreSQL wire protocol, ingestion and minimal HTTP server entries. No InfluxDB, VictoriaMetrics or QuestDB listener ran. During marking review (October 2026) all three Verify blocks passed bash -n under bash 5.3.9, and the inventory's two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Those runs covered all three blocks in earlier forms, whose exit statuses did not classify their results. The current forms of all three pass bash -n and ShellCheck 0.11.0 in the repository's gate suite, which runs both over every block. Stub runs of the current inventory with stub ss and sudo commands and no network, in a clean shell and under an inherited `set -e`, `readonly` and `declare -i`, exited 0 when both tables showed only loopback listeners, 1 when one showed a named port on a wildcard address, 3 when an ss command failed and 2 when ss was missing. Exposed, a listed port shows a public or wildcard bind; fixed, only its intended private address. The inventory block exits 1 when a port it names is bound to a wildcard address, 3 when either ss command fails, 2 when ss is not installed, so neither table is listed, and otherwise 0, leaving public and private addresses for you to judge. Per the guide's cited sudo sudoers manual, secure_path entry, where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH, so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it. Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
 
 ```bash
-# REASONED: listener inventory; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
+# Listener inventory, REASONED as the paragraph above records: no isolated network namespace for listeners on the authoring host. Expected outcomes are recorded above and vendor sources below.
 (                                   # a subshell, so the exits below end only the subshell
   command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   # read the whole table: 8086 and loopback 8088; 8428, 8480, 8481, 8482 and native
   # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its intended private
   # address, and no metrics or ingest port bound to a public interface
-  set -- 0 "$(if sudo ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the TCP listeners
+  set -- 0 "$(if sudo ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0; a missing ss has already exited 2 above), then the TCP listeners
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                         # status, the TCP listener table, then ss's exit status
   printf '%s' "$2"
   [ "$3" = 0 ] || { echo "sudo ss -tlnp exit $3: the TCP listener inventory failed; inconclusive"; set -- 3 "$2" "$3"; }
@@ -287,6 +287,7 @@ REASONED: the VictoriaMetrics v1.152.0 single-node endpoint-key and Basic-auth c
 
 - QuestDB minimal HTTP server (`9003`, `http.health.check.authentication.required` defaults to `true`; `false` permits unauthenticated health checks): https://questdb.com/docs/configuration/http-min-server/
 - QuestDB TLS encryption (Enterprise only; `tls.enabled`): https://questdb.com/docs/configuration/tls/
+- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
 
 
 <!-- version-basis:start -->
@@ -366,7 +367,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "41ae79ee1fe5c31f290a8539e27954e12f3e86505a09ab44059c0ade1103b52d",
+  "body_sha256": "29d4a5b620c289ce3a4cc7cbcce8978d9f4b64cd7542ca1cf1c9ecbbc486eff6",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",
