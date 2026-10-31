@@ -301,7 +301,7 @@ REASONED: service-comparison provenance, per the guide's cited MongoDB security 
 
 Local checks did run: Bash parsing, ShellCheck, JavaScript syntax parsing, duplicate-key YAML parsing, and merges for both membership alternatives. Shell-only argument tracing checked probe dispatch; it did not simulate or verify MongoDB behavior. Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access.
 
-### Listener exposure (REASONED: listener inventory and interpretation; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; a stubbed ss returned fixture listeners. Expected comparison: unintended wildcard or public binds are exposed; selected private or loopback binds are the fixed expectation. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB security checklist and Community authentication support.)
+### Listener exposure (REASONED: listener inventory and interpretation; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; a stubbed ss returned fixture listeners. Those runs and the attempt recorded below covered an earlier form of the block, a bare ss -tlnp whose exit status was its own; on the current form, which exits 3 when ss fails and 0 otherwise, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the stub run was not repeated. Expected comparison: unintended wildcard or public binds are exposed; selected private or loopback binds are the fixed expectation. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB security checklist and Community authentication support.)
 
 **REASONED:** no MongoDB service is available. The local command was attempted, but the sandbox refused its netlink socket with `Operation not permitted`; that output establishes nothing about listeners.
 
@@ -309,7 +309,13 @@ Run on every database and router host:
 
 ```bash
 # REASONED: listener inventory; no MongoDB service or permitted netlink socket. Expected binds and network-hardening source follow.
-ss -tlnp
+(                                       # a subshell, so the exits below end only the subshell
+  if ss -tlnp; then
+    echo "unclassified observation: read every listener above; an unintended wildcard or public bind is the exposed state"; exit 0
+  else
+    echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; exit 3
+  fi
+)
 ```
 
 Read every relevant listener. The exposed state includes an unintended wildcard or public listener. The fixed state listens only on loopback or deliberately selected private addresses. Check the actual configured ports, including any non-default ports, and inspect firewall rules separately. A private listener alone does not prove remote firewall behavior. See [network hardening](https://www.mongodb.com/docs/manual/administration/security-checklist/).
@@ -347,29 +353,67 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
     done
   }
   check_values "$@" || exit 2
+  set -- "$@" 0                         # the 7th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
 
   case "$1" in
+    plaintext|missing-certificate)      # positive control first: a TLS ping that presents the client certificate
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
+        --eval 'db.runCommand({ping: 1})'; then
+        echo "positive control: the TLS ping presenting the client certificate completed"
+      else
+        echo "mongosh exit $?: the TLS ping presenting the client certificate, this mode's positive control, did not complete; inconclusive"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
+  esac
+  case "$1" in
     plaintext)
-      mongosh --norc --host "$2" --port 27017 \
-        --eval 'db.runCommand({ping: 1})' ;;
+      if mongosh --norc --host "$2" --port 27017 \
+        --eval 'db.runCommand({ping: 1})'; then
+        echo "FINDING: the plaintext ping completed, so this endpoint accepts connections without TLS"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 1
+      else
+        echo "mongosh exit $?: the plaintext ping did not complete; with the TLS control above completed, that is the requireTLS result (read the error above to confirm a TLS rejection)"
+      fi ;;
     tls)
-      mongosh --norc --host "$2" --port 27017 --tls \
-        --tlsCAFile "$3" --tlsCertificateKeyFile "$4" ;;
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --tlsCertificateKeyFile "$4"; then
+        echo "the tls session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the tls session did not connect or ended with an error; inconclusive"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     scram)
-      mongosh --norc --host "$2" --port 27017 --tls \
+      if mongosh --norc --host "$2" --port 27017 --tls \
         --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
         --username "$5" --authenticationDatabase "$6" \
-        --authenticationMechanism SCRAM-SHA-256 --password ;;
+        --authenticationMechanism SCRAM-SHA-256 --password; then
+        echo "the scram session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the scram session did not connect or ended with an error; inconclusive (an authentication failure is the expected result only from an excluded source or listener)"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     x509)
-      mongosh --norc --host "$2" --port 27017 --tls \
+      if mongosh --norc --host "$2" --port 27017 --tls \
         --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
         --authenticationDatabase "\$external" \
-        --authenticationMechanism MONGODB-X509 ;;
+        --authenticationMechanism MONGODB-X509; then
+        echo "the x509 session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the x509 session did not connect or ended with an error; inconclusive (an authentication failure is the expected result only for an unregistered subject)"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     missing-certificate)
-      mongosh --norc --host "$2" --port 27017 --tls \
-        --tlsCAFile "$3" --eval 'db.runCommand({ping: 1})' ;;
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --eval 'db.runCommand({ping: 1})'; then
+        echo "the TLS ping without a client certificate completed: expected with allowConnectionsWithoutCertificates true and the exposed state once it is false, so judge it against your setting"
+      else
+        echo "mongosh exit $?: the TLS ping without a client certificate did not complete; with the TLS control above completed, that is the result the setting false requires (read the error above to confirm a certificate rejection)"
+      fi ;;
     *) echo "unknown mode; not probing"; exit 2 ;;
   esac
+  echo "block exit $7; any session's contents, any error text and, for missing-certificate, whether a completed ping matches your setting are left for you to judge"
+  exit "$7"
 )
 ```
 
@@ -571,7 +615,7 @@ db.clients.insertOne({name: "Probe", note: "SECURECONFIG_REDACTION_CANARY"});
 
 Without redaction, the canary value appears in the matching log entry. With `security.redactClientLogData` enabled, the entry still exists but its attached values are shown as `###`, while metadata such as error and operation codes and line numbers remains visible. A missing log entry is inconclusive on its own. See [the redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/) and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
 
-### Verify storage encryption (REASONED: encrypted and unencrypted storage, key initialization and KMIP failure; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; fixture grep printed Encryption key manager initialized and returned 1 without output for an unrelated line. Expected comparison: encrypted files require the correct keys; missing keys or mismatched KMIP identity prevent startup, while unencrypted files reopen without keys. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure.)
+### Verify storage encryption (REASONED: encrypted and unencrypted storage, key initialization and KMIP failure; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; fixture grep printed Encryption key manager initialized and returned 1 without output for an unrelated line. Those runs covered an earlier form of the block, a bare grep whose exit status was grep's own; on the current form, which exits 0 when grep matches and 3 when it matches nothing or fails, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the fixture grep was not repeated. Expected comparison: encrypted files require the correct keys; missing keys or mismatched KMIP identity prevent startup, while unencrypted files reopen without keys. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure.)
 
 **REASONED:** no MongoDB Enterprise binaries, disposable data directory, or KMIP endpoint is available.
 
@@ -579,7 +623,16 @@ Create equivalent unencrypted and encrypted fixtures, each holding a known docum
 
 ```bash
 # REASONED: storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
-grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log
+(                                       # a subshell, so the exits below end only the subshell
+  if grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log; then
+    echo "unclassified observation: read the matched lines above; with encryption enabled, the log records that the encryption key manager initialized"; exit 0
+  else
+    case "$?" in
+      1) echo "no matching line in /var/log/mongodb/mongod.log, so it shows no key-manager initialization; inconclusive (the log may have rotated or be written elsewhere)"; exit 3 ;;
+      *) echo "grep could not read /var/log/mongodb/mongod.log; inconclusive"; exit 3 ;;
+    esac
+  fi
+)
 ```
 
 With encryption enabled, the log records that the encryption key manager initialized; with a mismatched KMIP server identity or a missing key, initialization fails and the server does not start. The unencrypted fixture reopens with no key. Do not treat the absence of plaintext under `strings` as proof of encryption, since compression alone can produce that result. See the [encryption-at-rest reference](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/) and the [configure-encryption procedure](https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/).
@@ -858,7 +911,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "6e261f19e17f8c67b4d035b60d5136fa4e204bfa582d36bd7675c81729222b93",
+  "body_sha256": "c708e44014c9b0286fa69a1c60dee605849ae14a2e28d9fb1ea85fec0eef70f6",
   "components": {
     "bind": {
       "name": "MongoDB bind source",

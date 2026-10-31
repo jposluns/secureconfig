@@ -23224,28 +23224,52 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
       esac
       [ -f "$2" ] || { echo "CA file is missing; not probing"; exit 2; }
       [ -r "$2" ] || { echo "CA file is unreadable; not probing"; exit 2; }
-      case "$4" in
+      case "$4" in                      # one psql per run; except in sql mode, the 5th value holds what it printed, then its exit status
         tls|wrong)
-          psql -X -W -v ON_ERROR_STOP=1 \
+          set -- "$1" "$2" "$3" "$4" "$(if psql -X -W -v ON_ERROR_STOP=1 \
             "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5" \
-            -c 'SELECT version();'
+            -c 'SELECT version();' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
           ;;
         scram)
-          psql -X -W -v ON_ERROR_STOP=1 \
+          set -- "$1" "$2" "$3" "$4" "$(if psql -X -W -v ON_ERROR_STOP=1 \
             "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5 require_auth=scram-sha-256" \
-            -c 'SELECT 1;'
+            -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
           ;;
         plaintext)
-          psql -X -W -v ON_ERROR_STOP=1 \
+          set -- "$1" "$2" "$3" "$4" "$(if psql -X -W -v ON_ERROR_STOP=1 \
             "host=$1 port=5432 dbname=app user=$3 sslmode=disable gssencmode=disable connect_timeout=5" \
-            -c 'SELECT 1;'
+            -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
           ;;
         sql)
-          psql -X -W -v ON_ERROR_STOP=1 \
-            "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5"
-          ;;
+          if psql -X -W -v ON_ERROR_STOP=1 \
+            "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5"; then
+            echo "block exit 0; the sql session is not classified, so judge what it showed yourself"; exit 0
+          else
+            echo "psql exit $?: the sql session did not connect or ended with an error; block exit 3, inconclusive"; exit 3
+          fi ;;
         *) echo "choose tls, wrong, scram, plaintext or sql; not probing"; exit 2 ;;
       esac
+      set -- "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # the mode, psql's exit status, then what psql printed
+      printf '%s' "$3"
+      case "$1:$2" in
+        tls:0|scram:0) echo "pass: the $1 login connected and ran its query, the positive control"; set -- 0 "$1" ;;
+        wrong:0) echo "FINDING: the deliberately wrong password connected, as an earlier matching trust rule allows"; set -- 1 "$1" ;;
+        plaintext:0) echo "FINDING: the plaintext login connected without TLS, as a plaintext-permitting host rule allows"; set -- 1 "$1" ;;
+        wrong:*)
+          case "$3" in
+            *'password authentication failed'*) echo "pass: the wrong password failed with password authentication failure, the fixed result while the tls login succeeds"; set -- 0 "$1" ;;
+            *) echo "psql exit $2 without a password authentication failure; inconclusive"; set -- 3 "$1" ;;
+          esac ;;
+        plaintext:*)
+          case "$3" in
+            *'no pg_hba.conf entry'*'no encryption'*) echo "pass: the plaintext login received an HBA refusal naming no matching entry and no encryption, the fixed result while the tls login succeeds"; set -- 0 "$1" ;;
+            *) echo "psql exit $2 without an HBA refusal naming no matching entry and no encryption; inconclusive"; set -- 3 "$1" ;;
+          esac ;;
+        tls:*) echo "psql exit $2: the tls login did not connect; inconclusive (the hostname-verification and client-certificate comparisons expect a rejection here, which this block cannot tell from any other failure)"; set -- 3 "$1" ;;
+        *) echo "psql exit $2: the scram login did not connect; inconclusive (a rejected non-SCRAM exchange is the exposed state, which this block cannot tell from any other failure)"; set -- 3 "$1" ;;
+      esac
+      echo "block exit $1; only this $2 run is classified, so pairing it with its matched run in the table below the block, and reading any error above, is left to you"
+      exit "$1"
       ;;
   esac
 )
@@ -23280,7 +23304,28 @@ Run on the database host, substituting the intended bind address. Inspect every 
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 2 ;;
     *)
       printf 'Expected listener address: %s; inspect every returned row.\n' "$1"
-      ss -tlnp 'sport = :5432'
+      set -- "$(if ss -tlnp 'sport = :5432'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "${1%$'\n'*}" "${1##*$'\n'}"   # the listener table, then ss's exit status
+      printf '%s' "$1"
+      if [ "$2" != 0 ]; then
+        echo "ss exit $2: the listener inventory failed; inconclusive unless a row above is a wildcard"
+      fi
+      if printf '%s' "$1" | awk 'NR > 1 && ($4 == "0.0.0.0:5432" || $4 == "[::]:5432" || $4 == "*:5432") { found = 1 } END { exit !found }'; then
+        echo "FINDING: a wildcard listener on port 5432, which listen_addresses = '*' produces"; exit 1
+      else
+        case "$?" in 1) ;; *) echo "awk could not read the listener table; inconclusive"; exit 3 ;; esac
+      fi
+      if [ "$2" != 0 ]; then
+        exit 3
+      fi
+      if printf '%s' "$1" | awk 'NR > 1 { found = 1 } END { exit !found }'; then
+        echo "no wildcard listener on port 5432; unclassified observation: compare every row above with your intended addresses, and pair it with a successful tls connection through an intended interface"; exit 0
+      else
+        case "$?" in
+          1) echo "no listener on port 5432, which is not a passing result; inconclusive"; exit 3 ;;
+          *) echo "awk could not read the listener table; inconclusive"; exit 3 ;;
+        esac
+      fi
       ;;
   esac
 )
@@ -23698,7 +23743,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8018336c8f86ebc4dc36cad369e52769012d7902b3145554c8b191d3b2468ff0",
+  "body_sha256": "b8bab6936969deaabcbc862d197ac4532fcaebfaf46fe84233154725c8b00a88",
   "components": {
     "init": {
       "name": "PostgreSQL initdb source",
@@ -25862,7 +25907,7 @@ REASONED: service-comparison provenance, per the guide's cited MongoDB security 
 
 Local checks did run: Bash parsing, ShellCheck, JavaScript syntax parsing, duplicate-key YAML parsing, and merges for both membership alternatives. Shell-only argument tracing checked probe dispatch; it did not simulate or verify MongoDB behavior. Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access.
 
-### Listener exposure (REASONED: listener inventory and interpretation; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; a stubbed ss returned fixture listeners. Expected comparison: unintended wildcard or public binds are exposed; selected private or loopback binds are the fixed expectation. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB security checklist and Community authentication support.)
+### Listener exposure (REASONED: listener inventory and interpretation; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; a stubbed ss returned fixture listeners. Those runs and the attempt recorded below covered an earlier form of the block, a bare ss -tlnp whose exit status was its own; on the current form, which exits 3 when ss fails and 0 otherwise, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the stub run was not repeated. Expected comparison: unintended wildcard or public binds are exposed; selected private or loopback binds are the fixed expectation. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB security checklist and Community authentication support.)
 
 **REASONED:** no MongoDB service is available. The local command was attempted, but the sandbox refused its netlink socket with `Operation not permitted`; that output establishes nothing about listeners.
 
@@ -25870,7 +25915,13 @@ Run on every database and router host:
 
 ```bash
 # REASONED: listener inventory; no MongoDB service or permitted netlink socket. Expected binds and network-hardening source follow.
-ss -tlnp
+(                                       # a subshell, so the exits below end only the subshell
+  if ss -tlnp; then
+    echo "unclassified observation: read every listener above; an unintended wildcard or public bind is the exposed state"; exit 0
+  else
+    echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; exit 3
+  fi
+)
 ```
 
 Read every relevant listener. The exposed state includes an unintended wildcard or public listener. The fixed state listens only on loopback or deliberately selected private addresses. Check the actual configured ports, including any non-default ports, and inspect firewall rules separately. A private listener alone does not prove remote firewall behavior. See [network hardening](https://www.mongodb.com/docs/manual/administration/security-checklist/).
@@ -25908,29 +25959,67 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
     done
   }
   check_values "$@" || exit 2
+  set -- "$@" 0                         # the 7th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
 
   case "$1" in
+    plaintext|missing-certificate)      # positive control first: a TLS ping that presents the client certificate
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
+        --eval 'db.runCommand({ping: 1})'; then
+        echo "positive control: the TLS ping presenting the client certificate completed"
+      else
+        echo "mongosh exit $?: the TLS ping presenting the client certificate, this mode's positive control, did not complete; inconclusive"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
+  esac
+  case "$1" in
     plaintext)
-      mongosh --norc --host "$2" --port 27017 \
-        --eval 'db.runCommand({ping: 1})' ;;
+      if mongosh --norc --host "$2" --port 27017 \
+        --eval 'db.runCommand({ping: 1})'; then
+        echo "FINDING: the plaintext ping completed, so this endpoint accepts connections without TLS"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 1
+      else
+        echo "mongosh exit $?: the plaintext ping did not complete; with the TLS control above completed, that is the requireTLS result (read the error above to confirm a TLS rejection)"
+      fi ;;
     tls)
-      mongosh --norc --host "$2" --port 27017 --tls \
-        --tlsCAFile "$3" --tlsCertificateKeyFile "$4" ;;
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --tlsCertificateKeyFile "$4"; then
+        echo "the tls session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the tls session did not connect or ended with an error; inconclusive"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     scram)
-      mongosh --norc --host "$2" --port 27017 --tls \
+      if mongosh --norc --host "$2" --port 27017 --tls \
         --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
         --username "$5" --authenticationDatabase "$6" \
-        --authenticationMechanism SCRAM-SHA-256 --password ;;
+        --authenticationMechanism SCRAM-SHA-256 --password; then
+        echo "the scram session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the scram session did not connect or ended with an error; inconclusive (an authentication failure is the expected result only from an excluded source or listener)"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     x509)
-      mongosh --norc --host "$2" --port 27017 --tls \
+      if mongosh --norc --host "$2" --port 27017 --tls \
         --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
         --authenticationDatabase "\$external" \
-        --authenticationMechanism MONGODB-X509 ;;
+        --authenticationMechanism MONGODB-X509; then
+        echo "the x509 session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the x509 session did not connect or ended with an error; inconclusive (an authentication failure is the expected result only for an unregistered subject)"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     missing-certificate)
-      mongosh --norc --host "$2" --port 27017 --tls \
-        --tlsCAFile "$3" --eval 'db.runCommand({ping: 1})' ;;
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --eval 'db.runCommand({ping: 1})'; then
+        echo "the TLS ping without a client certificate completed: expected with allowConnectionsWithoutCertificates true and the exposed state once it is false, so judge it against your setting"
+      else
+        echo "mongosh exit $?: the TLS ping without a client certificate did not complete; with the TLS control above completed, that is the result the setting false requires (read the error above to confirm a certificate rejection)"
+      fi ;;
     *) echo "unknown mode; not probing"; exit 2 ;;
   esac
+  echo "block exit $7; any session's contents, any error text and, for missing-certificate, whether a completed ping matches your setting are left for you to judge"
+  exit "$7"
 )
 ```
 
@@ -26132,7 +26221,7 @@ db.clients.insertOne({name: "Probe", note: "SECURECONFIG_REDACTION_CANARY"});
 
 Without redaction, the canary value appears in the matching log entry. With `security.redactClientLogData` enabled, the entry still exists but its attached values are shown as `###`, while metadata such as error and operation codes and line numbers remains visible. A missing log entry is inconclusive on its own. See [the redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/) and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
 
-### Verify storage encryption (REASONED: encrypted and unencrypted storage, key initialization and KMIP failure; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; fixture grep printed Encryption key manager initialized and returned 1 without output for an unrelated line. Expected comparison: encrypted files require the correct keys; missing keys or mismatched KMIP identity prevent startup, while unencrypted files reopen without keys. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure.)
+### Verify storage encryption (REASONED: encrypted and unencrypted storage, key initialization and KMIP failure; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; fixture grep printed Encryption key manager initialized and returned 1 without output for an unrelated line. Those runs covered an earlier form of the block, a bare grep whose exit status was grep's own; on the current form, which exits 0 when grep matches and 3 when it matches nothing or fails, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the fixture grep was not repeated. Expected comparison: encrypted files require the correct keys; missing keys or mismatched KMIP identity prevent startup, while unencrypted files reopen without keys. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure.)
 
 **REASONED:** no MongoDB Enterprise binaries, disposable data directory, or KMIP endpoint is available.
 
@@ -26140,7 +26229,16 @@ Create equivalent unencrypted and encrypted fixtures, each holding a known docum
 
 ```bash
 # REASONED: storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
-grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log
+(                                       # a subshell, so the exits below end only the subshell
+  if grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log; then
+    echo "unclassified observation: read the matched lines above; with encryption enabled, the log records that the encryption key manager initialized"; exit 0
+  else
+    case "$?" in
+      1) echo "no matching line in /var/log/mongodb/mongod.log, so it shows no key-manager initialization; inconclusive (the log may have rotated or be written elsewhere)"; exit 3 ;;
+      *) echo "grep could not read /var/log/mongodb/mongod.log; inconclusive"; exit 3 ;;
+    esac
+  fi
+)
 ```
 
 With encryption enabled, the log records that the encryption key manager initialized; with a mismatched KMIP server identity or a missing key, initialization fails and the server does not start. The unencrypted fixture reopens with no key. Do not treat the absence of plaintext under `strings` as proof of encryption, since compression alone can produce that result. See the [encryption-at-rest reference](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/) and the [configure-encryption procedure](https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/).
@@ -26419,7 +26517,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "6e261f19e17f8c67b4d035b60d5136fa4e204bfa582d36bd7675c81729222b93",
+  "body_sha256": "c708e44014c9b0286fa69a1c60dee605849ae14a2e28d9fb1ea85fec0eef70f6",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
@@ -49559,10 +49657,20 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
    REASONED: following block; address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
-   (
-     for ip in 169.254.169.254 127.0.0.1 10.0.0.1 192.168.0.1 172.16.0.1; do
-       python3 -c 'import ipaddress,sys; a=ipaddress.ip_address(sys.argv[1]); print(sys.argv[1], "BLOCK" if (a.is_private or a.is_loopback or a.is_link_local or a.is_reserved) else "ALLOW")' "$ip"
+   (                                       # a subshell, so the exit below ends only the subshell
+     set -- 0 169.254.169.254 127.0.0.1 10.0.0.1 192.168.0.1 172.16.0.1   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the addresses still to classify
+     while [ "$#" -gt 1 ]; do
+       set -- "$(if python3 -c 'import ipaddress,sys; a=ipaddress.ip_address(sys.argv[1]); print(sys.argv[1], "BLOCK" if (a.is_private or a.is_loopback or a.is_link_local or a.is_reserved) else "ALLOW")' "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+       set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"   # python's exit status, its line, the status so far, then the addresses
+       printf '%s' "$2"
+       case "$1:$2" in
+         0:"$4 BLOCK"$'\n') set -- "$3" "${@:5}" ;;
+         0:"$4 ALLOW"$'\n') echo "FINDING: $4 printed ALLOW, an SSRF hole"; set -- 1 "${@:5}" ;;
+         *) echo "python3 exit $1: $4 was not classified; inconclusive"; if [ "$3" = 1 ]; then set -- 1 "${@:5}"; else set -- 3 "${@:5}"; fi ;;
+       esac
      done
+     echo "block exit $1; the five addresses are the whole check, so beyond any error above it leaves nothing for you to judge"
+     exit "$1"
    )
    ```
 
@@ -49570,7 +49678,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3.
+   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
 
    ```bash
    (
@@ -49608,7 +49716,18 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
    REASONED: following block; application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
-   python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("application_type") == "native" else 1)' < dcr-request.json
+   (                                       # a subshell, so the exits below end only the subshell
+     [ -f dcr-request.json ] || { echo "no dcr-request.json in this directory: save the captured registration body there first; not checking"; exit 2; }
+     [ -r dcr-request.json ] || { echo "dcr-request.json is unreadable; not checking"; exit 2; }
+     set -- "$(if python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("application_type") == "native" else 1)' < dcr-request.json 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+     set -- "${1##*$'\n'}" "${1%$'\n'*}"   # python's exit status, then anything it printed
+     printf '%s' "$2"
+     case "$1:$2" in
+       0:) echo "pass: application_type has the value the expression checks; block exit 0"; exit 0 ;;
+       1:) echo "FINDING: application_type is absent, which the server defaults to web, or is not the value the expression checks; block exit 1"; exit 1 ;;
+       *) echo "python3 exit $1: the body was not read as a JSON object (read any error above); block exit 3, inconclusive"; exit 3 ;;
+     esac
+   )
    ```
 
    Exposed: the field is absent and the server defaults it to `web` (OIDC Registration section 2), which under a provider policy that enforces the web redirect-URI constraints gets a native client's loopback or custom-scheme redirect rejected, so the command exits non-zero. Fixed: the field is present and matches the client's deployment, so the command exits zero. Distinguishing source: MCP's "MUST specify an appropriate `application_type`".
@@ -49696,7 +49815,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "a95ba78c3ee379833dc8beb30c733d80ed1725e0eb4f64d27064053f80b04ae0",
+  "body_sha256": "02b8acd74206067f2099ec98bb9130fc803374b02c5691f97ea048007a0bdb65",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -60031,9 +60150,13 @@ REASONED: following block; ordinary-user profiles and MFA comparisons; a local S
           echo "substitute the protected headers file; not probing"; exit 2 ;;
         *)
           if [ -r "$2" ]; then
-            curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+            if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
               --header @- --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-              --url "$1" < "$2"
+              --url "$1" < "$2"; then
+              echo "block exit 0; unclassified observation: read the body and http= line above, since only you know whether its rows belong to this request's user"
+            else
+              echo "curl exit $?: the request failed, which proves nothing about authorization; block exit 3, inconclusive"; exit 3
+            fi
           else
             echo "headers file is unreadable; no conclusion"; exit 2
           fi ;;
@@ -60428,15 +60551,15 @@ Claims (full source mapping in the JSON block below):
 - verify-key-retirement (REASONED; supabase): Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches.
 - verify-api-removal (REASONED; supabase): Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls.
 - verify-bundle (REASONED; supabase): Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately.
-- local-guards (DEMONSTRATED; supabase, shellcheck): Historical local guard tests rejected placeholders and malformed set lines; this guide's assessment is shell behavior only, not live authorization. The recorded ShellCheck 0.11.0 has a release citation, not host-binary evidence; bash and other tool/parser versions remain unrecorded. The runs covered earlier forms, whose bundle scan result arms ended with status 0; current forms were not re-run.
-- local-syntax (DEMONSTRATED; firebase, supabase, shellcheck): Recorded ShellCheck 0.11.0/bash and JSON/TOML/JavaScript parsing passed; this guide's assessment is that these checks do not compile Firebase Rules, execute SQL or demonstrate services. Only the ShellCheck release is cited; bash and other tool/parser versions remain unrecorded. The bash runs covered earlier forms, whose bundle scan result arms ended with status 0; current forms were not re-run.
+- local-guards (DEMONSTRATED; supabase, shellcheck): Historical local guard tests rejected placeholders and malformed set lines; this guide's assessment is shell behavior only, not live authorization. The recorded ShellCheck 0.11.0 has a release citation, not host-binary evidence; bash and other tool/parser versions are unrecorded. Runs covered earlier forms, whose guard refusals and bundle scan result arms exited 0; current forms were not re-run.
+- local-syntax (DEMONSTRATED; firebase, supabase, shellcheck): Recorded ShellCheck 0.11.0/bash and JSON/TOML/JavaScript parsing passed; this guide's assessment is that these checks do not compile Firebase Rules, execute SQL or demonstrate services. Only the ShellCheck release is cited; bash and other tool/parser versions are unrecorded. Bash runs covered earlier forms, whose guard refusals and bundle scan result arms exited 0; current forms were not re-run.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "ca187204ce373eeac473ee12fcc16c4a5ba7d3f4909754ec4ef76fbc7adc443d",
+  "body_sha256": "97f78e5a05d4760e47d6a77c28798968d6cb955f1816b0aa26fba5c7cc3af381",
   "components": {
     "firebase": {
       "name": "Firebase documentation",
@@ -60622,8 +60745,8 @@ Claims (full source mapping in the JSON block below):
     "verify-key-retirement": {"text": "Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches.", "components": ["supabase"], "sources": ["supabase:sa946354db383", "supabase:sfc2f9ae0232b"], "status": "REASONED"},
     "verify-api-removal": {"text": "Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls.", "components": ["supabase"], "sources": ["supabase:s6d5cf2d4dbf3", "supabase:s20ef046ac646"], "status": "REASONED"},
     "verify-bundle": {"text": "Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately.", "components": ["supabase"], "sources": ["supabase:s65d5b8043bad"], "status": "REASONED", "verify": [2]},
-    "local-guards": {"text": "Historical local guard tests rejected placeholders and malformed set lines; this guide's assessment is shell behavior only, not live authorization. The recorded ShellCheck 0.11.0 has a release citation, not host-binary evidence; bash and other tool/parser versions remain unrecorded. The runs covered earlier forms, whose bundle scan result arms ended with status 0; current forms were not re-run.", "components": ["supabase", "shellcheck"], "sources": ["supabase:s92b405dc3c7e", "supabase:s65d5b8043bad", "shellcheck:sf994764bf270"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty values, and omitted or shortened `set --` lines."},
-    "local-syntax": {"text": "Recorded ShellCheck 0.11.0/bash and JSON/TOML/JavaScript parsing passed; this guide's assessment is that these checks do not compile Firebase Rules, execute SQL or demonstrate services. Only the ShellCheck release is cited; bash and other tool/parser versions remain unrecorded. The bash runs covered earlier forms, whose bundle scan result arms ended with status 0; current forms were not re-run.", "components": ["firebase", "supabase", "shellcheck"], "sources": ["firebase:sa6b1c4933e6a", "firebase:sd8a1bda29f5c", "supabase:s3a5e39fe7b4d", "firebase:sc8f214d059d2", "shellcheck:sf994764bf270"], "status": "DEMONSTRATED", "evidence": "The RTDB JSON, `firebase.json` fragment, Auth TOML, and callable JavaScript passed local parsing checks."}
+    "local-guards": {"text": "Historical local guard tests rejected placeholders and malformed set lines; this guide's assessment is shell behavior only, not live authorization. The recorded ShellCheck 0.11.0 has a release citation, not host-binary evidence; bash and other tool/parser versions are unrecorded. Runs covered earlier forms, whose guard refusals and bundle scan result arms exited 0; current forms were not re-run.", "components": ["supabase", "shellcheck"], "sources": ["supabase:s92b405dc3c7e", "supabase:s65d5b8043bad", "shellcheck:sf994764bf270"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty values, and omitted or shortened `set --` lines."},
+    "local-syntax": {"text": "Recorded ShellCheck 0.11.0/bash and JSON/TOML/JavaScript parsing passed; this guide's assessment is that these checks do not compile Firebase Rules, execute SQL or demonstrate services. Only the ShellCheck release is cited; bash and other tool/parser versions are unrecorded. Bash runs covered earlier forms, whose guard refusals and bundle scan result arms exited 0; current forms were not re-run.", "components": ["firebase", "supabase", "shellcheck"], "sources": ["firebase:sa6b1c4933e6a", "firebase:sd8a1bda29f5c", "supabase:s3a5e39fe7b4d", "firebase:sc8f214d059d2", "shellcheck:sf994764bf270"], "status": "DEMONSTRATED", "evidence": "The RTDB JSON, `firebase.json` fragment, Auth TOML, and callable JavaScript passed local parsing checks."}
   }
 }
 ````
