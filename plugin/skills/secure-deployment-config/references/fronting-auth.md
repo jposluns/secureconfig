@@ -145,46 +145,99 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 
 ## Verify
 
+REASONED: the cited oauth2-proxy and Authelia listener defaults support this host-side inventory, which is prose rather than part of the block below, because it runs on the proxy's host and the block runs from another host. On the proxy's host, run `ss -tlnp` and read every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 reachable only by the proxy (loopback, or a private container network), never a public interface. The authoring environment cannot provision the proxy, backend, IdP and external probe host, so no listing is recorded.
+
 REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned listener defaults and curl manual define isolation, direct-header refusal and anonymous challenges. The authoring environment cannot provision the proxy, backend, IdP and external probe host; no live outcome is recorded. Expected responses and inconclusive failures are stated below.
 
 ```bash
-ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 reachable only by the proxy (loopback, or a private container network), never a public interface
-# each must be unreachable from another host. Read err, not the number: it must name a refusal or timeout reaching
+# Run this block from another host: app 3000, oauth2-proxy 4180 and Authelia 9091 must each be unreachable from it. Read err, not the number: it must name a refusal or timeout reaching
 # YOUR address. An HTTP code means the app answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-(                                             # a subshell, so your own script arguments are untouched
-  set +e   # expected refusals must not skip later probes under an inherited set -e
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) for p in 3000 4180 9091; do   # app, oauth2-proxy, Authelia: each must be unreachable from another host
-         curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/"
-       done
-       curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         -H 'X-User: admin' "http://$1:3000/" ;;   # forged header the nginx app trusts, straight at the app
-  esac
-)
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your auth proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sI "https://$1/"             # no session: a 401, or a 302 whose Location is the sign-in page (/oauth2/sign_in or the portal); any other 302 is not a pass
+(                                             # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                      # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                                    # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                             # a subshell, so your own script arguments are untouched
+    set +e   # expected refusals must not skip later probes under an inherited set -e
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                               # the 2nd value is this part's status so far, ranked as above
+    # app 3000, oauth2-proxy 4180, Authelia 9091: each must be unreachable from another host
+    set -- "$1" "$2" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 -w 'port=3000 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its port= http= exit= err= line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      7:*"http=000 "*|28:*"http=000 "*) echo "port 3000: unclassified, read err above; a refusal or timeout reaching YOUR address is the pass, and any other cause is inconclusive" ;;
+      *"http=000 "*|*:) echo "port 3000: curl exit $3 with no HTTP code and no refusal or timeout; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *"http="*) echo "FINDING: port 3000 answered with an HTTP code, so the app is reachable from this host"; set -- "$1" 1 ;;
+      *) echo "port 3000: curl exit $3 printed no http= line; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 -w 'port=4180 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:4180/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its port= http= exit= err= line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      7:*"http=000 "*|28:*"http=000 "*) echo "port 4180: unclassified, read err above; a refusal or timeout reaching YOUR address is the pass, and any other cause is inconclusive" ;;
+      *"http=000 "*|*:) echo "port 4180: curl exit $3 with no HTTP code and no refusal or timeout; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *"http="*) echo "FINDING: port 4180 answered with an HTTP code, so oauth2-proxy is reachable from this host"; set -- "$1" 1 ;;
+      *) echo "port 4180: curl exit $3 printed no http= line; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 -w 'port=9091 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:9091/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its port= http= exit= err= line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      7:*"http=000 "*|28:*"http=000 "*) echo "port 9091: unclassified, read err above; a refusal or timeout reaching YOUR address is the pass, and any other cause is inconclusive" ;;
+      *"http=000 "*|*:) echo "port 9091: curl exit $3 with no HTTP code and no refusal or timeout; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *"http="*) echo "FINDING: port 9091 answered with an HTTP code, so Authelia is reachable from this host"; set -- "$1" 1 ;;
+      *) echo "port 9091: curl exit $3 printed no http= line; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -H 'X-User: admin' "http://$1:3000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # forged header the nginx app trusts, straight at the app
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its http= exit= err= line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      7:*"http=000 "*|28:*"http=000 "*) echo "forged header: unclassified, read err above; a refusal or timeout reaching YOUR address is the pass, and any other cause is inconclusive" ;;
+      *"http=000 "*|*:) echo "forged header: curl exit $3 with no HTTP code and no refusal or timeout; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *"http="*) echo "FINDING: the forged X-User request reached port 3000 and got an HTTP code, so network isolation does not refuse it"; set -- "$1" 1 ;;
+      *) echo "forged header: curl exit $3 printed no http= line; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                       # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your auth proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                         # the 2nd value is this part's status so far: 3 (inconclusive) outranks 0
+    set -- "$1" "$2" "$(if curl -q -g -sI -w '\n%{http_code} %{redirect_url}' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # no session: a 401, or a 302 whose Location is the sign-in page (/oauth2/sign_in or the portal); any other 302 is not a pass
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"         # curl's exit status, then the headers with the HTTP code and redirect target on the last line
+    set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and redirect target
+    printf '%s' "$4"
+    case "$3:$5" in
+      "0:401 "*|"0:302 https://$1/oauth2/sign_in"|"0:302 https://$1/oauth2/sign_in?"*|"0:302 /oauth2/sign_in"|"0:302 /oauth2/sign_in?"*) ;;
+      "0:302 ") echo "a 302 with no Location is not a pass; inconclusive"; set -- "$1" 3 ;;
+      "0:302 "*) echo "unclassified: the 302 goes to ${5#* }, not /oauth2/sign_in; it passes only if that is your sign-in portal, and any other 302 is not a pass" ;;
+      0:*) echo "HTTP ${5%% *} without a session is neither a 401 nor a 302 to the sign-in page; inconclusive"; set -- "$1" 3 ;;
+      *) echo "curl exit $3: the request without a session failed; inconclusive"; set -- "$1" 3 ;;
+    esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; a refusal or timeout on ports 3000, 4180 and 9091 and on the forged-header probe, and a 302 to a location other than /oauth2/sign_in, are not classified, so read err and the Location yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; listener isolation, anonymous challenges and direct and through-proxy identity-header checks, per the guide's cited oauth2-proxy nginx integration, oauth2-proxy Traefik integration, Traefik forwardAuth middleware and Authelia nginx integration. No proxy, backend, IdP or external probe host is available. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its anonymous-challenge curl took the app's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the new guard has not been run. Both YAML blocks parsed. Five rejected cases of the public-address guard printed refusal messages with no curl calls; a substituted address reached four curl stubs. The bash -n and ShellCheck runs recorded here covered this fence and the stub runs its public-address block, all in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No live outcome is observed: exposed access reaches a backend or trusts admin; fixed access isolates listeners, challenges anonymous users and admits a valid session under its real identity. After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
+REASONED: preceding block; listener isolation, anonymous challenges and direct and through-proxy identity-header checks, per the guide's cited oauth2-proxy nginx integration, oauth2-proxy Traefik integration, Traefik forwardAuth middleware and Authelia nginx integration. No proxy, backend, IdP or external probe host is available. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its anonymous-challenge curl took the app's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on that guarded form, and its guard was not run. Both YAML blocks parsed. Five rejected cases of the public-address guard printed refusal messages with no curl calls; a substituted address reached four curl stubs. The bash -n and ShellCheck runs recorded here covered this fence and the stub runs its public-address block, all in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the later form, whose guard refusals left the subshell with status 2. The current form leaves the listener inventory to the section's first paragraph and gives the whole block one exit status. It is 1 if port 3000, 4180 or 9091 or the forged-header probe answers with an HTTP code; 3 if one of those probes ends without an HTTP code, a refusal or a timeout, or if the anonymous request fails or answers anything but a 401 or a 302 with a Location; 2 if a guard refuses and nothing was found or failed; and otherwise 0. The anonymous request passes on a 401, or on a 302 to `/oauth2/sign_in`, with or without a query, given as a relative path or on the probed host over https. A refusal or timeout, and a 302 with any other Location, are left for you to judge: err must name YOUR address, and that Location passes only if it is your sign-in portal. That form was checked on 2026-10-31 with bash -n and with curl stubs and no network, covering each status, an earlier finding or failure followed by passing later checks, and an inherited `readonly`, `declare -i` or `set -e`. The stub runs covered the refusals of a missing marker, too few or too many values, and an empty or placeholder value in each part, and in the second part of a host name with a scheme, port, trailing dot, `@`, `?`, `%`, `#` or space and of an example.com, example.net or example.org host including `App.Example.COM`; each refused part made no curl call. In those runs a 302 to `/oauth2/sign_in` on another host or over http printed an unclassified line and exited 0, and a 302 to the nginx example's `/oauth2/sign_in?rd=` target exited 0 with no such line. ShellCheck 0.11.0 passed on that form in the repository's gate suite. No live outcome is observed: exposed access reaches a backend or trusts admin; fixed access isolates listeners, challenges anonymous users and admits a valid session under its real identity. After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
 
 ## Common mistakes
 
@@ -283,7 +336,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "82e577444cb9b7430304a2247dbd81ce8de912e9f50c5501054601cb3e8afa8e",
+  "body_sha256": "92537d718d78892be28d8ae54a3f118a2d9028d8d798319c655ed583ff40f377",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
@@ -391,7 +444,7 @@ Claims (full source mapping in the JSON block below):
     "pomerium-idp": {"text": "Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret.", "components": ["pomerium"], "sources": ["pomerium:s181907d16ed1", "pomerium:s4ed306cb118e"], "status": "REASONED"},
     "pomerium-policy": {"text": "Each Pomerium route carries policy restricting users, domains or claims.", "components": ["pomerium", "pomerium-docs"], "sources": ["pomerium:s4ed306cb118e", "pomerium-docs:s18dd6f6efcc6", "pomerium-docs:s69a7e15c61ca", "pomerium-docs:s84633400030e"], "status": "REASONED"},
     "idp-mfa": {"text": "oauth2-proxy and Pomerium rely on MFA enforced by their identity provider.", "components": ["oauth", "pomerium"], "sources": ["oauth:sb098baafd79a", "pomerium:s181907d16ed1"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy.", "components": ["oauth", "authelia"], "sources": ["oauth:sa987fae1c9ef", "authelia:s064d1e72c1e8", "authelia:sbec86d37ea1c"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy.", "components": ["oauth", "authelia"], "sources": ["oauth:sa987fae1c9ef", "authelia:s064d1e72c1e8", "authelia:sbec86d37ea1c"], "status": "REASONED"},
     "verify-direct": {"text": "From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive.", "components": ["curl", "oauth-rolling", "authelia-rolling"], "sources": ["oauth-rolling:sdcd74a9cd9c6", "authelia-rolling:s0cb4f49871b5", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-forged-direct": {"text": "A forged X-User sent directly to app port 3000 must be refused by network isolation.", "components": ["curl", "oauth-rolling"], "sources": ["oauth-rolling:sdcd74a9cd9c6", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-login": {"text": "Without a session, expect 401 or a 302 to the sign-in page; other redirects do not pass. A real session must reach the app.", "components": ["oauth-rolling", "authelia-rolling"], "sources": ["oauth-rolling:sdcd74a9cd9c6", "authelia-rolling:s4af41b2fed9f"], "status": "REASONED", "verify": [1]},
