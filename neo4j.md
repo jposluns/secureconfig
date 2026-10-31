@@ -244,7 +244,7 @@ Enable HTTP request logging only when an HTTP/HTTPS connector is in use. It does
 
 REASONED: every service comparison in this Verify section, per the guide's cited Configure network connectors (Neo4j 5), Cypher Shell prompts, environment credentials, history, parameters, and timeouts, OpenSSL 3 TLS probe options, TLS 1.3 client-certificate validation and alerts, Transactional HTTP API deprecation and Query API availability entries and the other entries listed under Sources. During marking review (October 2026) neo4j, cypher-shell, docker and podman were still absent from the authoring environment, with no network access to obtain them; the local checks that did run are recorded in the next paragraph. **Service verification status: REASONED, not demonstrated.** The authoring environment has no Neo4j server, Cypher Shell, Docker, or Podman available, and no authorized running deployment was supplied. All service comparisons below require capabilities missing here. Run exposed/fixed comparisons only in disposable test deployments. Record server, edition, client, and plugin versions alongside results.
 
-REASONED: local syntax, guard and fragment-parsing checks only, which observe no Neo4j service. During marking review (October 2026) they were repeated: bash -n under bash 5.3.9 and ShellCheck 0.11.0 passed all seven shell blocks. The guard checks during marking review (October 2026), with stub ss, openssl, curl and cypher-shell and no network, showed that each of the six guarded blocks refused unchanged, partial and miscounted input and example.com or angle-bracket hosts, and that each block that clears NEO4J_PASSWORD refused when it was readonly. The cluster block, during marking review (October 2026), also refused a malformed DNS name, port or URI, and with locally generated fixtures its three s_client calls reached the stub, while openssl verify accepted member.crt and rejected untrusted.crt (error 20) against ca.pem. The eight configuration fragments, during marking review (October 2026), showed no malformed lines or duplicate keys. Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run. The bash -n, ShellCheck, guard and stub runs recorded in this paragraph covered an earlier form of the section 1 block and the six guarded blocks, whose refusals exited with status 1. The six guarded Verify blocks now each end with one exit status covering every probe they classify and every command that fails: 1 for a finding, 3 for an inconclusive result, 2 for a guard refusal and 0 otherwise, and each block that runs its probes ends with a line naming what it leaves you to judge. The current forms are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and in October 2026, while this change was drafted, the six guarded Verify blocks also ran with stub ss, openssl, timeout, curl and cypher-shell and no network.
+REASONED: local syntax, guard and fragment-parsing checks only, which observe no Neo4j service. During marking review (October 2026) they were repeated: bash -n under bash 5.3.9 and ShellCheck 0.11.0 passed all seven shell blocks. The guard checks during marking review (October 2026), with stub ss, openssl, curl and cypher-shell and no network, showed that each of the six guarded blocks refused unchanged, partial and miscounted input and example.com or angle-bracket hosts, and that each block that clears NEO4J_PASSWORD refused when it was readonly. The cluster block, during marking review (October 2026), also refused a malformed DNS name, port or URI, and with locally generated fixtures its three s_client calls reached the stub, while openssl verify accepted member.crt and rejected untrusted.crt (error 20) against ca.pem. The eight configuration fragments, during marking review (October 2026), showed no malformed lines or duplicate keys. Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run. The bash -n, ShellCheck, guard and stub runs recorded in this paragraph covered an earlier form of the section 1 block and the six guarded blocks, whose refusals exited with status 1. The six guarded Verify blocks now each end with one exit status covering every probe they classify and every command that fails: 1 for a finding, 3 for an inconclusive result, 2 for a guard refusal and 0 otherwise, and each block that runs its probes ends with a line naming what it leaves you to judge. The current forms are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and in October 2026, while this change was drafted, the six guarded Verify blocks also ran with stub ss, openssl, timeout, curl and cypher-shell and no network, the two HTTPS pairs parsing their stub responses with the local python3.
 
 REASONED: guard behaviour only, with stub commands and no Neo4j service. During marking review (October 2026) each guarded block, pasted whole with a hostname substituted inside the quotes, reached only its stub commands, and unchanged or without its set -- line it refused. A substituted value containing one literal apostrophe made the listener block a syntax error that ran nothing, and its ss line pasted alone ran unguarded. A shadowed builtin was not tested. Those stub runs covered an earlier form of each guarded block, whose refusals exited with status 1; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the drafting stub runs recorded in the preceding paragraph. For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
 
@@ -687,6 +687,7 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
   esac
   [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
   [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
+  command -v python3 >/dev/null 2>&1 || { echo "python3 is not installed here; not probing"; exit 2; }
   set +e                                # errexit off here, so a request that ends nonzero is classified below instead of ending the block
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -696,16 +697,22 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
     "https://$1:7473/db/neo4j/query/v2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
   printf '%s' "$3"
-  set -- "$1" "$2" "$(if printf '%s' "$3" | tr -d ' \t\r\n\133\135'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*http=}"   # the response without white space or square brackets and tr's exit status, curl's exit status, then the HTTP code
-  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}" ""   # ..., the HTTP code, tr's exit status, then the result marks
-  case "$3" in *'"errors":'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}e" ;; esac   # an errors member
-  case "$3" in *'"values":1}'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}r" ;; esac   # the value ok=1
-  case "$4:$6:$5:$7" in
+  # python3 parses the whole body as JSON, so text after a result fails the parse, and prints e for an errors member and r for exactly one ok=1 value; "if 1:" lets its lines be indented
+  set -- "$1" "$2" "$(if printf '%s' "${3%$'\n'http=*}" | python3 -I -c 'if 1:
+      import json, sys
+      try: d = json.loads(sys.stdin.buffer.read())
+      except (ValueError, RecursionError): d = None
+      d = d if isinstance(d, dict) else {}
+      t = d.get("data") if isinstance(d.get("data"), dict) else {}
+      print("e" * ("errors" in d) + "r" * (json.dumps((t.get("fields"), t.get("values"))) == json.dumps((("ok",), ((1,),)))), end="")'
+    then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*http=}"   # the parsed body's marks and python3's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # the marks, curl's exit status, the HTTP code, then python3's exit status
+  case "$4:$6:$5:$3" in
     0:0:401:*) echo "the anonymous query was refused with 401" ;;
     0:0:2??:r) echo "FINDING: the anonymous query was accepted with HTTP $5, so authentication is not enforced"; set -- "$1" 1 ;;
     0:0:2??:*) echo "HTTP $5 for the anonymous query without the ok=1 result alone (an errors member, or an empty or malformed body) is neither the 401 pass nor an accepted query, since HTTP success alone is not enough; inconclusive"; set -- "$1" 3 ;;
     0:0:*) echo "HTTP $5 for the anonymous query is neither the 401 pass nor an accepted query, and a 404 does not prove authentication enforcement; inconclusive"; set -- "$1" 3 ;;
-    0:*) echo "tr exit $6: the anonymous response could not be processed; inconclusive"; set -- "$1" 3 ;;
+    0:*) echo "python3 exit $6: the anonymous response could not be processed; inconclusive"; set -- "$1" 3 ;;
     *) echo "curl exit $4: the anonymous request failed, and a connection or TLS failure does not prove authentication enforcement; inconclusive"; set -- "$1" 3 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -716,13 +723,20 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
     "https://$1:7473/db/neo4j/query/v2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
   printf '%s' "$3"
-  set -- "$1" "$2" "$(if printf '%s' "$3" | tr -d ' \t\r\n\133\135'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*http=}"   # the response without white space or square brackets and tr's exit status, curl's exit status, then the HTTP code
-  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # ..., the HTTP code, then tr's exit status
+  set -- "$1" "$2" "$(if printf '%s' "${3%$'\n'http=*}" | python3 -I -c 'if 1:
+      import json, sys
+      try: d = json.loads(sys.stdin.buffer.read())
+      except (ValueError, RecursionError): d = None
+      d = d if isinstance(d, dict) else {}
+      t = d.get("data") if isinstance(d.get("data"), dict) else {}
+      print("e" * ("errors" in d) + "r" * (json.dumps((t.get("fields"), t.get("values"))) == json.dumps((("ok",), ((1,),)))), end="")'
+    then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*http=}"   # the parsed body's marks and python3's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # the marks, curl's exit status, the HTTP code, then python3's exit status
   case "$4:$6:$5:$3" in
-    0:0:2??:*'"errors":'*) echo "HTTP $5 with an errors member: the authenticated query did not return ok=1, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-    0:0:2??:*'"values":1}'*) echo "the authenticated query returned ok=1" ;;
+    0:0:2??:e*) echo "HTTP $5 with an errors member: the authenticated query did not return ok=1, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:0:2??:r) echo "the authenticated query returned ok=1" ;;
     0:0:*) echo "HTTP $5 without the expected ok=1 result, and a Query API 202 alone does not prove query success, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-    0:*) echo "tr exit $6: the authenticated response could not be processed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) echo "python3 exit $6: the authenticated response could not be processed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     *) echo "curl exit $4: the authenticated request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
   echo "block exit $2; the response headers and bodies are not classified beyond the checks above, so judge them yourself"
@@ -748,6 +762,7 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
   esac
   [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
   [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
+  command -v python3 >/dev/null 2>&1 || { echo "python3 is not installed here; not probing"; exit 2; }
   set +e                                # errexit off here, so a request that ends nonzero is classified below instead of ending the block
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -757,16 +772,23 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
     "https://$1:7473/db/neo4j/tx/commit"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
   printf '%s' "$3"
-  set -- "$1" "$2" "$(if printf '%s' "$3" | tr -d ' \t\r\n\133\135'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*legacy-no-auth=}"   # the response without white space or square brackets and tr's exit status, curl's exit status, then the HTTP code
-  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}" ""   # ..., the HTTP code, tr's exit status, then the result marks
-  case "$3" in *'"errors":}'*|*'"errors":,'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}e" ;; esac   # an empty errors array
-  case "$3" in *'"row":1,'*|*'"row":1}'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}r" ;; esac      # the row ok=1
-  case "$4:$6:$5:$7" in
+  # python3 parses the whole body as JSON, so text after a result fails the parse, and prints e for an empty errors array and r for exactly one ok=1 row; "if 1:" lets its lines be indented
+  set -- "$1" "$2" "$(if printf '%s' "${3%$'\n'legacy-no-auth=*}" | python3 -I -c 'if 1:
+      import json, sys
+      try: d = json.loads(sys.stdin.buffer.read())
+      except (ValueError, RecursionError): d = None
+      d = d if isinstance(d, dict) else {}
+      r = d.get("results") if isinstance(d.get("results"), list) else ()
+      r = tuple((x.get("columns"), tuple(y.get("row") if isinstance(y, dict) else None for y in x.get("data")) if isinstance(x.get("data"), list) else None) if isinstance(x, dict) else None for x in r)
+      print("e" * (d.get("errors") == list()) + "r" * (json.dumps(r) == json.dumps(((("ok",), ((1,),)),))), end="")'
+    then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*legacy-no-auth=}"   # the parsed body's marks and python3's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # the marks, curl's exit status, the HTTP code, then python3's exit status
+  case "$4:$6:$5:$3" in
     0:0:401:*) echo "the anonymous legacy query was refused with 401" ;;
     0:0:2??:er) echo "FINDING: the anonymous legacy query was accepted with HTTP $5, so authentication is not enforced"; set -- "$1" 1 ;;
     0:0:2??:*) echo "HTTP $5 for the anonymous legacy query without ok=1 and an empty errors array (an error-only, empty or malformed body) is neither the 401 pass nor an accepted query, since HTTP success alone is not enough; inconclusive"; set -- "$1" 3 ;;
     0:0:*) echo "HTTP $5 for the anonymous legacy query is neither the 401 pass nor an accepted query (a missing endpoint proves nothing); inconclusive"; set -- "$1" 3 ;;
-    0:*) echo "tr exit $6: the anonymous legacy response could not be processed; inconclusive"; set -- "$1" 3 ;;
+    0:*) echo "python3 exit $6: the anonymous legacy response could not be processed; inconclusive"; set -- "$1" 3 ;;
     *) echo "curl exit $4: the anonymous legacy request failed (a TLS error or connection failure proves nothing); inconclusive"; set -- "$1" 3 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -777,14 +799,20 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
     "https://$1:7473/db/neo4j/tx/commit"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
   printf '%s' "$3"
-  set -- "$1" "$2" "$(if printf '%s' "$3" | tr -d ' \t\r\n\133\135'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*legacy-auth=}"   # the response without white space or square brackets and tr's exit status, curl's exit status, then the HTTP code
-  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}" ""   # ..., the HTTP code, tr's exit status, then the result marks
-  case "$3" in *'"errors":}'*|*'"errors":,'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}e" ;; esac   # an empty errors array
-  case "$3" in *'"row":1,'*|*'"row":1}'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}r" ;; esac      # the row ok=1
-  case "$4:$6:$5:$7" in
+  set -- "$1" "$2" "$(if printf '%s' "${3%$'\n'legacy-auth=*}" | python3 -I -c 'if 1:
+      import json, sys
+      try: d = json.loads(sys.stdin.buffer.read())
+      except (ValueError, RecursionError): d = None
+      d = d if isinstance(d, dict) else {}
+      r = d.get("results") if isinstance(d.get("results"), list) else ()
+      r = tuple((x.get("columns"), tuple(y.get("row") if isinstance(y, dict) else None for y in x.get("data")) if isinstance(x.get("data"), list) else None) if isinstance(x, dict) else None for x in r)
+      print("e" * (d.get("errors") == list()) + "r" * (json.dumps(r) == json.dumps(((("ok",), ((1,),)),))), end="")'
+    then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*legacy-auth=}"   # the parsed body's marks and python3's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # the marks, curl's exit status, the HTTP code, then python3's exit status
+  case "$4:$6:$5:$3" in
     0:0:2??:er) echo "the authenticated legacy query returned ok=1 with an empty errors array" ;;
     0:0:*) echo "HTTP $5 without ok=1 and an empty errors array, and HTTP 200 alone does not demonstrate query success, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-    0:*) echo "tr exit $6: the authenticated legacy response could not be processed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) echo "python3 exit $6: the authenticated legacy response could not be processed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     *) echo "curl exit $4: the authenticated legacy request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
   echo "block exit $2; the response headers and bodies are not classified beyond the checks above, so judge them yourself"
@@ -994,7 +1022,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ba535cc541041a3ac24773556ccbcc3c9fffa7db0ceba5138378450bf1867057",
+  "body_sha256": "fe435bf36c3b77a03d7a286d7b18d3dab0265c202de2137ae2d4cff3c90e6ad1",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",

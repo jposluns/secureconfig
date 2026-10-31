@@ -146,7 +146,7 @@ DEMONSTRATED: local shell preparation on 2026-10-05 in private /dev/shm scratch 
 
 REASONED: listener-inventory scope; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The Cloud Run ingress comparison also needs a provider deployment, and the root inventory needs sudo; neither was available. Block A passed bash -n and ShellCheck 0.11.0 without output and a sudo stub printed `STUB sudo <ss> <-tlnp>`, exiting 0; no privileged inventory ran. That run covered an earlier form of block A, which ran `sudo ss -tlnp` at top level; its current form, which refuses with status 2 when `ss` is not installed, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. Expect a wildcard origin in the exposed state and the intended loopback listeners in the fixed same-host state, per the guide's cited ss manual, Datasette CLI reference (rolling documentation, checked September 2026), and sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback). Host publication is separate per Docker port publishing (Docker's pre-28.0.0 localhost-publication caveat) and Cloud Run container contract. The following capability statements describe the historical authoring environment. **The fixed bind demonstrated on loopback; a wildcard bind and container publications REASONED** (the host forbids binding every interface and has no container runtime). On the deployment host, inspect the complete listener table:
 
-REASONED: following block; the cited ss and deployment documentation supplies the full inventory check; sudo, wildcard binding and container publication were unavailable. Only the unprivileged loopback inventory is recorded as demonstrated below.
+REASONED: following block; the cited ss and deployment documentation supplies the full inventory check; sudo, wildcard binding and container publication were unavailable. Only the unprivileged loopback inventory is recorded as demonstrated below. Per the guide's cited sudo sudoers manual, secure_path entry, where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH, so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it.
 
 ```bash
 (                                       # a subshell, so the exit below ends only the subshell
@@ -293,7 +293,7 @@ DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with 
 
 Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; the container-generator discussion here is scoped to commit `caf238aac86ebe370959b25384d6e05f6a1e2359`, not a tagged release or the separately pinned Cloud Run implementation. The sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
 
-Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1 tag entries, which were checked against the locally extracted tag snapshot in October 2026. This list also records the source-fetch review.
+Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1 tag entries, which were checked against the locally extracted tag snapshot in October 2026, and the sudo sudoers manual entry, which was checked against the file at its tag on 2026-10-31. This list also records the source-fetch review.
 
 - Datasette CLI reference (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/cli-reference.html
 - Datasette authentication and permissions (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/authentication.html
@@ -342,6 +342,7 @@ Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1
 - Tailscale Serve and Funnel distinction: https://tailscale.com/docs/reference/tailscale-cli/serve
 - curl manual (write-out variables `exitcode` and `errormsg` added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ss manual: https://man7.org/linux/man-pages/man8/ss.8.html
+- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
 - OWASP SQL injection prevention: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
 
 
@@ -443,7 +444,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "d6ddc2a38a8cb26a790ed36f011d73623fec45fb6803dd39b4e18f000aa7ba15",
+  "body_sha256": "7cc91a63e39008f226b2f92885aacdd182971d4e91e89a25cc751583c1c1e69a",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
