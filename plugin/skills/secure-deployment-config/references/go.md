@@ -192,7 +192,7 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
   curl -q -g -sI "http://$1/"         # expect 301 with a https:// Location
   set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
   [ "$3" = 0 ] || { echo "curl exit $3: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
@@ -208,9 +208,14 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
     0:*) echo "HTTP $4 from /api is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     *) echo "curl exit $3: the /api request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
-  ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
-  set -- "$1" "$2" "$?"                 # the 3rd value is ss's exit status
-  [ "$3" = 0 ] || { echo "ss -tlnp exit $3: the listener list failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  if command -v ss >/dev/null; then
+    ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
+    set -- "$1" "$2" "$?"               # the 3rd value is ss's exit status
+    [ "$3" = 0 ] || { echo "ss -tlnp exit $3: the listener list failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$2" in 0) set -- "$1" 2 ;; esac   # the refusal is the block's status only while no other part found something or was inconclusive
+  fi
   set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
   printf '%s\n' "$4"                    # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
@@ -360,7 +365,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "c952a51b8e8b30de35f34e8c88a23c6fdf31aab2c7baf8059b5458a2fbc8063a",
+  "body_sha256": "363e4f69497c9b8f329f0d7b77dd608ac9e883903aa92451064bab4dd3d03b33",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
