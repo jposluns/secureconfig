@@ -30324,7 +30324,7 @@ AIStor retries failed delivery, but events can be permanently lost when the queu
 
 ## 8. Verify (REASONED: every unit in this section rests on the local evidence and comparison-specific declarations throughout this section, citing Sources entries including AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions). A live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md)
 
-REASONED: only local parsing, shell behaviour and arithmetic were exercised in an offline scratch clone. All eight Bash blocks in this section passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; the three JSON examples in sections 4, 4.2 and 8 parsed with Python json.loads. The shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture. The first six Bash blocks printed stub responses and forwarded their placeholders unchanged: substitute real values before a live run. The bash -n, ShellCheck and stub runs covered the first Bash block, the exposure probes, in an earlier form, before its curls took the S3 host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither bash -n nor ShellCheck was re-run on that block, and its guard has not been run. The bash -n, ShellCheck and stub runs also covered the presigned-URL and Console-disabled blocks in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form of those two blocks, whose guard refusals leave the subshell with status 2. The live comparisons need AIStor, KMS, a durable audit receiver, and an IdP; a live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Credentials and authenticated STS/S3 and load clients with per-node metrics collection are also required. Sources entries include AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); each comparison's declaration identifies its specific sources. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
+REASONED: only local parsing, shell behaviour and arithmetic were exercised in an offline scratch clone. The eight Bash blocks this section held before its exposure block was split into three passed bash -n and ShellCheck 0.11.0 with exit 0 and no output in those earlier forms; the three JSON examples in sections 4, 4.2 and 8 parsed with Python json.loads. Those earlier shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture, and the first six blocks printed stub responses and forwarded their placeholders unchanged. Every Bash block here has changed since then. Each refuses with status 2, before it runs any probe, when a value on its `set --` line is missing or unusable or, in the two blocks that list listeners, when ss is not installed. Each records every classified result and every failed command in one exit status: 0 for a pass or for an observation it says it cannot classify, 1 for a finding and 3 for an inconclusive result, a finding outranking an inconclusive result. The current form of all ten Bash blocks is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs with mc, curl and ss stubs, which checked each block's guards and its exit status for each classified result, each failed command and inherited readonly, declare -i and set -e. Each block's declaration below says what its runs covered, and the console reachability block says why it cannot report a pass. The live comparisons need AIStor, KMS, a durable audit receiver, and an IdP; a live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Credentials and authenticated STS/S3 and load clients with per-node metrics collection are also required. Sources entries include AIStor access management (built-in policies, custom policy structure, actions, and resources); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); each comparison's declaration identifies its specific sources. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
 
 REASONED in this authoring environment: the existing probes below are retained, but their live outcomes were not demonstrated here. A live AIStor, KMS, audit receiver, and IdP stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md.
 
@@ -30344,108 +30344,317 @@ REASONED: following block; alias JSON follows the cited mc alias import schema; 
 
 Use root credentials in `mys3` only for the administrative comparisons below. Protect both the imported file and the resulting local `mc` configuration. Importing an alias is configuration, not proof of working authentication; confirm signed operations against MinIO's own endpoint.
 
-REASONED: following block; exposure and alias-import expectations follow the cited server and anonymous-policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output on this block in an earlier form, before its four curls took the S3 host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the guard has not been run. In that earlier form, with a fixture alias input path, the block printed stub listener, curl, and mc responses; the recorded calls covered all four URLs and alias JSON on stdin. Real listener scope, anonymous grants versus MinIO denials, and signed authentication were not observed. Per the guide's cited MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted); MinIO `mc anonymous get-json`; AIStor `mc alias import`. The MinIO `mc anonymous get-json` entry is cited for retrieving a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions, and the AIStor `mc alias import` entry for stdin and JSON fields. The three existing citations were not reopened.
+REASONED: following block; listener scope follows the cited server address documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. This listener inventory was the first line of an earlier exposure block, whose local bash -n and ShellCheck 0.11.0 runs exited 0 without output and whose stub run printed a stub listener table. The current form is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: a missing ss exits 2, a failing ss exits 3, and a listing exits 0 with a line saying the listeners are not classified. Real listener scope was not observed. Per the guide's cited MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted). This existing citation was not reopened.
 
 ```bash
-ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_S3_HOST'   # the host name MinIO's own S3 API answers on (its direct origin), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+(                                       # a subshell, so the exits below end only the subshell
+  command -v ss > /dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  if ss -tlnp; then   # read every listener; S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
+    echo "block exit 0; unclassified observation: this block does not judge listeners, so read every listener above against section 3"; exit 0
+  else
+    echo "ss -tlnp exit $?: the listener list failed; inconclusive"; exit 3
+  fi
+)
+```
+
+REASONED: following block; anonymous-denial expectations follow the cited anonymous-policy and curl documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. In an earlier form, before its S3 host, bucket and object moved to a guarded `set --` line and before it classified its results, local bash -n and ShellCheck 0.11.0 exited 0 without output on the exposure block, and its stub run recorded calls covering all four URLs. The current form is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: a 2xx from any of the three requests exits 1, a 403 from all three exits 0, and any other HTTP status or a curl failure exits 3 unless another request found a 2xx. Anonymous grants versus MinIO denials were not observed. Per the guide's cited MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); curl show-error. These existing citations were not reopened.
+
+```bash
+(                                       # a subshell, so your own script arguments are untouched and the exits below end only the subshell
+  set +e                                # errexit off here, so a request that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_S3_HOST' 'REPLACE_WITH_BUCKET' 'REPLACE_WITH_PRIVATE_OBJECT'   # the host name MinIO's own S3 API answers on (its direct origin), no scheme, user name, port, path, query, fragment, percent sign or trailing dot; then a bucket name and the key of a known private object in that bucket: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the bucket name (lower-case letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|/*|*'?'*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the key of a known private object in that bucket (no leading slash, question mark, hash sign, whitespace or control character) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- 0 "$@"                         # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0; then the host, bucket and object
   # -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: a 000 status beside a "curl: (N) ..." error line means no HTTP response arrived; that is inconclusive, never a denial and never proof of isolation
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/"                    # service root: anonymous ListBuckets denied
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/" # per bucket: anonymous listing denied
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9000/REPLACE_WITH_BUCKET/REPLACE_WITH_PRIVATE_OBJECT"
-                                                         # a known private object: 403, never 200, and the 403 must come from MinIO (behind a proxy a 403 may be the proxy's, so probe MinIO's direct origin). Anonymous policies are set per
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$2:9000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # service root: anonymous ListBuckets denied
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
+  case "$5:$6" in
+    0:403) ;;
+    0:2??) echo "FINDING: the service root answered $6 to an anonymous request, so anonymous ListBuckets is allowed"; set -- 1 "${@:2}" ;;
+    0:*) echo "HTTP $6 from the service root is neither the 403 denial nor a 2xx finding; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+    *) echo "curl exit $5: no HTTP response from the service root; inconclusive, never a denial"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$2:9000/$3/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # per bucket: anonymous listing denied
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
+  case "$5:$6" in
+    0:403) ;;
+    0:2??) echo "FINDING: the bucket answered $6 to an anonymous listing request, so anonymous listing is allowed"; set -- 1 "${@:2}" ;;
+    0:*) echo "HTTP $6 from the bucket is neither the 403 denial nor a 2xx finding (a 404 means the bucket name is wrong); inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+    *) echo "curl exit $5: no HTTP response for the bucket listing; inconclusive, never a denial"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$2:9000/$3/$4"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"                                     # a known private object: 403, never 200, and the 403 must come from MinIO (behind a proxy a 403 may be the proxy's, so probe MinIO's direct origin). Anonymous policies are set per
                                                          # bucket, so a denial at the service root does not prove any bucket is private
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:9001/"                    # console: probe the ACTUAL console port from ss above (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port). Any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
+  case "$5:$6" in
+    0:403) ;;
+    0:2??) echo "FINDING: the known private object answered $6 to an anonymous read"; set -- 1 "${@:2}" ;;
+    0:*) echo "HTTP $6 from the known private object is neither the 403 denial nor a 2xx finding (a 404 means the key or bucket is wrong); inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+    *) echo "curl exit $5: no HTTP response for the known private object; inconclusive, never a denial"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+  esac
+  echo "block exit $1; a 403 counts as MinIO's denial here only because the host is MinIO's direct origin, so confirm that yourself, and review every full anonymous policy as section 3 describes"
+  exit "$1"
 )
-mc alias import mys3 < /path/to/REPLACE_WITH_ADMIN_ALIAS.json
+```
+
+REASONED: following block; console reachability follows the cited server address documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. This console request was part of the earlier exposure block, whose local bash -n, ShellCheck 0.11.0 and stub runs covered it with a fixed port 9001. The current form takes the console port on its guarded `set --` line and is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: any HTTP status exits 1 and no HTTP response exits 3. A refusal, timeout or TLS error is not proof of isolation, so this block cannot report a pass; run it only from a network the Console should not reach. Per the guide's cited MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted). This existing citation was not reopened.
+
+```bash
+(                                       # a subshell, so your own script arguments are untouched and the exits below end only the subshell
+  set +e                                # errexit off here, so a failed request is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_S3_HOST' 'REPLACE_WITH_CONSOLE_PORT'   # the same host name as the block above, then the ACTUAL console port from ss in the first block (or the startup-log URL), not a guessed 9001 (an unset --console-address picks a random port): replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|*[!0123456789]*|0*|??????*) echo "substitute the console port, digits only, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  [ "$2" -le 65535 ] || { echo "the console port must be at most 65535; not probing"; exit 2; }
+  set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # console: any response from outside, not only 200, means it is reachable; a refusal, timeout, or TLS error is NOT proof of isolation
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"
+  case "$4" in
+    [123456789][0123456789][0123456789]) echo "FINDING: the console port answered HTTP $4 from this vantage, so the Console is reachable from here, which is a finding unless you exposed it here on purpose; block exit 1"; exit 1 ;;
+    *) echo "curl exit $3: no HTTP response from the console port; a refusal, timeout, or TLS error is NOT proof of isolation, so this block cannot report a pass; block exit 3, inconclusive: judge the Console's exposure from the listener inventory and your network policy"; exit 3 ;;
+  esac
+)
 ```
 
 For the exposure probes, an anonymous grant can produce successful listing or object reads; the private configuration must deny those operations at MinIO itself. Inspect every full anonymous policy as described in section 3, including upload grants. Listener inspection and probes from the relevant external network are both needed to assess console exposure. Sources: server address flags and anonymous-policy references below.
 
 **Scoped access, REASONED:** a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Prepare two different buckets containing known, harmless private objects. The application's policy must name only the application bucket. Build the app alias JSON with the generated scoped key and the same endpoint, `api`, and `path` fields as above.
 
-REASONED: following block; scoped-access comparisons follow the cited access-management and mc documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. A fixture alias input and mc stub recorded both policy queries, all reads, and the write payload; output was stub responses, not authorization results. The expected broad-key versus scoped-key outcomes are described below. Per the guide's cited AIStor access management (built-in policies, custom policy structure, actions, and resources); AIStor `mc cat`; AIStor `mc pipe`. These existing citations were not reopened.
+REASONED: following block; scoped-access comparisons follow the cited access-management and mc documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. In an earlier form, before the root alias import moved here from the exposure block and before its values moved to a guarded `set --` line, local bash -n and ShellCheck 0.11.0 exited 0 without output on this block and on that import. A fixture alias input and mc stub then recorded alias JSON on stdin, both policy queries, all reads, and the write payload; output was stub responses, not authorization results. The current form is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: a failed import exits 3 before any read, and a failed policy query, control read or write records 3. In those runs, the scoped key reading the other bucket's object exits 1, and a failure of that read without an Access Denied error records 3. The expected broad-key versus scoped-key outcomes are described below. Per the guide's cited AIStor `mc alias import` (stdin and JSON fields); AIStor access management (built-in policies, custom policy structure, actions, and resources); AIStor `mc cat`; AIStor `mc pipe`. These existing citations were not reopened.
 
 ```bash
-mc alias import app < /path/to/REPLACE_WITH_APP_ALIAS.json
-mc anonymous get-json mys3/REPLACE_WITH_APP_BUCKET
-mc anonymous get-json mys3/REPLACE_WITH_OTHER_BUCKET
-mc cat mys3/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT
-mc cat mys3/REPLACE_WITH_OTHER_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT
-mc cat app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT
-printf '%s\n' 'scoped write probe' | mc pipe app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_UNIQUE_PROBE_OBJECT
-mc cat app/REPLACE_WITH_OTHER_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT
+(                                       # a subshell, so your own script arguments are untouched and the exits below end only the subshell
+  set +e                                # errexit off here, so a command that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK '/path/to/REPLACE_WITH_ADMIN_ALIAS.json' '/path/to/REPLACE_WITH_APP_ALIAS.json' 'REPLACE_WITH_APP_BUCKET' 'REPLACE_WITH_OTHER_BUCKET' 'REPLACE_WITH_KNOWN_PRIVATE_OBJECT' 'REPLACE_WITH_UNIQUE_PROBE_OBJECT'   # the root alias file, the app alias file, the app bucket, the other bucket, the known private object's key (present in both buckets) and a new key for the write probe: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 6 ] || { echo "the set -- line needs exactly 6 values; not probing"; exit 2; }
+  case "$1|$2" in
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute both alias file paths inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  [ -f "$1" ] || { echo "the root alias file named on the set -- line above is not a readable regular file; not probing"; exit 2; }
+  [ -r "$1" ] || { echo "the root alias file named on the set -- line above is not a readable regular file; not probing"; exit 2; }
+  [ -f "$2" ] || { echo "the app alias file named on the set -- line above is not a readable regular file; not probing"; exit 2; }
+  [ -r "$2" ] || { echo "the app alias file named on the set -- line above is not a readable regular file; not probing"; exit 2; }
+  case "$3" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the app bucket name (lower-case letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$4" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the other bucket name (lower-case letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  [ "$3" != "$4" ] || { echo "the app bucket and the other bucket must be two different buckets; not probing"; exit 2; }
+  case "$5|$6" in
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute both object keys inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$5" in
+    ""|/*) echo "substitute the known private object's key, without a leading slash, on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$6" in
+    ""|/*) echo "substitute a new key for the write probe, without a leading slash, on the set -- line above; not probing"; exit 2 ;;
+  esac
+  [ "$5" != "$6" ] || { echo "the write probe needs a new key, not the known private object's; not probing"; exit 2; }
+  set -- 0 "$@"                         # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0; then the six values above
+  mc alias import mys3 < "$2" || { echo "mc alias import mys3 exit $?: the root alias did not import, so the reads below could use an older alias; inconclusive, not reading"; exit 3; }
+  mc alias import app < "$3" || { echo "mc alias import app exit $?: the app alias did not import, so the reads below could use an older alias; inconclusive, not reading"; exit 3; }
+  mc anonymous get-json "mys3/$4" || { echo "mc anonymous get-json exit $?: the app bucket's anonymous policy was not read; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"; }
+  mc anonymous get-json "mys3/$5" || { echo "mc anonymous get-json exit $?: the other bucket's anonymous policy was not read; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"; }
+  mc cat "mys3/$4/$6" || { echo "mc cat exit $?: root could not read the app bucket's known object, so the denial below cannot be interpreted; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"; }
+  mc cat "mys3/$5/$6" || { echo "mc cat exit $?: root could not read the other bucket's known object, so the denial below cannot be interpreted; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"; }
+  mc cat "app/$4/$6" || { echo "mc cat exit $?: the scoped key could not read its own bucket's known object; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"; }
+  printf '%s\n' 'scoped write probe' | mc pipe "app/$4/$7" || { echo "mc pipe exit $?: the scoped key could not write its probe; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"; }
+  set -- "${@:1:7}" "$(if mc cat "app/$5/$6" 2>&1 > /dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # MinIO must deny this read
+  set -- "${@:1:7}" "${8##*$'\n'}" "${8%$'\n'*}"   # mc's exit status, then its error text
+  printf '%s\n' "$9"
+  case "$8:$9" in
+    0:*) echo "FINDING: the scoped key read the other bucket's known object, so its access reaches beyond the app bucket"; set -- 1 "${@:2}" ;;
+    *'Access Denied'*) ;;
+    *) echo "mc cat exit $8 without an Access Denied error: the read failed, but not visibly by MinIO's denial; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+  esac
+  echo "block exit $1; the anonymous policies printed above are not classified, so confirm they exclude anonymous access to both fixtures"
+  exit "$1"
+)
 ```
 
 Confirm the policy reviews exclude anonymous access to both fixtures. Root must read both known objects. The scoped key must read its own fixture and write its probe, but MinIO must deny its read of the other bucket's known object. A root or overly broad application key would read both. A generic denial alone is insufficient: the successful reads establish the objects, endpoint, and working credentials. Sources: access management, access-key creation, `mc cat`, and `mc pipe`.
 
 **Encryption, REASONED:** a live AIStor and KMS stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. After configuring a working key manager and the intended bucket default, write a new object without a client encryption override:
 
-REASONED: following block; encryption comparison follows the cited KMS, encrypt and stat documentation; a live AIStor and KMS stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output; the mc stub recorded encrypt info, the write payload, and stat, printing stub responses. Successful unencrypted versus encrypted writes still require the live KMS comparison below. Per the guide's cited AIStor `mc encrypt info`; AIStor `mc stat` (metadata and specific-version inspection); AIStor MinIO KMS setup (environment settings, backend dependency, and object verification). These existing citations were not reopened.
+REASONED: following block; encryption comparison follows the cited KMS, encrypt and stat documentation; a live AIStor and KMS stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. In an earlier form, before its values moved to a guarded `set --` line, local bash -n and ShellCheck 0.11.0 exited 0 without output, and the mc stub recorded encrypt info, the write payload, and stat, printing stub responses. The current form is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: a failed command records 3, a failed write skips the inspection, and success exits 0 with the SSE metadata left for the reader. Successful unencrypted versus encrypted writes still require the live KMS comparison below. Per the guide's cited AIStor `mc encrypt info`; AIStor `mc stat` (metadata and specific-version inspection); AIStor MinIO KMS setup (environment settings, backend dependency, and object verification). These existing citations were not reopened.
 
 ```bash
-mc encrypt info mys3/REPLACE_WITH_BUCKET
-printf '%s\n' 'encryption probe' | mc pipe mys3/REPLACE_WITH_BUCKET/REPLACE_WITH_NEW_ENCRYPTION_PROBE
-mc stat mys3/REPLACE_WITH_BUCKET/REPLACE_WITH_NEW_ENCRYPTION_PROBE
+(                                       # a subshell, so your own script arguments are untouched and the exits below end only the subshell
+  set +e                                # errexit off here, so a command that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BUCKET' 'REPLACE_WITH_NEW_ENCRYPTION_PROBE'   # the bucket, then a new object key for the encryption probe: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the bucket name (lower-case letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:cntrl:]]*) echo "substitute a new object key, without a leading slash or control character, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- 0 "$@"                         # the block's status so far: 3 (inconclusive) outranks 0; then the bucket and the key
+  mc encrypt info "mys3/$2" || { echo "mc encrypt info exit $?: the bucket's encryption configuration was not read; inconclusive"; set -- 3 "${@:2}"; }
+  if printf '%s\n' 'encryption probe' | mc pipe "mys3/$2/$3"; then
+    mc stat "mys3/$2/$3" || { echo "mc stat exit $?: the new object's metadata was not read; inconclusive"; set -- 3 "${@:2}"; }
+  else
+    echo "mc pipe exit $?: the write failed, and a failed write proves neither state; inconclusive, not inspecting"; set -- 3 "${@:2}"
+  fi
+  echo "block exit $1; the bucket default and the new object's SSE metadata above are not classified, so compare them with the intended configuration and KMS key yourself"
+  exit "$1"
+)
 ```
 
 Confirm the bucket default and the newly written object's SSE metadata, including the intended KMS key for SSE-KMS. In a disposable unencrypted comparison deployment with no key manager, a successful ordinary write lacks SSE metadata; after the control is configured, the new write must carry it. A failed write proves neither state. `mc encrypt info` reports bucket configuration, not historical-object encryption, and absence of a bucket rule does not prove plaintext when server-wide automatic encryption applies. Sources: `mc encrypt info`, `mc encrypt set`, `mc stat`, and the MinIO KMS setup guide.
 
 **Retention, REASONED:** a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Use a newly created disposable bucket with locking enabled and no default retention. Stop if creation or either write fails. These fixtures compare an unlocked version with a protected version under the same root identity.
 
-REASONED: following block; retention fixtures follow the cited object-locking and mc documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output; the mc stub recorded bucket creation, both write payloads, and both inspections, printing stub responses. Real version IDs and unlocked versus protected versions require the live comparison below. Per the guide's cited AIStor object locking (existing buckets, Console limitation, retention modes, and delete markers); AIStor `mc mb` (`--with-lock` enables versioning without setting retention); AIStor `mc stat` (metadata and specific-version inspection). These existing citations were not reopened.
+REASONED: following block; retention fixtures follow the cited object-locking and mc documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. In an earlier form, before its bucket name moved to a guarded `set --` line, local bash -n and ShellCheck 0.11.0 exited 0 without output, and the mc stub recorded bucket creation, both write payloads, and both inspections, printing stub responses. The current form is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: a failed creation exits 3 before any write, a failed write exits 3 before the inspections, a failed inspection records 3, and success exits 0 with the version IDs left for the reader. Real version IDs and unlocked versus protected versions require the live comparison below. Per the guide's cited AIStor object locking (existing buckets, Console limitation, retention modes, and delete markers); AIStor `mc mb` (`--with-lock` enables versioning without setting retention); AIStor `mc stat` (metadata and specific-version inspection). These existing citations were not reopened.
 
 ```bash
-mc mb --with-lock mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET
-printf '%s\n' 'unlocked control' | mc pipe mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/control.txt
-printf '%s\n' 'retained probe' | mc pipe mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
-mc stat mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/control.txt
-mc stat mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
+(                                       # a subshell, so your own script arguments are untouched and the exits below end only the subshell
+  set +e                                # errexit off here, so a command that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEW_RETENTION_TEST_BUCKET'   # a new bucket name for this test: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute a new bucket name (lower-case letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- 0 "$1"                         # the block's status so far: 3 (inconclusive) outranks 0; then the bucket
+  mc mb --with-lock "mys3/$2" || { echo "mc mb exit $?: the locked test bucket was not created; stop, block exit 3, inconclusive"; exit 3; }
+  printf '%s\n' 'unlocked control' | mc pipe "mys3/$2/control.txt" || { echo "mc pipe exit $?: the control write failed; inconclusive"; set -- 3 "$2"; }
+  printf '%s\n' 'retained probe' | mc pipe "mys3/$2/protected.txt" || { echo "mc pipe exit $?: the protected write failed; inconclusive"; set -- 3 "$2"; }
+  [ "$1" = 0 ] || { echo "block exit 3; stop: a write failed, so there are no version IDs to record"; exit 3; }
+  mc stat "mys3/$2/control.txt" || { echo "mc stat exit $?: the control object was not inspected; inconclusive"; set -- 3 "$2"; }
+  mc stat "mys3/$2/protected.txt" || { echo "mc stat exit $?: the protected object was not inspected; inconclusive"; set -- 3 "$2"; }
+  echo "block exit $1; the version IDs above are not classified: record them for the next block"
+  exit "$1"
+)
 ```
 
 Record the exact version IDs from the successful object inspections. Substitute them below. The protected fixture receives a one-day COMPLIANCE lock and cannot be deleted early, including by root.
 
-REASONED: following block; exact-version deletion comparison follows the cited retention, rm and stat documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output; the mc stub recorded all eight operations with their version selectors and printed stub responses. Actual deletion of the unlocked version and survival of the COMPLIANCE version remain unobserved. Per the guide's cited AIStor `mc retention set` (default retention, existing buckets, ignored flags, and version IDs); AIStor `mc retention info`; AIStor `mc rm` (specific-version deletion); AIStor `mc stat` (metadata and specific-version inspection). These existing citations were not reopened.
+REASONED: following block; exact-version deletion comparison follows the cited retention, rm and stat documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. In an earlier form, before its bucket and version IDs moved to a guarded `set --` line, local bash -n and ShellCheck 0.11.0 exited 0 without output, and the mc stub recorded all eight operations with their version selectors and printed stub responses. The current form is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: a failure before the deletions exits 3 before any delete, and a successful delete of the protected version exits 1. In those runs, a failed control delete, a control version that still answers or fails without a does-not-exist error, or a failed later inspection records 3, and the retention output is left for the reader. Actual deletion of the unlocked version and survival of the COMPLIANCE version remain unobserved. Per the guide's cited AIStor `mc retention set` (default retention, existing buckets, ignored flags, and version IDs); AIStor `mc retention info`; AIStor `mc rm` (specific-version deletion); AIStor `mc stat` (metadata and specific-version inspection). These existing citations were not reopened.
 
 ```bash
-mc retention set --version-id REPLACE_WITH_PROTECTED_VERSION COMPLIANCE 1d \
-  mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
-mc retention info --version-id REPLACE_WITH_PROTECTED_VERSION \
-  mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
-mc stat --version-id REPLACE_WITH_CONTROL_VERSION \
-  mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/control.txt
-mc rm --version-id REPLACE_WITH_CONTROL_VERSION \
-  mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/control.txt
-mc stat --version-id REPLACE_WITH_CONTROL_VERSION \
-  mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/control.txt
-mc rm --version-id REPLACE_WITH_PROTECTED_VERSION \
-  mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
-mc stat --version-id REPLACE_WITH_PROTECTED_VERSION \
-  mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
-mc retention info --version-id REPLACE_WITH_PROTECTED_VERSION \
-  mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
+(                                       # a subshell, so your own script arguments are untouched and the exits below end only the subshell
+  set +e                                # errexit off here, so a command that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NEW_RETENTION_TEST_BUCKET' 'REPLACE_WITH_PROTECTED_VERSION' 'REPLACE_WITH_CONTROL_VERSION'   # the test bucket, then the protected and control version IDs recorded above: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the test bucket name (lower-case letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2|$3" in
+    *REPLACE_WITH_*|*[[:space:][:cntrl:]]*) echo "substitute both version IDs, without whitespace or control characters, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  [ -n "$2" ] || { echo "substitute both version IDs on the set -- line above; not probing"; exit 2; }
+  [ -n "$3" ] || { echo "substitute both version IDs on the set -- line above; not probing"; exit 2; }
+  [ "$2" != "$3" ] || { echo "the protected and control version IDs must differ; not probing"; exit 2; }
+  set -- 0 "$@"                         # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0; then the bucket and the two version IDs
+  mc retention set --version-id "$3" COMPLIANCE 1d \
+    "mys3/$2/protected.txt" || { echo "mc retention set exit $?: the protected version's retention was not set; inconclusive"; set -- 3 "${@:2}"; }
+  mc retention info --version-id "$3" \
+    "mys3/$2/protected.txt" || { echo "mc retention info exit $?: the protected version's retention was not read; inconclusive"; set -- 3 "${@:2}"; }
+  mc stat --version-id "$4" \
+    "mys3/$2/control.txt" || { echo "mc stat exit $?: the control version was not found; inconclusive"; set -- 3 "${@:2}"; }
+  [ "$1" = 0 ] || { echo "block exit 3; stop: the protected version's retention or the control version is not established, so nothing was deleted"; exit 3; }
+  mc rm --version-id "$4" \
+    "mys3/$2/control.txt" || { echo "mc rm exit $?: deleting the unlocked control failed, so the test has not isolated retention; inconclusive"; set -- 3 "${@:2}"; }
+  set -- "${@:1:4}" "$(if mc stat --version-id "$4" \
+    "mys3/$2/control.txt" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${@:1:4}" "${5##*$'\n'}" "${5%$'\n'*}"   # mc's exit status, then its output
+  printf '%s\n' "$6"
+  case "$5:$6" in
+    0:*) echo "the control version still answers after its delete, so the test has not isolated retention; inconclusive"; set -- 3 "${@:2}" ;;
+    *'does not exist'*) ;;
+    *) echo "mc stat exit $5 without a does-not-exist error: the control version's absence is not shown; inconclusive"; set -- 3 "${@:2}" ;;
+  esac
+  if mc rm --version-id "$3" \
+    "mys3/$2/protected.txt"; then
+    echo "FINDING: the COMPLIANCE-protected version was deleted before its retention expired"; set -- 1 "${@:2}"
+  fi
+  mc stat --version-id "$3" \
+    "mys3/$2/protected.txt" || { echo "mc stat exit $?: the protected version did not answer after the delete attempt; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"; }
+  mc retention info --version-id "$3" \
+    "mys3/$2/protected.txt" || { echo "mc retention info exit $?: the protected version's retention was not read after the delete attempt; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}"; }
+  echo "block exit $1; the retention output above is not classified, so confirm the protected version still has COMPLIANCE retention with a future retain-until date"
+  exit "$1"
+)
 ```
 
 Before deletion, confirm the protected version has COMPLIANCE retention with a future retain-until date and the control version exists. Deleting the unlocked control must succeed, and its subsequent inspection must report that specific version absent. Deleting the protected version must fail, while its subsequent inspection and retention query must still succeed for the same version ID. If both deletes fail, the test has not isolated retention. A delete marker or an unversioned read does not establish whether the retained version survived. Sources: object locking, `mc mb`, `mc retention set`, `mc retention info`, `mc rm`, and `mc stat`.
 
 **Audit delivery, REASONED:** a live AIStor and durable audit receiver stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. After enabling the chosen target and restarting AIStor, use a unique object name and record the test time. Reuse the proven private object in the forbidden bucket for the denied request.
 
-REASONED: following block; durable delivery comparison follows the cited audit documentation; a live AIStor and durable audit receiver stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output; the mc stub recorded the write payload and both reads, printing stub responses. Missing audit records without a target versus durable matching records with one still require the receiver comparison below. Per the guide's cited AIStor audit logging (no default destination, queue loss, persistent queue, and event fields); AIStor webhook audit delivery (environment settings and acknowledgement limits); AIStor Kafka audit delivery (environment settings and restart). These existing citations were not reopened.
+REASONED: following block; durable delivery comparison follows the cited audit documentation; a live AIStor and durable audit receiver stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. In an earlier form, before its values moved to a guarded `set --` line, local bash -n and ShellCheck 0.11.0 exited 0 without output, and the mc stub recorded the write payload and both reads, printing stub responses. The current form is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: a failed write or read of the new object records 3, as does a successful read of the other bucket's object or a failure of that read without an Access Denied error. Otherwise it exits 0, because the receiver's records, which are the result, are left for the reader. Missing audit records without a target versus durable matching records with one still require the receiver comparison below. Per the guide's cited AIStor audit logging (no default destination, queue loss, persistent queue, and event fields); AIStor webhook audit delivery (environment settings and acknowledgement limits); AIStor Kafka audit delivery (environment settings and restart). These existing citations were not reopened.
 
 ```bash
-printf '%s\n' 'audit delivery probe' | mc pipe app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_UNIQUE_AUDIT_OBJECT
-mc cat app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_UNIQUE_AUDIT_OBJECT
-mc cat app/REPLACE_WITH_OTHER_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT
+(                                       # a subshell, so your own script arguments are untouched and the exits below end only the subshell
+  set +e                                # errexit off here, so a command that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_APP_BUCKET' 'REPLACE_WITH_UNIQUE_AUDIT_OBJECT' 'REPLACE_WITH_OTHER_BUCKET' 'REPLACE_WITH_KNOWN_PRIVATE_OBJECT'   # the app bucket, a new object key for this test, the other bucket and its proven private object's key: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the app bucket name (lower-case letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the other bucket name (lower-case letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  [ "$1" != "$3" ] || { echo "the app bucket and the other bucket must be two different buckets; not probing"; exit 2; }
+  case "$2|$4" in
+    *REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute both object keys inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|/*) echo "substitute a new object key, without a leading slash, on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$4" in
+    ""|/*) echo "substitute the proven private object's key, without a leading slash, on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- 0 "$@"                         # the block's status so far: 3 (inconclusive) outranks 0; then the four values above
+  printf '%s\n' 'audit delivery probe' | mc pipe "app/$2/$3" || { echo "mc pipe exit $?: the audit write failed; inconclusive"; set -- 3 "${@:2}"; }
+  mc cat "app/$2/$3" || { echo "mc cat exit $?: the audit read failed; inconclusive"; set -- 3 "${@:2}"; }
+  set -- "${@:1:5}" "$(if mc cat "app/$4/$5" 2>&1 > /dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the denied read the receiver must record
+  set -- "${@:1:5}" "${6##*$'\n'}" "${6%$'\n'*}"   # mc's exit status, then its error text
+  printf '%s\n' "$7"
+  case "$6:$7" in
+    0:*) echo "the read of the other bucket's object succeeded, so there is no denied request for the receiver to record; inconclusive (the scoped-access block classifies that read as a finding)"; set -- 3 "${@:2}" ;;
+    *'Access Denied'*) ;;
+    *) echo "mc cat exit $6 without an Access Denied error: the read failed, but not visibly by MinIO's denial; inconclusive"; set -- 3 "${@:2}" ;;
+  esac
+  echo "block exit $1; this block cannot see the audit receiver, so query its persisted records for these requests yourself: an S3 200 proves nothing about logging"
+  exit "$1"
+)
 ```
 
 Query the receiver's persisted records for the matching bucket, object, operation, time, identity, status, and request ID. Confirm records for both the successful operations and the denied read, and confirm they remain available from durable storage, for example after restarting the receiver. With no target configured, these S3 requests can complete without any external audit record. With delivery configured, the matching records must actually be stored at the receiver. An S3 200 proves nothing about logging; a webhook 2xx proves only acknowledgement. Sources: audit logging, webhook delivery, and Kafka delivery.
@@ -30462,26 +30671,39 @@ For the duration caveat, use a valid JWT expiring in approximately 20 minutes, `
 
 Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner. This block and the Console-disabled check below print the `exitcode` and `errormsg` write-out variables, which the cited curl manual dates to curl 7.75.0; use curl 7.75.0 or later.
 
-REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With curl stubbed, the literal placeholder, empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed their guard messages without invoking curl, including a short assignment under set -u. A fixture HTTPS URL reached curl via config stdin, not argv; a backslash/quote fixture was escaped in that input. Both admitted cases printed a stub response. The bash -n, ShellCheck and stub runs recorded here covered the presigned-URL block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. These are local guard and formatting observations, not expiry or signature-age enforcement. Per the guide's cited AIStor `mc share download` (presigned credentials and expiry); AIStor access management (built-in policies, custom policy structure, actions, and resources); AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key). These existing citations were not reopened.
+REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With curl stubbed, the literal placeholder, empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed their guard messages without invoking curl, including a short assignment under set -u. A fixture HTTPS URL reached curl via config stdin, not argv; a backslash/quote fixture was escaped in that input. Both admitted cases printed a stub response. The bash -n, ShellCheck and stub runs recorded here covered the presigned-URL block in an earlier form, whose guard refusals left the subshell with status 0 and which did not classify its request. The current form, which takes allow or deny on its `set --` line, is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: guard refusals exit 2, a 2xx exits 0 with allow and 1 with deny, a 403 exits 0 with deny, and any other result exits 3. These are local guard and formatting observations, not expiry or signature-age enforcement. Per the guide's cited AIStor `mc share download` (presigned credentials and expiry); AIStor access management (built-in policies, custom policy structure, actions, and resources); AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key). These existing citations were not reopened.
 
 ```bash
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRESIGNED_URL'
+  set +e                   # errexit off here, so a failed request is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRESIGNED_URL' 'REPLACE_WITH_allow_OR_deny'   # the URL, then allow where this GET should succeed (a new URL, the first GET, or the one-hour URL without the deny policy) or deny where it should be refused (the five-minute URL after six minutes, or the one-hour URL after eleven minutes with the deny policy)
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*example.com*|*[[:cntrl:]]*|"") echo "substitute the complete URL without control characters; not probing"; exit 2 ;;
     https://*) ;;
     *) echo "use the deployment HTTPS URL; not probing"; exit 2 ;;
   esac
-  set -- "${1//\\/\\\\}"
-  set -- "${1//\"/\\\"}"
-  printf 'url = "%s"\n' "$1" |
-    curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 20 \
+  case "$2" in
+    allow|deny) ;;
+    *) echo "substitute allow (this GET should succeed) or deny (this GET should be refused) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "${1//\\/\\\\}" "$2"
+  set -- "${1//\"/\\\"}" "$2"
+  set -- "$1" "$2" "$(if printf 'url = "%s"\n' "$1" | curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 20 \
       -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --config -
+      --config -; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its write-out line
+  printf '%s\n' "$4"
+  case "$2:$3:$4" in
+    allow:0:http=2*) echo "block exit 0; the GET succeeded, as expected with allow; the comparisons below still need their other GETs"; exit 0 ;;
+    deny:0:'http=403 '*) echo "block exit 0; the GET was refused with 403, as expected with deny: correlate that denial with AIStor's own request or audit evidence, which this block cannot see"; exit 0 ;;
+    deny:0:http=2*) echo "FINDING: the GET succeeded although this URL should now be refused; block exit 1"; exit 1 ;;
+    *:0:*) echo "the HTTP status above is not the result this block classifies for $2; block exit 3, inconclusive"; exit 3 ;;
+    *) echo "curl exit $3: no HTTP response, and a network failure establishes neither control; block exit 3, inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
@@ -30494,15 +30716,17 @@ Correlate denials with AIStor's own request or audit evidence. A proxy error, ex
 
 **Console disabled, REASONED:** a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Run this on each AIStor host with permission to inspect its listeners. Supply the direct Console URL established by section 3, without credentials or query parameters, and a proven application object:
 
-REASONED: following block; Console disablement follows the cited Console settings; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With mc, ss, and curl stubbed, the literal placeholders, either empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed guard messages without external calls, including a short assignment under set -u. Valid fixtures called mc, ss, and curl in order and printed stub listener/curl responses; a failing mc printed signed S3 read failed; stop, exited 1, and called neither ss nor curl. The bash -n, ShellCheck and stub runs recorded here covered the Console-disabled block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. Enabled versus disabled Console behaviour still requires the live comparison below. Per the guide's cited AIStor Console settings (disablement and browser redirection); AIStor `mc cat`. These existing citations were not reopened.
+REASONED: following block; Console disablement follows the cited Console settings; a live AIStor stand-up opens listeners; the authoring host forbids that without an isolated network namespace, recorded as unavailable in DECISIONS.md and sqlite.md. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With mc, ss, and curl stubbed, the literal placeholders, either empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed guard messages without external calls, including a short assignment under set -u. Valid fixtures called mc, ss, and curl in order and printed stub listener/curl responses; a failing mc printed signed S3 read failed; stop, exited 1, and called neither ss nor curl. The bash -n, ShellCheck and stub runs recorded here covered the Console-disabled block in an earlier form, whose guard refusals left the subshell with status 0 and whose failed signed read exited 1. The current form, which takes enabled or off on its `set --` line, is covered by the bash -n and ShellCheck 0.11.0 passes of the repository's gate suite and by stub runs: guard refusals and a missing ss exit 2 before any call, a failed signed read exits 3, and a failed ss records 3. In those runs, with off a Console response exits 1 and no response is left unclassified at 0, and with enabled no response records 3. Enabled versus disabled Console behaviour still requires the live comparison below. Per the guide's cited AIStor Console settings (disablement and browser redirection); AIStor `mc cat`. These existing citations were not reopened.
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIRECT_CONSOLE_HTTPS_URL' 'app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT'
+  set +e                                # errexit off here, so a command that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIRECT_CONSOLE_HTTPS_URL' 'app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT' 'REPLACE_WITH_enabled_OR_off'   # the Console URL, the object, then enabled while the Console is still on or off after applying MINIO_BROWSER=off and restarting
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  [ -n "$1" ] && [ -n "$2" ] || { echo "supply both values; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  [ -n "$1" ] || { echo "supply both values; not probing"; exit 2; }
+  [ -n "$2" ] || { echo "supply both values; not probing"; exit 2; }
   case "$1|$2" in
     *REPLACE_WITH_*|*example.com*|*[[:cntrl:]]*) echo "substitute deployment values without control characters; not probing"; exit 2 ;;
   esac
@@ -30510,10 +30734,26 @@ REASONED: following block; Console disablement follows the cited Console setting
     https://*) ;;
     *) echo "use the deployment HTTPS Console URL; not probing"; exit 2 ;;
   esac
-  mc cat "$2" > /dev/null || { echo "signed S3 read failed; stop"; exit 1; }
-  ss -tlnp
-  curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+  case "$3" in
+    enabled|off) ;;
+    *) echo "substitute enabled (the Console is still on) or off (after MINIO_BROWSER=off and a restart) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  command -v ss > /dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  mc cat "$2" > /dev/null || { echo "signed S3 read failed; stop"; exit 3; }
+  set -- 0 "$@"                         # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0; then the three values above
+  ss -tlnp || { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; set -- 3 "${@:2}"; }
+  set -- "${@:1:4}" "$(if curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${@:1:4}" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then its write-out line
+  printf '%s\n' "$6"
+  case "$4:$6" in
+    enabled:'http=000 '*) echo "no HTTP response from the Console URL while the Console should be on, so its UI is not established; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+    enabled:*) ;;
+    off:'http=000 '*) echo "no HTTP response from the Console URL; a failed request to the previous URL alone is insufficient, so this is not classified as a pass" ;;
+    off:*) echo "FINDING: the Console URL still answers after MINIO_BROWSER=off"; set -- 1 "${@:2}" ;;
+  esac
+  echo "block exit $1; the listener table and the Console response are left for you to judge: with off, confirm the running service received MINIO_BROWSER=off and no Console listener remains; with enabled, confirm the response is the Console UI"
+  exit "$1"
 )
 ```
 
@@ -30655,7 +30895,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "baa2a64118aca8409a4b333045d0efc42601c486f9e65aeb0d6edb3bfe7b55e0",
+  "body_sha256": "2d7a69919cc62f7df316886e2ea012e3c3b9412fe47b3643ade3242d8f6a8b5c",
   "components": {
     "aistor": {
       "name": "AIStor documentation",
@@ -30767,15 +31007,15 @@ Claims (full source mapping in the JSON block below):
     "audit-webhook": {"text": "Enable HTTPS webhook with authentication value supplied verbatim, certificate verification and persistent audit queue; restart every node.", "components": ["aistor"], "sources": ["aistor:s5ffb30993d29", "aistor:s8b922d2cc573"], "status": "REASONED"},
     "audit-kafka": {"text": "Kafka TLS defaults off; explicitly enable verified TLS and supported SASL with topic-scoped credentials; example PLAIN is only over TLS.", "components": ["aistor"], "sources": ["aistor:s077155dd0d0a", "aistor:s624eb11b369c"], "status": "REASONED"},
     "audit-queue": {"text": "Persistent per-node queue needs service read/write/list access; delivery retries can lose events when full, and webhook 2xx proves acknowledgement rather than durability.", "components": ["aistor"], "sources": ["aistor:sfc2a9f6aaa82", "aistor:s8b922d2cc573"], "status": "REASONED"},
-    "verify-exposure": {"text": "Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.", "components": ["aistor", "curl"], "sources": ["aistor:sb91d4a3416c9", "aistor:sb9d5614881d7", "aistor:s832ebbd6b12d", "aistor:s410c1a1103fc", "aistor:sedcc92753b24", "aistor:s5e54dfb548ff", "aistor:sce35ebdaa862", "aistor:sfc2a9f6aaa82", "aistor:s077155dd0d0a", "aistor:s5ffb30993d29", "aistor:s010df9b91c3e", "aistor:sd117ab9c22cf", "curl:s07916104bf60"], "status": "REASONED", "verify": [1]},
-    "verify-scope": {"text": "Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded.", "components": ["aistor"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aistor:s060498cf1d28", "aistor:s8aab14fd9241"], "status": "REASONED", "verify": [2]},
-    "verify-encryption": {"text": "New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state.", "components": ["aistor"], "sources": ["aistor:sa1b121169978", "aistor:s0c9db42c9d8d", "aistor:s725b0aa69279"], "status": "REASONED", "verify": [3]},
-    "verify-retention": {"text": "Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable.", "components": ["aistor"], "sources": ["aistor:s79346e27156b", "aistor:sb375aff8811f", "aistor:s0c9db42c9d8d"], "status": "REASONED", "verify": [4, 5]},
-    "verify-audit": {"text": "Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit.", "components": ["aistor"], "sources": ["aistor:s7eb5037577a9", "aistor:s624eb11b369c", "aistor:s8b922d2cc573"], "status": "REASONED", "verify": [6]},
+    "verify-exposure": {"text": "Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.", "components": ["aistor", "curl"], "sources": ["aistor:sb91d4a3416c9", "aistor:sb9d5614881d7", "aistor:s832ebbd6b12d", "aistor:s410c1a1103fc", "aistor:sedcc92753b24", "aistor:s5e54dfb548ff", "aistor:sce35ebdaa862", "aistor:sfc2a9f6aaa82", "aistor:s077155dd0d0a", "aistor:s5ffb30993d29", "aistor:s010df9b91c3e", "aistor:sd117ab9c22cf", "curl:s07916104bf60"], "status": "REASONED", "verify": [1, 2, 3]},
+    "verify-scope": {"text": "Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded.", "components": ["aistor"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aistor:s060498cf1d28", "aistor:s8aab14fd9241"], "status": "REASONED", "verify": [4]},
+    "verify-encryption": {"text": "New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state.", "components": ["aistor"], "sources": ["aistor:sa1b121169978", "aistor:s0c9db42c9d8d", "aistor:s725b0aa69279"], "status": "REASONED", "verify": [5]},
+    "verify-retention": {"text": "Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable.", "components": ["aistor"], "sources": ["aistor:s79346e27156b", "aistor:sb375aff8811f", "aistor:s0c9db42c9d8d"], "status": "REASONED", "verify": [6, 7]},
+    "verify-audit": {"text": "Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit.", "components": ["aistor"], "sources": ["aistor:s7eb5037577a9", "aistor:s624eb11b369c", "aistor:s8b922d2cc573"], "status": "REASONED", "verify": [8]},
     "verify-oidc": {"text": "Fresh mapped STS credentials must read only the app fixture versus a broad-policy control; also test an unmapped identity and explicit duration beyond shorter JWT/default.", "components": ["aistor"], "sources": ["aistor:s72c067e99d16", "aistor:s53d35aac0c14"], "status": "REASONED"},
-    "verify-url-expiry": {"text": "Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.", "components": ["aistor", "curl"], "sources": ["aistor:s19e2a1dc1a62", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [7]},
-    "verify-signature-age": {"text": "One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.", "components": ["aistor", "aws", "curl"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aws:s724c81d09245", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [7]},
-    "verify-console": {"text": "After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.", "components": ["aistor", "curl"], "sources": ["aistor:s410c1a1103fc", "aistor:s060498cf1d28", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [8]},
+    "verify-url-expiry": {"text": "Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.", "components": ["aistor", "curl"], "sources": ["aistor:s19e2a1dc1a62", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [9]},
+    "verify-signature-age": {"text": "One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.", "components": ["aistor", "aws", "curl"], "sources": ["aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aws:s724c81d09245", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [9]},
+    "verify-console": {"text": "After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.", "components": ["aistor", "curl"], "sources": ["aistor:s410c1a1103fc", "aistor:s060498cf1d28", "curl:s5e1383feef7d"], "status": "REASONED", "verify": [10]},
     "verify-concurrency": {"text": "Four-node budget 64 should constrain admission to 16 per node under saturating signed load; compare measured inflight/waiting metrics with automatic sizing, not RPS or a guessed rejection code.", "components": ["aistor"], "sources": ["aistor:sedcc92753b24", "aistor:s4e625044ee38"], "status": "REASONED"}
   }
 }
