@@ -79,19 +79,15 @@ RedisInsight 3.8.0's default server configuration uses `RI_APP_HOST` with a fall
 
 ## Verify
 
-REASONED: following block; panel sources below support the listener check, the anonymous front-page/data-route checks and the authenticated data-route positive control; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes. The two `curl` checks take one panel's host name and protected path on a guarded `set --` line and refuse example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. This host-side inventory is prose rather than part of the block below, because it runs on the panel's host and the block runs from outside your network. On the panel's host, run `ss -tlnp` and read every panel listener: each should be loopback (127.0.0.1) or a deliberately chosen private address. Also inspect the actual published addresses and ports (`docker ps` and the port mappings), and from outside your network probe any public backend mapping too: a protected frontend does not prove a separately published backend port is closed.
+
+REASONED: following block; panel sources below support the anonymous front-page/data-route checks and the authenticated data-route positive control. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes. The two `curl` checks take one panel's host name and protected path on a guarded `set --` line and refuse example.com, example.net, example.org and their subdomains. The block records each outcome and exits once: 2 if its guard refuses, 3 if a request fails or the protected route answers 404 or a server error, and otherwise 0. A 401 or 403 is the pass; any other answer is printed for you to judge, because only its body or Location shows a dashboard or a login, so the block reports no finding itself and its last line says so. No run of an earlier form of the block is recorded. This form was checked on 2026-10-31 with bash -n and with curl stubs and no network, covering each guard refusal, each status, a failed or inconclusive first request followed by a passing second one, and an inherited `readonly`, `declare -i` or `set -e`; the repository's gate suite runs ShellCheck 0.11.0 over every block.
 
 ```bash
-# On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
-# Docker documents explicit publish addresses and firewall rules for publication. As this guide's assessment,
-# a socket listing alone does not prove reachability, so also inspect the actual published addresses and
-# ports (docker ps and the port mappings), and from outside your network probe any public backend mapping too:
-# a protected frontend does not prove a separately published backend port is closed.
-ss -tlnp                                      # panel listeners: loopback or a private address only
-
 # From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel. Read the
 # BODY, not just the status: a login page and a dashboard can both be 200. Run the block once per panel.
-(                                       # a subshell, so your own script arguments are untouched
+(                                       # a subshell, so your own script arguments are untouched and one exit status covers the whole block
+  set +e                                # errexit off, so a request that fails is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PANEL_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the panel's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a route you know returns real data when authorized, without its leading slash: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -105,16 +101,36 @@ ss -tlnp                                      # panel listeners: loopback or a p
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' -i "https://$1/"
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 3 (inconclusive) outranks 0; the block classifies no finding (see its last line)
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -i -w '\n%{http_code}' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"        # curl's exit status, then the response with the HTTP code on its last line
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$5"
   #   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
   #   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
   #   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
+  case "$4:$6" in
+    0:401|0:403) ;;
+    0:*) echo "unclassified: HTTP $6 from the front page is not a 401 or 403 denial, so read it against the comment above" ;;
+    *) echo "curl exit $4: the front-page request failed; inconclusive"; set -- "$1" "$2" 3 ;;
+  esac
   # SPA panels (Grafana, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
   # the dashboard, so also request a route you know returns real data when authorized, and require it be denied
   # without credentials:
-  curl -q -g -sS --noproxy '*' -i "https://$1/$2"
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -i -w '\n%{http_code}' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"        # curl's exit status, then the response with the HTTP code on its last line
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$5"
   #   Confirm that route returns data WITH valid auth first (a positive control); a 404 or a server error is
   #   inconclusive, not a pass, and the guard above refuses an unsubstituted placeholder.
+  case "$4:$6" in
+    0:401|0:403) ;;
+    0:404|0:5??) echo "HTTP $6 from the protected route is a 404 or a server error: inconclusive, not a pass"; set -- "$1" "$2" 3 ;;
+    0:*) echo "unclassified: HTTP $6 from the protected route is not a 401 or 403 denial, so read it against the comments above" ;;
+    *) echo "curl exit $4: the protected-route request failed; inconclusive"; set -- "$1" "$2" 3 ;;
+  esac
+  echo "block exit $3; a front-page answer other than 401 or 403, and a protected-route answer other than 401, 403, 404 or a server error, are not classified, so judge them yourself: a 200 that renders the dashboard or app content is a finding, and a redirect passes only into your login layer"
+  exit "$3"
 )
 ```
 
@@ -206,7 +222,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "af82072eb380d45c5ac78b7615639312ece098bfa0a87bd564790a0072e6ee93",
+  "body_sha256": "cdca7f5e032e5ed776dc72cb67fed27aa09f71417b7c492eb6fdff931af88aef",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",
@@ -345,7 +361,7 @@ Claims (full source mapping in the JSON block below):
     "pgadmin-login": {"text": "pgAdmin server mode has its own accounts/login.", "components": ["pgadmin"], "sources": ["pgadmin:s2f7e33714435"], "status": "REASONED"},
     "adminer-login": {"text": "Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
     "adminer-file": {"text": "Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy.", "components": ["grafana-pin", "prometheus-pin", "engine-pinned", "moby-pinned"], "sources": ["grafana-pin:s4c6ff3174e7e", "prometheus-pin:s6d5f308b02a2", "engine-pinned:sb3dacfbaf7e1", "engine-pinned:s1c82ff316a7e", "engine-pinned:sc244607b20e4", "moby-pinned:seaf4197aafaa"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy.", "components": ["grafana-pin", "prometheus-pin", "engine-pinned", "moby-pinned"], "sources": ["grafana-pin:s4c6ff3174e7e", "prometheus-pin:s6d5f308b02a2", "engine-pinned:sb3dacfbaf7e1", "engine-pinned:s1c82ff316a7e", "engine-pinned:sc244607b20e4", "moby-pinned:seaf4197aafaa"], "status": "REASONED"},
     "verify-login": {"text": "Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]},
     "verify-data": {"text": "A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]}
   }

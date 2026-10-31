@@ -176,45 +176,72 @@ The documented quickstart itself runs `docker run ... -p 3000:3000 ... openhands
 
 ## Verify
 
+REASONED: the cited UI binding references support this host-side inventory, which is prose rather than part of the block below, because it runs on the UI's host and the block runs from another host. On the UI's host, run `ss -tlnp` and read every listener: 3001/3210/3000, each UI on 127.0.0.1 only.
+
 ```bash
 # REASONED: listener and UI checks follow the cited vendor documentation;
 # the authoring host lacks an isolated network namespace for authorized live listeners.
-ss -tlnp   # read every listener; 3001/3210/3000: each UI on 127.0.0.1 only
-# from another host. Read err, not the number: it must name a refusal or timeout reaching YOUR
+# Run this block from another host. Read err, not the number: it must name a refusal or timeout reaching YOUR
 # address. An HTTP code means the port answered. A resolver failure, a local socket error, or a
 # timeout that did not come from the remote address is inconclusive, never a pass.
-(                                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3210/" ;;
-  esac
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                                       # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3210/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"             # curl's exit status, then its http= exit= err= line
+    printf '%s\n' "$3"
+    case "$2:$3" in
+      7:*"http=000 "*|28:*"http=000 "*) echo "unclassified: read err above; a refusal or timeout reaching YOUR address is the pass, and any other cause is inconclusive"; exit 0 ;;
+      *"http=000 "*|*:) echo "curl exit $2 with no HTTP code and no refusal or timeout; inconclusive"; exit 3 ;;
+      *"http="*) echo "FINDING: port 3210 answered with an HTTP code, so it is reachable from this host"; exit 1 ;;
+      *) echo "curl exit $2 printed no http= line; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                       # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_CHAT_HOST'   # the public host name your proxy serves the chat UI on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                         # the 2nd value is this part's status so far: 3 (inconclusive) outranks 0
+    set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api/some-endpoint"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"        # curl's exit status, then the HTTP code
+    printf '%s\n' "$4"                    # without a key/token: 401; 000 and curl's error mean no answer, never a pass
+    case "$3:$4" in
+      0:401) ;;
+      0:*) echo "unclassified: HTTP $4 is not the 401 expected without a key or token, so read it against an actual protected route of your deployment" ;;
+      *) echo "curl exit $3: the API request got no answer, never a pass; inconclusive"; set -- "$1" 3 ;;
+    esac
+    if curl -q -g -sSI "https://$1/"; then :; else   # via the proxy: TLS, login required
+      echo "curl exit $?: the request through the proxy failed; inconclusive"; set -- "$1" 3
+    fi
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is
+  #   NOT listed in AUTH_ALLOWED_EMAILS; expect rejection at registration, before any account or session
+  #   is created (AUTH_ALLOWED_EMAILS gates new registration; it does not revoke an already-registered
+  #   user's existing session)
+  echo "block exit $1; a refusal or timeout on port 3210, an API answer other than 401, the proxy's TLS and login headers and the LobeChat registration check are not classified, so judge them yourself"
+  exit "$1"
 )
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_CHAT_HOST'   # the public host name your proxy serves the chat UI on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api/some-endpoint"  # without a key/token: 401; 000 and curl's error mean no answer, never a pass
-  curl -q -g -sSI "https://$1/"                     # via the proxy: TLS, login required
-)
-# LobeChat SSO: attempt to register/sign in with a Google account that has never registered and is
-#   NOT listed in AUTH_ALLOWED_EMAILS; expect rejection at registration, before any account or session
-#   is created (AUTH_ALLOWED_EMAILS gates new registration; it does not revoke an already-registered
-#   user's existing session)
 ```
 
-REASONED: preceding block; isolation comparison, listener and external-reachability checks, API authentication, proxy TLS/login, LobeChat registration and multi-user isolation follow the cited UI binding/authentication references, LobeChat AUTH_ALLOWED_EMAILS source, AnythingLLM workspace roles and linked pgvector guidance. No live UI/RAG deployment, external test path or paired identities are available. The anonymous API probe's flags were run locally with curl 8.18.0 against loopback stub listeners, not a UI, and a closed loopback port: the old `-s` form printed only the response body for a 401 and for a 200, and nothing for the closed port (exit 7), while the `-sS -o /dev/null -w '%{http_code}\n'` form printed `401`, `200`, and `000` with curl's connection error. That `000` is the value those runs observed, not a cited one: the installed curl 8.18.0 manual describes `http_code` only as "The numerical response code that was found in the last retrieved HTTP(S) or FTP(s) transfer." The proxy probe uses `-sSI` rather than `-sI` because the manual says `-s` shows no error messages and `-S` with it shows an error message if curl fails, so a TLS, DNS or connection failure prints curl's error instead of nothing. Run locally with curl 8.18.0 against a closed loopback port, the `-sI` form exited 7 and printed nothing, and the `-sSI` form exited 7 and printed curl's connection error. Those curl 8.18.0 runs covered the earlier form of the two probes, before the probes took the chat host on a guarded `set --` line and gained `-g`; the guarded block, which refuses example.com, example.net, example.org and their subdomains, has not been run. For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared assistant over shared documents), verify isolation at the data layer, not only at login. First, as user A, ask a question whose answer lives only in user A's documents or past conversations and confirm A's own document supplies the answer, the positive control that retrieval works at all; then ask the same question as user B and confirm B gets nothing of A's. A retrieval step that searches every user's embeddings without enforcing per-document access hands one user's content into another's session even though each logged in separately; scope retrieval to the requesting user's own documents or workspace, and where the store is pgvector the tenant row-level-security check in [vector-databases.md](vector-databases.md) is the store-side half. A retrieval filter alone does not isolate conversation history, memory, or a shared cache; check each of those the same way. This isolation check is REASONED, not demonstrated: the authoring environment has no live multi-user RAG deployment. Its expected isolation rests on the cited AnythingLLM workspace-role documentation and the pgvector row-level-security guidance linked above.
+REASONED: preceding block; isolation comparison, listener and external-reachability checks, API authentication, proxy TLS/login, LobeChat registration and multi-user isolation follow the cited UI binding/authentication references, LobeChat AUTH_ALLOWED_EMAILS source, AnythingLLM workspace roles and linked pgvector guidance. No live UI/RAG deployment, external test path or paired identities are available. The anonymous API probe's flags were run locally with curl 8.18.0 against loopback stub listeners, not a UI, and a closed loopback port: the old `-s` form printed only the response body for a 401 and for a 200, and nothing for the closed port (exit 7), while the `-sS -o /dev/null -w '%{http_code}\n'` form printed `401`, `200`, and `000` with curl's connection error. That `000` is the value those runs observed, not a cited one: the installed curl 8.18.0 manual describes `http_code` only as "The numerical response code that was found in the last retrieved HTTP(S) or FTP(s) transfer." The proxy probe uses `-sSI` rather than `-sI` because the manual says `-s` shows no error messages and `-S` with it shows an error message if curl fails, so a TLS, DNS or connection failure prints curl's error instead of nothing. Run locally with curl 8.18.0 against a closed loopback port, the `-sI` form exited 7 and printed nothing, and the `-sSI` form exited 7 and printed curl's connection error. Those curl 8.18.0 runs covered the earlier form of the two probes, before the probes took the chat host on a guarded `set --` line and gained `-g`; that guarded form, which refuses example.com, example.net, example.org and their subdomains, was not run. The current form leaves the listener inventory to the section's first paragraph and gives the whole block one exit status: 1 if port 3210 answers with an HTTP code, 3 if a request fails or port 3210 gives neither an HTTP code nor a refusal or timeout, 2 if a guard refuses and nothing was found or failed, and otherwise 0. A refusal or timeout on port 3210, an API answer other than 401, the proxy's headers and the LobeChat registration check are left for you to judge, and the block's last line names them. That form was checked on 2026-10-31 with bash -n and with curl stubs and no network, covering each guard refusal, each status, an earlier finding or failure followed by passing later checks, and an inherited `readonly`, `declare -i` or `set -e`; the repository's gate suite runs ShellCheck 0.11.0 over every block. For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared assistant over shared documents), verify isolation at the data layer, not only at login. First, as user A, ask a question whose answer lives only in user A's documents or past conversations and confirm A's own document supplies the answer, the positive control that retrieval works at all; then ask the same question as user B and confirm B gets nothing of A's. A retrieval step that searches every user's embeddings without enforcing per-document access hands one user's content into another's session even though each logged in separately; scope retrieval to the requesting user's own documents or workspace, and where the store is pgvector the tenant row-level-security check in [vector-databases.md](vector-databases.md) is the store-side half. A retrieval filter alone does not isolate conversation history, memory, or a shared cache; check each of those the same way. This isolation check is REASONED, not demonstrated: the authoring environment has no live multi-user RAG deployment. Its expected isolation rests on the cited AnythingLLM workspace-role documentation and the pgvector row-level-security guidance linked above.
 
 ## Common mistakes
 
@@ -317,7 +344,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8d72ad09738b5167793e052f691c13b4a40c6b274c0ad876309eea7843a19d09",
+  "body_sha256": "90834528d783428988689651652d91b736579f316526b56e438bb5c9011f4eb5",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",
