@@ -342,60 +342,102 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
-**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. The /invocations runs and the bash -n result covered an earlier form, before the key and /invocations subshells took the model server's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains and exit 2 on a partial paste or a wrong value count, and before the listener inventory checked for `ss`. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n and stub runs of the whole block with `ss` present, failing and missing, in which both host subshells printed their placeholder refusals; the partial-paste, value-count and reserved-name refusals have not been run. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. The /invocations runs and the bash -n result covered an earlier form, before the key and /invocations subshells took the model server's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains and exit 2 on a partial paste or a wrong value count. They also came before the listener inventory checked for `ss` and before the block ran its parts in one subshell with one exit status. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n and stub runs of the whole block with `ss` and `pgrep` present, failing and missing, with the placeholders left in and substituted, and with a partial paste, a wrong value count and a reserved name on each host line, also under an inherited `readonly`, `declare -i` and `set -e`. The block runs its listener inventory, `pgrep` count, model-list key check and /invocations request as four parts of one subshell with errexit off, and exits once at the end. It exits 1 if the model list answers a request without a key with a 2xx or /invocations answers 200 without one. Otherwise it exits 3 if `ss`, `pgrep` or a request fails, the request without a key gets neither 401 nor a 2xx, the positive control with the key does not answer 200, or /invocations answers anything but 200. It exits 2 if a part refuses, including a missing `ss` or `pgrep` and an unsubstituted or partly pasted `set --` line, only while no other part found something or was inconclusive, and otherwise 0. A fixed deployment therefore also ends with 3, because the block cannot tell a proxy's refusal of /invocations from vLLM's own error; its last line leaves the listener list, any process count above 0 and the printed /invocations headers and `invocations-body.txt` for you to judge. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
 
 ```bash
-(                                       # a subshell, so the exit below ends only this part, with 2 when ss is not installed
-  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
-  ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
-             # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
-             # publication. From another host, probe EACH backend listener's own host and port (adapt the
-             # subshell below, which shows the technique for one endpoint) and confirm each is refused
-)
-pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-api|grpc-restricted-protocol)( |=)'
-           # counts visible command lines carrying one of those secret-bearing arguments; 0 means none was seen
-           # right now, and any match needs a look. Triton's restricted-API flags carry the secret in their
-           # value, so a match is expected when you pass either flag on the command line. It does not see a key in a file the server
-           # reads, in a server's environment (VLLM_API_KEY, LLAMA_API_KEY), inside another argument's value
-           # (vLLM's Rust-frontend --args-json), on an abbreviated option that argparse or getopt_long accepts
-           # (--api-k X, --http-restricted=...), or on a flag the pattern does not name
-(
-  # Feed the API key to curl on stdin (curl --header @-), never in argv:
-  # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The API key you substitute on the set -- line enters shell history.
-  # Use a short-lived key or clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the key from set -x
-  # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MODEL_HOST' 'REPLACE_WITH_API_KEY'   # the public host name your proxy serves the model API on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
-  curl -q -g -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' "https://$1/v1/models"   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
-  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- "https://$1/v1/models"   # positive control: 200 with a model list, printed
-)
-(
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MODEL_HOST' 'REPLACE_WITH_A_REAL_SERVED_MODEL'   # the same model API host name as the key check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then a real served model name: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
-  curl -q -g -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
-    -d "{\"model\":\"$2\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" "https://$1/invocations"
-)
+(                                       # one subshell around the whole block, so one exit status covers all four parts
+  set +e                                # errexit off here, so each part's status is recorded below instead of ending the block
+  set --                                # each part's exit status, in order, folded into the block's status at the end
+  (                                     # the listener inventory: 2 when ss is not installed, 3 when it fails
+    command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+    ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
+               # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
+               # publication. From another host, probe EACH backend listener's own host and port (adapt the
+               # subshell below, which shows the technique for one endpoint) and confirm each is refused
+    set -- "$?"                         # ss's exit status
+    [ "$1" = 0 ] || { echo "ss -tlnp exit $1: the listener list did not print; inconclusive"; exit 3; }
+    exit 0                              # the listener list is not classified: judge it yourself
+  )
+  set -- "$@" "$?"
+  (                                     # the argv count: 2 when pgrep is not installed, 3 when it fails
+    command -v pgrep >/dev/null || { echo "pgrep is not installed here; not counting processes"; exit 2; }
+    pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-api|grpc-restricted-protocol)( |=)'
+             # counts visible command lines carrying one of those secret-bearing arguments; 0 means none was seen
+             # right now, and any match needs a look. Triton's restricted-API flags carry the secret in their
+             # value, so a match is expected when you pass either flag on the command line. It does not see a key in a file the server
+             # reads, in a server's environment (VLLM_API_KEY, LLAMA_API_KEY), inside another argument's value
+             # (vLLM's Rust-frontend --args-json), on an abbreviated option that argparse or getopt_long accepts
+             # (--api-k X, --http-restricted=...), or on a flag the pattern does not name
+    set -- "$?"                         # pgrep's exit status: 0 when a process matched, 1 when none did
+    case "$1" in
+      0) echo "a visible command line carries one of those arguments: a lead to check yourself, not classified" ;;
+      1) ;;
+      *) echo "pgrep exit $1: the count is not reliable; inconclusive"; exit 3 ;;
+    esac
+    exit 0
+  )
+  set -- "$@" "$?"
+  (
+    # Feed the API key to curl on stdin (curl --header @-), never in argv:
+    # -H "Authorization: Bearer KEY" is readable in ps / /proc/<pid>/cmdline.
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The API key you substitute on the set -- line enters shell history.
+    # Use a short-lived key or clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the key from set -x
+    # tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MODEL_HOST' 'REPLACE_WITH_API_KEY'   # the public host name your proxy serves the model API on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "$2" "$(curl -q -g -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' "https://$1/v1/models"; printf '\n%s' "$?")"   # PROXY-policy test: 401 without a key. TGI leaves /v1/models outside its native key middleware, so a 200 is not proof the backend enforces the key
+    set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the key, curl's output, then curl's exit status
+    printf '%s' "$3"
+    case "$4:${3##*http=}" in
+      0:401\ *) set -- "$1" "$2" 0 ;;   # the expected refusal, a pass only if the positive control below answers 200
+      0:2??\ *) echo "FINDING: the model list answered without a key"; set -- "$1" "$2" 1 ;;
+      *) echo "the request without a key got neither 401 nor a 2xx; inconclusive"; set -- "$1" "$2" 3 ;;
+    esac
+    set -- "$3" "$(printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- "https://$1/v1/models"; printf '\n%s' "$?")"   # positive control: 200 with a model list, printed
+    set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status so far, curl's output, then curl's exit status; the key is no longer held
+    printf '%s' "$2"
+    case "$3:${2##*http=}" in
+      0:200\ *) ;;
+      *) echo "the positive control with the key did not answer 200; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+    esac
+    exit "$1"
+  )
+  set -- "$@" "$?"
+  (
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MODEL_HOST' 'REPLACE_WITH_A_REAL_SERVED_MODEL'   # the same model API host name as the key check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then a real served model name: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
+    set -- "$(curl -q -g -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
+      -d "{\"model\":\"$2\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" "https://$1/invocations"
+      printf '\n%s' "$?")"             # curl's headers and http= line, then curl's exit status
+    set -- "${1%$'\n'*}" "${1##*$'\n'}"
+    printf '%s' "$1"
+    case "$2:${1##*http=}" in
+      0:200*) echo "FINDING: /invocations answered 200 without a key, so the route reaches vLLM unauthenticated"; exit 1 ;;
+      0:*) echo "/invocations did not answer 200: judge the headers above and invocations-body.txt as the comments below say; inconclusive"; exit 3 ;;
+      *) echo "curl exit $2: the /invocations request failed; inconclusive"; exit 3 ;;
+    esac
+  )
+  set -- "$@" "$?"
                                                         # vLLM /invocations needs JSON (a bare -d '{}' sends form
                                                         # content-type and fails the schema) and a REAL served model.
                                                         # Read the printed headers and saved body, not the status alone: an
@@ -408,11 +450,20 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
                                                         # upstream error (nginx proxy_intercept_errors) serves its own page
                                                         # while the no-key request reached vLLM, which is reachability, not
                                                         # denial. Treat anything ambiguous as inconclusive
+  set -- 0 "$@"                         # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 2, a part that refused to run, which outranks 0, so a refusal gives 2 only while nothing else was recorded), then each part's status
+  while [ "$#" -gt 1 ]; do
+    case "$2:$1" in
+      1:*|3:0|3:2|3:3|2:0) set -- "$2" "${@:3}" ;;
+      0:*|2:*|3:*) set -- "$1" "${@:3}" ;;
+      *) echo "a part ended with status $2, which none of them sets; inconclusive"; case "$1" in 1) set -- 1 "${@:3}" ;; *) set -- 3 "${@:3}" ;; esac ;;
+    esac
+  done
+  echo "block exit $1; the listener list and any process count above 0 are not classified, and an inconclusive /invocations answer needs your proxy's logs, so judge them yourself"
+  exit "$1"
+)
 ```
 
-REASONED: mixed process-matching evidence and parser/visibility limitations from the printed expression and cited parser sources. The historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward. The pgrep line's demonstration covered only local expression matching, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line. The `pgrep` line prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4). The stub arguments `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`. The stub arguments `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`. The `pgrep` line therefore tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
-
-REASONED: following block; anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage. Bash 5.3.9 bash -n accepted all four Verify shell fences, the first in an earlier form, before its key and /invocations probes took the model server's host on guarded `set --` lines. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For the text-generation-webui block, the bash -n and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0; neither was re-run on the current form, whose guard refusals leave the subshell with status 2. For the vLLM internal-listener block, the bash -n run recorded here used an earlier form, whose Python target refusal and `NO CONNECTION` result each exited with status 1; it was not re-run on the current form, whose target refusal exits with status 2 and whose `NO CONNECTION` result exits with status 3. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
+REASONED: mixed process-matching evidence and parser/visibility limitations from the printed expression and cited parser sources, and the text-generation-webui instruction below from the cited modules/api/script.py. The historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward. The pgrep line's demonstration covered only local expression matching, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The current form of that block runs the unchanged `pgrep` line as its own part and records its status. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line. The `pgrep` line prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4). The stub arguments `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`. The stub arguments `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`. The `pgrep` line therefore tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen. For the text-generation-webui block that follows, anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage was available. Bash 5.3.9 bash -n accepted all four Verify shell fences, the first in an earlier form, before its key and /invocations probes took the model server's host on guarded `set --` lines, its listener inventory checked for `ss` and it ran its parts in one subshell with one exit status. The first fence's current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the local bash -n and stub runs recorded above it. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For the text-generation-webui block, the bash -n and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0; its current form, whose guard refusals leave the subshell with status 2, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes, and no stub run of it is recorded. For the vLLM internal-listener block, the bash -n run recorded here used an earlier form, whose Python target refusal and `NO CONNECTION` result each exited with status 1; its current form, whose target refusal exits with status 2 and whose `NO CONNECTION` result exits with status 3, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
 ```bash
 # REASONED: text-generation-webui authentication follows the cited modules/api/script.py; no container runtime is available.
@@ -673,7 +724,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "0ecb9b490f55b6d3f5cb310d5caad5aa8bf4e7a0f1247dc6541fd23eb3fd8856",
+  "body_sha256": "d8247397f61034949d043052f809d93da8b6ad5520e57ea18bdac72a8c687f8c",
   "components": {
     "llama": {
       "name": "llama.cpp",

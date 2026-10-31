@@ -104,7 +104,7 @@ The TCP reachability probe is the block demonstrated on loopback in
 
 REASONED: this listener-inventory instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); wildcard API binds are expected exposed and private or management binds fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. With sudo stubbed, the block printed `stub ss -tlnp 0.0.0.0:4646` and `stub ss -ulnp 0.0.0.0:4646`, then the corresponding `10.0.0.5:4646` fixture lines; this tests command dispatch only, not listener state. Those runs covered an earlier form of the listener block, two top-level `ss` commands without a status of their own. The current form, which checks for `ss` before listing, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n and stub runs with `ss` present, failing and missing. On each host, list the listeners, TCP and UDP:
 
-REASONED: following block; default and external listener expectations follow the pinned Nomad and Consul sources; only the reduced loopback inventory below was observed, with an earlier form of the block, and wildcard binding was forbidden. The form before the `ss` presence check passed bash -n and local stub runs; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n and stub runs with `ss` present, failing and missing.
+REASONED: following block; default and external listener expectations follow the pinned Nomad and Consul sources; only the reduced loopback inventory described at the end of this paragraph was observed, with an earlier form of the block, two top-level `ss` commands, and wildcard binding was forbidden. The form before the `ss` presence check passed bash -n and local stub runs; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n and stub runs with `ss` present, failing and missing. Exposed, the reasoned expectation, per the pinned Nomad and Consul agent defaults, is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on the API ports, 4646 and 8500; fixed means a private or management address. The block exits 2 if `ss` is not installed, 1 for a wildcard TCP listener on 4646 or 8500, 3 if either `ss` command fails and otherwise 0, and leaves the other ports and the UDP list for you to judge. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH (the guide's cited sudo sudoers manual, secure_path entry), so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it. On the loopback run, the agents listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports.
 
 ```bash
 (                                       # one subshell, so one exit status covers both listener lists
@@ -128,17 +128,8 @@ REASONED: following block; default and external listener expectations follow the
 )
 ```
 
-REASONED: preceding block; the wildcard expectation follows the pinned Nomad and Consul agent defaults, and the loopback listener record below came from an earlier form of the block, two top-level `ss` commands, while the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n and stub runs. Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on the API
-ports, 4646 and 8500; fixed means a private or management address. The block exits 2 if `ss` is not
-installed, 1 for a wildcard TCP listener on 4646 or 8500, 3 if either `ss` command fails and otherwise
-0, and leaves the other ports and the UDP list for you to judge. On the loopback run, the agents
-listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300
-and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports.
-
 REASONED: this anonymous-request instruction, per the guide's cited Nomad 2.0.7 ACL resolution when disabled and Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`); expected ACLs-off results are self/jobs/agent HTTP 200 with self AccessorID `acls-disabled`, versus 200/403/403 and `anonymous` with ACLs on. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. The bash -n, ShellCheck and refusal runs recorded here covered the Nomad probe block in an earlier form, whose guard refusals ended with status 0, and were not repeated on the current form, which exits 2 for a guard refusal, 1 for an ACLs-off result or a `200` on `/v1/jobs` or `/v1/agent/self`, 0 when all three paths give the ACLs-on results and 3 otherwise. The current form passed bash -n and local stub runs and the gate suite's bash -n and ShellCheck 0.11.0. Synthetic curl, grep and head stubs printed those HTTP/AccessorID results; they do not establish live ACL behaviour. For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
 `http://10.0.0.5:4646`) inside the single quotes, and paste the whole block.
-
-DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job. The loopback runs used an earlier form of the Nomad probe block, whose guard refusals and results ended with status 0; the current form exits 2 for a guard refusal, 1 for an ACLs-off result or a `200` on `/v1/jobs` or `/v1/agent/self`, 0 when all three paths give the ACLs-on results and 3 otherwise. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -175,6 +166,8 @@ DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed t
   exit "$2"
 )
 ```
+
+DEMONSTRATED: preceding block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job. The loopback runs used an earlier form of the Nomad probe block, whose guard refusals and results ended with status 0; the current form exits 2 for a guard refusal, 1 for an ACLs-off result or a `200` on `/v1/jobs` or `/v1/agent/self`, 0 when all three paths give the ACLs-on results and 3 otherwise. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 Exposed (ACLs off): `/v1/acl/token/self` returns `200` with `"AccessorID":"acls-disabled"`, and
 `/v1/jobs` and `/v1/agent/self` return `200`. With ACLs on, `/v1/acl/token/self` returns `200` with
@@ -404,6 +397,7 @@ give the host's public address. A "connected" on a port you did not mean to expo
 - Consul 2.0.4 default token for requests without one (`acl.tokens.default`, agent token API): https://github.com/hashicorp/consul/blob/v2.0.4/agent/http.go and https://github.com/hashicorp/consul/blob/v2.0.4/agent/token/persistence.go
 - Nomad 2.0.7 agent debug endpoints when ACLs are disabled (`enable_debug`): https://github.com/hashicorp/nomad/blob/v2.0.7/acl/acl.go
 - Consul 2.0.4 ACL bootstrap: https://github.com/hashicorp/consul/blob/v2.0.4/agent/acl_endpoint.go and https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl_endpoint.go
+- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
 
 
 <!-- version-basis:start -->
@@ -472,7 +466,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c0b4ff5030a3935b9c4ce6b561acbb2111dba73084969a9b899671005a23225f",
+  "body_sha256": "c18d7a3e90c76e06e71a86419c1d56f79a4050ca126c5eab123ddb393c063af2",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
