@@ -59,6 +59,7 @@ REASONED: following block; the cited ss filter reference and Serve backend-isola
 
 ```bash
 (                                                 # a subshell, so the exits below end only the subshell, not your shell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   set -- "$(if ss -tlnp 'sport = :3000'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # ss's own filter, not a grep: the address column
   set -- "${1%$'\n'*}" "${1##*$'\n'}"             # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
   printf '%s' "$1"
@@ -76,7 +77,7 @@ REASONED: following block; the cited ss filter reference and Serve backend-isola
 )
 ```
 
-REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. For the direct-address probe block, the bash -n, ShellCheck and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0 and whose probe left curl's own status. Its current form, whose guard refusals leave the subshell with status 2 and whose probe exits 1 on an HTTP reply and 3 otherwise, passes the repository's shell-block gate (bash -n and ShellCheck 0.11.0) but was not stub-run. For the listener block, the bash -n and ShellCheck runs recorded here used an earlier form, a top-level ss command whose status was its own. Its current form, which exits 0 when every port 3000 listener is 127.0.0.1:3000, 1 for a wildcard listener, and 3 otherwise, passes the repository's shell-block gate (bash -n and ShellCheck 0.11.0) but was not stub-run. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
+REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. For the direct-address probe block, the bash -n, ShellCheck and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0 and whose probe left curl's own status. Its current form, whose guard refusals leave the subshell with status 2 and whose probe exits 1 on an HTTP reply and 3 otherwise, passes the repository's shell-block gate (bash -n and ShellCheck 0.11.0) but was not stub-run. For the listener block, the bash -n and ShellCheck runs recorded here used an earlier form, a top-level ss command whose status was its own. Its current form, which exits 0 when every port 3000 listener is 127.0.0.1:3000, 1 for a wildcard listener, 2 when `ss` is not installed, and 3 otherwise, is covered by the repository's shell-block gate (bash -n and ShellCheck 0.11.0) and by stub runs with `ss` present and passing, present and failing, and missing. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
 
 REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. The authoring environment cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
 
@@ -179,7 +180,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2bba1f647a9aed57342be5e7394ea8afc5f96d16bab1f4a483900c23b01bd5cd",
+  "body_sha256": "c8e8c943906f7900846810896cc8ba21181f7032fe2eee2549fb0fd55c6780e2",
   "components": {
     "cli": {
       "name": "Tailscale CLI change",
