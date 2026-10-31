@@ -219,7 +219,7 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
 )
 ```
 
-REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available. Bash 5.3.9(1)-release passed bash -n on an earlier form, when the stats, client-certificate and runtime-socket checks shared one block, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated. In that earlier form the certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check; they now refuse with status 2. No network command ran. The current forms of the three blocks below are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, sudo and socat, a pty for the hidden prompt and no network. Each of them exits 2 when a guard refuses, 1 for a finding, 3 when a command it attempts or its positive control fails or an answer is neither the pass nor the finding, and otherwise 0, and its last line names what it leaves for you to judge. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener, the runtime
+REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available. Bash 5.3.9(1)-release passed bash -n on an earlier form, when the stats, client-certificate and runtime-socket checks shared one block, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated. In that earlier form the certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check; they now refuse with status 2. No network command ran. The current forms of the three blocks below are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, sudo and socat, a pty for the hidden prompt and no network. On 2026-10-31, run against a local mode-000 Unix socket with no network, a real socat 1.8.1.1 printed its denial as `socat[pid] E GOPEN: ...: Permission denied`, or as `E stat(...): Permission denied` when the socket's directory was not searchable, so the runtime-socket block reads only socat's own error line with a permission denial as the `nobody` denial. Each of them exits 2 when a guard refuses, 1 for a finding, 3 when a command it attempts or its positive control fails or an answer is neither the pass nor the finding, and otherwise 0, and its last line names what it leaves for you to judge. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener, the runtime
 socket and, where `verify required` is set, client certificates. Run only the blocks for the surfaces you
 enabled. The step for an enabled stats listener,
 REASONED from the cited HAProxy documentation, is to verify that listener with an unauthenticated request
@@ -297,10 +297,10 @@ every line after the first for your shell to run.
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls no-cert= line
   printf '%s\n' "$8"
   case "$7:$8" in
-    0:*) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    0:"mtls no-cert="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;   # a code not of three characters from 0123456789 reaches the last arm: inconclusive
     "35:mtls no-cert=000 "*|"56:mtls no-cert=000 "*) ;;   # rejected at TLS with no HTTP status received; reading curl's handshake (35) and receive (56) errors as the server's certificate rejection is reasoned, not sourced
     *:"mtls no-cert=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
-    *:"mtls no-cert="???" "*) echo "FINDING: the request without a client certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    *:"mtls no-cert="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request without a client certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$2" --key "$3" \
@@ -308,10 +308,10 @@ every line after the first for your shell to run.
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls untrusted= line
   printf '%s\n' "$8"
   case "$7:$8" in
-    0:*) echo "FINDING: the request with the untrusted certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    0:"mtls untrusted="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request with the untrusted certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
     "35:mtls untrusted=000 "*|"56:mtls untrusted=000 "*) ;;
     *:"mtls untrusted=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
-    *:"mtls untrusted="???" "*) echo "FINDING: the request with the untrusted certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    *:"mtls untrusted="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request with the untrusted certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$4" --key "$5" \
@@ -345,7 +345,7 @@ every line after the first for your shell to run.
   printf '%s\n' "${3%$'\n'}"                                          # without its own final line feed, so no blank line follows
   case "$2:$3" in
     0:*) echo "FINDING: the nobody account connected to the runtime socket"; set -- 1 ;;
-    *"connect("*"ermission denied"*) ;;                               # socat's own connect error, not any permission error
+    *"] E "*"ermission denied"*) ;;                                   # socat's own error line (socat[pid] E ...) with a permission denial, as observed with socat 1.8.1.1; not sudo's or another tool's
     *) echo "socat exit $2 without a permission denial; inconclusive"; set -- 3 ;;
   esac
   echo "block exit $1; the socket's mode and owner in the ls -l line and the show info output are not classified, so judge them yourself"
@@ -430,7 +430,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "cff77b199a7e9e747450a79955f1b7008b445a0c2bf202c79cd4ca870879b87d",
+  "body_sha256": "82683756fe5b75bb7a9a50c144a63120d88e6adb4f0cd7dea12468293940ba49",
   "components": {
     "haproxy": {
       "name": "HAProxy",
