@@ -204,7 +204,7 @@ Keep the H2 console off in production. This property defaults to `false` in both
 spring.h2.console.enabled=false
 ```
 
-Exclude `spring-boot-devtools` from production dependencies and deployed artifacts. When its development defaults are active, it sets error message, stack trace, and binding-error inclusion to `always`, using the version-appropriate prefix, and sets `spring.h2.console.enabled=true`. Console availability still depends on the required H2 components. Verify the production artifact and launch configuration rather than relying only on the normal packaged-application behaviour. See [Boot 3.5 devtools defaults](https://docs.spring.io/spring-boot/3.5/reference/using/devtools.html#using.devtools.property-defaults) and [Boot 4.1 devtools defaults](https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html#using.devtools.property-defaults).
+Exclude `spring-boot-devtools` from production dependencies and deployed artifacts. When its development defaults are active, it sets error message, stack trace, and binding-error inclusion to `always`, using the version-appropriate prefix, and sets `spring.h2.console.enabled=true`. As this guide's own assessment, console availability still depends on the required H2 components. Verify the production artifact and launch configuration rather than relying only on the normal packaged-application behaviour. See [Boot 3.5 devtools defaults](https://docs.spring.io/spring-boot/3.5/reference/using/devtools.html#using.devtools.property-defaults) and [Boot 4.1 devtools defaults](https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html#using.devtools.property-defaults).
 
 ## 7. Bound uploads, forms, and headers
 
@@ -242,18 +242,40 @@ None of these properties establishes a universal JSON body limit. Bound other re
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sI --noproxy '*' "https://$1/"        # succeeds without -k; shows Strict-Transport-Security
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/api"   # 401, or 302 to the login page, without credentials
-  ss -tlnp   # read every listener; java: behind a proxy: 127.0.0.1 only
-  grep -c "Using generated security password" app.log   # a positive count records password generation; zero does not prove the default user is absent
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (a command failed) or 0
+  curl -q -g -sI --noproxy '*' "https://$1/" ||        # succeeds without -k; shows Strict-Transport-Security
+    { echo "curl exit $?: the HTTPS request failed; inconclusive"; set -- "$1" 3; }
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/api" ||   # 401, or 302 to the login page, without credentials
+    { echo "curl exit $?: the /api request failed; inconclusive"; set -- "$1" 3; }
+  set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  printf '%s' "${3%$'\n'*}"   # read every listener; java: behind a proxy: 127.0.0.1 only
+  [ "${3##*$'\n'}" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- "$1" 3; }
+  echo "block exit $2; the HTTPS headers, including Strict-Transport-Security, the /api status and the listener list are not classified, so judge them yourself"
+  exit "$2"
+)
+```
+
+```bash
+(                                       # a subshell, so the exits below end only the subshell
+  [ -r app.log ] || { echo "no readable app.log in this directory: run this block where the application writes app.log; not counting"; exit 2; }
+  set -- "$(if grep -c "Using generated security password" app.log; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1##*$'\n'}" "${1%%$'\n'*}"  # grep's exit status, then the count
+  printf '%s\n' "$2"   # a positive count records password generation; zero does not prove the default user is absent
+  case "$1" in
+    0) echo "FINDING: app.log records $2 generated security password line(s), so the default user was created with a generated password"; set -- 1 ;;
+    1) echo "a zero generated-password log count is inconclusive"; set -- 3 ;;
+    *) echo "grep exit $1: app.log could not be searched; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; this block cannot exit 0, because a zero count is inconclusive: check the deployed authentication configuration and exercise the intended login method yourself"
+  exit "$1"
 )
 ```
 
 A zero generated-password log count is inconclusive: logging may suppress the message, and setting `spring.security.user.password` avoids password generation while retaining the default account. Check the deployed authentication configuration and exercise the intended login method. A custom `SecurityFilterChain` alone does not remove default-user auto-configuration, and OAuth2/OIDC does not require introducing a local `UserDetailsService`. See [Boot's security auto-configuration rules](https://docs.spring.io/spring-boot/3.5/reference/web/spring-security.html).
 
-The following deployment checks are **REASONED, not demonstrated**. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Those local checks covered the guarded blocks below in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
+REASONED: the deployment checks below are not demonstrated. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Those local checks covered the guarded blocks below in an earlier form, whose guard refusals ended with status 0, and no recorded local check covered the later form that ended each block with `) || echo "block exit $?"`. The current form of every block in this section, which reports its result in its exit status, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
 
-Paste each guarded block whole and substitute inside the single quotes. Each of the following blocks ends with `) || echo "block exit $?"`, which keeps your shell running and prints the subshell's non-zero status; every request in these blocks ends with its own `|| true`, so only a guard refusal prints a line, `block exit 2`. A block pasted whole still reports status 0 because the echo succeeds, so status 0 does not mean the check passed, and no recorded local check covered the closing echo. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
+REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each guarded block whole and substitute inside the single quotes. Every block in this section records each classified result and each failed command as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed command or an inconclusive result, a finding outranking an inconclusive result. Unless a guard refuses, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The generated-password count is a block of its own because it cannot exit 0: a zero count is inconclusive. The blocks that read `./java-verify-auth.headers`, `./below-limit.bin`, `./over-limit.bin` or `app.log` refuse with status 2, before any request or count, when a file they need is not readable in the current directory. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
 
 For authenticated requests, prepare `./java-verify-auth.headers` as a private, mode `0600` file containing the actual request headers for a test identity, one header per line. Use the application's authentication method, such as its session cookie or an accepted authorization header. For uploads, include the matching session and valid CSRF header where required. The blocks pass that file to curl through stdin, keeping credential values out of command arguments. Protect and remove the file after testing. Curl documents [header input and transfer diagnostics](https://curl.se/docs/manpage.html).
 
@@ -269,35 +291,70 @@ Reasoned check: run this HTTPS sweep from outside the trusted management network
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      for java_endpoint in health env configprops beans mappings threaddump loggers; do
-        curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
-          -o /dev/null -w 'anonymous %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-          "$1/$java_endpoint" || true
-        curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
-          --header @- -o /dev/null \
-          -w 'authorized %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-          "$1/$java_endpoint" < ./java-verify-auth.headers || true
-      done
-      ;;
   esac
-) || echo "block exit $?"
+  [ -r ./java-verify-auth.headers ] || { echo "no readable ./java-verify-auth.headers in this directory: prepare it as described above; not probing"; exit 2; }
+  set -- "$1" 0 health env configprops beans mappings threaddump loggers   # the 2nd value is the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the endpoints still to request
+  while [ "$#" -gt 2 ]; do
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+      -o /dev/null -w 'anonymous %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      "$1/$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:4}"
+    printf '%s' "${4%$'\n'*}"
+    case "${4##*$'\n'}:${4%$'\n'*}" in
+      0:*': http=2'??' exit='*) echo "FINDING: the public origin answered $3 with a 2xx for the anonymous identity; confirm it came from the application rather than a proxy or generic frontend"; set -- "$1" 1 "${@:3}" ;;
+      0:*) ;;
+      *) echo "curl exit ${4##*$'\n'}: the anonymous request for $3 failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+    esac
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+      --header @- -o /dev/null \
+      -w 'authorized %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      "$1/$3" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:5}"
+    printf '%s' "${4%$'\n'*}"
+    case "${4##*$'\n'}:${4%$'\n'*}" in
+      0:*': http=2'??' exit='*) echo "FINDING: the public origin answered $3 with a 2xx for the authorized identity; confirm it came from the application rather than a proxy or generic frontend"; set -- "$1" 1 "${@:3}" ;;
+      0:*) ;;
+      *) echo "curl exit ${4##*$'\n'}: the authorized request for $3 failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+    esac
+    set -- "$1" "$2" "${@:5}"           # drop this endpoint and its result
+  done
+  echo "block exit $2; answers other than a 2xx are not classified (a 401 or 403 demonstrates access control, not absence), so judge them yourself"
+  exit "$2"
+)
 ```
 
 Reasoned check: run this separate management-authorization sweep on the application host against the HTTP listener at `http://127.0.0.1:8081/actuator`. Adjust the port and base path in both URLs to match your management configuration. Prepare `./java-verify-auth.headers` on that host with an administrator identity accepted by the management security chain.
 
 ```bash
 (
-  for java_endpoint in health env configprops beans mappings threaddump loggers; do
-    curl -q -g -sS --noproxy '*' --proto '=http' --connect-timeout 5 --max-time 20 \
+  [ -r ./java-verify-auth.headers ] || { echo "no readable ./java-verify-auth.headers in this directory: prepare it on this host as described above; not probing"; exit 2; }
+  set -- 0 health env configprops beans mappings threaddump loggers   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the endpoints still to request
+  while [ "$#" -gt 1 ]; do
+    set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --proto '=http' --connect-timeout 5 --max-time 20 \
       -o /dev/null -w 'anonymous %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      "http://127.0.0.1:8081/actuator/$java_endpoint" || true
-    curl -q -g -sS --noproxy '*' --proto '=http' --connect-timeout 5 --max-time 20 \
+      "http://127.0.0.1:8081/actuator/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:3}"
+    printf '%s' "${3%$'\n'*}"
+    case "${3##*$'\n'}:$2:${3%$'\n'*}" in
+      0:health:*': http=401 exit='*) ;;
+      0:*': http=2'??' exit='*) echo "FINDING: the anonymous $2 request answered with a 2xx; an anonymous 2xx from a sensitive endpoint needs investigation"; set -- 1 "${@:2}" ;;
+      0:health:*) echo "the anonymous health request did not get the expected 401; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+      0:*) ;;
+      *) echo "curl exit ${3##*$'\n'}: the anonymous request for $2 failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --proto '=http' --connect-timeout 5 --max-time 20 \
       --header @- -o /dev/null \
       -w 'authorized %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      "http://127.0.0.1:8081/actuator/$java_endpoint" < ./java-verify-auth.headers || true
+      "http://127.0.0.1:8081/actuator/$2" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:4}"
+    printf '%s' "${3%$'\n'*}"
+    case "${3##*$'\n'}:$2:${3%$'\n'*}" in
+      0:health:*': http=200 exit='*|0:health:*': http=503 exit='*) ;;
+      0:health:*) echo "the administrator's health request did not get a health response (200, or 503 for an unhealthy status), so check the identity in ./java-verify-auth.headers; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+      0:*) ;;
+      *) echo "curl exit ${3##*$'\n'}: the authorized request for $2 failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+    esac
+    set -- "$1" "${@:4}"                # drop this endpoint and its result
   done
-) || echo "block exit $?"
+  echo "block exit $1; the administrator's answers from endpoints other than health are not classified (normally 404 with health-only exposure), so judge them yourself and repeat with a non-administrator identity for the 403"
+  exit "$1"
+)
 ```
 
 With the private-listener layout, the public origin must not serve Actuator responses to either identity. On the reachable management listener, the example security chain should reject anonymous health requests with `401`, reject an authenticated non-administrator with `403`, and allow an administrator to receive the health response. Health itself can report an unhealthy status, commonly `503`, so successful authorization is not synonymous with HTTP `200`.
@@ -314,13 +371,20 @@ Also check the separate port directly from an external machine. This block assum
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "http://$1:8081/actuator/health" || true
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "http://$1:8081/actuator/health"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}" in
+    0) echo "FINDING: an HTTP response, including 401, shows that an HTTP listener is reachable on public port 8081"; set -- "$1" 1 ;;
+    7) echo "connection refused: consistent with the loopback binding, but corroborate it with ss -tlnp on the server and a successful connection from the intended management path" ;;
+    28) echo "curl exit 28: an external timeout alone is inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit ${3##*$'\n'}: the request failed without an HTTP response; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; a refused connection is not classified until you corroborate it as above"
+  exit "$2"
+)
 ```
 
 Any HTTP response, including `401`, demonstrates that an HTTP listener is reachable on that public port. The fixed loopback binding should prevent that connection. Corroborate external failure with the existing `ss -tlnp` check on the server and a successful connection from the intended management path; an external timeout alone is inconclusive. See [management address binding](https://docs.spring.io/spring-boot/3.5/reference/actuator/monitoring.html#actuator.monitoring.customizing-management-server-address).
@@ -339,14 +403,21 @@ Reasoned check: use an isolated test deployment with a known route that triggers
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+  esac
+  [ -r ./java-verify-auth.headers ] || { echo "no readable ./java-verify-auth.headers in this directory: prepare it as described above; not probing"; exit 2; }
+  set -- "$1" 0 "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
         --header @- -H 'Accept: application/json' \
         -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "$1?trace=true&message=true&errors=true" < ./java-verify-auth.headers || true
-      ;;
+        "$1?trace=true&message=true&errors=true" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''http=401 exit='*|0:*$'\n''http=403 exit='*) echo "an authentication response does not test error handling; inconclusive"; set -- "$1" 3 ;;
+    0:*) ;;
+    *) echo "curl exit ${3##*$'\n'}: the request failed; inconclusive"; set -- "$1" 3 ;;
   esac
-) || echo "block exit $?"
+  echo "block exit $2; the error status and the body are not classified, so read them for the marker, stack frames, internal paths and rejected values yourself"
+  exit "$2"
+)
 ```
 
 In the exposed fixture, `always` or `on-param` inclusion can reveal the controlled message, trace, or binding details. With the production settings, Boot's standard error response should omit those details and the exception class even with these parameters. Confirm the expected error status and inspect the body for the marker, stack frames, internal paths, and rejected values. An authentication response does not test error handling. Repeat with `Accept: text/html` and check custom error responses separately. See the [error-inclusion semantics](https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html) and [versioned production defaults](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html).
@@ -363,15 +434,24 @@ Reasoned check: test both anonymously and with an identity allowed through appli
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
-        -w '\nanonymous: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" || true
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
-        --header @- -w '\nauthorized: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "$1" < ./java-verify-auth.headers || true
-      ;;
   esac
-) || echo "block exit $?"
+  [ -r ./java-verify-auth.headers ] || { echo "no readable ./java-verify-auth.headers in this directory: prepare it as described above; not probing"; exit 2; }
+  set -- "$1" 0 "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+        -w '\nanonymous: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
+  printf '%s' "${3%$'\n'*}"
+  [ "${3##*$'\n'}" = 0 ] || { echo "curl exit ${3##*$'\n'}: the anonymous request failed; inconclusive"; set -- "$1" 3; }
+  set -- "$1" "$2" "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+        --header @- -w '\nauthorized: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "$1" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''authorized: http=404 exit='*) ;;
+    0:*) echo "the authorized request did not reach the 404 missing-route answer: H2 content is the finding, and a login redirect, 401 or 403 alone does not establish absence; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit ${3##*$'\n'}: the authorized request failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the anonymous response, and any H2 content in either response, are not classified, so judge them yourself"
+  exit "$2"
+)
 ```
 
 An enabled, reachable console can return H2 content or a redirect into it. With the console disabled, a request that passes application security should reach normal missing-route handling, typically `404`, without H2 content. A login redirect, `401`, or `403` alone does not establish absence. Confirm the effective `spring.h2.console.enabled=false` setting and absence of production devtools as well. See the [console properties](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html) and [devtools overrides](https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html#using.devtools.property-defaults).
@@ -388,18 +468,34 @@ Reasoned check: use a test upload route that accepts a multipart file field name
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
+  esac
+  if [ -r ./java-verify-auth.headers ] && [ -r ./below-limit.bin ] && [ -r ./over-limit.bin ]; then :; else
+    echo "./java-verify-auth.headers, ./below-limit.bin and ./over-limit.bin must all be readable in this directory: prepare them as described above; not probing"; exit 2
+  fi
+  set -- "$1" 0 "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
         --header @- --form 'file=@./below-limit.bin' \
         -w '\nbelow limit: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "$1" < ./java-verify-auth.headers || true
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
+        "$1" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''below limit: http=2'??' exit='*) ;;
+    0:*) echo "the 1,024-byte upload did not succeed, so the positive control failed; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit ${3##*$'\n'}: the below-limit request failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
         --header @- --form 'file=@./over-limit.bin' \
         -w '\nover limit: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "$1" < ./java-verify-auth.headers || true
-      ;;
+        "$1" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''over limit: http=2'??' exit='*) echo "FINDING: the 1,048,577-byte upload succeeded, so no 1MB file limit rejected it"; set -- "$1" 1 ;;
+    0:*$'\n''over limit: http=401 exit='*|0:*$'\n''over limit: http=403 exit='*|0:*$'\n''over limit: http=404 exit='*) echo "an authentication, CSRF or missing-route answer is not evidence of the multipart limit; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) ;;
+    *) echo "curl exit ${3##*$'\n'}: the over-limit request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
-) || echo "block exit $?"
+  echo "block exit $2; the cause of an over-limit rejection is not classified, so read the response and server logs for a size cause yourself"
+  exit "$2"
+)
 ```
 
 The small upload must reach and succeed at the intended handler. With a deliberately raised limit in an isolated exposed fixture, both files should succeed; with the production limit, the larger file must be rejected because of its size. Inspect the response and server logs for that specific cause. Authentication, CSRF, missing-route, content-validation, and transport failures are not evidence of the multipart limit. A proxy rejection demonstrates the proxy limit; testing Boot's limit also requires reaching the application through an authorized path. See the [multipart limits](https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html).
@@ -543,7 +639,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "69a71db4c2d9b88a831e6ee628eb874bcfb0d69aef51b76ff721f534b9fce945",
+  "body_sha256": "9d5595f7ed00c101870054abdf86bb17fbfc06f397483dc6e569a3563a33959b",
   "components": {
     "boot41": {
       "name": "Spring Boot",
@@ -727,15 +823,15 @@ Claims (full source mapping in the JSON block below):
     "verify-tls": {"text": "HTTPS must succeed without -k and show HSTS.", "components": ["boot", "security65", "security"], "sources": ["boot:s4f6aa9df744a", "security65:s527bf5b95139", "security:s6fb344722a7c"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Unauthenticated /api should return 401 or a 302 login redirect.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
     "verify-bind": {"text": "Inspect every listener for loopback-only Java binding behind the proxy.", "components": ["boot-docs"], "sources": ["boot-docs:s34f52429c110", "boot-docs:s61bf6b20e945"], "status": "REASONED", "verify": [1]},
-    "verify-user": {"text": "Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
-    "verify-public-management": {"text": "Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [2]},
-    "verify-management-auth": {"text": "On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [3]},
-    "verify-management-port": {"text": "Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED", "verify": [4]},
+    "verify-user": {"text": "Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [2]},
+    "verify-public-management": {"text": "Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [3]},
+    "verify-management-auth": {"text": "On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [4]},
+    "verify-management-port": {"text": "Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED", "verify": [5]},
     "verify-dangerous": {"text": "Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "verify-errors": {"text": "Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:saea08b7576f4", "boot-docs:s6ce5733455c4"], "status": "REASONED", "verify": [5]},
-    "verify-h2": {"text": "Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED", "verify": [6]},
-    "verify-upload": {"text": "1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED", "verify": [7]},
-    "verify-credentials": {"text": "Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [2, 3, 4, 5, 6, 7]}
+    "verify-errors": {"text": "Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:saea08b7576f4", "boot-docs:s6ce5733455c4"], "status": "REASONED", "verify": [6]},
+    "verify-h2": {"text": "Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED", "verify": [7]},
+    "verify-upload": {"text": "1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED", "verify": [8]},
+    "verify-credentials": {"text": "Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [3, 4, 5, 6, 7, 8]}
   }
 }
 ````

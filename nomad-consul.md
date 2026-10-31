@@ -94,32 +94,50 @@ set `encrypt`.
 
 ## Verify
 
-REASONED: this overview distinguishes the historical loopback record from this marking review, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The expected states, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, are wildcard API binds for exposed and private or management binds for fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host now forbids that without an isolated network namespace, and none was available. This review passed all five Verify blocks through `bash -n` and ShellCheck 0.11.0 with no output, exercised guards and synthetic command results, and used a local terminal to test token input; these runs do not reproduce live ACL, bootstrap, anonymous-policy, listener or external-isolation outcomes. The bash -n, ShellCheck and guard runs in this review covered the Nomad probe, Consul probe and TCP blocks in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form of those three blocks, whose guard refusals exit with status 2. The historical record follows: These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
+REASONED: this overview distinguishes the historical loopback record from this marking review, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The expected states, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, are wildcard API binds for exposed and private or management binds for fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host now forbids that without an isolated network namespace, and none was available. This review passed all five Verify blocks through `bash -n` and ShellCheck 0.11.0 with no output, exercised guards and synthetic command results, and used a local terminal to test token input; these runs do not reproduce live ACL, bootstrap, anonymous-policy, listener or external-isolation outcomes. The bash -n, ShellCheck and guard runs in this review covered the Nomad probe, Consul probe and TCP blocks in an earlier form, whose guard refusals ended with status 0, and the listener and policy blocks in earlier forms that each ended with their last command's status. Those runs were not repeated on the current forms of those five blocks, each of which ends with one status for the whole fence: 2 for a guard refusal, 1 for a finding, 3 for a failed or inconclusive check and otherwise 0. The current forms passed bash -n and local stub runs and the gate suite's bash -n and ShellCheck 0.11.0. The historical record follows: These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
 listener was bound to 127.0.0.1: the Nomad and Consul probes in each ACL state, the bootstrap and anonymous-policy checks, and the
-listener list. The loopback runs of the Nomad and Consul probe blocks used an earlier form of each block, whose guard refusals ended with status 0; the current form of each, whose guard refusals exit with status 2, has not been run.
+listener list. The loopback runs of the Nomad and Consul probe blocks used an earlier form of each block, whose guard refusals and results ended with status 0, and the listener run used the earlier form of the listener block, two top-level `ss` commands; the current forms have had no demonstration run.
 The exposed listener state is REASONED from source: the authoring host forbids binding every
 interface, so the default wildcard bind was not observed, and no Nomad client ran a job.
 The TCP reachability probe is the block demonstrated on loopback in
 [low-code-builders.md](low-code-builders.md) with this guide's ports.
 
-REASONED: this listener-inventory instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); wildcard API binds are expected exposed and private or management binds fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. With sudo stubbed, the block printed `stub ss -tlnp 0.0.0.0:4646` and `stub ss -ulnp 0.0.0.0:4646`, then the corresponding `10.0.0.5:4646` fixture lines; this tests command dispatch only, not listener state. On each host, list the listeners, TCP and UDP:
+REASONED: this listener-inventory instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); wildcard API binds are expected exposed and private or management binds fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. With sudo stubbed, the block printed `stub ss -tlnp 0.0.0.0:4646` and `stub ss -ulnp 0.0.0.0:4646`, then the corresponding `10.0.0.5:4646` fixture lines; this tests command dispatch only, not listener state. Those runs covered an earlier form of the listener block, two top-level `ss` commands without a status of their own. On each host, list the listeners, TCP and UDP:
 
-REASONED: following block; default and external listener expectations follow the pinned Nomad and Consul sources; only the reduced loopback inventory below was observed, and wildcard binding was forbidden.
+REASONED: following block; default and external listener expectations follow the pinned Nomad and Consul sources; only the reduced loopback inventory below was observed, with an earlier form of the block, and wildcard binding was forbidden. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block.
 
 ```bash
-sudo ss -tlnp   # 4646, 4647, 4648 (Nomad); 8500, 8600, 8300, 8301, 8302, 8503 (Consul): private or management addresses only
-sudo ss -ulnp   # Serf gossip on UDP 4648 (Nomad) and 8301, 8302 (Consul); Consul DNS on UDP 8600
+(                                       # one subshell, so one exit status covers both listener lists
+  set +e                                # errexit off here, so a failed command is recorded below instead of ending the block
+  set -- 0 "$(if sudo ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the TCP listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                         # status, the TCP listener table, then ss's exit status
+  printf '%s' "$2"   # 4646, 4647, 4648 (Nomad); 8500, 8600, 8300, 8301, 8302, 8503 (Consul): private or management addresses only
+  [ "$3" = 0 ] || { echo "sudo ss -tlnp exit $3: the TCP listener list did not print; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 { p = $4; sub(/.*:/, "", p); a = substr($4, 1, length($4) - length(p) - 1); sub(/%.*/, "", a) } NR > 1 && (p == "4646" || p == "8500") && (a == "*" || a == "0.0.0.0" || a == "[::]") { found = 1 } END { exit !found }'; then
+    echo "FINDING: a TCP listener on port 4646 or 8500, an HTTP API, is bound to a wildcard address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the TCP listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  set -- "$1" "$(if sudo ss -ulnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the status so far, then the UDP listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                          # status, the UDP listener table, then ss's exit status
+  printf '%s' "$2"   # Serf gossip on UDP 4648 (Nomad) and 8301, 8302 (Consul); Consul DNS on UDP 8600
+  [ "$3" = 0 ] || { echo "sudo ss -ulnp exit $3: the UDP listener list did not print; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  echo "block exit $1; only wildcard TCP listeners on 4646 and 8500 are classified, so judge the other TCP ports and every UDP listener yourself"
+  exit "$1"
+)
 ```
 
-Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on the API
-ports, 4646 and 8500; fixed means a private or management address. On the loopback run, the agents
+REASONED: preceding block; the wildcard expectation follows the pinned Nomad and Consul agent defaults, and the loopback listener record below came from an earlier form of the block, two top-level `ss` commands. Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on the API
+ports, 4646 and 8500; fixed means a private or management address. The block exits 1 for a wildcard
+TCP listener on 4646 or 8500, 3 if either `ss` command fails and otherwise 0, and leaves the other
+ports and the UDP list for you to judge. On the loopback run, the agents
 listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300
 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports.
 
-REASONED: this anonymous-request instruction, per the guide's cited Nomad 2.0.7 ACL resolution when disabled and Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`); expected ACLs-off results are self/jobs/agent HTTP 200 with self AccessorID `acls-disabled`, versus 200/403/403 and `anonymous` with ACLs on. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. The bash -n, ShellCheck and refusal runs recorded here covered the Nomad probe block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Synthetic curl, grep and head stubs printed those HTTP/AccessorID results; they do not establish live ACL behaviour. For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
+REASONED: this anonymous-request instruction, per the guide's cited Nomad 2.0.7 ACL resolution when disabled and Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`); expected ACLs-off results are self/jobs/agent HTTP 200 with self AccessorID `acls-disabled`, versus 200/403/403 and `anonymous` with ACLs on. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. The bash -n, ShellCheck and refusal runs recorded here covered the Nomad probe block in an earlier form, whose guard refusals ended with status 0, and were not repeated on the current form, which exits 2 for a guard refusal, 1 for an ACLs-off result or a `200` on `/v1/jobs` or `/v1/agent/self`, 0 when all three paths give the ACLs-on results and 3 otherwise. The current form passed bash -n and local stub runs and the gate suite's bash -n and ShellCheck 0.11.0. Synthetic curl, grep and head stubs printed those HTTP/AccessorID results; they do not establish live ACL behaviour. For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
 `http://10.0.0.5:4646`) inside the single quotes, and paste the whole block.
 
-DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job. The loopback runs used an earlier form of the Nomad probe block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job. The loopback runs used an earlier form of the Nomad probe block, whose guard refusals and results ended with status 0; the current form exits 2 for a guard refusal, 1 for an ACLs-off result or a `200` on `/v1/jobs` or `/v1/agent/self`, 0 when all three paths give the ACLs-on results and 3 otherwise. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -129,12 +147,31 @@ DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed t
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Nomad URL on the set -- line above; not probing"; exit 2 ;;
-    *) for path in /v1/acl/token/self /v1/jobs /v1/agent/self; do
-         out=$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$path" 2>&1)
-         status=${out##*$'\n'}
-         echo "GET $path (no token): http/exit=$status $(printf '%s' "${out%$'\n'*}" | grep -o -E '"AccessorID":"[^"]*"|^Permission denied$|^curl: .*' | head -n 1)"
-       done ;;
   esac
+  set -- "$1" 0 /v1/acl/token/self /v1/jobs /v1/agent/self   # the URL, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the paths still to request
+  while [ "$#" -gt 2 ]; do
+    set -- "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"        # curl's exit status, the response ending in its code line, the URL, the status so far, this path, then the paths after it
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}" "${@:3}"   # curl's exit status, the HTTP code and exit as printed, the response, the URL, the status so far, this path, then the rest
+    echo "GET $6 (no token): http/exit=$2 $(printf '%s' "$3" | grep -o -E '"AccessorID":"[^"]*"|^Permission denied$|^curl: .*' | head -n 1)"
+    case "$6:$1:$2" in
+      /v1/acl/token/self:0:"200 0")
+        case "$3" in
+          *'"AccessorID":"acls-disabled"'*) echo "FINDING: ACLs are off on the server that answered $6"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+          *'"AccessorID":"anonymous"'*) ;;
+          *) echo "a 200 from $6 with neither the acls-disabled nor the anonymous AccessorID; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}" ;;
+        esac ;;
+      /v1/jobs:0:"200 0"|/v1/agent/self:0:"200 0") echo "FINDING: $6 answered 200 without a token"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+      /v1/jobs:0:"403 0"|/v1/agent/self:0:"403 0")
+        if printf '%s\n' "$3" | grep -q -x 'Permission denied'; then :; else
+          echo "a 403 from $6 without Permission denied, perhaps from a proxy; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}"
+        fi ;;
+      *) echo "neither an ACLs-off nor an ACLs-on result from $6; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}" ;;
+    esac
+    set -- "$4" "$5" "${@:7}"                           # the URL, the status so far, then the paths still to request
+  done
+  echo "block exit $2; the bootstrap and anonymous-policy checks below decide fixed, and this block does not run them"
+  exit "$2"
 )
 ```
 
@@ -154,13 +191,13 @@ status or message is inconclusive: a redirect (for example from a trailing slash
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the curl block above from a host that trusts the cluster's CA.
 
-REASONED: this token-input and process-exposure explanation, per the guide's cited Nomad 2.0.7 CLI token input: `-token` (`command/meta.go` L96, L170-L171) or `NOMAD_TOKEN` (`api/api.go` L388-L389), with no stdin form; a token in argv is exposed there, while the prompted prefix form avoids argv and shell history but retains same-account/root environment access. The recorded authoring limitation applies: a live `nomad acl policy info` needs a running Nomad server, which opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No second-account inspection was used in this review. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. A local terminal with a Nomad stub printed `no token supplied; not probing` and exited 2 for empty input, and `stub policy 404 (ACL policy not found) token=present` and exited 0 for a fixture token; readonly tok and IFS printed their refusal messages and exited 2 without invoking the stub. These observations establish local input handling only. `nomad` takes the token from `-token`, which puts it in argv, or from `NOMAD_TOKEN`, and has no stdin
+REASONED: this token-input and process-exposure explanation, per the guide's cited Nomad 2.0.7 CLI token input: `-token` (`command/meta.go` L96, L170-L171) or `NOMAD_TOKEN` (`api/api.go` L388-L389), with no stdin form; a token in argv is exposed there, while the prompted prefix form avoids argv and shell history but retains same-account/root environment access. The recorded authoring limitation applies: a live `nomad acl policy info` needs a running Nomad server, which opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No second-account inspection was used in this review. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. A local terminal with a Nomad stub printed `no token supplied; not probing` and exited 2 for empty input, and `stub policy 404 (ACL policy not found) token=present` and exited 0 for a fixture token; readonly tok and IFS printed their refusal messages and exited 2 without invoking the stub. Those runs covered an earlier form of the block, which ended with the nomad command's own status and exited 2 when the token read failed. The current form, which exits 0 on `404 (ACL policy not found)`, 1 when nomad shows the policy, 3 for a failed token read or any other result and 2 for a guard refusal or an empty token, passed bash -n and local stub runs, including runs under a pseudo-terminal, and the gate suite's bash -n and ShellCheck 0.11.0. These observations establish local input handling only. `nomad` takes the token from `-token`, which puts it in argv, or from `NOMAD_TOKEN`, and has no stdin
 input for it (checked at v2.0.7). The block prompts for the token, so it stays out of shell history,
 and hands it to the one `nomad` command as a prefix assignment, never exported. That moves the token
 out of argv, not out of reach: while `nomad` runs, it can be read from `/proc/<pid>/environ` by the
 same account and by root.
 
-REASONED: following block; token input follows the pinned Nomad 2.0.7 CLI source; the recorded policy inspection used the earlier exported-token form, not this prompt and prefix assignment. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+REASONED: following block; token input follows the pinned Nomad 2.0.7 CLI source; the recorded policy inspection used the earlier exported-token form, not this prompt and prefix assignment. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 (
@@ -170,14 +207,23 @@ REASONED: following block; token input follows the pinned Nomad 2.0.7 CLI source
     { echo 'cannot clear tok or NOMAD_TOKEN in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'Nomad management token (input hidden): ' tok < /dev/tty ||
-    { echo 'token input failed; not probing'; exit 2; }
+    { echo 'token input failed; not probing'; exit 3; }
   printf '\n'
   [ -n "$tok" ] || { echo 'no token supplied; not probing'; exit 2; }
-  NOMAD_TOKEN="$tok" nomad acl policy info anonymous
+  set -- "$(if NOMAD_TOKEN="$tok" nomad acl policy info anonymous 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # nomad's output, then its exit status
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"
+  printf '%s' "$1"
+  case "$2:$1" in
+    *"404 (ACL policy not found)"*) echo "no policy named anonymous, so requests without a token get no rights from one"; exit 0 ;;
+    0:*) echo "FINDING: a policy named anonymous exists, so requests without a token get its rights: read it above"; exit 1 ;;
+    *) echo "nomad exit $2 without 404 (ACL policy not found); inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
-All of these outcomes were observed with the curl probe block and these commands, on agents listening on test
+REASONED: preceding block; the policy check is reasoned in its current prompted form, which passed bash -n and local stub runs and the gate suite's bash -n and ShellCheck 0.11.0, and no demonstration was re-run on it.
+
+DEMONSTRATED: Nomad 2.0.7 loopback runs on test ports, with earlier forms of the curl probe block, whose guard refusals and results ended with status 0, and of the policy check. All of these outcomes were observed with the curl probe block and these commands, on agents listening on test
 ports. In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with
 `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self`
 with `200`, while the server answered it with `403`. Before bootstrap, the probe already printed the
@@ -190,12 +236,12 @@ anonymous job registration returned `200`, and `nomad acl policy info anonymous`
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
 policy, it returned `403`.
 
-REASONED: this per-agent anonymous-request instruction, per the guide's cited Consul 2.0.4 ACL resolution when disabled and Consul 2.0.4 configuration builder (listener addresses, ACL default, script checks and their warning, UI); expected ACLs-off self/agent results are 401/200, and enabled deny-policy results are 403/403 with the anonymous-permission message. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. The bash -n, ShellCheck and refusal runs recorded here covered the Consul probe block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Synthetic curl, grep and head stubs printed those status pairs and messages; they do not establish live ACL behaviour. For Consul, send two requests without a token, to every agent's HTTP API, servers and clients; probe
+REASONED: this per-agent anonymous-request instruction, per the guide's cited Consul 2.0.4 ACL resolution when disabled and Consul 2.0.4 configuration builder (listener addresses, ACL default, script checks and their warning, UI); expected ACLs-off self/agent results are 401/200, and enabled deny-policy results are 403/403 with the anonymous-permission message. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. The bash -n, ShellCheck and refusal runs recorded here covered the Consul probe block in an earlier form, whose guard refusals ended with status 0, and were not repeated on the current form, which exits 2 for a guard refusal, 1 for `ACL support disabled` or a `200` on either path, 0 for the deny-policy results on both paths and 3 otherwise. The current form passed bash -n and local stub runs and the gate suite's bash -n and ShellCheck 0.11.0. Synthetic curl, grep and head stubs printed those status pairs and messages; they do not establish live ACL behaviour. For Consul, send two requests without a token, to every agent's HTTP API, servers and clients; probe
 an agent whose `client_addr` is loopback, the default, from its own host (for example
 `http://127.0.0.1:8500`). Substitute the HTTP API URL (for example
 `http://10.0.0.5:8500`) inside the single quotes, and paste the whole block.
 
-DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed disabled, allow, deny and per-agent/default-token HTTP outcomes below on test ports. The loopback runs used an earlier form of the Consul probe block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed disabled, allow, deny and per-agent/default-token HTTP outcomes below on test ports. The loopback runs used an earlier form of the Consul probe block, whose guard refusals and results ended with status 0; the current form exits 2 for a guard refusal, 1 for `ACL support disabled` or a `200` on either path, 0 for the deny-policy results on both paths and 3 otherwise. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -205,16 +251,40 @@ DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed 
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Consul URL on the set -- line above; not probing"; exit 2 ;;
-    *) for path in /v1/acl/token/self /v1/agent/self; do
-         out=$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$path" 2>&1)
-         status=${out##*$'\n'}
-         echo "GET $path (no token): http/exit=$status $(printf '%s' "${out%$'\n'*}" | grep -o -E '^ACL support disabled$|^token does not exist: ACL not found$|^Permission denied: anonymous token lacks permission|^curl: .*' | head -n 1)"
-       done ;;
   esac
+  set -- "$1" 0 /v1/acl/token/self /v1/agent/self   # the URL, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the paths still to request
+  while [ "$#" -gt 2 ]; do
+    set -- "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"        # curl's exit status, the response ending in its code line, the URL, the status so far, this path, then the paths after it
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}" "${@:3}"   # curl's exit status, the HTTP code and exit as printed, the response, the URL, the status so far, this path, then the rest
+    echo "GET $6 (no token): http/exit=$2 $(printf '%s' "$3" | grep -o -E '^ACL support disabled$|^token does not exist: ACL not found$|^Permission denied: anonymous token lacks permission|^curl: .*' | head -n 1)"
+    case "$6:$1:$2" in
+      /v1/acl/token/self:0:"401 0")
+        if printf '%s\n' "$3" | grep -q -x 'ACL support disabled'; then
+          echo "FINDING: ACLs are off on the agent that answered $6"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}"
+        else
+          echo "a 401 from $6 without ACL support disabled; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}"
+        fi ;;
+      /v1/acl/token/self:0:"200 0") echo "FINDING: $6 answered 200 without a token, so a default token answers requests that carry none"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+      /v1/acl/token/self:0:"403 0")
+        if printf '%s\n' "$3" | grep -q -x 'token does not exist: ACL not found'; then :; else
+          echo "a 403 from $6 without token does not exist: ACL not found; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}"
+        fi ;;
+      /v1/agent/self:0:"200 0") echo "FINDING: $6 answered 200 without a token"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+      /v1/agent/self:0:"403 0")
+        if printf '%s\n' "$3" | grep -q '^Permission denied: anonymous token lacks permission'; then :; else
+          echo "a 403 from $6 without the anonymous-token message; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}"
+        fi ;;
+      *) echo "neither an exposed nor a deny-policy result from $6; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}" ;;
+    esac
+    set -- "$4" "$5" "${@:7}"                           # the URL, the status so far, then the paths still to request
+  done
+  echo "block exit $2; the bootstrap and anonymous-token checks below decide fixed, and this block does not run them"
+  exit "$2"
 )
 ```
 
-Exposed with ACLs off: `/v1/acl/token/self` returns `401` `ACL support disabled`, and
+DEMONSTRATED: preceding block; Consul 2.0.4 loopback runs on test ports, with an earlier form of the block whose guard refusals and results ended with status 0. Exposed with ACLs off: `/v1/acl/token/self` returns `401` `ACL support disabled`, and
 `/v1/agent/self` returns `200`. Exposed with ACLs on and the default `allow` policy:
 `/v1/acl/token/self` returns `403` `token does not exist: ACL not found`, and `/v1/agent/self` still
 returns `200`. Each agent applies its own `acl` block (observed for `enabled` and `default_policy`),
@@ -237,7 +307,7 @@ status or message is inconclusive: a redirect (for example from a trailing slash
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the block from a host that trusts the cluster's CA.
 
-All of these outcomes were observed with this block and these commands, on agents listening on test
+DEMONSTRATED: Consul 2.0.4 loopback runs on test ports, with an earlier form of the probe block whose guard refusals and results ended with status 0. All of these outcomes were observed with this block and these commands, on agents listening on test
 ports. With a bootstrapped server on the deny policy and a client agent with ACLs off, the block
 printed the deny results against the server, and `401` `ACL support disabled` and `200` against the
 client; with the server on the `allow` policy and the client on `deny`, it printed `200` on
@@ -249,13 +319,13 @@ sections. On the same runs an anonymous key-value write succeeded in both expose
 refused with `403` with the deny policy, and with script checks at their default, registering a script
 check through the API was refused with "Scripts are disabled on this agent from remote calls".
 
-REASONED: this external TCP-check instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and a failed control is inconclusive. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0; none was re-run on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. These are synthetic dispatch and output tests, not network observations. Finally, from a host that should not have access, try a TCP connection to each port. The block takes
+REASONED: this external TCP-check instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and a failed control is inconclusive. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0, and were not repeated on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. The current form passed bash -n and local stub runs and the gate suite's bash -n and ShellCheck 0.11.0. These are synthetic dispatch and output tests, not network observations. Finally, from a host that should not have access, try a TCP connection to each port. The block takes
 one IP address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot hide
 one behind a timeout on the other: run it once for each public address of the host. It also takes a
 port you know is open on that address from this host (for example SSH on 22) as the positive control,
 and stops if the control does not connect. Substitute both inside the single quotes.
 
-REASONED: following block; port targets follow the pinned Nomad and Consul defaults; the guide cross-references a loopback demonstration elsewhere, while external isolation was not demonstrated here. That loopback demonstration covered an earlier form of the block, whose failed control and result arms ended with status 0; the current form was not re-run.
+REASONED: following block; port targets follow the pinned Nomad and Consul defaults; the guide cross-references a loopback demonstration elsewhere, while external isolation was not demonstrated here. That loopback demonstration covered an earlier form of the block, whose failed control and result arms ended with status 0, and was not repeated on the current form. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -265,37 +335,42 @@ REASONED: following block; port targets follow the pinned Nomad and Consul defau
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit 2 ;; esac
   case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit 2 ;; esac
-  ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
+  set -- "$1" "$2" '^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'   # the address, the control port, then the IPv4 pattern, held here rather than in a named variable
   case "$1" in
     *:*:*)
       case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit 2 ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit 2 ;; esac
       case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit 2 ;; esac ;;
-    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
+    *) [[ $1 =~ $3 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
   esac
   case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit 2 ;; esac
   { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit 2; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-  err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
+  set -- "$1" "$2" "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the address, the control port, the control's messages, then its exit status
+  set -- "$1" "$2" "${3%$'\n'}" "$4"              # the messages without their final line break, as a plain capture prints them
+  [ "$4" = 0 ] || { echo "control $1:$2 did not connect (${3:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
-  rc=0
-  for p in 4646 4647 4648 8500 8600 8300 8301 8302 8503; do
+  set -- "$1" 0 4646 4647 4648 8500 8600 8300 8301 8302 8503   # the address, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports still to probe
+  while [ "$#" -gt 2 ]; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-    err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
-    case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
-      124:*) echo "$1:$p timed out from this host" ;;
-      *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
+    set -- "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"   # this port's exit status, its messages, the address, the status so far, this port, then the ports after it
+    set -- "$1" "${2%$'\n'}" "${@:3}"             # the messages without their final line break
+    case "$1:$2" in
+      0:*) echo "$3:$5 connected: reachable from this host"; set -- "$1" "$2" "$3" 1 "${@:5}" ;;
+      124:*) echo "$3:$5 timed out from this host" ;;
+      *"Connection refused"*) echo "$3:$5 refused from this host" ;;
+      *) echo "$3:$5 inconclusive (not a connection, refusal or timeout): ${2:-no message}"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 "${@:5}" ;;
     esac
+    set -- "$3" "$4" "${@:6}"                     # the address, the status so far, then the ports still to probe
   done
-  exit "$rc"
+  exit "$2"
 )
 ```
 
-REASONED: preceding block; this interpretation and the entire TCP block, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The entire TCP block includes address and port guards, the positive control, all nine targets and all result branches. The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and UDP remains outside the probe. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0; none was re-run on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. These are synthetic dispatch and output tests; the earlier cross-guide loopback record remains historical. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
+REASONED: preceding block; this interpretation and the entire TCP block, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The entire TCP block includes address and port guards, the positive control, all nine targets and all result branches. The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and UDP remains outside the probe. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0, and were not repeated on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. The current form passed bash -n and local stub runs and the gate suite's bash -n and ShellCheck 0.11.0. These are synthetic dispatch and output tests; the earlier cross-guide loopback record remains historical. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
 complete the handshake, so confirm a surprising "connected" with `ss` on the host. "refused" and
 "timed out" show only that this host could not reach the port: a firewall in front of the host
 produces either, but so can filtering on the probing host's own network, and the control proves only
@@ -375,17 +450,17 @@ Claims (full source mapping in the JSON block below):
 - consul-tls-gossip (REASONED; consul): TLS verification defaults off and gossip is unencrypted without encrypt.
 - verify-inventory (REASONED; nomad, consul): Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.
 - loopback-listeners (DEMONSTRATED; nomad, consul): Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.
-- nomad-acl-probe (DEMONSTRATED; nomad): Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.
-- nomad-agent-acl (DEMONSTRATED; nomad): Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.
+- nomad-acl-probe (DEMONSTRATED; nomad): Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
+- nomad-agent-acl (DEMONSTRATED; nomad): Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
 - nomad-bootstrap-run (DEMONSTRATED; nomad): ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.
 - nomad-anonymous-policy (DEMONSTRATED; nomad): Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.
 - nomad-job-registration (DEMONSTRATED; nomad): Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.
 - nomad-token-input (REASONED; nomad): CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.
-- consul-acl-probe (DEMONSTRATED; consul): Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.
-- consul-agent-acl (DEMONSTRATED; consul): Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.
+- consul-acl-probe (DEMONSTRATED; consul): Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
+- consul-agent-acl (DEMONSTRATED; consul): Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
 - consul-bootstrap-run (DEMONSTRATED; consul): Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.
 - consul-anonymous-token (DEMONSTRATED; consul): Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.
-- consul-default-token (DEMONSTRATED; consul): An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.
+- consul-default-token (DEMONSTRATED; consul): An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
 - consul-kv (DEMONSTRATED; consul): Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.
 - consul-script-run (DEMONSTRATED; consul): With default script-check settings, remote script registration was refused.
 - verify-tcp (REASONED; nomad, consul): Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run, which covered an earlier form whose control and result arms ended with status 0; the current form was not re-run. UDP is not tested.
@@ -396,7 +471,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1048f65c517cbf255b838683900990bd660f2bb5dac04cbc605c0c193e74a765",
+  "body_sha256": "a9c20a70fd8a8da1e927f5b638b05f86856fb03b236c3a4252fce62723234698",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
@@ -460,17 +535,17 @@ Claims (full source mapping in the JSON block below):
     "consul-tls-gossip": {"text": "TLS verification defaults off and gossip is unencrypted without encrypt.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [1]},
     "loopback-listeners": {"text": "Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the loopback run, the agents listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports."},
-    "nomad-acl-probe": {"text": "Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc", "nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with the curl probe block and these commands, on agents listening on test ports.", "verify": [2]},
-    "nomad-agent-acl": {"text": "Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self` with `200`, while the server answered it with `403`.", "verify": [2]},
+    "nomad-acl-probe": {"text": "Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc", "nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with the curl probe block and these commands, on agents listening on test ports.", "verify": [2]},
+    "nomad-agent-acl": {"text": "Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self` with `200`, while the server answered it with `403`.", "verify": [2]},
     "nomad-bootstrap-run": {"text": "ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.", "components": ["nomad"], "sources": ["nomad:sc3e36e830b67"], "status": "DEMONSTRATED", "evidence": "Before bootstrap, the probe already printed the ACLs-on results; the first `nomad acl bootstrap` printed a management token and the second failed with `Unexpected response code: 400 (ACL bootstrap already done ...)`."},
     "nomad-anonymous-policy": {"text": "Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.", "components": ["nomad"], "sources": ["nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "After an `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run in the same earlier form, showed the policy."},
     "nomad-job-registration": {"text": "Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous` policy, it returned `403`."},
     "nomad-token-input": {"text": "CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.", "components": ["nomad"], "sources": ["nomad:sba39c1a9119a", "nomad:sa04bf8c95cb6"], "status": "REASONED", "verify": [3]},
-    "consul-acl-probe": {"text": "Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with this block and these commands, on agents listening on test ports.", "verify": [4]},
-    "consul-agent-acl": {"text": "Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.", "components": ["consul"], "sources": ["consul:s8a0b5abac641", "consul:sc4fb30ca3702"], "status": "DEMONSTRATED", "evidence": "with the server on the `allow` policy and the client on `deny`, it printed `200` on `/v1/agent/self` against the server and the deny results against the client.", "verify": [4]},
+    "consul-acl-probe": {"text": "Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with this block and these commands, on agents listening on test ports.", "verify": [4]},
+    "consul-agent-acl": {"text": "Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["consul"], "sources": ["consul:s8a0b5abac641", "consul:sc4fb30ca3702"], "status": "DEMONSTRATED", "evidence": "with the server on the `allow` policy and the client on `deny`, it printed `200` on `/v1/agent/self` against the server and the deny results against the client.", "verify": [4]},
     "consul-bootstrap-run": {"text": "Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.", "components": ["consul"], "sources": ["consul:s35b783d75794", "consul:sa77598ec3695"], "status": "DEMONSTRATED", "evidence": "the first `consul acl bootstrap` printed a token and the second failed with `Unexpected response code: 403 (Permission denied: ACL bootstrap no longer allowed ...)`"},
     "consul-anonymous-token": {"text": "Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.", "components": ["consul"], "sources": ["consul:s00748de44382"], "status": "DEMONSTRATED", "evidence": "the anonymous token's read listed none of those sections."},
-    "consul-default-token": {"text": "An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.", "components": ["consul"], "sources": ["consul:sab8a5866d9c9", "consul:sfeb50129fc10"], "status": "DEMONSTRATED", "evidence": "On the loopback run, a default token holding key write, set through the agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a `403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a token succeeded.", "verify": [4]},
+    "consul-default-token": {"text": "An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["consul"], "sources": ["consul:sab8a5866d9c9", "consul:sfeb50129fc10"], "status": "DEMONSTRATED", "evidence": "On the loopback run, a default token holding key write, set through the agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a `403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a token succeeded.", "verify": [4]},
     "consul-kv": {"text": "Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the same runs an anonymous key-value write succeeded in both exposed states and was refused with `403` with the deny policy"},
     "consul-script-run": {"text": "With default script-check settings, remote script registration was refused.", "components": ["consul"], "sources": ["consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "with script checks at their default, registering a script check through the API was refused with \"Scripts are disabled on this agent from remote calls\"."},
     "verify-tcp": {"text": "Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run, which covered an earlier form whose control and result arms ended with status 0; the current form was not re-run. UDP is not tested.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]},
