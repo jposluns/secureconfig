@@ -123,7 +123,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ## Verify
 
-REASONED: following block; listener check, per the panel, Docker daemon and GitLab sources below, which also support the panel-login, 2375/2376 and password-file checks in the three blocks after it; each of the four blocks carries its own marker and exit status. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither that guard nor the Docker block's address and certificate-file guards has been run.
+REASONED: following block; listener check, per the panel, Docker daemon and GitLab sources below, which also support the panel-login, 2375/2376 and password-file checks in the three blocks after it; each of the four blocks carries its own marker and exit status. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; that guard and the Docker block's address and certificate-file guards have been run only under stubs, without network access.
 
 ```bash
 (                                                   # a subshell, so the exits below end only this check
@@ -142,7 +142,7 @@ REASONED: following block; listener check, per the panel, Docker daemon and GitL
 ```
 
 ```bash
-# REASONED: panel-login check from the cited Portainer, Jenkins and Gitea sources; no deployed panel or external test network is available, the guard has not been run, and no live result is recorded.
+# REASONED: panel-login check from the cited Portainer, Jenkins and Gitea sources; no deployed panel or external test network is available, the guard has been run only under stubs, and no live result is recorded.
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PANEL_HOST'   # the public host name your proxy serves one panel on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them, and run the block once per panel
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -185,7 +185,7 @@ REASONED: following block; listener check, per the panel, Docker daemon and GitL
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
   esac
   set -- "$1" 0                                     # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (the 2376 part refused), which outranks 0
-  if docker -H "tcp://$1:2375" info; then           # must fail: connection refused or filtered
+  if env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH docker -H "tcp://$1:2375" info; then   # must fail: connection refused or filtered; env -u drops the TLS settings exported in the setup above
     echo "FINDING: the Docker API answered on 2375 without TLS"; set -- "$1" 1
   else
     set -- "$1" "$2" "$?"                           # the address, the status so far, then docker's exit status
@@ -383,7 +383,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "89fb46441dc00c7d96c6f6045cbc9053cd6a93239c1757921600179ce75c59e6",
+  "body_sha256": "32a8f20c985adc31a08be4451c760edf40f0f61cdb97cada2fa4bb710640466c",
   "components": {
     "portainer": {
       "name": "Portainer",
