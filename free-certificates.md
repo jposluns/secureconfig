@@ -120,9 +120,11 @@ REASONED: certificate inventory and HTTPS/certificate inspection follow the cite
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
   sudo certbot certificates ||          # what is issued and when it expires
     { echo "certbot certificates exit $?: the certificate list could not be read; inconclusive"; set -- "$1" 3; }
@@ -257,7 +259,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ebba1404b6534e017c86c9cc8137e110cab3df32769afabfa1e0252ab4b3e5a4",
+  "body_sha256": "9580dd0de05bd29756c589ffc21005372d46a35bba7e55fcf1247406aaa2f63b",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",

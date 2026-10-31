@@ -585,9 +585,11 @@ REASONED: certificate inventory and HTTPS/certificate inspection follow the cite
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
   sudo certbot certificates ||          # what is issued and when it expires
     { echo "certbot certificates exit $?: the certificate list could not be read; inconclusive"; set -- "$1" 3; }
@@ -722,7 +724,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ebba1404b6534e017c86c9cc8137e110cab3df32769afabfa1e0252ab4b3e5a4",
+  "body_sha256": "9580dd0de05bd29756c589ffc21005372d46a35bba7e55fcf1247406aaa2f63b",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -16931,9 +16933,11 @@ REASONED: following block; private-route denial and Host handling, with the prox
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set +e                                # errexit off here, so a request that fails is recorded below instead of ending the block
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   set -- "$1" "$2" "$(if curl -q -g -si -w '\n%{http_code}' "https://$1/api/private"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -17145,7 +17149,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "261429b3cae24b146ce5203050d683d7c10bac8c76b372fb74a346e281d99a44",
+  "body_sha256": "a8815eec90e39c53430fce53568b5735b4296fba28ebdeb805706087cb51c578",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -53715,9 +53719,11 @@ REASONED: following block; listener inventory, Dify publication and TCP reachabi
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
     -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"; then
     echo "block exit 0; unclassified observation: the final code and URL are a transport note only, so judge the editor and /install in a fresh, unauthenticated browser session yourself"
@@ -54010,7 +54016,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "56ba6f046e81e45af7d708dfeff1103d93155a6eab9855ee7834f9e31d6dea6a",
+  "body_sha256": "0b449be59292d88291c379a22da2338b7a81e6c3b9c5ba80b31a3c011afe9551",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
@@ -59005,7 +59011,7 @@ RedisInsight 3.8.0's default server configuration uses `RI_APP_HOST` with a fall
 
 REASONED: the panel sources below support the host-side listener inventory in this paragraph, and Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. This host-side inventory is prose rather than part of the block below, because it runs on the panel's host and the block runs from outside your network. On the panel's host, run `ss -tlnp` and read every panel listener: each should be loopback (127.0.0.1) or a deliberately chosen private address. Also inspect the actual published addresses and ports (`docker ps` and the port mappings), and from outside your network probe any public backend mapping too: a protected frontend does not prove a separately published backend port is closed. No panel deployment or external test network is available here, so no listing is recorded.
 
-REASONED: following block; panel sources below support the anonymous front-page/data-route checks and the authenticated data-route positive control. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes. The two `curl` checks take one panel's host name and protected path on a guarded `set --` line and refuse example.com, example.net, example.org and their subdomains. The block records each outcome and exits once: 2 if its guard refuses, 3 if a request fails or the protected route answers 404 or a server error, and otherwise 0. A 401 or 403 is the pass; any other answer is printed for you to judge, because only its body or Location shows a dashboard or a login, so the block reports no finding itself and its last line says so. No run of an earlier form of the block is recorded. This form was checked on 2026-10-31 with bash -n and with curl stubs and no network, covering each status, a failed or inconclusive first request followed by a passing second one, and an inherited `readonly`, `declare -i` or `set -e`. The stub runs covered the refusals of a missing marker, too few or too many values, a host name that is empty or a placeholder or has a scheme, port, trailing dot, `@`, `?`, `%`, `#` or space, an example.com, example.net or example.org host including `App.Example.COM`, and a path that is empty or a placeholder or has a leading slash or space, each with no curl call. ShellCheck 0.11.0 passed on this form in the repository's gate suite.
+REASONED: following block; panel sources below support the anonymous front-page/data-route checks and the authenticated data-route positive control. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes. The two `curl` checks take one panel's host name and protected path on a guarded `set --` line and refuse example.com, example.net, example.org and their subdomains. The block records each outcome and exits once: 2 if its guard refuses, 3 if a request fails or the protected route answers 404 or a server error, and otherwise 0. A 401 or 403 is the pass; any other answer is printed for you to judge, because only its body or Location shows a dashboard or a login, so the block reports no finding itself and its last line says so. The block's earlier form, which lowercased the host with `tr` before refusing reserved names, was checked on 2026-10-31 with bash -n and with curl stubs and no network, covering each status, a failed or inconclusive first request followed by a passing second one, and an inherited `readonly`, `declare -i` or `set -e`. Those stub runs covered the refusals of a missing marker, too few or too many values, a host name that is empty or a placeholder or has a scheme, port, trailing dot, `@`, `?`, `%`, `#` or space, an example.com, example.net or example.org host including `App.Example.COM`, and a path that is empty or a placeholder or has a leading slash or space, each with no curl call. ShellCheck 0.11.0 passed on that earlier form in the repository's gate suite, and no run of a form before it is recorded. The current form, which matches reserved names in any letter case through bash's `nocasematch` option instead of `tr`, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs on 2026-10-31 with curl stubs and no network. Those runs refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case, including `App.Example.COM`, each with no curl call, also with `tr` absent from PATH and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and did not refuse a host name outside those domains.
 
 ```bash
 # From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel. Read the
@@ -59019,9 +59025,11 @@ REASONED: following block; panel sources below support the anonymous front-page/
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -59146,7 +59154,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "454993dabec13691c63afd5342bcb1c750a1e2b9402755d8b886e85d7fde51d2",
+  "body_sha256": "d3acfde4df8e2c3a825134e19ad962e1d3c357923f9b19839e4ef8bf19fee333",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",
@@ -62103,9 +62111,11 @@ REASONED: final-response header inspection follows the cited MDN header document
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set +e                                # errexit off here, so a check that ends nonzero is classified below instead of ending the block
   set -- "$(if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'final: %{http_code} %{url_effective}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "${1##*$'\n'}" "${1%$'\n'*}"   # curl's exit status, then every response's headers and the final: line
@@ -62237,7 +62247,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "a349943ef4844d606d158bcb8e42d64b131a5e74fa785391ac55b7d929cb9275",
+  "body_sha256": "5c06822c8b58b3939553c3486798a6ab347c6d936aac4c90da719de3f1289584",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",

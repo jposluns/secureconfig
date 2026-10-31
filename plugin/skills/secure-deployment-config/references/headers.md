@@ -71,9 +71,11 @@ REASONED: final-response header inspection follows the cited MDN header document
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set +e                                # errexit off here, so a check that ends nonzero is classified below instead of ending the block
   set -- "$(if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'final: %{http_code} %{url_effective}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "${1##*$'\n'}" "${1%$'\n'*}"   # curl's exit status, then every response's headers and the final: line
@@ -205,7 +207,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "a349943ef4844d606d158bcb8e42d64b131a5e74fa785391ac55b7d929cb9275",
+  "body_sha256": "5c06822c8b58b3939553c3486798a6ab347c6d936aac4c90da719de3f1289584",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",

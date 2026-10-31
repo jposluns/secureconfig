@@ -234,9 +234,11 @@ REASONED: following block; listener inventory, Dify publication and TCP reachabi
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
     -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"; then
     echo "block exit 0; unclassified observation: the final code and URL are a transport note only, so judge the editor and /install in a fresh, unauthenticated browser session yourself"
@@ -529,7 +531,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "56ba6f046e81e45af7d708dfeff1103d93155a6eab9855ee7834f9e31d6dea6a",
+  "body_sha256": "0b449be59292d88291c379a22da2338b7a81e6c3b9c5ba80b31a3c011afe9551",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
