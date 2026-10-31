@@ -55,8 +55,6 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 
 ## 4. Verify
 
-REASONED: following block; the cited ss filter reference and Serve backend-isolation guidance define the loopback check. The authoring environment cannot configure a Serve host; the guide records no listener observation.
-
 ```bash
 (                                                 # a subshell, so the exits below end only the subshell, not your shell
   command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
@@ -180,7 +178,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c8e8c943906f7900846810896cc8ba21181f7032fe2eee2549fb0fd55c6780e2",
+  "body_sha256": "5611464b9aed93a446136902c2dd6eec603ca20185c3290351a118f9de255503",
   "components": {
     "cli": {
       "name": "Tailscale CLI change",
