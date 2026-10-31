@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>card</title>
+<style>
+  @font-face { font-family: "InterCard"; font-weight: 700; src: url("file:///usr/share/fonts/opentype/inter/Inter-Bold.otf") format("opentype"); }
+  @font-face { font-family: "InterCard"; font-weight: 400; src: url("file:///usr/share/fonts/opentype/inter/Inter-Regular.otf") format("opentype"); }
+  html, body { margin: 0; padding: 0; }
+  body { width: 1200px; height: 630px; background: #0d4f63; overflow: hidden; position: relative;
+         font-family: "InterCard", sans-serif; color: #ffffff; -webkit-font-smoothing: antialiased; }
+  #header { position: absolute; left: 120px; top: 75px; height: 84px; display: flex; align-items: center; }
+  #tile { width: 84px; height: 84px; border-radius: 18px; background: #ffffff;
+          display: flex; align-items: center; justify-content: center; flex: none; }
+  #tile svg { width: 60px; height: 60px; display: block; }
+  #name { margin-left: 24px; font-weight: 700; font-size: 32px; line-height: 1; white-space: nowrap; }
+  #block { position: absolute; left: 120px; top: 207px; } /* tile bottom 159 + 48 */
+  #headline { margin: 0; font-weight: 700; line-height: 1.1; white-space: nowrap; }
+  #headline span { display: block; }
+  #subline { margin: 28px 0 0 0; font-weight: 400; font-size: 34px; line-height: 1.2;
+             color: rgba(255,255,255,0.86); white-space: nowrap; }
+</style>
+</head>
+<body>
+  <div id="header">
+    <div id="tile">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="5.5" y="11.5" width="13" height="8" rx="2" fill="none" stroke="#0d4f63" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8.7 11.5V8.3a3.3 3.3 0 0 1 6.6 0v3.2" fill="none" stroke="#0d4f63" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="12" cy="15.3" r="1.3" fill="#0d4f63"/>
+      </svg>
+    </div>
+    <div id="name">secureconfig.ai</div>
+  </div>
+  <div id="block">
+    <h1 id="headline"><span id="l1">Security guides for</span><span id="l2">AI-assisted projects.</span></h1>
+    <p id="subline">Free, public-domain deployment security guides.</p>
+  </div>
+<script>
+(async function () {
+  await document.fonts.load('700 100px "InterCard"');
+  await document.fonts.load('400 34px "InterCard"');
+  await document.fonts.ready;
+  const lines = ["Security guides for", "AI-assisted projects."];
+  const ctx = document.createElement("canvas").getContext("2d");
+  const widest = (px) => {
+    ctx.font = '700 ' + px + 'px "InterCard"';
+    return Math.max.apply(null, lines.map(t => ctx.measureText(t).width));
+  };
+  let size = 10;
+  while (widest(size + 1) <= 960) size++;
+  const h = document.getElementById("headline");
+  h.style.fontSize = size + "px";
+  const sub = document.getElementById("subline");
+  const r = el => el.getBoundingClientRect();
+  const out = {
+    headlinePx: size,
+    ok64: size >= 64,
+    canvasWidths: lines.map(t => { ctx.font = '700 ' + size + 'px "InterCard"'; return +ctx.measureText(t).width.toFixed(2); }),
+    domWidths: ["l1", "l2"].map(id => { const rg = document.createRange(); rg.selectNodeContents(document.getElementById(id)); return +rg.getBoundingClientRect().width.toFixed(2); }),
+    nextWidest: +widest(size + 1).toFixed(2),
+    sublinePx: parseFloat(getComputedStyle(sub).fontSize),
+    namePx: parseFloat(getComputedStyle(document.getElementById("name")).fontSize),
+    sublineBottom: +r(sub).bottom.toFixed(2),
+    fontCheck: document.fonts.check('700 32px "InterCard"') && document.fonts.check('400 34px "InterCard"')
+  };
+  document.title = JSON.stringify(out);
+})();
+</script>
+</body>
+</html>
