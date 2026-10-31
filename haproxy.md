@@ -138,56 +138,80 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
 ```bash
 # REASONED: configuration and exposed/fixed checks follow the cited HAProxy documentation;
 # no HAProxy runtime is available in the authoring environment.
-sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
-# REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell was checked
-# but the exposed-vs-fixed responses were not. A transport, TLS, or
-# DNS error is inconclusive, never a pass.
-(
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a +e                                  # never trace or export the credential read below
-  { unset -n pw && unset -v pw; } 2>/dev/null ||
-    { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
-  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
-  IFS= read -r -s -p 'admin password: ' pw < /dev/tty || exit 2; echo
-  case "$pw" in ''|*[[:cntrl:]]*) echo 'supply the admin password; not probing'; exit 2 ;; esac
-  pw=${pw//\\/\\\\}; pw=${pw//\"/\\\"}   # escape \ and " so curl --config parsing keeps the exact password
-  base=(-sS --noproxy '*' --connect-timeout 5 --max-time 30)
-  # 1) HTTP must redirect to HTTPS.
-  curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
-  # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
-  #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
-  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
-  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
-  curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
-  printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
-  printf 'user = "admin:%s"\n' "$pw"              | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
-  # 3) Body-size guard, BOTH cases with valid creds so a 401 cannot masquerade as the result. Payloads live in
-  #    a private temp dir removed on exit.
-  tmp=$(mktemp -d) || { echo 'no tempdir; not probing'; exit 2; }
-  trap 'rm -rf "$tmp"' EXIT
-  head -c 1M /dev/zero > "$tmp/under.bin"  || { echo 'payload write failed'; exit 2; }
-  head -c 11M /dev/zero > "$tmp/over.bin" || { echo 'payload write failed'; exit 2; }
-  for f in under over; do
-    printf 'user = "admin:%s"\n' "$pw" | curl -q -g "${base[@]}" --config - --data-binary @"$tmp/$f.bin" \
-      -o /dev/null -w "$f http=%{http_code}\n" "https://$1/"
-  done
-  # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
-  # sets here; a chunked upload advertises none and is not covered. A backend can return 413 too, so to
-  # attribute the refusal to HAProxy, in an isolated fixture remove ONLY the http-request deny line and
-  # confirm the over upload then reaches the app.
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 3 (inconclusive) outranks 2 (a part refused its input), which outranks 0; no answer here is classified
+  sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
+  case "$?" in 0) ;; *) echo "haproxy -c or reload exit $?: the requests below may test the configuration HAProxy was already running; inconclusive"; set -- 3 ;; esac
+  # REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell was checked
+  # but the exposed-vs-fixed responses were not. A transport, TLS, or
+  # DNS error is inconclusive, never a pass.
+  (
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    set +x +a +e                                  # never trace or export the credential read below
+    { unset -n pw && unset -v pw; } 2>/dev/null ||
+      { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
+    { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+    case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
+    IFS= read -r -s -p 'admin password: ' pw < /dev/tty || { echo; echo 'password input failed; not probing'; exit 3; }; echo
+    case "$pw" in ''|*[[:cntrl:]]*) echo 'supply the admin password; not probing'; exit 2 ;; esac
+    pw=${pw//\\/\\\\}; pw=${pw//\"/\\\"}   # escape \ and " so curl --config parsing keeps the exact password
+    set -- "$1" 0                         # the 2nd value is this part's status so far, ranked as above
+    # 1) HTTP must redirect to HTTPS.
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
+    case "$?" in 0) ;; *) echo "curl exit $?: the redirect request failed; inconclusive"; set -- "$1" 3 ;; esac
+    # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
+    #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
+    #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+    #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
+    case "$?" in 0) ;; *) echo "curl exit $?: the request without credentials failed; inconclusive"; set -- "$1" 3 ;; esac
+    printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
+    case "$?" in 0) ;; *) echo "curl exit $?: the request with wrong credentials failed; inconclusive"; set -- "$1" 3 ;; esac
+    printf 'user = "admin:%s"\n' "$pw"              | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
+    case "$?" in 0) ;; *) echo "curl exit $?: the request with valid credentials failed; inconclusive"; set -- "$1" 3 ;; esac
+    # 3) Body-size guard, BOTH cases with valid creds so a 401 cannot masquerade as the result. Payloads live in
+    #    a private temp dir removed at the end of this part.
+    set -- "$1" "$2" "$(if mktemp -d; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3%%$'\n'*}" "${3##*$'\n'}"   # this part's status, the temp dir, then mktemp's exit status
+    if [ "$4" != 0 ]; then
+      echo 'no tempdir; not probing'; set -- "$1" 3
+    else
+      if head -c 1M /dev/zero > "$3/under.bin" && head -c 11M /dev/zero > "$3/over.bin"; then
+        printf 'user = "admin:%s"\n' "$pw" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 --config - --data-binary @"$3/under.bin" \
+          -o /dev/null -w 'under http=%{http_code}\n' "https://$1/"
+        case "$?" in 0) ;; *) echo "curl exit $?: the under request failed; inconclusive"; set -- "$1" 3 "$3" "$4" ;; esac
+        printf 'user = "admin:%s"\n' "$pw" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 --config - --data-binary @"$3/over.bin" \
+          -o /dev/null -w 'over http=%{http_code}\n' "https://$1/"
+        case "$?" in 0) ;; *) echo "curl exit $?: the over request failed; inconclusive"; set -- "$1" 3 "$3" "$4" ;; esac
+      else
+        echo 'payload write failed'; set -- "$1" 3 "$3" "$4"
+      fi
+      rm -rf -- "$3"
+    fi
+    # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
+    # sets here; a chunked upload advertises none and is not covered. A backend can return 413 too, so to
+    # attribute the refusal to HAProxy, in an isolated fixture remove ONLY the http-request deny line and
+    # confirm the over upload then reaches the app.
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0 - the checks above pass while
+             # the backend also answers directly on 3000, bypassing HAProxy's TLS and auth. Confirm the runtime
+             # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
+  case "$?" in 0) ;; *) echo "ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  echo "block exit $1; no answer in this block is classified: judge the redirect headers, the no-creds, bad-creds, valid, under and over codes and the listener table yourself against the comments above"
+  exit "$1"
 )
-ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0 - the checks above pass while
-           # the backend also answers directly on 3000, bypassing HAProxy's TLS and auth. Confirm the runtime
-           # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available. Bash 5.3.9(1)-release passed bash -n on the following fence, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated. The certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check. No network command ran. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener, the runtime
-socket and, where `verify required` is set, client certificates. The step for an enabled stats listener,
+REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available. Bash 5.3.9(1)-release passed bash -n on an earlier form, when the stats, client-certificate and runtime-socket checks shared one block, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated. In that earlier form the certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check; they now refuse with status 2. No network command ran. The current forms of the three blocks below are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, sudo and socat, a pty for the hidden prompt and no network. Each of them exits 2 when a guard refuses, 1 for a finding, 3 when a command it attempts or its positive control fails or an answer is neither the pass nor the finding, and otherwise 0, and its last line names what it leaves for you to judge. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener, the runtime
+socket and, where `verify required` is set, client certificates. Run only the blocks for the surfaces you
+enabled. The step for an enabled stats listener,
 REASONED from the cited HAProxy documentation, is to verify that listener with an unauthenticated request
 (refused) and a valid-credential request (returns the statistics) against that listener specifically.
 The step for an enabled runtime socket, REASONED from the cited HAProxy
@@ -200,8 +224,7 @@ In this block and the one above, paste the password alone at the hidden prompt: 
 every line after the first for your shell to run.
 
 ```bash
-# REASONED: management-surface checks follow the cited HAProxy documentation; no HAProxy runtime is available.
-(
+(                                       # a subshell, so the exits below end only the subshell
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
   { unset -n sp && unset -v sp; } 2>/dev/null ||
@@ -212,37 +235,108 @@ every line after the first for your shell to run.
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
-  base=(-sS --noproxy '*' --connect-timeout 5 --max-time 15)
-  # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
-  # the loopback bind): no credentials must be refused; valid credentials return the statistics.
-  curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"
   # The stats password reaches curl through stdin config (curl --config -), never argv. The hidden prompt
   # keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin closes the argv channel
   # only: the account owner and root can still read it in the subshell and curl.
-  IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || exit 2; echo
+  IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || { echo; echo 'stats password input failed; not probing'; exit 3; }; echo
   case "$sp" in ''|*[[:cntrl:]]*) echo 'supply the stats password; not probing'; exit 2 ;; esac
   sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}
-  printf 'user = "admin:%s"\n' "$sp" | curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" --config - -o /dev/null -w 'stats auth=%{http_code}\n' "https://$1:8404/stats"
-  # mTLS, only if `bind ... verify required`: no cert and an untrusted cert must be rejected at TLS; a trusted
-  # cert must be admitted (it may still return 401 if Basic auth is also configured). The path guards keep a
-  # local file error from standing in for a server rejection.
-  curl -q -g "${base[@]}" -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$1/"
-  for pair in 'REPLACE_WITH_UNTRUSTED_CRT:REPLACE_WITH_UNTRUSTED_KEY:untrusted' 'REPLACE_WITH_TRUSTED_CRT:REPLACE_WITH_TRUSTED_KEY:trusted'; do
-    crt=${pair%%:*}; rest=${pair#*:}; key=${rest%%:*}; label=${rest##*:}
-    case "$crt$key" in *REPLACE_WITH_*) echo "substitute the $label cert and key; not probing"; continue ;; esac
-    if [ -r "$crt" ] && [ -r "$key" ]; then
-      curl -q -g "${base[@]}" --cert "$crt" --key "$key" \
-        -o /dev/null -w "mtls $label=%{http_code} exit=%{exitcode}\n" "https://$1/"
-    else
-      echo "$label cert or key not readable; not probing"
-    fi
-  done
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
+  # the loopback bind): no credentials must be refused; valid credentials return the statistics.
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its stats no-creds= line
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "0:stats no-creds=401"|"0:stats no-creds=403") ;;
+    "0:stats no-creds=2"??) echo "FINDING: the stats listener answered without credentials"; set -- "$1" 1 ;;
+    0:*) echo "the request without credentials was neither refused nor answered; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $3: the stats request without credentials failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if printf 'user = "admin:%s"\n' "$sp" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --resolve "$1:8404:127.0.0.1" --config - -o /dev/null -w 'stats auth=%{http_code}\n' "https://$1:8404/stats"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its stats auth= line
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "0:stats auth=200") ;;
+    0:*) echo "valid credentials did not return the statistics, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the stats request with valid credentials failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the statistics page itself is not read here, so open it with valid credentials and judge it yourself"
+  exit "$2"
 )
+```
+
+```bash
+# REASONED: client-certificate checks follow the cited HAProxy bind verify documentation; no HAProxy runtime or certificate fixtures are available.
+# mTLS, only if `bind ... verify required`: no cert and an untrusted cert must be rejected at TLS; a trusted
+# cert must be admitted (it may still return 401 if Basic auth is also configured). The path guards keep a
+# local file error from standing in for a server rejection.
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so a rejected request is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST' 'REPLACE_WITH_UNTRUSTED_CRT' 'REPLACE_WITH_UNTRUSTED_KEY' 'REPLACE_WITH_TRUSTED_CRT' 'REPLACE_WITH_TRUSTED_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 5 ] || { echo 'the set -- line needs exactly 5 values; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
+  case "$2$3" in *REPLACE_WITH_*) echo "substitute the untrusted cert and key; not probing"; exit 2 ;; esac
+  case "$4$5" in *REPLACE_WITH_*) echo "substitute the trusted cert and key; not probing"; exit 2 ;; esac
+  if [ -r "$2" ] && [ -r "$3" ]; then :; else echo "untrusted cert or key not readable; not probing"; exit 2; fi
+  if [ -r "$4" ] && [ -r "$5" ]; then :; else echo "trusted cert or key not readable; not probing"; exit 2; fi
+  set -- "$1" "$2" "$3" "$4" "$5" 0     # the 6th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls no-cert= line
+  printf '%s\n' "$8"
+  case "$7" in
+    0) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    35|56) ;;                           # curl's TLS handshake and receive errors, where a server's certificate rejection surfaces
+    *) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$2" --key "$3" \
+    -o /dev/null -w 'mtls untrusted=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls untrusted= line
+  printf '%s\n' "$8"
+  case "$7" in
+    0) echo "FINDING: the request with the untrusted certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    35|56) ;;
+    *) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$4" --key "$5" \
+    -o /dev/null -w 'mtls trusted=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls trusted= line
+  printf '%s\n' "$8"
+  case "$7" in
+    0) ;;
+    *) echo "curl exit $7: the trusted certificate was not admitted, so the positive control failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
+  echo "block exit $6; the HTTP codes are not classified (a trusted certificate may still draw 401 from Basic auth), and exit 35 or 56 reads as a TLS rejection only beside an admitted trusted certificate, so judge the lines above yourself"
+  exit "$6"
+)
+```
+
+```bash
+# REASONED: runtime-socket checks follow the cited HAProxy management documentation; no HAProxy runtime is available.
 # Runtime socket: root-owned mode-600 Unix socket, and an unauthorized local identity must be denied.
-ls -l /run/haproxy/admin.sock                                       # expect srw------- root root
-# guard-conventions: allow fixed local HAProxy admin socket /run/haproxy/admin.sock; no reader-substituted target
-printf 'show info\n' | sudo socat - /run/haproxy/admin.sock | head -1   # authorized (root): prints info
-sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorized identity: expect permission denied
+(                                       # a subshell, so the exit below ends only the subshell
+  set +e                                # errexit off here, so the expected denial below is classified instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  ls -l /run/haproxy/admin.sock                                       # expect srw------- root root
+  case "$?" in 0) ;; *) echo "ls exit $?: /run/haproxy/admin.sock could not be listed; inconclusive"; set -- 3 ;; esac
+  # guard-conventions: allow fixed local HAProxy admin socket /run/haproxy/admin.sock; no reader-substituted target
+  set -- "$1" "$(if printf 'show info\n' | sudo socat - /run/haproxy/admin.sock; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"                          # socat's exit status, then the first line it printed
+  printf '%s\n' "$3"                                                  # authorized (root): prints info
+  case "$2" in 0) ;; *) echo "socat exit $2: the authorized show info request failed; inconclusive"; set -- 3 ;; esac
+  set -- "$1" "$(if sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # unauthorized identity: expect permission denied
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"                           # socat's exit status, then what it printed
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    0:*) echo "FINDING: the nobody account connected to the runtime socket"; set -- 1 ;;
+    *"ermission denied"*) ;;
+    *) echo "socat exit $2 without a permission denial; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the socket's mode and owner in the ls -l line and the show info output are not classified, so judge them yourself"
+  exit "$1"
+)
 ```
 
 ## Common mistakes
@@ -322,7 +416,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7e31cdd1a3ad49bec6ab015220eefeb12eeef86b0b22ad2c82e19926c4196a71",
+  "body_sha256": "2b6b74106fc6cae7210fe7f6af1c7f6296119efab5b23e466cb4fa31e3f2bd6f",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -400,8 +494,8 @@ Claims (full source mapping in the JSON block below):
     "verify-size": {"text": "With valid credentials, 1M succeeds and 11M returns 413; remove only the deny rule in isolation to attribute refusal. These Content-Length probes do not test chunked bodies.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [1]},
     "verify-backend": {"text": "Inventory all listeners: backend 3000 must be loopback-only even if frontend checks pass, and the runtime endpoint must not be TCP.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493"], "status": "REASONED", "verify": [1]},
     "verify-stats": {"text": "Probe the 8404 stats listener itself via loopback with the certificate hostname: no credentials refused, valid credentials return statistics.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:sae992a8ac3a7"], "status": "REASONED", "verify": [2]},
-    "verify-mtls": {"text": "With verify required, no/untrusted client certificates must fail TLS and trusted ones pass; readable cert/key controls avoid local errors, and Basic may still return 401.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [2]},
-    "verify-runtime": {"text": "Check root/root mode 600 and root show info success versus nobody permission denial; reported admin command level is not proof of access control.", "components": ["haproxy"], "sources": ["haproxy:s9c32621d6493", "haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [2]}
+    "verify-mtls": {"text": "With verify required, no/untrusted client certificates must fail TLS and trusted ones pass; readable cert/key controls avoid local errors, and Basic may still return 401.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [3]},
+    "verify-runtime": {"text": "Check root/root mode 600 and root show info success versus nobody permission denial; reported admin command level is not proof of access control.", "components": ["haproxy"], "sources": ["haproxy:s9c32621d6493", "haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [4]}
   }
 }
 ````

@@ -86,35 +86,35 @@ PostgreSQL, so bind or publish both protocols deliberately and keep the database
 Enabling auth on a running instance stops trace collection and blocks all API access until API keys exist, so
 mint a key immediately after the flip: a system key (admin-created, acts for the whole instance) or a user key
 authenticates API requests via `PHOENIX_API_KEY` sent as an `Authorization: Bearer` header, and collectors and
-SDKs need one to keep sending traces. Phoenix has no native MFA, but it can federate to an OAuth2/OIDC identity
-provider (its documentation works through Google, AWS Cognito, and Microsoft Entra ID); enforce MFA there, or
-add an identity-aware proxy in front per [mfa.md](mfa.md). Two OAuth caveats: `PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP`
-defaults to `True`, so any identity the provider will authenticate can provision itself an account unless you
-set it `False` and restrict provider membership (test an unapproved identity). The second caveat is that local
-email/password login stays available alongside SSO and bypasses the provider's MFA, so set
-`PHOENIX_DISABLE_BASIC_AUTH=True` once the IdP is the intended path. Establish and test an approved IdP
-administrator BEFORE you disable local login or provider signup: disabling basic auth also disables the local
-admin password, so once `PHOENIX_DISABLE_BASIC_AUTH=True` the "replacement admin password works" control in
-Verify no longer applies - instead require local password login to FAIL and an approved IdP login with MFA to
-succeed.
+SDKs need one to keep sending traces. Phoenix has no native MFA, but it can federate to an OAuth2/OIDC
+identity provider (its documentation works through Google, AWS Cognito, and Microsoft Entra ID); enforce MFA
+there, or add an identity-aware proxy in front per [mfa.md](mfa.md). Two OAuth caveats:
+`PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP` defaults to `True`, so any identity the provider will authenticate can
+provision itself an account unless you set it `False` and restrict provider membership (test an unapproved
+identity). The second caveat is that local email/password login stays available alongside SSO and bypasses the
+provider's MFA, so set `PHOENIX_DISABLE_BASIC_AUTH=True` once the IdP is the intended path. Establish and test
+an approved IdP administrator BEFORE you disable local login or provider signup: disabling basic auth also
+disables the local admin password, so once `PHOENIX_DISABLE_BASIC_AUTH=True` the "replacement admin password
+works" control in Verify no longer applies - instead require local password login to FAIL and an approved IdP
+login with MFA to succeed.
 
 ## Helicone (self-hosted)
 
 Helicone self-hosts with Better Auth: account signup and organization membership, not a fixed shared login
 (the `test@helicone.ai` / `password` credential is the manual guide's local trial only). Generate a real
 `BETTER_AUTH_SECRET` before the first start: the all-in-one image documents the placeholder
-`change-me-in-production` and the repository Compose file falls back to `your-secret-key`, and a known
-signing secret weakens every session token it protects, so replace whichever example value your deployment
-uses. Then restrict who may sign up, and do not expose the dashboard without
-your own layer in front. Helicone is several services, not one: its Docker Compose publishes the backing
-stores - PostgreSQL, ClickHouse, MinIO/S3, Redis, and MailHog - on host ports independent of the dashboard
-login (for example `54388:5432` and `18123:8123`). An identity proxy on the Helicone UI therefore leaves those
-backing stores wide open; remove or loopback-scope every backing publication and rotate the example storage
-credentials ([minio.md](minio.md), [object-storage.md](object-storage.md)). Ingestion runs through the separate
-AI Gateway and the provider keys in its environment, not the web session; store those per
-[secrets.md](secrets.md). The Jawn service and the S3 store also hold your data, so protect every service, not
-just the dashboard and gateway: keep them all on a private network or behind an identity-aware fronting layer
-([fronting-auth.md](fronting-auth.md), [nginx.md](nginx.md), [caddy.md](caddy.md)) with MFA ([mfa.md](mfa.md)).
+`change-me-in-production` and the repository Compose file falls back to `your-secret-key`, and a known signing
+secret weakens every session token it protects, so replace whichever example value your deployment uses. Then
+restrict who may sign up, and do not expose the dashboard without your own layer in front. Helicone is several
+services, not one: its Docker Compose publishes the backing stores - PostgreSQL, ClickHouse, MinIO/S3, Redis,
+and MailHog - on host ports independent of the dashboard login (for example `54388:5432` and `18123:8123`). An
+identity proxy on the Helicone UI therefore leaves those backing stores wide open; remove or loopback-scope
+every backing publication and rotate the example storage credentials ([minio.md](minio.md),
+[object-storage.md](object-storage.md)). Ingestion runs through the separate AI Gateway and the provider keys
+in its environment, not the web session; store those per [secrets.md](secrets.md). The Jawn service and the S3
+store also hold your data, so protect every service, not just the dashboard and gateway: keep them all on a
+private network or behind an identity-aware fronting layer ([fronting-auth.md](fronting-auth.md),
+[nginx.md](nginx.md), [caddy.md](caddy.md)) with MFA ([mfa.md](mfa.md)).
 
 ## OpenTelemetry Collector
 
@@ -170,7 +170,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The October 2026 marking review covered the Langfuse dashboard and key-pair checks in an earlier form, before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; bash -n was not re-run on the guarded block, and the new guards have not been run. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the listener inventory, with the Langfuse checks and the Collector OTLP/HTTP probe in the two blocks after it, each marked in its own first line, per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) an earlier form, which held all three checks in one block, passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network. With the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. That review covered the Langfuse checks before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the Collector probe while it targeted a fixed illustrative host. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss and no network, which ran the guards and every exit status. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. The Langfuse and Collector blocks exit 1 for an anonymous 2xx; the Langfuse block exits 3 for any other anonymous answer than 401 or a keyed answer other than a 2xx, and the Collector block exits 0 for 401 or 403 and 3 for any other answer. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, and its last line names what it leaves for you to judge. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -180,66 +180,102 @@ from an untrusted network and use an authorized client as a positive control; a 
 alone does not prove authentication. No exposed-versus-fixed Collector run was performed here.
 
 ```bash
-# REASONED: these checks follow the cited vendor documentation and source readings, not live results.
-# The authoring environment has no running Langfuse,
-# Phoenix, Helicone, or OpenTelemetry Collector deployment to probe, so the shell syntax and the key guard
-# branches were tested locally in an earlier form (the Langfuse host guards have not been run), but the
-# exposed-vs-fixed service responses were not.
 # ss is a listener inventory in THIS namespace - not a firewall, NAT, or authentication check.
-ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
-           # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
-           # binds [::] regardless of PHOENIX_HOST) and a port here can still be published by DNAT, so
-           # confirm the actual container publications and firewall, and probe the public IPv4/IPv6 path
-           # from another host - this list alone proves neither exposure nor authentication
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
+             # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
+             # binds [::] regardless of PHOENIX_HOST) and a port here can still be published by DNAT, so
+             # confirm the actual container publications and firewall, and probe the public IPv4/IPv6 path
+             # from another host - this list alone proves neither exposure nor authentication
+  case "$?" in
+    0) echo "unclassified observation: the listener table above is not classified, so judge it yourself against the namespace, publications and firewall"; exit 0 ;;
+    *) echo "ss -tlnp exit $?: there is no listener table to judge; inconclusive"; exit 3 ;;
+  esac
+)
+```
+
+```bash
+# REASONED: Langfuse dashboard reachability and public API authentication follow the cited Langfuse authentication and public API documentation; no Langfuse deployment is available.
 # Langfuse dashboard: a bare GET of / cannot tell a login page from an exposed project view (both are 200
 # and the body is discarded), so confirm it in a FRESH browser session - an unauthenticated visit must
 # land on login, not a project. The curl below is only transport reachability.
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST'   # the public host name your proxy serves Langfuse on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST'   # the public host name your proxy serves Langfuse on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
+      -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
+    case "$?" in 0) exit 0 ;; *) echo "curl exit $?: the dashboard request failed; inconclusive"; exit 3 ;; esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # Langfuse public API auth, matched pair: WITHOUT the key expect 401; WITH a valid project key (public:secret)
+  # expect 200 whose JSON body carries the EXPECTED project id - the positive control. A 401/200 pair seen
+  # THROUGH a reverse proxy does not prove Langfuse itself authenticated (a proxy can reject anonymous and
+  # admit authenticated while its backend stays open), so repeat the pair DIRECTLY against the Langfuse
+  # listener from an authorized network position, keeping any proxy credentials constant, and separately
+  # confirm untrusted clients cannot reach that backend. The key reaches curl on stdin via a config file (curl --config -), so it stays out
+  # of argv and /proc/<pid>/cmdline; still prefer a short-lived project key.
+  (
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The secret key you substitute on the set -- line enters shell history.
+    # Use a short-lived project key or clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the keys from set -x
+    # tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST' 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'   # the same Langfuse host name as the dashboard check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the project's public and secret keys: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit 2 ;; esac
+    case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}"
+    set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}"
+    set -- "$1" "$2" "$3" 0             # the 4th value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
+      -w 'projects no-key=%{http_code} exit=%{exitcode}\n' "https://$1/api/public/projects"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then its projects no-key= line
+    printf '%s\n' "$6"
+    case "$5:$6" in
+      "0:projects no-key=401 "*) ;;
+      "0:projects no-key=2"*) echo "FINDING: the public API answered without the key"; set -- "$1" "$2" "$3" 1 ;;
+      0:*) echo "the request without the key got neither 401 nor a 2xx; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $5: the request without the key failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$(if printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
+      -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - "https://$1/api/public/projects"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then the response body and its projects with-key= line
+    printf '%s' "$6"
+    case "$5:$6" in
+      0:*"projects with-key=2"*) ;;
+      0:*) echo "the request with the key did not get a 2xx, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $5: the request with the key failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    esac
+    exit "$4"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the dashboard's final URL, whether a fresh browser lands on login, and whether the keyed body carries the expected project id are not classified, so judge them yourself"
+  exit "$1"
 )
-# Langfuse public API auth, matched pair: WITHOUT the key expect 401; WITH a valid project key (public:secret)
-# expect 200 whose JSON body carries the EXPECTED project id - the positive control. A 401/200 pair seen
-# THROUGH a reverse proxy does not prove Langfuse itself authenticated (a proxy can reject anonymous and
-# admit authenticated while its backend stays open), so repeat the pair DIRECTLY against the Langfuse
-# listener from an authorized network position, keeping any proxy credentials constant, and separately
-# confirm untrusted clients cannot reach that backend. The key reaches curl on stdin via a config file (curl --config -), so it stays out
-# of argv and /proc/<pid>/cmdline; still prefer a short-lived project key.
-(
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The secret key you substitute on the set -- line enters shell history.
-  # Use a short-lived project key or clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the keys from set -x
-  # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST' 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'   # the same Langfuse host name as the dashboard check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the project's public and secret keys: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit 2 ;; esac
-  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit 2 ;; esac
-  set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}"
-  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}"
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
-    -w 'projects no-key=%{http_code} exit=%{exitcode}\n' "https://$1/api/public/projects"
-  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - "https://$1/api/public/projects"
-)
+```
+
+```bash
+# REASONED: Collector OTLP/HTTP receiver authentication follows the cited Collector security guidance and basicauthextension entries; no Collector deployment is available.
 # Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat the
 # probe below WITH it, on curl's stdin as described next, and expect a 2xx - the positive
 # control. Run the pair DIRECTLY against the receiver to establish RECEIVER authentication (a proxy can
@@ -257,10 +293,31 @@ ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespac
 # backslash and then a double quote escaped in "$1" before the printf. The credential on that set -- line
 # enters shell history, so clear that line afterward. Stdin closes the argv channel only: it does not
 # hide the credential from set -x tracing or your own account's view of the process.
-# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
-  -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
-  https://otel-collector.internal:4318/v1/traces
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_COLLECTOR_HOST'   # the host name of the Collector's OTLP/HTTP receiver on port 4318, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the Collector's host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
+    -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
+    "https://$1:4318/v1/traces"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # curl's exit status, then its otlp no-auth= line
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    "0:otlp no-auth=401 "*|"0:otlp no-auth=403 "*) set -- 0 ;;
+    "0:otlp no-auth=2"*) echo "FINDING: the receiver accepted spans with no credential"; set -- 1 ;;
+    0:*) echo "the anonymous request got neither 401/403 nor a 2xx (a 415 is a content-type answer, not an authentication result); inconclusive"; set -- 3 ;;
+    *) echo "curl exit $2: the request failed, and a failed connection proves nothing about authentication; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the authenticated repeat described above and each OTLP/gRPC receiver are not run here, so run and judge them yourself"
+  exit "$1"
+)
 ```
 
 REASONED: the Phoenix default-credential check and the anonymous read-API probe it introduces, per the guide's cited Arize Phoenix authentication entry (the default admin account and /v1/ REST permissions) and Arize Phoenix OAuth2 sign-up and basic-auth controls entry. No Phoenix instance is available in the authoring environment, so the manual login was not attempted; the expected exposed and fixed results are those stated here. For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
@@ -276,7 +333,6 @@ legitimately reaches Phoenix (a connection failure proves nothing about authenti
 anonymously (the probe prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer):
 
 ```bash
-# REASONED: Phoenix read-API authentication follows the cited documentation and source; no Phoenix instance is available.
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PHOENIX_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -284,14 +340,24 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "https://$1/v1/projects" \
-         -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n'
-       ;;
   esac
+  set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "https://$1/v1/projects" \
+       -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"     # curl's exit status, then the response and its unauth-read line
+  printf '%s' "$3"
+  set -- "$1" "$2" "${3%$'\n'}"                # the same, without the final line feed, so the last line is the unauth-read line
+  case "$2:${3##*$'\n'}" in
+    0:*" http=2"??" exit="*) echo "FINDING: /v1/projects answered the anonymous request with a 2xx"; set -- 1 ;;
+    0:*" http=401 exit="*|0:*" http=403 exit="*) set -- 0 ;;
+    0:*) echo "an answer other than a 2xx, 401 or 403 is inconclusive and does not prove authentication is on"; set -- 3 ;;
+    *) echo "curl exit $2: a transport error is inconclusive and does not prove authentication is on"; set -- 3 ;;
+  esac
+  echo "block exit $1; the response body and the default-credential check above are not classified here, so judge them yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. The bash -n and stub runs recorded here covered an earlier form of this block, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
+REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. The bash -n and stub runs recorded here covered an earlier form of this block, whose guard refusals exited with status 1 and whose answer was not classified. The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, a stub curl and no network: it exits 2 when a guard refuses, 1 for a 2xx, 0 for 401 or 403 and 3 for anything else, and its last line names what it leaves for you to judge. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
 is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login page, a `415`, or a transport
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
@@ -506,7 +572,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ac6aae2726cf301025195a2f207306adbd69adcc2aef41253575ba3831c9218f",
+  "body_sha256": "1e54a9a74f0281fc7c4a2a1f46e61b14338d4566d6121797dc76625692a2bc2b",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -710,11 +776,11 @@ Claims (full source mapping in the JSON block below):
     "otel-k8s": {"text": "otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope.", "components": ["otel-dist"], "sources": ["otel-dist:sb93573df35e2"], "status": "REASONED"},
     "otel-minimal": {"text": "Run only required components and use a non-root process.", "components": ["otel-docs"], "sources": ["otel-docs:s5fc11440844b"], "status": "REASONED"},
     "verify-inventory": {"text": "Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls.", "components": ["otel-dist", "otel-docs", "phoenix-bind"], "sources": ["otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d", "otel-docs:s5fc11440844b", "phoenix-bind:s19ffeb67866e", "phoenix-bind:sfc104ed5254a"], "status": "REASONED", "verify": [1]},
-    "verify-dashboard": {"text": "Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED", "verify": [1]},
-    "verify-lf-api": {"text": "Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED", "verify": [1]},
-    "verify-collector": {"text": "Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED", "verify": [1]},
+    "verify-dashboard": {"text": "Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED", "verify": [2]},
+    "verify-lf-api": {"text": "Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED", "verify": [2]},
+    "verify-collector": {"text": "Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED", "verify": [3]},
     "verify-phoenix-admin": {"text": "Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "verify-phoenix-read": {"text": "Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.", "components": ["phoenix", "curl"], "sources": ["phoenix:s5a90699b7950", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-phoenix-read": {"text": "Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.", "components": ["phoenix", "curl"], "sources": ["phoenix:s5a90699b7950", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [4]},
     "verify-phoenix-http": {"text": "Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control.", "components": ["phoenix", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:sdbf548dbb448"], "status": "REASONED"},
     "verify-phoenix-grpc": {"text": "Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.", "components": ["phoenix-auth", "phoenix-bind"], "sources": ["phoenix-auth:sdbf548dbb448", "phoenix-bind:sfc104ed5254a"], "status": "REASONED"}
   }

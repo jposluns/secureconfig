@@ -154,16 +154,28 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. The bash -x, history and stub runs of the cookie subshell covered an earlier form, before the no-cookie and cookie requests took the application's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. The bash -x and history runs of the secret-scan subshell covered an earlier form, whose FINDING and error arms ended with status 0; none was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
+REASONED: following block; the listener inventory, with the anonymous route, authorized route and client-secret checks in the three blocks after it, each marked in its own first line. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. Those bash -x, history and stub runs covered earlier forms, when all four checks shared one block: the cookie subshell before it took the application's host on a guarded `set --` line, and the secret scan while its FINDING and error arms ended with status 0. The current forms of the four blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss, real grep on a scratch build directory, a pty for the hidden prompts and no network, which ran the guards and every status below; the tracing and history runs were not repeated. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, a hidden-prompt read included. The secret scan exits 1 when grep finds the secret and 0 when it does not; the route answers and the listener table are left unclassified, and each block's last line names what it leaves for you to judge. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
-ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
-           # firewall or the platform ingress, so confirm external reachability separately
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
+             # firewall or the platform ingress, so confirm external reachability separately
+  case "$?" in
+    0) echo "unclassified observation: the listener table above is not classified, so judge it yourself"; exit 0 ;;
+    *) echo "ss -tlnp exit $?: there is no listener table to judge; inconclusive"; exit 3 ;;
+  esac
+)
+```
+
+```bash
+# REASONED: anonymous route checks follow the cited Next.js authentication guide and curl manual; no deployed application is available, so no route outcome is recorded.
 # Protected routes WITHOUT a cookie. This guide's verifySession() redirects to /login, so an unauthenticated
 # Route Handler or page returns a 3xx to /login (or 401/403 if you chose the "return 401" variant); a
 # streamed redirect can instead be a 200 whose body is a client-side redirect shell, not the protected content, so read the BODY, not the status
 # alone. --noproxy so no client proxy answers. Save each body and confirm it carries NO protected payload:
 (                                       # a subshell, so your own script arguments are untouched
+  set +e                                # errexit off here, so a failed request is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Next.js app is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -174,9 +186,18 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 if a request fails, otherwise 0, because you judge the answers
   curl -q -g -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/api/admin"   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
+  case "$?" in 0) ;; *) echo "curl exit $?: the /api/admin request failed; inconclusive"; set -- "$1" 3 ;; esac
   curl -q -g -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/dashboard"    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+  case "$?" in 0) ;; *) echo "curl exit $?: the /dashboard request failed; inconclusive"; set -- "$1" 3 ;; esac
+  echo "block exit $2; the status codes, redirect targets and the bodies saved in admin-nocookie.txt and dash-nocookie.txt are not classified, so judge them yourself"
+  exit "$2"
 )
+```
+
+```bash
+# REASONED: authorized route controls and hidden cookie input follow the cited Next.js authentication guide and curl manual; no deployed application or session cookies are available.
 # POSITIVE controls, so a denial above is the auth check firing and not a route broken for everyone. Put the
 # app's host name and then the cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
 # `better-auth.session_token` (or `__Secure-better-auth.session_token` with secure cookies) - and paste a
@@ -205,23 +226,35 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
   { unset -n cookie_value && unset -v cookie_value; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
-  IFS= read -r -s -p 'ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 3 if a request fails, otherwise 0, because you judge the answers
+  IFS= read -r -s -p 'ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty ||
+    { printf '\n'; echo 'admin cookie input failed; not probing'; exit 3; }
   printf '\n'
   case "$cookie_value" in
     ''|*[[:cntrl:]]*) echo 'a valid admin session cookie value is required; not probing'; exit 2 ;;
   esac
   printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
     curl -q -g -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- "https://$1/dashboard"   # expect 200; dash-auth.txt is the dashboard, not /login
+  case "$?" in 0) ;; *) echo "curl exit $?: the admin /dashboard request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
   printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
     curl -q -g -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- "https://$1/api/admin"    # admin cookie: 200
-  IFS= read -r -s -p 'NON-ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
+  case "$?" in 0) ;; *) echo "curl exit $?: the admin /api/admin request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
+  IFS= read -r -s -p 'NON-ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty ||
+    { printf '\n'; echo 'non-admin cookie input failed; not probing'; exit 3; }
   printf '\n'
   case "$cookie_value" in
-    ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; exit 2 ;;
+    ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; case "$3" in 0) exit 2 ;; esac; exit "$3" ;;
   esac
   printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
     curl -q -g -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- "https://$1/api/admin"   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
+  case "$?" in 0) ;; *) echo "curl exit $?: the non-admin /api/admin request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
+  echo "block exit $3; the status codes, redirect targets and the bodies saved in dash-auth.txt, admin-auth.txt and admin-nonadmin.txt are not classified, so judge them yourself"
+  exit "$3"
 )
+```
+
+```bash
+# REASONED: the client-bundle secret scan follows the cited Next.js environment-variable guide and GNU grep manual; no application build is available.
 # Secret scan of the client bundle: search the FULL secret (not a prefix), require the build to exist, and
 # read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block).
 # Paste the session-signing secret at the hidden prompt; it reaches grep on stdin (-f - reads the patterns
@@ -233,18 +266,24 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
   { unset -n session_secret && unset -v session_secret; } 2>/dev/null ||
     { echo 'cannot initialize secret input; not scanning'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
-  [ -d .next/static ] || { echo 'inconclusive: run next build first'; exit 2; }
-  IFS= read -r -s -p 'SESSION_SECRET value (input hidden), then Enter: ' session_secret < /dev/tty || exit 2
+  [ -d .next/static ] || { echo 'no .next/static here: run next build first; not scanning'; exit 2; }
+  IFS= read -r -s -p 'SESSION_SECRET value (input hidden), then Enter: ' session_secret < /dev/tty ||
+    { printf '\n'; echo 'secret input failed; not scanning'; exit 3; }
   printf '\n'
   case "$session_secret" in
-    ''|*[[:cntrl:]]*) echo 'inconclusive: the full secret is required; not scanning'; exit 2 ;;
+    ''|*[[:cntrl:]]*) echo 'the full secret is required; not scanning'; exit 2 ;;
   esac
-  if printf '%s\n' "$session_secret" | grep -rIlF -f - -- .next/static; then rc=0; else rc=$?; fi
-  case "$rc" in
-    0) echo "FINDING: the secret is in the browser bundle"; exit 1 ;;
-    1) echo "clean: secret not found in the bundle" ;;
-    *) echo "error: grep exited $rc, result inconclusive"; exit 3 ;;
-  esac
+  if printf '%s\n' "$session_secret" | grep -rIlF -f - -- .next/static; then
+    echo "FINDING: the secret is in the browser bundle"; set -- 1
+  else
+    set -- "$?"                         # grep's exit status, taken in the else branch, so no named variable holds it
+    case "$1" in
+      1) echo "clean: secret not found in the bundle"; set -- 0 ;;
+      *) echo "error: grep exited $1, result inconclusive"; set -- 3 ;;
+    esac
+  fi
+  echo "block exit $1; a clean grep is evidence, not proof: an encoded or split value, your other secrets and the Server Action steps below are not checked here, so judge them yourself"
+  exit "$1"
 )
 # a clean grep is evidence not proof (a bundler can split or encode a value); scan for your other secrets too.
 # Server Action authorization: create a FRESH disposable record before EACH attempt (an authorized mutation
@@ -344,7 +383,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d84f153420f2698c1f199d202a9f712ba029a3f6363d033aa310c61b5eadbe98",
+  "body_sha256": "65ccf8079b8b6c39567c745f0e0ae97b8a2337255357f2a31f47878776179e9b",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",
@@ -458,11 +497,11 @@ Claims (full source mapping in the JSON block below):
     "vercel-methods": {"text": "Deployment Protection admits project-authorized Vercel users; Passport, Password Protection and Trusted IPs need Enterprise/paid add-ons, not app-user authentication.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96"], "status": "REASONED"},
     "vercel-scope": {"text": "Standard Protection excludes production domains; enable All Deployments. Cited 9 September 2026 announcement makes Vercel Authentication production scope free on all plans including Hobby.", "components": ["vercel"], "sources": ["vercel:s7836e043434a", "vercel:se6089d5c4e96"], "status": "REASONED"},
     "verify-bind": {"text": "ss inventories loopback 3000; it does not prove firewall/platform ingress isolation.", "components": ["next"], "sources": ["next:s066f8a176a52", "next:s353c30dff99f"], "status": "REASONED", "verify": [1]},
-    "verify-anonymous": {"text": "Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
-    "verify-authorized": {"text": "Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
-    "verify-cookie-input": {"text": "Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.", "components": ["curl"], "sources": ["curl:s5345a985007a"], "status": "REASONED", "verify": [1]},
-    "verify-secret": {"text": "Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.", "components": ["next", "grep"], "sources": ["next:s964651d4eed4", "grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae"], "status": "REASONED", "verify": [1]},
-    "verify-action": {"text": "Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED", "verify": [1]}
+    "verify-anonymous": {"text": "Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [2]},
+    "verify-authorized": {"text": "Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [3]},
+    "verify-cookie-input": {"text": "Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.", "components": ["curl"], "sources": ["curl:s5345a985007a"], "status": "REASONED", "verify": [3]},
+    "verify-secret": {"text": "Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.", "components": ["next", "grep"], "sources": ["next:s964651d4eed4", "grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae"], "status": "REASONED", "verify": [4]},
+    "verify-action": {"text": "Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED", "verify": [4]}
   }
 }
 ````

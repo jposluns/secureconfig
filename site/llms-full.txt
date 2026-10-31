@@ -11241,56 +11241,80 @@ The runtime API (the `stats socket` added to `global` above) is not enabled by d
 ```bash
 # REASONED: configuration and exposed/fixed checks follow the cited HAProxy documentation;
 # no HAProxy runtime is available in the authoring environment.
-sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
-# REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell was checked
-# but the exposed-vs-fixed responses were not. A transport, TLS, or
-# DNS error is inconclusive, never a pass.
-(
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set +x +a +e                                  # never trace or export the credential read below
-  { unset -n pw && unset -v pw; } 2>/dev/null ||
-    { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
-  { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
-  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
-  IFS= read -r -s -p 'admin password: ' pw < /dev/tty || exit 2; echo
-  case "$pw" in ''|*[[:cntrl:]]*) echo 'supply the admin password; not probing'; exit 2 ;; esac
-  pw=${pw//\\/\\\\}; pw=${pw//\"/\\\"}   # escape \ and " so curl --config parsing keeps the exact password
-  base=(-sS --noproxy '*' --connect-timeout 5 --max-time 30)
-  # 1) HTTP must redirect to HTTPS.
-  curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
-  # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
-  #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
-  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
-  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
-  curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
-  printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
-  printf 'user = "admin:%s"\n' "$pw"              | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
-  # 3) Body-size guard, BOTH cases with valid creds so a 401 cannot masquerade as the result. Payloads live in
-  #    a private temp dir removed on exit.
-  tmp=$(mktemp -d) || { echo 'no tempdir; not probing'; exit 2; }
-  trap 'rm -rf "$tmp"' EXIT
-  head -c 1M /dev/zero > "$tmp/under.bin"  || { echo 'payload write failed'; exit 2; }
-  head -c 11M /dev/zero > "$tmp/over.bin" || { echo 'payload write failed'; exit 2; }
-  for f in under over; do
-    printf 'user = "admin:%s"\n' "$pw" | curl -q -g "${base[@]}" --config - --data-binary @"$tmp/$f.bin" \
-      -o /dev/null -w "$f http=%{http_code}\n" "https://$1/"
-  done
-  # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
-  # sets here; a chunked upload advertises none and is not covered. A backend can return 413 too, so to
-  # attribute the refusal to HAProxy, in an isolated fixture remove ONLY the http-request deny line and
-  # confirm the over upload then reaches the app.
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 3 (inconclusive) outranks 2 (a part refused its input), which outranks 0; no answer here is classified
+  sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
+  case "$?" in 0) ;; *) echo "haproxy -c or reload exit $?: the requests below may test the configuration HAProxy was already running; inconclusive"; set -- 3 ;; esac
+  # REASONED, not demonstrated here: no HAProxy runtime in the authoring environment, so the shell was checked
+  # but the exposed-vs-fixed responses were not. A transport, TLS, or
+  # DNS error is inconclusive, never a pass.
+  (
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    set +x +a +e                                  # never trace or export the credential read below
+    { unset -n pw && unset -v pw; } 2>/dev/null ||
+      { echo 'a readonly pw is set in this shell; not probing'; exit 2; }
+    { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+    case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
+    IFS= read -r -s -p 'admin password: ' pw < /dev/tty || { echo; echo 'password input failed; not probing'; exit 3; }; echo
+    case "$pw" in ''|*[[:cntrl:]]*) echo 'supply the admin password; not probing'; exit 2 ;; esac
+    pw=${pw//\\/\\\\}; pw=${pw//\"/\\\"}   # escape \ and " so curl --config parsing keeps the exact password
+    set -- "$1" 0                         # the 2nd value is this part's status so far, ranked as above
+    # 1) HTTP must redirect to HTTPS.
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
+    case "$?" in 0) ;; *) echo "curl exit $?: the redirect request failed; inconclusive"; set -- "$1" 3 ;; esac
+    # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
+    #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
+    #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+    #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
+    case "$?" in 0) ;; *) echo "curl exit $?: the request without credentials failed; inconclusive"; set -- "$1" 3 ;; esac
+    printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
+    case "$?" in 0) ;; *) echo "curl exit $?: the request with wrong credentials failed; inconclusive"; set -- "$1" 3 ;; esac
+    printf 'user = "admin:%s"\n' "$pw"              | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
+    case "$?" in 0) ;; *) echo "curl exit $?: the request with valid credentials failed; inconclusive"; set -- "$1" 3 ;; esac
+    # 3) Body-size guard, BOTH cases with valid creds so a 401 cannot masquerade as the result. Payloads live in
+    #    a private temp dir removed at the end of this part.
+    set -- "$1" "$2" "$(if mktemp -d; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3%%$'\n'*}" "${3##*$'\n'}"   # this part's status, the temp dir, then mktemp's exit status
+    if [ "$4" != 0 ]; then
+      echo 'no tempdir; not probing'; set -- "$1" 3
+    else
+      if head -c 1M /dev/zero > "$3/under.bin" && head -c 11M /dev/zero > "$3/over.bin"; then
+        printf 'user = "admin:%s"\n' "$pw" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 --config - --data-binary @"$3/under.bin" \
+          -o /dev/null -w 'under http=%{http_code}\n' "https://$1/"
+        case "$?" in 0) ;; *) echo "curl exit $?: the under request failed; inconclusive"; set -- "$1" 3 "$3" "$4" ;; esac
+        printf 'user = "admin:%s"\n' "$pw" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 30 --config - --data-binary @"$3/over.bin" \
+          -o /dev/null -w 'over http=%{http_code}\n' "https://$1/"
+        case "$?" in 0) ;; *) echo "curl exit $?: the over request failed; inconclusive"; set -- "$1" 3 "$3" "$4" ;; esac
+      else
+        echo 'payload write failed'; set -- "$1" 3 "$3" "$4"
+      fi
+      rm -rf -- "$3"
+    fi
+    # under: the app's success, not 413; over: 413. req.body_size reads the advertised Content-Length, which curl
+    # sets here; a chunked upload advertises none and is not covered. A backend can return 413 too, so to
+    # attribute the refusal to HAProxy, in an isolated fixture remove ONLY the http-request deny line and
+    # confirm the over upload then reaches the app.
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0 - the checks above pass while
+             # the backend also answers directly on 3000, bypassing HAProxy's TLS and auth. Confirm the runtime
+             # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
+  case "$?" in 0) ;; *) echo "ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  echo "block exit $1; no answer in this block is classified: judge the redirect headers, the no-creds, bad-creds, valid, under and over codes and the listener table yourself against the comments above"
+  exit "$1"
 )
-ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0 - the checks above pass while
-           # the backend also answers directly on 3000, bypassing HAProxy's TLS and auth. Confirm the runtime
-           # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available. Bash 5.3.9(1)-release passed bash -n on the following fence, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated. The certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check. No network command ran. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener, the runtime
-socket and, where `verify required` is set, client certificates. The step for an enabled stats listener,
+REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available. Bash 5.3.9(1)-release passed bash -n on an earlier form, when the stats, client-certificate and runtime-socket checks shared one block, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated. In that earlier form the certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check; they now refuse with status 2. No network command ran. The current forms of the three blocks below are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, sudo and socat, a pty for the hidden prompt and no network. Each of them exits 2 when a guard refuses, 1 for a finding, 3 when a command it attempts or its positive control fails or an answer is neither the pass nor the finding, and otherwise 0, and its last line names what it leaves for you to judge. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener, the runtime
+socket and, where `verify required` is set, client certificates. Run only the blocks for the surfaces you
+enabled. The step for an enabled stats listener,
 REASONED from the cited HAProxy documentation, is to verify that listener with an unauthenticated request
 (refused) and a valid-credential request (returns the statistics) against that listener specifically.
 The step for an enabled runtime socket, REASONED from the cited HAProxy
@@ -11303,8 +11327,7 @@ In this block and the one above, paste the password alone at the hidden prompt: 
 every line after the first for your shell to run.
 
 ```bash
-# REASONED: management-surface checks follow the cited HAProxy documentation; no HAProxy runtime is available.
-(
+(                                       # a subshell, so the exits below end only the subshell
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
   { unset -n sp && unset -v sp; } 2>/dev/null ||
@@ -11315,37 +11338,108 @@ every line after the first for your shell to run.
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
-  base=(-sS --noproxy '*' --connect-timeout 5 --max-time 15)
-  # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
-  # the loopback bind): no credentials must be refused; valid credentials return the statistics.
-  curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"
   # The stats password reaches curl through stdin config (curl --config -), never argv. The hidden prompt
   # keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin closes the argv channel
   # only: the account owner and root can still read it in the subshell and curl.
-  IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || exit 2; echo
+  IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || { echo; echo 'stats password input failed; not probing'; exit 3; }; echo
   case "$sp" in ''|*[[:cntrl:]]*) echo 'supply the stats password; not probing'; exit 2 ;; esac
   sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}
-  printf 'user = "admin:%s"\n' "$sp" | curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" --config - -o /dev/null -w 'stats auth=%{http_code}\n' "https://$1:8404/stats"
-  # mTLS, only if `bind ... verify required`: no cert and an untrusted cert must be rejected at TLS; a trusted
-  # cert must be admitted (it may still return 401 if Basic auth is also configured). The path guards keep a
-  # local file error from standing in for a server rejection.
-  curl -q -g "${base[@]}" -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$1/"
-  for pair in 'REPLACE_WITH_UNTRUSTED_CRT:REPLACE_WITH_UNTRUSTED_KEY:untrusted' 'REPLACE_WITH_TRUSTED_CRT:REPLACE_WITH_TRUSTED_KEY:trusted'; do
-    crt=${pair%%:*}; rest=${pair#*:}; key=${rest%%:*}; label=${rest##*:}
-    case "$crt$key" in *REPLACE_WITH_*) echo "substitute the $label cert and key; not probing"; continue ;; esac
-    if [ -r "$crt" ] && [ -r "$key" ]; then
-      curl -q -g "${base[@]}" --cert "$crt" --key "$key" \
-        -o /dev/null -w "mtls $label=%{http_code} exit=%{exitcode}\n" "https://$1/"
-    else
-      echo "$label cert or key not readable; not probing"
-    fi
-  done
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
+  # the loopback bind): no credentials must be refused; valid credentials return the statistics.
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its stats no-creds= line
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "0:stats no-creds=401"|"0:stats no-creds=403") ;;
+    "0:stats no-creds=2"??) echo "FINDING: the stats listener answered without credentials"; set -- "$1" 1 ;;
+    0:*) echo "the request without credentials was neither refused nor answered; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $3: the stats request without credentials failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if printf 'user = "admin:%s"\n' "$sp" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --resolve "$1:8404:127.0.0.1" --config - -o /dev/null -w 'stats auth=%{http_code}\n' "https://$1:8404/stats"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its stats auth= line
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "0:stats auth=200") ;;
+    0:*) echo "valid credentials did not return the statistics, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the stats request with valid credentials failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the statistics page itself is not read here, so open it with valid credentials and judge it yourself"
+  exit "$2"
 )
+```
+
+```bash
+# REASONED: client-certificate checks follow the cited HAProxy bind verify documentation; no HAProxy runtime or certificate fixtures are available.
+# mTLS, only if `bind ... verify required`: no cert and an untrusted cert must be rejected at TLS; a trusted
+# cert must be admitted (it may still return 401 if Basic auth is also configured). The path guards keep a
+# local file error from standing in for a server rejection.
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so a rejected request is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST' 'REPLACE_WITH_UNTRUSTED_CRT' 'REPLACE_WITH_UNTRUSTED_KEY' 'REPLACE_WITH_TRUSTED_CRT' 'REPLACE_WITH_TRUSTED_KEY'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 5 ] || { echo 'the set -- line needs exactly 5 values; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the host; not probing'; exit 2 ;; esac
+  case "$2$3" in *REPLACE_WITH_*) echo "substitute the untrusted cert and key; not probing"; exit 2 ;; esac
+  case "$4$5" in *REPLACE_WITH_*) echo "substitute the trusted cert and key; not probing"; exit 2 ;; esac
+  if [ -r "$2" ] && [ -r "$3" ]; then :; else echo "untrusted cert or key not readable; not probing"; exit 2; fi
+  if [ -r "$4" ] && [ -r "$5" ]; then :; else echo "trusted cert or key not readable; not probing"; exit 2; fi
+  set -- "$1" "$2" "$3" "$4" "$5" 0     # the 6th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null -w 'mtls no-cert=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls no-cert= line
+  printf '%s\n' "$8"
+  case "$7" in
+    0) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    35|56) ;;                           # curl's TLS handshake and receive errors, where a server's certificate rejection surfaces
+    *) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$2" --key "$3" \
+    -o /dev/null -w 'mtls untrusted=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls untrusted= line
+  printf '%s\n' "$8"
+  case "$7" in
+    0) echo "FINDING: the request with the untrusted certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    35|56) ;;
+    *) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$4" --key "$5" \
+    -o /dev/null -w 'mtls trusted=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls trusted= line
+  printf '%s\n' "$8"
+  case "$7" in
+    0) ;;
+    *) echo "curl exit $7: the trusted certificate was not admitted, so the positive control failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
+  echo "block exit $6; the HTTP codes are not classified (a trusted certificate may still draw 401 from Basic auth), and exit 35 or 56 reads as a TLS rejection only beside an admitted trusted certificate, so judge the lines above yourself"
+  exit "$6"
+)
+```
+
+```bash
+# REASONED: runtime-socket checks follow the cited HAProxy management documentation; no HAProxy runtime is available.
 # Runtime socket: root-owned mode-600 Unix socket, and an unauthorized local identity must be denied.
-ls -l /run/haproxy/admin.sock                                       # expect srw------- root root
-# guard-conventions: allow fixed local HAProxy admin socket /run/haproxy/admin.sock; no reader-substituted target
-printf 'show info\n' | sudo socat - /run/haproxy/admin.sock | head -1   # authorized (root): prints info
-sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorized identity: expect permission denied
+(                                       # a subshell, so the exit below ends only the subshell
+  set +e                                # errexit off here, so the expected denial below is classified instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  ls -l /run/haproxy/admin.sock                                       # expect srw------- root root
+  case "$?" in 0) ;; *) echo "ls exit $?: /run/haproxy/admin.sock could not be listed; inconclusive"; set -- 3 ;; esac
+  # guard-conventions: allow fixed local HAProxy admin socket /run/haproxy/admin.sock; no reader-substituted target
+  set -- "$1" "$(if printf 'show info\n' | sudo socat - /run/haproxy/admin.sock; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"                          # socat's exit status, then the first line it printed
+  printf '%s\n' "$3"                                                  # authorized (root): prints info
+  case "$2" in 0) ;; *) echo "socat exit $2: the authorized show info request failed; inconclusive"; set -- 3 ;; esac
+  set -- "$1" "$(if sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # unauthorized identity: expect permission denied
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"                           # socat's exit status, then what it printed
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    0:*) echo "FINDING: the nobody account connected to the runtime socket"; set -- 1 ;;
+    *"ermission denied"*) ;;
+    *) echo "socat exit $2 without a permission denial; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the socket's mode and owner in the ls -l line and the show info output are not classified, so judge them yourself"
+  exit "$1"
+)
 ```
 
 ## Common mistakes
@@ -11425,7 +11519,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7e31cdd1a3ad49bec6ab015220eefeb12eeef86b0b22ad2c82e19926c4196a71",
+  "body_sha256": "2b6b74106fc6cae7210fe7f6af1c7f6296119efab5b23e466cb4fa31e3f2bd6f",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -11503,8 +11597,8 @@ Claims (full source mapping in the JSON block below):
     "verify-size": {"text": "With valid credentials, 1M succeeds and 11M returns 413; remove only the deny rule in isolation to attribute refusal. These Content-Length probes do not test chunked bodies.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [1]},
     "verify-backend": {"text": "Inventory all listeners: backend 3000 must be loopback-only even if frontend checks pass, and the runtime endpoint must not be TCP.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493"], "status": "REASONED", "verify": [1]},
     "verify-stats": {"text": "Probe the 8404 stats listener itself via loopback with the certificate hostname: no credentials refused, valid credentials return statistics.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:sae992a8ac3a7"], "status": "REASONED", "verify": [2]},
-    "verify-mtls": {"text": "With verify required, no/untrusted client certificates must fail TLS and trusted ones pass; readable cert/key controls avoid local errors, and Basic may still return 401.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [2]},
-    "verify-runtime": {"text": "Check root/root mode 600 and root show info success versus nobody permission denial; reported admin command level is not proof of access control.", "components": ["haproxy"], "sources": ["haproxy:s9c32621d6493", "haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [2]}
+    "verify-mtls": {"text": "With verify required, no/untrusted client certificates must fail TLS and trusted ones pass; readable cert/key controls avoid local errors, and Basic may still return 401.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [3]},
+    "verify-runtime": {"text": "Check root/root mode 600 and root show info success versus nobody permission denial; reported admin command level is not proof of access control.", "components": ["haproxy"], "sources": ["haproxy:s9c32621d6493", "haproxy:s5792e6ff4990"], "status": "REASONED", "verify": [4]}
   }
 }
 ````
@@ -11657,82 +11751,106 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker and ss and no network, which ran the guards and every exit status; no Traefik answered them.)
 
 ```bash
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name Traefik routes to the app (the Host rule in section 2), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sI "http://$1/"     # expect a redirect to https://
-  curl -q -g -sI "https://$1/"    # expect 401 without credentials once auth is on
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 3 (inconclusive) outranks 2 (a part refused its input), which outranks 0; no answer here is classified
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name Traefik routes to the app (the Host rule in section 2), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    curl -q -g -sI "http://$1/"         # expect a redirect to https://
+    case "$?" in 0) ;; *) echo "curl exit $?: the redirect request failed; inconclusive"; set -- "$1" 3 ;; esac
+    curl -q -g -sI "https://$1/"        # expect 401 without credentials once auth is on
+    case "$?" in 0) ;; *) echo "curl exit $?: the HTTPS request failed; inconclusive"; set -- "$1" 3 ;; esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (
+    # curl reads the admin password from a config stream on stdin (--config -),
+    # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The password you substitute on the set -- line enters shell history.
+    # Clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the password from
+    # set -x tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PASSWORD'   # the same app host name as the checks above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then the admin password: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "${2//\\/\\\\}"
+    set -- "$1" "${2//\"/\\\"}"
+    set -- "$1" "$2" 0                  # the 3rd value is this part's status so far, ranked as above
+    if head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin; then
+      printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
+                                       # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
+      case "$?" in 0) ;; *) echo "curl exit $?: the 1M request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
+      printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
+                                       # 413. Credentials matter: app-body runs after app-auth, so an
+                                       # unauthenticated probe is counted by app-rate/app-inflight but stops
+                                       # at 401 before app-body buffers it. A backend with its own limit
+                                       # returns the same code, so attributing the refusal needs an isolated
+                                       # environment with app-body removed
+      case "$?" in 0) ;; *) echo "curl exit $?: the 11M request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
+    else
+      echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; set -- "$1" "$2" 3
+    fi
+    rm -f /tmp/under.bin /tmp/over.bin
+    exit "$3"
+  )
+  case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the same app host name as the checks above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -o pipefail                     # the pipeline's status is its last failing command's, so a failed request inside xargs is not hidden by uniq
+    seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
+                                         # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
+                                         # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
+                                         # next handler on failure, so an unauthenticated flood is counted by the
+                                         # limiter, keyed on the client source. A 429 appeared. That is all this shows.
+                                         # inflightreq also returns
+                                         # 429, and an upstream under load can too, so this does not
+                                         # establish that ratelimit fired. Attributing it needs an isolated
+                                         # environment with both disabled as a baseline, then each enabled
+                                         # alone, with the arrival rate actually measured
+    case "$?" in 0) exit 0 ;; *) echo "flood pipeline exit $?: a request or a counting command failed; inconclusive"; exit 3 ;; esac
+  )
+  case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  docker compose ps                     # only Traefik publishes ports; the app's 3000 must NOT be published
+  case "$?" in 0) ;; *) echo "docker compose ps exit $?; inconclusive"; set -- 3 ;; esac
+  sudo ss -tlnp                         # read the whole listener table, do not grep it down to the port you
+                                        # expect (that hides an unexpected listener): only Traefik should
+                                        # answer on the host. A backend answering on 3000 directly bypasses
+                                        # Traefik's TLS and its authentication middleware
+  case "$?" in 0) ;; *) echo "sudo ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  echo "block exit $1; no answer in this block is classified: judge the redirect and 401 headers, the 1M and 11M codes, the flood counts and both listings yourself against the comments above"
+  exit "$1"
 )
-head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-(
-  # curl reads the admin password from a config stream on stdin (--config -),
-  # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The password you substitute on the set -- line enters shell history.
-  # Clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the password from
-  # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PASSWORD'   # the same app host name as the checks above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then the admin password: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
-  set -- "$1" "${2//\\/\\\\}"
-  set -- "$1" "${2//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
-                                     # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
-                                     # 413. Credentials matter: app-body runs after app-auth, so an
-                                     # unauthenticated probe is counted by app-rate/app-inflight but stops
-                                     # at 401 before app-body buffers it. A backend with its own limit
-                                     # returns the same code, so attributing the refusal needs an isolated
-                                     # environment with app-body removed
-)
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the same app host name as the checks above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
-                                       # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
-                                       # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
-                                       # next handler on failure, so an unauthenticated flood is counted by the
-                                       # limiter, keyed on the client source. A 429 appeared. That is all this shows.
-                                       # inflightreq also returns
-                                       # 429, and an upstream under load can too, so this does not
-                                       # establish that ratelimit fired. Attributing it needs an isolated
-                                       # environment with both disabled as a baseline, then each enabled
-                                       # alone, with the arrival rate actually measured
-)
-rm -f /tmp/under.bin /tmp/over.bin
-docker compose ps                    # only Traefik publishes ports; the app's 3000 must NOT be published
-sudo ss -tlnp                        # read the whole listener table, do not grep it down to the port you
-                                     # expect (that hides an unexpected listener): only Traefik should
-                                     # answer on the host. A backend answering on 3000 directly bypasses
-                                     # Traefik's TLS and its authentication middleware
 ```
 
 Check the Traefik log for ACME errors on first start; issuance failures otherwise surface as a self-signed "TRAEFIK DEFAULT CERT" in the browser.
@@ -11748,7 +11866,7 @@ services:
 `traefik/whoami` listens on a single HTTP port, so Traefik's single-port detection can build a service for it and a routed reply is unmistakable (the body carries a `Hostname:` line). Read the router rule Traefik generated for the canary; its `Host(...)` value is the canary's normalized name, and you pass that value as the `Host:` header below. Probe plain HTTP against the `:443` listener: the auto-generated router never requested TLS, so it answers plain HTTP even there. Run these probe blocks with Bash and curl 7.75.0 or newer, which added the `exitcode` and `errormsg` write-out variables they print.
 
 ```bash
-(                              # a subshell, so your own shell arguments are untouched
+(                              # a subshell, so your own shell arguments are untouched; it exits 0 for 404, 1 for 200, 502 or 504, 3 otherwise
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TRAEFIK_HOST' 'REPLACE_WITH_HTTPS_PORT' 'REPLACE_WITH_CANARY_HOST_HEADER'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -11757,9 +11875,19 @@ services:
   case "$1:$2:$3" in
     *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -H "Host: $3" \
-    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"
+    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # curl's exit status, then everything it printed
+  printf '%s' "$5"
+  case "$4:$5" in
+    0:*"http=404 exit="*) echo "pass: Traefik answered 404 for the canary, so it ignored the unlabelled container"; set -- 0 ;;
+    0:*"http=200 exit="*|0:*"http=502 exit="*|0:*"http=504 exit="*) echo "FINDING: Traefik routed the unlabelled canary (expected on the exposed calibration fixture; anywhere else an exposure to remove)"; set -- 1 ;;
+    0:*) echo "the canary's answer is neither the 404 pass nor a 200, 502 or 504 route; inconclusive"; set -- 3 ;;
+    *) echo "curl exit $4: the canary request failed; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; a 404 counts only after the exposed-fixture calibration returned 200 with the canary's own Hostname: body, which this block does not check, so judge that and the body yourself"
+  exit "$1"
 )
 ```
 
@@ -11768,7 +11896,7 @@ With `exposedByDefault: false` the canary returns `http=404` from Traefik's unma
 A `404` for the canary also appears when the whole Docker provider is off, which breaks all routing. Confirm the provider still works by probing the app itself, published only over HTTPS:
 
 ```bash
-(                              # a subshell, so your own shell arguments are untouched
+(                              # a subshell, so your own shell arguments are untouched; it exits 0 when the app answers, 3 for 404 or a failed request
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_APP_HOST' 'REPLACE_WITH_HTTPS_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -11777,8 +11905,17 @@ A `404` for the canary also appears when the whole Docker provider is off, which
   case "$1:$2" in
     *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then everything it printed
+  printf '%s' "$4"
+  case "$3:$4" in
+    0:*"http=404 exit="*) echo "the app answered 404, so the provider is not routing it; inconclusive, and a canary 404 means nothing until it does"; set -- 3 ;;
+    0:*) echo "the app answered, so the provider is routing it"; set -- 0 ;;
+    *) echo "curl exit $3: the request failed, and a connection failure means the provider is not routing the app; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the status code is not classified, and a 401 may come from the app's own login rather than Traefik's basicAuth, so judge it and the router's middlewares yourself"
+  exit "$1"
 )
 ```
 
@@ -11880,7 +12017,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e25c49cac81a55593946c2d1abba005054334d5d3d0a04a608ba0b279bdc4349",
+  "body_sha256": "45c8f66a0cf74647f528c4d0788a833bd3bda121428e961c7f90c5ce5e7ae102",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",
@@ -17040,16 +17177,28 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. The bash -x, history and stub runs of the cookie subshell covered an earlier form, before the no-cookie and cookie requests took the application's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. The bash -x and history runs of the secret-scan subshell covered an earlier form, whose FINDING and error arms ended with status 0; none was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
+REASONED: following block; the listener inventory, with the anonymous route, authorized route and client-secret checks in the three blocks after it, each marked in its own first line. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. Those bash -x, history and stub runs covered earlier forms, when all four checks shared one block: the cookie subshell before it took the application's host on a guarded `set --` line, and the secret scan while its FINDING and error arms ended with status 0. The current forms of the four blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss, real grep on a scratch build directory, a pty for the hidden prompts and no network, which ran the guards and every status below; the tracing and history runs were not repeated. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, a hidden-prompt read included. The secret scan exits 1 when grep finds the secret and 0 when it does not; the route answers and the listener table are left unclassified, and each block's last line names what it leaves for you to judge. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
-ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
-           # firewall or the platform ingress, so confirm external reachability separately
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
+             # firewall or the platform ingress, so confirm external reachability separately
+  case "$?" in
+    0) echo "unclassified observation: the listener table above is not classified, so judge it yourself"; exit 0 ;;
+    *) echo "ss -tlnp exit $?: there is no listener table to judge; inconclusive"; exit 3 ;;
+  esac
+)
+```
+
+```bash
+# REASONED: anonymous route checks follow the cited Next.js authentication guide and curl manual; no deployed application is available, so no route outcome is recorded.
 # Protected routes WITHOUT a cookie. This guide's verifySession() redirects to /login, so an unauthenticated
 # Route Handler or page returns a 3xx to /login (or 401/403 if you chose the "return 401" variant); a
 # streamed redirect can instead be a 200 whose body is a client-side redirect shell, not the protected content, so read the BODY, not the status
 # alone. --noproxy so no client proxy answers. Save each body and confirm it carries NO protected payload:
 (                                       # a subshell, so your own script arguments are untouched
+  set +e                                # errexit off here, so a failed request is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Next.js app is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -17060,9 +17209,18 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 if a request fails, otherwise 0, because you judge the answers
   curl -q -g -sS --noproxy '*' -o admin-nocookie.txt -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/api/admin"   # 3xx to /login, or 401/403; admin-nocookie.txt must hold no admin data
+  case "$?" in 0) ;; *) echo "curl exit $?: the /api/admin request failed; inconclusive"; set -- "$1" 3 ;; esac
   curl -q -g -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redirect_url}\n' "https://$1/dashboard"    # 3xx with loc=/login, or a 200 redirect shell; dash-nocookie.txt must NOT contain dashboard content (a streamed redirect saves a shell, not the login page)
+  case "$?" in 0) ;; *) echo "curl exit $?: the /dashboard request failed; inconclusive"; set -- "$1" 3 ;; esac
+  echo "block exit $2; the status codes, redirect targets and the bodies saved in admin-nocookie.txt and dash-nocookie.txt are not classified, so judge them yourself"
+  exit "$2"
 )
+```
+
+```bash
+# REASONED: authorized route controls and hidden cookie input follow the cited Next.js authentication guide and curl manual; no deployed application or session cookies are available.
 # POSITIVE controls, so a denial above is the auth check firing and not a route broken for everyone. Put the
 # app's host name and then the cookie's NAME on the set -- line - this guide's example uses `session`, Better Auth uses
 # `better-auth.session_token` (or `__Secure-better-auth.session_token` with secure cookies) - and paste a
@@ -17091,23 +17249,35 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
   { unset -n cookie_value && unset -v cookie_value; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
-  IFS= read -r -s -p 'ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 3 if a request fails, otherwise 0, because you judge the answers
+  IFS= read -r -s -p 'ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty ||
+    { printf '\n'; echo 'admin cookie input failed; not probing'; exit 3; }
   printf '\n'
   case "$cookie_value" in
     ''|*[[:cntrl:]]*) echo 'a valid admin session cookie value is required; not probing'; exit 2 ;;
   esac
   printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
     curl -q -g -sS --noproxy '*' -o dash-auth.txt  -w 'http=%{http_code}\n' --header @- "https://$1/dashboard"   # expect 200; dash-auth.txt is the dashboard, not /login
+  case "$?" in 0) ;; *) echo "curl exit $?: the admin /dashboard request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
   printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
     curl -q -g -sS --noproxy '*' -o admin-auth.txt -w 'http=%{http_code}\n' --header @- "https://$1/api/admin"    # admin cookie: 200
-  IFS= read -r -s -p 'NON-ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty || exit 2
+  case "$?" in 0) ;; *) echo "curl exit $?: the admin /api/admin request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
+  IFS= read -r -s -p 'NON-ADMIN session cookie VALUE (input hidden), then Enter: ' cookie_value < /dev/tty ||
+    { printf '\n'; echo 'non-admin cookie input failed; not probing'; exit 3; }
   printf '\n'
   case "$cookie_value" in
-    ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; exit 2 ;;
+    ''|*[[:cntrl:]]*) echo 'a valid non-admin session cookie value is required; not probing'; case "$3" in 0) exit 2 ;; esac; exit "$3" ;;
   esac
   printf 'Cookie: %s=%s\n' "$2" "$cookie_value" |
     curl -q -g -sS --noproxy '*' -o admin-nonadmin.txt -w 'http=%{http_code} loc=%{redirect_url}\n' --header @- "https://$1/api/admin"   # a non-admin cookie here must be 403 or a /login redirect, and admin-nonadmin.txt must hold no admin data; this means nothing unless the admin run got 200
+  case "$?" in 0) ;; *) echo "curl exit $?: the non-admin /api/admin request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
+  echo "block exit $3; the status codes, redirect targets and the bodies saved in dash-auth.txt, admin-auth.txt and admin-nonadmin.txt are not classified, so judge them yourself"
+  exit "$3"
 )
+```
+
+```bash
+# REASONED: the client-bundle secret scan follows the cited Next.js environment-variable guide and GNU grep manual; no application build is available.
 # Secret scan of the client bundle: search the FULL secret (not a prefix), require the build to exist, and
 # read grep's exit status separately (run inline under set -e, a clean grep's exit 1 would abort the block).
 # Paste the session-signing secret at the hidden prompt; it reaches grep on stdin (-f - reads the patterns
@@ -17119,18 +17289,24 @@ ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss sh
   { unset -n session_secret && unset -v session_secret; } 2>/dev/null ||
     { echo 'cannot initialize secret input; not scanning'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
-  [ -d .next/static ] || { echo 'inconclusive: run next build first'; exit 2; }
-  IFS= read -r -s -p 'SESSION_SECRET value (input hidden), then Enter: ' session_secret < /dev/tty || exit 2
+  [ -d .next/static ] || { echo 'no .next/static here: run next build first; not scanning'; exit 2; }
+  IFS= read -r -s -p 'SESSION_SECRET value (input hidden), then Enter: ' session_secret < /dev/tty ||
+    { printf '\n'; echo 'secret input failed; not scanning'; exit 3; }
   printf '\n'
   case "$session_secret" in
-    ''|*[[:cntrl:]]*) echo 'inconclusive: the full secret is required; not scanning'; exit 2 ;;
+    ''|*[[:cntrl:]]*) echo 'the full secret is required; not scanning'; exit 2 ;;
   esac
-  if printf '%s\n' "$session_secret" | grep -rIlF -f - -- .next/static; then rc=0; else rc=$?; fi
-  case "$rc" in
-    0) echo "FINDING: the secret is in the browser bundle"; exit 1 ;;
-    1) echo "clean: secret not found in the bundle" ;;
-    *) echo "error: grep exited $rc, result inconclusive"; exit 3 ;;
-  esac
+  if printf '%s\n' "$session_secret" | grep -rIlF -f - -- .next/static; then
+    echo "FINDING: the secret is in the browser bundle"; set -- 1
+  else
+    set -- "$?"                         # grep's exit status, taken in the else branch, so no named variable holds it
+    case "$1" in
+      1) echo "clean: secret not found in the bundle"; set -- 0 ;;
+      *) echo "error: grep exited $1, result inconclusive"; set -- 3 ;;
+    esac
+  fi
+  echo "block exit $1; a clean grep is evidence, not proof: an encoded or split value, your other secrets and the Server Action steps below are not checked here, so judge them yourself"
+  exit "$1"
 )
 # a clean grep is evidence not proof (a bundler can split or encode a value); scan for your other secrets too.
 # Server Action authorization: create a FRESH disposable record before EACH attempt (an authorized mutation
@@ -17230,7 +17406,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d84f153420f2698c1f199d202a9f712ba029a3f6363d033aa310c61b5eadbe98",
+  "body_sha256": "65ccf8079b8b6c39567c745f0e0ae97b8a2337255357f2a31f47878776179e9b",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",
@@ -17344,11 +17520,11 @@ Claims (full source mapping in the JSON block below):
     "vercel-methods": {"text": "Deployment Protection admits project-authorized Vercel users; Passport, Password Protection and Trusted IPs need Enterprise/paid add-ons, not app-user authentication.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96"], "status": "REASONED"},
     "vercel-scope": {"text": "Standard Protection excludes production domains; enable All Deployments. Cited 9 September 2026 announcement makes Vercel Authentication production scope free on all plans including Hobby.", "components": ["vercel"], "sources": ["vercel:s7836e043434a", "vercel:se6089d5c4e96"], "status": "REASONED"},
     "verify-bind": {"text": "ss inventories loopback 3000; it does not prove firewall/platform ingress isolation.", "components": ["next"], "sources": ["next:s066f8a176a52", "next:s353c30dff99f"], "status": "REASONED", "verify": [1]},
-    "verify-anonymous": {"text": "Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
-    "verify-authorized": {"text": "Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
-    "verify-cookie-input": {"text": "Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.", "components": ["curl"], "sources": ["curl:s5345a985007a"], "status": "REASONED", "verify": [1]},
-    "verify-secret": {"text": "Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.", "components": ["next", "grep"], "sources": ["next:s964651d4eed4", "grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae"], "status": "REASONED", "verify": [1]},
-    "verify-action": {"text": "Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED", "verify": [1]}
+    "verify-anonymous": {"text": "Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [2]},
+    "verify-authorized": {"text": "Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [3]},
+    "verify-cookie-input": {"text": "Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.", "components": ["curl"], "sources": ["curl:s5345a985007a"], "status": "REASONED", "verify": [3]},
+    "verify-secret": {"text": "Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.", "components": ["next", "grep"], "sources": ["next:s964651d4eed4", "grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae"], "status": "REASONED", "verify": [4]},
+    "verify-action": {"text": "Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED", "verify": [4]}
   }
 }
 ````
@@ -54879,35 +55055,35 @@ PostgreSQL, so bind or publish both protocols deliberately and keep the database
 Enabling auth on a running instance stops trace collection and blocks all API access until API keys exist, so
 mint a key immediately after the flip: a system key (admin-created, acts for the whole instance) or a user key
 authenticates API requests via `PHOENIX_API_KEY` sent as an `Authorization: Bearer` header, and collectors and
-SDKs need one to keep sending traces. Phoenix has no native MFA, but it can federate to an OAuth2/OIDC identity
-provider (its documentation works through Google, AWS Cognito, and Microsoft Entra ID); enforce MFA there, or
-add an identity-aware proxy in front per [mfa.md](https://github.com/jposluns/secureconfig/blob/main/mfa.md). Two OAuth caveats: `PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP`
-defaults to `True`, so any identity the provider will authenticate can provision itself an account unless you
-set it `False` and restrict provider membership (test an unapproved identity). The second caveat is that local
-email/password login stays available alongside SSO and bypasses the provider's MFA, so set
-`PHOENIX_DISABLE_BASIC_AUTH=True` once the IdP is the intended path. Establish and test an approved IdP
-administrator BEFORE you disable local login or provider signup: disabling basic auth also disables the local
-admin password, so once `PHOENIX_DISABLE_BASIC_AUTH=True` the "replacement admin password works" control in
-Verify no longer applies - instead require local password login to FAIL and an approved IdP login with MFA to
-succeed.
+SDKs need one to keep sending traces. Phoenix has no native MFA, but it can federate to an OAuth2/OIDC
+identity provider (its documentation works through Google, AWS Cognito, and Microsoft Entra ID); enforce MFA
+there, or add an identity-aware proxy in front per [mfa.md](https://github.com/jposluns/secureconfig/blob/main/mfa.md). Two OAuth caveats:
+`PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP` defaults to `True`, so any identity the provider will authenticate can
+provision itself an account unless you set it `False` and restrict provider membership (test an unapproved
+identity). The second caveat is that local email/password login stays available alongside SSO and bypasses the
+provider's MFA, so set `PHOENIX_DISABLE_BASIC_AUTH=True` once the IdP is the intended path. Establish and test
+an approved IdP administrator BEFORE you disable local login or provider signup: disabling basic auth also
+disables the local admin password, so once `PHOENIX_DISABLE_BASIC_AUTH=True` the "replacement admin password
+works" control in Verify no longer applies - instead require local password login to FAIL and an approved IdP
+login with MFA to succeed.
 
 ## Helicone (self-hosted)
 
 Helicone self-hosts with Better Auth: account signup and organization membership, not a fixed shared login
 (the `test@helicone.ai` / `password` credential is the manual guide's local trial only). Generate a real
 `BETTER_AUTH_SECRET` before the first start: the all-in-one image documents the placeholder
-`change-me-in-production` and the repository Compose file falls back to `your-secret-key`, and a known
-signing secret weakens every session token it protects, so replace whichever example value your deployment
-uses. Then restrict who may sign up, and do not expose the dashboard without
-your own layer in front. Helicone is several services, not one: its Docker Compose publishes the backing
-stores - PostgreSQL, ClickHouse, MinIO/S3, Redis, and MailHog - on host ports independent of the dashboard
-login (for example `54388:5432` and `18123:8123`). An identity proxy on the Helicone UI therefore leaves those
-backing stores wide open; remove or loopback-scope every backing publication and rotate the example storage
-credentials ([minio.md](https://github.com/jposluns/secureconfig/blob/main/minio.md), [object-storage.md](https://github.com/jposluns/secureconfig/blob/main/object-storage.md)). Ingestion runs through the separate
-AI Gateway and the provider keys in its environment, not the web session; store those per
-[secrets.md](https://github.com/jposluns/secureconfig/blob/main/secrets.md). The Jawn service and the S3 store also hold your data, so protect every service, not
-just the dashboard and gateway: keep them all on a private network or behind an identity-aware fronting layer
-([fronting-auth.md](https://github.com/jposluns/secureconfig/blob/main/fronting-auth.md), [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md), [caddy.md](https://github.com/jposluns/secureconfig/blob/main/caddy.md)) with MFA ([mfa.md](https://github.com/jposluns/secureconfig/blob/main/mfa.md)).
+`change-me-in-production` and the repository Compose file falls back to `your-secret-key`, and a known signing
+secret weakens every session token it protects, so replace whichever example value your deployment uses. Then
+restrict who may sign up, and do not expose the dashboard without your own layer in front. Helicone is several
+services, not one: its Docker Compose publishes the backing stores - PostgreSQL, ClickHouse, MinIO/S3, Redis,
+and MailHog - on host ports independent of the dashboard login (for example `54388:5432` and `18123:8123`). An
+identity proxy on the Helicone UI therefore leaves those backing stores wide open; remove or loopback-scope
+every backing publication and rotate the example storage credentials ([minio.md](https://github.com/jposluns/secureconfig/blob/main/minio.md),
+[object-storage.md](https://github.com/jposluns/secureconfig/blob/main/object-storage.md)). Ingestion runs through the separate AI Gateway and the provider keys
+in its environment, not the web session; store those per [secrets.md](https://github.com/jposluns/secureconfig/blob/main/secrets.md). The Jawn service and the S3
+store also hold your data, so protect every service, not just the dashboard and gateway: keep them all on a
+private network or behind an identity-aware fronting layer ([fronting-auth.md](https://github.com/jposluns/secureconfig/blob/main/fronting-auth.md),
+[nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md), [caddy.md](https://github.com/jposluns/secureconfig/blob/main/caddy.md)) with MFA ([mfa.md](https://github.com/jposluns/secureconfig/blob/main/mfa.md)).
 
 ## OpenTelemetry Collector
 
@@ -54963,7 +55139,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The October 2026 marking review covered the Langfuse dashboard and key-pair checks in an earlier form, before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; bash -n was not re-run on the guarded block, and the new guards have not been run. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the listener inventory, with the Langfuse checks and the Collector OTLP/HTTP probe in the two blocks after it, each marked in its own first line, per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) an earlier form, which held all three checks in one block, passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network. With the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. That review covered the Langfuse checks before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the Collector probe while it targeted a fixed illustrative host. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss and no network, which ran the guards and every exit status. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. The Langfuse and Collector blocks exit 1 for an anonymous 2xx; the Langfuse block exits 3 for any other anonymous answer than 401 or a keyed answer other than a 2xx, and the Collector block exits 0 for 401 or 403 and 3 for any other answer. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, and its last line names what it leaves for you to judge. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -54973,66 +55149,102 @@ from an untrusted network and use an authorized client as a positive control; a 
 alone does not prove authentication. No exposed-versus-fixed Collector run was performed here.
 
 ```bash
-# REASONED: these checks follow the cited vendor documentation and source readings, not live results.
-# The authoring environment has no running Langfuse,
-# Phoenix, Helicone, or OpenTelemetry Collector deployment to probe, so the shell syntax and the key guard
-# branches were tested locally in an earlier form (the Langfuse host guards have not been run), but the
-# exposed-vs-fixed service responses were not.
 # ss is a listener inventory in THIS namespace - not a firewall, NAT, or authentication check.
-ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
-           # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
-           # binds [::] regardless of PHOENIX_HOST) and a port here can still be published by DNAT, so
-           # confirm the actual container publications and firewall, and probe the public IPv4/IPv6 path
-           # from another host - this list alone proves neither exposure nor authentication
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespace, host publication, and
+             # permitted network paths. A wildcard bind is not itself exposure (Phoenix's gRPC 4317 always
+             # binds [::] regardless of PHOENIX_HOST) and a port here can still be published by DNAT, so
+             # confirm the actual container publications and firewall, and probe the public IPv4/IPv6 path
+             # from another host - this list alone proves neither exposure nor authentication
+  case "$?" in
+    0) echo "unclassified observation: the listener table above is not classified, so judge it yourself against the namespace, publications and firewall"; exit 0 ;;
+    *) echo "ss -tlnp exit $?: there is no listener table to judge; inconclusive"; exit 3 ;;
+  esac
+)
+```
+
+```bash
+# REASONED: Langfuse dashboard reachability and public API authentication follow the cited Langfuse authentication and public API documentation; no Langfuse deployment is available.
 # Langfuse dashboard: a bare GET of / cannot tell a login page from an exposed project view (both are 200
 # and the body is discarded), so confirm it in a FRESH browser session - an unauthenticated visit must
 # land on login, not a project. The curl below is only transport reachability.
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST'   # the public host name your proxy serves Langfuse on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST'   # the public host name your proxy serves Langfuse on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
+      -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
+    case "$?" in 0) exit 0 ;; *) echo "curl exit $?: the dashboard request failed; inconclusive"; exit 3 ;; esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # Langfuse public API auth, matched pair: WITHOUT the key expect 401; WITH a valid project key (public:secret)
+  # expect 200 whose JSON body carries the EXPECTED project id - the positive control. A 401/200 pair seen
+  # THROUGH a reverse proxy does not prove Langfuse itself authenticated (a proxy can reject anonymous and
+  # admit authenticated while its backend stays open), so repeat the pair DIRECTLY against the Langfuse
+  # listener from an authorized network position, keeping any proxy credentials constant, and separately
+  # confirm untrusted clients cannot reach that backend. The key reaches curl on stdin via a config file (curl --config -), so it stays out
+  # of argv and /proc/<pid>/cmdline; still prefer a short-lived project key.
+  (
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The secret key you substitute on the set -- line enters shell history.
+    # Use a short-lived project key or clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the keys from set -x
+    # tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST' 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'   # the same Langfuse host name as the dashboard check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the project's public and secret keys: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit 2 ;; esac
+    case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}"
+    set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}"
+    set -- "$1" "$2" "$3" 0             # the 4th value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
+      -w 'projects no-key=%{http_code} exit=%{exitcode}\n' "https://$1/api/public/projects"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then its projects no-key= line
+    printf '%s\n' "$6"
+    case "$5:$6" in
+      "0:projects no-key=401 "*) ;;
+      "0:projects no-key=2"*) echo "FINDING: the public API answered without the key"; set -- "$1" "$2" "$3" 1 ;;
+      0:*) echo "the request without the key got neither 401 nor a 2xx; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $5: the request without the key failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$(if printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
+      -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - "https://$1/api/public/projects"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then the response body and its projects with-key= line
+    printf '%s' "$6"
+    case "$5:$6" in
+      0:*"projects with-key=2"*) ;;
+      0:*) echo "the request with the key did not get a 2xx, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $5: the request with the key failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    esac
+    exit "$4"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the dashboard's final URL, whether a fresh browser lands on login, and whether the keyed body carries the expected project id are not classified, so judge them yourself"
+  exit "$1"
 )
-# Langfuse public API auth, matched pair: WITHOUT the key expect 401; WITH a valid project key (public:secret)
-# expect 200 whose JSON body carries the EXPECTED project id - the positive control. A 401/200 pair seen
-# THROUGH a reverse proxy does not prove Langfuse itself authenticated (a proxy can reject anonymous and
-# admit authenticated while its backend stays open), so repeat the pair DIRECTLY against the Langfuse
-# listener from an authorized network position, keeping any proxy credentials constant, and separately
-# confirm untrusted clients cannot reach that backend. The key reaches curl on stdin via a config file (curl --config -), so it stays out
-# of argv and /proc/<pid>/cmdline; still prefer a short-lived project key.
-(
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The secret key you substitute on the set -- line enters shell history.
-  # Use a short-lived project key or clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the keys from set -x
-  # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_LANGFUSE_HOST' 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'   # the same Langfuse host name as the dashboard check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the project's public and secret keys: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit 2 ;; esac
-  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit 2 ;; esac
-  set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}"
-  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}"
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
-    -w 'projects no-key=%{http_code} exit=%{exitcode}\n' "https://$1/api/public/projects"
-  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - "https://$1/api/public/projects"
-)
+```
+
+```bash
+# REASONED: Collector OTLP/HTTP receiver authentication follows the cited Collector security guidance and basicauthextension entries; no Collector deployment is available.
 # Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat the
 # probe below WITH it, on curl's stdin as described next, and expect a 2xx - the positive
 # control. Run the pair DIRECTLY against the receiver to establish RECEIVER authentication (a proxy can
@@ -55050,10 +55262,31 @@ ss -tlnp   # inventory 3000/6006/4317/4318 and identify each listener's namespac
 # backslash and then a double quote escaped in "$1" before the printf. The credential on that set -- line
 # enters shell history, so clear that line afterward. Stdin closes the argv channel only: it does not
 # hide the credential from set -x tracing or your own account's view of the process.
-# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
-  -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
-  https://otel-collector.internal:4318/v1/traces
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_COLLECTOR_HOST'   # the host name of the Collector's OTLP/HTTP receiver on port 4318, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the Collector's host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
+    -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
+    "https://$1:4318/v1/traces"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # curl's exit status, then its otlp no-auth= line
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    "0:otlp no-auth=401 "*|"0:otlp no-auth=403 "*) set -- 0 ;;
+    "0:otlp no-auth=2"*) echo "FINDING: the receiver accepted spans with no credential"; set -- 1 ;;
+    0:*) echo "the anonymous request got neither 401/403 nor a 2xx (a 415 is a content-type answer, not an authentication result); inconclusive"; set -- 3 ;;
+    *) echo "curl exit $2: the request failed, and a failed connection proves nothing about authentication; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the authenticated repeat described above and each OTLP/gRPC receiver are not run here, so run and judge them yourself"
+  exit "$1"
+)
 ```
 
 REASONED: the Phoenix default-credential check and the anonymous read-API probe it introduces, per the guide's cited Arize Phoenix authentication entry (the default admin account and /v1/ REST permissions) and Arize Phoenix OAuth2 sign-up and basic-auth controls entry. No Phoenix instance is available in the authoring environment, so the manual login was not attempted; the expected exposed and fixed results are those stated here. For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
@@ -55069,7 +55302,6 @@ legitimately reaches Phoenix (a connection failure proves nothing about authenti
 anonymously (the probe prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer):
 
 ```bash
-# REASONED: Phoenix read-API authentication follows the cited documentation and source; no Phoenix instance is available.
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PHOENIX_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -55077,14 +55309,24 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "https://$1/v1/projects" \
-         -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n'
-       ;;
   esac
+  set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "https://$1/v1/projects" \
+       -w '\n[unauth-read] http=%{http_code} exit=%{exitcode} err=%{errormsg}\n'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"     # curl's exit status, then the response and its unauth-read line
+  printf '%s' "$3"
+  set -- "$1" "$2" "${3%$'\n'}"                # the same, without the final line feed, so the last line is the unauth-read line
+  case "$2:${3##*$'\n'}" in
+    0:*" http=2"??" exit="*) echo "FINDING: /v1/projects answered the anonymous request with a 2xx"; set -- 1 ;;
+    0:*" http=401 exit="*|0:*" http=403 exit="*) set -- 0 ;;
+    0:*) echo "an answer other than a 2xx, 401 or 403 is inconclusive and does not prove authentication is on"; set -- 3 ;;
+    *) echo "curl exit $2: a transport error is inconclusive and does not prove authentication is on"; set -- 3 ;;
+  esac
+  echo "block exit $1; the response body and the default-credential check above are not classified here, so judge them yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. The bash -n and stub runs recorded here covered an earlier form of this block, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
+REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. The bash -n and stub runs recorded here covered an earlier form of this block, whose guard refusals exited with status 1 and whose answer was not classified. The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, a stub curl and no network: it exits 2 when a guard refuses, 1 for a 2xx, 0 for 401 or 403 and 3 for anything else, and its last line names what it leaves for you to judge. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
 is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login page, a `415`, or a transport
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
@@ -55299,7 +55541,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ac6aae2726cf301025195a2f207306adbd69adcc2aef41253575ba3831c9218f",
+  "body_sha256": "1e54a9a74f0281fc7c4a2a1f46e61b14338d4566d6121797dc76625692a2bc2b",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -55503,11 +55745,11 @@ Claims (full source mapping in the JSON block below):
     "otel-k8s": {"text": "otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope.", "components": ["otel-dist"], "sources": ["otel-dist:sb93573df35e2"], "status": "REASONED"},
     "otel-minimal": {"text": "Run only required components and use a non-root process.", "components": ["otel-docs"], "sources": ["otel-docs:s5fc11440844b"], "status": "REASONED"},
     "verify-inventory": {"text": "Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls.", "components": ["otel-dist", "otel-docs", "phoenix-bind"], "sources": ["otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d", "otel-docs:s5fc11440844b", "phoenix-bind:s19ffeb67866e", "phoenix-bind:sfc104ed5254a"], "status": "REASONED", "verify": [1]},
-    "verify-dashboard": {"text": "Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED", "verify": [1]},
-    "verify-lf-api": {"text": "Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED", "verify": [1]},
-    "verify-collector": {"text": "Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED", "verify": [1]},
+    "verify-dashboard": {"text": "Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED", "verify": [2]},
+    "verify-lf-api": {"text": "Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED", "verify": [2]},
+    "verify-collector": {"text": "Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED", "verify": [3]},
     "verify-phoenix-admin": {"text": "Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "verify-phoenix-read": {"text": "Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.", "components": ["phoenix", "curl"], "sources": ["phoenix:s5a90699b7950", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-phoenix-read": {"text": "Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.", "components": ["phoenix", "curl"], "sources": ["phoenix:s5a90699b7950", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [4]},
     "verify-phoenix-http": {"text": "Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control.", "components": ["phoenix", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:sdbf548dbb448"], "status": "REASONED"},
     "verify-phoenix-grpc": {"text": "Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.", "components": ["phoenix-auth", "phoenix-bind"], "sources": ["phoenix-auth:sdbf548dbb448", "phoenix-bind:sfc104ed5254a"], "status": "REASONED"}
   }

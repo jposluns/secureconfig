@@ -141,82 +141,106 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker and ss and no network, which ran the guards and every exit status; no Traefik answered them.)
 
 ```bash
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name Traefik routes to the app (the Host rule in section 2), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sI "http://$1/"     # expect a redirect to https://
-  curl -q -g -sI "https://$1/"    # expect 401 without credentials once auth is on
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 3 (inconclusive) outranks 2 (a part refused its input), which outranks 0; no answer here is classified
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name Traefik routes to the app (the Host rule in section 2), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    curl -q -g -sI "http://$1/"         # expect a redirect to https://
+    case "$?" in 0) ;; *) echo "curl exit $?: the redirect request failed; inconclusive"; set -- "$1" 3 ;; esac
+    curl -q -g -sI "https://$1/"        # expect 401 without credentials once auth is on
+    case "$?" in 0) ;; *) echo "curl exit $?: the HTTPS request failed; inconclusive"; set -- "$1" 3 ;; esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (
+    # curl reads the admin password from a config stream on stdin (--config -),
+    # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The password you substitute on the set -- line enters shell history.
+    # Clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the password from
+    # set -x tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PASSWORD'   # the same app host name as the checks above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then the admin password: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "${2//\\/\\\\}"
+    set -- "$1" "${2//\"/\\\"}"
+    set -- "$1" "$2" 0                  # the 3rd value is this part's status so far, ranked as above
+    if head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin; then
+      printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
+                                       # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
+      case "$?" in 0) ;; *) echo "curl exit $?: the 1M request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
+      printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
+                                       # 413. Credentials matter: app-body runs after app-auth, so an
+                                       # unauthenticated probe is counted by app-rate/app-inflight but stops
+                                       # at 401 before app-body buffers it. A backend with its own limit
+                                       # returns the same code, so attributing the refusal needs an isolated
+                                       # environment with app-body removed
+      case "$?" in 0) ;; *) echo "curl exit $?: the 11M request failed; inconclusive"; set -- "$1" "$2" 3 ;; esac
+    else
+      echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; set -- "$1" "$2" 3
+    fi
+    rm -f /tmp/under.bin /tmp/over.bin
+    exit "$3"
+  )
+  case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the same app host name as the checks above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -o pipefail                     # the pipeline's status is its last failing command's, so a failed request inside xargs is not hidden by uniq
+    seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
+                                         # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
+                                         # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
+                                         # next handler on failure, so an unauthenticated flood is counted by the
+                                         # limiter, keyed on the client source. A 429 appeared. That is all this shows.
+                                         # inflightreq also returns
+                                         # 429, and an upstream under load can too, so this does not
+                                         # establish that ratelimit fired. Attributing it needs an isolated
+                                         # environment with both disabled as a baseline, then each enabled
+                                         # alone, with the arrival rate actually measured
+    case "$?" in 0) exit 0 ;; *) echo "flood pipeline exit $?: a request or a counting command failed; inconclusive"; exit 3 ;; esac
+  )
+  case "$?:$1" in 0:*) ;; 2:0) set -- 2 ;; 2:*) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  docker compose ps                     # only Traefik publishes ports; the app's 3000 must NOT be published
+  case "$?" in 0) ;; *) echo "docker compose ps exit $?; inconclusive"; set -- 3 ;; esac
+  sudo ss -tlnp                         # read the whole listener table, do not grep it down to the port you
+                                        # expect (that hides an unexpected listener): only Traefik should
+                                        # answer on the host. A backend answering on 3000 directly bypasses
+                                        # Traefik's TLS and its authentication middleware
+  case "$?" in 0) ;; *) echo "sudo ss -tlnp exit $?; inconclusive"; set -- 3 ;; esac
+  echo "block exit $1; no answer in this block is classified: judge the redirect and 401 headers, the 1M and 11M codes, the flood counts and both listings yourself against the comments above"
+  exit "$1"
 )
-head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-(
-  # curl reads the admin password from a config stream on stdin (--config -),
-  # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The password you substitute on the set -- line enters shell history.
-  # Clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the password from
-  # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST' 'REPLACE_WITH_PASSWORD'   # the same app host name as the checks above (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then the admin password: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
-  set -- "$1" "${2//\\/\\\\}"
-  set -- "$1" "${2//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
-                                     # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
-                                     # 413. Credentials matter: app-body runs after app-auth, so an
-                                     # unauthenticated probe is counted by app-rate/app-inflight but stops
-                                     # at 401 before app-body buffers it. A backend with its own limit
-                                     # returns the same code, so attributing the refusal needs an isolated
-                                     # environment with app-body removed
-)
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the same app host name as the checks above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
-                                       # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
-                                       # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
-                                       # next handler on failure, so an unauthenticated flood is counted by the
-                                       # limiter, keyed on the client source. A 429 appeared. That is all this shows.
-                                       # inflightreq also returns
-                                       # 429, and an upstream under load can too, so this does not
-                                       # establish that ratelimit fired. Attributing it needs an isolated
-                                       # environment with both disabled as a baseline, then each enabled
-                                       # alone, with the arrival rate actually measured
-)
-rm -f /tmp/under.bin /tmp/over.bin
-docker compose ps                    # only Traefik publishes ports; the app's 3000 must NOT be published
-sudo ss -tlnp                        # read the whole listener table, do not grep it down to the port you
-                                     # expect (that hides an unexpected listener): only Traefik should
-                                     # answer on the host. A backend answering on 3000 directly bypasses
-                                     # Traefik's TLS and its authentication middleware
 ```
 
 Check the Traefik log for ACME errors on first start; issuance failures otherwise surface as a self-signed "TRAEFIK DEFAULT CERT" in the browser.
@@ -232,7 +256,7 @@ services:
 `traefik/whoami` listens on a single HTTP port, so Traefik's single-port detection can build a service for it and a routed reply is unmistakable (the body carries a `Hostname:` line). Read the router rule Traefik generated for the canary; its `Host(...)` value is the canary's normalized name, and you pass that value as the `Host:` header below. Probe plain HTTP against the `:443` listener: the auto-generated router never requested TLS, so it answers plain HTTP even there. Run these probe blocks with Bash and curl 7.75.0 or newer, which added the `exitcode` and `errormsg` write-out variables they print.
 
 ```bash
-(                              # a subshell, so your own shell arguments are untouched
+(                              # a subshell, so your own shell arguments are untouched; it exits 0 for 404, 1 for 200, 502 or 504, 3 otherwise
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_TRAEFIK_HOST' 'REPLACE_WITH_HTTPS_PORT' 'REPLACE_WITH_CANARY_HOST_HEADER'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -241,9 +265,19 @@ services:
   case "$1:$2:$3" in
     *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -H "Host: $3" \
-    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"
+    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # curl's exit status, then everything it printed
+  printf '%s' "$5"
+  case "$4:$5" in
+    0:*"http=404 exit="*) echo "pass: Traefik answered 404 for the canary, so it ignored the unlabelled container"; set -- 0 ;;
+    0:*"http=200 exit="*|0:*"http=502 exit="*|0:*"http=504 exit="*) echo "FINDING: Traefik routed the unlabelled canary (expected on the exposed calibration fixture; anywhere else an exposure to remove)"; set -- 1 ;;
+    0:*) echo "the canary's answer is neither the 404 pass nor a 200, 502 or 504 route; inconclusive"; set -- 3 ;;
+    *) echo "curl exit $4: the canary request failed; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; a 404 counts only after the exposed-fixture calibration returned 200 with the canary's own Hostname: body, which this block does not check, so judge that and the body yourself"
+  exit "$1"
 )
 ```
 
@@ -252,7 +286,7 @@ With `exposedByDefault: false` the canary returns `http=404` from Traefik's unma
 A `404` for the canary also appears when the whole Docker provider is off, which breaks all routing. Confirm the provider still works by probing the app itself, published only over HTTPS:
 
 ```bash
-(                              # a subshell, so your own shell arguments are untouched
+(                              # a subshell, so your own shell arguments are untouched; it exits 0 when the app answers, 3 for 404 or a failed request
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_APP_HOST' 'REPLACE_WITH_HTTPS_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -261,8 +295,17 @@ A `404` for the canary also appears when the whole Docker provider is off, which
   case "$1:$2" in
     *REPLACE_WITH_*) echo "substitute the values on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then everything it printed
+  printf '%s' "$4"
+  case "$3:$4" in
+    0:*"http=404 exit="*) echo "the app answered 404, so the provider is not routing it; inconclusive, and a canary 404 means nothing until it does"; set -- 3 ;;
+    0:*) echo "the app answered, so the provider is routing it"; set -- 0 ;;
+    *) echo "curl exit $3: the request failed, and a connection failure means the provider is not routing the app; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the status code is not classified, and a 401 may come from the app's own login rather than Traefik's basicAuth, so judge it and the router's middlewares yourself"
+  exit "$1"
 )
 ```
 
@@ -364,7 +407,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e25c49cac81a55593946c2d1abba005054334d5d3d0a04a608ba0b279bdc4349",
+  "body_sha256": "45c8f66a0cf74647f528c4d0788a833bd3bda121428e961c7f90c5ce5e7ae102",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",
