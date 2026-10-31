@@ -177,7 +177,7 @@ The helper bodies at the v4.5.0 and v4.9.2 commits, read as source without an On
 
 Read as source at v4.9.2 to v4.9.4 without an Onyx run, the seed's row creation validates the provider name, which the seed fixes as the valid slug `saml`, and validates the config against the SAML config model, raising `ValueError` when either check fails. The seed has already required that model's four required fields as nonempty strings, and beside them it passes only the model's optional `sp_x509_cert`, when `settings.json` gives it as a nonempty string, and `sp_private_key`, when `certs/sp.key` is read and nonempty; whether any value it passes can still fail the model's string validation depends on pydantic, whose source was not read. The seed catches neither that `ValueError` nor any database error other than `IntegrityError`, and its `certs/sp.key` read, which runs before the required-value check, catches only `OSError`, so a key file that is not UTF-8 raises `UnicodeDecodeError` there. Any of these exceptions passes out of the startup database session block and ends the base `lifespan` startup hook in `main.py` before it yields. What the ASGI server then does, and whether a given legacy file stops a deployment's startup, has not been observed. With EE on, `main.py` can take `get_application` from `ee.onyx.main`, whose `main.py` the paragraph below reads as source at v4.5.0 and v4.9.2. Read as source, EE is on by default: `utils/variable_functionality.py` turns it on when `LICENSE_ENFORCEMENT_ENABLED` is unset, which it treats as `true`, or is `true` in any letter case. This guide therefore assesses that a deployment that keeps that default may run the EE path. Read as source at v4.9.2 to v4.9.4, where `backend/ee/onyx/main.py` is byte-identical in the fetched files, the EE `lifespan` enters the base `lifespan` before its own `yield`, so in this guide's inference these seed errors end the EE startup hook too.
 
-Extending the v4.4.0 inference to these tags, as source reading and this guide's inference rather than an observed deployment: a case-sensitive search for `AUTH_TYPE` in the `backend` and `web` trees at the v4.5.0 and v4.9.2 commits finds it read only by the two helpers and the two legacy migrations, and otherwise only in comments, tests and a test README. In the fetched repository, the two migration files are byte-identical to the v4.4.0 files cited above. At both tags `main.py` mounts the password login routers "in every deployment mode", gates only the env-credential Google login routers, web and mobile, on configured OAuth credentials, and always mounts the SAML and OIDC routers that serve provider rows. Read as source, `AUTH_TYPE` can still add login providers through two one-time legacy imports. When the SSO provider migration creates the provider table in single-tenant mode, it inserts an enabled Google or OIDC provider row if `AUTH_TYPE` is `google_oauth` (or `oidc` with `OPENID_CONFIG_URL` set), OAuth credentials are configured and the new table is still empty. The always-mounted OIDC router serves that row. The startup SAML import can add a SAML provider row, enabled by the model's default, that the always-mounted SAML router serves. Read as source at both commits, `backend/ee/onyx/main.py`, which both recursive trees list, contains no `AUTH_TYPE`; its `lifespan` runs the base hook through `async with lifespan_base(app):` before its own `seed_db()` and `yield`, and its `get_application` calls `get_application_base(lifespan_override=lifespan)`. It mounts a Google OAuth login router at `/auth/oauth`, built from `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET`, only when `MULTI_TENANT` is set; the other routers it mounts, including `ee_oauth_router` and the SCIM router, were not read. Read as source, `main.py`, whose cited v4.9.4 factory uses `lifespan_override` when a caller passes it, and `backend/ee/onyx/main.py` are each byte-identical at v4.9.2, v4.9.3 and v4.9.4. In this guide's inference, an EE deployment at those three tags therefore runs the base startup calls and router mounting cited here, and an exception that ends the base `lifespan` before it yields ends the EE one too, which narrows runtime selection without settling it. The v4.5.0 base factory is not cited, so this inference is not extended to v4.5.0. Apart from these imports, `AUTH_TYPE` does not select runtime authentication at v4.5.0 or v4.9.2; that conclusion is this guide's inference, and deployed selection at those tags has not been observed.
+Extending the v4.4.0 inference to these tags, as source reading and this guide's inference rather than an observed deployment: a case-sensitive search for `AUTH_TYPE` in the `backend` and `web` trees at the v4.5.0 and v4.9.2 commits finds it read only by the two helpers and the two legacy migrations, and otherwise only in comments, tests and a test README. In the fetched repository, the two migration files are byte-identical to the v4.4.0 files cited above. At both tags `main.py` mounts the password login routers "in every deployment mode", gates only the env-credential Google login routers, web and mobile, on configured OAuth credentials, and always mounts the SAML and OIDC routers that serve provider rows. Read as source, `AUTH_TYPE` can still add login providers through two one-time legacy imports. When the SSO provider migration creates the provider table in single-tenant mode, it inserts an enabled Google or OIDC provider row if `AUTH_TYPE` is `google_oauth` (or `oidc` with `OPENID_CONFIG_URL` set), OAuth credentials are configured and the new table is still empty. The always-mounted OIDC router serves that row. The startup SAML import can add a SAML provider row, enabled by the model's default, that the always-mounted SAML router serves. Read as source at both commits, `backend/ee/onyx/main.py`, which both recursive trees list, contains no `AUTH_TYPE`; its `lifespan` runs the base hook through `async with lifespan_base(app):` before its own `seed_db()` and `yield`, and its `get_application` calls `get_application_base(lifespan_override=lifespan)`. It mounts a Google OAuth login router at `/auth/oauth`, built from `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET`, only when `MULTI_TENANT` is set; the other routers it mounts, including `ee_oauth_router` and the SCIM router, were not read. Read as source, `main.py`, whose cited v4.9.4 factory uses `lifespan_override` when a caller passes it, and `backend/ee/onyx/main.py` are each byte-identical in the fetched files at v4.9.2, v4.9.3 and v4.9.4. In this guide's inference, an EE deployment at those three tags therefore runs the base startup calls and router mounting cited here, and an exception that ends the base `lifespan` before it yields ends the EE one too, which narrows runtime selection without settling it. The v4.5.0 base factory is not cited, so this inference is not extended to v4.5.0. Apart from these imports, `AUTH_TYPE` does not select runtime authentication at v4.5.0 or v4.9.2; that conclusion is this guide's inference, and deployed selection at those tags has not been observed.
 
 This guide's advice: do not set `AUTH_TYPE` expecting to change authentication.
 
@@ -195,7 +195,7 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 ## Verify
 
-REASONED: Verify overview and the historical run record, per the guide's cited SearxNG server settings, LocalAI getting started, Text Embeddings Inference CLI arguments, LangServe README at commit `27e57af`, Mem0 REST API, Onyx basic authentication, Docker packet filtering and firewalls, Docker Compose ps, curl manual and GNU grep 3.12 manual, exit status (checked October 2026). The GNU manual documents statuses 0 for a selected line, 1 for no selected lines and 2 for an error; the house runs observed statuses in Bash, dash and BusyBox ash and did not record which grep implementation or version ran. In local marking review (October 2026, Bash 5.3.9), bash -n and ShellCheck 0.11.0 on check 1 exited 0 without output; a placeholder fixture was recorded with `grep_exit=0`, a clean fixture printed `grep_exit=1`, and a missing fixture printed `grep_exit=2`. Bash, dash and BusyBox ash, with and without `set -u`, printed the token and `grep_exit=0` for the exposed fixture and `grep_exit=1` for the fixed fixture. Check 2 bash -n and ShellCheck 0.11.0 exited 0 without output; stub ss printed `-tlnp`, and stub docker printed `compose config` and `compose ps --format json`. In dash and BusyBox ash, checks 6 and 7 printed `run this block in bash; not probing` with and without exported `BASH_VERSION`, with trap diagnostics on stderr and no curl stub call. Stubbed checks 3 to 7 printed `not probing` for empty or placeholder values and `STUB curl` or `STUB nc` for substituted values. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expected exposed outcomes are an anonymous protected response or a reachable direct port; fixed outcomes are anonymous rejection or direct refusal, with application output through a configured authorized ingress when valid credentials are used. Bash check 1 wrong-marker and short-count fixtures printed `paste the whole block, including its set -- line; not checking` and `the set -- line needs exactly 1 value; not checking`; its filename-placeholder fixture printed `substitute the file name on the set -- line above; not checking` and exited 1. A direct grep of a fixture printed `<fixture path>:2:REPLACE_WITH_TOKEN`. These local runs establish guard and placeholder-scan behaviour only; none establishes live service behaviour. An external vantage, TLS exchange, configured authorized ingress and valid credentials were not tested; their availability is unknown, so the positive control remains an expectation, not an observation. **Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Check 7's five-value guard, changed in #475, was exercised in `bash` on 2026-10-13 (UTC) against a stub curl: one and two headers reached curl only on stdin, and a line feed, carriage return or placeholder in either header was refused before any curl call; it was not re-run in `dash` or BusyBox `ash`. Check 6's slice guard, added in #478, was exercised on 2026-10-13 (UTC) against a stub curl: `bash` reached the stub unchanged, and `dash` and BusyBox `ash` printed "run this block in bash; not probing" before any curl call, with and without `BASH_VERSION` exported; in those shells checks 6 and 7 now stop at that guard before their placeholder guards run. Every bash -n, ShellCheck, fixture and stub run recorded in this overview for checks 1 and 3 to 7 covered an earlier form of those blocks, in which every guard refusal ended with status 0 except the placeholder refusals of checks 1 and 3, which exited with status 1; none was re-run on the current form, in which every guard refusal exits with status 2. That earlier form also ended with status 0 after check 1's scan and check 4's probe, whatever they found; the current form exits with status 1 after a check 1 placeholder match or a check 4 completed connection, and check 1 exits with status 3 after a read error. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. Historical authoring note: the authoring environment had no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
+REASONED: Verify overview and the historical run record, per the guide's cited SearxNG server settings, LocalAI getting started, Text Embeddings Inference CLI arguments, LangServe README at commit `27e57af`, Mem0 REST API, Onyx basic authentication, Docker packet filtering and firewalls, Docker Compose ps, curl manual and GNU grep 3.12 manual, exit status (checked October 2026). The GNU manual documents statuses 0 for a selected line, 1 for no selected lines and 2 for an error; the house runs observed statuses in Bash, dash and BusyBox ash and did not record which grep implementation or version ran. In local marking review (October 2026, Bash 5.3.9), bash -n and ShellCheck 0.11.0 on check 1 exited 0 without output; a placeholder fixture was recorded with `grep_exit=0`, a clean fixture printed `grep_exit=1`, and a missing fixture printed `grep_exit=2`. Bash, dash and BusyBox ash, with and without `set -u`, printed the token and `grep_exit=0` for the exposed fixture and `grep_exit=1` for the fixed fixture. Check 2 bash -n and ShellCheck 0.11.0 exited 0 without output; stub ss printed `-tlnp`, and stub docker printed `compose config` and `compose ps --format json`. Those check 2 runs covered an earlier form of that block, which ran its three commands at top level and ended with the last command's status; of them, only the gate suite's ShellCheck 0.11.0 pass covers the current form, which runs them in a subshell and exits with status 3 when one fails or the running inventory lists no service. In dash and BusyBox ash, checks 6 and 7 printed `run this block in bash; not probing` with and without exported `BASH_VERSION`, with trap diagnostics on stderr and no curl stub call. Stubbed checks 3 to 7 printed `not probing` for empty or placeholder values and `STUB curl` or `STUB nc` for substituted values. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expected exposed outcomes are an anonymous protected response or a reachable direct port; fixed outcomes are anonymous rejection or direct refusal, with application output through a configured authorized ingress when valid credentials are used. Bash check 1 wrong-marker and short-count fixtures printed `paste the whole block, including its set -- line; not checking` and `the set -- line needs exactly 1 value; not checking`; its filename-placeholder fixture printed `substitute the file name on the set -- line above; not checking` and exited 1. A direct grep of a fixture printed `<fixture path>:2:REPLACE_WITH_TOKEN`. These local runs establish guard and placeholder-scan behaviour only; none establishes live service behaviour. An external vantage, TLS exchange, configured authorized ingress and valid credentials were not tested; their availability is unknown, so the positive control remains an expectation, not an observation. **Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Check 7's five-value guard, changed in #475, was exercised in `bash` on 2026-10-13 (UTC) against a stub curl: one and two headers reached curl only on stdin, and a line feed, carriage return or placeholder in either header was refused before any curl call; it was not re-run in `dash` or BusyBox `ash`. Check 6's slice guard, added in #478, was exercised on 2026-10-13 (UTC) against a stub curl: `bash` reached the stub unchanged, and `dash` and BusyBox `ash` printed "run this block in bash; not probing" before any curl call, with and without `BASH_VERSION` exported; in those shells checks 6 and 7 now stop at that guard before their placeholder guards run. Every bash -n, ShellCheck, fixture and stub run recorded in this overview for checks 1 and 3 to 7 covered an earlier form of those blocks, in which every guard refusal ended with status 0 except the placeholder refusals of checks 1 and 3, which exited with status 1; none was re-run on the current form, in which every guard refusal exits with status 2. That earlier form also ended with status 0 after check 1's scan and check 4's probe, whatever they found; the current form exits with status 1 after a check 1 placeholder match or a check 4 completed connection, and check 1 exits with status 3 after a read error. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. Historical authoring note: the authoring environment had no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
 
 REASONED: Complete-block copy and guard guidance, per the guide's cited curl manual and Docker packet filtering and firewalls. In local marking review (October 2026, Bash 5.3.9), the single-quoted `$(printf SHOULD_NOT_RUN)` value appeared literally in the stub curl URL; the empty, placeholder, wrong-marker and short-count cases in checks 3 to 7 printed `not probing` before any stub call, while substituted values printed `STUB curl` or `STUB nc`. The stub runs recorded here covered checks 3 to 7 in an earlier form, in which every guard refusal ended with status 0 except the check 3 placeholder refusal, which exited with status 1; none was re-run on the current form, in which every guard refusal exits with status 2. The run did not test a deployed service or a pasted fragment below the guard. An external vantage, TLS exchange, configured authorized ingress and valid credentials were not tested; their availability is unknown. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. An exposed direct port is expected to answer, while a fixed direct port is expected to refuse; the authorized ingress control requires a configured route and valid credentials and was not run. Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line, and the guard lines below check that marker and count the values, so a fragment that keeps those lines but drops or shortens the `set --` line stops instead of running on whatever arguments your own shell already held. A fragment pasted from below the guard lines is not guarded at all, which is why the instruction is to paste whole blocks. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
 
@@ -213,10 +213,10 @@ DEMONSTRATED: following block; placeholder-scan expectations follow GNU grep 3.1
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the file name on the set -- line above; not checking"; exit 2 ;;
-    *) if grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"; then grep_rc=0; else grep_rc=$?; fi
-       printf 'grep_exit=%s\n' "$grep_rc"
+    *) if grep -nH -o 'REPLACE_WITH_[[:alnum:]_]*' -- "$1"; then set -- "$1" 0; else set -- "$1" "$?"; fi   # grep's status, held as the 2nd value rather than in a named variable
+       printf 'grep_exit=%s\n' "$2"
        # Status: 1 when a placeholder matched, 0 for a clean scan, 3 for a read error.
-       case "$grep_rc" in 0) exit 1 ;; 1) exit 0 ;; *) exit 3 ;; esac ;;
+       case "$2" in 0) exit 1 ;; 1) exit 0 ;; *) exit 3 ;; esac ;;
   esac
 )
 ```
@@ -227,15 +227,27 @@ DEMONSTRATED: Check 1 fixed and unreadable fixture outcomes, per the recorded lo
 
 REASONED: Address and request guard behaviour in checks 3 to 7, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics for each of checks 3 to 7. In local marking review (October 2026, Bash 5.3.9), runs of each block printed `not probing` for empty and `REPLACE_WITH_` values before any stub call; substituted values printed `STUB curl` in checks 3, 5, 6 and 7 and `STUB nc` in check 4. Wrong markers printed `paste the whole block, including its set -- line; not probing`; short counts printed `the set -- line needs exactly 2 values; not probing` in checks 3 and 4, with 3, 4 or 5 values respectively in checks 5, 6 and 7. The bash -n, ShellCheck and stub runs recorded here covered checks 3 to 7 in an earlier form, in which every guard refusal ended with status 0 except the check 3 placeholder refusal, which exited with status 1; none was re-run on the current form, in which every guard refusal exits with status 2. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expected exposure is a direct answer; a fixed direct path refuses, per the guide's cited Docker packet filtering and firewalls. An external vantage, TLS exchange, authorized ingress and valid credentials were not checked; their availability is unknown. These guards are prerequisites, not deployment evidence. The address guards below likewise print `not probing` when required values are empty or still contain `REPLACE_WITH_`. Substituted values enter the probe arm. This is a prerequisite, not evidence that the deployment is private.
 
-### 2. Inventory listeners, the merged Compose model, and running publications (REASONED: Listener and publication inventory, per the guide's cited Docker packet filtering and firewalls, Compose networking, Compose merge rules and Docker Compose ps. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Stub ss and docker printed their invocations; no live inventory or real Compose JSON shape was observed. Historical authoring note: no container runtime was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect unintended listeners or publications when exposed, and only intended ingress or loopback publications when fixed; errors and empty inventories remain inconclusive.)
+### 2. Inventory listeners, the merged Compose model, and running publications (REASONED: Listener and publication inventory, per the guide's cited Docker packet filtering and firewalls, Compose networking, Compose merge rules and Docker Compose ps. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Stub ss and docker printed their invocations; no live inventory or real Compose JSON shape was observed. Those runs covered an earlier form that ran the three commands at top level; of them, only the gate suite's ShellCheck 0.11.0 pass covers the current form, which exits with status 3 when one fails or the running inventory lists no service. Historical authoring note: no container runtime was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect unintended listeners or publications when exposed, and only intended ingress or loopback publications when fixed; errors and empty inventories remain inconclusive.)
 
 **Reasoned, not demonstrated** (historical authoring note: no container runtime in the authoring environment). Run on the deployment host. For Compose, use the exact project, file selection, overrides, environment, and profiles used to start the deployment. Add those same options to these commands where needed. What makes an inventory readable rather than guesswork is documented: Compose ps reports the running publication fields, Compose merge rules govern how an override's port list combines with the base, and Compose networking establishes that services reach each other with no host publication at all; all three are in Sources:
 
 ```bash
-# REASONED: Listener and publication inventory, per the guide's cited Docker packet filtering and firewalls, Compose networking, Compose merge rules and Docker Compose ps. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Stub ss and docker printed their invocations; no live inventory or real Compose JSON shape was observed. Historical authoring note: no container runtime was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect unintended listeners or publications when exposed, and only intended ingress or loopback publications when fixed; errors and empty inventories remain inconclusive.
-ss -tlnp
-docker compose config
-docker compose ps --format json
+# REASONED: Listener and publication inventory, per the guide's cited Docker packet filtering and firewalls, Compose networking, Compose merge rules and Docker Compose ps. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Stub ss and docker printed their invocations; no live inventory or real Compose JSON shape was observed. Those runs covered an earlier form that ran the three commands at top level; of them, only the gate suite's ShellCheck 0.11.0 pass covers the current form, which exits with status 3 when one fails or the running inventory lists no service. Historical authoring note: no container runtime was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect unintended listeners or publications when exposed, and only intended ingress or loopback publications when fixed; errors and empty inventories remain inconclusive.
+(                              # a subshell, so the exit below ends only the subshell
+  set -- 0                     # the block's status so far: 3 (a command failed or the inventory is empty) or 0
+  if ss -tlnp; then :; else echo "ss -tlnp exit $?: the listener list is missing or incomplete; inconclusive"; set -- 3; fi
+  if docker compose config; then :; else echo "docker compose config exit $?: no merged model to compare; inconclusive"; set -- 3; fi
+  set -- "$1" "$(if docker compose ps --format json; then printf ' 0'; else printf ' %s' "$?"; fi)"   # the status so far, then the running publications, a space and ps's exit status
+  printf '%s' "${2% *}"
+  # Status: 3 when a command fails or the running inventory lists no service (no JSON object); otherwise 0.
+  case "${2##* }:${2% *}" in
+    0:*'{'*) ;;
+    0:*) echo "docker compose ps listed no running service, and an empty inventory is not a pass; inconclusive"; set -- 3 ;;
+    *) echo "docker compose ps exit ${2##* }: no running inventory; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the listeners, the merged model and the running publications above are not classified, so judge them against Broken and Fixed below"
+  exit "$1"
+)
 ```
 
 **Broken:** `ss` shows an application or backing listener on a wildcard or non-loopback host address; the merged Compose model retains an unwanted host publication; or the running service has a `Publishers` entry mapping it to an unintended host address and port.
@@ -261,9 +273,23 @@ A Compose error, missing service, stopped application, or empty inventory is not
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1:$2" in
     *REPLACE_WITH_*|:*|*:) echo "substitute the address and port on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
-         "http://$1:$2/" ;;
+  esac
+  set -- "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -w 'http=%{http_code} exit=%{exitcode} remote=%{remote_ip} time_connect=%{time_connect} err=%{errormsg}\n' \
+      "http://$1:$2/"; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  set -- "${1% *}" "${1##* }"    # curl's write-out line, then its exit status, held as values rather than in named variables
+  printf '%s' "$1"
+  # Status: 1 for any HTTP answer or a completed TCP connection; 0 when the connection failed before TCP
+  # completed (curl exit 7), which check 2 and the working ingress in check 7 must still corroborate; otherwise 3.
+  case "$1" in
+    "http=000 "*" time_connect=0.000000 "*) ;;
+    "http=000 "*) echo "FINDING: a TCP connection completed without an HTTP answer (an empty reply, reset or timeout), so the direct path exists"; exit 1 ;;
+    "http="???" "*) echo "FINDING: the direct port answered over HTTP, so the direct path exists"; exit 1 ;;
+    *) echo "curl exit $2 printed no write-out line; inconclusive"; exit 3 ;;
+  esac
+  case "$2" in
+    7) echo "the connection failed before TCP completed (curl exit 7), consistent with a refusal; corroborate it with check 2 and the working ingress in check 7"; exit 0 ;;
+    *) echo "curl exit $2 before any TCP connection formed (a timeout, or a name or local error); inconclusive"; exit 3 ;;
   esac
 )
 ```
@@ -292,16 +318,23 @@ REASONED: following block; Backing-port reachability and the example publication
   case "$1:$2" in
     *REPLACE_WITH_*) echo "substitute the address and port on the set -- line above; not probing"; exit 2 ;;
   esac
-  if nc -vz -w 5 "$1" "$2"; then nc_rc=0; else nc_rc=$?; fi
-  printf 'exit=%s\n' "$nc_rc"
-  # Status: 1 when the connection completed; otherwise 0, because refusal and timeout need the evidence below.
-  case "$nc_rc" in 0) exit 1 ;; esac
+  set -- "$(if nc -vz -w 5 "$1" "$2" 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"   # netcat's messages, then its exit status
+  set -- "${1% *}" "${1##* }"
+  printf '%s' "$1"
+  printf 'exit=%s\n' "$2"
+  # Status: 1 when the connection completed; 0 when netcat reports the connection refused, which check 2 must
+  # still corroborate; otherwise 3, because a timeout, a name or option error, or silence is inconclusive.
+  case "$2:$1" in
+    0:*) echo "FINDING: the connection completed, so this port is reachable from here"; exit 1 ;;
+    *:*refused*|*:*Refused*) echo "netcat reported the connection refused; confirm the private publication state with check 2"; exit 0 ;;
+    *) echo "netcat exit $2 without a reported refusal (a timeout, a name or option error, or silence); inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
 **Broken:** netcat reports a successful connection and `exit=0`, and the block exits with status 1. A database password prompt or a service that sends nothing after accepting does not change that result.
 
-**Fixed:** netcat reports connection refused to your actual address and port, with a nonzero exit status, and check 2 confirms the private publication state. The block exits with status 0 for every nonzero netcat status, including the inconclusive cases below, so its status alone does not establish the fix.
+REASONED: netcat status classification, from the refusal message netcat prints, which the block expects to contain the word refused; that wording was not checked against a netcat manual or run here, so a netcat that words its refusal differently gets status 3, never 0. **Fixed:** netcat reports connection refused to your actual address and port, with a nonzero exit status, and check 2 confirms the private publication state. The block exits with status 0 only when netcat's output names a refused connection, and with status 3 for any other nonzero netcat status, including the inconclusive cases below, so a status of 0 still needs check 2's corroboration.
 
 A timeout remains inconclusive without corroborating configuration and filtering evidence. Unsupported options, name-resolution failures, local errors, or unexplained silence are not passes. In particular, BusyBox netcat may reject `-v`; use an implementation supporting these options.
 
@@ -339,8 +372,19 @@ REASONED: following block; Ingress authentication and route coverage, per the gu
   else
     set -- -X "$2" "$1"
   fi
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"
+  set -- "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$@"; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  set -- "${1% *}" "${1##* }"            # the headers, body and write-out line, then curl's exit status
+  printf '%s' "$1"
+  set -- "$1" "$2" "${1##*http=}"        # the text after the last http=, which starts with the HTTP code
+  # Status: 1 for an anonymous 2xx; 0 for a 401 or 403, and 0 for a redirect you judge from its Location
+  # header; otherwise 3, as for a TLS, connection, 5xx, routing or validation error.
+  case "$3" in
+    2??" "*) echo "FINDING: the anonymous request got HTTP ${3%% *} through the ingress"; exit 1 ;;
+    401" "*|403" "*) echo "the anonymous request was rejected with HTTP ${3%% *}; check 7 must still succeed for the authorized caller"; exit 0 ;;
+    3??" "*) echo "unclassified observation: HTTP ${3%% *} is a redirect, which passes only when the Location header above names your configured identity service"; exit 0 ;;
+    *) echo "curl exit $2 with HTTP ${3%% *} is not an authentication result; inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
@@ -366,14 +410,15 @@ REASONED: following block; Native authentication, its limits and the private pos
   # on the set -- line enters shell history; clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the header from set -x
   # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' ''
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' '' 'REPLACE_WITH_anonymous_wrong_OR_valid'
   # $3 is the same harmless JSON body as checks 5 and 7 (keep the empty quotes if none is needed).
   # $4 is a credential header: leave it EMPTY for the anonymous run, put a WRONG credential for the
   # wrong-key run, and the VALID one for the positive control. Run this block three times against the
   # SAME private URL; the native layer must reject the first two and serve the third.
+  # $5 names the run: anonymous, wrong or valid.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit 2; }
+  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit 2; }
   if [ -z "$1" ] || [ -z "$2" ]; then
     echo "fill in the URL and method on the set -- line above; not probing"; exit 2
   fi
@@ -387,16 +432,32 @@ REASONED: following block; Native authentication, its limits and the private pos
   case "$4" in
     *[[:cntrl:]]*) echo "put the credential header on one line; not probing"; exit 2 ;;
   esac
-  # Body options, if any, go after the four values. The credential header ($4) reaches curl on stdin
+  case "$5:$4" in
+    anonymous:|wrong:?*|valid:?*) ;;
+    *) echo "set the fifth value to anonymous with an empty header, or to wrong or valid with a header; not probing"; exit 2 ;;
+  esac
+  # Body options, if any, go after the five values. The credential header ($4) reaches curl on stdin
   # (--header @-), never in its argv, where ps and /proc/<pid>/cmdline would show it.
   if [ -n "$3" ]; then set -- "$@" -H 'Content-Type: application/json' --data-binary "$3"; fi
   if [ -n "$4" ]; then
-    printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
-      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
+    set -- "$5" "$(if printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"; then printf ' 0'; else printf ' %s' "$?"; fi)"
   else
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
+    set -- "$5" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"; then printf ' 0'; else printf ' %s' "$?"; fi)"
   fi
+  set -- "$1" "${2% *}" "${2##* }"       # the run, the response with its write-out line, then curl's exit status
+  printf '%s' "$2"
+  set -- "$1" "$3" "${2##*http=}"        # the run, curl's exit status, then the text after the last http=, which starts with the HTTP code
+  # Status: for the anonymous and wrong runs, 1 for a 2xx and 0 for a 401 or 403; for the valid run, 0 for a
+  # 2xx whose body you still read; otherwise 3, because an unreachable upstream, unknown path, malformed
+  # request or unavailable model tests nothing.
+  case "$1:${3%% *}" in
+    anonymous:2??|wrong:2??) echo "FINDING: the $1 run got HTTP ${3%% *}, so the native layer served it"; exit 1 ;;
+    anonymous:401|anonymous:403|wrong:401|wrong:403) echo "the $1 run was rejected with HTTP ${3%% *}"; exit 0 ;;
+    valid:2??) echo "the valid run got HTTP ${3%% *}; read the body above to confirm it is real output, not a generic page"; exit 0 ;;
+    *) echo "curl exit $2 with HTTP ${3%% *} is not a result the $1 run classifies; inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
@@ -404,7 +465,7 @@ REASONED: following block; Native authentication, its limits and the private pos
 
 **Fixed:** the configured authentication layer rejects that same valid request, while check 7 succeeds with credentials.
 
-An unreachable upstream means native authentication was not tested; it does not prove that authentication works. Likewise, an unknown path, malformed request, or unavailable model does not demonstrate rejection of an anonymous caller. Run the block three times against the SAME private URL, varying only `$4`: empty (anonymous), a deliberately WRONG credential, then the VALID one. The native layer must reject the first two and serve the third; that valid-credential run is the positive control on the private backend, so the three together (anonymous reject, wrong-key reject, valid-key accept) establish the native gate rather than a coincidental error. Check 7 is the separate success test through the HTTPS ingress.
+REASONED: native-gate run sequence and statuses, per the guide's cited LocalAI getting started, Text Embeddings Inference CLI arguments, Mem0 REST API and Onyx basic authentication; not run against a deployment. An unreachable upstream means native authentication was not tested; it does not prove that authentication works. Likewise, an unknown path, malformed request, or unavailable model does not demonstrate rejection of an anonymous caller. Run the block three times against the SAME private URL, varying only `$4` and the run name in `$5`: empty with `anonymous`, a deliberately WRONG credential with `wrong`, then the VALID one with `valid`. The native layer must reject the first two and serve the third; that valid-credential run is the positive control on the private backend, so the three together (anonymous reject, wrong-key reject, valid-key accept) establish the native gate rather than a coincidental error. The block exits with status 1 when the anonymous or wrong run gets a `2xx`, with 0 when either gets `401` or `403` or when the valid run gets a `2xx` whose body you still read, and with 3 otherwise. Check 7 is the separate success test through the HTTPS ingress.
 
 Mem0 and Onyx ship authentication on, but the verified record does not establish the exact response code for a selected endpoint. Investigate a successful anonymous Mem0 request for `AUTH_DISABLED=true`, route coverage, and the running version; the response alone does not identify its cause.
 
@@ -452,12 +513,21 @@ REASONED: following block; Credentialed HTTPS success and header transport, per 
   # would show them.
   if [ -n "$3" ]; then set -- "$@" -H 'Content-Type: application/json' --data-binary "$3"; fi
   if [ -n "$5" ]; then
-    printf '%s\n' "$4" "$5" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
-      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"
+    set -- "$(if printf '%s\n' "$4" "$5" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"; then printf ' 0'; else printf ' %s' "$?"; fi)"
   else
-    printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
-      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"
+    set -- "$(if printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"; then printf ' 0'; else printf ' %s' "$?"; fi)"
   fi
+  set -- "${1% *}" "${1##* }"            # the response with its write-out line, then curl's exit status
+  printf '%s' "$1"
+  set -- "$1" "$2" "${1##*http=}"        # the text after the last http=, which starts with the HTTP code
+  # Status: 0 for a 2xx, whose body you still read; otherwise 3, because a connection failure, 401, 403,
+  # 5xx or login redirect does not establish a working protected service.
+  case "$3" in
+    2??" "*) echo "unclassified observation: HTTP ${3%% *} with credentials; read the body above, which passes only as the expected application output, not a generic page"; exit 0 ;;
+    *) echo "curl exit $2 with HTTP ${3%% *}: the credentialed request did not succeed; inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
@@ -675,7 +745,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "c80501b83503c143ab9003cfa323e570fc08764a030859e4af04d1d7faf520f9",
+  "body_sha256": "83552f2f30d2c7c0c2c2b77f9a3cc57ae551660cdc865a40d7d16176a6fcf417",
   "components": {
     "searx": {
       "name": "SearxNG documentation",

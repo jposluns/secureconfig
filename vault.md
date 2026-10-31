@@ -437,35 +437,80 @@ this on the Vault host as a non-root admin authorized to inspect audit devices, 
 and read the example AppRole:
 
 ```bash
-# DEMONSTRATED: loopback listener, health, file audit, root revocation and role runs recorded below; ss used the documented non-root stand-in. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
+# DEMONSTRATED: loopback listener, health, file audit, root revocation and role runs recorded below; ss used the documented non-root stand-in. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1, which took two values and which ended with the role read's status; the current form, which takes INSPECT or REVOKED_ROOT as a third value and exits once with one status for its classified checks, has not been demonstrated.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
-    'REPLACE_WITH_CA_FILE'
+    'REPLACE_WITH_CA_FILE' \
+    'REPLACE_WITH_INSPECT_OR_REVOKED_ROOT'
+  # Value 3 is INSPECT as the scoped admin, or REVOKED_ROOT for the repeat with the revoked root token selected.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
-        *)
-          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
-          [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
-          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
-          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
-          sudo ss -tlnp
-          vault status -format=json
-          curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-            --cacert "$2" -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/v1/sys/health"
-          vault audit list -detailed
-          vault token lookup
-          vault token lookup -format=json
-          vault read -format=json auth/approle/role/payments
-          ;;
-      esac
-      ;;
   esac
+  case "$2" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
+  esac
+  case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+  case "$3" in
+    INSPECT|REVOKED_ROOT) ;;
+    *) echo "set value 3 to INSPECT as the scoped admin, or REVOKED_ROOT with the revoked root token selected; not probing"; exit 2 ;;
+  esac
+  unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+  export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+  set -- "$1" "$2" "$3" 0   # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  if sudo ss -tlnp; then :; else
+    echo "sudo ss -tlnp exit $?: no socket table to read; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+  fi
+  if vault status -format=json; then :; else
+    echo "vault status exit $? (2 means sealed, 1 an error): not the initialized, unsealed operating state; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+  fi
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert "$2" -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/v1/sys/health"; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  printf '%s' "${5% *}"
+  case "${5##* }:${5% *}" in
+    0:"http=200 "*) ;;
+    0:*) echo "unclassified observation: read the health code above against the list below; a healthy response is a connectivity control, not proof of hardening" ;;
+    *) echo "curl exit ${5##* }: the health request failed, as a transport or certificate verification failure does; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$(if vault audit list -detailed 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  printf '%s' "${5% *}"
+  case "$3:${5##* }:${5% *}" in
+    INSPECT:*:*"No audit devices are enabled."*) echo "FINDING: no audit device is enabled, so requests are served unlogged"; set -- "$1" "$2" "$3" 1 ;;
+    INSPECT:0:*) echo "unclassified observation: the devices are listed above; check delivery by correlating a request_id, as described below" ;;
+    INSPECT:*) echo "vault audit list exit ${5##* }: a failed or denied inspection; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "with the revoked root token selected the audit list is expected to fail; not classified" ;;
+  esac
+  # In the two lookups, vault's own output goes straight to you and only its error text is held, so no token enters a value.
+  { set -- "$1" "$2" "$3" "$4" "$(if { vault token lookup >&3; } 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"; } 3>&1
+  printf '%s' "${5% *}"
+  case "$3:${5##* }:${5% *}" in
+    INSPECT:0:*) ;;
+    INSPECT:*) echo "vault token lookup exit ${5##* }: the scoped admin's lookup, the positive control, failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    REVOKED_ROOT:0:*) echo "FINDING: the revoked root token's lookup succeeded, so that token is still live"; set -- "$1" "$2" "$3" 1 ;;
+    REVOKED_ROOT:*:*"permission denied"*|REVOKED_ROOT:*:*"invalid token"*) echo "Vault refused the revoked root token's lookup, the fixed outcome" ;;
+    *) echo "vault token lookup exit ${5##* } without a permission-denied or invalid-token error; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  { set -- "$1" "$2" "$3" "$4" "$(if { vault token lookup -format=json >&3; } 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"; } 3>&1
+  printf '%s' "${5% *}"
+  case "$3:${5##* }:${5% *}" in
+    INSPECT:0:*) ;;
+    INSPECT:*) echo "vault token lookup exit ${5##* }: the scoped admin's lookup, the positive control, failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    REVOKED_ROOT:0:*) echo "FINDING: the revoked root token's lookup succeeded, so that token is still live"; set -- "$1" "$2" "$3" 1 ;;
+    REVOKED_ROOT:*:*"permission denied"*|REVOKED_ROOT:*:*"invalid token"*) echo "Vault refused the revoked root token's lookup, the fixed outcome" ;;
+    *) echo "vault token lookup exit ${5##* } without a permission-denied or invalid-token error; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  if vault read -format=json auth/approle/role/payments; then :; else
+    set -- "$1" "$2" "$3" "$4" "$?"
+    case "$3" in
+      INSPECT) echo "vault read exit $5: a missing role or denied inspection; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "with the revoked root token selected the role read is expected to fail; not classified" ;;
+    esac
+  fi
+  echo "block exit $4; the socket table, any health code but 200, audit delivery and the role parameters are not classified, so judge them yourself"
+  exit "$4"
 )
 ```
 
@@ -473,36 +518,81 @@ and read the example AppRole:
 # REASONED: wildcard binds, ss as root, HA health and independent audit delivery; the host lacks the capabilities listed below. Repeat these commands for those scenarios using the cited listener, health and audit sources.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
-    'REPLACE_WITH_CA_FILE'
+    'REPLACE_WITH_CA_FILE' \
+    'REPLACE_WITH_INSPECT_OR_REVOKED_ROOT'
+  # Value 3 is INSPECT as the scoped admin, or REVOKED_ROOT for the repeat with the revoked root token selected.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
-        *)
-          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
-          [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
-          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
-          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
-          sudo ss -tlnp
-          vault status -format=json
-          curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-            --cacert "$2" -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/v1/sys/health"
-          vault audit list -detailed
-          vault token lookup
-          vault token lookup -format=json
-          vault read -format=json auth/approle/role/payments
-          ;;
-      esac
-      ;;
   esac
+  case "$2" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
+  esac
+  case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+  case "$3" in
+    INSPECT|REVOKED_ROOT) ;;
+    *) echo "set value 3 to INSPECT as the scoped admin, or REVOKED_ROOT with the revoked root token selected; not probing"; exit 2 ;;
+  esac
+  unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+  export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+  set -- "$1" "$2" "$3" 0   # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  if sudo ss -tlnp; then :; else
+    echo "sudo ss -tlnp exit $?: no socket table to read; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+  fi
+  if vault status -format=json; then :; else
+    echo "vault status exit $? (2 means sealed, 1 an error): not the initialized, unsealed operating state; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+  fi
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert "$2" -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/v1/sys/health"; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  printf '%s' "${5% *}"
+  case "${5##* }:${5% *}" in
+    0:"http=200 "*) ;;
+    0:*) echo "unclassified observation: read the health code above against the list below; a healthy response is a connectivity control, not proof of hardening" ;;
+    *) echo "curl exit ${5##* }: the health request failed, as a transport or certificate verification failure does; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$(if vault audit list -detailed 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  printf '%s' "${5% *}"
+  case "$3:${5##* }:${5% *}" in
+    INSPECT:*:*"No audit devices are enabled."*) echo "FINDING: no audit device is enabled, so requests are served unlogged"; set -- "$1" "$2" "$3" 1 ;;
+    INSPECT:0:*) echo "unclassified observation: the devices are listed above; check delivery by correlating a request_id, as described below" ;;
+    INSPECT:*) echo "vault audit list exit ${5##* }: a failed or denied inspection; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "with the revoked root token selected the audit list is expected to fail; not classified" ;;
+  esac
+  # In the two lookups, vault's own output goes straight to you and only its error text is held, so no token enters a value.
+  { set -- "$1" "$2" "$3" "$4" "$(if { vault token lookup >&3; } 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"; } 3>&1
+  printf '%s' "${5% *}"
+  case "$3:${5##* }:${5% *}" in
+    INSPECT:0:*) ;;
+    INSPECT:*) echo "vault token lookup exit ${5##* }: the scoped admin's lookup, the positive control, failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    REVOKED_ROOT:0:*) echo "FINDING: the revoked root token's lookup succeeded, so that token is still live"; set -- "$1" "$2" "$3" 1 ;;
+    REVOKED_ROOT:*:*"permission denied"*|REVOKED_ROOT:*:*"invalid token"*) echo "Vault refused the revoked root token's lookup, the fixed outcome" ;;
+    *) echo "vault token lookup exit ${5##* } without a permission-denied or invalid-token error; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  { set -- "$1" "$2" "$3" "$4" "$(if { vault token lookup -format=json >&3; } 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"; } 3>&1
+  printf '%s' "${5% *}"
+  case "$3:${5##* }:${5% *}" in
+    INSPECT:0:*) ;;
+    INSPECT:*) echo "vault token lookup exit ${5##* }: the scoped admin's lookup, the positive control, failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    REVOKED_ROOT:0:*) echo "FINDING: the revoked root token's lookup succeeded, so that token is still live"; set -- "$1" "$2" "$3" 1 ;;
+    REVOKED_ROOT:*:*"permission denied"*|REVOKED_ROOT:*:*"invalid token"*) echo "Vault refused the revoked root token's lookup, the fixed outcome" ;;
+    *) echo "vault token lookup exit ${5##* } without a permission-denied or invalid-token error; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  if vault read -format=json auth/approle/role/payments; then :; else
+    set -- "$1" "$2" "$3" "$4" "$?"
+    case "$3" in
+      INSPECT) echo "vault read exit $5: a missing role or denied inspection; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "with the revoked root token selected the role read is expected to fail; not classified" ;;
+    esac
+  fi
+  echo "block exit $4; the socket table, any health code but 200, audit delivery and the role parameters are not classified, so judge them yourself"
+  exit "$4"
 )
 ```
 
-REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. The inspection checks follow the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints). The inspection checks also follow the guide's cited Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. The bash -n, ShellCheck and stub runs recorded in this paragraph covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Interpret the checks separately; the block's final exit status does not summarize them:
+REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. The inspection checks follow the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints). The inspection checks also follow the guide's cited Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. The bash -n, ShellCheck and stub runs recorded in this paragraph covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The current form of both blocks, not yet demonstrated, takes `INSPECT` for the scoped admin or `REVOKED_ROOT` for the revoked-root repeat as its third value and exits once: 1 for an empty audit list or a successful revoked-root lookup, 3 for a failed command or positive control, and 0 otherwise. The socket table, health codes other than `200`, audit delivery and the role bounds stay for you to judge, as the items below describe:
 
 - REASONED: bind and TLS comparison: unintended listeners are findings; intended private binds with verified TLS and matched firewall controls are required. The parenthetical host limitations below describe the historical run. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault production hardening (root token, swap, core dumps). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Bind and TLS (demonstrated, TLS in both states; a wildcard bind, `ss` as root and the firewall
   REASONED: the host forbids binding every interface, has no `sudo`, and has no second network):** read the whole socket table. Confirm `8200` is bound to the intended
@@ -535,11 +625,12 @@ REASONED: preceding block; all listener, health, audit, root-token and AppRole i
 - REASONED: root revocation: a revoked root lookup must fail while an independently authenticated scoped admin succeeds; successful root lookup is the exposed outcome. Per the guide's cited Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault token concepts (token prefixes, parent and child revocation, root tokens, TTLs, service and batch behavior). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Root revocation (demonstrated):** the scoped-admin token lookup is the positive control. Log that
   admin in through an auth method: a non-orphan token made with `vault token create` while the root
   token is selected is the root token's child and is revoked with it.
-  Repeat the guarded block with the revoked initial root credential still selected and judge its
-  token-lookup results: Vault must return permission-denied or invalid-token errors. Other
-  authenticated commands in that repeat will also fail. A successful root-token lookup is the
-  exposed state. This proves that one token is dead, not that no root token exists; do not retain
-  or generate a live root credential for testing.
+  Repeat the guarded block with the revoked initial root credential still selected and `REVOKED_ROOT`
+  as its third value, and judge its token-lookup results: Vault must return permission-denied or
+  invalid-token errors. Other authenticated commands in that repeat will also fail. A successful
+  root-token lookup is the exposed state, and the block then exits with status 1. This proves that
+  one token is dead, not that no root token exists; do not retain or generate a live root credential
+  for testing.
   See [token lookup](https://developer.hashicorp.com/vault/docs/commands/token/lookup) and
   [self-revocation](https://developer.hashicorp.com/vault/docs/commands/token/revoke).
 - REASONED: AppRole inspection: require every section 7 bound; absent limits or broader policies are findings, while denied inspection is inconclusive. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **AppRole configuration (demonstrated):** compare the role read with every parameter in section 7,
@@ -589,7 +680,7 @@ request followed by the same request with the selected credential; response bodi
 to avoid printing secrets or profiles.
 
 ```bash
-# DEMONSTRATED: loopback ACL and active-node monitoring pairs recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
+# DEMONSTRATED: loopback ACL and active-node monitoring pairs recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1 and which ended with the authenticated request's curl status; the current form, whose guard refusals exit with status 2 and which classifies the anonymous request, has not been demonstrated.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -599,27 +690,35 @@ to avoid printing secrets or profiles.
   [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
-        *)
-          case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
-            *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
-              [ -r "$3" ] || { echo "header file is not readable"; exit 2; }
-              curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-                --cacert "$2" -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
-              curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-                --cacert "$2" --header "@$3" \
-                -w 'authenticated http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
-              ;;
-          esac
-          ;;
-      esac
-      ;;
   esac
+  case "$2" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
+  esac
+  case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+  [ -r "$3" ] || { echo "header file is not readable"; exit 2; }
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert "$2" -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  printf '%s' "${4% *}"
+  # Status: 1 for an anonymous 2xx; 3 for any other anonymous answer but 403, or a failed request; otherwise 0.
+  # The authenticated result depends on the identity and the table row below, so you judge it.
+  case "${4##* }:${4% *}" in
+    0:"anonymous http=403 "*) set -- "$1" "$2" "$3" 0 ;;
+    0:"anonymous http=2"??" "*) echo "FINDING: the anonymous request got an HTTP 2xx, so the endpoint answers without a token"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "the anonymous request got neither 403 nor a 2xx, and a 404, redirect or standby answer is not an ACL result; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit ${4##* }: the anonymous request failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
+  if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert "$2" --header "@$3" \
+    -w 'authenticated http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then :; else
+    set -- "$1" "$2" "$3" "$4" "$?"
+    echo "curl exit $5: the authenticated request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+  fi
+  echo "block exit $4; the authenticated code above is not classified, so judge it against the table row below"
+  exit "$4"
 )
 ```
 
@@ -634,27 +733,35 @@ to avoid printing secrets or profiles.
   [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
-        *)
-          case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
-            *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
-              [ -r "$3" ] || { echo "header file is not readable"; exit 2; }
-              curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-                --cacert "$2" -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
-              curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-                --cacert "$2" --header "@$3" \
-                -w 'authenticated http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
-              ;;
-          esac
-          ;;
-      esac
-      ;;
   esac
+  case "$2" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
+  esac
+  case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+  [ -r "$3" ] || { echo "header file is not readable"; exit 2; }
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert "$2" -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  printf '%s' "${4% *}"
+  # Status: 1 for an anonymous 2xx; 3 for any other anonymous answer but 403, or a failed request; otherwise 0.
+  # The authenticated result depends on the identity and the table row below, so you judge it.
+  case "${4##* }:${4% *}" in
+    0:"anonymous http=403 "*) set -- "$1" "$2" "$3" 0 ;;
+    0:"anonymous http=2"??" "*) echo "FINDING: the anonymous request got an HTTP 2xx, so the endpoint answers without a token"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "the anonymous request got neither 403 nor a 2xx, and a 404, redirect or standby answer is not an ACL result; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit ${4##* }: the anonymous request failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
+  if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert "$2" --header "@$3" \
+    -w 'authenticated http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then :; else
+    set -- "$1" "$2" "$3" "$4" "$?"
+    echo "curl exit $5: the authenticated request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+  fi
+  echo "block exit $4; the authenticated code above is not classified, so judge it against the table row below"
+  exit "$4"
 )
 ```
 
@@ -722,8 +829,11 @@ run: the contents of process memory are unknown, because every attempt by those 
 `/proc/sys/kernel/yama/ptrace_scope` read `1`. Root was not tested as the observer, because the
 evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
 was set), and no real `vault` client or live Vault service ran, because `vault` was not on the
-evaluation host's PATH. These three runs covered an earlier form of the following block, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The following
-login request takes `role_id` and `secret_id` from the request file on
+evaluation host's PATH. These three runs covered an earlier form of the following block, whose guard
+refusals exited with status 1 and which ended with the login's own status; none was re-run on the
+current form, which takes `EXPECT_SUCCESS` or `EXPECT_REFUSAL` as a fourth value and classifies the
+login, and which holds only `vault`'s error text in a value. The following login request takes
+`role_id` and `secret_id` from the request file on
 `vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
 shell history nor `set -x` tracing records it, provided the file is prepared through protected
 delivery rather than by a shell command that contains the credentials. Stdin closes the argv
@@ -735,34 +845,46 @@ login request reads the credentials from stdin, not argv. Its successful output 
 handle it only in a protected session.
 
 ```bash
-# DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
+# DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1, which took three values and which ended with the login's status; the current form, which takes EXPECT_SUCCESS or EXPECT_REFUSAL as a fourth value and classifies the login, has not been demonstrated.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
-    'REPLACE_WITH_LOGIN_JSON_FILE'
+    'REPLACE_WITH_LOGIN_JSON_FILE' \
+    'REPLACE_WITH_EXPECT_SUCCESS_OR_EXPECT_REFUSAL'
+  # Value 4 is EXPECT_SUCCESS for a fresh credential from an allowed source, or EXPECT_REFUSAL for a reused,
+  # expired or disallowed-source one, as the cases below describe.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
-        *)
-          case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
-            *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
-              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
-              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
-              [ -r "$3" ] || { echo "login request file is not readable"; exit 2; }
-              vault write -format=json auth/approle/login - < "$3"
-              ;;
-          esac
-          ;;
-      esac
-      ;;
+  esac
+  case "$2" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
+  esac
+  case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+  case "$4" in
+    EXPECT_SUCCESS|EXPECT_REFUSAL) ;;
+    *) echo "set value 4 to EXPECT_SUCCESS for a fresh credential from an allowed source, or EXPECT_REFUSAL for a reused, expired or disallowed-source one; not probing"; exit 2 ;;
+  esac
+  unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+  export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+  [ -r "$3" ] || { echo "login request file is not readable"; exit 2; }
+  # The login's output, which holds a token, goes straight to you; only vault's error text is held as a value.
+  { set -- "$4" "$(if { vault write -format=json auth/approle/login - < "$3" >&3; } 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"; } 3>&1
+  printf '%s' "${2% *}"
+  # Status: with EXPECT_SUCCESS, 0 when the login succeeds and 3 when it fails; with EXPECT_REFUSAL, 1 when it
+  # succeeds, 0 for Vault's invalid role or secret ID or CIDR refusal, and 3 for any other failure.
+  case "$1:${2##* }:${2% *}" in
+    EXPECT_SUCCESS:0:*) echo "the login succeeded; read token_policies, lease_duration and the hvs. token prefix above against the cases below"; exit 0 ;;
+    EXPECT_SUCCESS:*) echo "vault write exit ${2##* }: a login expected to succeed failed, so this positive control failed; inconclusive"; exit 3 ;;
+    EXPECT_REFUSAL:0:*) echo "FINDING: a login expected to be refused succeeded"; exit 1 ;;
+    *:*"invalid role or secret ID"*|*:*"unauthorized by CIDR restrictions"*) echo "Vault refused the login with an authentication error, the fixed outcome while a fresh credential from an allowed source still succeeds"; exit 0 ;;
+    *) echo "vault write exit ${2##* } without Vault's invalid role or secret ID or CIDR error, and a network refusal alone demonstrates neither control; inconclusive"; exit 3 ;;
   esac
 )
 ```
@@ -900,7 +1022,11 @@ unknown, because every attempt by those observers to open `/proc/<pid>/mem` was 
 (Permission denied) on the evaluation host, where `/proc/sys/kernel/yama/ptrace_scope` read `1`.
 Root was not tested as the observer, because the evaluation host refused privilege elevation
 (`sudo -n id` failed because the no-new-privileges flag was set), and no real `vault` client or
-live Vault service ran, because `vault` was not on the evaluation host's PATH. These three runs covered an earlier form of both wrapping-lookup blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The reasoning from
+live Vault service ran, because `vault` was not on the evaluation host's PATH. These three runs
+covered an earlier form of both wrapping-lookup blocks, whose guard refusals exited with status 1
+and which ended with the lookup's own status; none was re-run on the current form, which takes
+`FRESH` or `SPENT` as a fourth value and classifies the lookup, and which holds only `vault`'s error
+text in a value. The reasoning from
 the shell behaviour of file input on stdin applies to both wrapping-lookup blocks below, the
 demonstrated lookup and the recipient-validation lookup. Each passes the protected lookup request,
 wrapping token included, to `vault` from a file on its stdin. Neither block types the token or
@@ -920,34 +1046,45 @@ protected JSON lookup request described in section 7, and select the received
 wrapping token through securely injected `VAULT_TOKEN`. Lookup must succeed before unwrapping:
 
 ```bash
-# DEMONSTRATED: loopback wrapping lookup before expiry and after consumption or expiry, recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
+# DEMONSTRATED: loopback wrapping lookup before expiry and after consumption or expiry, recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1, which took three values and which ended with the lookup's status; the current form, which takes FRESH or SPENT as a fourth value and classifies the lookup, has not been demonstrated.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
-    'REPLACE_WITH_WRAPPING_LOOKUP_JSON_FILE'
+    'REPLACE_WITH_WRAPPING_LOOKUP_JSON_FILE' \
+    'REPLACE_WITH_FRESH_OR_SPENT'
+  # Value 4 is FRESH for a token not yet unwrapped and unexpired, or SPENT for a consumed or expired one.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
-        *)
-          case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
-            *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
-              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
-              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
-              [ -r "$3" ] || { echo "lookup request file is not readable"; exit 2; }
-              vault write -format=json sys/wrapping/lookup - < "$3"
-              ;;
-          esac
-          ;;
-      esac
-      ;;
+  esac
+  case "$2" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
+  esac
+  case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+  case "$4" in
+    FRESH|SPENT) ;;
+    *) echo "set value 4 to FRESH for a token not yet unwrapped and unexpired, or SPENT for a consumed or expired one; not probing"; exit 2 ;;
+  esac
+  unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+  export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+  [ -r "$3" ] || { echo "lookup request file is not readable"; exit 2; }
+  # The lookup's output goes straight to you; only vault's error text is held as a value.
+  { set -- "$4" "$(if { vault write -format=json sys/wrapping/lookup - < "$3" >&3; } 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"; } 3>&1
+  printf '%s' "${2% *}"
+  # Status: with FRESH, 0 when the lookup succeeds, its fields left for you to judge, and 3 when it fails; with
+  # SPENT, 1 when the lookup succeeds, 0 for Vault's not-valid wrapping-token error, and 3 for any other failure.
+  case "$1:${2##* }:${2% *}" in
+    FRESH:0:*) echo "the lookup succeeded; read creation_path, creation_ttl and creation_time above against the requirements below"; exit 0 ;;
+    FRESH:*) echo "vault write exit ${2##* }: the lookup of a fresh token, the positive control, failed; inconclusive"; exit 3 ;;
+    SPENT:0:*) echo "FINDING: a consumed or expired wrapping token still passed lookup"; exit 1 ;;
+    *:*"wrapping token is not valid or does not exist"*) echo "Vault refused the consumed or expired token, the fixed outcome while a fresh token from the same delivery path passes"; exit 0 ;;
+    *) echo "vault write exit ${2##* } without Vault's not-valid wrapping-token error; inconclusive"; exit 3 ;;
   esac
 )
 ```
@@ -957,30 +1094,41 @@ wrapping token through securely injected `VAULT_TOKEN`. Lookup must succeed befo
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
-    'REPLACE_WITH_WRAPPING_LOOKUP_JSON_FILE'
+    'REPLACE_WITH_WRAPPING_LOOKUP_JSON_FILE' \
+    'REPLACE_WITH_FRESH_OR_SPENT'
+  # Value 4 is FRESH for a token not yet unwrapped and unexpired, or SPENT for a consumed or expired one.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
-        *)
-          case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
-            *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
-              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
-              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
-              [ -r "$3" ] || { echo "lookup request file is not readable"; exit 2; }
-              vault write -format=json sys/wrapping/lookup - < "$3"
-              ;;
-          esac
-          ;;
-      esac
-      ;;
+  esac
+  case "$2" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
+  esac
+  case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+  case "$4" in
+    FRESH|SPENT) ;;
+    *) echo "set value 4 to FRESH for a token not yet unwrapped and unexpired, or SPENT for a consumed or expired one; not probing"; exit 2 ;;
+  esac
+  unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+  export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+  [ -r "$3" ] || { echo "lookup request file is not readable"; exit 2; }
+  # The lookup's output goes straight to you; only vault's error text is held as a value.
+  { set -- "$4" "$(if { vault write -format=json sys/wrapping/lookup - < "$3" >&3; } 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"; } 3>&1
+  printf '%s' "${2% *}"
+  # Status: with FRESH, 0 when the lookup succeeds, its fields left for you to judge, and 3 when it fails; with
+  # SPENT, 1 when the lookup succeeds, 0 for Vault's not-valid wrapping-token error, and 3 for any other failure.
+  case "$1:${2##* }:${2% *}" in
+    FRESH:0:*) echo "the lookup succeeded; read creation_path, creation_ttl and creation_time above against the requirements below"; exit 0 ;;
+    FRESH:*) echo "vault write exit ${2##* }: the lookup of a fresh token, the positive control, failed; inconclusive"; exit 3 ;;
+    SPENT:0:*) echo "FINDING: a consumed or expired wrapping token still passed lookup"; exit 1 ;;
+    *:*"wrapping token is not valid or does not exist"*) echo "Vault refused the consumed or expired token, the fixed outcome while a fresh token from the same delivery path passes"; exit 0 ;;
+    *) echo "vault write exit ${2##* } without Vault's not-valid wrapping-token error; inconclusive"; exit 3 ;;
   esac
 )
 ```
@@ -1014,27 +1162,41 @@ already-unwrapped error. A separate fresh, validated token must still unwrap suc
 Protect the successful output, which contains the SecretID.
 
 ```bash
-# DEMONSTRATED: loopback first unwrap, consumed-token refusal and fresh-token control recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
+# DEMONSTRATED: loopback first unwrap, consumed-token refusal and fresh-token control recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1, which took two values and which ended with the unwrap's status; the current form, which takes FIRST or REPEAT as a third value and classifies the unwrap, has not been demonstrated.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
-    'REPLACE_WITH_CA_FILE'
+    'REPLACE_WITH_CA_FILE' \
+    'REPLACE_WITH_FIRST_OR_REPEAT'
+  # Value 3 is FIRST for a token's first unwrap, or REPEAT for the repeat with the consumed token still selected.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
-        *)
-          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
-          [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
-          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
-          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
-          vault unwrap
-          ;;
-      esac
-      ;;
+  esac
+  case "$2" in
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
+  esac
+  case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+  case "$3" in
+    FIRST|REPEAT) ;;
+    *) echo "set value 3 to FIRST for a token's first unwrap, or REPEAT with the consumed token still selected; not probing"; exit 2 ;;
+  esac
+  unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+  export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+  # The unwrapped SecretID goes straight to you; only vault's error text is held as a value.
+  { set -- "$3" "$(if { vault unwrap >&3; } 2>&1; then printf ' 0'; else printf ' %s' "$?"; fi)"; } 3>&1
+  printf '%s' "${2% *}"
+  # Status: with FIRST, 0 when the unwrap succeeds, 1 when Vault says the token is not valid, because someone may
+  # have unwrapped it first, and 3 for any other failure; with REPEAT, 1 when the unwrap succeeds, 0 for that
+  # not-valid error, and 3 for any other failure.
+  case "$1:${2##* }:${2% *}" in
+    FIRST:0:*) echo "the first unwrap succeeded; protect the SecretID above"; exit 0 ;;
+    REPEAT:0:*) echo "FINDING: the consumed wrapping token unwrapped again"; exit 1 ;;
+    FIRST:*:*"wrapping token is not valid or does not exist"*) echo "FINDING: the first unwrap failed because the token is no longer valid, so it may have been unwrapped before you; investigate"; exit 1 ;;
+    REPEAT:*:*"wrapping token is not valid or does not exist"*) echo "Vault refused the consumed token, the fixed outcome while a fresh, validated token still unwraps"; exit 0 ;;
+    *) echo "vault unwrap exit ${2##* } without Vault's not-valid wrapping-token error; inconclusive"; exit 3 ;;
   esac
 )
 ```
@@ -1052,7 +1214,7 @@ run it from a machine outside your trusted network, where the fixed state is tha
 Guard the address so the probe cannot run unsubstituted and time out as if the port were closed:
 
 ```bash
-# DEMONSTRATED: local connection-failure discriminator recorded below; this does not demonstrate an external firewall. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
+# DEMONSTRATED: local connection-failure discriminator recorded below; this does not demonstrate an external firewall. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1 and which ended with curl's status; the current form, whose guard refusals exit with status 2 and which classifies the probe by time_connect, has not been demonstrated.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -1060,11 +1222,22 @@ Guard the address so the probe cannot run unsubstituted and time out as if the p
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
-        "https://$1:8200/v1/sys/seal-status"
-      ;;
+  esac
+  set -- "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1:8200/v1/sys/seal-status"; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  set -- "${1% *}" "${1##* }"   # curl's write-out line, then its exit status
+  printf '%s' "$1"
+  # Status: 1 for any non-zero time_connect, because the TCP connection formed; 0 when it stayed 0.000000 after a
+  # refusal, no route or connection timeout (curl exit 7 or 28); otherwise 3, as for a name or local socket error.
+  case "$1" in
+    "http="*" time_connect=0.000000 "*) ;;
+    "http="*" time_connect="*) echo "FINDING: a TCP connection to port 8200 formed from this source"; exit 1 ;;
+    *) echo "curl exit $2 printed no write-out line; inconclusive"; exit 3 ;;
+  esac
+  case "$2" in
+    7|28) echo "no TCP connection formed (curl exit $2); this shows only that the address you tested is unreachable from here"; exit 0 ;;
+    *) echo "curl exit $2 before any TCP connection, as for a name-resolution or local socket error; inconclusive"; exit 3 ;;
   esac
 )
 ```
@@ -1072,17 +1245,35 @@ Guard the address so the probe cannot run unsubstituted and time out as if the p
 ```bash
 # REASONED: external isolation and permitted-source control; the host has no second network. Repeat this probe from the sources described below; the cited listener and firewall guidance defines the expected outcomes.
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP' 'REPLACE_WITH_FORBIDDEN_OR_PERMITTED'
+  # Value 2 is FORBIDDEN when you probe from a source the firewall must refuse, or PERMITTED from a permitted one.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
-    *)
-      curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
-        "https://$1:8200/v1/sys/seal-status"
-      ;;
+  esac
+  case "$2" in
+    FORBIDDEN|PERMITTED) ;;
+    *) echo "set value 2 to FORBIDDEN from a source the firewall must refuse, or PERMITTED from a permitted source; not probing"; exit 2 ;;
+  esac
+  set -- "$2" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1:8200/v1/sys/seal-status"; then printf ' 0'; else printf ' %s' "$?"; fi)"
+  set -- "$1" "${2% *}" "${2##* }"   # the source, curl's write-out line, then its exit status
+  printf '%s' "$2"
+  # Status: from a FORBIDDEN source, 1 for any non-zero time_connect, 0 when it stayed 0.000000 after curl exit 7
+  # or 28, otherwise 3; from a PERMITTED source, 0 when the TCP connection formed, the positive control, else 3.
+  case "$1:$2" in
+    FORBIDDEN:"http="*" time_connect=0.000000 "*) ;;
+    FORBIDDEN:"http="*" time_connect="*) echo "FINDING: a TCP connection to port 8200 formed from this forbidden source"; exit 1 ;;
+    PERMITTED:"http="*" time_connect=0.000000 "*) echo "curl exit $3: no TCP connection formed from the permitted source, so the matched control failed; inconclusive"; exit 3 ;;
+    PERMITTED:"http="*" time_connect="*) echo "a TCP connection formed from the permitted source, the positive control, even if certificate verification failed after it"; exit 0 ;;
+    *) echo "curl exit $3 printed no write-out line; inconclusive"; exit 3 ;;
+  esac
+  case "$3" in
+    7|28) echo "no TCP connection formed (curl exit $3); this shows only that the address you tested is unreachable from here"; exit 0 ;;
+    *) echo "curl exit $3 before any TCP connection, as for a name-resolution or local socket error; inconclusive"; exit 3 ;;
   esac
 )
 ```
@@ -1100,7 +1291,8 @@ and against 127.0.0.2, where nothing listens, `time_connect=0.000000` and `Could
 server` (exit `7`), the refused shape.
 
 REASONED: external isolation control: require a TCP connection from the permitted source and refusal from the forbidden source to the same destination; forbidden-source connectivity is exposed and a failed permitted control is inconclusive. No permitted/forbidden deployment pair was available. Per the guide's cited Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS); curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Pair the forbidden-source check with the same destination and port from a permitted host:
-the positive control must establish a TCP connection. For `8201`, use a permitted Vault node.
+the positive control must establish a TCP connection, which the preceding block reports with status
+0 when its second value is `PERMITTED`. For `8201`, use a permitted Vault node.
 If the permitted source cannot route to that destination, the matched control is unavailable;
 record the limitation instead of claiming this probe demonstrates isolation. Confirm the firewall
 rules as well; a single external probe only establishes reachability from that source.
@@ -1235,7 +1427,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9c79dd6d8f9dc755e565aa2bccc9557ded7d24dc90d70f22fd4007b29f0b36e8",
+  "body_sha256": "013fd875807b61b911d6f36907ce07aac8f8aa6705a0bab28becf30c43a062f1",
   "components": {
     "run": {
       "name": "Vault loopback run",
