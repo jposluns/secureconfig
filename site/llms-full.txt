@@ -62835,35 +62835,51 @@ debugger". Do not publish 25 unless you use email triggers.
 
 ## Verify
 
-REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request, TCP control and per-port paths; sample and replaced file fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found". The inventory block has no guard refusals; for the five other blocks, the bash -n, ShellCheck, stub and fixture runs recorded here covered an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No deployment was available for this review; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed/fixed expectations below that are not recorded as demonstrated remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
+REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request, TCP control and per-port paths; sample and replaced file fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found". The inventory block has no guard refusals, and the runs recorded here covered it in an earlier form, two top-level commands without a status of their own; for the five other blocks, the bash -n, ShellCheck, stub and fixture runs recorded here covered an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No deployment was available for this review; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed/fixed expectations below that are not recorded as demonstrated remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
 the TCP reachability probe's outcomes on loopback; the NocoDB key check's logic was exercised with a
 stand-in for `docker exec`. Those demonstrations and the stand-in run used earlier forms of their
 blocks, whose guard refusals ended with status 0; the current forms, whose guard refusals exit with
-status 2, have not been run. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
+status 2, have had no demonstration or stand-in run. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
 Appsmith and Budibase ship for production as container images and the authoring host has no container
 runtime. NocoDB also cannot run here outside a container: its server calls `listen` with no host, so it
 can only bind every interface, which the host forbids; the same applies to Windmill's default bind.
 The remaining checks are REASONED from the cited vendor documentation and pinned source readings.
 
-REASONED: The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). On the host, list the listeners, then read Docker's own publications, because a port published through
+REASONED: The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. Those runs covered an earlier form of the block, two top-level commands without a status of their own. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). On the host, list the listeners, then read Docker's own publications, because a port published through
 Docker's NAT may have no host socket at all, so absence from `ss` is not proof of isolation:
 
 REASONED: following block; pinned Compose and Docker sources support listener/publication inventory. The recorded host has no container runtime and forbids wildcard binds; exposed/fixed expectations follow.
 
 ```bash
-sudo ss -tlnp   # 8080 (NocoDB; Appsmith dev Compose), 80/443 (Baserow, Windmill Caddy), 10000 and 4000 (Budibase), 8000 and 25 (Windmill): loopback or private only
-docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or "[::]:" (":::" before Docker CLI 27.2) publication accepts connections on every host address: reachable from outside unless a firewall rule (for example in DOCKER-USER) filters it
+(                                       # one subshell, so one exit status covers both lists: 3 if either command fails, otherwise 0
+  set +e                                # errexit off here, so a failed command is recorded below instead of ending the block
+  set -- 0                              # the block's status so far: 3 (inconclusive) outranks 0
+  if sudo ss -tlnp; then :; else        # 8080 (NocoDB; Appsmith dev Compose), 80/443 (Baserow, Windmill Caddy), 10000 and 4000 (Budibase), 8000 and 25 (Windmill): loopback or private only
+    echo "sudo ss -tlnp exit $?: the listener list did not print; inconclusive"; set -- 3
+  fi
+  if docker ps --format '{{.Names}}\t{{.Ports}}'; then :; else   # every "0.0.0.0:" or "[::]:" (":::" before Docker CLI 27.2) publication accepts connections on every host address: reachable from outside unless a firewall rule (for example in DOCKER-USER) filters it
+    echo "docker ps exit $?: the publication list did not print; inconclusive"; set -- 3
+  fi
+  echo "block exit $1; the listeners and publications above are not classified, so judge them yourself"
+  exit "$1"
+)
 ```
 
-REASONED: preceding block; The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
-of those ports; fixed means a loopback or private address only.
+REASONED: preceding block; The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. Those runs covered an earlier form of the block, two top-level commands without a status of their own. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
+of those ports; fixed means a loopback or private address only. The block leaves both lists for you to
+judge, because a firewall rule can filter a wildcard publication, and it exits 3 if `ss` or
+`docker ps` fails and otherwise 0.
 
-REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found"; a missing path printed "cannot read", the path, then "as a regular file; not checked". Placeholder, missing-marker, short-assignment and empty inputs stopped locally. The bash -n and fixture runs recorded here covered the file-check block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, a found sample token with status 1 and a failed read with status 3. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
+REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found"; a missing path printed "cannot read", the path, then "as a regular file; not checked". Placeholder, missing-marker, short-assignment and empty inputs stopped locally. The bash -n and fixture runs recorded here covered the file-check block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, a sample token in value position with status 1 and a failed read with status 3. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
 once per file, including every file an `env_file:` line names and the `.env` Compose reads for
 variable substitution. Substitute the file path inside the
-single quotes (a path containing an apostrophe needs other quoting), and paste the whole block.
+single quotes (a path containing an apostrophe needs other quoting), and paste the whole block. The
+block prints every whole-token hit but exits 1 only when one sits in value position, after `=`, `:`,
+`:-` or a quote and ending the value (followed by the line's end, a blank, a quote or one of
+`,;&@})`); hits only elsewhere, such as `image: budibase/apps`, end with status 0 and an
+unclassified-observation line.
 
-DEMONSTRATED: following block; recorded sample-token runs found vendor values and syntax variants, found none in replaced copies and refused an unreadable path, as detailed below. The sample-token runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form, whose guard refusals exit with status 2, a found sample token with status 1 and a failed read with status 3, has not been run. External environment values are outside this file check.
+DEMONSTRATED: following block; recorded sample-token runs found vendor values and syntax variants, found none in replaced copies and refused an unreadable path, as detailed below. The sample-token runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form exits 2 for a guard refusal, 1 for a sample token in value position and 3 for a failed read. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it. External environment values are outside this file check.
 
 ```bash
 (
@@ -62873,19 +62889,29 @@ DEMONSTRATED: following block; recorded sample-token runs found vendor values an
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute your file on the set -- line above; not checking"; exit 2 ;; esac
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file; not checked"; exit 2; }
-  grep -n -E '(^|[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]|$)' -- "$1"
-  case "$?" in
-    0) echo "FOUND vendor sample tokens: inspect each line above; replace every secret still set to one"; exit 1 ;;
-    1) echo "no vendor sample tokens found" ;;
-    *) echo "grep could not read $1; not checked"; exit 3 ;;
-  esac
+  if grep -n -E '(^|[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]|$)' -- "$1"; then   # every whole-token hit
+    if grep -q -E '(=|:-?|"|'"'"')[[:blank:]]*(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)($|[[:blank:]]|"|'"'"'|,|;|&|@|\}|\))' -- "$1"; then   # a hit in value position: after =, :, :- or a quote, and ending the value
+      echo "FOUND vendor sample tokens: inspect each line above; replace every secret still set to one"; exit 1
+    else
+      case "$?" in
+        1) echo "every hit above is outside value position, such as an image name; unclassified observation: inspect each line above"; exit 0 ;;
+        *) echo "grep could not read $1; not checked"; exit 3 ;;
+      esac
+    fi
+  else
+    case "$?" in
+      1) echo "no vendor sample tokens found" ;;
+      *) echo "grep could not read $1; not checked"; exit 3 ;;
+    esac
+  fi
 )
 ```
 
-The search matches each sample value as a whole token wherever it appears, so it cannot report a file
+DEMONSTRATED: preceding block; the sample-token runs recorded below used an earlier form of the block, whose result arms ended with status 0. The search matches each sample value as a whole token wherever it appears, so it cannot report a file
 clean while one of them is still in it; the cost is that it also reports harmless lines such as `image:
-budibase/apps`, so inspect each hit. Values supplied from outside the files, such as the shell
-environment Compose runs in, are beyond its reach. This was demonstrated. On Budibase's sample `hosting/.env` it
+budibase/apps`, so inspect each hit. Such a line alone ends with status 0 and an unclassified-observation
+line, not with the finding's status 1. Values supplied from outside the files, such as the shell
+environment Compose runs in, are beyond its reach. This was demonstrated with the earlier form. On Budibase's sample `hosting/.env` it
 reported all eleven sample lines, on Appsmith's development Compose file the two `abcd` lines, and on
 Windmill's Compose file its `changeme` Postgres password. It also reported Compose defaults
 (`${JWT_SECRET:-testsecret}`), flow mappings and lists (`{COUCH_DB_PASSWORD: budibase, X: 1}`),
@@ -62914,7 +62940,7 @@ and Docker-socket holders can read the configured value with `docker inspect`. T
 does not remove that exposure, prove encryption is working, or establish what the server process
 actually received. Do not use `docker exec -e` to inject a key for this check.
 
-REASONED: following block; Docker exec inheritance and pinned NocoDB start scripts support key-presence checking. No real container ran because the recorded host has no container runtime; only stand-in logic outcomes below were observed. Those stand-in runs covered an earlier form of the block, whose result arms ended with status 0; the current form was not re-run.
+REASONED: following block; Docker exec inheritance and pinned NocoDB start scripts support key-presence checking. No real container ran because the recorded host has no container runtime; only stand-in logic outcomes below were observed. Those stand-in runs covered an earlier form of the block, whose result arms ended with status 0; the current form, which reads docker's status through an if condition, passed bash -n and local stub runs, and the stand-in runs were not repeated on it.
 
 ```bash
 (
@@ -62926,12 +62952,14 @@ REASONED: following block; Docker exec inheritance and pinned NocoDB start scrip
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit 2; }
   case "$1" in *REPLACE_WITH_*|""|-*|*[[:cntrl:]]*) echo "substitute the container name on the set -- line above; not checking"; exit 2 ;; esac
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand inside the container
-  docker exec "$1" sh -c 'set +x; if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
-  case "$?" in
-    0) echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the container's configured environment" ;;
-    3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment"; exit 1 ;;
-    *) echo "could not run the check in container $1; not checked"; exit 3 ;;
-  esac
+  if docker exec "$1" sh -c 'set +x; if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'; then
+    echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the container's configured environment"
+  else
+    case "$?" in
+      3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment"; exit 1 ;;
+      *) echo "could not run the check in container $1; not checked"; exit 3 ;;
+    esac
+  fi
 )
 ```
 
@@ -62944,7 +62972,7 @@ REASONED: The login block passed bash -n, its JSON parsed, and a curl stub recei
 published default, not a secret, so it is fine in the request body. Substitute the base URL (for
 example the Caddy address on port 80) inside the single quotes.
 
-DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password. This does not demonstrate external isolation. The loopback run used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password. This does not demonstrate external isolation. The loopback run used an earlier form of the block, whose guard refusals ended with status 0 and whose result was curl's own exit status; the current form exits 2 for a guard refusal, 1 for a `200`, 0 for a `400` and 3 otherwise. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -62954,22 +62982,30 @@ DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for chang
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the base URL on the set -- line above; not probing"; exit 2 ;;
-    *) printf '%s' '{"email":"admin@windmill.dev","password":"changeme"}' |
-         curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
-           -H 'Content-Type: application/json' --data-binary @- \
-           -w 'default login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/auth/login" ;;
+  esac
+  set -- "$1" "$(if printf '%s' '{"email":"admin@windmill.dev","password":"changeme"}' | \
+       curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
+         -H 'Content-Type: application/json' --data-binary @- \
+         -w 'default login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' "$1/api/auth/login"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"        # the URL, curl's exit status, then its result line and HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the URL, curl's exit status, its result line, then the HTTP code
+  printf '%s\n' "$3"
+  case "$2:$4" in
+    0:200) echo "FINDING: the default login was accepted with 200"; exit 1 ;;
+    0:400) echo "the default login was refused with 400; log in once with your real credentials before trusting it, so that a dead service is not read as fixed"; exit 0 ;;
+    *) echo "neither the 200 finding nor the 400 pass; inconclusive"; exit 3 ;;
   esac
 )
 ```
 
-Exposed, the default login gets `200` with a token; fixed, it gets `400` (both observed with this block
+DEMONSTRATED: preceding block; Windmill v1.817.0 loopback run with an earlier form of the block, whose result was curl's own exit status. Exposed, the default login gets `200` with a token; fixed, it gets `400` (both observed with that earlier form of this block
 on the loopback run). Before trusting a `400`, log in once with your real credentials, so that a dead
-service is not read as fixed.
+service is not read as fixed. The block exits 1 on a `200`, 0 on a `400` and 3 on anything else.
 
 REASONED: The two sample-value requests use Budibase v3.46.0 sample environment for the sample values and Budibase v3.46.0 proxy configuration (`/db/`) for the path. The Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password; the LiteLLM 401 for a non-`sk-` key when a database is connected and the 400 without one are supported by LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. These are expectations, not live observations. The recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
 the proxy URL (`http://HOST:10000` in the sample setup) and the LiteLLM URL inside the single quotes.
 
-REASONED: following block; Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. That local marking review covered an earlier form of the block, whose guard refusals ended with status 0; bash -n, ShellCheck and the guard fixtures have not been run on the current form, whose guard refusals exit with status 2. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls). That local marking review's short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); that review's long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=http://203.0.113.10:10000/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=http://203.0.113.11:4000/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
+REASONED: following block; Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. That local marking review covered an earlier form of the block, whose guard refusals ended with status 0; that review's bash -n, ShellCheck and guard fixtures were not repeated on the current form, whose guard refusals exit with status 2. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls). That local marking review's short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); that review's long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=http://203.0.113.10:10000/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=http://203.0.113.11:4000/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
 
 ```bash
 (
@@ -62979,13 +63015,31 @@ REASONED: following block; Budibase v3.46.0 sample environment supplies the samp
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1|$2" in
     *REPLACE_WITH_*|"|"*|*"|"|-*|*'|-'*|*" "*|*[[:cntrl:]]*) echo "substitute both URLs on the set -- line above; not probing"; exit 2 ;;
-    *) printf 'user = "budibase:budibase"\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
-         --max-time 15 --config - -w 'couchdb sample login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         "$1/db/_session?basic=true"
-       printf 'Authorization: Bearer budibase\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
-         --max-time 15 -H @- -w 'litellm sample key: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         "$2/v1/models" ;;
   esac
+  set -- "$1" "$2" "$(if printf 'user = "budibase:budibase"\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
+       --max-time 15 --config - -w 'couchdb sample login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' \
+       "$1/db/_session?basic=true"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # the two URLs, curl's exit status, then its result line and HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the two URLs, curl's exit status, its result line, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5" in
+    0:200) echo "FINDING: the CouchDB sample login was accepted with 200"; set -- "$1" "$2" 1 ;;
+    0:401) set -- "$1" "$2" 0 ;;
+    *) echo "the CouchDB sample login got neither the 200 finding nor the 401 pass; inconclusive"; set -- "$1" "$2" 3 ;;
+  esac                                                  # the 3rd value is now the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$(if printf 'Authorization: Bearer budibase\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
+       --max-time 15 -H @- -w 'litellm sample key: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' \
+       "$2/v1/models"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"        # the URLs, the status so far, curl's exit status, then its result line and HTTP code
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # the URLs, the status so far, curl's exit status, its result line, then the HTTP code
+  printf '%s\n' "$5"
+  case "$4:$6" in
+    0:200) echo "FINDING: the LiteLLM sample key was accepted with 200"; set -- "$1" "$2" 1 ;;
+    0:401|0:400) ;;
+    *) echo "the LiteLLM sample key got neither the 200 finding nor a 401 or 400 pass; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
+  echo "block exit $3; confirm that each service accepts your real credentials, the positive control this block does not run"
+  exit "$3"
 )
 ```
 
@@ -63017,7 +63071,7 @@ behind a timeout on the other: run it once for each public address of the host. 
 is open on that address from this host (for example SSH on 22) as the positive control, and stops if
 the control does not connect. Substitute both inside the single quotes.
 
-DEMONSTRATED: following block; recorded loopback tests observed connected, refused, timeout/full accept queue, failed-control stopping and the input cases below. Public isolation remains reasoned; the timeout fixture was not a firewall. The loopback tests used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, has not been run.
+DEMONSTRATED: following block; recorded loopback tests observed connected, refused, timeout/full accept queue, failed-control stopping and the input cases below. Public isolation remains reasoned; the timeout fixture was not a firewall. The loopback tests used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, and it holds its values in positional parameters. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -63027,37 +63081,42 @@ DEMONSTRATED: following block; recorded loopback tests observed connected, refus
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit 2 ;; esac
   case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit 2 ;; esac
-  ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
+  set -- "$1" "$2" '^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'   # the address, the control port, then the IPv4 pattern, held here rather than in a named variable
   case "$1" in
     *:*:*)
       case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit 2 ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit 2 ;; esac
       case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit 2 ;; esac ;;
-    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
+    *) [[ $1 =~ $3 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
   esac
   case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit 2 ;; esac
   { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit 2; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-  err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
+  set -- "$1" "$2" "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the address, the control port, the control's messages, then its exit status
+  set -- "$1" "$2" "${3%$'\n'}" "$4"              # the messages without their final line break, as a plain capture prints them
+  [ "$4" = 0 ] || { echo "control $1:$2 did not connect (${3:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
-  rc=0
-  for p in 80 443 8080 10000 4000 8000 25; do
+  set -- "$1" 0 80 443 8080 10000 4000 8000 25   # the address, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports still to probe
+  while [ "$#" -gt 2 ]; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-    err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
-    case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
-      124:*) echo "$1:$p timed out from this host" ;;
-      *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
+    set -- "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"   # this port's exit status, its messages, the address, the status so far, this port, then the ports after it
+    set -- "$1" "${2%$'\n'}" "${@:3}"             # the messages without their final line break
+    case "$1:$2" in
+      0:*) echo "$3:$5 connected: reachable from this host"; set -- "$1" "$2" "$3" 1 "${@:5}" ;;
+      124:*) echo "$3:$5 timed out from this host" ;;
+      *"Connection refused"*) echo "$3:$5 refused from this host" ;;
+      *) echo "$3:$5 inconclusive (not a connection, refusal or timeout): ${2:-no message}"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 "${@:5}" ;;
     esac
+    set -- "$3" "$4" "${@:6}"                     # the address, the status so far, then the ports still to probe
   done
-  exit "$rc"
+  exit "$2"
 )
 ```
 
-Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
+DEMONSTRATED: preceding block; the loopback runs and refusals recorded below used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
 complete the handshake, so confirm a surprising "connected" with `ss` on the host. "refused" and
 "timed out" show only that this host could not reach the port: a firewall in front of the service
 produces either, but so can filtering on the probing host's own network (many providers block outbound
@@ -63217,7 +63276,7 @@ Claims (full source mapping in the JSON block below):
 - verify-baserow-signup (REASONED; baserow): Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.
 - verify-appsmith-signup (REASONED; appsmith): Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.
 - verify-external (REASONED; baserow, budibase, windmill): Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.
-- windmill-default-login (DEMONSTRATED; windmill): Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.
+- windmill-default-login (DEMONSTRATED; windmill): Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200. Runs covered an earlier form whose result was curl's own exit status; the current form was not re-run.
 - windmill-loopback (DEMONSTRATED; windmill): SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.
 - windmill-sandbox-run (DEMONSTRATED; windmill): Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.
 - verify-inventory (REASONED; docker, baserow, appsmith, budibase, windmill): Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.
@@ -63237,7 +63296,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "bdc48d73a98f5f7f76963ab46e498b154f06c8ca120b8d7340a71bddaf2977d5",
+  "body_sha256": "094905445c9c34f54f7b38b79aa9e33bb945c8d1ab34dd5cf606b7c9c86ca97e",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -63415,7 +63474,7 @@ Claims (full source mapping in the JSON block below):
     "verify-baserow-signup": {"text": "Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6", "baserow:s4588448964a2"], "status": "REASONED"},
     "verify-appsmith-signup": {"text": "Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1", "appsmith:sd1c55be91e30", "appsmith:se3cd894dc579"], "status": "REASONED"},
     "verify-external": {"text": "Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED"},
-    "windmill-default-login": {"text": "Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac", "windmill:s345ca635c837", "windmill:s03c33b490c08"], "status": "DEMONSTRATED", "evidence": "After the password was changed, `changeme` got `400` and the new password `200`.", "verify": [4]},
+    "windmill-default-login": {"text": "Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200. Runs covered an earlier form whose result was curl's own exit status; the current form was not re-run.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac", "windmill:s345ca635c837", "windmill:s03c33b490c08"], "status": "DEMONSTRATED", "evidence": "After the password was changed, `changeme` got `400` and the new password `200`.", "verify": [4]},
     "windmill-loopback": {"text": "SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.", "components": ["windmill"], "sources": ["windmill:s8e4bbba271f2"], "status": "DEMONSTRATED", "evidence": "The server's only listener was on 127.0.0.1, at the test port the run set."},
     "windmill-sandbox-run": {"text": "Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.", "components": ["windmill"], "sources": ["windmill:sd775b7c95872"], "status": "DEMONSTRATED", "evidence": "on the loopback run, without nsjail installed, the worker logged \"Nsjail sandboxing will NOT be available\"."},
     "verify-inventory": {"text": "Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.", "components": ["docker", "baserow", "appsmith", "budibase", "windmill"], "sources": ["docker:s2fecb6db5480", "baserow:s1b31314982f4", "appsmith:s9fdcff5a28a4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED", "verify": [1]},
@@ -63572,30 +63631,54 @@ separated privileges by default, and cannot reach the VM or node consoles.
 
 ## Verify
 
-REASONED: this historical run overview preserves the original authoring record, not a new live comparison; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules. The exposed and fixed listener descriptions are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). The guide's cited sources for those descriptions are now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
+REASONED: this historical run overview preserves the original authoring record, not a new live comparison; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Those runs covered an earlier form of the listener block, two top-level `ss` commands without a status of their own. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules. The exposed and fixed listener descriptions are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). The guide's cited sources for those descriptions are now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
 Webmin 2.670's own on thirty test files, and the TCP reachability probe, which is the block demonstrated
 on loopback in [low-code-builders.md](https://github.com/jposluns/secureconfig/blob/main/low-code-builders.md) with this guide's ports. The Webmin parser's
 fixture runs and the TCP probe's loopback runs used earlier forms of those blocks, whose guard
-refusals ended with status 0; the current forms, whose guard refusals exit with status 2, have not
-been run. Everything else
+refusals ended with status 0; the current forms, whose guard refusals exit with status 2, have had no
+demonstration run. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
 Those expected outcomes are REASONED from the cited vendor documentation and source.
 
-REASONED: this TCP and UDP inventory instruction; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules. The exposed and fixed listener descriptions are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). The guide's cited sources for those descriptions are now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. On the host, list the listeners, TCP and UDP:
+REASONED: this TCP and UDP inventory instruction; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Those runs covered an earlier form of the listener block, two top-level `ss` commands without a status of their own. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules. The exposed and fixed listener descriptions are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). The guide's cited sources for those descriptions are now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. On the host, list the listeners, TCP and UDP:
 
 REASONED: following block; pinned Cockpit, Webmin/Usermin and Proxmox sources support this inventory. The recorded host lacks Cockpit systemd and Proxmox and forbids wildcard binds; exposed/fixed expectations follow.
 
 ```bash
-sudo ss -tlnp   # 9090 (Cockpit), 10000 (Webmin), 20000 (Usermin), 8006 and 3128 (Proxmox VE): a management address only; Proxmox cluster exception below
-sudo ss -ulnp   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should be gone
+(                                       # one subshell, so one exit status covers both listener lists
+  set +e                                # errexit off here, so a failed command is recorded below instead of ending the block
+  set -- 0 "$(if sudo ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the TCP listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                         # status, the TCP listener table, then ss's exit status
+  printf '%s' "$2"   # 9090 (Cockpit), 10000 (Webmin), 20000 (Usermin), 8006 and 3128 (Proxmox VE): a management address only; Proxmox cluster exception below
+  [ "$3" = 0 ] || { echo "sudo ss -tlnp exit $3: the TCP listener list did not print; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 { p = $4; sub(/.*:/, "", p); a = substr($4, 1, length($4) - length(p) - 1); sub(/%.*/, "", a) } NR > 1 && (p == "9090" || p == "10000" || p == "20000") && (a == "*" || a == "0.0.0.0" || a == "[::]") { found = 1 } END { exit !found }'; then
+    echo "FINDING: a TCP listener on port 9090, 10000 or 20000 is bound to a wildcard address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the TCP listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  set -- "$1" "$(if sudo ss -ulnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the status so far, then the UDP listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                          # status, the UDP listener table, then ss's exit status
+  printf '%s' "$2"   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should be gone
+  [ "$3" = 0 ] || { echo "sudo ss -ulnp exit $3: the UDP listener list did not print; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:(10000|20000)$/ { found = 1 } END { exit !found }'; then
+    echo "FINDING: a UDP listener on port 10000 or 20000, the Webmin or Usermin discovery socket, is still open"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the UDP listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  echo "block exit $1; Proxmox VE's 8006 and 3128 and every other listener are not classified, so judge them yourself against the cluster exception below"
+  exit "$1"
+)
 ```
 
-REASONED: preceding block; this listener interpretation and the preceding TCP and UDP inventory block; the cluster exception also needs a multi-node Proxmox VE cluster with management networks, access lists and firewall rules, none of which was available. A live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules. The exposed and fixed listener descriptions are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). The guide's cited sources for those descriptions are now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
+REASONED: preceding block; this listener interpretation and the preceding TCP and UDP inventory block; the cluster exception also needs a multi-node Proxmox VE cluster with management networks, access lists and firewall rules, none of which was available. A live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Those runs covered an earlier form of the listener block, two top-level `ss` commands without a status of their own. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules. The exposed and fixed listener descriptions are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). The guide's cited sources for those descriptions are now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
 fixed means a management address only. On a Proxmox VE cluster, where the vendor advises against
 `LISTEN_IP`, 8006 and 3128 keep their wildcard binds; this guide's assessment is that the fixed state
 there requires the management-only access lists and firewall below. The new-socket code tries `::`
-then `0.0.0.0`; dual-stack operation is documentation-backed and must be checked on the host.
+then `0.0.0.0`; dual-stack operation is documentation-backed and must be checked on the host. The
+block exits 1 for a wildcard TCP listener on 9090, 10000 or 20000 or any UDP listener on 10000 or
+20000, 3 if either `ss` command fails and otherwise 0, and leaves 8006, 3128 and every other listener
+for you to judge.
 
 REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The bash -n, ShellCheck and refusal runs recorded here covered the parser block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, a file that prints `NO effective bind=`, a `listen=` line or `NO allow=` with status 1 and a failed parse with status 3. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. Those Perl fixture runs used an earlier form of the program, whose result arms ended with status 0; the current form, which exits 1 after printing an exposed setting, was not re-run. These are file results only; on the Webmin host, exposed miniserv listens on every address with discovery UDP open and offers its login to any client; fixed miniserv listens on the management address only with no discovery socket, a management-network client reaches the login, and from a client outside the allow= networks the connection fails or miniserv refuses it. The exposed and fixed Webmin host behaviours are per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
@@ -63611,7 +63694,7 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 `/etc/webmin/restart`. Substitute the file path inside the single quotes (the package default is
 `/etc/webmin/miniserv.conf`), and paste the whole block.
 
-DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. The fixture runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form, whose guard refusals exit with status 2, a file that prints `NO effective bind=`, a `listen=` line or `NO allow=` with status 1 and a failed parse with status 3, has not been run. This demonstrates file inspection, not running sockets or network isolation.
+DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. The fixture runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form exits 2 for a guard refusal, 1 for a file that prints `NO effective bind=`, a `listen=` line or `NO allow=`, and 3 for a failed parse, including a Perl error. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it. This demonstrates file inspection, not running sockets or network isolation.
 
 ```bash
 (
@@ -63622,41 +63705,52 @@ DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixture
   case "$1" in *REPLACE_WITH_*|"") echo "substitute your file on the set -- line above; not checking"; exit 2 ;; esac
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file (try sudo); not checked"; exit 2; }
   command -v perl >/dev/null || { echo "perl is not installed here; not checking"; exit 2; }
+  set -- "$1" 0                         # the file, then the block's status so far: 1 for a finding, 3 for a failed parse, otherwise 0
   # shellcheck disable=SC2016  # the single-quoted Perl program is meant to expand its own variables
-  perl -MSocket -e '
-    open(CONF, "<", $ARGV[0]) || exit 2;
-    while (<CONF>) {
-      s/\r|\n//g;
-      if (/^#/ || !/\S/) { next; }
-      /^([^=]+)=(.*)$/;
-      $name = $1; $val = $2;
-      $name =~ s/^\s+//g; $name =~ s/\s+$//g;
-      $val =~ s/^\s+//g; $val =~ s/\s+$//g;
-      $rv{$name} = $val;
-    }
-    close(CONF);
-    $bind = $rv{"bind"}; $bind = "" if ($bind eq "*");
-    $v4 = $bind eq "" ? undef : Socket::inet_pton(Socket::AF_INET(), $bind);
-    $v6 = (defined($v4) || $bind !~ /:/) ? undef : Socket::inet_pton(Socket::AF_INET6(), $bind);
-    if (!$bind || (defined($v4) && $v4 eq "\0" x 4) || (defined($v6) && $v6 eq "\0" x 16)) { print "NO effective bind=: every address\n"; $found = 1; }
-    elsif (defined($v4) || (defined($v6) && substr($v6, 0, 12) ne ("\0" x 10) . "\xff\xff")) { print "bind=$bind\n"; }
-    else { print "bind=$bind: not a plain IPv4 or IPv6 address; check with ss what miniserv binds\n"; }
-    print "sockets=$rv{sockets}: extra listeners, possibly on every address; check ss\n" if ($rv{"sockets"} =~ /\S/);
-    print $rv{"listen"} ? "listen=$rv{listen}: UDP discovery socket on every IPv4 address\n" : "no UDP discovery socket\n";
-    $found = 1 if ($rv{"listen"});
-    @allow = split(/\s+/, $rv{"allow"});
-    @deny = split(/\s+/, $rv{"deny"});
-    print "deny=@deny\n" if (@deny);
-    print @allow ? "allow=@allow\n" : @deny ? "NO allow=: any client address not on deny= may try to log in\n" : "NO allow=: any client address may try to log in\n";
-    $found = 1 if (!@allow);
-    print "sudo=$rv{sudo}: Unix users whom sudo permits can log in as root\n" if ($rv{"sudo"});
+  if perl -e '
+    eval {
+      require Socket;
+      open(CONF, "<", $ARGV[0]) || die "cannot open the file\n";
+      while (<CONF>) {
+        s/\r|\n//g;
+        if (/^#/ || !/\S/) { next; }
+        /^([^=]+)=(.*)$/;
+        $name = $1; $val = $2;
+        $name =~ s/^\s+//g; $name =~ s/\s+$//g;
+        $val =~ s/^\s+//g; $val =~ s/\s+$//g;
+        $rv{$name} = $val;
+      }
+      close(CONF);
+      $bind = $rv{"bind"}; $bind = "" if ($bind eq "*");
+      $v4 = $bind eq "" ? undef : Socket::inet_pton(Socket::AF_INET(), $bind);
+      $v6 = (defined($v4) || $bind !~ /:/) ? undef : Socket::inet_pton(Socket::AF_INET6(), $bind);
+      if (!$bind || (defined($v4) && $v4 eq "\0" x 4) || (defined($v6) && $v6 eq "\0" x 16)) { print "NO effective bind=: every address\n"; $found = 1; }
+      elsif (defined($v4) || (defined($v6) && substr($v6, 0, 12) ne ("\0" x 10) . "\xff\xff")) { print "bind=$bind\n"; }
+      else { print "bind=$bind: not a plain IPv4 or IPv6 address; check with ss what miniserv binds\n"; }
+      print "sockets=$rv{sockets}: extra listeners, possibly on every address; check ss\n" if ($rv{"sockets"} =~ /\S/);
+      print $rv{"listen"} ? "listen=$rv{listen}: UDP discovery socket on every IPv4 address\n" : "no UDP discovery socket\n";
+      $found = 1 if ($rv{"listen"});
+      @allow = split(/\s+/, $rv{"allow"});
+      @deny = split(/\s+/, $rv{"deny"});
+      print "deny=@deny\n" if (@deny);
+      print @allow ? "allow=@allow\n" : @deny ? "NO allow=: any client address not on deny= may try to log in\n" : "NO allow=: any client address may try to log in\n";
+      $found = 1 if (!@allow);
+      print "sudo=$rv{sudo}: Unix users whom sudo permits can log in as root\n" if ($rv{"sudo"});
+      1;
+    } or do { print STDERR "parse failed: $@"; exit 3; };
     exit($found ? 1 : 0);
-  ' "$1"
-  case "$?" in 0) ;; 1) exit 1 ;; *) echo "could not read $1; not checked"; exit 3 ;; esac
+  ' "$1"; then :; else
+    case "$?" in
+      1) set -- "$1" 1 ;;
+      *) echo "could not read $1; not checked"; set -- "$1" 3 ;;
+    esac
+  fi
+  echo "block exit $2; the allow= and deny= entries as written, any sockets= or sudo= line and any bind= value flagged for ss are not classified, so judge them yourself"
+  exit "$2"
 )
 ```
 
-Exposed: "NO effective bind=", a `listen=` line and "NO allow=". Fixed: a management address on
+DEMONSTRATED: preceding block; the thirty-file fixture runs recorded below used an earlier form of the block, whose result arms ended with status 0. Exposed: "NO effective bind=", a `listen=` line and "NO allow=". Fixed: a management address on
 `bind=`, "no UDP discovery socket" and only your management networks on `allow=`; the block prints
 the lists as written, so check each entry. A `sockets=` line means more listeners; check each with
 `ss`. This was demonstrated on thirty test files: the loopback run's configuration, its
@@ -63698,7 +63792,7 @@ hide one behind a timeout on the other: run it once for each public address of t
 takes a port you know is open on that address from this host (for example SSH on 22) as the positive
 control, and stops if the control does not connect. Substitute both inside the single quotes.
 
-DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned. The reused loopback probe runs used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, has not been run.
+DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned. The reused loopback probe runs used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, and it holds its values in positional parameters. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -63708,37 +63802,42 @@ DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopba
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit 2 ;; esac
   case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit 2 ;; esac
-  ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
+  set -- "$1" "$2" '^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'   # the address, the control port, then the IPv4 pattern, held here rather than in a named variable
   case "$1" in
     *:*:*)
       case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit 2 ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit 2 ;; esac
       case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit 2 ;; esac ;;
-    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
+    *) [[ $1 =~ $3 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
   esac
   case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit 2 ;; esac
   { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit 2; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-  err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
+  set -- "$1" "$2" "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the address, the control port, the control's messages, then its exit status
+  set -- "$1" "$2" "${3%$'\n'}" "$4"              # the messages without their final line break, as a plain capture prints them
+  [ "$4" = 0 ] || { echo "control $1:$2 did not connect (${3:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
-  rc=0
-  for p in 9090 10000 20000 8006 3128; do
+  set -- "$1" 0 9090 10000 20000 8006 3128   # the address, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports still to probe
+  while [ "$#" -gt 2 ]; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-    err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
-    case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
-      124:*) echo "$1:$p timed out from this host" ;;
-      *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
+    set -- "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"   # this port's exit status, its messages, the address, the status so far, this port, then the ports after it
+    set -- "$1" "${2%$'\n'}" "${@:3}"             # the messages without their final line break
+    case "$1:$2" in
+      0:*) echo "$3:$5 connected: reachable from this host"; set -- "$1" "$2" "$3" 1 "${@:5}" ;;
+      124:*) echo "$3:$5 timed out from this host" ;;
+      *"Connection refused"*) echo "$3:$5 refused from this host" ;;
+      *) echo "$3:$5 inconclusive (not a connection, refusal or timeout): ${2:-no message}"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 "${@:5}" ;;
     esac
+    set -- "$3" "$4" "${@:6}"                     # the address, the status so far, then the ports still to probe
   done
-  exit "$rc"
+  exit "$2"
 )
 ```
 
-Exposed, a panel port reports "connected"; a transparent proxy on the probing host's network can
+DEMONSTRATED: preceding block; the loopback connection recorded below came from low-code-builders.md's earlier form of this probe, whose guard refusals, failed control and result arms ended with status 0. Exposed, a panel port reports "connected"; a transparent proxy on the probing host's network can
 also complete the handshake, so confirm a surprising "connected" with `ss` on the server. "refused"
 and "timed out" show only that this host could not reach the port: a firewall in front of the server
 produces either, but so can filtering on the probing host's own network, and the control proves only
@@ -63855,7 +63954,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "cc04a6d272d3342b001718e779adfcdb5eaa278918719c281980fe3f2d2ea6ef",
+  "body_sha256": "18a7979a0512882f31c19bcd4470909f314ea547bef3a414bf08e6a65512aed0",
   "components": {
     "cockpit": {
       "name": "Cockpit",
@@ -64090,32 +64189,50 @@ set `encrypt`.
 
 ## Verify
 
-REASONED: this overview distinguishes the historical loopback record from this marking review, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The expected states, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, are wildcard API binds for exposed and private or management binds for fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host now forbids that without an isolated network namespace, and none was available. This review passed all five Verify blocks through `bash -n` and ShellCheck 0.11.0 with no output, exercised guards and synthetic command results, and used a local terminal to test token input; these runs do not reproduce live ACL, bootstrap, anonymous-policy, listener or external-isolation outcomes. The bash -n, ShellCheck and guard runs in this review covered the Nomad probe, Consul probe and TCP blocks in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form of those three blocks, whose guard refusals exit with status 2. The historical record follows: These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
+REASONED: this overview distinguishes the historical loopback record from this marking review, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The expected states, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, are wildcard API binds for exposed and private or management binds for fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host now forbids that without an isolated network namespace, and none was available. This review passed all five Verify blocks through `bash -n` and ShellCheck 0.11.0 with no output, exercised guards and synthetic command results, and used a local terminal to test token input; these runs do not reproduce live ACL, bootstrap, anonymous-policy, listener or external-isolation outcomes. The bash -n, ShellCheck and guard runs in this review covered the Nomad probe, Consul probe and TCP blocks in an earlier form, whose guard refusals ended with status 0, and the listener and policy blocks in earlier forms that each ended with their last command's status; none was re-run on the current form of those five blocks. The historical record follows: These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
 listener was bound to 127.0.0.1: the Nomad and Consul probes in each ACL state, the bootstrap and anonymous-policy checks, and the
-listener list. The loopback runs of the Nomad and Consul probe blocks used an earlier form of each block, whose guard refusals ended with status 0; the current form of each, whose guard refusals exit with status 2, has not been run.
+listener list. The loopback runs of the Nomad and Consul probe blocks used an earlier form of each block, whose guard refusals and results ended with status 0, and the listener run used the earlier form of the listener block, two top-level `ss` commands; the current forms have had no demonstration run.
 The exposed listener state is REASONED from source: the authoring host forbids binding every
 interface, so the default wildcard bind was not observed, and no Nomad client ran a job.
 The TCP reachability probe is the block demonstrated on loopback in
 [low-code-builders.md](https://github.com/jposluns/secureconfig/blob/main/low-code-builders.md) with this guide's ports.
 
-REASONED: this listener-inventory instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); wildcard API binds are expected exposed and private or management binds fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. With sudo stubbed, the block printed `stub ss -tlnp 0.0.0.0:4646` and `stub ss -ulnp 0.0.0.0:4646`, then the corresponding `10.0.0.5:4646` fixture lines; this tests command dispatch only, not listener state. On each host, list the listeners, TCP and UDP:
+REASONED: this listener-inventory instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); wildcard API binds are expected exposed and private or management binds fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. With sudo stubbed, the block printed `stub ss -tlnp 0.0.0.0:4646` and `stub ss -ulnp 0.0.0.0:4646`, then the corresponding `10.0.0.5:4646` fixture lines; this tests command dispatch only, not listener state. Those runs covered an earlier form of the listener block, two top-level `ss` commands without a status of their own. On each host, list the listeners, TCP and UDP:
 
-REASONED: following block; default and external listener expectations follow the pinned Nomad and Consul sources; only the reduced loopback inventory below was observed, and wildcard binding was forbidden.
+REASONED: following block; default and external listener expectations follow the pinned Nomad and Consul sources; only the reduced loopback inventory below was observed, with an earlier form of the block, and wildcard binding was forbidden. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block.
 
 ```bash
-sudo ss -tlnp   # 4646, 4647, 4648 (Nomad); 8500, 8600, 8300, 8301, 8302, 8503 (Consul): private or management addresses only
-sudo ss -ulnp   # Serf gossip on UDP 4648 (Nomad) and 8301, 8302 (Consul); Consul DNS on UDP 8600
+(                                       # one subshell, so one exit status covers both listener lists
+  set +e                                # errexit off here, so a failed command is recorded below instead of ending the block
+  set -- 0 "$(if sudo ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the TCP listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                         # status, the TCP listener table, then ss's exit status
+  printf '%s' "$2"   # 4646, 4647, 4648 (Nomad); 8500, 8600, 8300, 8301, 8302, 8503 (Consul): private or management addresses only
+  [ "$3" = 0 ] || { echo "sudo ss -tlnp exit $3: the TCP listener list did not print; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 { p = $4; sub(/.*:/, "", p); a = substr($4, 1, length($4) - length(p) - 1); sub(/%.*/, "", a) } NR > 1 && (p == "4646" || p == "8500") && (a == "*" || a == "0.0.0.0" || a == "[::]") { found = 1 } END { exit !found }'; then
+    echo "FINDING: a TCP listener on port 4646 or 8500, an HTTP API, is bound to a wildcard address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the TCP listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  set -- "$1" "$(if sudo ss -ulnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the status so far, then the UDP listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                          # status, the UDP listener table, then ss's exit status
+  printf '%s' "$2"   # Serf gossip on UDP 4648 (Nomad) and 8301, 8302 (Consul); Consul DNS on UDP 8600
+  [ "$3" = 0 ] || { echo "sudo ss -ulnp exit $3: the UDP listener list did not print; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  echo "block exit $1; only wildcard TCP listeners on 4646 and 8500 are classified, so judge the other TCP ports and every UDP listener yourself"
+  exit "$1"
+)
 ```
 
-Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on the API
-ports, 4646 and 8500; fixed means a private or management address. On the loopback run, the agents
+REASONED: preceding block; the wildcard expectation follows the pinned Nomad and Consul agent defaults, and the loopback listener record below came from an earlier form of the block, two top-level `ss` commands. Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on the API
+ports, 4646 and 8500; fixed means a private or management address. The block exits 1 for a wildcard
+TCP listener on 4646 or 8500, 3 if either `ss` command fails and otherwise 0, and leaves the other
+ports and the UDP list for you to judge. On the loopback run, the agents
 listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300
 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports.
 
 REASONED: this anonymous-request instruction, per the guide's cited Nomad 2.0.7 ACL resolution when disabled and Nomad 2.0.7 anonymous token (its rights come from the policy named `anonymous`); expected ACLs-off results are self/jobs/agent HTTP 200 with self AccessorID `acls-disabled`, versus 200/403/403 and `anonymous` with ACLs on. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. The bash -n, ShellCheck and refusal runs recorded here covered the Nomad probe block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Synthetic curl, grep and head stubs printed those HTTP/AccessorID results; they do not establish live ACL behaviour. For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
 `http://10.0.0.5:4646`) inside the single quotes, and paste the whole block.
 
-DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job. The loopback runs used an earlier form of the Nomad probe block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job. The loopback runs used an earlier form of the Nomad probe block, whose guard refusals and results ended with status 0; the current form exits 2 for a guard refusal, 1 for an ACLs-off result or a `200` on `/v1/jobs` or `/v1/agent/self`, 0 when all three paths give the ACLs-on results and 3 otherwise. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -64125,12 +64242,31 @@ DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed t
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Nomad URL on the set -- line above; not probing"; exit 2 ;;
-    *) for path in /v1/acl/token/self /v1/jobs /v1/agent/self; do
-         out=$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$path" 2>&1)
-         status=${out##*$'\n'}
-         echo "GET $path (no token): http/exit=$status $(printf '%s' "${out%$'\n'*}" | grep -o -E '"AccessorID":"[^"]*"|^Permission denied$|^curl: .*' | head -n 1)"
-       done ;;
   esac
+  set -- "$1" 0 /v1/acl/token/self /v1/jobs /v1/agent/self   # the URL, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the paths still to request
+  while [ "$#" -gt 2 ]; do
+    set -- "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"        # curl's exit status, the response ending in its code line, the URL, the status so far, this path, then the paths after it
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}" "${@:3}"   # curl's exit status, the HTTP code and exit as printed, the response, the URL, the status so far, this path, then the rest
+    echo "GET $6 (no token): http/exit=$2 $(printf '%s' "$3" | grep -o -E '"AccessorID":"[^"]*"|^Permission denied$|^curl: .*' | head -n 1)"
+    case "$6:$1:$2" in
+      /v1/acl/token/self:0:"200 0")
+        case "$3" in
+          *'"AccessorID":"acls-disabled"'*) echo "FINDING: ACLs are off on the server that answered $6"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+          *'"AccessorID":"anonymous"'*) ;;
+          *) echo "a 200 from $6 with neither the acls-disabled nor the anonymous AccessorID; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}" ;;
+        esac ;;
+      /v1/jobs:0:"200 0"|/v1/agent/self:0:"200 0") echo "FINDING: $6 answered 200 without a token"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+      /v1/jobs:0:"403 0"|/v1/agent/self:0:"403 0")
+        if printf '%s\n' "$3" | grep -q -x 'Permission denied'; then :; else
+          echo "a 403 from $6 without Permission denied, perhaps from a proxy; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}"
+        fi ;;
+      *) echo "neither an ACLs-off nor an ACLs-on result from $6; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}" ;;
+    esac
+    set -- "$4" "$5" "${@:7}"                           # the URL, the status so far, then the paths still to request
+  done
+  echo "block exit $2; the bootstrap and anonymous-policy checks below decide fixed, and this block does not run them"
+  exit "$2"
 )
 ```
 
@@ -64150,7 +64286,7 @@ status or message is inconclusive: a redirect (for example from a trailing slash
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the curl block above from a host that trusts the cluster's CA.
 
-REASONED: this token-input and process-exposure explanation, per the guide's cited Nomad 2.0.7 CLI token input: `-token` (`command/meta.go` L96, L170-L171) or `NOMAD_TOKEN` (`api/api.go` L388-L389), with no stdin form; a token in argv is exposed there, while the prompted prefix form avoids argv and shell history but retains same-account/root environment access. The recorded authoring limitation applies: a live `nomad acl policy info` needs a running Nomad server, which opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No second-account inspection was used in this review. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. A local terminal with a Nomad stub printed `no token supplied; not probing` and exited 2 for empty input, and `stub policy 404 (ACL policy not found) token=present` and exited 0 for a fixture token; readonly tok and IFS printed their refusal messages and exited 2 without invoking the stub. These observations establish local input handling only. `nomad` takes the token from `-token`, which puts it in argv, or from `NOMAD_TOKEN`, and has no stdin
+REASONED: this token-input and process-exposure explanation, per the guide's cited Nomad 2.0.7 CLI token input: `-token` (`command/meta.go` L96, L170-L171) or `NOMAD_TOKEN` (`api/api.go` L388-L389), with no stdin form; a token in argv is exposed there, while the prompted prefix form avoids argv and shell history but retains same-account/root environment access. The recorded authoring limitation applies: a live `nomad acl policy info` needs a running Nomad server, which opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No second-account inspection was used in this review. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. A local terminal with a Nomad stub printed `no token supplied; not probing` and exited 2 for empty input, and `stub policy 404 (ACL policy not found) token=present` and exited 0 for a fixture token; readonly tok and IFS printed their refusal messages and exited 2 without invoking the stub. Those runs covered an earlier form of the block, which ended with the nomad command's own status and exited 2 when the token read failed. These observations establish local input handling only. `nomad` takes the token from `-token`, which puts it in argv, or from `NOMAD_TOKEN`, and has no stdin
 input for it (checked at v2.0.7). The block prompts for the token, so it stays out of shell history,
 and hands it to the one `nomad` command as a prefix assignment, never exported. That moves the token
 out of argv, not out of reach: while `nomad` runs, it can be read from `/proc/<pid>/environ` by the
@@ -64166,14 +64302,21 @@ REASONED: following block; token input follows the pinned Nomad 2.0.7 CLI source
     { echo 'cannot clear tok or NOMAD_TOKEN in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
   IFS= read -r -s -p 'Nomad management token (input hidden): ' tok < /dev/tty ||
-    { echo 'token input failed; not probing'; exit 2; }
+    { echo 'token input failed; not probing'; exit 3; }
   printf '\n'
   [ -n "$tok" ] || { echo 'no token supplied; not probing'; exit 2; }
-  NOMAD_TOKEN="$tok" nomad acl policy info anonymous
+  set -- "$(if NOMAD_TOKEN="$tok" nomad acl policy info anonymous 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # nomad's output, then its exit status
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"
+  printf '%s' "$1"
+  case "$2:$1" in
+    *"404 (ACL policy not found)"*) echo "no policy named anonymous, so requests without a token get no rights from one"; exit 0 ;;
+    0:*) echo "FINDING: a policy named anonymous exists, so requests without a token get its rights: read it above"; exit 1 ;;
+    *) echo "nomad exit $2 without 404 (ACL policy not found); inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
-All of these outcomes were observed with the curl probe block and these commands, on agents listening on test
+REASONED: preceding block; the policy check is reasoned in its current prompted form, and the historical Nomad 2.0.7 loopback record below used earlier forms of the curl probe block, whose guard refusals and results ended with status 0, and of the policy check. All of these outcomes were observed with the curl probe block and these commands, on agents listening on test
 ports. In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with
 `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self`
 with `200`, while the server answered it with `403`. Before bootstrap, the probe already printed the
@@ -64191,7 +64334,7 @@ an agent whose `client_addr` is loopback, the default, from its own host (for ex
 `http://127.0.0.1:8500`). Substitute the HTTP API URL (for example
 `http://10.0.0.5:8500`) inside the single quotes, and paste the whole block.
 
-DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed disabled, allow, deny and per-agent/default-token HTTP outcomes below on test ports. The loopback runs used an earlier form of the Consul probe block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed disabled, allow, deny and per-agent/default-token HTTP outcomes below on test ports. The loopback runs used an earlier form of the Consul probe block, whose guard refusals and results ended with status 0; the current form exits 2 for a guard refusal, 1 for `ACL support disabled` or a `200` on either path, 0 for the deny-policy results on both paths and 3 otherwise. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -64201,16 +64344,40 @@ DEMONSTRATED: following block; the recorded Consul 2.0.4 loopback runs observed 
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Consul URL on the set -- line above; not probing"; exit 2 ;;
-    *) for path in /v1/acl/token/self /v1/agent/self; do
-         out=$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$path" 2>&1)
-         status=${out##*$'\n'}
-         echo "GET $path (no token): http/exit=$status $(printf '%s' "${out%$'\n'*}" | grep -o -E '^ACL support disabled$|^token does not exist: ACL not found$|^Permission denied: anonymous token lacks permission|^curl: .*' | head -n 1)"
-       done ;;
   esac
+  set -- "$1" 0 /v1/acl/token/self /v1/agent/self   # the URL, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the paths still to request
+  while [ "$#" -gt 2 ]; do
+    set -- "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -w '\n%{http_code} %{exitcode}' -- "$1$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"        # curl's exit status, the response ending in its code line, the URL, the status so far, this path, then the paths after it
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}" "${@:3}"   # curl's exit status, the HTTP code and exit as printed, the response, the URL, the status so far, this path, then the rest
+    echo "GET $6 (no token): http/exit=$2 $(printf '%s' "$3" | grep -o -E '^ACL support disabled$|^token does not exist: ACL not found$|^Permission denied: anonymous token lacks permission|^curl: .*' | head -n 1)"
+    case "$6:$1:$2" in
+      /v1/acl/token/self:0:"401 0")
+        if printf '%s\n' "$3" | grep -q -x 'ACL support disabled'; then
+          echo "FINDING: ACLs are off on the agent that answered $6"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}"
+        else
+          echo "a 401 from $6 without ACL support disabled; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}"
+        fi ;;
+      /v1/acl/token/self:0:"200 0") echo "FINDING: $6 answered 200 without a token, so a default token answers requests that carry none"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+      /v1/acl/token/self:0:"403 0")
+        if printf '%s\n' "$3" | grep -q -x 'token does not exist: ACL not found'; then :; else
+          echo "a 403 from $6 without token does not exist: ACL not found; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}"
+        fi ;;
+      /v1/agent/self:0:"200 0") echo "FINDING: $6 answered 200 without a token"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+      /v1/agent/self:0:"403 0")
+        if printf '%s\n' "$3" | grep -q '^Permission denied: anonymous token lacks permission'; then :; else
+          echo "a 403 from $6 without the anonymous-token message; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}"
+        fi ;;
+      *) echo "neither an exposed nor a deny-policy result from $6; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}" ;;
+    esac
+    set -- "$4" "$5" "${@:7}"                           # the URL, the status so far, then the paths still to request
+  done
+  echo "block exit $2; the bootstrap and anonymous-token checks below decide fixed, and this block does not run them"
+  exit "$2"
 )
 ```
 
-Exposed with ACLs off: `/v1/acl/token/self` returns `401` `ACL support disabled`, and
+DEMONSTRATED: preceding block; Consul 2.0.4 loopback runs on test ports, with an earlier form of the block whose guard refusals and results ended with status 0. Exposed with ACLs off: `/v1/acl/token/self` returns `401` `ACL support disabled`, and
 `/v1/agent/self` returns `200`. Exposed with ACLs on and the default `allow` policy:
 `/v1/acl/token/self` returns `403` `token does not exist: ACL not found`, and `/v1/agent/self` still
 returns `200`. Each agent applies its own `acl` block (observed for `enabled` and `default_policy`),
@@ -64233,7 +64400,7 @@ status or message is inconclusive: a redirect (for example from a trailing slash
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the block from a host that trusts the cluster's CA.
 
-All of these outcomes were observed with this block and these commands, on agents listening on test
+DEMONSTRATED: Consul 2.0.4 loopback runs on test ports, with an earlier form of the probe block whose guard refusals and results ended with status 0. All of these outcomes were observed with this block and these commands, on agents listening on test
 ports. With a bootstrapped server on the deny policy and a client agent with ACLs off, the block
 printed the deny results against the server, and `401` `ACL support disabled` and `200` against the
 client; with the server on the `allow` policy and the client on `deny`, it printed `200` on
@@ -64261,33 +64428,38 @@ REASONED: following block; port targets follow the pinned Nomad and Consul defau
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit 2 ;; esac
   case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit 2 ;; esac
-  ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
+  set -- "$1" "$2" '^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'   # the address, the control port, then the IPv4 pattern, held here rather than in a named variable
   case "$1" in
     *:*:*)
       case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit 2 ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit 2 ;; esac
       case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit 2 ;; esac ;;
-    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
+    *) [[ $1 =~ $3 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
   esac
   case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit 2 ;; esac
   { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit 2; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-  err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
+  set -- "$1" "$2" "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the address, the control port, the control's messages, then its exit status
+  set -- "$1" "$2" "${3%$'\n'}" "$4"              # the messages without their final line break, as a plain capture prints them
+  [ "$4" = 0 ] || { echo "control $1:$2 did not connect (${3:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
-  rc=0
-  for p in 4646 4647 4648 8500 8600 8300 8301 8302 8503; do
+  set -- "$1" 0 4646 4647 4648 8500 8600 8300 8301 8302 8503   # the address, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports still to probe
+  while [ "$#" -gt 2 ]; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-    err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
-    case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
-      124:*) echo "$1:$p timed out from this host" ;;
-      *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
+    set -- "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"   # this port's exit status, its messages, the address, the status so far, this port, then the ports after it
+    set -- "$1" "${2%$'\n'}" "${@:3}"             # the messages without their final line break
+    case "$1:$2" in
+      0:*) echo "$3:$5 connected: reachable from this host"; set -- "$1" "$2" "$3" 1 "${@:5}" ;;
+      124:*) echo "$3:$5 timed out from this host" ;;
+      *"Connection refused"*) echo "$3:$5 refused from this host" ;;
+      *) echo "$3:$5 inconclusive (not a connection, refusal or timeout): ${2:-no message}"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 "${@:5}" ;;
     esac
+    set -- "$3" "$4" "${@:6}"                     # the address, the status so far, then the ports still to probe
   done
-  exit "$rc"
+  exit "$2"
 )
 ```
 
@@ -64371,17 +64543,17 @@ Claims (full source mapping in the JSON block below):
 - consul-tls-gossip (REASONED; consul): TLS verification defaults off and gossip is unencrypted without encrypt.
 - verify-inventory (REASONED; nomad, consul): Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.
 - loopback-listeners (DEMONSTRATED; nomad, consul): Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.
-- nomad-acl-probe (DEMONSTRATED; nomad): Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.
-- nomad-agent-acl (DEMONSTRATED; nomad): Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.
+- nomad-acl-probe (DEMONSTRATED; nomad): Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
+- nomad-agent-acl (DEMONSTRATED; nomad): Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
 - nomad-bootstrap-run (DEMONSTRATED; nomad): ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.
 - nomad-anonymous-policy (DEMONSTRATED; nomad): Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.
 - nomad-job-registration (DEMONSTRATED; nomad): Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.
 - nomad-token-input (REASONED; nomad): CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.
-- consul-acl-probe (DEMONSTRATED; consul): Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.
-- consul-agent-acl (DEMONSTRATED; consul): Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.
+- consul-acl-probe (DEMONSTRATED; consul): Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
+- consul-agent-acl (DEMONSTRATED; consul): Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
 - consul-bootstrap-run (DEMONSTRATED; consul): Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.
 - consul-anonymous-token (DEMONSTRATED; consul): Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.
-- consul-default-token (DEMONSTRATED; consul): An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.
+- consul-default-token (DEMONSTRATED; consul): An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.
 - consul-kv (DEMONSTRATED; consul): Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.
 - consul-script-run (DEMONSTRATED; consul): With default script-check settings, remote script registration was refused.
 - verify-tcp (REASONED; nomad, consul): Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run, which covered an earlier form whose control and result arms ended with status 0; the current form was not re-run. UDP is not tested.
@@ -64392,7 +64564,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1048f65c517cbf255b838683900990bd660f2bb5dac04cbc605c0c193e74a765",
+  "body_sha256": "b02babb11d61780bf673cb83d08cabe971812ebef80485b09af1d422f225e6c9",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
@@ -64456,17 +64628,17 @@ Claims (full source mapping in the JSON block below):
     "consul-tls-gossip": {"text": "TLS verification defaults off and gossip is unencrypted without encrypt.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [1]},
     "loopback-listeners": {"text": "Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the loopback run, the agents listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports."},
-    "nomad-acl-probe": {"text": "Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc", "nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with the curl probe block and these commands, on agents listening on test ports.", "verify": [2]},
-    "nomad-agent-acl": {"text": "Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self` with `200`, while the server answered it with `403`.", "verify": [2]},
+    "nomad-acl-probe": {"text": "Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc", "nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with the curl probe block and these commands, on agents listening on test ports.", "verify": [2]},
+    "nomad-agent-acl": {"text": "Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self` with `200`, while the server answered it with `403`.", "verify": [2]},
     "nomad-bootstrap-run": {"text": "ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.", "components": ["nomad"], "sources": ["nomad:sc3e36e830b67"], "status": "DEMONSTRATED", "evidence": "Before bootstrap, the probe already printed the ACLs-on results; the first `nomad acl bootstrap` printed a management token and the second failed with `Unexpected response code: 400 (ACL bootstrap already done ...)`."},
     "nomad-anonymous-policy": {"text": "Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.", "components": ["nomad"], "sources": ["nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "After an `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run in the same earlier form, showed the policy."},
     "nomad-job-registration": {"text": "Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous` policy, it returned `403`."},
     "nomad-token-input": {"text": "CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.", "components": ["nomad"], "sources": ["nomad:sba39c1a9119a", "nomad:sa04bf8c95cb6"], "status": "REASONED", "verify": [3]},
-    "consul-acl-probe": {"text": "Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with this block and these commands, on agents listening on test ports.", "verify": [4]},
-    "consul-agent-acl": {"text": "Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.", "components": ["consul"], "sources": ["consul:s8a0b5abac641", "consul:sc4fb30ca3702"], "status": "DEMONSTRATED", "evidence": "with the server on the `allow` policy and the client on `deny`, it printed `200` on `/v1/agent/self` against the server and the deny results against the client.", "verify": [4]},
+    "consul-acl-probe": {"text": "Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with this block and these commands, on agents listening on test ports.", "verify": [4]},
+    "consul-agent-acl": {"text": "Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["consul"], "sources": ["consul:s8a0b5abac641", "consul:sc4fb30ca3702"], "status": "DEMONSTRATED", "evidence": "with the server on the `allow` policy and the client on `deny`, it printed `200` on `/v1/agent/self` against the server and the deny results against the client.", "verify": [4]},
     "consul-bootstrap-run": {"text": "Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.", "components": ["consul"], "sources": ["consul:s35b783d75794", "consul:sa77598ec3695"], "status": "DEMONSTRATED", "evidence": "the first `consul acl bootstrap` printed a token and the second failed with `Unexpected response code: 403 (Permission denied: ACL bootstrap no longer allowed ...)`"},
     "consul-anonymous-token": {"text": "Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.", "components": ["consul"], "sources": ["consul:s00748de44382"], "status": "DEMONSTRATED", "evidence": "the anonymous token's read listed none of those sections."},
-    "consul-default-token": {"text": "An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.", "components": ["consul"], "sources": ["consul:sab8a5866d9c9", "consul:sfeb50129fc10"], "status": "DEMONSTRATED", "evidence": "On the loopback run, a default token holding key write, set through the agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a `403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a token succeeded.", "verify": [4]},
+    "consul-default-token": {"text": "An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write. Runs covered an earlier form whose guard refusals and results ended with status 0; the current form was not re-run.", "components": ["consul"], "sources": ["consul:sab8a5866d9c9", "consul:sfeb50129fc10"], "status": "DEMONSTRATED", "evidence": "On the loopback run, a default token holding key write, set through the agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a `403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a token succeeded.", "verify": [4]},
     "consul-kv": {"text": "Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the same runs an anonymous key-value write succeeded in both exposed states and was refused with `403` with the deny policy"},
     "consul-script-run": {"text": "With default script-check settings, remote script registration was refused.", "components": ["consul"], "sources": ["consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "with script checks at their default, registering a script check through the API was refused with \"Scripts are disabled on this agent from remote calls\"."},
     "verify-tcp": {"text": "Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run, which covered an earlier form whose control and result arms ended with status 0; the current form was not re-run. UDP is not tested.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]},

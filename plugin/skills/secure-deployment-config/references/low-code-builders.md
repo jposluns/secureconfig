@@ -168,35 +168,51 @@ debugger". Do not publish 25 unless you use email triggers.
 
 ## Verify
 
-REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request, TCP control and per-port paths; sample and replaced file fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found". The inventory block has no guard refusals; for the five other blocks, the bash -n, ShellCheck, stub and fixture runs recorded here covered an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No deployment was available for this review; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed/fixed expectations below that are not recorded as demonstrated remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
+REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request, TCP control and per-port paths; sample and replaced file fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found". The inventory block has no guard refusals, and the runs recorded here covered it in an earlier form, two top-level commands without a status of their own; for the five other blocks, the bash -n, ShellCheck, stub and fixture runs recorded here covered an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No deployment was available for this review; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed/fixed expectations below that are not recorded as demonstrated remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
 the TCP reachability probe's outcomes on loopback; the NocoDB key check's logic was exercised with a
 stand-in for `docker exec`. Those demonstrations and the stand-in run used earlier forms of their
 blocks, whose guard refusals ended with status 0; the current forms, whose guard refusals exit with
-status 2, have not been run. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
+status 2, have had no demonstration or stand-in run. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
 Appsmith and Budibase ship for production as container images and the authoring host has no container
 runtime. NocoDB also cannot run here outside a container: its server calls `listen` with no host, so it
 can only bind every interface, which the host forbids; the same applies to Windmill's default bind.
 The remaining checks are REASONED from the cited vendor documentation and pinned source readings.
 
-REASONED: The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). On the host, list the listeners, then read Docker's own publications, because a port published through
+REASONED: The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. Those runs covered an earlier form of the block, two top-level commands without a status of their own. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). On the host, list the listeners, then read Docker's own publications, because a port published through
 Docker's NAT may have no host socket at all, so absence from `ss` is not proof of isolation:
 
 REASONED: following block; pinned Compose and Docker sources support listener/publication inventory. The recorded host has no container runtime and forbids wildcard binds; exposed/fixed expectations follow.
 
 ```bash
-sudo ss -tlnp   # 8080 (NocoDB; Appsmith dev Compose), 80/443 (Baserow, Windmill Caddy), 10000 and 4000 (Budibase), 8000 and 25 (Windmill): loopback or private only
-docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or "[::]:" (":::" before Docker CLI 27.2) publication accepts connections on every host address: reachable from outside unless a firewall rule (for example in DOCKER-USER) filters it
+(                                       # one subshell, so one exit status covers both lists: 3 if either command fails, otherwise 0
+  set +e                                # errexit off here, so a failed command is recorded below instead of ending the block
+  set -- 0                              # the block's status so far: 3 (inconclusive) outranks 0
+  if sudo ss -tlnp; then :; else        # 8080 (NocoDB; Appsmith dev Compose), 80/443 (Baserow, Windmill Caddy), 10000 and 4000 (Budibase), 8000 and 25 (Windmill): loopback or private only
+    echo "sudo ss -tlnp exit $?: the listener list did not print; inconclusive"; set -- 3
+  fi
+  if docker ps --format '{{.Names}}\t{{.Ports}}'; then :; else   # every "0.0.0.0:" or "[::]:" (":::" before Docker CLI 27.2) publication accepts connections on every host address: reachable from outside unless a firewall rule (for example in DOCKER-USER) filters it
+    echo "docker ps exit $?: the publication list did not print; inconclusive"; set -- 3
+  fi
+  echo "block exit $1; the listeners and publications above are not classified, so judge them yourself"
+  exit "$1"
+)
 ```
 
-REASONED: preceding block; The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
-of those ports; fixed means a loopback or private address only.
+REASONED: preceding block; The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. Those runs covered an earlier form of the block, two top-level commands without a status of their own. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
+of those ports; fixed means a loopback or private address only. The block leaves both lists for you to
+judge, because a firewall rule can filter a wildcard publication, and it exits 3 if `ss` or
+`docker ps` fails and otherwise 0.
 
-REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found"; a missing path printed "cannot read", the path, then "as a regular file; not checked". Placeholder, missing-marker, short-assignment and empty inputs stopped locally. The bash -n and fixture runs recorded here covered the file-check block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, a found sample token with status 1 and a failed read with status 3. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
+REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found"; a missing path printed "cannot read", the path, then "as a regular file; not checked". Placeholder, missing-marker, short-assignment and empty inputs stopped locally. The bash -n and fixture runs recorded here covered the file-check block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, a sample token in value position with status 1 and a failed read with status 3. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
 once per file, including every file an `env_file:` line names and the `.env` Compose reads for
 variable substitution. Substitute the file path inside the
-single quotes (a path containing an apostrophe needs other quoting), and paste the whole block.
+single quotes (a path containing an apostrophe needs other quoting), and paste the whole block. The
+block prints every whole-token hit but exits 1 only when one sits in value position, after `=`, `:`,
+`:-` or a quote and ending the value (followed by the line's end, a blank, a quote or one of
+`,;&@})`); hits only elsewhere, such as `image: budibase/apps`, end with status 0 and an
+unclassified-observation line.
 
-DEMONSTRATED: following block; recorded sample-token runs found vendor values and syntax variants, found none in replaced copies and refused an unreadable path, as detailed below. The sample-token runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form, whose guard refusals exit with status 2, a found sample token with status 1 and a failed read with status 3, has not been run. External environment values are outside this file check.
+DEMONSTRATED: following block; recorded sample-token runs found vendor values and syntax variants, found none in replaced copies and refused an unreadable path, as detailed below. The sample-token runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form exits 2 for a guard refusal, 1 for a sample token in value position and 3 for a failed read. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it. External environment values are outside this file check.
 
 ```bash
 (
@@ -206,19 +222,29 @@ DEMONSTRATED: following block; recorded sample-token runs found vendor values an
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute your file on the set -- line above; not checking"; exit 2 ;; esac
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file; not checked"; exit 2; }
-  grep -n -E '(^|[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]|$)' -- "$1"
-  case "$?" in
-    0) echo "FOUND vendor sample tokens: inspect each line above; replace every secret still set to one"; exit 1 ;;
-    1) echo "no vendor sample tokens found" ;;
-    *) echo "grep could not read $1; not checked"; exit 3 ;;
-  esac
+  if grep -n -E '(^|[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]|$)' -- "$1"; then   # every whole-token hit
+    if grep -q -E '(=|:-?|"|'"'"')[[:blank:]]*(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)($|[[:blank:]]|"|'"'"'|,|;|&|@|\}|\))' -- "$1"; then   # a hit in value position: after =, :, :- or a quote, and ending the value
+      echo "FOUND vendor sample tokens: inspect each line above; replace every secret still set to one"; exit 1
+    else
+      case "$?" in
+        1) echo "every hit above is outside value position, such as an image name; unclassified observation: inspect each line above"; exit 0 ;;
+        *) echo "grep could not read $1; not checked"; exit 3 ;;
+      esac
+    fi
+  else
+    case "$?" in
+      1) echo "no vendor sample tokens found" ;;
+      *) echo "grep could not read $1; not checked"; exit 3 ;;
+    esac
+  fi
 )
 ```
 
-The search matches each sample value as a whole token wherever it appears, so it cannot report a file
+DEMONSTRATED: preceding block; the sample-token runs recorded below used an earlier form of the block, whose result arms ended with status 0. The search matches each sample value as a whole token wherever it appears, so it cannot report a file
 clean while one of them is still in it; the cost is that it also reports harmless lines such as `image:
-budibase/apps`, so inspect each hit. Values supplied from outside the files, such as the shell
-environment Compose runs in, are beyond its reach. This was demonstrated. On Budibase's sample `hosting/.env` it
+budibase/apps`, so inspect each hit. Such a line alone ends with status 0 and an unclassified-observation
+line, not with the finding's status 1. Values supplied from outside the files, such as the shell
+environment Compose runs in, are beyond its reach. This was demonstrated with the earlier form. On Budibase's sample `hosting/.env` it
 reported all eleven sample lines, on Appsmith's development Compose file the two `abcd` lines, and on
 Windmill's Compose file its `changeme` Postgres password. It also reported Compose defaults
 (`${JWT_SECRET:-testsecret}`), flow mappings and lists (`{COUCH_DB_PASSWORD: budibase, X: 1}`),
@@ -247,7 +273,7 @@ and Docker-socket holders can read the configured value with `docker inspect`. T
 does not remove that exposure, prove encryption is working, or establish what the server process
 actually received. Do not use `docker exec -e` to inject a key for this check.
 
-REASONED: following block; Docker exec inheritance and pinned NocoDB start scripts support key-presence checking. No real container ran because the recorded host has no container runtime; only stand-in logic outcomes below were observed. Those stand-in runs covered an earlier form of the block, whose result arms ended with status 0; the current form was not re-run.
+REASONED: following block; Docker exec inheritance and pinned NocoDB start scripts support key-presence checking. No real container ran because the recorded host has no container runtime; only stand-in logic outcomes below were observed. Those stand-in runs covered an earlier form of the block, whose result arms ended with status 0; the current form, which reads docker's status through an if condition, passed bash -n and local stub runs, and the stand-in runs were not repeated on it.
 
 ```bash
 (
@@ -259,12 +285,14 @@ REASONED: following block; Docker exec inheritance and pinned NocoDB start scrip
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not checking"; exit 2; }
   case "$1" in *REPLACE_WITH_*|""|-*|*[[:cntrl:]]*) echo "substitute the container name on the set -- line above; not checking"; exit 2 ;; esac
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand inside the container
-  docker exec "$1" sh -c 'set +x; if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
-  case "$?" in
-    0) echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the container's configured environment" ;;
-    3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment"; exit 1 ;;
-    *) echo "could not run the check in container $1; not checked"; exit 3 ;;
-  esac
+  if docker exec "$1" sh -c 'set +x; if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'; then
+    echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the container's configured environment"
+  else
+    case "$?" in
+      3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment"; exit 1 ;;
+      *) echo "could not run the check in container $1; not checked"; exit 3 ;;
+    esac
+  fi
 )
 ```
 
@@ -277,7 +305,7 @@ REASONED: The login block passed bash -n, its JSON parsed, and a curl stub recei
 published default, not a secret, so it is fine in the request body. Substitute the base URL (for
 example the Caddy address on port 80) inside the single quotes.
 
-DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password. This does not demonstrate external isolation. The loopback run used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password. This does not demonstrate external isolation. The loopback run used an earlier form of the block, whose guard refusals ended with status 0 and whose result was curl's own exit status; the current form exits 2 for a guard refusal, 1 for a `200`, 0 for a `400` and 3 otherwise. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -287,22 +315,30 @@ DEMONSTRATED: following block; Windmill v1.817.0 loopback returned 200 for chang
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the base URL on the set -- line above; not probing"; exit 2 ;;
-    *) printf '%s' '{"email":"admin@windmill.dev","password":"changeme"}' |
-         curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
-           -H 'Content-Type: application/json' --data-binary @- \
-           -w 'default login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/auth/login" ;;
+  esac
+  set -- "$1" "$(if printf '%s' '{"email":"admin@windmill.dev","password":"changeme"}' | \
+       curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
+         -H 'Content-Type: application/json' --data-binary @- \
+         -w 'default login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' "$1/api/auth/login"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"        # the URL, curl's exit status, then its result line and HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the URL, curl's exit status, its result line, then the HTTP code
+  printf '%s\n' "$3"
+  case "$2:$4" in
+    0:200) echo "FINDING: the default login was accepted with 200"; exit 1 ;;
+    0:400) echo "the default login was refused with 400; log in once with your real credentials before trusting it, so that a dead service is not read as fixed"; exit 0 ;;
+    *) echo "neither the 200 finding nor the 400 pass; inconclusive"; exit 3 ;;
   esac
 )
 ```
 
-Exposed, the default login gets `200` with a token; fixed, it gets `400` (both observed with this block
+DEMONSTRATED: preceding block; Windmill v1.817.0 loopback run with an earlier form of the block, whose result was curl's own exit status. Exposed, the default login gets `200` with a token; fixed, it gets `400` (both observed with that earlier form of this block
 on the loopback run). Before trusting a `400`, log in once with your real credentials, so that a dead
-service is not read as fixed.
+service is not read as fixed. The block exits 1 on a `200`, 0 on a `400` and 3 on anything else.
 
 REASONED: The two sample-value requests use Budibase v3.46.0 sample environment for the sample values and Budibase v3.46.0 proxy configuration (`/db/`) for the path. The Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password; the LiteLLM 401 for a non-`sk-` key when a database is connected and the 400 without one are supported by LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. These are expectations, not live observations. The recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
 the proxy URL (`http://HOST:10000` in the sample setup) and the LiteLLM URL inside the single quotes.
 
-REASONED: following block; Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. That local marking review covered an earlier form of the block, whose guard refusals ended with status 0; bash -n, ShellCheck and the guard fixtures have not been run on the current form, whose guard refusals exit with status 2. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls). That local marking review's short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); that review's long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=http://203.0.113.10:10000/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=http://203.0.113.11:4000/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
+REASONED: following block; Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. That local marking review covered an earlier form of the block, whose guard refusals ended with status 0; that review's bash -n, ShellCheck and guard fixtures were not repeated on the current form, whose guard refusals exit with status 2. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls). That local marking review's short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); that review's long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=http://203.0.113.10:10000/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=http://203.0.113.11:4000/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
 
 ```bash
 (
@@ -312,13 +348,31 @@ REASONED: following block; Budibase v3.46.0 sample environment supplies the samp
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1|$2" in
     *REPLACE_WITH_*|"|"*|*"|"|-*|*'|-'*|*" "*|*[[:cntrl:]]*) echo "substitute both URLs on the set -- line above; not probing"; exit 2 ;;
-    *) printf 'user = "budibase:budibase"\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
-         --max-time 15 --config - -w 'couchdb sample login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         "$1/db/_session?basic=true"
-       printf 'Authorization: Bearer budibase\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
-         --max-time 15 -H @- -w 'litellm sample key: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-         "$2/v1/models" ;;
   esac
+  set -- "$1" "$2" "$(if printf 'user = "budibase:budibase"\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
+       --max-time 15 --config - -w 'couchdb sample login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' \
+       "$1/db/_session?basic=true"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # the two URLs, curl's exit status, then its result line and HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the two URLs, curl's exit status, its result line, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5" in
+    0:200) echo "FINDING: the CouchDB sample login was accepted with 200"; set -- "$1" "$2" 1 ;;
+    0:401) set -- "$1" "$2" 0 ;;
+    *) echo "the CouchDB sample login got neither the 200 finding nor the 401 pass; inconclusive"; set -- "$1" "$2" 3 ;;
+  esac                                                  # the 3rd value is now the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$(if printf 'Authorization: Bearer budibase\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
+       --max-time 15 -H @- -w 'litellm sample key: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' \
+       "$2/v1/models"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"        # the URLs, the status so far, curl's exit status, then its result line and HTTP code
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # the URLs, the status so far, curl's exit status, its result line, then the HTTP code
+  printf '%s\n' "$5"
+  case "$4:$6" in
+    0:200) echo "FINDING: the LiteLLM sample key was accepted with 200"; set -- "$1" "$2" 1 ;;
+    0:401|0:400) ;;
+    *) echo "the LiteLLM sample key got neither the 200 finding nor a 401 or 400 pass; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
+  echo "block exit $3; confirm that each service accepts your real credentials, the positive control this block does not run"
+  exit "$3"
 )
 ```
 
@@ -350,7 +404,7 @@ behind a timeout on the other: run it once for each public address of the host. 
 is open on that address from this host (for example SSH on 22) as the positive control, and stops if
 the control does not connect. Substitute both inside the single quotes.
 
-DEMONSTRATED: following block; recorded loopback tests observed connected, refused, timeout/full accept queue, failed-control stopping and the input cases below. Public isolation remains reasoned; the timeout fixture was not a firewall. The loopback tests used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, has not been run.
+DEMONSTRATED: following block; recorded loopback tests observed connected, refused, timeout/full accept queue, failed-control stopping and the input cases below. Public isolation remains reasoned; the timeout fixture was not a firewall. The loopback tests used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, and it holds its values in positional parameters. The current form passed bash -n and local stub runs, and the repository's gate suite runs ShellCheck 0.11.0 over every block; no demonstration was re-run on it.
 
 ```bash
 (
@@ -360,37 +414,42 @@ DEMONSTRATED: following block; recorded loopback tests observed connected, refus
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute one IP address on the set -- line above; not probing"; exit 2 ;; esac
   case "$1" in 0.0.0.0) echo "$1 reaches this host itself; give the public address of the service; not probing"; exit 2 ;; esac
-  ipv4='^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'
+  set -- "$1" "$2" '^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'   # the address, the control port, then the IPv4 pattern, held here rather than in a named variable
   case "$1" in
     *:*:*)
       case "$1" in *[!0123456789ABCDEFabcdef.:]*) echo "$1 is not an IPv6 address; not probing"; exit 2 ;; esac
       case "$1" in *.*) echo "give the IPv4 address itself rather than $1; not probing"; exit 2 ;; esac
       case "$1" in *[!0:]*) ;; *) echo "$1 is all zeros (this host itself, or not an address); give the public address of the service; not probing"; exit 2 ;; esac ;;
-    *) [[ $1 =~ $ipv4 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
+    *) [[ $1 =~ $3 ]] || { echo "give one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not probing"; exit 2; } ;;
   esac
   case "$2" in *[!0123456789]*|"") echo "substitute a known-open control port on the set -- line above; not probing"; exit 2 ;; esac
   { [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; } 2>/dev/null || { echo "the control port must be 1 to 65535; not probing"; exit 2; }
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-  err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
+  set -- "$1" "$2" "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the address, the control port, the control's messages, then its exit status
+  set -- "$1" "$2" "${3%$'\n'}" "$4"              # the messages without their final line break, as a plain capture prints them
+  [ "$4" = 0 ] || { echo "control $1:$2 did not connect (${3:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
-  rc=0
-  for p in 80 443 8080 10000 4000 8000 25; do
+  set -- "$1" 0 80 443 8080 10000 4000 8000 25   # the address, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports still to probe
+  while [ "$#" -gt 2 ]; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
-    err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
-    case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
-      124:*) echo "$1:$p timed out from this host" ;;
-      *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
+    set -- "$(if LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"   # this port's exit status, its messages, the address, the status so far, this port, then the ports after it
+    set -- "$1" "${2%$'\n'}" "${@:3}"             # the messages without their final line break
+    case "$1:$2" in
+      0:*) echo "$3:$5 connected: reachable from this host"; set -- "$1" "$2" "$3" 1 "${@:5}" ;;
+      124:*) echo "$3:$5 timed out from this host" ;;
+      *"Connection refused"*) echo "$3:$5 refused from this host" ;;
+      *) echo "$3:$5 inconclusive (not a connection, refusal or timeout): ${2:-no message}"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 "${@:5}" ;;
     esac
+    set -- "$3" "$4" "${@:6}"                     # the address, the status so far, then the ports still to probe
   done
-  exit "$rc"
+  exit "$2"
 )
 ```
 
-Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
+DEMONSTRATED: preceding block; the loopback runs and refusals recorded below used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
 complete the handshake, so confirm a surprising "connected" with `ss` on the host. "refused" and
 "timed out" show only that this host could not reach the port: a firewall in front of the service
 produces either, but so can filtering on the probing host's own network (many providers block outbound
@@ -550,7 +609,7 @@ Claims (full source mapping in the JSON block below):
 - verify-baserow-signup (REASONED; baserow): Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.
 - verify-appsmith-signup (REASONED; appsmith): Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.
 - verify-external (REASONED; baserow, budibase, windmill): Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.
-- windmill-default-login (DEMONSTRATED; windmill): Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.
+- windmill-default-login (DEMONSTRATED; windmill): Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200. Runs covered an earlier form whose result was curl's own exit status; the current form was not re-run.
 - windmill-loopback (DEMONSTRATED; windmill): SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.
 - windmill-sandbox-run (DEMONSTRATED; windmill): Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.
 - verify-inventory (REASONED; docker, baserow, appsmith, budibase, windmill): Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.
@@ -570,7 +629,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "bdc48d73a98f5f7f76963ab46e498b154f06c8ca120b8d7340a71bddaf2977d5",
+  "body_sha256": "094905445c9c34f54f7b38b79aa9e33bb945c8d1ab34dd5cf606b7c9c86ca97e",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -748,7 +807,7 @@ Claims (full source mapping in the JSON block below):
     "verify-baserow-signup": {"text": "Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6", "baserow:s4588448964a2"], "status": "REASONED"},
     "verify-appsmith-signup": {"text": "Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1", "appsmith:sd1c55be91e30", "appsmith:se3cd894dc579"], "status": "REASONED"},
     "verify-external": {"text": "Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED"},
-    "windmill-default-login": {"text": "Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac", "windmill:s345ca635c837", "windmill:s03c33b490c08"], "status": "DEMONSTRATED", "evidence": "After the password was changed, `changeme` got `400` and the new password `200`.", "verify": [4]},
+    "windmill-default-login": {"text": "Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200. Runs covered an earlier form whose result was curl's own exit status; the current form was not re-run.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac", "windmill:s345ca635c837", "windmill:s03c33b490c08"], "status": "DEMONSTRATED", "evidence": "After the password was changed, `changeme` got `400` and the new password `200`.", "verify": [4]},
     "windmill-loopback": {"text": "SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.", "components": ["windmill"], "sources": ["windmill:s8e4bbba271f2"], "status": "DEMONSTRATED", "evidence": "The server's only listener was on 127.0.0.1, at the test port the run set."},
     "windmill-sandbox-run": {"text": "Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.", "components": ["windmill"], "sources": ["windmill:sd775b7c95872"], "status": "DEMONSTRATED", "evidence": "on the loopback run, without nsjail installed, the worker logged \"Nsjail sandboxing will NOT be available\"."},
     "verify-inventory": {"text": "Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.", "components": ["docker", "baserow", "appsmith", "budibase", "windmill"], "sources": ["docker:s2fecb6db5480", "baserow:s1b31314982f4", "appsmith:s9fdcff5a28a4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED", "verify": [1]},
