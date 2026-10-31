@@ -94,6 +94,29 @@ fi
 # An unchecked restore could leave a half-written bundle for every later gate to read.
 cp "$orig" site/llms-full.txt || { bad "could not restore site/llms-full.txt from $orig"; exit 1; }
 
+echo "== llms-full.txt links are absolute and name repository paths =="
+# site/llms-full.txt is served from https://secureconfig.ai/, where a relative link such as
+# (mfa.md) names a page that does not exist, so scripts/build-llms-full.sh rewrites each one to
+# https://github.com/jposluns/secureconfig/blob/main/<path> (tree/main/ for a directory). The
+# freshness gate above proves the committed file is the build's output. This one runs the
+# build's link check, through scripts/build-llms-full.sh --check-links, on the committed file,
+# so the build and this gate apply one rule. The check parses the file with the pinned
+# markdown-it-py and each piece of raw HTML in it with Python's html.parser. It fails closed on
+# any link, image, link reference definition or listed HTML URL attribute whose target is not
+# an in-page anchor or a URL with a scheme, and on any link into this repository's main branch
+# that names no file or directory in this checkout. The build script's comment above the check
+# lists the attributes and the CSS and srcset forms it refuses. Code spans, fenced code and
+# indented code are code to the parser and are not checked. Its self-test of mutations and
+# clean cases runs first, so what checks the bundle is the shipped rule, and it reads only the
+# working tree, so it stays offline. Heading anchors are not checked here; the local-links gate
+# below checks them in the guides the bundle is built from.
+if llms_links=$(bash scripts/build-llms-full.sh --check-links 2>&1); then
+  ok "site/llms-full.txt has no link target the gate cannot certify, and all $llms_links of its links into this repository's main branch name a path in this checkout"
+else
+  bad "site/llms-full.txt has a link target the gate cannot certify, or a link into this repository that names no path here, or the gate's self-test failed"
+  printf '%s\n' "$llms_links" | sed 's/^/          /'
+fi
+
 echo "== the plugin bundle is current =="
 # plugin/ is generated from the guides by scripts/build-plugin.sh, the same way
 # site/llms-full.txt is, and for the same reason: a bundle that has drifted from the guides ships
