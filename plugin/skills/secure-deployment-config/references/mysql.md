@@ -515,6 +515,7 @@ Run on the database server, using its actual `hostname` output:
     *)
       [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
       [ "$(hostname)" = "$1" ] || { echo "run on the named database server"; exit 2; }
+      command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
       ss -tlnp
       ;;
   esac
@@ -851,7 +852,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d27a3234852d6e1e0ea36d68c6f9f1a19687c191ca507c1d8a10e670d032620",
+  "body_sha256": "b0a1c01acfd2a04dcdbd8c9c94b4e424621aef43faf91695d747a78e8569ed56",
   "components": {
     "mysql": {
       "name": "MySQL reference",

@@ -342,13 +342,16 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
-**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. The /invocations runs and the bash -n result covered an earlier form, before the key and /invocations subshells took the model server's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains and exit 2 on a partial paste or a wrong value count; neither the stub runs nor bash -n was repeated on the guarded form, and the guards have not been run. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. The /invocations runs and the bash -n result covered an earlier form, before the key and /invocations subshells took the model server's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains and exit 2 on a partial paste or a wrong value count, and before the listener inventory checked for `ss`. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n and stub runs of the whole block with `ss` present, failing and missing, in which both host subshells printed their placeholder refusals; the partial-paste, value-count and reserved-name refusals have not been run. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
 
 ```bash
-ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
-           # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
-           # publication. From another host, probe EACH backend listener's own host and port (adapt the
-           # subshell below, which shows the technique for one endpoint) and confirm each is refused
+(                                       # a subshell, so the exit below ends only this part, with 2 when ss is not installed
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
+             # namespace-local BIND, not a host firewall, a cloud security group, or Docker -p NAT
+             # publication. From another host, probe EACH backend listener's own host and port (adapt the
+             # subshell below, which shows the technique for one endpoint) and confirm each is refused
+)
 pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-api|grpc-restricted-protocol)( |=)'
            # counts visible command lines carrying one of those secret-bearing arguments; 0 means none was seen
            # right now, and any match needs a look. Triton's restricted-API flags carry the secret in their
@@ -670,7 +673,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "63177b1643e8ddccb6ff27cf0a229e4eea4313ed3297fe11626d027c4e8325f7",
+  "body_sha256": "0ecb9b490f55b6d3f5cb310d5caad5aa8bf4e7a0f1247dc6541fd23eb3fd8856",
   "components": {
     "llama": {
       "name": "llama.cpp",
