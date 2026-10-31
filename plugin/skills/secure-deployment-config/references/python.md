@@ -151,7 +151,10 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
   # pair cannot tell whether the app or the proxy enforced it: confirm the layer by probing the app directly or in its logs.
   curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"        # no credentials: expect 401/403
   curl -q -g -sS --noproxy '*' -H @cred.txt -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"   # valid credential from a file (cred.txt holds a full header line, e.g. "Authorization: Bearer ..."): expect 2xx
-  ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
+  ss -tlnp ||   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
+    { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  echo "unclassified observation: read every listener above against section 1"
+  exit 0
 )
 ```
 
@@ -295,7 +298,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "dd746c0f968ce6c3b32b9f24440d31e608a8ee4e0eae52272860b682099e9d8a",
+  "body_sha256": "4e4acf805340e4fdce7d0ef9692bf80cf5b4b8aca9513f729b51972095b5d8ee",
   "components": {
     "django": {
       "name": "Django documentation",

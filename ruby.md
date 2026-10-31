@@ -137,7 +137,14 @@ ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
   # login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
   # the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
 )
-git ls-files config/master.key                                   # prints nothing
+(                                       # a subshell, so the exits below end only the subshell
+  out=$(git ls-files config/master.key)                          # git prints nothing
+  rc=$?
+  [ "$rc" -eq 0 ] || { echo "git ls-files exit $rc (run this in the app's repository); inconclusive"; exit 3; }
+  [ -z "$out" ] || { printf '%s\n' "$out"; echo "FINDING: config/master.key is tracked by git"; exit 1; }
+  echo "config/master.key is not tracked by git"
+  exit 0
+)
 ```
 
 ## Sources (checked September 2026)
@@ -220,7 +227,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1660ec787cfe13068dc4f7fc85dd482d84425e9fdfee190ec74d927062e63ed7",
+  "body_sha256": "cbeb8f935cf7fee5389361bb79c2b959b6e2421780f1bdf7d0e055df73b088ee",
   "components": {
     "rails": {
       "name": "Rails documentation",

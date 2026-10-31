@@ -194,8 +194,13 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 ss -tlnp   # read every listener; the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
                                      # public address. A missing 2019 line is not a pass on its own: it also
                                      # means you moved it to a unix socket or set admin off, so confirm which
-ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exists and is owner-restricted
+(                                    # a subshell, so the exit below ends only the subshell
+  ls -l /run/caddy/admin.sock ||     # if you bound it to a unix socket: it exists and is owner-restricted
                                      # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
+    { echo "ls could not list /run/caddy/admin.sock; inconclusive (if the admin API is on TCP or off, the ss -tlnp lines above are the check)"; exit 3; }
+  echo "unclassified observation: read the socket's mode and owner above; the pass is a socket that is owner-restricted"
+  exit 0
+)
 ```
 
 ## Common mistakes
@@ -296,7 +301,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "27b14126c80ec7ee3c82f3fc5d9d03a93c4b4e99113405e98811dfb5b12893d0",
+  "body_sha256": "e6335c74060b55cd3622663749e5a0729a39b3ac29068c2fe81bedb5c9d43711",
   "components": {
     "admin": {
       "name": "Caddy admin source",

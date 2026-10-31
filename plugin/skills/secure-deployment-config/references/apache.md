@@ -106,8 +106,11 @@ Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsuppor
 
 ## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
-These are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so the
-status code is printed and you compare it; nothing here fails on its own.
+Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
+the status code is printed and you compare it. The unconfigured-name request that ends the first
+block also sets that block's exit status: 0 for the 401 pass, 1 for a 200, and 3 for any other
+code or a curl error. The `apachectl -S` block exits 3 if the command fails and 0 otherwise,
+because you judge the vhost list it prints.
 
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
@@ -142,11 +145,19 @@ sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
   # SNI saying your own host name, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
   # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
   # The URL hostname supplies SNI and the Host header; --connect-to changes only the connection destination (your address):
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
+  code=$(curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
     --connect-to "REPLACE_WITH_AN_UNCONFIGURED_NAME:443:$1:443" \
-    https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH
+    https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH)
+  rc=$?
+  printf '%s\n' "$code"
                                           # 401 is the pass. 200 means another vhost served the
                                           # protected resource with no authentication at all
+  [ "$rc" -eq 0 ] || { echo "curl exit $rc: a transport, certificate or local error; inconclusive (if your certificate covers no spare name, use the configuration review below)"; exit 3; }
+  case "$code" in
+    401) echo "pass: the unconfigured name was refused with 401"; exit 0 ;;
+    200) echo "FINDING: another vhost served the protected path with no authentication"; exit 1 ;;
+    *) echo "HTTP $code is neither the 401 pass nor the 200 finding; inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
@@ -157,7 +168,12 @@ instead: list the vhosts for that address and port, and confirm the first one Ap
 choose does not serve the protected `DocumentRoot`.
 
 ```bash
-sudo apachectl -S                       # the vhost list, in Apache's own matching order
+(                                       # a subshell, so the exit below ends only the subshell
+  sudo apachectl -S ||                  # the vhost list, in Apache's own matching order
+    { echo "apachectl -S failed; inconclusive"; exit 3; }
+  echo "unclassified observation: read the vhost list above; the first vhost Apache would choose for that address and port must not serve the protected DocumentRoot"
+  exit 0
+)
 ```
 
 ## Common mistakes
@@ -248,7 +264,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "27e2367fee431cc907cacea61bf35e344851452e1933987c97f486e339daced4",
+  "body_sha256": "a670a3d72d4176ecb4320d46d924c1aa8b19d3e34503aea7f10dd2840cd8d952",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",

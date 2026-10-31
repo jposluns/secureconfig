@@ -143,7 +143,12 @@ ping -c1 192.168.1.50
 sudo nft list chain inet filter forward | grep -E 'iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
 
 # ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
-ss -tlnp   # read every listener; 8080: only a loopback address unless you deliberately published it
+(          # a subshell, so the exit below ends only the subshell
+  ss -tlnp ||   # read every listener; 8080: only a loopback address unless you deliberately published it
+    { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  echo "unclassified observation: read every listener above; 8080 belongs on a loopback address unless you deliberately published it"
+  exit 0
+)
 ```
 
 ## Sources (checked September 2026)
@@ -252,7 +257,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "a169728e03665529c658553abde2beb4ec232f19ccde55ced0d05317b7421042",
+  "body_sha256": "4872e15a8d9949d536300372a397b48b1ed7ba182896d48f8b04ce045e506968",
   "components": {
     "frps": {
       "name": "frps source",

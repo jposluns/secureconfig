@@ -216,11 +216,20 @@ sudo nginx -t && sudo systemctl reload nginx
                                     # then each enabled alone, with the arrival rate actually measured
 )
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
+(                                   # a subshell, so the exits below end only the subshell
+  out=$(ss -tlnp) || { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  printf '%s\n' "$out"   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
                                     # above pass while the app also answers directly on port 3000,
                                     # which bypasses this proxy's TLS and its authentication. That
                                     # bypass is the first common mistake below, and the first item in
                                     # common-mistakes.md
+  printf '%s\n' "$out" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]:") != 1 { found = 1 } END { exit !found }'
+  case "$?" in
+    0) echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; exit 1 ;;
+    1) echo "no port 3000 listener outside loopback; unclassified observation: read every other listener above"; exit 0 ;;
+    *) echo "awk could not read the listener list; inconclusive"; exit 3 ;;
+  esac
+)
 ```
 
 ## Common mistakes
@@ -331,7 +340,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "1567c153ede312cc84063b1191cd7e4db7d0fc901daf4743d8178176f741fd6a",
+  "body_sha256": "5f39710f2d22a386def62638edd90f3adce4f8d0c4fad6f222c66c6990ad909e",
   "components": {
     "nginx-source": {
       "name": "nginx source",

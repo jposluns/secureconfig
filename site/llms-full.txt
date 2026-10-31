@@ -2167,7 +2167,12 @@ ping -c1 192.168.1.50
 sudo nft list chain inet filter forward | grep -E 'iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
 
 # ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
-ss -tlnp   # read every listener; 8080: only a loopback address unless you deliberately published it
+(          # a subshell, so the exit below ends only the subshell
+  ss -tlnp ||   # read every listener; 8080: only a loopback address unless you deliberately published it
+    { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  echo "unclassified observation: read every listener above; 8080 belongs on a loopback address unless you deliberately published it"
+  exit 0
+)
 ```
 
 ## Sources (checked September 2026)
@@ -2276,7 +2281,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "a169728e03665529c658553abde2beb4ec232f19ccde55ced0d05317b7421042",
+  "body_sha256": "4872e15a8d9949d536300372a397b48b1ed7ba182896d48f8b04ce045e506968",
   "components": {
     "frps": {
       "name": "frps source",
@@ -9131,8 +9136,11 @@ Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsuppor
 
 ## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
-These are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so the
-status code is printed and you compare it; nothing here fails on its own.
+Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
+the status code is printed and you compare it. The unconfigured-name request that ends the first
+block also sets that block's exit status: 0 for the 401 pass, 1 for a 200, and 3 for any other
+code or a curl error. The `apachectl -S` block exits 3 if the command fails and 0 otherwise,
+because you judge the vhost list it prints.
 
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
@@ -9167,11 +9175,19 @@ sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
   # SNI saying your own host name, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
   # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
   # The URL hostname supplies SNI and the Host header; --connect-to changes only the connection destination (your address):
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
+  code=$(curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
     --connect-to "REPLACE_WITH_AN_UNCONFIGURED_NAME:443:$1:443" \
-    https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH
+    https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH)
+  rc=$?
+  printf '%s\n' "$code"
                                           # 401 is the pass. 200 means another vhost served the
                                           # protected resource with no authentication at all
+  [ "$rc" -eq 0 ] || { echo "curl exit $rc: a transport, certificate or local error; inconclusive (if your certificate covers no spare name, use the configuration review below)"; exit 3; }
+  case "$code" in
+    401) echo "pass: the unconfigured name was refused with 401"; exit 0 ;;
+    200) echo "FINDING: another vhost served the protected path with no authentication"; exit 1 ;;
+    *) echo "HTTP $code is neither the 401 pass nor the 200 finding; inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
@@ -9182,7 +9198,12 @@ instead: list the vhosts for that address and port, and confirm the first one Ap
 choose does not serve the protected `DocumentRoot`.
 
 ```bash
-sudo apachectl -S                       # the vhost list, in Apache's own matching order
+(                                       # a subshell, so the exit below ends only the subshell
+  sudo apachectl -S ||                  # the vhost list, in Apache's own matching order
+    { echo "apachectl -S failed; inconclusive"; exit 3; }
+  echo "unclassified observation: read the vhost list above; the first vhost Apache would choose for that address and port must not serve the protected DocumentRoot"
+  exit 0
+)
 ```
 
 ## Common mistakes
@@ -9273,7 +9294,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "27e2367fee431cc907cacea61bf35e344851452e1933987c97f486e339daced4",
+  "body_sha256": "a670a3d72d4176ecb4320d46d924c1aa8b19d3e34503aea7f10dd2840cd8d952",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -9641,11 +9662,20 @@ sudo nginx -t && sudo systemctl reload nginx
                                     # then each enabled alone, with the arrival rate actually measured
 )
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
+(                                   # a subshell, so the exits below end only the subshell
+  out=$(ss -tlnp) || { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  printf '%s\n' "$out"   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
                                     # above pass while the app also answers directly on port 3000,
                                     # which bypasses this proxy's TLS and its authentication. That
                                     # bypass is the first common mistake below, and the first item in
                                     # common-mistakes.md
+  printf '%s\n' "$out" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]:") != 1 { found = 1 } END { exit !found }'
+  case "$?" in
+    0) echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; exit 1 ;;
+    1) echo "no port 3000 listener outside loopback; unclassified observation: read every other listener above"; exit 0 ;;
+    *) echo "awk could not read the listener list; inconclusive"; exit 3 ;;
+  esac
+)
 ```
 
 ## Common mistakes
@@ -9756,7 +9786,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "1567c153ede312cc84063b1191cd7e4db7d0fc901daf4743d8178176f741fd6a",
+  "body_sha256": "5f39710f2d22a386def62638edd90f3adce4f8d0c4fad6f222c66c6990ad909e",
   "components": {
     "nginx-source": {
       "name": "nginx source",
@@ -10506,8 +10536,13 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 ss -tlnp   # read every listener; the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
                                      # public address. A missing 2019 line is not a pass on its own: it also
                                      # means you moved it to a unix socket or set admin off, so confirm which
-ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exists and is owner-restricted
+(                                    # a subshell, so the exit below ends only the subshell
+  ls -l /run/caddy/admin.sock ||     # if you bound it to a unix socket: it exists and is owner-restricted
                                      # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
+    { echo "ls could not list /run/caddy/admin.sock; inconclusive (if the admin API is on TCP or off, the ss -tlnp lines above are the check)"; exit 3; }
+  echo "unclassified observation: read the socket's mode and owner above; the pass is a socket that is owner-restricted"
+  exit 0
+)
 ```
 
 ## Common mistakes
@@ -10608,7 +10643,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "27b14126c80ec7ee3c82f3fc5d9d03a93c4b4e99113405e98811dfb5b12893d0",
+  "body_sha256": "e6335c74060b55cd3622663749e5a0729a39b3ac29068c2fe81bedb5c9d43711",
   "components": {
     "admin": {
       "name": "Caddy admin source",
@@ -12302,7 +12337,10 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
   # pair cannot tell whether the app or the proxy enforced it: confirm the layer by probing the app directly or in its logs.
   curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"        # no credentials: expect 401/403
   curl -q -g -sS --noproxy '*' -H @cred.txt -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"   # valid credential from a file (cred.txt holds a full header line, e.g. "Authorization: Bearer ..."): expect 2xx
-  ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
+  ss -tlnp ||   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
+    { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  echo "unclassified observation: read every listener above against section 1"
+  exit 0
 )
 ```
 
@@ -12446,7 +12484,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "dd746c0f968ce6c3b32b9f24440d31e608a8ee4e0eae52272860b682099e9d8a",
+  "body_sha256": "4e4acf805340e4fdce7d0ef9692bf80cf5b4b8aca9513f729b51972095b5d8ee",
   "components": {
     "django": {
       "name": "Django documentation",
@@ -19707,7 +19745,14 @@ ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
   # login path (a bare 404 is inconclusive, it also means nothing is mounted there). A 200 that returns
   # the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
 )
-git ls-files config/master.key                                   # prints nothing
+(                                       # a subshell, so the exits below end only the subshell
+  out=$(git ls-files config/master.key)                          # git prints nothing
+  rc=$?
+  [ "$rc" -eq 0 ] || { echo "git ls-files exit $rc (run this in the app's repository); inconclusive"; exit 3; }
+  [ -z "$out" ] || { printf '%s\n' "$out"; echo "FINDING: config/master.key is tracked by git"; exit 1; }
+  echo "config/master.key is not tracked by git"
+  exit 0
+)
 ```
 
 ## Sources (checked September 2026)
@@ -19790,7 +19835,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1660ec787cfe13068dc4f7fc85dd482d84425e9fdfee190ec74d927062e63ed7",
+  "body_sha256": "cbeb8f935cf7fee5389361bb79c2b959b6e2421780f1bdf7d0e055df73b088ee",
   "components": {
     "rails": {
       "name": "Rails documentation",
