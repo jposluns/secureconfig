@@ -111,81 +111,121 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ## 6. Verify
 
-REASONED: n8n 2.40.6's registry returns the first non-null strategy result, or `false` if all abstain; `ApiKeyAuth`, `BearerAuth` and `CookieAuth` return that result. Its pinned express-openapi-validator 5.5.3 calls `AuthValidator.validate()` before the handler ([lines 165-174](https://github.com/cdimascio/express-openapi-validator/blob/5c204614a5ccb04ddc64f68e8a282e8f661dfb47/src/middlewares/openapi.security.ts#L165-L174)); for a header `apiKey` scheme, a missing header throws an `Error` without a status ([lines 265-271](https://github.com/cdimascio/express-openapi-validator/blob/5c204614a5ccb04ddc64f68e8a282e8f661dfb47/src/middlewares/openapi.security.ts#L265-L271)). This guide's assessment: a false result or a thrown error without a status gets fallback status 401 ([lines 142-185](https://github.com/cdimascio/express-openapi-validator/blob/5c204614a5ccb04ddc64f68e8a282e8f661dfb47/src/middlewares/openapi.security.ts#L142-L185)); when security fails and that failure is selected, the validator forwards an `HttpError` with that status, while exceptions can supply other statuses. The source `openapi.yml` declares `ApiKeyAuth` as a header `apiKey` scheme named `X-N8N-API-KEY`, `BearerAuth` as a bearer JWT scheme and `CookieAuth` as an `apiKey` cookie named `n8n-auth`, each as a separate global security requirement ([lines 167-185](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/openapi.yml#L167-L185)). The n8n application serializes `HttpError` as a message object with its status (400 if falsy); `Unauthorized` with a session cookie gets 401 and message `Unauthorized`.
+REASONED: The n8n 2.40.6 registry returns the first non-null strategy result, or `false` if all abstain; `ApiKeyAuth`, `BearerAuth` and `CookieAuth` return that result. Its pinned express-openapi-validator 5.5.3 calls `AuthValidator.validate()` before the handler ([lines 165-174](https://github.com/cdimascio/express-openapi-validator/blob/5c204614a5ccb04ddc64f68e8a282e8f661dfb47/src/middlewares/openapi.security.ts#L165-L174)); for a header `apiKey` scheme, a missing header throws an `Error` without a status ([lines 265-271](https://github.com/cdimascio/express-openapi-validator/blob/5c204614a5ccb04ddc64f68e8a282e8f661dfb47/src/middlewares/openapi.security.ts#L265-L271)). This guide's assessment: a false result or a thrown error without a status gets fallback status 401 ([lines 142-185](https://github.com/cdimascio/express-openapi-validator/blob/5c204614a5ccb04ddc64f68e8a282e8f661dfb47/src/middlewares/openapi.security.ts#L142-L185)); when security fails and that failure is selected, the validator forwards an `HttpError` with that status, while exceptions can supply other statuses. The source `openapi.yml` declares `ApiKeyAuth` as a header `apiKey` scheme named `X-N8N-API-KEY`, `BearerAuth` as a bearer JWT scheme and `CookieAuth` as an `apiKey` cookie named `n8n-auth`, each as a separate global security requirement ([lines 167-185](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/openapi.yml#L167-L185)). The n8n application serializes `HttpError` as a message object with its status (400 if falsy); `Unauthorized` with a session cookie gets 401 and message `Unauthorized`.
 
 REASONED: source limits and guide advice for the API probes below; no live n8n deployment is available and no API outcome was observed. The cited `workflows.handler.ts` lines implement only `getWorkflowVersion`: success returns version JSON without `autosaved` and no explicit status. Public controllers precede the validator, so a controller-owned route can respond before the validator's security check ([ownership, lines 154-155](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L154-L155), [controller activation, lines 232-236](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L232-L236), [mount order, lines 374-380](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L374-L380)). The registry mounts each public controller's router at its base path ([registry activation, lines 55-67](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L55-L67)); `v1/controllers/index.ts` imports the workflows controller so its decorator metadata is registered ([lines 1-16](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/index.ts#L1-L16)), and that controller is `@PublicApiController('/workflows')` with `getWorkflows` on `@Get('/')` and `@ApiKeyScope('workflow:list')` ([lines 205-206](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/workflows.public.controller.ts#L205-L206), [lines 229-235](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/workflows.public.controller.ts#L229-L235)). The `@PublicApiController` decorator records the controller's base path, marks it as a public API controller not registered on the root path and registers it as a service ([lines 23-34](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/public-api-controller.ts#L23-L34)); `@Get` records the route's HTTP method and path ([lines 30-53](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/route.ts#L30-L53)) in the shared controller metadata ([lines 9-36](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/controller-registry-metadata.ts#L9-L36)). `public-api/index.ts` imports the v1 controllers ([line 24](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L24-L24)) and builds one router per `v*` folder ([lines 398-415](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L398-L415)), and the server mounts those routers with the endpoint from its `publicApi.path` setting ([line 186](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/server.ts#L186-L186), [lines 230-231](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/server.ts#L230-L231)). The cited files do not establish that setting's default (NOT ESTABLISHED); the `/api/v1` base path rests on the n8n API authentication page in Sources. The registry applies authentication middleware to every controller route and returns 401 `Unauthorized` when the auth registry does not authenticate ([controller authentication, lines 120-168](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L120-L168)); on a route with an API key scope, the next middleware returns 403 `Forbidden` when the request has no token grant or its key scopes do not satisfy that scope ([scope check, lines 188-199](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L188-L199)). This guide's inference concerns ordering relative to the validator, not skipping authentication. On success, `getWorkflows` returns an object with a `data` array of workflows and a `nextCursor` ([lines 277-302](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/workflows.public.controller.ts#L277-L302)). The registry writes nothing more if headers were already sent; when the status that `resolveSuccessStatus` returns is 204, or the route has no response DTO and the result is undefined, it sends that status with no body; otherwise it sends that status with JSON of the result parsed by the route's response DTO when it has one, else of the raw result ([lines 77-81](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L77-L81), [lines 106-117](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L106-L117)). `resolveSuccessStatus` returns the route's declared success status and throws when none is declared ([lines 148-162](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-route-resolver.ts#L148-L162)), and `@ApiResponse` records a route's success status and response DTO ([lines 10-34](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/api-response.ts#L10-L34)). `getWorkflows` declares `@ApiResponse(200, WorkflowListPublicDto)` ([lines 229-235](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/workflows.public.controller.ts#L229-L235)), a DTO with a `data` array and a nullable string `nextCursor` ([lines 172-175](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/api-types/src/dto/workflows/workflow-public.dto.ts#L172-L175)), so when the handler returns and the DTO parse succeeds, the registry sends status 200 with the parsed JSON; no response was observed. The source `openapi.yml` lists no `/workflows` list path, only `/workflows/{id}/...` sub-paths ([lines 79-159](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/openapi.yml#L79-L159)); the generated `getWorkflows` spec records scope `workflow:list` and declares 200 with required `data` and `nextCursor`, 400, 401 and 403 ([lines 1-6](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/handlers/workflows/spec/paths/getWorkflows.generated.yml#L1-L6), [lines 43-47](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/handlers/workflows/spec/paths/getWorkflows.generated.yml#L43-L47), [lines 562-573](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/handlers/workflows/spec/paths/getWorkflows.generated.yml#L562-L573)). This guide's assessment: a request without credentials gets 401 `Unauthorized` from the route's authentication middleware if no auth strategy authenticates it. The server registers `ApiKeyAuthStrategy` and then `SessionCookieAuthStrategy` ([lines 188-198](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/server.ts#L188-L198)), and the token-exchange module's `init` appends `ScopedJwtStrategy` only after its `N8N_ENV_FEAT_TOKEN_EXCHANGE` feature check passes ([lines 22-38](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/token-exchange.module.ts#L22-L38)). Each abstains without its credential: the API key strategy when API-key auth is disabled or the `x-n8n-api-key` header is absent or empty ([lines 86-93](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/api-key-auth.strategy.ts#L86-L93), [header name, line 14](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/api-key-auth.strategy.ts#L14-L14)), and the session strategy without the `n8n-auth` cookie ([lines 31-33](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/session-cookie-auth.strategy.ts#L31-L33), [line 74](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/constants.ts#L74-L74)). The scoped JWT strategy abstains without a `Bearer` authorization token or an `x-n8n-api-key` header ([lines 74-77](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L74-L77), [lines 104-117](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L104-L117), [prefix and header names, lines 12-13](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L12-L13)). The registry returns `false` when all abstain ([lines 49-58](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/auth-strategy.registry.ts#L49-L58)). Strategy registrations outside the cited files are NOT ESTABLISHED, so the 401 stays this guide's assessment. Compare no `X-N8N-API-KEY` with a valid key at that same URL, keeping proxy credentials constant and feeding the key on stdin; rejection (for example 401) and 200 workflow JSON remain expectations to observe, and a fronting proxy can alter the status.
 
 ```bash
 # REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in the authoring environment. Expected API status outcomes require a live check; the assessment above traces conditional public-API refusal and the workflows list route's middleware, response body and declared 200 success status; pinned source still establishes the Webhook refusal codes.
 # On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
-# The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains; those guards have not been run.
+# The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains, and before this block reported one exit status for all of its parts.
+# On 2026-10-31 the current form passed bash -n and ran whole against stubs, including those example-domain refusals; no n8n deployment or network was involved.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
 # owner-creation data to a live instance as a "test".
-ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n8n on 127.0.0.1 (or its
-           # private container network), with the Postgres and task-runner ports NOT published. Loopback
-           # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
-# TLS reachability (proves TLS, not authentication):
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST'   # the public host name your proxy serves n8n on (your N8N_HOST value), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
-    -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/"
-)
-# Public API auth, matched pair against the same URL: expect rejection without the n8n key
-# (for example 401) and 200 workflow JSON with a valid key; verify both outcomes on your instance.
-# The key is fed on stdin (-H @-), so it stays out of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
-# Stdin closes the argv channel only: it does not hide the key from set -x tracing or your own
-# account's view of the process.
-(
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_N8N_API_KEY'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
-  case "$2" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 2 ;; esac
-  u="https://$1/api/v1/workflows"
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$u"
-  printf 'X-N8N-API-KEY: %s\n' "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
-)
-# no-key => expect rejection by n8n; check the observed status (a fronting proxy can also 401, so hold its
-# credential constant and vary only the n8n key). With-key => expect 200 and workflow JSON.
-# The editor login is POST /rest/login with the default REST prefix; confirm editor access separately.
-# Webhook auth: the api/v1 check says NOTHING about webhooks. Test each PRODUCTION webhook (prefix
-# /webhook/, never /webhook-test/) with the method the node expects and a valid payload, three ways: no
-# credential, a WRONG credential, and the valid one. With configured node credentials, missing
-# Basic/JWT auth returns 401 and missing Header auth returns 403 in the pinned handler.
-# Valid calls must perform the expected action; missing/wrong calls must not. A 200 alone is not proof (a workflow can respond 200 without acting); a 404 means inactive/wrong
-# method/wrong path, not protected. For a None webhook that validates a signature in the workflow,
-# confirm an unsigned request runs no action. Pick a workflow safe to trigger, and substitute your n8n host and webhook path.
-(
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_WEBHOOK_PATH'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the production webhook path after /webhook/: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 2 ;; esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://$1/webhook/$2"
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n8n on 127.0.0.1 (or its
+             # private container network), with the Postgres and task-runner ports NOT published. Loopback
+             # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
+  set -- "$1" "$?"                      # the block's status so far, then ss's exit status
+  [ "$2" = 0 ] || { echo "ss -tlnp exit $2: no listener inventory; inconclusive"; set -- 3; }
+  # TLS reachability (proves TLS, not authentication):
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST'   # the public host name your proxy serves n8n on (your N8N_HOST value), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
+      -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/" ||
+      { echo "curl exit $?: the TLS request failed; inconclusive"; exit 3; }
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # Public API auth, matched pair against the same URL: expect rejection without the n8n key
+  # (for example 401) and 200 workflow JSON with a valid key; verify both outcomes on your instance.
+  # The key is fed on stdin (-H @-), so it stays out of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
+  # Stdin closes the argv channel only: it does not hide the key from set -x tracing or your own
+  # account's view of the process.
+  (
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_N8N_API_KEY'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the API key: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
+    case "$2" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 2 ;; esac
+    set -- "$1" "$2" "https://$1/api/v1/workflows" 0   # the host, the key, the workflows URL, then this part's status so far, ranked as above
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5%%$'\n'*}" "${5##*$'\n'}"   # curl's write-out line, then its exit status
+    printf '%s\n' "$5"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${5#no-key=}"         # then the HTTP code and the rest of the line
+    case "$6:${7%% *}" in
+      0:401|0:403) ;;
+      0:2??) echo "FINDING: the public API answered ${7%% *} without the n8n key"; set -- "$1" "$2" "$3" 1 ;;
+      0:*) echo "HTTP ${7%% *} without the key is neither a 401 or 403 rejection nor a 2xx finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $6: the request without the key failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$(if printf 'X-N8N-API-KEY: %s\n' "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"    # the response and its write-out line, then curl's exit status
+    printf '%s' "$5"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${5##*with-key=}"     # then the HTTP code and the rest of the line
+    case "$6:${7%% *}" in
+      0:200) ;;
+      0:*) echo "HTTP ${7%% *} with the key is not the expected 200, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $6: the request with the key failed, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    esac
+    exit "$4"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # no-key => expect rejection by n8n; check the observed status (a fronting proxy can also 401, so hold its
+  # credential constant and vary only the n8n key). With-key => expect 200 and workflow JSON.
+  # The editor login is POST /rest/login with the default REST prefix; confirm editor access separately.
+  # Webhook auth: the api/v1 check says NOTHING about webhooks. Test each PRODUCTION webhook (prefix
+  # /webhook/, never /webhook-test/) with the method the node expects and a valid payload, three ways: no
+  # credential, a WRONG credential, and the valid one. With configured node credentials, missing
+  # Basic/JWT auth returns 401 and missing Header auth returns 403 in the pinned handler.
+  # Valid calls must perform the expected action; missing/wrong calls must not. A 200 alone is not proof (a workflow can respond 200 without acting); a 404 means inactive/wrong
+  # method/wrong path, not protected. For a None webhook that validates a signature in the workflow,
+  # confirm an unsigned request runs no action. Pick a workflow safe to trigger, and substitute your n8n host and webhook path.
+  (
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST' 'REPLACE_WITH_WEBHOOK_PATH'   # the same n8n host name as the TLS check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the production webhook path after /webhook/: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://$1/webhook/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "${3%%$'\n'*}" "${3##*$'\n'}"   # curl's write-out line, then its exit status
+    printf '%s\n' "$1"
+    set -- "$1" "$2" "${1#no-cred=}"      # then the HTTP code and the rest of the line
+    case "$2:${3%% *}" in
+      0:401|0:403) exit 0 ;;
+      0:404) echo "HTTP 404: the webhook is inactive or the method or path is wrong, not protected; inconclusive"; exit 3 ;;
+      0:*) echo "HTTP ${3%% *} without a credential is not classified: a 200 alone is not proof, so check whether the workflow acted"; exit 0 ;;
+      *) echo "curl exit $2: the webhook request failed; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the listener list, the tls= status, the workflow JSON and a webhook answer other than 401, 403 or 404 are not classified, so judge them yourself, and test the wrong and valid webhook credentials separately"
+  exit "$1"
 )
 ```
 
@@ -466,7 +506,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "284a134ea8c90bb763014fc2ed80a579051aacf726319e879e68889d52a807d4",
+  "body_sha256": "59169111c6710536c1483106a7cf557a80cdbc0b47ea9ee70516b99a1e824921",
   "components": {
     "server": {
       "name": "n8n listener source",
