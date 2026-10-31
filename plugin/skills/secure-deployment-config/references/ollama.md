@@ -480,7 +480,9 @@ REASONED: comparison procedure from the cited service and proxy sources; isolate
 
 ### V1. Inspect the listener, identity, and store (REASONED: listener, systemd/container identity, publication, ownership, ACL and writable-store comparisons, with administrative and inference positive controls, follow C1 and C5; no deployed store, service identity or external observer. Local command-marker tests above do not inspect a deployment)
 
-No deployed service, container runtime, store, or test identities are available. Run this on the deployment host with enough privilege to inspect processes and sockets. Use `NONE` for a host-only deployment:
+**REASONED:** no deployed service, container runtime, store, or test identities are available. Run this on the deployment host with enough privilege to inspect processes and sockets. Use `NONE` for a host-only deployment.
+
+Expected behavior follows C1's [Docker publication reference](https://docs.docker.com/engine/network/port-publishing/) and C5's [Linux service instructions](https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx).
 
 ```bash
 (
@@ -515,13 +517,11 @@ No deployed service, container runtime, store, or test identities are available.
 )
 ```
 
-For container-only deployments, systemd inspection may be inapplicable. Inspect the actual container process identity and mounted store; an empty configured container user is not proof of an unprivileged process. Inspect every relevant network namespace, IPv4/IPv6 address, publication, and network attachment. The block exits 3 when any inspection command fails, as the systemd or store commands can on a container-only deployment or with the store elsewhere, 2 when `ss` is not installed and no inspection command failed, and otherwise 0, because it classifies nothing and leaves every listing for you to judge.
-
 The exposed comparison shows unintended listeners/publications, root execution, or writable model state. The fixed comparison shows the intended private path and dedicated identity. Check existing regular files and ACLs, service-home signing keys, root-owned configuration, and proxy key separation too.
 
-From an unrelated unprivileged test account, run `test -w /var/lib/ollama/models` and inspect its exit status; writable access is a failure of the proposed policy. In an isolated store, confirm that identity cannot create a disposable file, while the service identity can perform the approved import/inference workflow. Pair ownership inspection with V4's successful administrative operation and V3's inference control.
+REASONED: container-only inspection and this block's exit statuses, from the block's own code and the C1 and C5 references cited before the block; no deployment was inspected. For container-only deployments, systemd inspection may be inapplicable. Inspect the actual container process identity and mounted store; an empty configured container user is not proof of an unprivileged process. Inspect every relevant network namespace, IPv4/IPv6 address, publication, and network attachment. The block exits 3 when any inspection command fails, as the systemd or store commands can on a container-only deployment or with the store elsewhere, 2 when `ss` is not installed and no inspection command failed, and otherwise 0, because it classifies nothing and leaves every listing for you to judge.
 
-Expected behavior follows C1's [Docker publication reference](https://docs.docker.com/engine/network/port-publishing/) and C5's [Linux service instructions](https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx).
+From an unrelated unprivileged test account, run `test -w /var/lib/ollama/models` and inspect its exit status; writable access is a failure of the proposed policy. In an isolated store, confirm that identity cannot create a disposable file, while the service identity can perform the approved import/inference workflow. Pair ownership inspection with V4's successful administrative operation and V3's inference control.
 
 ### V2. Probe direct-backend bypass from another machine (REASONED: direct-origin reachability and approved-proxy inference comparison follow C1 binding documentation; no live target or external observer. The local address-guard cases above establish no network outcome)
 
@@ -1210,7 +1210,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "6de26b7296f4b60a12475f0fe3fce64d575029d2bc2eeb3affae217f1241b5f8",
+  "body_sha256": "34ce44d281751ff9aa97d8c2db5a40aec64981cecd0ef5d3a0d1443d348fd4aa",
   "components": {
     "ollama": {
       "name": "Ollama",
