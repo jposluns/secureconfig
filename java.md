@@ -242,14 +242,19 @@ None of these properties establishes a universal JSON body limit. Bound other re
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (a command failed) or 0
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (a command failed), which outranks 2 (ss is missing), which outranks 0
   curl -q -g -sI --noproxy '*' "https://$1/" ||        # succeeds without -k; shows Strict-Transport-Security
     { echo "curl exit $?: the HTTPS request failed; inconclusive"; set -- "$1" 3; }
   curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/api" ||   # 401, or 302 to the login page, without credentials
     { echo "curl exit $?: the /api request failed; inconclusive"; set -- "$1" 3; }
-  set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  printf '%s' "${3%$'\n'*}"   # read every listener; java: behind a proxy: 127.0.0.1 only
-  [ "${3##*$'\n'}" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- "$1" 3; }
+  if command -v ss >/dev/null; then
+    set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    printf '%s' "${3%$'\n'*}"   # read every listener; java: behind a proxy: 127.0.0.1 only
+    [ "${3##*$'\n'}" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- "$1" 3; }
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$2" in 0) set -- "$1" 2 ;; esac
+  fi
   echo "block exit $2; the HTTPS headers, including Strict-Transport-Security, the /api status and the listener list are not classified, so judge them yourself"
   exit "$2"
 )
@@ -275,7 +280,7 @@ A zero generated-password log count is inconclusive: logging may suppress the me
 
 REASONED: the deployment checks below are not demonstrated. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Those local checks covered the guarded blocks below in an earlier form, whose guard refusals ended with status 0, and no recorded local check covered the later form that ended each block with `) || echo "block exit $?"`. The current form of every block in this section, which reports its result in its exit status, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
 
-REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each guarded block whole and substitute inside the single quotes. Every block in this section records each classified result and each failed command as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed command or an inconclusive result, a finding outranking an inconclusive result. Unless a guard refuses, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The generated-password count is a block of its own because it cannot exit 0: a zero count is inconclusive. The blocks that read `./java-verify-auth.headers`, `./below-limit.bin`, `./over-limit.bin` or `app.log` refuse with status 2, before any request or count, when a file they need is not readable in the current directory. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
+REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each guarded block whole and substitute inside the single quotes. Every block in this section records each classified result and each failed command as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed command or an inconclusive result, a finding outranking an inconclusive result. The first block in this section refuses only its listener inventory when `ss` is missing: it prints `ss is not installed here; not listing sockets` after its requests have run, and exits 2 only when neither request failed. Stub runs of that block's current form (October 2026, Bash 5.3.9, scratch `ss` and `curl` stubs, no network, under an inherited `readonly` variable, `declare -i` variable and `set -e`) exited 0 with `ss` and the stubbed requests passing, 3 with `ss` failing, and 2 with `ss` missing; with `ss` missing, stubbed failed requests gave 3. Unless a guard ends the block early, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The generated-password count is a block of its own because it cannot exit 0: a zero count is inconclusive. The blocks that read `./java-verify-auth.headers`, `./below-limit.bin`, `./over-limit.bin` or `app.log` refuse with status 2, before any request or count, when a file they need is not readable in the current directory. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
 
 For authenticated requests, prepare `./java-verify-auth.headers` as a private, mode `0600` file containing the actual request headers for a test identity, one header per line. Use the application's authentication method, such as its session cookie or an accepted authorization header. For uploads, include the matching session and valid CSRF header where required. The blocks pass that file to curl through stdin, keeping credential values out of command arguments. Protect and remove the file after testing. Curl documents [header input and transfer diagnostics](https://curl.se/docs/manpage.html).
 
@@ -639,7 +644,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d5595f7ed00c101870054abdf86bb17fbfc06f397483dc6e569a3563a33959b",
+  "body_sha256": "f2a6ef6de7559c34a2d1d97ff139a2d6be1ce4fbd39c8a3d22abcde54851f148",
   "components": {
     "boot41": {
       "name": "Spring Boot",
