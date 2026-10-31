@@ -138,27 +138,37 @@ authority and contain it at the infrastructure layer, not with login alone:
 
 ## Verify
 
-REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; no live builder has answered it. The checks are now four fences, each ending with its own exit status: the host inventory, the outside TCP check of port 5003 with its port 443 positive control, the builder transport note and the Dify key pair. The gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2.
 
 ```bash
-# REASONED: listener inventory, Dify publication and TCP checks follow the cited pinned Compose,
-# daemon startup and Docker sources; no isolated network namespace or Docker is available here.
-ss -tlnp                                        # read the whole list: app ports on 127.0.0.1; 80/443
+(                                               # the whole block in one subshell, so one exit status covers every part of it
+  set -- 0                                      # the block's status so far: 3 (a command failed, inconclusive) outranks 0
+  ss -tlnp ||                                   # read the whole list: app ports on 127.0.0.1; 80/443
                                                 # public only where Dify's own nginx is the TLS edge.
                                                 # A container port published by DNAT need not appear
                                                 # here at all, so this list cannot clear 5003 by itself
-# REASONED Dify publication check: the authoring host forbids opening listeners without an isolated
-# network namespace, and has none; Docker is unavailable. Base: expect PublishedPort 5003 on
-# plugin_daemon; after !reset and recreation: no host mapping. See the Compose and ps sources.
-docker compose ps --format json                 # run in dify/docker: no Publishers entry on the
+    { echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- 3; }
+  # REASONED Dify publication check: the authoring host forbids opening listeners without an isolated
+  # network namespace, and has none; Docker is unavailable. Base: expect PublishedPort 5003 on
+  # plugin_daemon; after !reset and recreation: no host mapping. See the Compose and ps sources.
+  docker compose ps --format json ||            # run in dify/docker: no Publishers entry on the
                                                 # plugin_daemon service may map it to a host port.
                                                 # Read the entries rather than the array's length:
                                                 # a merely exposed container port can appear too. A grep for
                                                 # "published" cannot say which service published it
-# REASONED Dify TCP check: the authoring host forbids opening listeners without an isolated network
+    { echo "docker compose ps exit $?: the Compose service list failed (run it in dify/docker); inconclusive"; set -- 3; }
+  echo "block exit $1; unclassified observation: read every listener and every Publishers entry above yourself, because this block classifies neither"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: Dify TCP check: the authoring host forbids opening listeners without an isolated network
 # namespace, and has none; Docker is unavailable. Default enabled/published: expect connection success;
 # section 1 override and recreation: refusal/timeout with the positive control succeeding.
 # See the pinned Compose publication and daemon startup sources.
+# Run this block from an outside network. It exits 1 if port 5003 accepts a connection, 3 if the port 443
+# positive control fails or nc fails on 5003 with no output, and otherwise 0, leaving nc's 5003 line to you.
 (                                               # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -166,15 +176,36 @@ docker compose ps --format json                 # run in dify/docker: no Publish
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) nc -vz -w 3 "$1" 5003 ;;                # from an outside network, and the authority here:
   esac
-)
+  set -- "$1" "$(if nc -vz -w 3 "$1" 5003 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # from an outside network, and the authority here:
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
-# a refusal or timeout from YOUR address is the pass ONLY if your packets reach the host at all: as a
-# positive control, nc -vz -w 3 the same address on a port you know is open (your TLS edge, 443) and
-# confirm THAT succeeds; if the control also times out the path is filtered and the 5003 result is
-# inconclusive (the port could still be open from another network). A local error, an unsupported
-# option (BusyBox netcat rejects -v), or exit 1 with no output is inconclusive: nothing reached the network
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"      # your address, nc's exit status, then what it printed
+  printf '%s' "$3"
+  # a refusal or timeout from YOUR address is the pass ONLY if your packets reach the host at all: as a
+  # positive control, this block runs nc -vz -w 3 against the same address on a port you know is open
+  # (your TLS edge, 443), which must succeed; if the control also times out the path is filtered and the 5003 result is
+  # inconclusive (the port could still be open from another network). A local error, an unsupported
+  # option (BusyBox netcat rejects -v), or exit 1 with no output is inconclusive: nothing reached the network
+  set -- "$1" "$2" "$3" "$(if nc -vz -w 3 "$1" 443 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # then the positive control's exit status and what it printed
+  printf '%s' "$5"
+  case "$2:$4" in
+    0:*) echo "FINDING: port 5003 accepted a TCP connection from here, which proves exposure; block exit 1"; exit 1 ;;
+    *:0) ;;
+    *) echo "nc exit $4 on the port 443 positive control, so the path may be filtered and the 5003 result is inconclusive; block exit 3"; exit 3 ;;
+  esac
+  if [ -n "$3" ]; then
+    echo "block exit 0; the 5003 line above passes only if it reports a refusal or timeout reaching your address, so read it yourself"
+    exit 0
+  fi
+  echo "nc exit $2 with no output for 5003: nothing reached the network; inconclusive; block exit 3"
+  exit 3
+)
+```
+
+```bash
+# REASONED: builder transport reachability follows the cited Dify setup, Flowise, Langflow and LibreChat
+# authentication references; no deployed editors are available here.
 # The curls below observe TRANSPORT and status; they cannot by themselves prove APPLICATION auth,
 # because a reverse proxy in front of the app can return the same codes (or forward to an
 # unauthenticated backend once its own check passes), and curl follows HTTP redirects but does not run a
@@ -188,7 +219,8 @@ docker compose ps --format json                 # run in dify/docker: no Publish
 # tell an open editor from a login page and it discards the /install form you must read. In the browser,
 # an unauthenticated editor visit must land on a login route, and /install on your Dify host must
 # show "already set up" or redirect to login, NEVER an open create-admin form (an open form means the
-# first visitor owns the instance). The curl below is only a transport-reachability note:
+# first visitor owns the instance). The curl below is only a transport-reachability note, so this
+# block exits 3 if it fails and otherwise 0:
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_BUILDER_HOST'   # the builder's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -200,10 +232,20 @@ docker compose ps --format json                 # run in dify/docker: no Publish
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
+  if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"; then
+    echo "block exit 0; unclassified observation: the final code and URL are a transport note only, so judge the editor and /install in a fresh, unauthenticated browser session yourself"
+    exit 0
+  else
+    echo "curl exit $?: the builder did not answer over HTTPS; inconclusive; block exit 3"
+    exit 3
+  fi
 )
-#
+```
+
+```bash
+# REASONED: application API authentication follows the cited Dify API-key, Flowise and Langflow
+# authentication references; no deployed apps or application keys are available here.
 # App API auth, tested against the app on its LOOPBACK address so your fronting reverse proxy (section 2)
 # is out of the path, one MATCHED pair per app: WITHOUT the key expect that app's OWN rejection, WITH a
 # valid key expect a 2xx returning real output (the positive control). Note for Dify: 127.0.0.1:8080 is
@@ -214,6 +256,8 @@ docker compose ps --format json                 # run in dify/docker: no Publish
 # returns 401 with a message like "Authorization header must be provided and start with 'Bearer'"; a 400
 # app_unavailable instead means the app is unavailable or misconfigured (the token identifies the app),
 # not that the endpoint is open. WITH a valid app key, 200 returning the app's parameters JSON.
+# This block exits 1 for a 2xx without the key, 0 for a 401 without the key and a 2xx with it, and
+# otherwise 3.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The app key you substitute on the set -- line enters shell history.
@@ -225,8 +269,35 @@ docker compose ps --format json                 # run in dify/docker: no Publish
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Dify app key on the set -- line above; not probing"; exit 2 ;; esac
-  curl -q -g -sS -w '\ndify no-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 http://127.0.0.1:8080/v1/parameters
-  printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS -w '\ndify with-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 -H @- http://127.0.0.1:8080/v1/parameters
+  set -- "$1" "$(if curl -q -g -sS -w '\ndify no-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 http://127.0.0.1:8080/v1/parameters; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"          # the key, curl's exit status, then the body and its no-key= line
+  printf '%s' "$3"
+  set -- "$1" "$2" "${3##*no-key=}"                 # the key, curl's exit status, then the text after no-key=
+  set -- "$1" "$2" "${3%% *}"                       # the key, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "$3" "$(if printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS -w '\ndify with-key=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 15 -H @- http://127.0.0.1:8080/v1/parameters; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # then curl's exit status with the key, and the body and its with-key= line
+  printf '%s' "$5"
+  set -- "$1" "$2" "$3" "$4" "${5##*with-key=}"
+  set -- "$1" "$2" "$3" "$4" "${5%% *}"             # the key, then the exit status and HTTP code without the key and with it
+  case "$2:$3" in
+    0:2??) echo "FINDING: /v1/parameters answered $3 without the key, so the endpoint is open; block exit 1; read the two bodies above yourself"; exit 1 ;;
+  esac
+  case "$2:$3:$4:$5" in
+    0:401:0:2??) echo "block exit 0; Dify refused the request without the key and answered it with the key, so read the two bodies above yourself"; exit 0 ;;
+  esac
+  case "$2:$3" in
+    0:400) echo "HTTP 400 without the key, which with app_unavailable means the app is unavailable or misconfigured, not that the endpoint is open; inconclusive" ;;
+    0:401) ;;
+    0:*) echo "HTTP $3 without the key is neither Dify's 401 nor a 2xx finding; inconclusive" ;;
+    *) echo "curl exit $2: the request without the key failed; inconclusive" ;;
+  esac
+  case "$4:$5" in
+    0:2??) ;;
+    0:*) echo "HTTP $5 with the key, so the positive control failed; inconclusive" ;;
+    *) echo "curl exit $4: the request with the key failed, so the positive control failed; inconclusive" ;;
+  esac
+  echo "block exit 3; read the two bodies above yourself"
+  exit 3
 )
 # Repeat the same guarded, paired pattern for Flowise (POST http://127.0.0.1:3000/api/v1/prediction/<id>
 # on a chatflow you ASSIGNED a key to - a keyless chatflow is public by design - key in an
@@ -453,7 +524,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "a5b248c898492b447bed03a19566576895e32009e84c3464f117ef4fc807d929",
+  "body_sha256": "0bd05c61d0f9a6ea3f0d8fdedbe271b42ae4cb1e809162064c8e1e16d68cd387",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
@@ -897,11 +968,11 @@ Claims (full source mapping in the JSON block below):
     "flowise-guards": {"text": "Keep HTTP_SECURITY_CHECK and CUSTOM_MCP_SECURITY_CHECK enabled; disabling MCP check permits arbitrary command execution.", "components": ["flowise"], "sources": ["flowise:sfee1ae75d51a"], "status": "REASONED"},
     "librechat-actions": {"text": "Unset actions.allowedDomains allows public domains with private-target SSRF checks; configured allowlist denies others, and listed private destination grants exception.", "components": ["librechat"], "sources": ["librechat:s9f9e35619ce7"], "status": "REASONED"},
     "dify-ssrf": {"text": "Keep Dify SSRF proxy for sandbox and HTTP-request nodes; HTTP allowlists do not contain arbitrary local tools.", "components": ["dify-console", "dify-compose"], "sources": ["dify-console:sb28809d177bf", "dify-compose:s517af9c43635"], "status": "REASONED"},
-    "verify-network": {"text": "Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence.", "components": ["dify-console", "daemon", "docker"], "sources": ["dify-console:s1e4c822a36b1", "daemon:s32b7d021da01", "docker:s3e97c2c250b6", "docker:s351180c6678f"], "status": "REASONED", "verify": [1]},
-    "verify-editor": {"text": "Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup.", "components": ["dify", "flowise-auth", "langflow", "librechat"], "sources": ["dify:sc63a91c72255", "flowise-auth:s6fd9f4266a98", "langflow:s5cfeeba4d9b3", "librechat:s70ac8e7c9504"], "status": "REASONED", "verify": [1]},
-    "verify-dify": {"text": "Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution.", "components": ["dify"], "sources": ["dify:sd5ae6b9492f0"], "status": "REASONED", "verify": [1]},
-    "verify-flowise": {"text": "Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public.", "components": ["flowise"], "sources": ["flowise:s546a18b65918", "flowise:s23c31010d23d"], "status": "REASONED", "verify": [1]},
-    "verify-langflow": {"text": "Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive.", "components": ["langflow"], "sources": ["langflow:s5cfeeba4d9b3"], "status": "REASONED", "verify": [1]}
+    "verify-network": {"text": "Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence.", "components": ["dify-console", "daemon", "docker"], "sources": ["dify-console:s1e4c822a36b1", "daemon:s32b7d021da01", "docker:s3e97c2c250b6", "docker:s351180c6678f"], "status": "REASONED", "verify": [1, 2]},
+    "verify-editor": {"text": "Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup.", "components": ["dify", "flowise-auth", "langflow", "librechat"], "sources": ["dify:sc63a91c72255", "flowise-auth:s6fd9f4266a98", "langflow:s5cfeeba4d9b3", "librechat:s70ac8e7c9504"], "status": "REASONED", "verify": [3]},
+    "verify-dify": {"text": "Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution.", "components": ["dify"], "sources": ["dify:sd5ae6b9492f0"], "status": "REASONED", "verify": [4]},
+    "verify-flowise": {"text": "Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public.", "components": ["flowise"], "sources": ["flowise:s546a18b65918", "flowise:s23c31010d23d"], "status": "REASONED", "verify": [4]},
+    "verify-langflow": {"text": "Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive.", "components": ["langflow"], "sources": ["langflow:s5cfeeba4d9b3"], "status": "REASONED", "verify": [4]}
   }
 }
 ````

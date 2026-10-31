@@ -34,7 +34,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages. No authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics. For the port-probe block, that bash -n and ShellCheck run used an earlier form, whose guard refusals left the subshell with status 0; neither was re-run on the current form, whose guard refusals leave the subshell with status 2. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion inbound SSH rule on the target VM subnet where an NSG is applied, is expected; Microsoft recommends scoping the Bastion source to `AzureBastionSubnet`), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
+REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages. No authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics, in an earlier form; for the port-probe block, that form's guard refusals left the subshell with status 0. The rule inventory is now one fence per cloud, and the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of those fences and of the port-probe block, as do stub runs with no network reached. The Google Cloud and Azure fences exit 2 when their guard refuses an unsubstituted value, and each inventory fence exits 3 if a listing command fails and otherwise 0, because you judge every rule it lists. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion inbound SSH rule on the target VM subnet where an NSG is applied, is expected; Microsoft recommends scoping the Bastion source to `AzureBastionSubnet`), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
 
 REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation, Google firewall policy and evaluation-order references, and the Azure security-admin rule and applied-rules pages; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
@@ -42,62 +42,105 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
 # 0.0.0.0/1 together with 128.0.0.0/1 admits every IPv4 address while matching neither literal, and
 # a source can be a prefix list or another security group instead of a CIDR.
-aws ec2 describe-security-group-rules \
-  --query "SecurityGroupRules[].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6,Prefix:PrefixListId,SG:ReferencedGroupInfo.GroupId}" \
-  --output table
-# read every row whose Egress column reads False. Its source must be a private CIDR, a security
-# group, a prefix list you have resolved and trust, or, where the destination port is 80 or 443,
-# the internet. A public source on any other port is a finding, except the single administrative
-# address rule 3 allows on 22. Rows reading True
-# are outbound, a separate question.
+(                                       # a subshell, so the exits below end only the subshell
+  aws ec2 describe-security-group-rules \
+    --query "SecurityGroupRules[].{Group:GroupId,Egress:IsEgress,Proto:IpProtocol,From:FromPort,To:ToPort,V4:CidrIpv4,V6:CidrIpv6,Prefix:PrefixListId,SG:ReferencedGroupInfo.GroupId}" \
+    --output table ||
+    { echo "aws exit $?: the security group rule listing failed; inconclusive; block exit 3"; exit 3; }
+  # read every row whose Egress column reads False. Its source must be a private CIDR, a security
+  # group, a prefix list you have resolved and trust, or, where the destination port is 80 or 443,
+  # the internet. A public source on any other port is a finding, except the single administrative
+  # address rule 3 allows on 22. Rows reading True
+  # are outbound, a separate question.
+  echo "block exit 0; unclassified observation: judge every rule listed above yourself, as the comments in this block describe"
+  exit 0
+)
+```
 
+```bash
+# REASONED: Google Cloud rule and policy inventory follows the cited VPC firewall rule, firewall policy,
+# evaluation-order and gcloud references; no authorized Google Cloud account is available here.
 # Google Cloud, once per project. Whole records, because a table projection drops the enforcement
 # state: an enforced world-open rule and the same rule with "disabled": true project identically.
-gcloud compute firewall-rules list --format=json
-# for each entry with "direction": "INGRESS", "disabled": false and an "allowed" list, work out what
-# its "sourceRanges" actually reach, by the same reasoning as the AWS command above: 0.0.0.0/0 and
-# ::/0 are the obvious cases, and so is any set of ranges that together cover the internet. An entry
-# with "denied" restricts rather than exposes.
-# firewall-rules list displays Compute Engine firewall rules in this project; also enumerate the policy resources:
-gcloud compute firewall-policies list --organization=REPLACE_WITH_ORG_ID   # repeat with --folder=REPLACE_WITH_FOLDER_ID for each relevant folder
-gcloud compute network-firewall-policies list                              # no scope flag lists global and regional policies in this project
-# inspect each hierarchical policy with `gcloud compute firewall-policies describe POLICY_ID --format=json`.
-# inspect each global network policy with `gcloud compute network-firewall-policies describe POLICY_NAME --global --format=json`;
-# for each regional policy, use `gcloud compute network-firewall-policies describe POLICY_NAME --region=REGION --format=json`.
-# Hierarchical policy rules can override or delegate to global network and VPC rules. Read the effective order and matching
-# rule: as this guide's reasoning, a policy allow with an internet source can expose the port even when the VPC list
-# above is clean, unless an earlier rule denies it. Google documents the VPC network's networkFirewallPolicyEnforcementOrder:
-# AFTER_CLASSIC_FIREWALL (default) evaluates hierarchical and regional system policies, VPC rules, then global and
-# regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and
-# regional system policies but before VPC rules.
-# A matching allow or deny stops evaluation; goto_next continues it. See
-# https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order#determine-rule-evaluation
-# and https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order#default-rule-evaluation
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORG_ID'   # your organization ID, which this block needs, so without one it cannot report 0: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not listing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not listing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[[:space:][:cntrl:]]*) echo "substitute your organization ID inside the quotes on the set -- line above; not listing"; exit 2 ;;
+  esac
+  set -- "$1" 0                         # your organization ID, then the block's status so far: 3 (a listing failed, inconclusive) outranks 0
+  gcloud compute firewall-rules list --format=json ||
+    { echo "gcloud exit $?: the VPC firewall rule listing failed; inconclusive"; set -- "$1" 3; }
+  # for each entry with "direction": "INGRESS", "disabled": false and an "allowed" list, work out what
+  # its "sourceRanges" actually reach, by the same reasoning as the AWS command above: 0.0.0.0/0 and
+  # ::/0 are the obvious cases, and so is any set of ranges that together cover the internet. An entry
+  # with "denied" restricts rather than exposes.
+  # firewall-rules list displays Compute Engine firewall rules in this project; also enumerate the policy resources:
+  gcloud compute firewall-policies list --organization="$1" ||   # repeat with --folder=REPLACE_WITH_FOLDER_ID for each relevant folder
+    { echo "gcloud exit $?: the hierarchical firewall policy listing failed; inconclusive"; set -- "$1" 3; }
+  gcloud compute network-firewall-policies list ||               # no scope flag lists global and regional policies in this project
+    { echo "gcloud exit $?: the network firewall policy listing failed; inconclusive"; set -- "$1" 3; }
+  # inspect each hierarchical policy with `gcloud compute firewall-policies describe POLICY_ID --format=json`.
+  # inspect each global network policy with `gcloud compute network-firewall-policies describe POLICY_NAME --global --format=json`;
+  # for each regional policy, use `gcloud compute network-firewall-policies describe POLICY_NAME --region=REGION --format=json`.
+  # Hierarchical policy rules can override or delegate to global network and VPC rules. Read the effective order and matching
+  # rule: as this guide's reasoning, a policy allow with an internet source can expose the port even when the VPC list
+  # above is clean, unless an earlier rule denies it. Google documents the VPC network's networkFirewallPolicyEnforcementOrder:
+  # AFTER_CLASSIC_FIREWALL (default) evaluates hierarchical and regional system policies, VPC rules, then global and
+  # regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and
+  # regional system policies but before VPC rules.
+  # A matching allow or deny stops evaluation; goto_next continues it. See
+  # https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order#determine-rule-evaluation
+  # and https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order#default-rule-evaluation
+  echo "block exit $2; unclassified observation: judge every rule and policy listed above yourself, as the comments in this block describe"
+  exit "$2"
+)
+```
 
+```bash
+# REASONED: Azure rule inventory follows the cited network security group rule properties and the Azure
+# security-admin rule and applied-rules pages; no authorized Azure account is available here.
 # Azure, once per network security group. JSON, not a table: the table formatter omits array-valued
 # columns, so a rule carrying sourceAddressPrefixes rather than sourceAddressPrefix would print an
 # empty cell in the exposed state and the safe state alike. --include-default because the platform's
 # own rules are inbound rules too, and this step claims to enumerate every one.
-az network nsg rule list \
-  --resource-group REPLACE_WITH_RESOURCE_GROUP --nsg-name REPLACE_WITH_NSG_NAME \
-  --include-default --output json
-# for each rule with "direction": "Inbound" and "access": "Allow", work out what its
-# "sourceAddressPrefix" and "sourceAddressPrefixes" actually reach: "*", "Internet", "0.0.0.0/0" and
-# "::/0" are the obvious cases, and so is any set of ranges that together cover the internet.
-# NSG rules are not the whole story: Azure Virtual Network Manager security admin rules run before NSG rules.
-# Allow continues to NSG evaluation; Always Allow bypasses it; Deny stops traffic. For a target VM
-# whose virtual network has a Virtual Network Manager configuration applied, use the Azure portal:
-# Networking > network interface > Support + troubleshooting > Effective security rules, then select
-# the Azure Virtual Network Manager to inspect its applied security admin rules.
-# As this guide's advice, when none is applied, the NSG review above alone covers that VM.
-# As this guide's reasoning, this check passes when no applied Always Allow from an unauthorized or
-# internet source reaches a restricted port, including SSH's default port 22 or its configured port.
-# Any such rule is a finding even if the NSG list above looks safe; inspect its source, destination,
-# action and port.
-# The fetched pages give a portal path for applied rules; this guide has no sourced CLI command to list them.
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_RESOURCE_GROUP' 'REPLACE_WITH_NSG_NAME'   # the resource group, then the network security group's name: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not listing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not listing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[[:space:][:cntrl:]]*) echo "substitute your resource group inside the quotes on the set -- line above; not listing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|*[[:space:][:cntrl:]]*) echo "substitute your network security group's name inside the quotes on the set -- line above; not listing"; exit 2 ;;
+  esac
+  az network nsg rule list \
+    --resource-group "$1" --nsg-name "$2" \
+    --include-default --output json ||
+    { echo "az exit $?: the network security group rule listing failed; inconclusive; block exit 3"; exit 3; }
+  # for each rule with "direction": "Inbound" and "access": "Allow", work out what its
+  # "sourceAddressPrefix" and "sourceAddressPrefixes" actually reach: "*", "Internet", "0.0.0.0/0" and
+  # "::/0" are the obvious cases, and so is any set of ranges that together cover the internet.
+  # NSG rules are not the whole story: Azure Virtual Network Manager security admin rules run before NSG rules.
+  # Allow continues to NSG evaluation; Always Allow bypasses it; Deny stops traffic. For a target VM
+  # whose virtual network has a Virtual Network Manager configuration applied, use the Azure portal:
+  # Networking > network interface > Support + troubleshooting > Effective security rules, then select
+  # the Azure Virtual Network Manager to inspect its applied security admin rules.
+  # As this guide's advice, when none is applied, the NSG review above alone covers that VM.
+  # As this guide's reasoning, this check passes when no applied Always Allow from an unauthorized or
+  # internet source reaches a restricted port, including SSH's default port 22 or its configured port.
+  # Any such rule is a finding even if the NSG list above looks safe; inspect its source, destination,
+  # action and port.
+  # The fetched pages give a portal path for applied rules; this guide has no sourced CLI command to list them.
+  echo "block exit 0; unclassified observation: judge every rule listed above, and any applied security admin rules in the portal, yourself"
+  exit 0
+)
 ```
 
-- REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. The bash -n, ShellCheck and stub runs recorded here covered the port-probe block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
+- REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. The bash -n, ShellCheck and stub runs recorded here covered the port-probe block in an earlier form, whose guard refusals left the subshell with status 0. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs, in which each guard refusal exited 2 without reaching nc, a substituted address reached five nc stubs, an accepted connection exited 1 and an nc failure with no output exited 3. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
 
   REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
@@ -109,13 +152,25 @@ az network nsg rule list \
     [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
     case "$1" in
       *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-      *) for p in 22 3306 5432 6379 27017; do nc -vz -w 3 "$1" "$p"; done ;;
     esac
+    set -- "$1" 0 22 3306 5432 6379 27017   # your address, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports
+    while [ "$#" -gt 2 ]; do                # one pass per port; each pass drops the port it probed
+      set -- "$(if nc -vz -w 3 "$1" "$3" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+      printf '%s' "${1%$'\n'*}"             # what nc printed; the values above now follow nc's output and exit status
+      case "${1##*$'\n'}:${1%$'\n'*}" in
+        0:*) echo "FINDING: port $4 accepted a connection from here"; set -- "$2" 1 "${@:5}" ;;
+        *:) echo "nc exit ${1##*$'\n'} with no output for port $4: nothing reached the network; inconclusive"
+            case "$3" in 1) set -- "$2" 1 "${@:5}" ;; *) set -- "$2" 3 "${@:5}" ;; esac ;;
+        *) set -- "$2" "$3" "${@:5}" ;;     # refused, timed out or a usage error: read the line yourself
+      esac
+    done
+    echo "block exit $2; a failed nc line passes only if it reports a refused or timed-out connection, and a usage error is inconclusive, so read each one yourself"
+    exit "$2"
   )
   ```
 
   Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result, and neither is exit 1 with no output at all, which is what a denied local socket looks like: in both cases nothing reached the network, so the check is inconclusive rather than passed.
-- REASONED: complete address/port coverage and allowed/disallowed controls, per the guide's cited AWS security group rules, Google Cloud VPC firewall rules and Azure network security group rule properties. No authorized cloud endpoints or separate source networks are available. The related shell blocks passed bash -n and ShellCheck 0.11.0 without diagnostics; rejected placeholder cases reached no nc stub and a substituted address reached five. For the port-probe block, the bash -n, ShellCheck and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No real scan ran. Exposed services answer disallowed sources; fixed services answer only allowed sources, corroborated by effective rules, with unused or failed services remaining inconclusive. The `nc` list above is a non-exhaustive spot-check (it omits RDP 3389 and application ports such as 8080 or 9200), and a refused or timed-out port only means nothing answered from here, not that the cloud firewall denies it (an allowed port with no listener refuses too). The strongest reachability test is a full-range external scan of every public IPv4 and IPv6 address (for example with nmap, against your own infrastructure only) from a disallowed source: distinguish open, closed, and filtered, since a closed or refused port is not proof the firewall denies it (a port with no listener also reads closed). For each restricted service, confirm it is reachable from its allowed source and unreachable from a disallowed one, and correlate that with the effective firewall rules before crediting the block to the cloud firewall.
+- REASONED: complete address/port coverage and allowed/disallowed controls, per the guide's cited AWS security group rules, Google Cloud VPC firewall rules and Azure network security group rule properties. No authorized cloud endpoints or separate source networks are available. The related shell blocks passed bash -n and ShellCheck 0.11.0 without diagnostics; rejected placeholder cases reached no nc stub and a substituted address reached five. For the port-probe block, the bash -n, ShellCheck and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the stub runs recorded in the item above. No real scan ran. Exposed services answer disallowed sources; fixed services answer only allowed sources, corroborated by effective rules, with unused or failed services remaining inconclusive. The `nc` list above is a non-exhaustive spot-check (it omits RDP 3389 and application ports such as 8080 or 9200), and a refused or timed-out port only means nothing answered from here, not that the cloud firewall denies it (an allowed port with no listener refuses too). The strongest reachability test is a full-range external scan of every public IPv4 and IPv6 address (for example with nmap, against your own infrastructure only) from a disallowed source: distinguish open, closed, and filtered, since a closed or refused port is not proof the firewall denies it (a port with no listener also reads closed). For each restricted service, confirm it is reachable from its allowed source and unreachable from a disallowed one, and correlate that with the effective firewall rules before crediting the block to the cloud firewall.
 
 ## Sources (checked September 2026)
 
@@ -187,7 +242,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1a9c56dc7f9917303f9d535c33a8d6091a5a5c97d68d4f5a623f91ca6c8d7baa",
+  "body_sha256": "ea26ac0ea21b7255310752e56de1649b31befe8e154cc86cda6412aa9fc9de82",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
@@ -259,12 +314,12 @@ Claims (full source mapping in the JSON block below):
     "least-access": {"text": "Start default-deny, add minimum allowances and retire obsolete rules; use security-group references where supported to survive app IP changes.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:s3d55deda04f8"], "status": "REASONED"},
     "docker": {"text": "On VMs running Docker, use both cloud and host firewall layers as this guide's advice; Docker documents that published container traffic bypasses UFW settings, as the linked Docker guide explains.", "components": ["docker-docs"], "sources": ["docker-docs:sb5ca9f87b1f3"], "status": "REASONED"},
     "verify-aws": {"text": "Per region inspect all inbound rules, protocol/port ranges, IPv4/IPv6 CIDRs, resolved prefix lists and group references; combinations of narrower ranges can still expose the internet.", "components": ["aws"], "sources": ["aws:s0c459e0aa7a1", "aws:s5594f61a25d6", "aws:sf8813f7c4057"], "status": "REASONED", "verify": [1]},
-    "verify-gcp": {"text": "Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s3a90bf10d4eb"], "status": "REASONED", "verify": [1]},
-    "gcp-policies": {"text": "Also list/describe hierarchical and global/regional network policies and read their effective order. Hierarchical policy rules can override or delegate to global network and VPC rules. The VPC network's networkFirewallPolicyEnforcementOrder defaults to AFTER_CLASSIC_FIREWALL: hierarchical and regional system policies, VPC rules, then global and regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and regional system policies but before VPC rules. A matching allow or deny stops evaluation; goto_next continues it. As this guide's reasoning, a policy allow with an internet source can expose a port even when the VPC list is clean, unless an earlier rule denies it.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s68e82eab648c", "gcp:s633352524069", "gcp:sbfb2e25c9059", "gcp:s12d2856bf552", "gcp:sef4965908f7b", "gcp:s652edf39de2a", "gcp:s57189bff8b8f", "gcp:sd9ee642a0bff"], "status": "REASONED", "verify": [1]},
-    "verify-azure": {"text": "Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure.", "components": ["azure"], "sources": ["azure:sfdd568ca0dea", "azure:s3d55deda04f8"], "status": "REASONED", "verify": [1]},
-    "azure-admin": {"text": "Azure Virtual Network Manager security admin rules run before NSG rules: Allow continues to NSG evaluation, Always Allow bypasses NSG evaluation, and Deny stops traffic. For a target VM whose virtual network has a Virtual Network Manager configuration applied, review its applied rules in the Azure portal; as this guide's advice, when none is applied, the NSG review alone covers that VM. As this guide's reasoning, this check passes when no applied Always Allow from an unauthorized or internet source reaches a restricted port, including SSH's default port 22 or its configured port; any such rule fails even if the NSG list looks safe. This guide has no sourced CLI command to list applied rules.", "components": ["azure", "azure-docs"], "sources": ["azure:s3d55deda04f8", "azure-docs:s03ca867c4276", "azure-docs:s382379ec555c"], "status": "REASONED", "verify": [1]},
-    "verify-ports": {"text": "Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:s3d55deda04f8"], "status": "REASONED", "verify": [2]},
-    "verify-complete": {"text": "The spot-check omits RDP 3389 and apps such as 8080/9200; scan all public IPv4/IPv6 ports, distinguish open/closed/filtered, and correlate allowed/disallowed controls with effective rules.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:s3d55deda04f8"], "status": "REASONED", "verify": [2]}
+    "verify-gcp": {"text": "Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s3a90bf10d4eb"], "status": "REASONED", "verify": [2]},
+    "gcp-policies": {"text": "Also list/describe hierarchical and global/regional network policies and read their effective order. Hierarchical policy rules can override or delegate to global network and VPC rules. The VPC network's networkFirewallPolicyEnforcementOrder defaults to AFTER_CLASSIC_FIREWALL: hierarchical and regional system policies, VPC rules, then global and regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and regional system policies but before VPC rules. A matching allow or deny stops evaluation; goto_next continues it. As this guide's reasoning, a policy allow with an internet source can expose a port even when the VPC list is clean, unless an earlier rule denies it.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s68e82eab648c", "gcp:s633352524069", "gcp:sbfb2e25c9059", "gcp:s12d2856bf552", "gcp:sef4965908f7b", "gcp:s652edf39de2a", "gcp:s57189bff8b8f", "gcp:sd9ee642a0bff"], "status": "REASONED", "verify": [2]},
+    "verify-azure": {"text": "Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure.", "components": ["azure"], "sources": ["azure:sfdd568ca0dea", "azure:s3d55deda04f8"], "status": "REASONED", "verify": [3]},
+    "azure-admin": {"text": "Azure Virtual Network Manager security admin rules run before NSG rules: Allow continues to NSG evaluation, Always Allow bypasses NSG evaluation, and Deny stops traffic. For a target VM whose virtual network has a Virtual Network Manager configuration applied, review its applied rules in the Azure portal; as this guide's advice, when none is applied, the NSG review alone covers that VM. As this guide's reasoning, this check passes when no applied Always Allow from an unauthorized or internet source reaches a restricted port, including SSH's default port 22 or its configured port; any such rule fails even if the NSG list looks safe. This guide has no sourced CLI command to list applied rules.", "components": ["azure", "azure-docs"], "sources": ["azure:s3d55deda04f8", "azure-docs:s03ca867c4276", "azure-docs:s382379ec555c"], "status": "REASONED", "verify": [3]},
+    "verify-ports": {"text": "Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:s3d55deda04f8"], "status": "REASONED", "verify": [4]},
+    "verify-complete": {"text": "The spot-check omits RDP 3389 and apps such as 8080/9200; scan all public IPv4/IPv6 ports, distinguish open/closed/filtered, and correlate allowed/disallowed controls with effective rules.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:s3d55deda04f8"], "status": "REASONED", "verify": [4]}
   }
 }
 ````
