@@ -62457,12 +62457,12 @@ docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or "[::]:" ("::
 REASONED: preceding block; The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
 of those ports; fixed means a loopback or private address only.
 
-REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found"; a missing path printed "cannot read", the path, then "as a regular file; not checked". Placeholder, missing-marker, short-assignment and empty inputs stopped locally. The bash -n and fixture runs recorded here covered the file-check block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
+REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed a line beginning "FOUND vendor sample tokens:" and "no vendor sample tokens found"; a missing path printed "cannot read", the path, then "as a regular file; not checked". Placeholder, missing-marker, short-assignment and empty inputs stopped locally. The bash -n and fixture runs recorded here covered the file-check block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, a found sample token with status 1 and a failed read with status 3. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
 once per file, including every file an `env_file:` line names and the `.env` Compose reads for
 variable substitution. Substitute the file path inside the
 single quotes (a path containing an apostrophe needs other quoting), and paste the whole block.
 
-DEMONSTRATED: following block; recorded sample-token runs found vendor values and syntax variants, found none in replaced copies and refused an unreadable path, as detailed below. The sample-token runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run. External environment values are outside this file check.
+DEMONSTRATED: following block; recorded sample-token runs found vendor values and syntax variants, found none in replaced copies and refused an unreadable path, as detailed below. The sample-token runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form, whose guard refusals exit with status 2, a found sample token with status 1 and a failed read with status 3, has not been run. External environment values are outside this file check.
 
 ```bash
 (
@@ -62474,9 +62474,9 @@ DEMONSTRATED: following block; recorded sample-token runs found vendor values an
   { [ -f "$1" ] && [ -r "$1" ]; } || { echo "cannot read $1 as a regular file; not checked"; exit 2; }
   grep -n -E '(^|[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_])(testsecret|budibase|abcd|changeme|569a1821-0a93-45e8-87ab-eb857f20a010)([^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]|$)' -- "$1"
   case "$?" in
-    0) echo "FOUND vendor sample tokens: inspect each line above; replace every secret still set to one" ;;
+    0) echo "FOUND vendor sample tokens: inspect each line above; replace every secret still set to one"; exit 1 ;;
     1) echo "no vendor sample tokens found" ;;
-    *) echo "grep could not read $1; not checked" ;;
+    *) echo "grep could not read $1; not checked"; exit 3 ;;
   esac
 )
 ```
@@ -62491,7 +62491,7 @@ Windmill's Compose file its `changeme` Postgres password. It also reported Compo
 URL parameters (`&password=changeme&`) and trailing punctuation. On copies with the values replaced it printed "no
 vendor sample tokens found", and on an unreadable path it reported that it did not check.
 
-REASONED: The key-presence block passed bash -n; a docker stub executing the inner shell test printed "non-empty" for a set key, "EMPTY or unset" for empty and absent keys, and "not checked" for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. Round-2 Bash stub runs also stopped tab, LF, CR and DEL inputs with "substitute the container name on the set -- line above; not checking", without calling docker. The bash -n and stub runs recorded here covered the key-presence block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No deployed NocoDB container was available; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect "EMPTY or unset" when exposed and "non-empty" when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. For NocoDB, check the encryption key in the container rather than in a file: Compose variable
+REASONED: The key-presence block passed bash -n; a docker stub executing the inner shell test printed "non-empty" for a set key, "EMPTY or unset" for empty and absent keys, and "not checked" for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. Round-2 Bash stub runs also stopped tab, LF, CR and DEL inputs with "substitute the container name on the set -- line above; not checking", without calling docker. The bash -n and stub runs recorded here covered the key-presence block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, an empty or unset key with status 1 and a failed check with status 3. No deployed NocoDB container was available; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect "EMPTY or unset" when exposed and "non-empty" when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. For NocoDB, check the encryption key in the container rather than in a file: Compose variable
 substitution, `env_file:` precedence and YAML values all decide the value, and the container's
 configured environment is their result. `docker exec` runs with that configured environment, not with
 the server process's own, so the two differ if the image's startup changes the variable. NocoDB's
@@ -62500,7 +62500,7 @@ without touching it, but the pinned tree has no Dockerfile, so which script the 
 verified. The block reports only whether the key is non-empty and never prints it. Substitute the
 container name inside the single quotes.
 
-REASONED: Presence-check assumptions and limits, per the guide's cited Docker `docker exec` environment, NocoDB 2026.09.0 container start scripts and NocoDB 2026.09.0 credential encryption. The key-presence block passed bash -n; a docker stub executing the inner shell test printed "non-empty" for a set key, "EMPTY or unset" for empty and absent keys, and "not checked" for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. Round-2 Bash stub runs also stopped tab, LF, CR and DEL inputs with "substitute the container name on the set -- line above; not checking", without calling docker. The bash -n and stub runs recorded here covered the key-presence block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No deployed NocoDB container was available; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect "EMPTY or unset" when exposed and "non-empty" when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. Process-environment visibility, image startup selection and encryption were not tested against a deployed container. This check assumes a clean host Bash shell, trusted container image and startup files, and a
+REASONED: Presence-check assumptions and limits, per the guide's cited Docker `docker exec` environment, NocoDB 2026.09.0 container start scripts and NocoDB 2026.09.0 credential encryption. The key-presence block passed bash -n; a docker stub executing the inner shell test printed "non-empty" for a set key, "EMPTY or unset" for empty and absent keys, and "not checked" for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. Round-2 Bash stub runs also stopped tab, LF, CR and DEL inputs with "substitute the container name on the set -- line above; not checking", without calling docker. The bash -n and stub runs recorded here covered the key-presence block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, an empty or unset key with status 1 and a failed check with status 3. No deployed NocoDB container was available; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect "EMPTY or unset" when exposed and "non-empty" when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. Process-environment visibility, image startup selection and encryption were not tested against a deployed container. This check assumes a clean host Bash shell, trusted container image and startup files, and a
 container shell whose `[` is a builtin. It intentionally tests an existing container environment
 value: prompting for a key or supplying a file would test that replacement, not the deployed
 configuration. Docker's documented `exec`
@@ -62513,7 +62513,7 @@ and Docker-socket holders can read the configured value with `docker inspect`. T
 does not remove that exposure, prove encryption is working, or establish what the server process
 actually received. Do not use `docker exec -e` to inject a key for this check.
 
-REASONED: following block; Docker exec inheritance and pinned NocoDB start scripts support key-presence checking. No real container ran because the recorded host has no container runtime; only stand-in logic outcomes below were observed.
+REASONED: following block; Docker exec inheritance and pinned NocoDB start scripts support key-presence checking. No real container ran because the recorded host has no container runtime; only stand-in logic outcomes below were observed. Those stand-in runs covered an earlier form of the block, whose result arms ended with status 0; the current form was not re-run.
 
 ```bash
 (
@@ -62528,13 +62528,13 @@ REASONED: following block; Docker exec inheritance and pinned NocoDB start scrip
   docker exec "$1" sh -c 'set +x; if [ -n "${NC_CONNECTION_ENCRYPT_KEY-}" ]; then exit 0; else exit 3; fi'
   case "$?" in
     0) echo "NC_CONNECTION_ENCRYPT_KEY is non-empty in the container's configured environment" ;;
-    3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment" ;;
-    *) echo "could not run the check in container $1; not checked" ;;
+    3) echo "NC_CONNECTION_ENCRYPT_KEY is EMPTY or unset in the container's configured environment"; exit 1 ;;
+    *) echo "could not run the check in container $1; not checked"; exit 3 ;;
   esac
 )
 ```
 
-REASONED: preceding block; The key-presence block passed bash -n; a docker stub executing the inner shell test printed "non-empty" for a set key, "EMPTY or unset" for empty and absent keys, and "not checked" for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. Round-2 Bash stub runs also stopped tab, LF, CR and DEL inputs with "substitute the container name on the set -- line above; not checking", without calling docker. The bash -n and stub runs recorded here covered the key-presence block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No deployed NocoDB container was available; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect "EMPTY or unset" when exposed and "non-empty" when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. The following stand-in account is the guide's earlier record. Exposed: "EMPTY or unset". Fixed: "non-empty". Anything else means the check did not run. With a
+REASONED: preceding block; The key-presence block passed bash -n; a docker stub executing the inner shell test printed "non-empty" for a set key, "EMPTY or unset" for empty and absent keys, and "not checked" for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. Round-2 Bash stub runs also stopped tab, LF, CR and DEL inputs with "substitute the container name on the set -- line above; not checking", without calling docker. The bash -n and stub runs recorded here covered the key-presence block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, an empty or unset key with status 1 and a failed check with status 3. No deployed NocoDB container was available; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect "EMPTY or unset" when exposed and "non-empty" when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. The following stand-in account is the guide's earlier record. Exposed: "EMPTY or unset". Fixed: "non-empty". Anything else means the check did not run. With a
 stand-in for `docker exec`, the block printed "non-empty" for a set key, "EMPTY or unset" for an empty
 and an unset one, and "not checked" when the container was missing; it was not run against a real
 NocoDB container (no container runtime on the authoring host).
@@ -62609,14 +62609,14 @@ inconclusive, because the frontend does not enforce the setting: check the backe
 `APPSMITH_SIGNUP_DISABLED`). Delete any test account the exposed state let you create, then sign in as your
 admin as the positive control.
 
-REASONED: The TCP block passed bash -n; timeout stubs printed "connected" for the control and every tested port, while refusal, timeout and fixture error at the control stopped further probes. Round-2 timeout stubs connected the control and exercised all seven tested ports in each branch: printed outcomes were "connected: reachable from this host", "timed out from this host", "refused from this host" and "inconclusive (not a connection, refusal or timeout): fixture error", each prefixed by the fixture IP address and tested port. Placeholder, missing-marker, short-assignment, empty, malformed-address and invalid-port inputs stopped locally. The bash -n and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. No public probing host or live deployment was available; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed means "connected"; refusal or timeout is only consistent with fixed, subject to the controls below, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Baserow 2.3.4 install with Docker (ufw warning). Finally, from a host that should not have access, try a TCP connection to each published port. The
+REASONED: The TCP block passed bash -n; timeout stubs printed "connected" for the control and every tested port, while refusal, timeout and fixture error at the control stopped further probes. Round-2 timeout stubs connected the control and exercised all seven tested ports in each branch: printed outcomes were "connected: reachable from this host", "timed out from this host", "refused from this host" and "inconclusive (not a connection, refusal or timeout): fixture error", each prefixed by the fixture IP address and tested port. Placeholder, missing-marker, short-assignment, empty, malformed-address and invalid-port inputs stopped locally. The bash -n and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0; none was re-run on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. No public probing host or live deployment was available; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed means "connected"; refusal or timeout is only consistent with fixed, subject to the controls below, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Baserow 2.3.4 install with Docker (ufw warning). Finally, from a host that should not have access, try a TCP connection to each published port. The
 block uses bash's `/dev/tcp`, so it works for SMTP on 25 as well as the web ports. It takes one IP
 address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot hide one
 behind a timeout on the other: run it once for each public address of the host. It also takes a port you know
 is open on that address from this host (for example SSH on 22) as the positive control, and stops if
 the control does not connect. Substitute both inside the single quotes.
 
-DEMONSTRATED: following block; recorded loopback tests observed connected, refused, timeout/full accept queue, failed-control stopping and the input cases below. Public isolation remains reasoned; the timeout fixture was not a firewall. The loopback tests used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; recorded loopback tests observed connected, refused, timeout/full accept queue, failed-control stopping and the input cases below. Public isolation remains reasoned; the timeout fixture was not a firewall. The loopback tests used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, has not been run.
 
 ```bash
 (
@@ -62639,18 +62639,20 @@ DEMONSTRATED: following block; recorded loopback tests observed connected, refus
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
   err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 2; }
+    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
+  rc=0
   for p in 80 443 8080 10000 4000 8000 25; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
     err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
     case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host" ;;
+      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
       124:*) echo "$1:$p timed out from this host" ;;
       *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}" ;;
+      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
     esac
   done
+  exit "$rc"
 )
 ```
 
@@ -62819,22 +62821,22 @@ Claims (full source mapping in the JSON block below):
 - windmill-sandbox-run (DEMONSTRATED; windmill): Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.
 - verify-inventory (REASONED; docker, baserow, appsmith, budibase, windmill): Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.
 - verify-port-display (REASONED; docker, docker-new, docker-old): IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered.
-- verify-sample-tokens (DEMONSTRATED; nocodb, appsmith, budibase, windmill): Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope.
+- verify-sample-tokens (DEMONSTRATED; nocodb, appsmith, budibase, windmill): Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope. Runs covered an earlier form whose result arms ended with status 0; the current form was not re-run.
 - verify-nocodb-key (REASONED; nocodb, docker): docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified.
 - nocodb-key-limits (REASONED; nocodb, docker): Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key.
-- nocodb-key-logic (DEMONSTRATED; docker): A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.
+- nocodb-key-logic (DEMONSTRATED; docker): A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated. Runs covered an earlier form whose result arms ended with status 0; the current form was not re-run.
 - verify-windmill-control (REASONED; windmill): Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.
 - verify-couchdb (REASONED; budibase, couchdb): Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.
 - verify-litellm (REASONED; budibase, litellm): Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-`sk-` keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
-- verify-tcp-outcomes (DEMONSTRATED; baserow, budibase, windmill): Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.
-- verify-tcp-inputs (DEMONSTRATED; baserow, budibase, windmill): Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.
+- verify-tcp-outcomes (DEMONSTRATED; baserow, budibase, windmill): Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. Runs covered an earlier form whose control and result arms ended with status 0; the current form was not re-run.
+- verify-tcp-inputs (DEMONSTRATED; baserow, budibase, windmill): Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control. Runs covered an earlier form whose guard, control and result arms ended with status 0; the current form was not re-run.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "4445135aeff9a69c546025d69a08818433c0db7e46a1e9981b758c044fb5cd9e",
+  "body_sha256": "bdc48d73a98f5f7f76963ab46e498b154f06c8ca120b8d7340a71bddaf2977d5",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -63017,15 +63019,15 @@ Claims (full source mapping in the JSON block below):
     "windmill-sandbox-run": {"text": "Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.", "components": ["windmill"], "sources": ["windmill:sd775b7c95872"], "status": "DEMONSTRATED", "evidence": "on the loopback run, without nsjail installed, the worker logged \"Nsjail sandboxing will NOT be available\"."},
     "verify-inventory": {"text": "Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.", "components": ["docker", "baserow", "appsmith", "budibase", "windmill"], "sources": ["docker:s2fecb6db5480", "baserow:s1b31314982f4", "appsmith:s9fdcff5a28a4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED", "verify": [1]},
     "verify-port-display": {"text": "IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered.", "components": ["docker", "docker-new", "docker-old"], "sources": ["docker:s2fecb6db5480", "docker-new:sca9a0e1e4b6a", "docker-old:sa202ad11d4ed"], "status": "REASONED", "verify": [1]},
-    "verify-sample-tokens": {"text": "Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope.", "components": ["nocodb", "appsmith", "budibase", "windmill"], "sources": ["nocodb:s536899ecd4a5", "appsmith:s9fdcff5a28a4", "budibase:s735ead81ce9c", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On copies with the values replaced it printed \"no vendor sample tokens found\", and on an unreadable path it reported that it did not check.", "verify": [2]},
+    "verify-sample-tokens": {"text": "Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope. Runs covered an earlier form whose result arms ended with status 0; the current form was not re-run.", "components": ["nocodb", "appsmith", "budibase", "windmill"], "sources": ["nocodb:s536899ecd4a5", "appsmith:s9fdcff5a28a4", "budibase:s735ead81ce9c", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On copies with the values replaced it printed \"no vendor sample tokens found\", and on an unreadable path it reported that it did not check.", "verify": [2]},
     "verify-nocodb-key": {"text": "docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified.", "components": ["nocodb", "docker"], "sources": ["nocodb:sbfbf630008e1", "nocodb:se5da9707c684", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [3]},
     "nocodb-key-limits": {"text": "Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key.", "components": ["nocodb", "docker"], "sources": ["nocodb:sca40040b40cc", "nocodb:sbfbf630008e1", "nocodb:se5da9707c684", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [3]},
-    "nocodb-key-logic": {"text": "A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.", "components": ["docker"], "sources": ["docker:sd34e76a09f6c"], "status": "DEMONSTRATED", "evidence": "With a stand-in for `docker exec`, the block printed \"non-empty\" for a set key, \"EMPTY or unset\" for an empty and an unset one, and \"not checked\" when the container was missing;"},
+    "nocodb-key-logic": {"text": "A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated. Runs covered an earlier form whose result arms ended with status 0; the current form was not re-run.", "components": ["docker"], "sources": ["docker:sd34e76a09f6c"], "status": "DEMONSTRATED", "evidence": "With a stand-in for `docker exec`, the block printed \"non-empty\" for a set key, \"EMPTY or unset\" for an empty and an unset one, and \"not checked\" when the container was missing;"},
     "verify-windmill-control": {"text": "Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac"], "status": "REASONED"},
     "verify-couchdb": {"text": "Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.", "components": ["budibase", "couchdb"], "sources": ["budibase:s735ead81ce9c", "budibase:s7fbf706a4c8f", "couchdb:s34292991c4ec", "budibase:s5209f2549c9b", "budibase:s9afbeb2063b5", "budibase:s2a033b3a4117", "budibase:s851ad716e105"], "status": "REASONED", "verify": [5]},
     "verify-litellm": {"text": "Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-`sk-` keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.", "components": ["budibase", "litellm"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12", "litellm:sbe6fa0b81017", "budibase:s32775c45ba51"], "status": "REASONED", "verify": [5]},
-    "verify-tcp-outcomes": {"text": "Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On loopback it printed \"connected\" for the control and an open port, \"timed out\" for a port whose accept queue was full (standing in for a filtered one) and \"refused\" for a closed port, and it stopped when the control was closed.", "verify": [6]},
-    "verify-tcp-inputs": {"text": "Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "`::ffff:0:0` and `::ffff:7f00:1` passed and connected to a listener bound to 127.0.0.1", "verify": [6]}
+    "verify-tcp-outcomes": {"text": "Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. Runs covered an earlier form whose control and result arms ended with status 0; the current form was not re-run.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On loopback it printed \"connected\" for the control and an open port, \"timed out\" for a port whose accept queue was full (standing in for a filtered one) and \"refused\" for a closed port, and it stopped when the control was closed.", "verify": [6]},
+    "verify-tcp-inputs": {"text": "Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control. Runs covered an earlier form whose guard, control and result arms ended with status 0; the current form was not re-run.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "`::ffff:0:0` and `::ffff:7f00:1` passed and connected to a listener bound to 127.0.0.1", "verify": [6]}
   }
 }
 ````
@@ -63194,7 +63196,7 @@ fixed means a management address only. On a Proxmox VE cluster, where the vendor
 there requires the management-only access lists and firewall below. The new-socket code tries `::`
 then `0.0.0.0`; dual-stack operation is documentation-backed and must be checked on the host.
 
-REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The bash -n, ShellCheck and refusal runs recorded here covered the parser block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. These are file results only; on the Webmin host, exposed miniserv listens on every address with discovery UDP open and offers its login to any client; fixed miniserv listens on the management address only with no discovery socket, a management-network client reaches the login, and from a client outside the allow= networks the connection fails or miniserv refuses it. The exposed and fixed Webmin host behaviours are per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
+REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The bash -n, ShellCheck and refusal runs recorded here covered the parser block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, a file that prints `NO effective bind=`, a `listen=` line or `NO allow=` with status 1 and a failed parse with status 3. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. Those Perl fixture runs used an earlier form of the program, whose result arms ended with status 0; the current form, which exits 1 after printing an exposed setting, was not re-run. These are file results only; on the Webmin host, exposed miniserv listens on every address with discovery UDP open and offers its login to any client; fixed miniserv listens on the management address only with no discovery socket, a management-network client reaches the login, and from a client outside the allow= networks the connection fails or miniserv refuses it. The exposed and fixed Webmin host behaviours are per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
 the name and the value are trimmed, and the last occurrence of a setting wins), then applies
 miniserv's rules: `bind=*`, `bind=0`, `bind=0.0.0.0`, `bind=::`, or an empty or missing `bind=` means
@@ -63208,7 +63210,7 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 `/etc/webmin/restart`. Substitute the file path inside the single quotes (the package default is
 `/etc/webmin/miniserv.conf`), and paste the whole block.
 
-DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. The fixture runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run. This demonstrates file inspection, not running sockets or network isolation.
+DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. The fixture runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form, whose guard refusals exit with status 2, a file that prints `NO effective bind=`, a `listen=` line or `NO allow=` with status 1 and a failed parse with status 3, has not been run. This demonstrates file inspection, not running sockets or network isolation.
 
 ```bash
 (
@@ -63235,19 +63237,21 @@ DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixture
     $bind = $rv{"bind"}; $bind = "" if ($bind eq "*");
     $v4 = $bind eq "" ? undef : Socket::inet_pton(Socket::AF_INET(), $bind);
     $v6 = (defined($v4) || $bind !~ /:/) ? undef : Socket::inet_pton(Socket::AF_INET6(), $bind);
-    if (!$bind || (defined($v4) && $v4 eq "\0" x 4) || (defined($v6) && $v6 eq "\0" x 16)) { print "NO effective bind=: every address\n"; }
+    if (!$bind || (defined($v4) && $v4 eq "\0" x 4) || (defined($v6) && $v6 eq "\0" x 16)) { print "NO effective bind=: every address\n"; $found = 1; }
     elsif (defined($v4) || (defined($v6) && substr($v6, 0, 12) ne ("\0" x 10) . "\xff\xff")) { print "bind=$bind\n"; }
     else { print "bind=$bind: not a plain IPv4 or IPv6 address; check with ss what miniserv binds\n"; }
     print "sockets=$rv{sockets}: extra listeners, possibly on every address; check ss\n" if ($rv{"sockets"} =~ /\S/);
     print $rv{"listen"} ? "listen=$rv{listen}: UDP discovery socket on every IPv4 address\n" : "no UDP discovery socket\n";
+    $found = 1 if ($rv{"listen"});
     @allow = split(/\s+/, $rv{"allow"});
     @deny = split(/\s+/, $rv{"deny"});
     print "deny=@deny\n" if (@deny);
     print @allow ? "allow=@allow\n" : @deny ? "NO allow=: any client address not on deny= may try to log in\n" : "NO allow=: any client address may try to log in\n";
+    $found = 1 if (!@allow);
     print "sudo=$rv{sudo}: Unix users whom sudo permits can log in as root\n" if ($rv{"sudo"});
-    exit 0;
+    exit($found ? 1 : 0);
   ' "$1"
-  case "$?" in 0) ;; *) echo "could not read $1; not checked" ;; esac
+  case "$?" in 0) ;; 1) exit 1 ;; *) echo "could not read $1; not checked"; exit 3 ;; esac
 )
 ```
 
@@ -63287,13 +63291,13 @@ default; fixed is enabled and running, with rules that allow 8006, 22 and 3128 o
 addresses, which you confirm in the datacenter and node firewall rules in the web interface. In the web interface, check
 that every administrative user, `root@pam` included, has a second factor.
 
-REASONED: this external-vantage procedure needs each server public address, a known-open control port and a host outside the allowed management network; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the TCP block through `bash -n` and ShellCheck 0.11.0 with no output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. A `timeout` stub returning 124 for the control printed `control 198.51.100.7:22 did not connect (timeout stub invoked); not probing`. The bash -n, ShellCheck and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Expected exposed TCP connects; fixed isolation may refuse or time out, which is only consistent with isolation after the positive control and server inventory checks. The exposed and fixed TCP expectations and that consistency qualification are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Finally, from a host that should not have access, try a TCP connection to each panel port. The block
+REASONED: this external-vantage procedure needs each server public address, a known-open control port and a host outside the allowed management network; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the TCP block through `bash -n` and ShellCheck 0.11.0 with no output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. A `timeout` stub returning 124 for the control printed `control 198.51.100.7:22 did not connect (timeout stub invoked); not probing`. The bash -n, ShellCheck and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0; none was re-run on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. Expected exposed TCP connects; fixed isolation may refuse or time out, which is only consistent with isolation after the positive control and server inventory checks. The exposed and fixed TCP expectations and that consistency qualification are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Finally, from a host that should not have access, try a TCP connection to each panel port. The block
 takes one IP address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot
 hide one behind a timeout on the other: run it once for each public address of the server. It also
 takes a port you know is open on that address from this host (for example SSH on 22) as the positive
 control, and stops if the control does not connect. Substitute both inside the single quotes.
 
-DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned. The reused loopback probe runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned. The reused loopback probe runs used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, has not been run.
 
 ```bash
 (
@@ -63316,18 +63320,20 @@ DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopba
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
   err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 2; }
+    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
+  rc=0
   for p in 9090 10000 20000 8006 3128; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
     err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
     case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host" ;;
+      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
       124:*) echo "$1:$p timed out from this host" ;;
       *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}" ;;
+      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
     esac
   done
+  exit "$rc"
 )
 ```
 
@@ -63440,15 +63446,15 @@ Claims (full source mapping in the JSON block below):
 - webmin-loopback (DEMONSTRATED; webmin): Loopback bind with no listen line produced one TCP socket and no UDP.
 - webmin-rate-run (DEMONSTRATED; webmin): Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403.
 - verify-listeners (REASONED; cockpit, webmin, usermin, pve-docs, pve-manager, pve-http, pve-common): Expect management TCP binds and no discovery UDP; this guide assesses clustered Proxmox wildcards as fixed only with management-only ACLs and firewall rules. Pinned new-socket code tries :: then 0.0.0.0; dual-stack operation remains documentation-backed and must be checked on the host.
-- verify-webmin-parser (DEMONSTRATED; webmin): Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof.
-- verify-tcp-loopback (DEMONSTRATED; cockpit, webmin, usermin, pve-docs): Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard.
+- verify-webmin-parser (DEMONSTRATED; webmin): Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof. Runs covered an earlier form whose result arms ended with status 0; the current form was not re-run.
+- verify-tcp-loopback (DEMONSTRATED; cockpit, webmin, usermin, pve-docs): Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard. Runs covered an earlier form whose control and result arms ended with status 0; the current form was not re-run.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "106ccf3775119900bc12082c7ceeff9bbb8a562b0aedc521db2a6cb3d8e695a0",
+  "body_sha256": "cc04a6d272d3342b001718e779adfcdb5eaa278918719c281980fe3f2d2ea6ef",
   "components": {
     "cockpit": {
       "name": "Cockpit",
@@ -63576,8 +63582,8 @@ Claims (full source mapping in the JSON block below):
     "webmin-loopback": {"text": "Loopback bind with no listen line produced one TCP socket and no UDP.", "components": ["webmin"], "sources": ["webmin:sb8fec2baa0f2"], "status": "DEMONSTRATED", "evidence": "its only socket was TCP `127.0.0.1` on the test port, with no UDP socket."},
     "webmin-rate-run": {"text": "Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403.", "components": ["webmin"], "sources": ["webmin:sa4f7ac343e85", "webmin:sdb2ef2bf9978"], "status": "DEMONSTRATED", "evidence": "the fifth wrong password was delayed past a five-second client timeout by miniserv's growing failure delay, and the right password was then refused with `403` \"Access denied for 127.0.0.1\"."},
     "verify-listeners": {"text": "Expect management TCP binds and no discovery UDP; this guide assesses clustered Proxmox wildcards as fixed only with management-only ACLs and firewall rules. Pinned new-socket code tries :: then 0.0.0.0; dual-stack operation remains documentation-backed and must be checked on the host.", "components": ["cockpit", "webmin", "usermin", "pve-docs", "pve-manager", "pve-http", "pve-common"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc", "pve-manager:s1507ce3e40b8", "pve-docs:s954445cf4e14", "pve-http:sb8d499c6bd8c", "pve-common:s062026297433", "pve-manager:s67c1a8621e22", "pve-manager:sb7f08e4e98ab", "pve-manager:s0b79b5bbd95f", "pve-http:s2f151d3facd0", "pve-common:s022a9e4640ab", "pve-http:s753d88abe320"], "status": "REASONED", "verify": [1]},
-    "verify-webmin-parser": {"text": "Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof.", "components": ["webmin"], "sources": ["webmin:sb8fec2baa0f2", "webmin:sdb2ef2bf9978"], "status": "DEMONSTRATED", "evidence": "On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on the same file, and the block printed the outcomes above; it reported an unreadable path as not checked.", "verify": [2]},
-    "verify-tcp-loopback": {"text": "Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard.", "components": ["cockpit", "webmin", "usermin", "pve-docs"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc"], "status": "DEMONSTRATED", "evidence": "loopback addresses pass, and hex spellings such as `::ffff:0:0` connected to a listener bound to 127.0.0.1", "verify": [3]}
+    "verify-webmin-parser": {"text": "Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof. Runs covered an earlier form whose result arms ended with status 0; the current form was not re-run.", "components": ["webmin"], "sources": ["webmin:sb8fec2baa0f2", "webmin:sdb2ef2bf9978"], "status": "DEMONSTRATED", "evidence": "On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on the same file, and the block printed the outcomes above; it reported an unreadable path as not checked.", "verify": [2]},
+    "verify-tcp-loopback": {"text": "Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard. Runs covered an earlier form whose control and result arms ended with status 0; the current form was not re-run.", "components": ["cockpit", "webmin", "usermin", "pve-docs"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc"], "status": "DEMONSTRATED", "evidence": "loopback addresses pass, and hex spellings such as `::ffff:0:0` connected to a listener bound to 127.0.0.1", "verify": [3]}
   }
 }
 ````
@@ -63838,13 +63844,13 @@ sections. On the same runs an anonymous key-value write succeeded in both expose
 refused with `403` with the deny policy, and with script checks at their default, registering a script
 check through the API was refused with "Scripts are disabled on this agent from remote calls".
 
-REASONED: this external TCP-check instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and a failed control is inconclusive. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. These are synthetic dispatch and output tests, not network observations. Finally, from a host that should not have access, try a TCP connection to each port. The block takes
+REASONED: this external TCP-check instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and a failed control is inconclusive. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0; none was re-run on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. These are synthetic dispatch and output tests, not network observations. Finally, from a host that should not have access, try a TCP connection to each port. The block takes
 one IP address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot hide
 one behind a timeout on the other: run it once for each public address of the host. It also takes a
 port you know is open on that address from this host (for example SSH on 22) as the positive control,
 and stops if the control does not connect. Substitute both inside the single quotes.
 
-REASONED: following block; port targets follow the pinned Nomad and Consul defaults; the guide cross-references a loopback demonstration elsewhere, while external isolation was not demonstrated here.
+REASONED: following block; port targets follow the pinned Nomad and Consul defaults; the guide cross-references a loopback demonstration elsewhere, while external isolation was not demonstrated here. That loopback demonstration covered an earlier form of the block, whose failed control and result arms ended with status 0; the current form was not re-run.
 
 ```bash
 (
@@ -63867,22 +63873,24 @@ REASONED: following block; port targets follow the pinned Nomad and Consul defau
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
   err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 2; }
+    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
+  rc=0
   for p in 4646 4647 4648 8500 8600 8300 8301 8302 8503; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
     err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
     case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host" ;;
+      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
       124:*) echo "$1:$p timed out from this host" ;;
       *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}" ;;
+      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
     esac
   done
+  exit "$rc"
 )
 ```
 
-REASONED: preceding block; this interpretation and the entire TCP block, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The entire TCP block includes address and port guards, the positive control, all nine targets and all result branches. The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and UDP remains outside the probe. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. These are synthetic dispatch and output tests; the earlier cross-guide loopback record remains historical. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
+REASONED: preceding block; this interpretation and the entire TCP block, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`). The entire TCP block includes address and port guards, the positive control, all nine targets and all result branches. The exposed state, per the guide's cited Nomad 2.0.7 and Consul 2.0.4 agent defaults, means connected, while refusal or timeout is only consistent with fixed, and UDP remains outside the probe. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, IPv6 with a non-hex character, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. The bash -n, ShellCheck, refusal and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0; none was re-run on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. These are synthetic dispatch and output tests; the earlier cross-guide loopback record remains historical. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
 complete the handshake, so confirm a surprising "connected" with `ss` on the host. "refused" and
 "timed out" show only that this host could not reach the port: a firewall in front of the host
 produces either, but so can filtering on the probing host's own network, and the control proves only
@@ -63975,7 +63983,7 @@ Claims (full source mapping in the JSON block below):
 - consul-default-token (DEMONSTRATED; consul): An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.
 - consul-kv (DEMONSTRATED; consul): Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.
 - consul-script-run (DEMONSTRATED; consul): With default script-check settings, remote script registration was refused.
-- verify-tcp (REASONED; nomad, consul): Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested.
+- verify-tcp (REASONED; nomad, consul): Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run, which covered an earlier form whose control and result arms ended with status 0; the current form was not re-run. UDP is not tested.
 - verify-address-limits (REASONED; nomad, consul): TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets.
 
 ````json
@@ -63983,7 +63991,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "03bb5d486faf73b1dc8114c6ea5a85fa952d20b070e7f18ced46738b0e544e4d",
+  "body_sha256": "1048f65c517cbf255b838683900990bd660f2bb5dac04cbc605c0c193e74a765",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
@@ -64060,7 +64068,7 @@ Claims (full source mapping in the JSON block below):
     "consul-default-token": {"text": "An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.", "components": ["consul"], "sources": ["consul:sab8a5866d9c9", "consul:sfeb50129fc10"], "status": "DEMONSTRATED", "evidence": "On the loopback run, a default token holding key write, set through the agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a `403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a token succeeded.", "verify": [4]},
     "consul-kv": {"text": "Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the same runs an anonymous key-value write succeeded in both exposed states and was refused with `403` with the deny policy"},
     "consul-script-run": {"text": "With default script-check settings, remote script registration was refused.", "components": ["consul"], "sources": ["consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "with script checks at their default, registering a script check through the API was refused with \"Scripts are disabled on this agent from remote calls\"."},
-    "verify-tcp": {"text": "Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]},
+    "verify-tcp": {"text": "Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run, which covered an earlier form whose control and result arms ended with status 0; the current form was not re-run. UDP is not tested.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]},
     "verify-address-limits": {"text": "TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]}
   }
 }
