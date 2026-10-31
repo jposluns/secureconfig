@@ -143,7 +143,7 @@ that tolerance rather than removing the timeout.
 
 Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket. That CDN or proxy arrangement means the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture. No earlier form of this block has a recorded run; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with the network and host commands replaced, which ran its guards but no deployment. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -160,7 +160,12 @@ Mind the client address these headers carry. At a direct internet edge the block
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+    set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case
+    case "${3##*$'\n'}:${3%$'\n'*}" in  # tr's exit status, then the host name in lower case
+      0:?*) ;;
+      *) echo "tr exit ${3##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
+    esac
+    case "${3%$'\n'*}" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     case "$2" in
@@ -208,7 +213,12 @@ Mind the client address these headers carry. At a direct internet edge the block
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+    set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case
+    case "${3##*$'\n'}:${3%$'\n'*}" in  # tr's exit status, then the host name in lower case
+      0:?*) ;;
+      *) echo "tr exit ${3##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
+    esac
+    case "${3%$'\n'*}" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
@@ -263,7 +273,8 @@ Mind the client address these headers carry. At a direct internet edge the block
     else
       echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3
     fi
-    seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
+    (set -o pipefail; seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c) ||   # pipefail only in this subshell
+      { echo "rate-limit run exit $?: seq, sort, uniq or one of the 40 curl requests failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
                                       # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
                                       # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
                                       # phase, so an unauthenticated flood still exercises the limiter, which
@@ -275,7 +286,8 @@ Mind the client address these headers carry. At a direct internet edge the block
                                       # establish that either nginx limiter fired. Attributing it needs an
                                       # isolated environment with both limiters disabled as a baseline,
                                       # then each enabled alone, with the arrival rate actually measured
-    rm -f /tmp/under.bin /tmp/over.bin
+    rm -f /tmp/under.bin /tmp/over.bin ||
+      { echo "rm exit $?: the cleanup failed, so /tmp/under.bin or /tmp/over.bin may remain; delete them yourself"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
     exit "$3"
   )
   case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
@@ -301,7 +313,7 @@ Mind the client address these headers carry. At a direct internet edge the block
     echo "ss is not installed here; not listing sockets"
     case "$1" in 0) set -- 2 ;; esac
   fi
-  echo "block exit $1; the redirect and HTTPS headers, the rate-limit counts, the uncredentialed status with open, and listeners other than port 3000 are not classified, so judge them yourself"
+  echo "block exit $1; the redirect and HTTPS headers, the rate-limit counts, the uncredentialed status with open, and listeners other than port 3000 (every listener, if ss is missing) are not classified, so judge them yourself"
   exit "$1"
 )
 ```
@@ -414,7 +426,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "8454e6ea4c776f7c7d465746dad4b863a4e1b318bf706a4fa66076c5367f0a0c",
+  "body_sha256": "c7f9bbb4aef8980e310cd899b9107776ab81fd9cb84a3d85554f9ea56beb3411",
   "components": {
     "nginx-source": {
       "name": "nginx source",

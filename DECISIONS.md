@@ -17,9 +17,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **Maintainer rulings of 2026-10-31 on the `ss` listener inventories, isolation probes run from another host and the
-  #1106 proxy decisions (#1129).** The maintainer gave three rulings through AskUserQuestion in an attended session at
-  about 12:50Z that day. No reasoning was recorded beyond the terms below. The third confirms the two proxy decisions
+- **Maintainer rulings of 2026-10-31 on the `ss` listener inventories, isolation probes run from another host, the
+  #1106 proxy decisions and rule 6's `) || echo "block exit $?"` sentence (#1129).** The maintainer gave the first
+  three rulings through AskUserQuestion in an attended session at about 12:50Z that day, and the fourth at about
+  13:52Z. No reasoning was recorded beyond the terms below. The third confirms the two proxy decisions
   of 2026-10-31 that "Proxy decisions awaiting maintainer review" below records, and each of those two proxy decisions
   is now a maintainer ruling. Those entries keep their wording; this entry records the outcome.
   - The `ss` listener inventories. A Verify listener inventory checks `command -v ss` before it runs `ss`, and refuses

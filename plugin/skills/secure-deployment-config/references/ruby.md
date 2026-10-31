@@ -113,7 +113,7 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 
 ## Verify
 
-REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. No earlier form of this block has a recorded run; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with the network and host commands replaced, which ran its guard but no deployment. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -127,7 +127,12 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    set -- "$1" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    case "${2##*$'\n'}:${2%$'\n'*}" in  # tr's exit status, then the host name in lower case
+      0:?*) ;;
+      *) echo "tr exit ${2##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
+    esac
+    case "${2%$'\n'*}" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     set -- "$1" 0                                               # the 2nd value is this part's status so far, ranked as above
@@ -135,7 +140,9 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
       { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
     set -- "$1" "$2" "$(if curl -q -g -sI "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"               # curl's exit status, then the headers
-    printf '%s' "$4" | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
+    if printf '%s' "$4" | grep -iE 'strict-transport|set-cookie'; then :; else   # HSTS; secure; httponly; samesite=lax
+      case "$?" in 1) ;; *) echo "grep could not filter the HTTPS headers; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;; esac
+    fi
     [ "$3" = 0 ] || { echo "curl exit $3: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
     set -- "$1" "$2" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/dashboard"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"              # curl's exit status, then the HTTP code
@@ -195,7 +202,7 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
     echo "no config/application.rb here: run this block from the Rails app's root directory, where git ls-files looks for config/master.key; not checking"
     case "$1" in 0) set -- 2 ;; esac
   fi
-  echo "block exit $1; the redirect and HTTPS headers, a /sidekiq answer other than 200, and listeners on ports other than 3000 are not classified, so judge them yourself"
+  echo "block exit $1; the redirect and HTTPS headers, a /sidekiq answer other than 200, and listeners on ports other than 3000 (every listener, if ss is missing) are not classified, so judge them yourself"
   exit "$1"
 )
 ```
@@ -280,7 +287,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a8f7ae01c5a0b59d5f1ee134f18e2e0a4ebcc6b0a7d696140c02450a29be723a",
+  "body_sha256": "000eb6d68d36ecaba8271e86c511dc656daa96d01f4f1365a9e5deea67461c68",
   "components": {
     "rails": {
       "name": "Rails documentation",
