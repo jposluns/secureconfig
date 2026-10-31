@@ -301,7 +301,7 @@ REASONED: service-comparison provenance, per the guide's cited MongoDB security 
 
 Local checks did run: Bash parsing, ShellCheck, JavaScript syntax parsing, duplicate-key YAML parsing, and merges for both membership alternatives. Shell-only argument tracing checked probe dispatch; it did not simulate or verify MongoDB behavior. Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access.
 
-### Listener exposure (REASONED: listener inventory and interpretation; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; a stubbed ss returned fixture listeners. Those runs and the attempt recorded below covered an earlier form of the block, a bare ss -tlnp whose exit status was its own; on the current form, which exits 3 when ss fails and 0 otherwise, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the stub run was not repeated. Expected comparison: unintended wildcard or public binds are exposed; selected private or loopback binds are the fixed expectation. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB security checklist and Community authentication support.)
+### Listener exposure (REASONED: listener inventory and interpretation; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; a stubbed ss returned fixture listeners. Those runs and the attempt recorded below covered an earlier form of the block, a bare ss -tlnp whose exit status was its own, and the repository gate suite's bash -n and ShellCheck 0.11.0 checks covered a later form, which exited 3 when ss failed and 0 otherwise. The current form, which exits 2 when ss is not installed, 3 when ss fails and 0 otherwise, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local stub runs with ss passing, failing and missing, which exited 0, 3 and 2. Expected comparison: unintended wildcard or public binds are exposed; selected private or loopback binds are the fixed expectation. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB security checklist and Community authentication support.)
 
 **REASONED:** no MongoDB service is available. The local command was attempted, but the sandbox refused its netlink socket with `Operation not permitted`; that output establishes nothing about listeners.
 
@@ -310,6 +310,7 @@ Run on every database and router host:
 ```bash
 # REASONED: listener inventory; no MongoDB service or permitted netlink socket. Expected binds and network-hardening source follow.
 (                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   if ss -tlnp; then
     echo "unclassified observation: read every listener above; an unintended wildcard or public bind is the exposed state"; exit 0
   else
@@ -911,7 +912,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "8ff6f01b23a2adb7dc271f7ff4c0964c6ce374eded4782fec52c6efdf3ab16c2",
+  "body_sha256": "3ba0ca4c87cd1860da34d87fd62a14ea06b55a5321652ca7c49d45072e666cd6",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
