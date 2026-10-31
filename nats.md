@@ -750,7 +750,7 @@ REASONED: comparison procedure from the paired controls below; no live broker or
 
 ### V0. Offline checks and their limits
 
-DEMONSTRATED: the local shell-syntax and guard checks recorded in this paragraph, re-run at marking time: the five fragments passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 with no diagnostics. The marking-time guard-only runs rejected 30 invalid cases (unsubstituted placeholders, removed set markers, wrong argument counts, empty values, angle brackets and example.com hosts) with their not-probing messages, and all five substituted controls reached a local stub marker. No network command ran in that marking-time re-run. **Demonstrated here:** the five fenced Bash fragments below passed `bash -n` with Bash 5.3.9 and ShellCheck 0.11.0. Guard-only execution rejected 145 invalid input cases and allowed five substituted controls to reach a local marker. Those cases included empty arguments, original and embedded placeholders, angle brackets, `example.com`, wrong argument counts, and missing setup with unrelated caller arguments. No network command ran. This establishes bounded shell and guard evidence, not CLI semantics or general bypass resistance.
+DEMONSTRATED: the local shell-syntax and guard checks recorded in this paragraph, re-run at marking time: the five fragments passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 with no diagnostics. The marking-time guard-only runs rejected 30 invalid cases (unsubstituted placeholders, removed set markers, wrong argument counts, empty values, angle brackets and example.com hosts) with their not-probing messages, and all five substituted controls reached a local stub marker. No network command ran in that marking-time re-run. **Demonstrated here:** the five fenced Bash fragments below passed `bash -n` with Bash 5.3.9 and ShellCheck 0.11.0. Guard-only execution rejected 145 invalid input cases and allowed five substituted controls to reach a local marker. Those cases included empty arguments, original and embedded placeholders, angle brackets, `example.com`, wrong argument counts, and missing setup with unrelated caller arguments. No network command ran. This establishes bounded shell and guard evidence, not CLI semantics or general bypass resistance. The marking-time and original runs recorded in this paragraph covered an earlier form of the V2 authentication block, whose failed positive control exited with status 1; none was re-run on the current form, which exits with status 3 after a failed positive control.
 
 REASONED: provenance caveat only, from the revision record of this guide; it states what the earlier runs do not prove, and no new check is claimed. The prior guide's reported 14 invalid guard cases and two positive controls concerned its earlier fragments; they are not evidence that the replacement service checks ran.
 
@@ -814,7 +814,7 @@ The first publish is the allowed control. The subsequent operations deliberately
   export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
   [ "$NATS_USER" = order-svc ] || { echo 'username mismatch'; exit 2; }
   opts=(--no-context --server "$srv" --timeout 3s --inbox-prefix _INBOX.order-svc)
-  NATS_PASSWORD="$pw" timeout 10s nats "${opts[@]}" pub orders.created hi || { echo 'positive control failed; stop'; exit 1; }
+  NATS_PASSWORD="$pw" timeout 10s nats "${opts[@]}" pub orders.created hi || { echo 'positive control failed; stop'; exit 3; }
   unset NATS_USER
   timeout 10s nats "${opts[@]}" pub orders.created hi
   export NATS_USER=order-svc
@@ -1290,7 +1290,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ee0c15d6121adf5c67b5cd3d51808c2c748df6ac0ce72260f0841ad91168b85f",
+  "body_sha256": "6ad5212400cc800b717df0420b17d3d0468236306f9268fbb1f15404317e3ae8",
   "components": {
     "server": {
       "name": "NATS Server",
