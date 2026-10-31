@@ -75,61 +75,124 @@ Where a system cannot revoke immediately, such as a session cached until its own
 
 ## Verify
 
-REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. The block exits once with one status for all four checks. Its retired-name check reads your configured resolver only, so it records a finding for any answer and is otherwise inconclusive: it cannot pass on its own, and the authoritative check in its comment decides removal.
 
 ```bash
 # From a second network, not the host itself:
-(                                                      # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) nmap -Pn -p- "$1" ;;                        # TCP only: only the intended ports answer here; probe any UDP service separately (nmap -sU)
+(                                                      # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                               # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                                             # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                                    # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$(if nmap -Pn -p- "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # TCP only: only the intended ports answer here; probe any UDP service separately (nmap -sU)
+    set -- "${1%$'\n'*}" "${1##*$'\n'}"                # nmap's report, then its exit status
+    printf '%s' "$1"
     # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
     # inconclusive, not a clean result
-  esac
-)
-(                                                      # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IPV6'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) nmap -Pn -6 -p- "$1" ;;                      # same, over the public IPv6 address (TCP only)
-                                                    # same reading: a scan that did not run is not a clean scan
-  esac
-)
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_RETIRED_HOST'   # the retired preview or service host name whose DNS record you removed, no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the retired host name (no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sI "https://$1/"          # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
-  for t in A AAAA CNAME; do echo "$t:"; dig +short "$1" "$t"; done   # checks your configured resolver only, so it is not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
-)
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the live app's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  openssl s_client -connect "$1:443" -servername "$1" \
-    -verify_hostname "$1" -verify_return_error </dev/null \
-    | openssl x509 -noout -enddate                        # run from outside on a schedule
+    case "$2:$1" in
+      0:|0:*'(0 hosts up)'*) echo "nmap printed no report or reported the host down; inconclusive, not a clean result"; exit 3 ;;
+      0:*) exit 0 ;;
+      *) echo "nmap exit $2: the scan did not complete; inconclusive, not a clean result"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                                    # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IPV6'   # replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$(if nmap -Pn -6 -p- "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # same, over the public IPv6 address (TCP only)
+    set -- "${1%$'\n'*}" "${1##*$'\n'}"                # nmap's report, then its exit status
+    printf '%s' "$1"
+    # same reading: a scan that did not run is not a clean scan
+    case "$2:$1" in
+      0:|0:*'(0 hosts up)'*) echo "nmap printed no report or reported the host down; inconclusive, not a clean result"; exit 3 ;;
+      0:*) exit 0 ;;
+      *) echo "nmap exit $2: the scan did not complete; inconclusive, not a clean result"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_RETIRED_HOST'   # the retired preview or service host name whose DNS record you removed, no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the retired host name (no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    curl -q -g -sI "https://$1/" ||     # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
+      { echo "curl exit $?: the request failed, which is not proof the record is gone; inconclusive"; set -- "$1" 3; }
+    # The three dig lookups below check your configured resolver only, so they are not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
+    echo "A:"
+    set -- "$1" "$2" "$(if dig +short "$1" A; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"     # the host, this part's status, dig's answer, then dig's exit status
+    printf '%s' "$3"
+    case "$4:$3" in
+      0:) [ "$2" = 1 ] || set -- "$1" 3 ;;            # no answer: inconclusive on its own
+      0:*) set -- "$1" 1 ;;                            # an answer: that resolver still returns a mapping
+      *) echo "dig exit $4: the A lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    echo "AAAA:"
+    set -- "$1" "$2" "$(if dig +short "$1" AAAA; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"
+    printf '%s' "$3"
+    case "$4:$3" in
+      0:) [ "$2" = 1 ] || set -- "$1" 3 ;;
+      0:*) set -- "$1" 1 ;;
+      *) echo "dig exit $4: the AAAA lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    echo "CNAME:"
+    set -- "$1" "$2" "$(if dig +short "$1" CNAME; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"
+    printf '%s' "$3"
+    case "$4:$3" in
+      0:) [ "$2" = 1 ] || set -- "$1" 3 ;;
+      0:*) set -- "$1" 1 ;;
+      *) echo "dig exit $4: the CNAME lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    case "$2" in
+      1) echo "FINDING: your resolver still returns a mapping for $1; investigate before you release the target" ;;
+      *) echo "no answer from your resolver, or a failed lookup or request: inconclusive, so confirm removal at each authoritative nameserver as the comment above says" ;;
+    esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the live app's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$(if openssl s_client -connect "$1:443" -servername "$1" \
+      -verify_hostname "$1" -verify_return_error </dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # s_client's own status, captured before x509 reads its output
+    set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"           # the host, s_client's output, then its exit status
+    [ "$3" = 0 ] || { echo "s_client exit $3: verification failed (an expired, untrusted or misnamed certificate fails here) or the connection did; inconclusive"; exit 3; }
+    printf '%s\n' "$2" \
+      | openssl x509 -noout -enddate ||                # run from outside on a schedule
+      { echo "openssl x509 exit $?: it could not read the served certificate; inconclusive"; exit 3; }
+    exit 0
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the open ports nmap lists, the retired name's HTTPS headers and the certificate's notAfter date are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -256,7 +319,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "c9bdf1734588a2411c18bbccff5e7b6f1bc4807bc3d724ae9bc9dfcf7eb3cf2b",
+  "body_sha256": "f960e4f09afeedcc2218b6a95246313c1dce34d8d078839f9bb200f86dcb8788",
   "components": {
     "nmap": {
       "name": "Nmap documentation",

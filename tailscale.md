@@ -58,11 +58,25 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 REASONED: following block; the cited ss filter reference and Serve backend-isolation guidance define the loopback check. The authoring environment cannot configure a Serve host; the guide records no listener observation.
 
 ```bash
-ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
-                                                  # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
+(                                                 # a subshell, so the exits below end only the subshell, not your shell
+  set -- "$(if ss -tlnp 'sport = :3000'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # ss's own filter, not a grep: the address column
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"             # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
+  printf '%s' "$1"
+  [ "$2" = 0 ] || { echo "ss exit $2: the listener list could not be read; inconclusive"; exit 3; }
+  if printf '%s' "$1" | awk 'NR > 1 { n++; if ($4 == "0.0.0.0:3000" || $4 == "[::]:3000" || $4 == "*:3000" || $4 == ":::3000") w++; else if ($4 != "127.0.0.1:3000") o++ } END { exit (w ? 1 : (!n ? 3 : (o ? 4 : 0))) }'; then
+    echo "pass: every listener on port 3000 is 127.0.0.1:3000"; exit 0
+  else
+    case "$?" in
+      1) echo "FINDING: a wildcard listener on port 3000 answers on every address, not only loopback"; exit 1 ;;
+      3) echo "no TCP listener on port 3000, so no 127.0.0.1:3000 line to confirm; inconclusive"; exit 3 ;;
+      4) echo "a listener on port 3000 is neither 127.0.0.1:3000 nor a wildcard; read its address above; inconclusive"; exit 3 ;;
+      *) echo "awk could not read the ss output; inconclusive"; exit 3 ;;
+    esac
+  fi
+)
 ```
 
-REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. For the direct-address probe block, the bash -n, ShellCheck and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
+REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. For the direct-address probe block, the bash -n, ShellCheck and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0 and whose probe left curl's own status; none was re-run on the current form, whose guard refusals leave the subshell with status 2 and whose probe exits 1 on an HTTP reply and 3 otherwise. For the listener block, the bash -n and ShellCheck runs recorded here used an earlier form, a top-level ss command whose status was its own; neither was re-run on the current form, which exits 0 when every port 3000 listener is 127.0.0.1:3000, 1 for a wildcard listener, and 3 otherwise. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
 
 REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. The authoring environment cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
 
@@ -74,23 +88,35 @@ REASONED: following block; direct-backend isolation follows the cited Serve iden
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host's LAN or VPC address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
   esac
+  if curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+       -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"; then
+    echo "FINDING: the app answered at $1:3000, so it is reachable past the tailnet"; exit 1
+  else
+    echo "curl exit $?: no HTTP reply, which is inconclusive on its own; read err above and rely on the ss check for the bind address"; exit 3
+  fi
 )
 # Any HTTP reply (including 4xx/5xx) proves the app is reachable past the tailnet at that address. A failed request does not by itself prove a loopback bind (a firewall, a wrong address, or a stalled response fails the same way), so read `err`/`exitcode` and rely on the `ss` line above for the actual bind address.
 ```
 
-REASONED: preceding block; direct-backend isolation and the allowed tailnet path, per the guide's cited Tailscale serve identity headers and Tailscale serve. No Serve host or allowed/excluded tailnet devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; rejected guards reached no curl stub and a substituted direct address reached one. The bash -n, ShellCheck and stub runs recorded here covered the direct-address probe block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No live access was observed: exposed direct access bypasses the tailnet; fixed direct access is isolated while the allowed tailnet request works. Allowed access alone does not distinguish allow-all from scoped policy. Then confirm the tailnet path works and that the section-1 restriction actually holds:
+REASONED: preceding block; direct-backend isolation and the allowed tailnet path, per the guide's cited Tailscale serve identity headers and Tailscale serve. No Serve host or allowed/excluded tailnet devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; rejected guards reached no curl stub and a substituted direct address reached one. The bash -n, ShellCheck and stub runs recorded here covered the direct-address probe block in an earlier form, whose guard refusals left the subshell with status 0 and whose probe left curl's own status; none was re-run on the current form, whose guard refusals leave the subshell with status 2 and whose probe exits 1 on an HTTP reply and 3 otherwise. No live access was observed: exposed direct access bypasses the tailnet; fixed direct access is isolated while the allowed tailnet request works. Allowed access alone does not distinguish allow-all from scoped policy. Then confirm the tailnet path works and that the section-1 restriction actually holds:
 
 REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. The authoring environment cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
 
 ```bash
-tailscale serve status
-curl -q -sI https://host.tailnet.ts.net/            # from an ALLOWED tailnet device: works
+(                                                   # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                            # errexit off here, so a command that fails is recorded in the status below instead of ending the block
+  set -- 0                                          # the block's status so far: 3 (inconclusive) outranks 0
+  tailscale serve status ||
+    { echo "tailscale serve status exit $?: the Serve configuration could not be read; inconclusive"; set -- 3; }
+  curl -q -sI https://host.tailnet.ts.net/ ||       # from an ALLOWED tailnet device: works
+    { echo "curl exit $?: the request from this allowed device failed; inconclusive"; set -- 3; }
+  echo "block exit $1; the Serve status and the response headers are not classified, and a request that works here does not show that the section-1 restriction holds, so judge them and assert it with the policy tests below"
+  exit "$1"
+)
 ```
 
-REASONED: preceding block; Serve status, allowed access, policy assertions and public Serve/Funnel reachability, per the guide's cited Tailscale serve, Tailscale policy-file tests and Tailscale funnel. No tailnet, policy submission access or allowed/excluded devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; no live status, policy evaluation or request was observed. Exposed allow-all admits excluded identities; fixed policy accepts the intended identity and denies the excluded one, with failing assertions rejecting the policy file. Public Serve should remain unreachable; public Funnel remains reachable and therefore needs application login. An allowed device connects under both the default allow-all policy and a correctly scoped one, so a request that works here does not prove the section-1 restriction took hold. Assert it in the tailnet policy file's `tests` (an `accept` from the intended identity to this host and port, and a `deny` from an excluded tailnet identity); Tailscale rejects a policy file whose `tests` fail. From a non-tailnet network the serve URL is unreachable while a funnel URL is reachable, so a funneled app must gate every request with its own login.
+REASONED: preceding block; Serve status, allowed access, policy assertions and public Serve/Funnel reachability, per the guide's cited Tailscale serve, Tailscale policy-file tests and Tailscale funnel. No tailnet, policy submission access or allowed/excluded devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of the block, two top-level commands whose status was curl's; neither was re-run on the current form, which exits 3 when either command fails and 0 otherwise. No live status, policy evaluation or request was observed. Exposed allow-all admits excluded identities; fixed policy accepts the intended identity and denies the excluded one, with failing assertions rejecting the policy file. Public Serve should remain unreachable; public Funnel remains reachable and therefore needs application login. An allowed device connects under both the default allow-all policy and a correctly scoped one, so a request that works here does not prove the section-1 restriction took hold. Assert it in the tailnet policy file's `tests` (an `accept` from the intended identity to this host and port, and a `deny` from an excluded tailnet identity); Tailscale rejects a policy file whose `tests` fail. From a non-tailnet network the serve URL is unreachable while a funnel URL is reachable, so a funneled app must gate every request with its own login.
 
 ## Sources (checked September 2026)
 
@@ -153,7 +179,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d83fa0e03a454e7c856a11109daf131f2cb5cdac65a468196fbbf4116885196a",
+  "body_sha256": "7b531d30785708817603a7306900c2b479402c5e941e42ec4a709b1e6530f017",
   "components": {
     "cli": {
       "name": "Tailscale CLI change",

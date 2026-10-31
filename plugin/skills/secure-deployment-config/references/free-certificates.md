@@ -108,15 +108,39 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ## Verify
 
-REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run.
+REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks.
 
 ```bash
-sudo certbot certificates                       # what is issued and when it expires
-host=REPLACE_WITH_YOUR_HOSTNAME                    # your deployment's public hostname, not example.com (which serves a live page and would pass spuriously)
-curl -q -sI "https://$host/"                        # succeeds without -k
-openssl s_client -connect "$host:443" -servername "$host" \
-  -verify_hostname "$host" -verify_return_error </dev/null \
-  | openssl x509 -noout -issuer -dates
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a check that ends nonzero is recorded in the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOSTNAME'   # your deployment's public hostname, not example.com (which serves a live page and would pass spuriously), with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
+  sudo certbot certificates ||          # what is issued and when it expires
+    { echo "certbot certificates exit $?: the certificate list could not be read; inconclusive"; set -- "$1" 3; }
+  curl -q -sI "https://$1/" ||          # succeeds without -k
+    { echo "curl exit $?: HTTPS with certificate verification failed; inconclusive"; set -- "$1" 3; }
+  set -- "$1" "$2" "$(if openssl s_client -connect "$1:443" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error </dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # s_client's own status, captured before x509 reads its output
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, s_client's output, then its exit status
+  if [ "$4" = 0 ]; then
+    printf '%s\n' "$3" \
+      | openssl x509 -noout -issuer -dates ||
+      { echo "openssl x509 exit $?: it could not read the served certificate; inconclusive"; set -- "$1" 3; }
+  else
+    echo "s_client exit $4: hostname or chain verification failed, or the connection did; inconclusive"; set -- "$1" 3
+  fi
+  echo "block exit $2; the certificate list, the HTTPS headers, and the issuer and dates are not classified, so judge them yourself"
+  exit "$2"
+)
 ```
 
 REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation; no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
@@ -233,7 +257,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "7d78802565cad072bfdac86ecb50937d57ecb90b73dcaf285d7e3b6bf010e8d8",
+  "body_sha256": "8819d3677ed53e76712df76eeac890f6d692ec73fa05cf2710c703e4161714cc",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
