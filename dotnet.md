@@ -305,7 +305,7 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is missing), which outranks 0
   curl -q -g --noproxy '*' -sI "http://$1/" ||         # expect 307 or 308 with a https:// Location
     { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
   curl -q -g --noproxy '*' -sI "https://$1/" ||        # succeeds without -k; shows Strict-Transport-Security
@@ -319,9 +319,14 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
     0:*) echo "HTTP $4 from /api is neither the 401 pass nor a 2xx finding (a page redirect, an OIDC or customized challenge, or a missing route); inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     *) echo "curl exit $3: the /api request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
-  set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  printf '%s' "${3%$'\n'*}"   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
-  [ "${3##*$'\n'}" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  if command -v ss >/dev/null; then
+    set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    printf '%s' "${3%$'\n'*}"   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
+    [ "${3##*$'\n'}" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$2" in 0) set -- "$1" 2 ;; esac
+  fi
   echo "block exit $2; the redirect and HTTPS headers, including Strict-Transport-Security, and the listener list are not classified, so judge them yourself"
   exit "$2"
 )
@@ -333,7 +338,7 @@ For the `/api` check, the route must exist, require authorization, and use the a
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
-REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. Every block in section 9, including the one above, records each classified result and each failed request as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed request or an inconclusive result, a finding outranking an inconclusive result. Unless a guard refuses, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The cookie-continuity block also refuses with status 2, before any request, when `./dotnet-verify.cookies` is not readable in the current directory.
+REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. Every block in section 9, including the one above, records each classified result and each failed request as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed request or an inconclusive result, a finding outranking an inconclusive result. The first block in section 9 refuses only its listener inventory when `ss` is missing: it prints `ss is not installed here; not listing sockets` after its requests have run, and exits 2 only when none of them found something or was inconclusive. Stub runs of that block's current form (October 2026, Bash 5.3.9, scratch `ss` and `curl` stubs, no network, under an inherited `readonly` variable, `declare -i` variable and `set -e`) exited 0 with `ss` and the stubbed requests passing, 3 with `ss` failing, and 2 with `ss` missing; with `ss` missing, a stubbed `200` from `/api` gave 1 and stubbed failed requests gave 3. Unless a guard ends the block early, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The cookie-continuity block also refuses with status 2, before any request, when `./dotnet-verify.cookies` is not readable in the current directory.
 
 #### Production error disclosure (REASONED: the following block tests error representations against the cited error-handling documentation; no .NET runtime or deployed test application, as recorded below.)
 
@@ -667,7 +672,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "4940213fd1978c771e9a5909df170d9cb1edec2a77d7329079ced210f8b09b79",
+  "body_sha256": "2c92068a6f773da5796926d35e5df58d968dbacbde0598ac5ccd0a2aa96d4aff",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
