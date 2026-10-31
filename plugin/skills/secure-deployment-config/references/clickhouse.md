@@ -610,7 +610,7 @@ FOR INTERVAL 1 HOUR MAX queries = 2
 TO quota_reader;
 ```
 
-**REASONED: run order for the quota reads; no ClickHouse server or client binary, no container runtime and no fresh `quota_reader` account in the authoring environment, so the reads did not run; queries between them would count against the two-query quota, per the guide's cited "Quota accounting, exemptions, and resets" source. The local checks showed that the guarded connection's guard refused all 13 of its bad-input cases under bash -u with no call to a stub clickhouse-client. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which sets its exit status from its classified results, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** Through the guarded connection as `quota_reader`, issue these individually without intervening application queries:
+**REASONED: run order for the quota reads; no ClickHouse server or client binary, no container runtime and no fresh `quota_reader` account in the authoring environment, so the reads did not run; queries between them would count against the two-query quota, per the guide's cited "Quota accounting, exemptions, and resets" source. The local checks showed that the guarded connection's guard refused all 13 of its bad-input cases under bash -u with no call to a stub clickhouse-client. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which exits 3 when clickhouse-client exits nonzero, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** Through the guarded connection as `quota_reader`, issue these individually without intervening application queries:
 
 ```sql
 -- REASONED: quota enforcement; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
@@ -852,7 +852,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "cffa86fe6d9b5374a49f1070f4c19f8e1bdf390f42cb9e5afd3a17a7fd13ba01",
+  "body_sha256": "3ffa25d78f0f273f249f15a0b140dbc2c809addba98b212025d62297992ba4eb",
   "components": {
     "docs": {
       "name": "ClickHouse documentation",

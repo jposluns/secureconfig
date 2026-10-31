@@ -738,7 +738,7 @@ observed. On the host:
 )
 ```
 
-REASONED: preceding block; the expected inventory results for every TCP and UDP port the block names, per the same cited listener sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. That stub run used an earlier form of the following block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
+REASONED: preceding block; the expected inventory results for every TCP and UDP port the block names, per the same cited listener sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. That stub run used an earlier form of the following block, whose guard refusals ended with status 0, and was not repeated on the current form, whose guard refusals exit with status 2 and which exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
 and likewise for the others. Fixed means a loopback or private address. Then probe from a host that
 should not have access. The block refuses to run until you substitute the address.
 
@@ -772,14 +772,14 @@ REASONED: following block; external probes follow the cited listener and authent
 )
 ```
 
-REASONED: preceding block; the second-host probes of node_exporter, Alertmanager, Pushgateway, Jaeger and Loki and the Loki tenant-header repeat, per the guide's cited Prometheus security model, Exporter toolkit v0.17.1 web configuration, Jaeger 2.21 security and Loki v3.7.8 authentication entries. The authoring environment had no second host and no Loki listener. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: without its set -- line it printed the paste-the-whole-block refusal, and with 203.0.113.10 substituted the stub received the five URLs in order. The bash -n and stub runs recorded here covered the probe block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. The expected exposed and fixed results are those stated here. Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
+REASONED: preceding block; the second-host probes of node_exporter, Alertmanager, Pushgateway, Jaeger and Loki and the Loki tenant-header repeat, per the guide's cited Prometheus security model, Exporter toolkit v0.17.1 web configuration, Jaeger 2.21 security and Loki v3.7.8 authentication entries. The authoring environment had no second host and no Loki listener. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: without its set -- line it printed the paste-the-whole-block refusal, and with 203.0.113.10 substituted the stub received the five URLs in order. The bash -n and stub runs recorded here covered the probe block in an earlier form, whose guard refusals ended with status 0, and the stub runs were not repeated on the current form. The current form's guard refusals exit with status 2, it exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. The expected exposed and fixed results are those stated here. Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
 TLS, switch that URL to `https`. A `401` then means its authentication is on. From a host that should
 be blocked, a connection refusal or a connect timeout is consistent with isolation. Read the `err`
 text to confirm it happened while connecting, not in a local proxy or policy. The write-out fields need
 curl 7.75.0 or newer. For Loki, a `401` without a tenant header proves nothing. Repeat the Loki probe
 with `-H 'X-Scope-OrgID: anyone'` added, and treat a `200` as exposure.
 
-REASONED: the positive-control and stdin-password instructions for the following credential pair, per the guide's cited Exporter toolkit v0.17.1 web configuration entry. The pair itself is declared below from the guide's recorded loopback runs; this marking review did not repeat them. During marking review (October 2026) that block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-URL refusal; an http:// URL drew the use-an-https-URL refusal; a user containing a colon was refused; and with dummy values the password reached curl only on stdin as an escaped user line, never in argv. The bash -n and stub runs recorded here covered the credential block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Exposed, the request without credentials returns 200; fixed, 401 without and 200 with credentials. Run the positive control from a host that should have access, so a dead service is not read as fixed.
+REASONED: the positive-control and stdin-password instructions for the following credential pair, per the guide's cited Exporter toolkit v0.17.1 web configuration entry. The pair itself is declared below from the guide's recorded loopback runs; this marking review did not repeat them. During marking review (October 2026) that block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-URL refusal; an http:// URL drew the use-an-https-URL refusal; a user containing a colon was refused; and with dummy values the password reached curl only on stdin as an escaped user line, never in argv. The bash -n and stub runs recorded here covered the credential block in an earlier form, whose guard refusals ended with status 0, and the stub runs were not repeated on the current form, whose guard refusals exit with status 2 and which exits 1, 3 or 0 on its two results; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Exposed, the request without credentials returns 200; fixed, 401 without and 200 with credentials. Run the positive control from a host that should have access, so a dead service is not read as fixed.
 The password reaches curl on stdin, not argv. Substitute inside the quotes, and add
 `--cacert /path/to/ca.crt` if the certificate is private.
 
@@ -820,7 +820,7 @@ DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporte
     0:*) echo "the request with credentials did not return 200, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
     *) echo "curl exit $5: the request with credentials failed, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
-  echo "block exit $4; whether this host should have access is not checked, so run it from one that should, or a dead service can read as fixed"
+  echo "block exit $4; whether this host should have access is not checked"
   exit "$4"
 )
 ```
@@ -1357,7 +1357,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "5512b478c1d4847dd36c9dc8a82b593e2e12a6ce7bad5db0523745f8711015c1",
+  "body_sha256": "c9958df1ec85d47979216de4cd201b1297cac02fa2e35698574f4846fc29f24c",
   "components": {
     "node": {
       "name": "node_exporter",
