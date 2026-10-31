@@ -374,7 +374,7 @@ give the server's public address. A "connected" on a port you did not mean to ex
 - pve-manager 9.2.20 spiceproxy shared configuration, bind and ACLs, lines 31 to 59 (checked October 2026): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/Service/spiceproxy.pm
 - libpve-http-server-perl 6.0.5 configuration reader, lines 10 to 97, at 5119ff9bec08c69584c0c98bea3edd0098179e5f (checked October 2026): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/Utils.pm
 - libpve-common-perl 9.1.21 socket creation and reuse, lines 803 to 854, at 5054082fe492429fc37574985c2ca812af9a3125 (checked October 2026): https://git.proxmox.com/?p=pve-common.git;a=blob_plain;hb=5054082fe492429fc37574985c2ca812af9a3125;f=src/PVE/Daemon.pm
-- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 
 
 <!-- version-basis:start -->
@@ -446,7 +446,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7eefdbcf7a12da8c0dc8f993419202a410192cd6ceb252bc4832be151eaedf06",
+  "body_sha256": "6b401a44b03e5a51ee4951f89b2239e285e5cf8837dc889b86415ba2650db180",
   "components": {
     "cockpit": {
       "name": "Cockpit",

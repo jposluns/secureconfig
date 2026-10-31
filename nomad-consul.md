@@ -397,7 +397,7 @@ give the host's public address. A "connected" on a port you did not mean to expo
 - Consul 2.0.4 default token for requests without one (`acl.tokens.default`, agent token API): https://github.com/hashicorp/consul/blob/v2.0.4/agent/http.go and https://github.com/hashicorp/consul/blob/v2.0.4/agent/token/persistence.go
 - Nomad 2.0.7 agent debug endpoints when ACLs are disabled (`enable_debug`): https://github.com/hashicorp/nomad/blob/v2.0.7/acl/acl.go
 - Consul 2.0.4 ACL bootstrap: https://github.com/hashicorp/consul/blob/v2.0.4/agent/acl_endpoint.go and https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl_endpoint.go
-- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 
 
 <!-- version-basis:start -->
@@ -466,7 +466,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c18d7a3e90c76e06e71a86419c1d56f79a4050ca126c5eab123ddb393c063af2",
+  "body_sha256": "ae1c84224571043cfac59f7ef6afdcacb0c70a0d70bb3f909794310bbefc136c",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
