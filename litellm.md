@@ -292,35 +292,76 @@ Use a valid virtual key whose `allowed_routes` includes `/v1/models`. Substitute
 # STDIN (-H @-) so it never enters curl's arguments, a temp file, or a shell variable; the guard refuses
 # on a placeholder. (The key you substitute on the set -- line does enter your shell history, so use a
 # short-lived key or clear that history line afterward.)
-(
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VIRTUAL_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 2 ;;
-    *)
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' http://127.0.0.1:4000/v1/models
-  # guard-conventions: allow deliberate bad-key negative control; sk-not-a-real-key is a dummy, not a live credential
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'bad-key=%{http_code} exit=%{exitcode}\n' -H 'Authorization: Bearer sk-not-a-real-key' http://127.0.0.1:4000/v1/models
-  printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\ngood-key=%{http_code} exit=%{exitcode}\n' -H @- http://127.0.0.1:4000/v1/models
-      ;;
-  esac
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VIRTUAL_KEY'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 2 ;;
+      *)
+        set -- "$1" 0                   # the 2nd value is this part's status so far, ranked as above
+        set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n%{http_code}' http://127.0.0.1:4000/v1/models; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+        set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its output
+        printf '%s\n' "${4%$'\n'*}"     # the no-key= line
+        case "$3:${4##*$'\n'}" in
+          0:401) ;;
+          0:200) echo "FINDING: /v1/models answered 200 with no key"; set -- "$1" 1 ;;
+          0:*) echo "no-key HTTP ${4##*$'\n'} is not LiteLLM's 401; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+          *) echo "curl exit $3: the no-key request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac
+        # guard-conventions: allow deliberate bad-key negative control; sk-not-a-real-key is a dummy, not a live credential
+        set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'bad-key=%{http_code} exit=%{exitcode}\n%{http_code}' -H 'Authorization: Bearer sk-not-a-real-key' http://127.0.0.1:4000/v1/models; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+        set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its output
+        printf '%s\n' "${4%$'\n'*}"     # the bad-key= line
+        case "$3:${4##*$'\n'}" in
+          0:401) ;;
+          0:200) echo "FINDING: /v1/models answered 200 to a wrong key"; set -- "$1" 1 ;;
+          0:*) echo "bad-key HTTP ${4##*$'\n'} is not LiteLLM's 401; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+          *) echo "curl exit $3: the bad-key request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac
+        set -- "$1" "$2" "$(if printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\ngood-key=%{http_code} exit=%{exitcode}\n%{http_code}' -H @- http://127.0.0.1:4000/v1/models; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+        set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its output
+        printf '%s\n' "${4%$'\n'*}"     # the model list and the good-key= line
+        case "$3:${4##*$'\n'}" in
+          0:200) ;;
+          0:*) echo "good-key HTTP ${4##*$'\n'} is not the 200 model list, so this positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+          *) echo "curl exit $3: the good-key request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac
+        exit "$2"
+        ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # Expected: no-key and bad-key => 401 from LiteLLM; good-key => 200 with the model list (a 200 without a
+  # key is the finding). Then repeat the good-key request through the public https ingress to confirm the
+  # TLS front works. A transport error (exit != 0) is inconclusive, not a pass.
+  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # a listener inventory in THIS network namespace, not a firewall/NAT/publication check:
+                     # confirm 4000 is loopback-only here, then from ANOTHER host confirm 4000 is refused
+                     # externally (a Docker DNAT publication need not appear in this list at all). The check
+                     # below also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback.
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:4000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 4000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  echo "block exit $1; listeners on other ports, a Docker publication this list cannot show, the outside-host check of port 4000 and the repeat through your HTTPS ingress are not classified, so judge them yourself"
+  exit "$1"
 )
-# Expected: no-key and bad-key => 401 from LiteLLM; good-key => 200 with the model list (a 200 without a
-# key is the finding). Then repeat the good-key request through the public https ingress to confirm the
-# TLS front works. A transport error (exit != 0) is inconclusive, not a pass.
-ss -tlnp   # a listener inventory in THIS network namespace, not a firewall/NAT/publication check:
-           # confirm 4000 is loopback-only here, then from ANOTHER host confirm 4000 is refused
-           # externally (a Docker DNAT publication need not appear in this list at all).
 ```
 
 The `/v1/models` comparison tests authentication and listing, not successful inference or model authorization. Complete the inference comparisons below too. Inspect IPv4 and IPv6 reachability, published container ports, and any separate metrics listener.
 
 ### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. The bash -n run covered both fences, and the stub runs the request fence, in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. These observations establish neither file-content validation nor API acceptance)
 
-**REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result.
+**REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result. The bash -n and stub runs recorded in the heading above also predate the change that makes both Verify shell fences report their result in their exit status (1 for a finding, 2 for a guard refusal, 3 for a failed or inconclusive check, 0 for a pass or a named unclassified observation), so none of them covered the current form.
 
 Before running it, provision a mode-0600 header file in a private directory containing `Authorization: Bearer ` followed by the appropriate test or administrative key. Use an empty header file for unauthenticated requests. Prepare the JSON body in another protected file, substituting its placeholders before use; `{}` suffices for GET, which ignores that file. Keep URLs free of credentials. The block captures responses privately because management responses can contain keys.
 
@@ -330,6 +371,7 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
 
 ```bash
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'POST' 'REPLACE_WITH_HEADER_FILE' 'REPLACE_WITH_JSON_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -345,8 +387,8 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
       [ -r "$3" ] || { echo "header file is unreadable"; exit 2; }
       [ -r "$4" ] || { echo "JSON file is unreadable"; exit 2; }
       umask 077
-      set -- "$@" "$(mktemp -d)" || exit 1
-      [ -d "$5" ] || { echo "cannot create private results directory"; exit 1; }
+      set -- "$@" "$(mktemp -d)"         # empty if mktemp fails, which the next line catches
+      [ -d "$5" ] || { echo "cannot create private results directory"; exit 3; }
       printf 'Private response directory: %s\n' "$5"
       case "$2" in
         POST)
@@ -361,6 +403,11 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
             -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
           ;;
         *) echo "only GET and POST are supported; not probing"; exit 2 ;;
+      esac
+      set -- "$1" "$2" "$3" "$4" "$5" "$?"   # curl's exit status
+      case "$6" in
+        0) echo "block exit 0, an unclassified observation: a completed request is not a pass on its own, so compare the http= line above and the response in $5 with the comparison you are running"; exit 0 ;;
+        *) echo "curl exit $6: the request failed; inconclusive"; exit 3 ;;
       esac
       ;;
     *) echo "use HTTPS or the loopback backend; not probing"; exit 2 ;;
@@ -540,7 +587,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a34d33c4347949a36d9625d0803c520e2b3b0b260136c5093830c6c56311de63",
+  "body_sha256": "83700efd94f3db0aabc6509b2031fc9b343fc511d9acc120346a53356c420368",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",
