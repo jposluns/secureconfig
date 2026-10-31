@@ -388,7 +388,7 @@ exited 3, and a missing `ss` exited 2.
     sudo ss -tlnp ||   # speaks only for the node and network namespace it runs in, not the whole cluster
       { echo "sudo ss -tlnp exit $?: the listener inventory failed; inconclusive"; [ "$1" = 1 ] || set -- 3; }
   else
-    echo "ss is not installed here, so the node listener inventory did not run; not listing"
+    echo "ss is not installed here; not listing sockets"
     case "$1" in 0) set -- 2 ;; esac
   fi
   echo "block exit $1; the Service, NetworkPolicy, pod and route listings and the listener table are not classified, so judge them yourself"
@@ -826,7 +826,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "75f98ef46df34b5568f67cc96b4fe90d4e658354fa492e531cebb4d7a3bcb094",
+  "body_sha256": "ff6a83157f529680d3a3716dcaead724fbb008d1cfa21445e896815dc398f02f",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",

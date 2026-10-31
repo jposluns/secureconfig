@@ -424,7 +424,7 @@ REASONED: following block; the listener inventory follows the cited GitLab monit
 
 ```bash
 (                                       # a subshell, so the exits below end only the subshell
-  command -v ss > /dev/null || { echo "ss is not installed here, so the listener inventory did not run; not listing"; exit 2; }
+  command -v ss > /dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   sudo ss -tlnp || { echo "sudo ss -tlnp exit $?: the listener inventory failed; inconclusive"; exit 3; }
   echo "block exit 0; the listener table is not classified, so judge it yourself"
 )
@@ -559,7 +559,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "b5568e8bc525e59e53e056089161687d9620488678ce097af14f2fc4b105ba9c",
+  "body_sha256": "a7952a3b25cac81b59d94eed7af07516c698ec7862e378a578cc5923b8d1e06c",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
