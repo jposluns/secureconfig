@@ -193,7 +193,7 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ## 9. Verify
 
-**REASONED:** whole Verify section; every service comparison below rests on the Sources entries cited at that comparison. During marking review (October 2026), the three then-current bash blocks ran from files under Bash 5.3.9(1)-release with a Python 3.14.4 harness and scratch-confined command stubs; each passed `bash -n` and ShellCheck 0.11.0 with exit 0 and no output. The refusal and substituted-input results are recorded at each block's declaration. Earlier declarations elsewhere in this section describe historical authoring runs, which were not independently reproduced in this review. No live Open WebUI, TLS ingress, second-host fixture, identity provider or provider test credentials were supplied for this review. No service response was observed, and the exposed and fixed service comparisons remain REASONED from the pinned source and linked vendor documentation. During marking review (2026-10-14), the block 2 and 3 stub cases were repeated after adding credential refusals; those results are recorded at their declarations. During marking review (2026-10-14), all three then-current Verify bash blocks were extracted to files and each passed Bash 5.3.9(1)-release `bash -n` and ShellCheck 0.11.0 with exit 0 and no output. These syntax and lint checks did not execute the blocks or repeat the stub cases. Every bash -n, ShellCheck and stub run recorded in this section covered the three Verify bash blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2.
+**REASONED:** whole Verify section; every service comparison below rests on the Sources entries cited at that comparison. During marking review (October 2026), the three then-current bash blocks ran from files under Bash 5.3.9(1)-release with a Python 3.14.4 harness and scratch-confined command stubs; each passed `bash -n` and ShellCheck 0.11.0 with exit 0 and no output. The refusal and substituted-input results are recorded at each block's declaration. Earlier declarations elsewhere in this section describe historical authoring runs, which were not independently reproduced in this review. No live Open WebUI, TLS ingress, second-host fixture, identity provider or provider test credentials were supplied for this review. No service response was observed, and the exposed and fixed service comparisons remain REASONED from the pinned source and linked vendor documentation. During marking review (2026-10-14), the block 2 and 3 stub cases were repeated after adding credential refusals; those results are recorded at their declarations. During marking review (2026-10-14), all three then-current Verify bash blocks were extracted to files and each passed Bash 5.3.9(1)-release `bash -n` and ShellCheck 0.11.0 with exit 0 and no output. These syntax and lint checks did not execute the blocks or repeat the stub cases. Every bash -n, ShellCheck and stub run recorded in this section covered the three Verify bash blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Those runs also predate the change that makes each of the three blocks report its result in its exit status (1 for a finding, 2 for a guard refusal, 3 for a failed or inconclusive check, 0 for a pass or a named unclassified observation), so none of them covered the current form.
 
 **REASONED:** operating guidance for every comparison below; no live Open WebUI or ordinary and administrator test accounts in the authoring environment. The operating guidance carries no command of its own, so nothing in it ran locally. The operating guidance rests on the verified-user roles in the guide's cited Open WebUI authentication helpers entry and the additive grants in the guide's cited Open WebUI groups entry: an administrator can pass a check that an ordinary user must fail, so an administrator's success alone cannot separate the exposed state from the fixed one. Run exposed comparisons only on a private, disposable installation. Keep production bootstrap private. Use ordinary users as well as administrators: an administrator's successful request does not demonstrate an ordinary user's boundary.
 
@@ -203,6 +203,7 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ```bash
 (
+  set +e                                # errexit off here, so a command that ends nonzero is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'https://chat.example.com'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -213,19 +214,42 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
     https://*@*)
       echo "use an HTTPS origin without credentials; not probing"; exit 2 ;;
     https://*)
-      ss -tlnp   # read every listener; the published mapping should be 127.0.0.1:3000 only, never 0.0.0.0 or ::.
-                 # ss shows host listeners, not Docker's NAT: use Docker Engine 28.0+ for loopback publishing
-                 # (older engines let a same-L2 host reach a localhost-published port), confirm the mapping is
-                 # 127.0.0.1:3000->8080/tcp, and from another LAN/VPC host confirm nothing answers on port 3000.
+      set -- "$1" 0                     # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+      set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the listener table, then ss's exit status
+      printf '%s' "$3"   # read every listener; the published mapping should be 127.0.0.1:3000 only, never 0.0.0.0 or ::.
+                         # ss shows host listeners, not Docker's NAT: use Docker Engine 28.0+ for loopback publishing
+                         # (older engines let a same-L2 host reach a localhost-published port), confirm the mapping is
+                         # 127.0.0.1:3000->8080/tcp, and from another LAN/VPC host confirm nothing answers on port 3000.
+                         # The check below also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback.
+      [ "$4" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- "$1" 3 "$3" "$4"; }
+      if printf '%s' "$3" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+        echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- "$1" 1 "$3" "$4"
+      else
+        case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;; esac
+      fi
       curl -q -g -sSI --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${1%/}/"
                                            # serves over TLS without -k; --noproxy so a client proxy cannot answer
+      case "$?" in 0) ;; *) echo "the HTTPS request failed, and a certificate error, local socket error or DNS failure does not prove private ingress; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;; esac
       # Signup state, programmatically: Open WebUI serves its feature flags at /api/config.
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "${1%/}/api/config"
-                                           # JSON feature flags; confirm signup is disabled there (features.enable_signup: false)
+      set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "${1%/}/api/config"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the response body
+      printf '%s\n' "$4"                  # JSON feature flags; confirm signup is disabled there (features.enable_signup: false)
+      if printf '%s' "$4" | grep -q '"enable_signup" *: *true'; then
+        echo "FINDING: /api/config reports enable_signup true, so ordinary signup is open"; set -- "$1" 1
+      elif [ "$3" != 0 ]; then
+        echo "curl exit $3: the /api/config request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+      elif printf '%s' "$4" | grep -q '"enable_signup" *: *false'; then
+        :
+      else
+        echo "/api/config reported enable_signup as neither true nor false; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+      fi
       # In a private browser window, AFTER your admin account exists: the sign-up option is absent AND an actual
       # registration attempt is REFUSED (a missing button alone is not proof). With signup on, registering a new
       # account yields a pending/unapproved user, not access.
+      echo "block exit $2; listeners other than a non-loopback port 3000, the Docker mapping, the HTTPS response headers and the browser registration attempt are not classified, so judge them yourself"
+      exit "$2"
       ;;
     *) echo "use an HTTPS origin without credentials; not probing"; exit 2 ;;
   esac
@@ -238,6 +262,7 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ```bash
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_OPENWEBUI_HOST_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -248,8 +273,15 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
     *@*)
       echo "use a host address without credentials; not probing"; exit 2 ;;
     *)
-      curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"
+      set -- "$1" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{time_connect}' "http://$1:3000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # curl's exit status, then its output
+      printf '%s\n' "${3%$'\n'*}"         # the http= line
+      case "$2:${3##*$'\n'}" in
+        0:*) echo "FINDING: port 3000 answered over HTTP from this host"; exit 1 ;;
+        7:0.000000|28:0.000000) echo "block exit 0, an unclassified observation: nothing answered on port 3000, as the fixed publication requires, but a local error gives the same exit status, so read the err= text above and confirm the intended HTTPS service still works before attributing this to the network boundary"; exit 0 ;;
+        *) echo "curl exit $2 is neither an answer nor a refused or timed-out connection; inconclusive"; exit 3 ;;
+      esac
       ;;
   esac
 )
@@ -265,6 +297,7 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ```bash
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'GET' 'REPLACE_WITH_HEADER_FILE' 'REPLACE_WITH_BODY_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -284,8 +317,8 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
         *) echo "use GET, POST, DELETE or UPLOAD; not probing"; exit 2 ;;
       esac
       umask 077
-      set -- "$@" "$(mktemp -d)" || exit 1
-      [ -d "$5" ] || { echo "cannot create private results directory"; exit 1; }
+      set -- "$@" "$(mktemp -d)"         # empty if mktemp fails, which the next line catches
+      [ -d "$5" ] || { echo "cannot create private results directory"; exit 3; }
       printf 'Private response directory: %s\n' "$5"
       case "$2" in
         GET)
@@ -311,6 +344,11 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
             -H "@$3" -F "file=@$4" -o "$5/body" -D "$5/headers" \
             -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
           ;;
+      esac
+      set -- "$1" "$2" "$3" "$4" "$5" "$?"   # curl's exit status
+      case "$6" in
+        0) echo "block exit 0, an unclassified observation: a completed request is not a pass on its own, so compare the http= line above and the response in $5 with the comparison you are running"; exit 0 ;;
+        *) echo "curl exit $6: the request failed; inconclusive"; exit 3 ;;
       esac
       ;;
     *) echo "use HTTPS or the loopback backend; not probing"; exit 2 ;;
@@ -484,7 +522,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "40995d661392e2b2e2d42b622e708db91744e805c9d8660ececa67b4181a397a",
+  "body_sha256": "687c29452975341d01610f4ab8114b17b0ec0f462131609dbdff02da67aa4c9f",
   "components": {
     "webui": {
       "name": "Open WebUI",
