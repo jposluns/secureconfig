@@ -101,9 +101,27 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing
 REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; the authoring environment has no authorized target host or external probe machine.
 
 ```bash
-sudo ss -4 -tulnp                 # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
-sudo ss -6 -tulnp                 # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
-sudo ufw status verbose           # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
+(                                 # a subshell, so the exit below ends only the subshell; run it on the host you are checking
+  set +e                          # errexit off here, so a command that fails is recorded below instead of ending the block
+  set -- 0                        # the block's status so far: 3 (a command failed) outranks 2 (the ufw check refused), which outranks 0
+  sudo ss -4 -tulnp || { echo "ss -4 exit $?: the IPv4 listener list failed; inconclusive"; set -- 3; }   # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
+  sudo ss -6 -tulnp || { echo "ss -6 exit $?: the IPv6 listener list failed; inconclusive"; set -- 3; }   # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
+  if command -v ufw > /dev/null || [ -x /usr/sbin/ufw ]; then
+    sudo ufw status verbose || { echo "ufw status exit $?: the firewall status failed; inconclusive"; set -- 3; }   # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
+  else
+    echo "ufw is not installed here, so its status was not read: on a firewalld system read the zone with firewall-cmd --list-all as section 2 shows; not checking"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
+  echo "block exit $1; the listeners and the firewall status are not classified, so judge them against the comments"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: disallowed-source SSH reachability follows the cited netcat, BusyBox, UFW and firewalld sources; no external probe machine is available in the authoring environment.
+# Run this block from an address outside the admin range. It never exits 0: a connection is the finding (1), and
+# any failure to connect is inconclusive (3), because a refusal or timeout alone does not show that the host
+# firewall denied it; it exits 2 if it refuses its input.
 (                                 # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -111,20 +129,36 @@ sudo ufw status verbose           # default deny incoming; then `sudo ufw show r
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) nc -vz -w 3 "$1" 22 ;;   # from an address outside the admin range: must fail to connect
+    *) if nc -vz -w 3 "$1" 22; then   # from an address outside the admin range: must fail to connect
+         echo "FINDING: port 22 accepted a connection from this address; block exit 1"; exit 1
+       else
+         echo "nc exit $?: no connection; inconclusive, so confirm SSH works from an allowed source and read the effective firewall rules; block exit 3"; exit 3
+       fi ;;
     # as this guide's assessment, a refusal or timeout only means THIS connection failed, not that the host firewall denied it (a host with
     # no sshd listening refuses too): confirm SSH works from an allowed source and read `ufw status`/`--list-all`
     # for the effective rule. A local error, an unsupported option (BusyBox small nc lacks -v; its 1.10-compatible applet lists it), or exit 1 with no
     # output at all is inconclusive as this guide's assessment; it does not establish a remote firewall result
   esac
 )
-# guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
-ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   # keys-only: require immediate failure with NO password prompt AND a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; "Permission denied (publickey)" is expected when only publickey remains; a password prompt or a method list naming either method means that path is still on
-# guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
-ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
 ```
 
-REASONED: preceding block; listener and firewall inventory, disallowed-source SSH reachability, key-only login and PAM MFA comparisons follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; no authorized target host or external probe machine is available, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session. The `nc -vz -w 3` form is sourced for Ubuntu noble netcat-openbsd; CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative, but the fetched Ncat source is a later master commit, so this guide has not established the packaged version's option behaviour. Check the installed `nc` variant before treating this probe as evidence.
+```bash
+# REASONED: key-only login and PAM MFA comparisons follow the cited OpenSSH, TOTP and Duo sources; no authorized target host is available in the authoring environment.
+# Run this block from a second terminal before closing your working session. Both checks are read-and-judge, and
+# neither ssh exit status is a result: the keys-only check passes by failing, and the MFA check is judged by
+# its prompts, so the block always exits 0.
+(                                 # a subshell, so the exit below ends only the subshell
+  set +e                          # errexit off here, so the keys-only check's expected failure does not end the block before the MFA check
+  # guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
+  ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   # keys-only: require immediate failure with NO password prompt AND a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; "Permission denied (publickey)" is expected when only publickey remains; a password prompt or a method list naming either method means that path is still on
+  # guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
+  ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
+  echo "block exit 0; both ssh results are not classified, so judge them against the comments"
+  exit 0
+)
+```
+
+REASONED: the listener and firewall inventory, disallowed-source SSH reachability, key-only login and PAM MFA comparisons in the three blocks above follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; no authorized target host or external probe machine is available, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session. The `nc -vz -w 3` form is sourced for Ubuntu noble netcat-openbsd; CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative, but the fetched Ncat source is a later master commit, so this guide has not established the packaged version's option behaviour. Check the installed `nc` variant before treating this probe as evidence.
 
 ## Sources (checked September 2026)
 
@@ -266,7 +300,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "16eff2aea7e4e9fc85785cfc8368e6fae769d3bcbe50c2d5c3f883795b67d4de",
+  "body_sha256": "ec469b7cdb1c79108bc438e5b6f2e429929ddabd0145ead5a0af7fb446bfcc51",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
@@ -514,11 +548,11 @@ Claims (full source mapping in the JSON block below):
     "fail2ban": {"text": "Use fail2ban to ban repeated authentication failures against SSH/login services.", "components": ["fail2ban"], "sources": ["fail2ban:s7a37ae416e85"], "status": "REASONED"},
     "crowdsec": {"text": "CrowdSec is the alternative protection for repeated authentication failures.", "components": ["crowdsec"], "sources": ["crowdsec:s4efe4c22c69b"], "status": "REASONED"},
     "updates": {"text": "Automate security patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems, configured to install them. Ubuntu noble's postinst conditionally writes 20auto-upgrades, and apt-daily-upgrade invokes unattended-upgrade when its periodic interval permits; its allowed origins include the release and security pockets. CentOS Stream 9 packages dnf-automatic. Upstream DNF 4.14.0 ships the cited automatic.conf defaults apply_updates=no and upgrade_type=default and the cited timers; enable dnf-automatic-install.timer and select upgrade_type=security for security-only installation. CentOS Stream 9 applies downstream dnf-automatic patches this guide has not reviewed, so its packaged defaults remain unestablished. Other Debian and RHEL-family package defaults remain unestablished.", "components": ["ssh", "ubuntu-uu", "ubuntu-apt", "c9s-dnf", "dnf4"], "sources": ["ssh:s44f73ffcb41e", "ubuntu-uu:sf087d7bd33d0", "ubuntu-uu:s665816188e55", "ubuntu-apt:sca779f690beb", "ubuntu-apt:sfd64eba4bd67", "ubuntu-apt:s11bc9e19894d", "c9s-dnf:s9b090e2053b2", "c9s-dnf:s32a269377ebb", "c9s-dnf:s006862fe84d1", "c9s-dnf:s50216e5989bf", "dnf4:s97934a4740a2", "dnf4:sbd65ffa4b83c", "dnf4:s5619c2b76401", "dnf4:sb4ab6d87f528", "dnf4:s189a68fdfaad"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure with NO password prompt and a Permission denied (...) method list naming neither password nor keyboard-interactive are required. As this guide's reasoning, the client prints the server's remaining methods in that list.", "components": ["ufw", "iproute2", "ubuntu-nc", "c9s-nmap", "busybox", "openssh99"], "sources": ["ufw:scff3a017f30b", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s8ecdaf9e9ea7", "iproute2:s4e1c28d5adad", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "busybox:sd707e18625cc", "busybox:s34bdee292f79", "busybox:s14b89daa008d", "c9s-nmap:s3ab25d24e37a", "ubuntu-nc:s5e260ceab82c", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562", "openssh99:saa71f4024a44"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure with NO password prompt and a Permission denied (...) method list naming neither password nor keyboard-interactive are required. As this guide's reasoning, the client prints the server's remaining methods in that list.", "components": ["ufw", "iproute2", "ubuntu-nc", "c9s-nmap", "busybox", "openssh99"], "sources": ["ufw:scff3a017f30b", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s8ecdaf9e9ea7", "iproute2:s4e1c28d5adad", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "busybox:sd707e18625cc", "busybox:s34bdee292f79", "busybox:s14b89daa008d", "c9s-nmap:s3ab25d24e37a", "ubuntu-nc:s5e260ceab82c", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562", "openssh99:saa71f4024a44"], "status": "REASONED", "verify": [1, 2, 3]},
     "verify-firewall": {"text": "UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED", "verify": [1]},
-    "verify-external": {"text": "Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. As this guide's assessment, refusal alone, local errors and unsupported netcat options are inconclusive.", "components": ["ufw", "firewalld"], "sources": ["ufw:scff3a017f30b", "firewalld:sa1a1385129f1"], "status": "REASONED", "verify": [1]},
-    "verify-password": {"text": "A password-only SSH attempt must fail immediately without a password prompt and show a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; a prompt or a list naming either method means that path is still on.", "components": ["ssh", "openssh99"], "sources": ["ssh:s44f73ffcb41e", "openssh99:saa71f4024a44", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562"], "status": "REASONED", "verify": [1]},
-    "verify-mfa": {"text": "After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.", "components": ["ssh", "totp", "duo"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18", "duo:s18b76ce18df1"], "status": "REASONED", "verify": [1]}
+    "verify-external": {"text": "Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. As this guide's assessment, refusal alone, local errors and unsupported netcat options are inconclusive.", "components": ["ufw", "firewalld"], "sources": ["ufw:scff3a017f30b", "firewalld:sa1a1385129f1"], "status": "REASONED", "verify": [2]},
+    "verify-password": {"text": "A password-only SSH attempt must fail immediately without a password prompt and show a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; a prompt or a list naming either method means that path is still on.", "components": ["ssh", "openssh99"], "sources": ["ssh:s44f73ffcb41e", "openssh99:saa71f4024a44", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562"], "status": "REASONED", "verify": [3]},
+    "verify-mfa": {"text": "After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.", "components": ["ssh", "totp", "duo"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18", "duo:s18b76ce18df1"], "status": "REASONED", "verify": [3]}
   }
 }
 ````

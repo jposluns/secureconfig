@@ -15950,9 +15950,9 @@ Both are development tooling, not a production server: the `vite preview` docs s
 
 REASONED: output-path coverage per the cited SvelteKit adapter-node, Nitro and Vite pinned sources; no framework application or production build is available in the authoring environment, so the paths were checked against those sources rather than a built tree. Run from the project root after a production build. The paths below cover default SvelteKit adapter-node output (`build/client` plus the separate `build/prerendered`), Nuxt/Nitro public output (`.output/public`, including copied public assets and prerendered pages), and a plain Vite client build (`dist`, including copied public assets). They exclude adapter-node server output and Nitro `.output/server`.
 
-REASONED: scan coverage and the dist/server classification per the design of the block itself and the cited output-path sources; at marking time the scan ran against local fixture trees, where a secret planted under dist/assets was reported as a FINDING, a tree without it reported clean, and a plant only under dist/server was reported as server output. The same marking-time fixture run also showed that, with no listed directory, the block refused as inconclusive, and that, with dist/assets a symlink to an external fixture directory holding the planted value, the scan followed the link and reported dist/assets/x.js as a FINDING. These fixture runs covered an earlier form, whose FINDING and error arms ended with status 0; none was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. No real framework production build is available in the authoring environment, so none was scanned. Before running, adjust both path lists for your actual adapter, Nitro preset or configured output directories. The block always scans all of `dist`, following symlinks, so it never misses a browser-served file. In a Vite SSR layout, where `dist/server` holds the server build, a result whose matches are all under `dist/server/` is reported as server output rather than as a client leak, and any other result is a FINDING, with its `dist/server/` matches labelled as server output. Confirm that `dist/server` is server-only in your deployment before treating a server-output result as clean. Include any separately deployed static assets and prerendered HTML, and, apart from `dist` (scanned whole, as described above), never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
+REASONED: scan coverage and the dist/server classification per the design of the block itself and the cited output-path sources; at marking time the scan ran against local fixture trees, where a secret planted under dist/assets was reported as a FINDING, a tree without it reported clean, and a plant only under dist/server was reported as server output. The same marking-time fixture run also showed that, with no listed directory, the block refused as inconclusive, and that, with dist/assets a symlink to an external fixture directory holding the planted value, the scan followed the link and reported dist/assets/x.js as a FINDING. These fixture runs covered an earlier form, whose FINDING and error arms ended with status 0; none was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. No real framework production build is available in the authoring environment, so none was scanned. Before running, adjust the scan block's directory list for your actual adapter, Nitro preset or configured output directories. The block always scans all of `dist`, following symlinks, so it never misses a browser-served file. In a Vite SSR layout, where `dist/server` holds the server build, a result whose matches are all under `dist/server/` is reported as server output rather than as a client leak, and any other result is a FINDING, with its `dist/server/` matches labelled as server output. Confirm that `dist/server` is server-only in your deployment before treating a server-output result as clean. Include any separately deployed static assets and prerendered HTML, and, apart from `dist` (scanned whole, as described above), never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
 
-REASONED: following block; private-route denial, client-secret scanning, Host handling and proxy cookies/redirects. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework and grep documentation. The private-route and spoofed-Host requests each take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guards have not been run.
+REASONED: following block; private-route denial and Host handling, with the proxy cookie and redirect checks in the prose after the next block; the client-secret scan is the next block. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework documentation. The private-route and spoofed-Host requests take the application's host name once, on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The block exits 1 if `/api/private` answers a 2xx without a session cookie, 3 if it answers anything else but 401 or if either request fails, and otherwise 0; a curl exit 52 on the spoofed-Host request, where the server closes without a response as nginx's `return 444` does, is not a failure. The spoofed-Host result stays for you to judge. The block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted; it has not been run against a deployment.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -15966,10 +15966,33 @@ REASONED: following block; private-route denial, client-secret scanning, Host ha
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -si "https://$1/api/private" | head -1   # 401 with no session cookie, on all three frameworks
+  set +e                                # errexit off here, so a request that fails is recorded below instead of ending the block
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$(if curl -q -g -si -w '\n%{http_code}' "https://$1/api/private"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"               # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"          # curl's exit status, the response, then the HTTP code
+  if [ -n "$4" ]; then printf '%s\n' "${4%%$'\n'*}"; fi      # the status line: 401 with no session cookie, on all three frameworks
+  case "$3:$5" in
+    0:401) ;;
+    0:2??) echo "FINDING: /api/private answered $5 with no session cookie"; set -- "$1" 1 ;;
+    0:*) echo "HTTP $5 from /api/private is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the /api/private request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  # The spoofed Host header evil.example.com is a deliberately foreign value, so it stays as written.
+  set -- "$1" "$2" "$(if curl -q -g -si "https://$1/" -H "Host: evil.example.com"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"               # curl's exit status, then the response
+  if [ -n "$4" ]; then printf '%s\n' "${4%%$'\n'*}"; fi      # the deployed application must not trust a spoofed Host
+  case "$3" in
+    0|52) ;;                            # a status line, or none when the server closes without a response (nginx's return 444 gives curl exit 52)
+    *) echo "curl exit $3: the spoofed-Host request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the spoofed-Host status line, or its absence, is not classified, so judge it as the Host paragraph below the next block says"
+  exit "$2"
 )
-ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm browser-served output paths
-# Use the browser-served paths above; adapt both lists for custom output or SSR before running.
+```
+
+```bash
+# The browser-served paths are the four directory checks at the top of the block; adapt them for custom output or SSR before running.
 # Search client assets and prerendered pages for the literal secret with a fixed-string match. The secret is prompted
 # (input hidden) and reaches grep on stdin (-f - reads the patterns from stdin), never grep's argv; -l prints only
 # file names, so a finding does not echo the secret. -R follows symlinks, so a linked asset is searched too; -D skip
@@ -15978,57 +16001,54 @@ ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm 
 # separately, so an inherited `set -e` cannot abort on a clean result: 0 is a finding, 1 is clean, anything else is
 # an error, with grep's own diagnostics left visible. Paste this subshell by itself: without bracketed paste, a line
 # pasted after its closing ) becomes the search value instead, and its clean result then means nothing.
+# The block exits 1 for a finding, 3 if the hidden prompt, ls or grep fails, 2 if a check refuses (no listed
+# directory, a readonly name or IFS, or an empty secret), and 0 for a clean or server-output-only result.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
-  set --
-  for d in build/client build/prerendered .output/public dist; do [ -d "$d" ] && set -- "$@" "$d"; done
-  [ "$#" -gt 0 ] || { echo 'inconclusive: no listed browser-served output directory here; build first and check the paths'; exit 2; }
+  set --                                # the directories to search, kept in the positional parameters rather than a named variable
+  if [ -d build/client ]; then set -- "$@" build/client; fi
+  if [ -d build/prerendered ]; then set -- "$@" build/prerendered; fi
+  if [ -d .output/public ]; then set -- "$@" .output/public; fi
+  if [ -d dist ]; then set -- "$@" dist; fi
+  [ "$#" -gt 0 ] || { echo 'no listed browser-served output directory here; build first and check the paths; not scanning'; exit 2; }
   { unset -n client_secret && unset -v client_secret; } 2>/dev/null ||
     { echo 'cannot initialize secret input; not scanning'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not scanning'; exit 2; }
-  IFS= read -r -s -p 'Secret value to search for (input hidden), then Enter: ' client_secret < /dev/tty || exit 2
-  printf '\n'
+  if IFS= read -r -s -p 'Secret value to search for (input hidden), then Enter: ' client_secret < /dev/tty; then
+    printf '\n'
+  else
+    printf '\n'; echo 'secret input failed; not scanning'; exit 3   # every check above passed, so the failed prompt is inconclusive
+  fi
   case "$client_secret" in
     ''|*[[:cntrl:]]*) echo 'the full secret value is required; not scanning'; exit 2 ;;
   esac
+  set -- 0 "$@"                         # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the directories
+  ls -d -- "${@:2}" || { echo "ls exit $?: the output directories could not be listed; inconclusive"; set -- 3 "${@:2}"; }   # confirm browser-served output paths
   # File names are not secret: capture them so matches under dist/server/ (a Vite SSR server build) are reported apart.
-  if hits=$(printf '%s\n' "$client_secret" | grep -RlF -D skip -f - -- "$@"); then rc=0; else rc=$?; fi
-  case "$rc" in
+  set -- "$1" "$(if printf '%s\n' "$client_secret" | grep -RlF -D skip -f - -- "${@:2}"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:2}"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}" "${@:3}"         # status, grep's exit status, the matching file names, then the directories searched
+  case "$2" in
     0)
       # FINDING is the default; only a positively classified all-dist/server/ result is reported as server output.
-      client_hits=$(printf '%s\n' "$hits" | grep -av '^dist/server/' || :)
-      server_hits=$(printf '%s\n' "$hits" | grep -a '^dist/server/' || :)
-      printf '%s\n' "$hits"
-      if [ -z "$client_hits" ] && [ -n "$server_hits" ]; then
+      printf '%s' "$3"
+      if printf '%s' "$3" | grep -aq '^dist/server/' && ! printf '%s' "$3" | grep -aqv '^dist/server/'; then
         echo "server output only: every match is under dist/server/, which a Vite SSR build does not serve to browsers; confirm dist/server is server-only in your deployment before treating this as clean"
       else
         echo "FINDING: the secret is in the built client output"
-        [ -z "$server_hits" ] || echo "(of the files listed, those under dist/server/ are server output)"
-        exit 1
+        if printf '%s' "$3" | grep -aq '^dist/server/'; then echo "(of the files listed, those under dist/server/ are server output)"; fi
+        set -- 1 "${@:2}"
       fi
       ;;
-    1) echo "clean: secret not found in $*" ;;
-    *) echo "error: grep exited $rc, result inconclusive"; exit 3 ;;
+    1) echo "clean: secret not found in ${*:4}" ;;
+    *) echo "error: grep exited $2, result inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
   esac
-)
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the same application host name as the private-route check above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  # The spoofed Host header evil.example.com is a deliberately foreign value, so it stays as written.
-  curl -q -g -si "https://$1/" -H "Host: evil.example.com" | head -1   # the deployed application must not trust a spoofed Host
+  echo "block exit $1; a server-output-only or clean result is not proof, so judge it as the paragraph after this block says"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; the whole fence: the private-route request, the output-path listing, the client-secret scan and the spoofed-Host request, per the cited framework documentation and GNU grep manual entries; no deployed framework application is available in the authoring environment, so the two curl checks were not run. The scan subshell ran at marking time against local fixture trees, where a planted secret produced the FINDING line and a clean fixture tree reported clean. On 2026-10-13 (UTC), with Bash 5.3.9 and a dummy secret typed at a pty's hidden prompt, the scan subshell traced two lines under `bash -x` (`trap -` and `set +x +a +e`), neither holding the dummy, where the same subshell with `set +x` removed traced 32 lines, one of them holding the dummy; an interactive Bash given the subshell wrote a history file holding the block's lines and not the dummy. The fixture, bash -x and history runs of the scan subshell recorded here covered an earlier form, whose FINDING and error arms ended with status 0; none was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. The account-owner and transformation limits stated in this paragraph are documented, not demonstrated. The secret reaches grep on stdin, never argv; the hidden prompt keeps it out of shell history and the block's `set +x` keeps it out of `set -x` tracing, but this does not hide it from the account owner or root. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
+REASONED: preceding block; the output-path listing and the client-secret scan, per the cited framework documentation and GNU grep manual entries; the private-route and spoofed-Host requests are in the block before it. The scan subshell ran at marking time against local fixture trees, where a planted secret produced the FINDING line and a clean fixture tree reported clean. On 2026-10-13 (UTC), with Bash 5.3.9 and a dummy secret typed at a pty's hidden prompt, the scan subshell traced two lines under `bash -x` (`trap -` and `set +x +a +e`), neither holding the dummy, where the same subshell with `set +x` removed traced 32 lines, one of them holding the dummy; an interactive Bash given the subshell wrote a history file holding the block's lines and not the dummy. The fixture, bash -x and history runs of the scan subshell recorded here covered an earlier form, whose FINDING and error arms ended with status 0; none was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. The current form, which also lists its directories itself, holds its captures in positional parameters and exits 3 when the hidden prompt fails, is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs while it was drafted. The account-owner and transformation limits stated in this paragraph are documented, not demonstrated. The secret reaches grep on stdin, never argv; the hidden prompt keeps it out of shell history and the block's `set +x` keeps it out of `set -x` tracing, but this does not hide it from the account owner or root. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
 
 REASONED: Host, proxy cookie, redirect and trusted-proxy checks per the cited SvelteKit adapter-node and core source, Vite server-options documentation, Nuxt runtime config documentation, the pinned Nuxt 4.0.0 package manifest and lockfile, pinned nitropack 2.12.0 and h3 1.15.3 sources, and Node v22.22.1 HTTP documentation. No reverse proxy or deployed adapter is available in the authoring environment, so the outcomes of the Host, proxy cookie, redirect and trusted-proxy checks were not observed. The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server. Guide assessment: for this probe, exposed means the application responds to the spoofed Host, so curl prints its first response line. Fixed means a fronting proxy or server refuses the unknown Host before the application; apply the default-server refusal pattern in [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md) to the probed HTTPS listener. With a refusal response, curl prints its status line; with nginx return 444 closing without a response, this silent curl pipeline prints nothing. Neither a status line nor silence alone proves which layer handled the request or whether the application builds URLs or redirects from Host. Correlate proxy and application logs with the probe and a working allowed-host control; inspect response headers and generated URLs separately to judge Host use. Adapter-node 5.5.7 uses `ORIGIN` or configured/request headers for the request origin; without `ORIGIN` or `PROTOCOL_HEADER`, it defaults the protocol to `https` and uses the request `Host` header unless `HOST_HEADER` supplies one. Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use an `https://` `Location` once `ORIGIN` (SvelteKit) is set. `NUXT_PUBLIC_...` is the public runtime-config prefix, exposed straight to the client bundle; it is not a trusted-proxy or secure-cookie setting and does nothing for this check. Nuxt 4.0.0 pins nitropack 2.12.0. For a non-static production build with no preset named or matched, nitropack falls back to `node-server`, whose entry runtime passes the h3 app through h3's `toNodeListener` to a Node HTTP or HTTPS server. In the traced adapter-node 5.5.7 handler and SvelteKit Node request conversion, `ORIGIN` or configured/request headers form the request URL without a Host allowlist. In the traced nitropack 2.12.0 node-server and app construction, the h3 app reaches Node HTTP or HTTPS without a Host allowlist. Nuxt v4.0.0 resolves h3 1.15.3: its traced request utilities read `Host` or optionally `x-forwarded-host` and construct a URL without an allowlist; the release commit exports `toNodeListener`, which creates an event and calls `app.handler`, matching the adapter Nitro imports. Node v22.22.1 documents default rejection of an HTTP/1.1 request missing `Host`; that is not an allowed-host list. Guide assessment: these source paths do not establish a universal Host rejection outcome, how the hosting platform treats Host and forwarded headers, or a deployed cookie and redirect outcome. Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable. Guide advice: verify the equivalent behaviour against the deployed Nuxt preset and hosting platform, or whichever adapter you deploy with.
 
@@ -16154,7 +16174,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "cdaff98fafa1f1dfb8ad391ec69dd9cafcef805c0a24e6d142f59d28006ee04d",
+  "body_sha256": "e12d281c3f29b4937375260eb7c5e3086d24dbd889b298b01fd6317af64c1356",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -16318,7 +16338,7 @@ Claims (full source mapping in the JSON block below):
     "vite-bind": {"text": "Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests.", "components": ["vite-pin", "vite"], "sources": ["vite-pin:s36532f775f7f", "vite:sae9dd90908fc"], "status": "REASONED"},
     "vite-hosts": {"text": "server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED"},
     "verify-private": {"text": "Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED", "verify": [1]},
-    "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite", "nitro-output-docs"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:sa65d64f55ca1", "nuxt-output:se1cb3e5b4959", "nitro-output:sbe9fd1f61fe0", "nitro-output-docs:s47fff9b24fba", "nitro-output-docs:s51e38e411bfa", "vite-pin:s8ba1c2b868b7", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [1]},
+    "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite", "nitro-output-docs"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:sa65d64f55ca1", "nuxt-output:se1cb3e5b4959", "nitro-output:sbe9fd1f61fe0", "nitro-output-docs:s47fff9b24fba", "nitro-output-docs:s51e38e411bfa", "vite-pin:s8ba1c2b868b7", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [2]},
     "verify-host": {"text": "The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server. Guide assessment: for this probe, exposed means the application responds to the spoofed Host, so curl prints its first response line. Fixed means a fronting proxy or server refuses the unknown Host before the application; apply the default-server refusal pattern in [nginx.md](nginx.md) to the probed HTTPS listener. With a refusal response, curl prints its status line; with nginx return 444 closing without a response, this silent curl pipeline prints nothing. Neither a status line nor silence alone proves which layer handled the request or whether the application builds URLs or redirects from Host. Correlate proxy and application logs with the probe and a working allowed-host control; inspect response headers and generated URLs separately to judge Host use. In the traced adapter-node 5.5.7 and SvelteKit Node request conversion, ORIGIN or configured/request headers form the request URL; these files do not apply a Host allowlist. In the traced nitropack 2.12.0 node-server and app construction, the h3 app is passed to Node HTTP or HTTPS without a Host allowlist. Nuxt v4.0.0 resolves h3 1.15.3; its traced request utilities read Host or optionally forwarded Host and construct a URL without an allowlist; the release commit exports toNodeListener, which creates an event and calls app.handler, matching the adapter Nitro imports. Node v22.22.1 documents a default missing-Host rejection for HTTP/1.1, not an allowed-host list. Guide assessment: these source paths do not establish a universal Host rejection outcome or how the hosting platform treats Host and forwarded headers.", "components": ["vite", "adapter", "nitro-node", "svelte-kit-pin", "h3-pin", "node-http", "nuxt-lock"], "sources": ["vite:sae9dd90908fc", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:s0c8ca22542d2", "svelte-kit-pin:sd1c295d2cf56", "h3-pin:scfe5cba40964", "h3-pin:sdbe7e781611f", "h3-pin:s218970f40ae0", "node-http:sdc846082a7e3", "nuxt-lock:se77b46c1e3ad"], "status": "REASONED", "verify": [1]},
     "verify-proxy": {"text": "Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its deployment preset and hosting platform, not NUXT_PUBLIC_. Adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin; with ORIGIN and PROTOCOL_HEADER unset, it defaults to https and uses the request Host header unless HOST_HEADER supplies one. Nuxt 4.0.0 pins nitropack 2.12.0, which falls back to its node-server preset for a non-static production build with no preset named or matched; that preset passes the h3 app through toNodeListener to a Node HTTP or HTTPS server. Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable; the cited lines do not establish how h3 1.x or the hosting platform treats Host and forwarded headers or a deployed cookie and redirect outcome.", "components": ["svelte", "nuxt", "adapter", "nuxt-output", "nitro-node"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nuxt-output:sd00a53729513", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:sdf38c24e1f80", "nitro-node:s91ab58ddc148", "nitro-node:s0c8ca22542d2"], "status": "REASONED", "verify": [1]}
   }
@@ -20409,9 +20429,27 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing
 REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; the authoring environment has no authorized target host or external probe machine.
 
 ```bash
-sudo ss -4 -tulnp                 # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
-sudo ss -6 -tulnp                 # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
-sudo ufw status verbose           # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
+(                                 # a subshell, so the exit below ends only the subshell; run it on the host you are checking
+  set +e                          # errexit off here, so a command that fails is recorded below instead of ending the block
+  set -- 0                        # the block's status so far: 3 (a command failed) outranks 2 (the ufw check refused), which outranks 0
+  sudo ss -4 -tulnp || { echo "ss -4 exit $?: the IPv4 listener list failed; inconclusive"; set -- 3; }   # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
+  sudo ss -6 -tulnp || { echo "ss -6 exit $?: the IPv6 listener list failed; inconclusive"; set -- 3; }   # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
+  if command -v ufw > /dev/null || [ -x /usr/sbin/ufw ]; then
+    sudo ufw status verbose || { echo "ufw status exit $?: the firewall status failed; inconclusive"; set -- 3; }   # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
+  else
+    echo "ufw is not installed here, so its status was not read: on a firewalld system read the zone with firewall-cmd --list-all as section 2 shows; not checking"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
+  echo "block exit $1; the listeners and the firewall status are not classified, so judge them against the comments"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: disallowed-source SSH reachability follows the cited netcat, BusyBox, UFW and firewalld sources; no external probe machine is available in the authoring environment.
+# Run this block from an address outside the admin range. It never exits 0: a connection is the finding (1), and
+# any failure to connect is inconclusive (3), because a refusal or timeout alone does not show that the host
+# firewall denied it; it exits 2 if it refuses its input.
 (                                 # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -20419,20 +20457,36 @@ sudo ufw status verbose           # default deny incoming; then `sudo ufw show r
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) nc -vz -w 3 "$1" 22 ;;   # from an address outside the admin range: must fail to connect
+    *) if nc -vz -w 3 "$1" 22; then   # from an address outside the admin range: must fail to connect
+         echo "FINDING: port 22 accepted a connection from this address; block exit 1"; exit 1
+       else
+         echo "nc exit $?: no connection; inconclusive, so confirm SSH works from an allowed source and read the effective firewall rules; block exit 3"; exit 3
+       fi ;;
     # as this guide's assessment, a refusal or timeout only means THIS connection failed, not that the host firewall denied it (a host with
     # no sshd listening refuses too): confirm SSH works from an allowed source and read `ufw status`/`--list-all`
     # for the effective rule. A local error, an unsupported option (BusyBox small nc lacks -v; its 1.10-compatible applet lists it), or exit 1 with no
     # output at all is inconclusive as this guide's assessment; it does not establish a remote firewall result
   esac
 )
-# guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
-ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   # keys-only: require immediate failure with NO password prompt AND a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; "Permission denied (publickey)" is expected when only publickey remains; a password prompt or a method list naming either method means that path is still on
-# guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
-ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
 ```
 
-REASONED: preceding block; listener and firewall inventory, disallowed-source SSH reachability, key-only login and PAM MFA comparisons follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; no authorized target host or external probe machine is available, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session. The `nc -vz -w 3` form is sourced for Ubuntu noble netcat-openbsd; CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative, but the fetched Ncat source is a later master commit, so this guide has not established the packaged version's option behaviour. Check the installed `nc` variant before treating this probe as evidence.
+```bash
+# REASONED: key-only login and PAM MFA comparisons follow the cited OpenSSH, TOTP and Duo sources; no authorized target host is available in the authoring environment.
+# Run this block from a second terminal before closing your working session. Both checks are read-and-judge, and
+# neither ssh exit status is a result: the keys-only check passes by failing, and the MFA check is judged by
+# its prompts, so the block always exits 0.
+(                                 # a subshell, so the exit below ends only the subshell
+  set +e                          # errexit off here, so the keys-only check's expected failure does not end the block before the MFA check
+  # guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
+  ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   # keys-only: require immediate failure with NO password prompt AND a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; "Permission denied (publickey)" is expected when only publickey remains; a password prompt or a method list naming either method means that path is still on
+  # guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
+  ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
+  echo "block exit 0; both ssh results are not classified, so judge them against the comments"
+  exit 0
+)
+```
+
+REASONED: the listener and firewall inventory, disallowed-source SSH reachability, key-only login and PAM MFA comparisons in the three blocks above follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; no authorized target host or external probe machine is available, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session. The `nc -vz -w 3` form is sourced for Ubuntu noble netcat-openbsd; CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative, but the fetched Ncat source is a later master commit, so this guide has not established the packaged version's option behaviour. Check the installed `nc` variant before treating this probe as evidence.
 
 ## Sources (checked September 2026)
 
@@ -20574,7 +20628,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "16eff2aea7e4e9fc85785cfc8368e6fae769d3bcbe50c2d5c3f883795b67d4de",
+  "body_sha256": "ec469b7cdb1c79108bc438e5b6f2e429929ddabd0145ead5a0af7fb446bfcc51",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
@@ -20822,11 +20876,11 @@ Claims (full source mapping in the JSON block below):
     "fail2ban": {"text": "Use fail2ban to ban repeated authentication failures against SSH/login services.", "components": ["fail2ban"], "sources": ["fail2ban:s7a37ae416e85"], "status": "REASONED"},
     "crowdsec": {"text": "CrowdSec is the alternative protection for repeated authentication failures.", "components": ["crowdsec"], "sources": ["crowdsec:s4efe4c22c69b"], "status": "REASONED"},
     "updates": {"text": "Automate security patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems, configured to install them. Ubuntu noble's postinst conditionally writes 20auto-upgrades, and apt-daily-upgrade invokes unattended-upgrade when its periodic interval permits; its allowed origins include the release and security pockets. CentOS Stream 9 packages dnf-automatic. Upstream DNF 4.14.0 ships the cited automatic.conf defaults apply_updates=no and upgrade_type=default and the cited timers; enable dnf-automatic-install.timer and select upgrade_type=security for security-only installation. CentOS Stream 9 applies downstream dnf-automatic patches this guide has not reviewed, so its packaged defaults remain unestablished. Other Debian and RHEL-family package defaults remain unestablished.", "components": ["ssh", "ubuntu-uu", "ubuntu-apt", "c9s-dnf", "dnf4"], "sources": ["ssh:s44f73ffcb41e", "ubuntu-uu:sf087d7bd33d0", "ubuntu-uu:s665816188e55", "ubuntu-apt:sca779f690beb", "ubuntu-apt:sfd64eba4bd67", "ubuntu-apt:s11bc9e19894d", "c9s-dnf:s9b090e2053b2", "c9s-dnf:s32a269377ebb", "c9s-dnf:s006862fe84d1", "c9s-dnf:s50216e5989bf", "dnf4:s97934a4740a2", "dnf4:sbd65ffa4b83c", "dnf4:s5619c2b76401", "dnf4:sb4ab6d87f528", "dnf4:s189a68fdfaad"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure with NO password prompt and a Permission denied (...) method list naming neither password nor keyboard-interactive are required. As this guide's reasoning, the client prints the server's remaining methods in that list.", "components": ["ufw", "iproute2", "ubuntu-nc", "c9s-nmap", "busybox", "openssh99"], "sources": ["ufw:scff3a017f30b", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s8ecdaf9e9ea7", "iproute2:s4e1c28d5adad", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "busybox:sd707e18625cc", "busybox:s34bdee292f79", "busybox:s14b89daa008d", "c9s-nmap:s3ab25d24e37a", "ubuntu-nc:s5e260ceab82c", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562", "openssh99:saa71f4024a44"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure with NO password prompt and a Permission denied (...) method list naming neither password nor keyboard-interactive are required. As this guide's reasoning, the client prints the server's remaining methods in that list.", "components": ["ufw", "iproute2", "ubuntu-nc", "c9s-nmap", "busybox", "openssh99"], "sources": ["ufw:scff3a017f30b", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s8ecdaf9e9ea7", "iproute2:s4e1c28d5adad", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "busybox:sd707e18625cc", "busybox:s34bdee292f79", "busybox:s14b89daa008d", "c9s-nmap:s3ab25d24e37a", "ubuntu-nc:s5e260ceab82c", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562", "openssh99:saa71f4024a44"], "status": "REASONED", "verify": [1, 2, 3]},
     "verify-firewall": {"text": "UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED", "verify": [1]},
-    "verify-external": {"text": "Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. As this guide's assessment, refusal alone, local errors and unsupported netcat options are inconclusive.", "components": ["ufw", "firewalld"], "sources": ["ufw:scff3a017f30b", "firewalld:sa1a1385129f1"], "status": "REASONED", "verify": [1]},
-    "verify-password": {"text": "A password-only SSH attempt must fail immediately without a password prompt and show a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; a prompt or a list naming either method means that path is still on.", "components": ["ssh", "openssh99"], "sources": ["ssh:s44f73ffcb41e", "openssh99:saa71f4024a44", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562"], "status": "REASONED", "verify": [1]},
-    "verify-mfa": {"text": "After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.", "components": ["ssh", "totp", "duo"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18", "duo:s18b76ce18df1"], "status": "REASONED", "verify": [1]}
+    "verify-external": {"text": "Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. As this guide's assessment, refusal alone, local errors and unsupported netcat options are inconclusive.", "components": ["ufw", "firewalld"], "sources": ["ufw:scff3a017f30b", "firewalld:sa1a1385129f1"], "status": "REASONED", "verify": [2]},
+    "verify-password": {"text": "A password-only SSH attempt must fail immediately without a password prompt and show a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; a prompt or a list naming either method means that path is still on.", "components": ["ssh", "openssh99"], "sources": ["ssh:s44f73ffcb41e", "openssh99:saa71f4024a44", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562"], "status": "REASONED", "verify": [3]},
+    "verify-mfa": {"text": "After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.", "components": ["ssh", "totp", "duo"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18", "duo:s18b76ce18df1"], "status": "REASONED", "verify": [3]}
   }
 }
 ````
@@ -40253,9 +40307,9 @@ access cannot bypass that gateway.
 # REASONED: expected server outcomes follow the cited SurrealDB documentation; no SurrealDB runtime is
 # available in the authoring environment. A redirect, missing database, disabled route, proxy rejection, TLS or transport failure is
 # inconclusive, never a pass.
-ss -tlnp   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
-# guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health   # process up (not an auth check)
+# Run this block on the SurrealDB host: its listener inventory and health check read that host. It exits 2 if a
+# check refuses its input, 3 if the JWT prompt, ss, the health check or either query fails or the health check
+# does not answer 200, and otherwise 0; the listener list and the two query responses stay for you to judge.
 # Auth discrimination: INFO FOR DB; with no credentials vs with a valid system-user JWT, same NS/DB and
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then
 # the actual HTTPS endpoint.
@@ -40273,34 +40327,65 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
   case "$1|$2|$3" in *REPLACE_WITH_*) echo 'replace all placeholders; not probing'; exit 2 ;; esac
   { [ -n "$1" ] && [ -n "$2" ] && [ -n "$3" ]; } || { echo 'empty value; not probing'; exit 2; }
   case "$1" in http://127.0.0.1:8000|https://?*) ;; *) echo 'use local loopback HTTP or HTTPS; not probing'; exit 2 ;; esac
-  set -- -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header 'Accept: application/json' \
-    --header "Surreal-NS: $2" --header "Surreal-DB: $3" --data-binary 'INFO FOR DB;' --url "${1%/}/sql" \
-    --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n'
-  echo UNAUTHENTICATED
-  curl -q -g "$@" </dev/null || exit 1
-  IFS= read -r -s -p 'Short-lived system-user JWT: ' probe_jwt || exit 2
-  printf '\n'
+  if IFS= read -r -s -p 'Short-lived system-user JWT: ' probe_jwt; then
+    printf '\n'
+  else
+    printf '\n'; echo 'secret input failed; not probing'; exit 3   # every check above passed, so the failed prompt is inconclusive
+  fi
   [[ "$probe_jwt" =~ ^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+$ ]] || { echo 'missing or malformed JWT; not probing'; exit 2; }
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 3 (inconclusive) or 0
+  ss -tlnp || { echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- "$1" "$2" "$3" 3; }   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
+  # guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then its health= line
+  printf '%s' "$6"                      # process up (not an auth check)
+  case "$5:$6" in
+    0:health=200*) ;;
+    0:*) echo "the health check did not answer 200; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the health check failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
+  set -- "$4" -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header 'Accept: application/json' \
+    --header "Surreal-NS: $2" --header "Surreal-DB: $3" --data-binary 'INFO FOR DB;' --url "${1%/}/sql" \
+    --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n'   # the block's status so far, then curl's arguments
+  echo UNAUTHENTICATED
+  curl -q -g "${@:2}" </dev/null || { echo "curl exit $?: the unauthenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
   echo AUTHENTICATED
-  printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "$@" --header @- || exit 1
+  printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "${@:2}" --header @- || { echo "curl exit $?: the authenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
+  echo "block exit $1; the listener list and the two INFO FOR DB responses are not classified, so judge them against the comments"
+  exit "$1"
 )
 # Exposed (auth disabled + /sql enabled): the unauthenticated query returns DB info. Fixed: unauthenticated is
 # rejected with an identifiable authorization error and the authenticated request returns an OK result with DB
 # info. Both failing, only a proxy tested, an unrelated response, or a TLS/transport failure is inconclusive;
 # HTTP 200 alone is insufficient. This tests unauthorized DB-info access, not record permissions.
+```
+
+```bash
+# REASONED: public-origin reachability follows the cited SurrealDB bind and TLS documentation; no external test path is available in the authoring environment.
 # Origin reachability from an UNTRUSTED network - ANY HTTP answer proves the origin is reachable (a finding):
+# no other result passes, because a refusal, timeout, TLS or transport failure is inconclusive, so this block
+# exits 1 or 3, never 0, and 2 if it refuses its input.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_ORIGIN_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo 'one URL required; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the origin URL; not probing'; exit 2 ;; esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-    -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"
+  set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
+    -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"     # curl's exit status, then its origin line
+  printf '%s' "$3"
+  case "$3" in
+    'origin http=000 '*) echo "no HTTP answer (curl exit $2): a refusal, timeout, TLS or transport failure is inconclusive, never a pass"; set -- 3 ;;
+    'origin http='*) echo "FINDING: the origin gave an HTTP answer, so it is reachable from this network"; set -- 1 ;;
+    *) echo "curl exit $2 printed no origin line; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; this block classifies its one request and leaves nothing else to judge"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; listener inventory, health, anonymous/authenticated database-info queries, public-origin reachability and TLS interpretation follow the cited SurrealDB bind, health, SQL/authentication and TLS documentation. No running deployment, system-user JWT, external test path or deployment certificate is available. These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
+REASONED: listener inventory, health and anonymous/authenticated database-info queries (the first block above), public-origin reachability (the second) and TLS interpretation follow the cited SurrealDB bind, health, SQL/authentication and TLS documentation. No running deployment, system-user JWT, external test path or deployment certificate is available. These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
 the expected exposed and fixed outcomes follow the cited SurrealDB documentation. Confirm the TLS certificate chain wherever
 TLS terminates with normal validation (a trusted CA for private PKI); never use `-k`.
 Paste the JWT alone at the hidden prompt: a multi-line paste leaves every line after the first for your
@@ -40388,7 +40473,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "3ae249c925a97ab8fa00b39d687a5f6f5cf75dd99a8b9122a4176521392465ec",
+  "body_sha256": "bc7f77d15feeb4f0dbecad5fe20c2f70a063ae867f47347fe58a45b11f91781e",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",
@@ -40494,8 +40579,8 @@ Claims (full source mapping in the JSON block below):
     "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication.", "components": ["docs"], "sources": ["docs:s2eb33a763ea4", "docs:scc00d3d3618d"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
     "verify-auth-limits": {"text": "Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
-    "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "Validate the certificate chain at every TLS termination using normal trust checks, never -k.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]}
+    "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [2]},
+    "verify-tls": {"text": "Validate the certificate chain at every TLS termination using normal trust checks, never -k.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1, 2]}
   }
 }
 ````
@@ -50792,26 +50877,11 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 
 ```bash
 # REASONED: listener and authentication checks follow the cited MLflow documentation; no running basic-auth server is available.
-ss -tlnp   # read every listener; 5000: 127.0.0.1 only
-# from another machine, checking the port is unreachable from outside. The pass is that no TCP
-# connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
-# route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
-# handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:5000/" || true ;;
-  esac
-)
+# Run this block on the MLflow host: its backend checks reach 127.0.0.1:5000 and its listener list reads that host.
 # experiments/search is a POST endpoint, so each check posts a minimal body. --noproxy so no client
 # proxy answers. A 401 at your public MLflow host can come from the fronting proxy OR from MLflow's own basic
-# auth, so the backend check below proves MLflow itself enforces it, not just the proxy. These are
-# MANUAL checks: each command prints its HTTP status for you to compare with the comment; curl exits 0
+# auth, so the backend check below proves MLflow itself enforces it, not just the proxy. Each command prints
+# its HTTP status and the block classifies it against the comment beside it; curl exits 0
 # for 401/403/404 too, so shell success is NOT a pass, and an open MLflow backend answers the anonymous
 # search with 200. If you front MLflow with an identity-aware proxy (Cloudflare Access etc., the MFA
 # option in step 3) instead of plain basic auth, the public https probes also need that proxy's own
@@ -50821,50 +50891,150 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # the argv channel only, not shell history, set -x tracing, or your own
 # account's view of the process. Substitute each password INSIDE the
 # single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
-(
-  # Each credential reaches curl on stdin via a config file (curl --config -), never
-  # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MLFLOW_HOST' 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # first the public host name your proxy serves MLflow on, which is also a Host that --allowed-hosts admits, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace each value inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
-  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit 2 ;; esac
-  case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit 2 ;; esac
-  case "$5" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit 2 ;; esac
-  set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}" "${4//\\/\\\\}" "$5"
-  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}" "${4//\"/\\\"}" "$5"
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    "https://$1/api/2.0/mlflow/experiments/search"   # 401: no credentials
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - "https://$1/api/2.0/mlflow/experiments/search"   # positive control: 200 with the admin password
-  printf 'user = "admin:not-the-real-password"\n' | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - "https://$1/api/2.0/mlflow/experiments/search"   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
-  # On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
-  # MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
-  # so send the allowed Host header, your MLflow host name from the set -- line:
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # 401: no credentials, on the backend
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # backend positive control: 200 with the admin password
-  # Authorization, not just authentication: experiments/search only returns results the caller may see, so
-  # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
-  # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
-    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
-  printf 'user = "%s:%s"\n' "$3" "$4" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
-    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+# The block exits 1 for a finding (a 2xx where a refusal is expected), 3 if ss or a request fails or a request
+# answers anything else the comments do not expect, 2 if the credential part refuses its input, and otherwise 0.
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  ss -tlnp || { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; set -- 3; }   # read every listener; 5000: 127.0.0.1 only
+  (
+    # Each credential reaches curl on stdin via a config file (curl --config -), never
+    # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MLFLOW_HOST' 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # first the public host name your proxy serves MLflow on, which is also a Host that --allowed-hosts admits, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace each value inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+    case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit 2 ;; esac
+    case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit 2 ;; esac
+    case "$5" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}" "${4//\\/\\\\}" "$5"
+    set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}" "${4//\"/\\\"}" "$5"
+    set -- "$1" "$2" "$3" "$4" "$5" 0   # the 6th value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      "https://$1/api/2.0/mlflow/experiments/search"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # 401: no credentials
+    case "$7:$8" in
+      0:401) ;;
+      0:2??) echo "FINDING: the public search answered $8 with no credentials"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      0:*) echo "HTTP $8 from the public search with no credentials is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the public search with no credentials failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      --config - "https://$1/api/2.0/mlflow/experiments/search"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # positive control: 200 with the admin password
+    case "$7:$8" in
+      0:200) ;;
+      0:*) echo "HTTP $8 from the public search with the admin password is not the 200 positive control; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the public search with the admin password failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf 'user = "admin:not-the-real-password"\n' | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      --config - "https://$1/api/2.0/mlflow/experiments/search"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
+    case "$7:$8" in
+      0:401) ;;
+      0:2??) echo "FINDING: the public search answered $8 to a wrong admin password"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      0:*) echo "HTTP $8 from the public search with a wrong password is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the public search with a wrong password failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    # On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
+    # MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
+    # so send the allowed Host header, your MLflow host name from the set -- line:
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      http://127.0.0.1:5000/api/2.0/mlflow/experiments/search; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # 401: no credentials, on the backend
+    case "$7:$8" in
+      0:401) ;;
+      0:2??) echo "FINDING: the backend search answered $8 with no credentials, so MLflow itself does not enforce authentication"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      0:403) echo "HTTP 403 from the backend search: --allowed-hosts refused the Host header before authentication ran; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      0:*) echo "HTTP $8 from the backend search with no credentials is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the backend search with no credentials failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      --config - http://127.0.0.1:5000/api/2.0/mlflow/experiments/search; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # backend positive control: 200 with the admin password
+    case "$7:$8" in
+      0:200) ;;
+      0:*) echo "HTTP $8 from the backend search with the admin password is not the 200 positive control; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the backend search with the admin password failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    # Authorization, not just authentication: experiments/search only returns results the caller may see, so
+    # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
+    # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
+      --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
+    case "$7:$8" in
+      0:200) set -- "$1" "$2" "$3" "$4" "$5" "$6" admin-ok ;;
+      0:*) echo "HTTP $8 from the admin experiment check is not 200: a wrong id or wrong admin credentials; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3; set -- "$1" "$2" "$3" "$4" "$5" "$6" admin-failed ;;
+      *) echo "curl exit $7: the admin experiment check failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3; set -- "$1" "$2" "$3" "$4" "$5" "$6" admin-failed ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$(if printf 'user = "%s:%s"\n' "$3" "$4" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
+      --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8##*$'\n'}" "${8%%$'\n'*}"   # the admin check's result, curl's exit status, then the HTTP code
+    printf '%s\n' "$9"                  # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+    case "$7:$8:$9" in
+      admin-ok:0:403) ;;
+      admin-ok:0:2??) echo "FINDING: the low-permission user read the experiment ($9), so MLflow did not refuse it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      admin-ok:0:401) echo "HTTP 401 for the low-permission user: its credentials are wrong, so authorization was not tested; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      admin-ok:0:*) echo "HTTP $9 for the low-permission user is neither the 403 pass nor a 2xx finding; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      admin-failed:0:*) echo "HTTP $9 for the low-permission user is not classified, because the admin check above failed" ;;
+      *) echo "curl exit $8: the low-permission experiment check failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    exit "$6"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the listeners are not classified, so read every one against the comment on the ss line"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; listener inventory, external TCP reachability, proxy/backend authentication and experiment authorization follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+```bash
+# REASONED: external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment.
+# Run this block from another machine, checking the port is unreachable from outside. The pass is that no TCP
+# connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
+# route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
+# handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
+# The block exits 0 for curl exit 7 or 28 with time_connect 0.000000, 1 for a handshake or an http code, 3 for
+# any other failure and 2 if it refuses its input. A local socket error can also exit 7, so read err before
+# taking 0 as the pass.
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$(if curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+       -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:5000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"     # curl's exit status, then its write-out line
+  printf '%s' "$3"
+  case "$2:$3" in
+    7:'http=000 time_connect=0.000000 '*|28:'http=000 time_connect=0.000000 '*) echo "no TCP connection formed (curl exit $2); the pass, if err names a refusal, no route or a connect timeout"; set -- 0 ;;
+    *:'http=000 time_connect=0.000000 '*) echo "curl exit $2 with no connection: a name-resolution or local error; inconclusive"; set -- 3 ;;
+    *:http=*) echo "FINDING: the handshake completed or the port answered (a non-zero time_connect or an http code), so port 5000 is reachable from this machine"; set -- 1 ;;
+    *) echo "curl exit $2 printed no write-out line; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the err text is not classified, so confirm it names a connection-level failure before reading 0 as the pass"
+  exit "$1"
+)
+```
+
+REASONED: listener inventory, proxy/backend authentication and experiment authorization in the first block above, and external TCP reachability in the second, follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the current form of both blocks, that guard included, is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted.
 
 ## Common mistakes
 
@@ -50966,7 +51136,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "eb23186fa44285caae697fb95581894572df447cf1fb847722d1d1ec47896370",
+  "body_sha256": "ba1ac094ec96250b42e080c29920542c234b80252e4d3d791c2062e74aa12ec1",
   "components": {
     "source": {
       "name": "MLflow pinned source",
@@ -51111,7 +51281,7 @@ Claims (full source mapping in the JSON block below):
     "artifact-existing": {"text": "Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "artifact-direct": {"text": "With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1.", "components": ["source", "iproute2"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
-    "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [1]},
+    "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [2]},
     "verify-public-auth": {"text": "POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.", "components": ["docs", "curl"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-backend-auth": {"text": "Repeat anonymous 401/admin 200 directly on loopback with the public Host header that --allowed-hosts admits; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s5b79d1871e0b", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]},
     "verify-authorization": {"text": "Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]}

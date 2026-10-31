@@ -134,9 +134,9 @@ access cannot bypass that gateway.
 # REASONED: expected server outcomes follow the cited SurrealDB documentation; no SurrealDB runtime is
 # available in the authoring environment. A redirect, missing database, disabled route, proxy rejection, TLS or transport failure is
 # inconclusive, never a pass.
-ss -tlnp   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
-# guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health   # process up (not an auth check)
+# Run this block on the SurrealDB host: its listener inventory and health check read that host. It exits 2 if a
+# check refuses its input, 3 if the JWT prompt, ss, the health check or either query fails or the health check
+# does not answer 200, and otherwise 0; the listener list and the two query responses stay for you to judge.
 # Auth discrimination: INFO FOR DB; with no credentials vs with a valid system-user JWT, same NS/DB and
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then
 # the actual HTTPS endpoint.
@@ -154,34 +154,65 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
   case "$1|$2|$3" in *REPLACE_WITH_*) echo 'replace all placeholders; not probing'; exit 2 ;; esac
   { [ -n "$1" ] && [ -n "$2" ] && [ -n "$3" ]; } || { echo 'empty value; not probing'; exit 2; }
   case "$1" in http://127.0.0.1:8000|https://?*) ;; *) echo 'use local loopback HTTP or HTTPS; not probing'; exit 2 ;; esac
-  set -- -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header 'Accept: application/json' \
-    --header "Surreal-NS: $2" --header "Surreal-DB: $3" --data-binary 'INFO FOR DB;' --url "${1%/}/sql" \
-    --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n'
-  echo UNAUTHENTICATED
-  curl -q -g "$@" </dev/null || exit 1
-  IFS= read -r -s -p 'Short-lived system-user JWT: ' probe_jwt || exit 2
-  printf '\n'
+  if IFS= read -r -s -p 'Short-lived system-user JWT: ' probe_jwt; then
+    printf '\n'
+  else
+    printf '\n'; echo 'secret input failed; not probing'; exit 3   # every check above passed, so the failed prompt is inconclusive
+  fi
   [[ "$probe_jwt" =~ ^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+$ ]] || { echo 'missing or malformed JWT; not probing'; exit 2; }
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 3 (inconclusive) or 0
+  ss -tlnp || { echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- "$1" "$2" "$3" 3; }   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
+  # guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then its health= line
+  printf '%s' "$6"                      # process up (not an auth check)
+  case "$5:$6" in
+    0:health=200*) ;;
+    0:*) echo "the health check did not answer 200; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the health check failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
+  set -- "$4" -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header 'Accept: application/json' \
+    --header "Surreal-NS: $2" --header "Surreal-DB: $3" --data-binary 'INFO FOR DB;' --url "${1%/}/sql" \
+    --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n'   # the block's status so far, then curl's arguments
+  echo UNAUTHENTICATED
+  curl -q -g "${@:2}" </dev/null || { echo "curl exit $?: the unauthenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
   echo AUTHENTICATED
-  printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "$@" --header @- || exit 1
+  printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "${@:2}" --header @- || { echo "curl exit $?: the authenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
+  echo "block exit $1; the listener list and the two INFO FOR DB responses are not classified, so judge them against the comments"
+  exit "$1"
 )
 # Exposed (auth disabled + /sql enabled): the unauthenticated query returns DB info. Fixed: unauthenticated is
 # rejected with an identifiable authorization error and the authenticated request returns an OK result with DB
 # info. Both failing, only a proxy tested, an unrelated response, or a TLS/transport failure is inconclusive;
 # HTTP 200 alone is insufficient. This tests unauthorized DB-info access, not record permissions.
+```
+
+```bash
+# REASONED: public-origin reachability follows the cited SurrealDB bind and TLS documentation; no external test path is available in the authoring environment.
 # Origin reachability from an UNTRUSTED network - ANY HTTP answer proves the origin is reachable (a finding):
+# no other result passes, because a refusal, timeout, TLS or transport failure is inconclusive, so this block
+# exits 1 or 3, never 0, and 2 if it refuses its input.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_ORIGIN_URL'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo 'one URL required; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the origin URL; not probing'; exit 2 ;; esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-    -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"
+  set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
+    -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"     # curl's exit status, then its origin line
+  printf '%s' "$3"
+  case "$3" in
+    'origin http=000 '*) echo "no HTTP answer (curl exit $2): a refusal, timeout, TLS or transport failure is inconclusive, never a pass"; set -- 3 ;;
+    'origin http='*) echo "FINDING: the origin gave an HTTP answer, so it is reachable from this network"; set -- 1 ;;
+    *) echo "curl exit $2 printed no origin line; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; this block classifies its one request and leaves nothing else to judge"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; listener inventory, health, anonymous/authenticated database-info queries, public-origin reachability and TLS interpretation follow the cited SurrealDB bind, health, SQL/authentication and TLS documentation. No running deployment, system-user JWT, external test path or deployment certificate is available. These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
+REASONED: listener inventory, health and anonymous/authenticated database-info queries (the first block above), public-origin reachability (the second) and TLS interpretation follow the cited SurrealDB bind, health, SQL/authentication and TLS documentation. No running deployment, system-user JWT, external test path or deployment certificate is available. These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
 the expected exposed and fixed outcomes follow the cited SurrealDB documentation. Confirm the TLS certificate chain wherever
 TLS terminates with normal validation (a trusted CA for private PKI); never use `-k`.
 Paste the JWT alone at the hidden prompt: a multi-line paste leaves every line after the first for your
@@ -269,7 +300,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "3ae249c925a97ab8fa00b39d687a5f6f5cf75dd99a8b9122a4176521392465ec",
+  "body_sha256": "bc7f77d15feeb4f0dbecad5fe20c2f70a063ae867f47347fe58a45b11f91781e",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",
@@ -375,8 +406,8 @@ Claims (full source mapping in the JSON block below):
     "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication.", "components": ["docs"], "sources": ["docs:s2eb33a763ea4", "docs:scc00d3d3618d"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
     "verify-auth-limits": {"text": "Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
-    "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "Validate the certificate chain at every TLS termination using normal trust checks, never -k.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]}
+    "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [2]},
+    "verify-tls": {"text": "Validate the certificate chain at every TLS termination using normal trust checks, never -k.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1, 2]}
   }
 }
 ````
