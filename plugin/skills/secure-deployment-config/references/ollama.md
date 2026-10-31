@@ -472,9 +472,9 @@ Add C4's explicit origin only if required, and remove inherited unwanted origins
 
 REASONED: service-comparison scope from the cited v0.34.2 sources; no authorized live deployment or external observer. No service was started or contacted for these checks. All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
 
-REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
+REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. The fresh bash -n and ShellCheck run and the historical guard-only tests covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
 
-REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
+REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. Those runs covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The V6 arms that stop when the result directory cannot be created or protected are not guard refusals and still exit with status 1. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
 
 REASONED: comparison procedure from the cited service and proxy sources; isolated exposed/fixed deployments, identities and observers are unavailable. Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
 
@@ -485,12 +485,12 @@ REASONED: comparison procedure from the cited service and proxy sources; isolate
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'ollama.service' 'REPLACE_WITH_CONTAINER_NAME_OR_NONE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not inspecting"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not inspecting"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "supply unit and container name or NONE"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "supply unit and container name or NONE"; exit 2; }
   case "$1|$2" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:space:]]*)
-      echo "replace both values; not inspecting"; exit 1 ;;
+      echo "replace both values; not inspecting"; exit 2 ;;
     *)
       systemctl cat -- "$1"
       systemctl show --property=User,Group,UMask,Environment,MainPID -- "$1"
@@ -522,12 +522,12 @@ Expected behavior follows C1's [Docker publication reference](https://docs.docke
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply exactly one address; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|*'<'*|*'>'*|*example.com*|""|*@*|*/*|*\?*|*\#*|*[[:space:]]*|203.0.113.*|198.51.100.*|192.0.2.*|*2001:db8*)
-      echo "supply the real deployment address; not probing"; exit 1 ;;
+      echo "supply the real deployment address; not probing"; exit 2 ;;
     *)
       curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -593,33 +593,33 @@ The following reusable probe reads the client configuration on stdin, keeping cr
 (
   set +x
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'POST' 'REPLACE_WITH_BODY_FILE_OR_DEV_NULL' 'REPLACE_WITH_CURL_CONFIG_FILE' 'application/json'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 5 ] || { echo "supply URL, method, body file, client config, and content type"; exit 1; }
+  [ "$#" -eq 5 ] || { echo "supply URL, method, body file, client config, and content type"; exit 2; }
   case "$1|$2|$3|$4|$5" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:cntrl:]]*)
-      echo "replace every value; not probing"; exit 1 ;;
+      echo "replace every value; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 1 ;;
+        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 2 ;;
         https://*|http://127.0.0.1:11434/*|http://localhost:11434/*) ;;
-        *) echo "use HTTPS, or the administrative loopback endpoint"; exit 1 ;;
+        *) echo "use HTTPS, or the administrative loopback endpoint"; exit 2 ;;
       esac
       case "$2" in
         GET|HEAD|OPTIONS)
-          [ "$3" = /dev/null ] || { echo "use /dev/null for this method"; exit 1; } ;;
+          [ "$3" = /dev/null ] || { echo "use /dev/null for this method"; exit 2; } ;;
         POST|DELETE) ;;
-        *) echo "unsupported test method"; exit 1 ;;
+        *) echo "unsupported test method"; exit 2 ;;
       esac
       case "$5" in
         application/json|application/octet-stream) ;;
-        *) echo "choose the fixture content type"; exit 1 ;;
+        *) echo "choose the fixture content type"; exit 2 ;;
       esac
-      [ -r "$3" ] || { echo "body file is unreadable"; exit 1; }
-      [ -r "$4" ] || { echo "client config is unreadable"; exit 1; }
+      [ -r "$3" ] || { echo "body file is unreadable"; exit 2; }
+      [ -r "$4" ] || { echo "client config is unreadable"; exit 2; }
       case "$(< "$4")" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-          echo "replace placeholders in the client config; not probing"; exit 1 ;;
+          echo "replace placeholders in the client config; not probing"; exit 2 ;;
       esac
       case "$2" in
         HEAD) set -- "$4" --head --url "$1" ;;
@@ -708,23 +708,23 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 (
   set +x
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_CHAT_URL' 'REPLACE_WITH_CHAT_BODY_FILE' 'REPLACE_WITH_CURL_CONFIG_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "supply URL, body file, and client config"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "supply URL, body file, and client config"; exit 2; }
   case "$1|$2|$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:cntrl:]]*)
-      echo "replace every value; not probing"; exit 1 ;;
+      echo "replace every value; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 1 ;;
+        *@*|*\?*|*\#*|*[[:space:]]*) echo "use a URL without credentials, query, or fragment"; exit 2 ;;
         https://*/api/chat) ;;
-        *) echo "use the HTTPS chat URL"; exit 1 ;;
+        *) echo "use the HTTPS chat URL"; exit 2 ;;
       esac
-      [ -r "$2" ] || { echo "body file is unreadable"; exit 1; }
-      [ -r "$3" ] || { echo "client config is unreadable"; exit 1; }
+      [ -r "$2" ] || { echo "body file is unreadable"; exit 2; }
+      [ -r "$3" ] || { echo "client config is unreadable"; exit 2; }
       case "$(< "$3")" in
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-          echo "replace placeholders in the client config; not probing"; exit 1 ;;
+          echo "replace placeholders in the client config; not probing"; exit 2 ;;
       esac
       ollama_probe_dir=$(mktemp -d) || { echo "cannot create result directory"; exit 1; }
       chmod 700 "$ollama_probe_dir" || { echo "cannot protect results"; exit 1; }
@@ -1182,7 +1182,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "3b96351b23d24a17e9deef1a0a8e32768456d048ea2466d43dd7f6c4901e0a1f",
+  "body_sha256": "3e9cfc601c839facec9bc660caa3d2fbc41b0f12d0ab422318fb537160afa53d",
   "components": {
     "ollama": {
       "name": "Ollama",

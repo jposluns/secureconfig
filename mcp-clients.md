@@ -112,7 +112,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2.
+   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3.
 
    ```bash
    (
@@ -125,11 +125,11 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
      esac
      [ -d "$1" ] || { echo "not a directory: $1; not probing"; exit 2; }
      if env LC_ALL=C grep -D skip -RlaiE '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]|refresh_token=[[:print:]]+|Bearer[[:space:]]+[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~+/-]{20,}' -- "$1/"; then
-       echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store"
+       echo "FOUND: the file(s) listed above hold a token value in cleartext; move it to a protected credential store"; exit 1
      else
        case $? in
          1) echo "clean: no cleartext token value found under $1" ;;
-         *) echo "scan error: grep could not read part of $1; re-run with access before trusting a clean result" ;;
+         *) echo "scan error: grep could not read part of $1; re-run with access before trusting a clean result"; exit 3 ;;
        esac
      fi
    )
@@ -238,7 +238,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "d8a8c267089b216ab52c965c5c4070ad9a95222f2e0ecace73e2a2ff80371241",
+  "body_sha256": "a95ba78c3ee379833dc8beb30c733d80ed1725e0eb4f64d27064053f80b04ae0",
   "components": {
     "mcp": {
       "name": "MCP",

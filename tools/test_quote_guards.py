@@ -30,7 +30,7 @@ def guards():
     obj = storage[storage.index("\n", signing) + 1:]
     obj = obj[:obj.index('            https://*)')] + '*) echo SAFE ;; esac'
     old_pg = r'''case "$2" in
-      *[[:space:]]*|*"'"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+      *[[:space:]]*|*"'"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 2 ;;
     esac'''
     old_obj = r'''case "$2" in
       *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*|*'"'*|*\\*)
