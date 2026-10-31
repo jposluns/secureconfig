@@ -104,22 +104,25 @@ SSLVerifyDepth 2
 
 Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsupported for its proxy integration (https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115). For human-facing sites, use [mod_auth_openidc](https://github.com/OpenIDC/mod_auth_openidc) v2.4.20.3 to make Apache an OIDC relying party (https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20), and configure MFA at the identity provider as this guide advises. Cloudflare Access is another suggested option for fronting an Apache origin (this guide's assessment). A Cloudflare Access self-hosted application places an authentication layer between users and an origin server. Sources for the self-hosted application sentence (1 of 2): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16. Sources for the self-hosted application sentence (2 of 2): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54. An Access policy can require MFA (https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81); see [mfa.md](mfa.md). This guide assesses that an Apache origin reachable without passing through Access is not protected by it. Sources for the unprotected-origin assessment (1 of 2): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L45-L45. Sources for the unprotected-origin assessment (2 of 2): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
+## 5. Verify
 
-Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
-the status code is printed and you compare it. The first block takes your host name, an
-unconfigured name and a protected path on its `set --` line, and refuses with status 2 if any is
-left unsubstituted or malformed, or if the unconfigured name is your own host name in any letter
-case. That comparison cannot see your other ServerName and ServerAlias values, so check the name
-against them yourself. It also refuses with status 2 if `tr` is not installed, and exits 3
+**REASONED:** this introduction and the block that follows it; the first block's scenarios follow
+the cited Apache documentation, and this guide records no exposed/fixed deployment run. This
+metadata-only review has no authorized Apache deployment fixture. Most of the checks below are
+read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so the status code is
+printed and you compare it. The first block takes your host name, an unconfigured name and a
+protected path on its `set --` line, and refuses with status 2 if any is left unsubstituted or
+malformed, or if the unconfigured name is your own host name in any letter case. That
+comparison cannot see your other ServerName and ServerAlias values, so check the name against
+them yourself. The block also refuses with status 2 if `tr` is not installed, and exits 3
 before probing if `tr` fails while folding a name to lower case. The block then runs the
-configuration test and reload, classifies its
-requests to the site root and to the unconfigured name, records each outcome as it runs, and
-exits once at the end. It exits 1 if either request answers 200, otherwise 3 if either answers anything
-but 401 or the configuration test, the reload or one of its curl or ss commands fails, otherwise
-2 if `ss` is not installed, and 0 when both answer 401. The redirect headers and the listener
-list stay for you to judge. The `apachectl -S` block exits 3 if the command fails and 0
-otherwise, because you judge the vhost list it prints.
+configuration test and reload, classifies its requests to the site root and to the
+unconfigured name, records each outcome as it runs, and exits once at the end. It exits 1 if
+either request answers 200, otherwise 3 if either answers anything but 401 or the configuration
+test, the reload or one of its curl or ss commands fails, otherwise 2 if `ss` is not installed,
+and 0 when both answer 401. The redirect headers and the listener list stay for you to judge.
+The `apachectl -S` block exits 3 if the command fails and 0 otherwise, because you judge the
+vhost list it prints.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -206,7 +209,10 @@ otherwise, because you judge the vhost list it prints.
 )
 ```
 
-That name has to be one your certificate already covers, typically a spare label under a
+**REASONED:** following block; the `apachectl -S` configuration review rests on the cited Apache
+name-based virtual host and virtual host matching documentation, and this guide records no
+exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment
+fixture. That name has to be one your certificate already covers, typically a spare label under a
 wildcard SAN, because the guide will not tell you to disable certificate verification to run a
 test. If the certificate covers no name you can spare, this check is a configuration review
 instead: list the vhosts for that address and port, and confirm the first one Apache would
@@ -309,7 +315,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "08ffb36c971895d8aea7267d72e37e4f52c5c8964a4207dbdb6d7ef8fb18ba3b",
+  "body_sha256": "1c117ebc20866e49f0f35dce80eaa7c48c1887b54b777b317cb75357bd2be380",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
