@@ -138,151 +138,238 @@ advice: do not ship a source map, or leave one served, for code not already mean
 
 ## Verify
 
-REASONED: following block; planted-file denial, directory listing, ACME/lookalike paths and client-bundle scans. No configured web-server deployment or run outcome is recorded here; expectations are reasoned from the guide and its cited server and framework sources.
+REASONED: following block; planted-file denial, directory listing and ACME/lookalike paths; the client-bundle scan has its own block after it. No configured web-server deployment or run outcome is recorded here; expectations are reasoned from the guide and its cited server and framework sources. The block exits 1 when a probe returns `PLANTED-SECRET` or a 2xx, `/uploads/` answers 200, the challenge token answers 403, or `/.well-known-backup/config` answers a 2xx while a real file is there. Otherwise it exits 3 when a step is inconclusive or a removal fails, including a bare 404 from that lookalike path with no file behind it, and 0 when every classified probe passes.
 
 ```bash
 # Plant a real file at a denied dotfile path so a 403/404 proves the RULE fired, not that the file is
-# absent (Caddy's `respond ... 404` is 404 BY DESIGN, and /.env may simply not exist). Set DOCROOT to THIS
-# host's real document root (nginx `root` / Apache DocumentRoot); the check is INCONCLUSIVE unless the plant
+# absent (Caddy's `respond ... 404` is 404 BY DESIGN, and /.env may simply not exist). Put THIS host's real
+# document root (nginx `root` / Apache DocumentRoot) on the set -- line; the check is INCONCLUSIVE unless the plant
 # lands. mktemp creates the probe exclusively so it never clobbers a real file, and only that file is
 # removed. --noproxy so no client proxy answers; the body is shown so leaked content is visible:
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set +e                                # errexit off here, so a probe that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_YOUR_DOCUMENT_ROOT'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then its document root as an absolute path: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  DOCROOT=/var/www/html
-  result=0                              # 3 once any step is inconclusive or a removal fails; the block exits with it after its cleanup
-  if probe=$(sudo mktemp "$DOCROOT/.env.probeXXXXXX" 2>/dev/null); then
+  case "$2" in
+    ""|*REPLACE_WITH_*|[!/]*|*[[:cntrl:]]*) echo "substitute this host's document root, an absolute path, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  denied_probes() (                     # the host, then each path: every response must be 403 or 404 without PLANTED-SECRET
+    set -- "$1" 0 "${@:2}"              # the host, these probes' status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the paths still to probe
+    while [ "$#" -gt 2 ]; do
+      set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $3\n" "https://$1$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:4}"
+      set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}" "${@:5}"   # the host, the status so far, the path, what curl printed, curl's exit status, then the paths still to probe
+      printf '%s' "$4"
+      case "$5:$4" in
+        0:*PLANTED-SECRET*) echo "FINDING: $3 returned PLANTED-SECRET"; set -- "$1" 1 "${@:3}" ;;
+        0:*'  <= 403 '*|0:*'  <= 404 '*) ;;
+        0:*'  <= 2'??' '*) echo "FINDING: $3 answered with a 2xx, so the deny rule did not fire"; set -- "$1" 1 "${@:3}" ;;
+        0:*) echo "inconclusive: $3 answered neither 403 nor 404"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+        *) echo "inconclusive: curl exit $5 for $3"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+      esac
+      set -- "$1" "$2" "${@:6}"
+    done
+    exit "$2"
+  )
+  acme_probe() (                        # the host, the scheme, then the token's name: the response must be probe, never 403
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -w '\n%{http_code}' "$2://$1/.well-known/acme-challenge/$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"             # the host, the scheme, the name, curl's exit status, then the body and HTTP code
+    set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"        # ..., curl's exit status, the body, then the HTTP code
+    printf '%s\n' "$5"
+    case "$4:$6:$5" in
+      0:200:probe) exit 0 ;;
+      0:403:*) echo "FINDING: the challenge token answered 403 over $2, so the deny rules block the ACME exemption"; exit 1 ;;
+      0:*) echo "inconclusive: the challenge token answered $6 over $2 without the body probe"; exit 3 ;;
+      *) echo "inconclusive: curl exit $4 for the challenge token over $2"; exit 3 ;;
+    esac
+  )
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0; the block exits with it after its cleanup
+  set -- "$1" "$2" "$3" "$(if sudo mktemp "$2/.env.probeXXXXXX" 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # the host, the document root, the status so far, the probe's path, then mktemp's exit status
+  if [ "$5" = 0 ]; then
     # mktemp makes it root-only (0600); chmod so the web-server worker can READ it, or its 403 is a FILE
     # PERMISSION denial (not the deny rule) and the check would false-pass with no rule configured:
-    if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
-      for p in "/${probe##*/}" /.git/config /config.php.bak /db.sql; do
-        curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://$1$p" || result=3
-      done
+    if printf 'PLANTED-SECRET' | sudo tee "$4" >/dev/null && sudo chmod 0644 "$4"; then
+      denied_probes "$1" "/${4##*/}" /.git/config /config.php.bak /db.sql
+      case "$?:$3" in 0:*) ;; 1:*) set -- "$1" "$2" 1 "$4" ;; *:1) ;; *) set -- "$1" "$2" 3 "$4" ;; esac   # fold those probes' status into the block's, ranked as above
       # every line must be 403 or 404 and must NOT print PLANTED-SECRET. The .env.probe* line is the POSITIVE
       # CONTROL (a world-readable real file under the deny rules), so its 403/404 is the rule, not permissions
       # or absence; a bare 404 on the others could be absence, so plant one at each to be sure
     else
       echo "inconclusive: could not prepare the probe file"
-      result=3
+      [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"
     fi
-    sudo rm -f "$probe" || result=3
+    sudo rm -f "$4" || { [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"; }
   else
-    echo "inconclusive: could not create a probe under $DOCROOT; point it at the writable document root"
-    result=3
+    echo "inconclusive: could not create a probe under $2; point it at the writable document root"
+    set -- "$1" "$2" 3
   fi
+  set -- "$1" "$2" "$3"
   # uploads/backups directory: an existing, non-empty, index-less dir must NOT return a 200 autoindex under
   # Options -Indexes. Plant a throwaway file so a listing would actually reveal something; inconclusive if the
   # directory does not exist:
-  if u=$(sudo mktemp "$DOCROOT/uploads/listcheckXXXXXX" 2>/dev/null); then
-    curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/" || result=3   # 403/404, never a 200 listing
-    sudo rm -f "$u" || result=3
+  set -- "$1" "$2" "$3" "$(if sudo mktemp "$2/uploads/listcheckXXXXXX" 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # ..., the throwaway file's path, then mktemp's exit status
+  if [ "$5" = 0 ]; then
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # ..., curl's exit status, then the HTTP code
+    printf '%s\n' "$6"                  # 403/404, never a 200 listing
+    case "$5:$6" in
+      0:403|0:404) ;;
+      0:200) echo "FINDING: /uploads/ answered 200, where an index-less directory must give 403 or 404, so it is listed"; set -- "$1" "$2" 1 "$4" ;;
+      0:*) echo "inconclusive: /uploads/ answered $6, neither 403 or 404 nor a 200 listing"; [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4" ;;
+      *) echo "inconclusive: curl exit $5 for /uploads/"; [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4" ;;
+    esac
+    sudo rm -f "$4" || { [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"; }
   else
-    echo "inconclusive: $DOCROOT/uploads does not exist or is not writable"
-    result=3
+    echo "inconclusive: $2/uploads does not exist or is not writable"
+    [ "$3" = 1 ] || set -- "$1" "$2" 3
   fi
+  set -- "$1" "$2" "$3"
 
-  acme="$DOCROOT/.well-known/acme-challenge"
-  if sudo test -d "$acme" && tok=$(sudo mktemp "$acme/probeXXXXXX" 2>/dev/null); then
-    if printf 'probe' | sudo tee "$tok" >/dev/null && sudo chmod 0644 "$tok"; then   # readable, or a 403 is a permission denial not the exemption
-      name=${tok##*/}
-      curl -q -g -sS --noproxy '*' "https://$1/.well-known/acme-challenge/$name" || result=3   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
-      curl -q -g -sS --noproxy '*' "http://$1/.well-known/acme-challenge/$name" || result=3    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+  set -- "$1" "$2" "$3" "$(if sudo test -d "$2/.well-known/acme-challenge" && sudo mktemp "$2/.well-known/acme-challenge/probeXXXXXX" 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # ..., the token's path, then the exit status of test and mktemp
+  if [ "$5" = 0 ]; then
+    if printf 'probe' | sudo tee "$4" >/dev/null && sudo chmod 0644 "$4"; then   # readable, or a 403 is a permission denial not the exemption
+      acme_probe "$1" https "${4##*/}"  # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
+      case "$?:$3" in 0:*) ;; 1:*) set -- "$1" "$2" 1 "$4" ;; *:1) ;; *) set -- "$1" "$2" 3 "$4" ;; esac
+      acme_probe "$1" http "${4##*/}"   # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+      case "$?:$3" in 0:*) ;; 1:*) set -- "$1" "$2" 1 "$4" ;; *:1) ;; *) set -- "$1" "$2" 3 "$4" ;; esac
     else
       echo "inconclusive: could not prepare the challenge file"
-      result=3
+      [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"
     fi
-    sudo rm -f "$tok" || result=3
+    sudo rm -f "$4" || { [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"; }
   else
-    echo "inconclusive: $acme does not exist"
-    result=3
+    echo "inconclusive: $2/.well-known/acme-challenge does not exist"
+    [ "$3" = 1 ] || set -- "$1" "$2" 3
   fi
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config" || result=3
+  set -- "$1" "$2" "$3"
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # ..., curl's exit status, then the HTTP code
+  printf '%s\n' "$5"
   # must be 403 or 404: a directory that only starts with "well-known" must not inherit the exemption. A bare
   # 404 is inconclusive here (nothing is there); create a real .well-known-backup/config to be certain a
   # served 200 would be the finding, then remove it
-  exit "$result"                        # after every cleanup attempt above: 3 if any step was inconclusive or a removal failed, else 0
+  case "$4:$5" in
+    0:403) ;;
+    0:404|0:2??)
+      if sudo test -f "$2/.well-known-backup/config"; then
+        case "$5" in 404) ;; *) echo "FINDING: /.well-known-backup/config answered $5, so the lookalike directory inherited the exemption"; set -- "$1" "$2" 1 ;; esac
+      else
+        echo "inconclusive: nothing is at $2/.well-known-backup/config, so its $5 does not show whether the rule fired"; [ "$3" = 1 ] || set -- "$1" "$2" 3
+      fi ;;
+    0:*) echo "inconclusive: /.well-known-backup/config answered $5, neither 403 nor 404"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    *) echo "inconclusive: curl exit $4 for /.well-known-backup/config"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
+  echo "block exit $3; the response bodies, and a 404 from /.git/config, /config.php.bak or /db.sql, where nothing was planted, are not classified, so judge them yourself"
+  exit "$3"                             # after every cleanup attempt above: 1 if a probe found a planted secret, a listing or a 403 on the challenge token, else 3 if any step was inconclusive or a removal failed, else 0
 )
+```
 
+```bash
+# REASONED: client-bundle scan per the guide's cited Next.js environment variables and GNU grep 3.12 exit status and error handling; no built bundle was scanned here, and no deployment outcome is recorded.
 (                                       # a subshell, so the exit below ends only this check
-  result=0 scanned=0
-  for d in .next/static build dist; do
-    [ -d "$d" ] || { echo "$d: absent, nothing scanned"; continue; }
-    scanned=1
-    if grep -rn "sk-\|AKIA\|ghp_\|sb_secret_\|-----BEGIN" "$d"; then rc=0; else rc=$?; fi; echo "$d exit: $rc"
-    case $rc in
-      0) result=1 ;;                                # a match is a finding, and it outranks an error
-      1) ;;
-      *) [ "$result" -eq 1 ] || result=3 ;;         # a grep error is inconclusive
-    esac
+  set -- 0 0 .next/static build dist    # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), whether any directory was scanned, then the directories still to scan
+  while [ "$#" -gt 2 ]; do
+    if [ -d "$3" ]; then
+      set -- "$1" 1 "${@:3}"
+      if grep -rn "sk-\|AKIA\|ghp_\|sb_secret_\|-----BEGIN" "$3"; then set -- "$1" "$2" "$3" 0 "${@:4}"; else set -- "$1" "$2" "$3" "$?" "${@:4}"; fi; echo "$3 exit: $4"
+      case "$4" in
+        0) set -- 1 "${@:2}" ;;                     # a match is a finding, and it outranks an error
+        1) ;;
+        *) [ "$1" = 1 ] || set -- 3 "${@:2}" ;;     # a grep error is inconclusive
+      esac
+      set -- "$1" "$2" "${@:5}"
+    else
+      echo "$3: absent, nothing scanned"
+      set -- "$1" "$2" "${@:4}"
+    fi
   done
-  [ "$scanned" -eq 1 ] || result=3                  # no directory existed, so nothing was scanned
-  exit "$result"
+  [ "$2" = 1 ] || set -- 3 "$2"                     # no directory existed, so nothing was scanned
+  exit "$1"
 )
 # run against the built client bundle, not the source. Exit 1 with no output is clean, exit 0
 # is a match, and exit 2 is a grep failure that is NOT clean. Do not send the errors to
 # /dev/null and read silence as a pass: a missing directory is an error (exit 2), and
 # discarding its error message leaves silence, which looks exactly like success. A clean result is evidence, not proof:
 # a bundler can split or encode a value, so scan for the literal secret as well
-# The block itself exits 1 when any directory matched, 3 when a grep failed or no directory existed,
+# The bundle scan above exits 1 when any directory matched, 3 when a grep failed or no directory existed,
 # and 0 otherwise.
 ```
 
-REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its result arms with status 0; the current form, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1, was not re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; client-bundle scan, per the guide's cited Next.js environment variables and GNU grep 3.12 exit status and error handling, with the dotfile/backup denial, listing and ACME/lookalike checks of the block above it, per the cited nginx core module, nginx access module, Apache core Options, Caddy matchers and RFC 8555 section 8.3 HTTP-01 validation. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the planted-file checks and the bundle scan as one block, before its host guard was added, and were not repeated on the guarded block. That earlier form ended its result arms with status 0. Those runs were not repeated on the next form either, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1. On the current form, in which the two checks are separate blocks, the planted-file block takes its document root on its `set --` line and exits 1 on a finding, and both keep their values in positional parameters, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses; ShellCheck was not run on it, and no demonstration was re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
-REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0; the current form, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed, was not re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
-against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and put its
-served host name on the block's `set --` line. On an isolated test host, run before and after enabling the
+REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0. Those runs were not repeated on the next form either, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed. On the current form, which also exits 1 when a probe returns PLANTED-SECRET, takes the document root on its `set --` line and keeps its values in positional parameters, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses; ShellCheck was not run on it, and no demonstration was re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+against real content. Use GNU `mktemp`, and put this host's served host name and its document root on
+the block's `set --` line. On an isolated test host, run before and after enabling the
 deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
-return 403 or 404 without that body. A failed plant or curl transfer is inconclusive. The block attempts to remove every plant, and it exits 3 when a step was inconclusive or a removal failed.
+return 403 or 404 without that body. A failed plant or curl transfer is inconclusive, and so is a 200 without that body or any other code. The block attempts to remove every plant, and it exits 1 when a probe returned `PLANTED-SECRET`, otherwise 3 when a step was inconclusive or a removal failed, and otherwise 0.
 
 ```bash
 # REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
 # runtime is available, and network restrictions prevent installing one. Expected exposed/fixed
 # outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
 # references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
-# block before its host guard was added. That form's inconclusive arms ended with status 0; this form,
-# which exits 3 after attempting its cleanup when a step is inconclusive or a removal fails, was not re-checked.
+# block before its host guard was added. That form's inconclusive arms ended with status 0; the later
+# forms, which exit 3 after attempting their cleanup when a step is inconclusive or a removal fails,
+# were not re-checked, except that bash -n and stub runs checked this one, which also exits 1 on PLANTED-SECRET.
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set +e                                # errexit off here, so a plant that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_YOUR_DOCUMENT_ROOT'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then its document root as an absolute path: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  DOCROOT=/var/www/html
-  result=0                              # 3 once any plant or transfer is inconclusive or a removal fails; the block exits with it after its cleanup
-  for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
-    template="$DOCROOT/probeXXXXXX"
-    [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
-    if probe=$(sudo mktemp --suffix="$suffix" "$template" 2>/dev/null); then
-      if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
-        p="/${probe##*/}"
-        curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-          -w "  <= %{http_code} $p\n" "https://$1$p" || { echo "inconclusive: curl failed"; result=3; }
-        # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
-      else
-        echo "inconclusive: could not prepare $probe"
-        result=3
-      fi
-      sudo rm -f "$probe" || result=3
+  case "$2" in
+    ""|*REPLACE_WITH_*|[!/]*|*[[:cntrl:]]*) echo "substitute this host's document root, an absolute path, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  plant_probe() (                       # the host, the document root, then one suffix ('' for the generic dotfile): plant, probe, then remove
+    set -- "$1" "$2" "$3" "$2/probeXXXXXX"
+    [ -n "$3" ] || set -- "$1" "$2" "$3" "$2/.probeXXXXXX"
+    set -- "$1" "$2" "$3" "$(if sudo mktemp --suffix="$3" "$4" 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # the host, the document root, the suffix, the plant's path, then mktemp's exit status
+    [ "$5" = 0 ] || { echo "inconclusive: could not plant suffix '$3' under $2"; exit 3; }
+    set -- "$1" "$2" "$3" "$4" 0        # the 5th value is this plant's status so far, ranked as below
+    if printf 'PLANTED-SECRET' | sudo tee "$4" >/dev/null && sudo chmod 0644 "$4"; then
+      set -- "$1" "$2" "$3" "$4" "$5" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w "  <= %{http_code} /${4##*/}\n" "https://$1/${4##*/}"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"   # ..., what curl printed, then curl's exit status
+      printf '%s' "$6"
+      # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
+      case "$7:$6" in
+        0:*PLANTED-SECRET*) echo "FINDING: /${4##*/} returned PLANTED-SECRET"; set -- "$1" "$2" "$3" "$4" 1 ;;
+        0:*'  <= 403 '*|0:*'  <= 404 '*) ;;
+        0:*) echo "inconclusive: /${4##*/} answered without PLANTED-SECRET but with neither 403 nor 404"; set -- "$1" "$2" "$3" "$4" 3 ;;
+        *) echo "inconclusive: curl failed"; set -- "$1" "$2" "$3" "$4" 3 ;;
+      esac
     else
-      echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
-      result=3
+      echo "inconclusive: could not prepare $4"
+      set -- "$1" "$2" "$3" "$4" 3
     fi
+    sudo rm -f "$4" || { [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3; }
+    exit "$5"
+  )
+  set -- "$1" "$2" 0 '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz   # the host, the document root, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the suffixes still to plant
+  while [ "$#" -gt 3 ]; do
+    plant_probe "$1" "$2" "$4"
+    case "$?:$3" in 0:*) ;; 1:*) set -- "$1" "$2" 1 "${@:4}" ;; *:1) ;; *) set -- "$1" "$2" 3 "${@:4}" ;; esac   # fold that plant's status into the block's, ranked as above
+    set -- "$1" "$2" "$3" "${@:5}"
   done
-  exit "$result"                        # after every removal was attempted: 3 if any step was inconclusive or a removal failed, else 0
+  echo "block exit $3"
+  exit "$3"                             # after every removal was attempted: 1 if a probe returned PLANTED-SECRET, else 3 if any step was inconclusive or a removal failed, else 0
 )
 ```
 
@@ -374,14 +461,14 @@ Claims (full source mapping in the JSON block below):
 - verify-lookalike (REASONED; nginx, apache, caddy, caddy-rolling): Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.
 - verify-bundle (REASONED; next, vite, cra, grep): Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.
 - verify-backup (REASONED; nginx, apache, caddy, caddy-rolling): Known previously deployed backup URLs should return 403 or 404 without the file contents.
-- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Only shell syntax and suffix creation were checked, on an earlier form whose inconclusive arms exited 0, not on this form or a server.
+- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Syntax and suffix creation were checked on an earlier form whose inconclusive arms exited 0; this form had only bash -n and stub runs, none on a server.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "3fa29a0cb0557f181a4b8f660f0515483f5375fceff0e23f212d5384278c6363",
+  "body_sha256": "7710fe4c8efac9fbcb11cf6d0af67fd4c809fed7a3d7d5a1b916ed74ac081860",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -526,9 +613,9 @@ Claims (full source mapping in the JSON block below):
     "verify-listing": {"text": "Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED", "verify": [1]},
     "verify-acme": {"text": "Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive.", "components": ["nginx", "apache", "acme-http01"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a", "acme-http01:se60bdd68e41d"], "status": "REASONED", "verify": [1]},
     "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
-    "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [1]},
+    "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [2]},
     "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
-    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Only shell syntax and suffix creation were checked, on an earlier form whose inconclusive arms exited 0, not on this form or a server.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [2]}
+    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Syntax and suffix creation were checked on an earlier form whose inconclusive arms exited 0; this form had only bash -n and stub runs, none on a server.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [3]}
   }
 }
 ````

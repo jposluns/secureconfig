@@ -21683,39 +21683,68 @@ SSH: authenticate with your own key, not a password. Lambda requires an SSH key 
 
 REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no service run is recorded. Expected readings below follow the cited platform documentation, the Vast.ai base-image portal configurator at commit 00064421641881c1f83ff58c55f13cbc10cbea4d, Jupyter Server v2.18.0 implementation, REST specification and security documentation, iproute2 v6.12.0 ss manual and implementation, and Linux man-pages-5.13 network namespace isolation. This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. This is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each mapped port from outside.
 
-REASONED: following block; this guide's test design compares anonymous and valid-token requests directly to loopback `:8888/api/contents`. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in `Authorization: token` or the `token` query parameter; password-only and cookie-authenticated requests need separate controls. The Sources entries below pin the contents route, authenticated GET, API refusal, token handling and authentication/authorization defaults; the REST specification documents the successful GET response as HTTP 200. These are source-based expectations, not observed deployment results; the missing deployment and credentials prevent the live comparison here.
+REASONED: following block; this guide's test design compares anonymous and valid-token requests directly to loopback `:8888/api/contents`. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in `Authorization: token` or the `token` query parameter; password-only and cookie-authenticated requests need separate controls. The Sources entries below pin the contents route, authenticated GET, API refusal, token handling and authentication/authorization defaults; the REST specification documents the successful GET response as HTTP 200. These are source-based expectations, not observed deployment results; the missing deployment and credentials prevent the live comparison here. The block exits 1 when the anonymous request gets a 2xx data response, 3 when a request fails, the anonymous request gets anything but 403 or a 2xx, or the valid-token positive control does not return 200, 2 when its token guard refuses, and otherwise 0; it leaves the listener table for you to judge.
 
 ```bash
-# Inventory assumes normal live kernel/proc inputs, without ss input-file environment overrides.
-ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
-           # the platform's NAT/proxy publication. A port here may be private OR public (once exposed/
-           # mapped), and a port published by the platform need not appear here at all, so cross-check
-           # against the platform's port mappings and probe each MAPPED port from outside (below).
-# Does the LISTENER itself demand auth? Test it DIRECTLY on loopback, with no platform proxy in the path,
-# as a matched pair: this guide's test design. Jupyter Server v2.18.0 accepts
-# 'Authorization: token <token>' or ?token=. With token auth enabled and no session cookie,
-# /api/contents returns 403 without credentials, not a login redirect. For the route at this URL,
-# default authorization and an existing readable path, valid-token GET completes the JSON model;
-# the REST specification documents HTTP 200 for this successful GET.
-# Any anonymous data response is a finding. Substitute the real token.
-(
-  # Feed the token to curl on stdin (curl --header @-), never in argv:
-  # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The Jupyter token you substitute on the set -- line enters shell history.
-  # Clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the token from set -x
-  # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Jupyter token on the set -- line above; not probing"; exit 2 ;; esac
-  curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
-    --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents
-  printf 'Authorization: token %s\n' "$1" | curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
-    --connect-timeout 5 --max-time 10 -H @- http://127.0.0.1:8888/api/contents
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  # Inventory assumes normal live kernel/proc inputs, without ss input-file environment overrides.
+  ss -tlnp ||  # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
+               # the platform's NAT/proxy publication. A port here may be private OR public (once exposed/
+               # mapped), and a port published by the platform need not appear here at all, so cross-check
+               # against the platform's port mappings and probe each MAPPED port from outside (next block).
+    { echo "ss -tlnp exit $?; inconclusive"; set -- 3; }
+  # Does the LISTENER itself demand auth? Test it DIRECTLY on loopback, with no platform proxy in the path,
+  # as a matched pair: this guide's test design. Jupyter Server v2.18.0 accepts
+  # 'Authorization: token <token>' or ?token=. With token auth enabled and no session cookie,
+  # /api/contents returns 403 without credentials, not a login redirect. For the route at this URL,
+  # default authorization and an existing readable path, valid-token GET completes the JSON model;
+  # the REST specification documents HTTP 200 for this successful GET.
+  # Any anonymous data response is a finding. Substitute the real token.
+  (
+    # Feed the token to curl on stdin (curl --header @-), never in argv:
+    # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The Jupyter token you substitute on the set -- line enters shell history.
+    # Clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the token from set -x
+    # tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Jupyter token on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
+      --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its no-token line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      0:'jupyter no-token=403 '*) ;;
+      0:'jupyter no-token=2'??' '*) echo "FINDING: an anonymous request to /api/contents got a data response"; set -- "$1" 1 ;;
+      0:*) echo "the no-token request got neither the 403 refusal nor a data response; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the no-token request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if printf 'Authorization: token %s\n' "$1" | curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
+      --connect-timeout 5 --max-time 10 -H @- http://127.0.0.1:8888/api/contents; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its with-token line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      0:'jupyter with-token=200 '*) ;;
+      0:*) echo "the valid-token request did not return 200, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the valid-token request failed, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the listener table is not classified, so judge it yourself, then probe each mapped port from outside with the next block"
+  exit "$1"
 )
+```
+
+```bash
+# REASONED: outside probe of each exposed mapping, per the cited RunPod, Vast.ai, Modal and Jupyter sources; no platform deployment, outside probe host or workload credentials are available, and no run is recorded.
 # Then confirm the SAME listener is authenticated FROM OUTSIDE, once PER exposed port/mapping. A probe of
 # the platform proxy hostname shows reachability and that something gates the URL, but a 401/200 there can
 # be the PLATFORM proxy rather than the listener, so read it with the direct-loopback pair above: a no-
@@ -21733,14 +21762,19 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the URL on the set -- line above; not probing"; exit 2 ;; esac
   case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the token on the set -- line above; not probing"; exit 2 ;; esac
-  curl -q -g -sS -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 "$1"
-  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H @- "$1"
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status: 3 once a request fails, otherwise 0
+  curl -q -g -sS -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 "$1" ||
+    { echo "curl exit $?: the no-credential request failed; inconclusive"; set -- "$1" "$2" 3; }
+  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H @- "$1" ||
+    { echo "curl exit $?: the with-credential request failed; inconclusive"; set -- "$1" "$2" 3; }
+  echo "block exit $3; neither code is classified, because this block cannot see whether a 200 returns app data or whose 401 it is: read them with the direct-loopback pair in the block above"
+  exit "$3"
 )
 ```
 
-REASONED: exposure interpretation from the cited platform publication and Jupyter authentication documentation; no platform deployment or outside probe host is available. Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). In this guide's assessment, any anonymous Jupyter data response is a finding, whichever of these platforms it runs on; a valid session cookie is authentication, and a 403 error response is not data access.
+REASONED: exposure interpretation from the cited platform publication and Jupyter authentication documentation; no platform deployment or outside probe host is available. Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). In this guide's assessment, any anonymous Jupyter data response is a finding, whichever of these platforms it runs on; a valid session cookie is authentication, and a 403 error response is not data access. The outside block above exits 2 when its guard refuses, 3 when a request fails and otherwise 0, because it cannot see whether a 200 returns app data or which layer sent a 401, so read its codes with the direct-loopback pair.
 
-REASONED: following block; this guide's test design for the Vast.ai portal's path exemptions and port exclusions has no live run: no Vast.ai instance or outside probe host is available. For an authenticated external mapping at base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the cited configurator lines 175-186 and 323-387 generate resolver 200, exempt-path backend responses and a Basic-auth challenge elsewhere. Before probing, establish harmless known private content at an exempt path and a non-exempt path, and obtain the portal's actual `WWW-Authenticate` header independently; confirm that the backend's own challenge differs. Substitute inside the quotes: mapped host:port, both paths starting with `/`, a distinctive non-secret body marker shared by those private resources, and that exact portal header line. If these prerequisites cannot be established, the result is INCONCLUSIVE. A public manifest is not private content merely because it returns 200. Anonymous matching content is a finding when that path is private; a protected-path 401 with the independently distinguished portal header matches the generated challenge, while a backend 401 or any unexplained response is INCONCLUSIVE. Disabled authentication and excluded ports can expose the same content, but these probes cannot diagnose which setting caused access. The resolver's 200 tests reachability only. Headers and bodies remain visible for inspection; transport failures are INCONCLUSIVE. The block exits once, after all three probes: with status 1 if any probe printed FINDING, with status 0 only if every probe printed PORTAL CHALLENGE, and otherwise with status 3. A resolver 200 without the private marker prints INCONCLUSIVE, so read each probe's line as well as the status. The block uses plain HTTP, the image default; with `ENABLE_HTTPS=true` and valid instance certificates, adjust the scheme. Repeat for each mapped port the portal proxies.
+REASONED: following block; this guide's test design for the Vast.ai portal's path exemptions and port exclusions has no live run: no Vast.ai instance or outside probe host is available. For an authenticated external mapping at base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the cited configurator lines 175-186 and 323-387 generate resolver 200, exempt-path backend responses and a Basic-auth challenge elsewhere. Before probing, establish harmless known private content at an exempt path and a non-exempt path, and obtain the portal's actual `WWW-Authenticate` header independently; confirm that the backend's own challenge differs. Substitute inside the quotes: mapped host:port, both paths starting with `/`, a distinctive non-secret body marker shared by those private resources, and that exact portal header line. If these prerequisites cannot be established, the result is INCONCLUSIVE. A public manifest is not private content merely because it returns 200. Anonymous matching content is a finding when that path is private; a protected-path 401 with the independently distinguished portal header matches the generated challenge, while a backend 401 or any unexplained response is INCONCLUSIVE. Disabled authentication and excluded ports can expose the same content, but these probes cannot diagnose which setting caused access. The resolver's 200 tests reachability only. Headers and bodies remain visible for inspection; transport failures are INCONCLUSIVE. The block exits once, after all three probes: with status 1 if any probe printed FINDING, with status 0 only if the resolver probe printed REACHABLE and the exempt-path and private-path probes printed PORTAL CHALLENGE, and otherwise with status 3. A resolver 200 without the private marker prints REACHABLE, because that 200 tests reachability only, and any other resolver answer prints INCONCLUSIVE, so read each probe's line as well as the status. The block uses plain HTTP, the image default; with `ENABLE_HTTPS=true` and valid instance certificates, adjust the scheme. Repeat for each mapped port the portal proxies.
 
 ```bash
 # Anonymous probes only; no credential enters this block.
@@ -21764,7 +21798,9 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
     set -- "$1" "$2" "$3" "$4" "${5%%$'\n\n'*}" "${5#*$'\n\n'}"
     case "${6%$'\nhttp='*}" in
       *"$3"*) echo 'FINDING: known private content returned anonymously'; exit 1 ;;
-      *) case "$6" in
+      *) case "$2:$6" in
+        /portal-resolver:*$'\nhttp=200 exit=0 err=\n'*) echo 'REACHABLE: the resolver answered 200, which tests reachability only' ;;
+        /portal-resolver:*) echo 'INCONCLUSIVE: the resolver did not answer 200'; exit 3 ;;
         *$'\nhttp=401 exit=0 err=\n'*)
           case "$5"$'\n' in
             *$'\n'"$4"$'\n'*) echo 'PORTAL CHALLENGE: matches the independently distinguished header' ;;
@@ -21774,14 +21810,14 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
       esac ;;
     esac
   )
-  # Each probe's status is appended to the positional values: 1 finding, 3 inconclusive, 0 portal challenge.
+  # Each probe's status is appended to the positional values: 1 finding, 3 inconclusive, 0 portal challenge or, for the resolver, a 200.
   portal_probe "$1" /portal-resolver "$4" "$5"
   set -- "$@" "$?"
   portal_probe "$1" "$2" "$4" "$5"
   set -- "$@" "$?"
   portal_probe "$1" "$3" "$4" "$5"
   set -- "$@" "$?"
-  # The block exits once: 1 if any probe found private content, else 0 only if all three saw the portal challenge, else 3.
+  # The block exits once: 1 if any probe found private content, else 0 only if the resolver answered 200 and both paths saw the portal challenge, else 3.
   case "$6:$7:$8" in 1:*|*:1:*|*:1) exit 1 ;; 0:0:0) exit 0 ;; *) exit 3 ;; esac
 )
 ```
@@ -21950,7 +21986,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "58660beb63b5c9f9ef8f90d917e85349c0c3ae4a9926437dd04c2bd3d774e3a7",
+  "body_sha256": "a32fd6fb5333c8e2499e89e5a79c3b566548a1be331c5f8166fda793b987f95f",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -22147,8 +22183,8 @@ Claims (full source mapping in the JSON block below):
     "verify-inventory": {"text": "This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. It is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each from outside.", "components": ["runpod", "vast", "iproute2", "network-namespaces"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s6c87acff18cf", "iproute2:sf8fdfa16eb3f", "iproute2:s1e96518d2ede", "network-namespaces:s427c923e346f"], "status": "REASONED", "verify": [1]},
     "verify-jupyter": {"text": "This guide's test design compares anonymous and valid-token requests directly to loopback :8888/api/contents; any anonymous data response is a finding, in this guide's assessment. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect.", "components": ["jupyter", "jupyter-contents"], "sources": ["jupyter:sc703a8030c8f", "jupyter-contents:sdc3ad9152505", "jupyter-contents:sf0a3ea8ee42e", "jupyter-contents:s4bdc7b9183f3", "jupyter-contents:s4e7504ed1ac8", "jupyter-contents:s83f1081e863e", "jupyter-contents:s6c884bdf8fb4"], "status": "REASONED", "verify": [1]},
     "verify-jupyter-token": {"text": "For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, default authorization, the route at :8888/api/contents and an existing readable path, valid-token GET completes the JSON model (the REST specification documents HTTP 200). Tokens are accepted in Authorization: token or the token query parameter; password-only and cookie-authenticated requests need separate controls.", "components": ["jupyter", "jupyter-contents"], "sources": ["jupyter:sc703a8030c8f", "jupyter-contents:sdc3ad9152505", "jupyter-contents:sf0a3ea8ee42e", "jupyter-contents:s4e7504ed1ac8", "jupyter-contents:s52316685e1e4", "jupyter-contents:s83f1081e863e", "jupyter-contents:s6c884bdf8fb4", "jupyter-contents:sb7fab0e85c94", "jupyter-contents:s58a8a77857b5"], "status": "REASONED", "verify": [1]},
-    "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
-    "verify-portal-exempt": {"text": "For an authenticated portal mapping at the cited commit, this guide expects resolver 200, exempt-path backend responses and a Basic challenge elsewhere, distinguishable only with a portal header known to differ from the backend. Anonymous known private content is a finding when that path is private; transport failures, backend 401s and unexplained responses are INCONCLUSIVE.", "components": ["vast-image"], "sources": ["vast-image:sae1085635ff9", "vast-image:s4a05112af859", "vast-image:sd9c32e411f08", "vast-image:s3c43b58f9e41"], "status": "REASONED", "verify": [2]},
+    "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [2]},
+    "verify-portal-exempt": {"text": "For an authenticated portal mapping at the cited commit, this guide expects resolver 200, exempt-path backend responses and a Basic challenge elsewhere, distinguishable only with a portal header known to differ from the backend. Anonymous known private content is a finding when that path is private; transport failures, backend 401s and unexplained responses are INCONCLUSIVE.", "components": ["vast-image"], "sources": ["vast-image:sae1085635ff9", "vast-image:s4a05112af859", "vast-image:sd9c32e411f08", "vast-image:s3c43b58f9e41"], "status": "REASONED", "verify": [3]},
     "remote-desktop": {"text": "At Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the linux-desktop launcher configures x11vnc on port 5900 with a password from VNC_PASSWORD, falling back to OPEN_BUTTON_TOKEN when VNC_PASSWORD is unset or empty. These citations do not establish other templates' ports or password defaults, or the strength of the effective VNC password.", "components": ["vast-image"], "sources": ["vast-image:s0428d55e9145", "vast-image:s44f3439f13de"], "status": "REASONED"},
     "remote-desktop-browser": {"text": "At Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the linux-desktop template README describes OPEN_BUTTON_TOKEN as randomly generated on first boot and visible in instance logs, and offers Selkies WebRTC and Guacamole browser VNC alongside direct VNC. This guide's advice: check both browser and direct VNC listeners and their public mappings for missing or weak authentication.", "components": ["runpod", "vast", "vast-image"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast-image:s1b8c6c46f358", "vast-image:s44f3439f13de"], "status": "REASONED"},
     "remote-desktop-direct": {"text": "In this guide's reasoning, a browser VNC page's HTTPS does not protect a separately reachable VNC connection, so a direct VNC mapping needs its own strong password and an encrypted tunnel, or should be kept off the public mapping. This guide's advice: test a direct VNC mapping with a VNC client, since browser VNC access controls and this guide's HTTP status checks may not cover it.", "components": ["runpod", "vast", "vast-image"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast-image:s1b8c6c46f358"], "status": "REASONED"}
@@ -41778,9 +41814,9 @@ Add C4's explicit origin only if required, and remove inherited unwanted origins
 
 REASONED: service-comparison scope from the cited v0.34.2 sources; no authorized live deployment or external observer. No service was started or contacted for these checks. All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
 
-REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. The fresh bash -n and ShellCheck run and the historical guard-only tests covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. In that earlier form, V6 also exited with status 1 when its result directory could not be created or protected, and with status 0 after a failed transfer; the current V6 exits with status 3 in both cases. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
+REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. The fresh bash -n and ShellCheck run and the historical guard-only tests covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was repeated on the later forms, whose guard refusals exit with status 2. In that earlier form, V6 also exited with status 1 when its result directory could not be created or protected, and with status 0 after a failed transfer, and V1, V2 and V3 ended with the status of their last command. The current V6 exits with status 3 in both of those V6 cases and keeps its values in positional parameters, and the current V1, V2 and V3 report the statuses their sections describe. On the current form, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses; ShellCheck was not run on it, and no demonstration was re-run. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
 
-REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. Those runs covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The V6 arms that stop when the result directory cannot be created or protected are not guard refusals; they exited with status 1 in that earlier form and now exit with status 3, and V6 now also exits with status 3 after any failed transfer, where the earlier form ended with status 0. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
+REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. Those runs covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was repeated on the later forms, whose guard refusals exit with status 2; in the current form V1, V2, V3 and V6 also report the statuses their sections describe. The V6 arms that stop when the result directory cannot be created or protected are not guard refusals; they exited with status 1 in that earlier form and now exit with status 3, and V6 now also exits with status 3 after any failed transfer, where the earlier form ended with status 0. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
 
 REASONED: comparison procedure from the cited service and proxy sources; isolated exposed/fixed deployments, identities and observers are unavailable. Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
 
@@ -41798,22 +41834,25 @@ REASONED: comparison procedure from the cited service and proxy sources; isolate
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:space:]]*)
       echo "replace both values; not inspecting"; exit 2 ;;
     *)
-      systemctl cat -- "$1"
-      systemctl show --property=User,Group,UMask,Environment,MainPID -- "$1"
-      ps -C ollama -o pid,user,group,args
-      ss -tlnp
-      stat -c '%U:%G %a %n' /var/lib/ollama /var/lib/ollama/models
-      getfacl -p /var/lib/ollama /var/lib/ollama/models
+      set -- "$1" "$2" 0                # the 3rd value is the block's status: 3 once an inspection command fails, otherwise 0
+      systemctl cat -- "$1" || { echo "systemctl cat exit $?; inconclusive"; set -- "$1" "$2" 3; }
+      systemctl show --property=User,Group,UMask,Environment,MainPID -- "$1" || { echo "systemctl show exit $?; inconclusive"; set -- "$1" "$2" 3; }
+      ps -C ollama -o pid,user,group,args || { echo "ps exit $? (no ollama process, or ps failed); inconclusive"; set -- "$1" "$2" 3; }
+      ss -tlnp || { echo "ss -tlnp exit $?; inconclusive"; set -- "$1" "$2" 3; }
+      stat -c '%U:%G %a %n' /var/lib/ollama /var/lib/ollama/models || { echo "stat exit $?; inconclusive"; set -- "$1" "$2" 3; }
+      getfacl -p /var/lib/ollama /var/lib/ollama/models || { echo "getfacl exit $?; inconclusive"; set -- "$1" "$2" 3; }
       if [ "$2" != NONE ]; then
-        docker ps --format 'table {{.Names}}\t{{.Ports}}'
-        docker inspect --format '{{json .HostConfig.PortBindings}} {{json .NetworkSettings.Networks}} {{json .Config.User}}' -- "$2"
+        docker ps --format 'table {{.Names}}\t{{.Ports}}' || { echo "docker ps exit $?; inconclusive"; set -- "$1" "$2" 3; }
+        docker inspect --format '{{json .HostConfig.PortBindings}} {{json .NetworkSettings.Networks}} {{json .Config.User}}' -- "$2" || { echo "docker inspect exit $?; inconclusive"; set -- "$1" "$2" 3; }
       fi
+      echo "block exit $3; nothing above is classified, so judge every listing against the comparisons below"
+      exit "$3"
       ;;
   esac
 )
 ```
 
-For container-only deployments, systemd inspection may be inapplicable. Inspect the actual container process identity and mounted store; an empty configured container user is not proof of an unprivileged process. Inspect every relevant network namespace, IPv4/IPv6 address, publication, and network attachment.
+For container-only deployments, systemd inspection may be inapplicable. Inspect the actual container process identity and mounted store; an empty configured container user is not proof of an unprivileged process. Inspect every relevant network namespace, IPv4/IPv6 address, publication, and network attachment. The block exits 3 when any inspection command fails, as the systemd or store commands can on a container-only deployment or with the store elsewhere, and otherwise 0, because it classifies nothing and leaves every listing for you to judge.
 
 The exposed comparison shows unintended listeners/publications, root execution, or writable model state. The fixed comparison shows the intended private path and dedicated identity. Check existing regular files and ACLs, service-home signing keys, root-owned configuration, and proxy key separation too.
 
@@ -41835,9 +41874,17 @@ Expected behavior follows C1's [Docker publication reference](https://docs.docke
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|*'<'*|*'>'*|*example.com*|""|*@*|*/*|*\?*|*\#*|*[[:space:]]*|203.0.113.*|198.51.100.*|192.0.2.*|*2001:db8*)
       echo "supply the real deployment address; not probing"; exit 2 ;;
     *)
-      curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+      if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "http://$1:11434/api/tags"
+        "http://$1:11434/api/tags"; then
+        echo "FINDING: the direct port answered over HTTP, which establishes the bypass even if its status is an error"; exit 1
+      else
+        set -- "$1" "$?"                # the address, then curl's exit status
+        case "$2" in
+          7|28) echo "curl exit $2, no connection (refused, unreachable or timed out): unclassified observation; it is the fixed result only when V1 and firewall evidence attribute it to the disallowed remote path and inference through the approved proxy succeeds"; exit 0 ;;
+          *) echo "curl exit $2: read err above; a resolver failure, local socket error or other local error is inconclusive"; exit 3 ;;
+        esac
+      fi
       ;;
   esac
 )
@@ -41845,7 +41892,7 @@ Expected behavior follows C1's [Docker publication reference](https://docs.docke
 
 Exposed: an HTTP response establishes that the direct port answered, even if its status is an error. Fixed: refusal or timeout attributable to the actual disallowed remote path, paired with successful inference through the approved proxy.
 
-Read `err`, not merely the exit number. A resolver failure, local socket error, wrong address, stopped service, or unexplained timeout is inconclusive. Correlate the result with V1 and firewall evidence. See C1's [binding documentation](https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx).
+Read `err`, not merely the exit number. A resolver failure, local socket error, wrong address, stopped service, or unexplained timeout is inconclusive. Correlate the result with V1 and firewall evidence. The block exits 1 when the direct port answers over HTTP, 0 with an unclassified-observation line when curl exits 7 or 28 (no connection, or a timeout), which you still attribute as above, and 3 on any other curl failure. See C1's [binding documentation](https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx).
 
 ### V3. Verify authentication and TLS with a real inference request (REASONED: cited Ollama, proxy and curl behavior; no live proxy, certificates, credentials or model)
 
@@ -41893,7 +41940,7 @@ Use the normal trust store when appropriate. Escape backslashes and double quote
 
 Inspect these files before use: allow only the intended authentication, trust, client-certificate, and test-header settings. Do not include URLs, redirects, proxy settings, insecure TLS options, extra transfers, or request/output overrides. An intentional `resolve` entry can support a hostname-negative test against the same server address. The files are trusted test inputs, not a safe format for untrusted instructions.
 
-The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of curl. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
+The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of curl. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures. The probe exits 0 when the transfer completes, leaving every response for you to compare with the table for your check, and 3 when curl fails; for the wrong-trust, wrong-hostname and client-certificate negatives that failure is the expected fixed result, so read its `err=` text as well as its status.
 
 ```bash
 (
@@ -41933,10 +41980,15 @@ The following reusable probe reads the client configuration on stdin, keeping cr
         POST|DELETE) set -- "$4" --request "$2" --url "$1" \
           --header "Content-Type: $5" --data-binary "@$3" ;;
       esac
-      curl -q -g -sS --config - --noproxy '*' --connect-timeout 5 --max-time 120 \
+      if curl -q -g -sS --config - --noproxy '*' --connect-timeout 5 --max-time 120 \
         --dump-header /dev/stderr \
         -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "${@:2}" < "$1"
+        "${@:2}" < "$1"; then
+        echo "unclassified observation: compare the headers, body and http= line above with the table for the check you are running"
+      else
+        echo "curl exit $?: the transfer failed; inconclusive, though a certificate or handshake failure is the expected fixed result of a wrong-trust, wrong-hostname or client-certificate negative, so read err above"
+        exit 3
+      fi
       ;;
   esac
 )
@@ -42032,28 +42084,33 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
           echo "replace placeholders in the client config; not probing"; exit 2 ;;
       esac
-      ollama_probe_dir=$(mktemp -d) || { echo "cannot create result directory"; exit 3; }
-      chmod 700 "$ollama_probe_dir" || { echo "cannot protect results"; exit 3; }
-      ollama_probe_pids=()
-      for ollama_probe_n in 1 2 3 4 5 6 7 8; do
+      set -- "$1" "$2" "$3" "$(if mktemp -d; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # URL, body file, client config, the result directory, then mktemp's exit status
+      [ "$5" = 0 ] && [ -n "$4" ] || { echo "cannot create result directory"; exit 3; }
+      chmod 700 "$4" || { echo "cannot protect results"; exit 3; }
+      set -- "$1" "$2" "$3" "$4"
+      while [ "$#" -lt 12 ]; do         # eight transfers: each appends its process ID, and $(($# - 3)) numbers its result files 1 to 8
         curl -q -g -sS --config - --noproxy '*' --connect-timeout 5 --max-time 120 \
           --request POST --header 'Content-Type: application/json' --data-binary "@$2" \
-          --output "$ollama_probe_dir/$ollama_probe_n.body" \
+          --output "$4/$(($# - 3)).body" \
           -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" \
-          < "$3" > "$ollama_probe_dir/$ollama_probe_n.status" \
-          2> "$ollama_probe_dir/$ollama_probe_n.stderr" &
-        ollama_probe_pids+=("$!")
+          < "$3" > "$4/$(($# - 3)).status" \
+          2> "$4/$(($# - 3)).stderr" &
+        set -- "$@" "$!"
       done
-      for ollama_probe_pid in "${ollama_probe_pids[@]}"; do
-        if wait "$ollama_probe_pid"; then
+      set -- "$4" 0 "${@:5}"            # the result directory, the block's status so far, then the eight process IDs
+      while [ "$#" -gt 2 ]; do
+        if wait "$3"; then
           :
         else
           echo "one transfer failed; inspect its status and stderr"
-          set -- "$@" 3   # records the failure; the block exits with status 3 below
+          set -- "$1" 3 "${@:3}"        # records the failure; the block exits with status 3 below
         fi
+        set -- "$1" "$2" "${@:4}"
       done
-      printf 'Results retained in %s\n' "$ollama_probe_dir"
-      [ "$#" -eq 3 ] || exit 3   # status 3 if any transfer failed; otherwise 0, and you judge the results
+      printf 'Results retained in %s\n' "$1"
+      echo "block exit $2; the eight results are not classified, so judge them against the exposed and fixed comparisons below"
+      exit "$2"                         # status 3 if any transfer failed; otherwise 0, and you judge the results
       ;;
   esac
 )
@@ -42490,7 +42547,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "7583c3d770c09dc4faf6aadb36ba94b9b5cbcd6b3dc2f5311ac8963598c430c6",
+  "body_sha256": "c99460a71296650c0bff65cd0aec7c45f753209fbe20f87e065c8a01a08ade27",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -57932,10 +57989,26 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ## Verify
 
-REASONED: following block; panel, Docker daemon and GitLab sources below support these listener/login, 2375/2376 and password-file checks. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: following block; listener check, per the panel, Docker daemon and GitLab sources below, which also support the panel-login, 2375/2376 and password-file checks in the three blocks after it; each of the four blocks carries its own marker and exit status. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither that guard nor the Docker block's address and certificate-file guards has been run.
 
 ```bash
-ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
+(                                                   # a subshell, so the exits below end only this check
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:(9443|9000|8000|3000|81|3001|2375|2376)$/ && (index($4, "0.0.0.0:") == 1 || index($4, "*:") == 1 || index($4, "[::]:") == 1) { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 9443, 9000, 8000, 3000, 81, 3001, 2375 or 2376 is bound to a wildcard address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  echo "block exit $1; a listener on those ports bound to a specific non-loopback address, and every listener on other ports, is not classified, so judge it yourself"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: panel-login check from the cited Portainer, Jenkins and Gitea sources; no deployed panel or external test network is available, the guard has not been run, and no live result is recorded.
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PANEL_HOST'   # the public host name your proxy serves one panel on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them, and run the block once per panel
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -57947,41 +58020,90 @@ ss -tlnp   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"
+  set -- "$1" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"                    # the host, curl's exit status, then the HTTP code
+  printf '%s\n' "$3"
                                                                     # 401, 403, or a login redirect, never a dashboard. No -k:
                                                                     # this panel is behind a proxy holding a real certificate, so
                                                                     # a check that skips verification proves nothing about it
+  case "$2:$3" in
+    0:401|0:403) set -- "$1" 0 ;;
+    0:3??) echo "HTTP $3, a redirect: unclassified observation; it passes only when it leads to the panel's login page, so follow it yourself"; set -- "$1" 0 ;;
+    0:2??) echo "HTTP $3: unclassified observation; open the page yourself, because a dashboard, or host, container or repository data shown without a login, is a finding"; set -- "$1" 0 ;;
+    0:*) echo "HTTP $3 is neither a 401 or 403 refusal, a redirect nor a page to judge; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $2: the request failed, a certificate that did not verify included, since this check keeps certificate verification on; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; a redirect or a 2xx page is not classified, so judge it as the line above says"
+  exit "$2"
 )
+```
+
+```bash
+# REASONED: Docker 2375 refusal and 2376 client-certificate comparisons from the cited Docker daemon sources; no daemon, certificate fixture or external test network is available, and no live result is recorded.
 # clears a pre-set declare -i or -l attribute, and any stale
 # value; copy this whole block, not just the command below
 (                                                   # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # the address the daemon answers on, for both 2375 and 2376: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) docker -H "tcp://$1:2375" info ;;       # must fail: connection refused or filtered
+  esac
+  set -- "$1" 0                                     # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (the 2376 part refused), which outranks 0
+  if docker -H "tcp://$1:2375" info; then           # must fail: connection refused or filtered
+    echo "FINDING: the Docker API answered on 2375 without TLS"; set -- "$1" 1
+  else
+    set -- "$1" "$2" "$?"                           # the address, the status so far, then docker's exit status
     # that is, refused or filtered BY THE REMOTE HOST. A local error or a docker client failure that
     # never opened a connection is inconclusive, not a pass
-  esac
+    case "$3" in
+      126|127) echo "docker exit $3: the docker client could not run, so no connection was opened; inconclusive"; set -- "$1" 3 ;;
+      *) echo "docker exit $3: unclassified observation; it is the pass only if the error above shows the remote host refused or filtered the connection"; set -- "$1" "$2" ;;
+    esac
+  fi
+  if [ -r ca.pem ] && [ -r client-cert.pem ] && [ -r client-key.pem ]; then
+    set -- "$1" "$2" "$(if env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
+      curl -q -g -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem "https://$1:2376/_ping"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"  # the address, the status so far, curl's exit status, then the HTTP code
+    printf '%s\n' "$4"
+                                                    # must fail the handshake on the CLIENT certificate. Do not use
+                                                    # `docker ... info` here: without `--tlsverify` it fails for the
+                                                    # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
+                                                    # can silently supply the very certificate the check is meant to lack
+    case "$3" in
+      0) echo "FINDING: 2376 answered HTTP $4 without a client certificate, so the daemon does not require one"; set -- "$1" 1 ;;
+      6|7|28) echo "curl exit $3: the request without a client certificate never reached the handshake; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: unclassified observation; it is the pass only if curl's error above shows the handshake failed on the client certificate"; set -- "$1" "$2" ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
+      "https://$1:2376/_ping"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # positive control: 200 with the right client certificate
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"  # the address, the status so far, curl's exit status, then the HTTP code
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      0:200) ;;
+      0:*) echo "HTTP $4 with the client certificate is not the 200 positive control; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the request with the client certificate failed, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2"
+  else                                              # a guard: the 2376 checks rely on the setup's certificate files in this directory
+    echo "ca.pem, client-cert.pem and client-key.pem are not all readable in this directory, so the 2376 checks did not run; not probing 2376"
+    [ "$2" = 0 ] && set -- "$1" 2
+  fi
+  echo "block exit $2; docker's error on 2375 and curl's error on 2376 without a client certificate are not classified, so read them as the lines above say"
+  exit "$2"
 )
-env -u DOCKER_HOST -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH \
-  curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem https://203.0.113.10:2376/_ping
-                                                                  # must fail the handshake on the CLIENT certificate. Do not use
-                                                                  # `docker ... info` here: without `--tlsverify` it fails for the
-                                                                  # wrong reason, and `DOCKER_CERT_PATH` exported in the setup above
-                                                                  # can silently supply the very certificate the check is meant to lack
-# guard-conventions: allow probe of a fixed illustrative target; no reader-substituted placeholder in this probe's argv
-curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.pem --key client-key.pem \
-  https://203.0.113.10:2376/_ping                                 # positive control: 200 with the right client certificate
+```
 
+```bash
 # GitLab CE: initial root password file check (needs Docker access; the container is named gitlab)
 # absence does not prove the password was rotated; presence means rotate root now
 # status: 1 when the file is present, 3 when the check did not run, 0 when the file is absent
 (                                                   # a subshell, so the exit below ends only this check
-  if state=$(docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null); then
-    case "$state" in
+  set -- "$(if docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1%%$'\n'*}" "${1##*$'\n'}"              # the container's reply, then docker exec's exit status
+  if [ "$2" = 0 ]; then
+    case "$1" in
       PRESENT) echo 'initial_root_password present: rotate root and remove it'; exit 1 ;;
       ABSENT)  echo 'initial_root_password absent' ;;
       *)       echo 'the check did not run (unexpected reply from the gitlab container): not a result'; exit 3 ;;
@@ -57993,7 +58115,7 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.
 )
 ```
 
-REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons, and the GitLab initial-password-file check follow the cited panel, Docker daemon and GitLab sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
+REASONED: preceding block; the GitLab initial-password-file check follows the cited GitLab source, and the listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons in the blocks above follow the cited panel and Docker daemon sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding. Each of the four blocks exits 1 for a finding, 3 for a failed or inconclusive check and otherwise 0, and a guard refusal exits 2; the Docker block also reports 2 when its certificate files are missing and nothing else in it was found or inconclusive. The last line of the listener, panel-login and Docker blocks names what each leaves for you to judge.
 
 ## Sources (checked September 2026)
 
@@ -58127,7 +58249,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e2df46b37ec9984b326cf26a776fb2bee084dc5868d86d04d791a96745a7f233",
+  "body_sha256": "89fb46441dc00c7d96c6f6045cbc9053cd6a93239c1757921600179ce75c59e6",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -58353,10 +58475,10 @@ Claims (full source mapping in the JSON block below):
     "nodered-secret": {"text": "Set credentialSecret yourself; otherwise generated, and stored credentials depend on it.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
     "nodered-private": {"text": "Keep editor private with fronting MFA; it has the power of its flows.", "components": ["nodered"], "sources": ["nodered:sa94f329023fe"], "status": "REASONED"},
     "verify-listeners": {"text": "Read every panel/API listener; expect loopback or absence, never wildcard exposure.", "components": ["portainer", "dokploy", "npm", "kuma", "docker"], "sources": ["portainer:s3e163c7d3c38", "dokploy:sc2cc854c9b7e", "npm:se553d384e783", "kuma:s05b853ba300b", "docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
-    "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:sfec17fde7bb0"], "status": "REASONED", "verify": [1]},
-    "verify-docker-plain": {"text": "Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.", "components": ["docker"], "sources": ["docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
-    "verify-docker-mtls": {"text": "2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.", "components": ["docker"], "sources": ["docker:sfe15a8156c18"], "status": "REASONED", "verify": [1]},
-    "verify-gitlab": {"text": "Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED", "verify": [1]}
+    "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:sfec17fde7bb0"], "status": "REASONED", "verify": [2]},
+    "verify-docker-plain": {"text": "Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.", "components": ["docker"], "sources": ["docker:s1b5ec54421b0"], "status": "REASONED", "verify": [3]},
+    "verify-docker-mtls": {"text": "2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.", "components": ["docker"], "sources": ["docker:sfe15a8156c18"], "status": "REASONED", "verify": [3]},
+    "verify-gitlab": {"text": "Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED", "verify": [4]}
   }
 }
 ````
@@ -60650,151 +60772,238 @@ advice: do not ship a source map, or leave one served, for code not already mean
 
 ## Verify
 
-REASONED: following block; planted-file denial, directory listing, ACME/lookalike paths and client-bundle scans. No configured web-server deployment or run outcome is recorded here; expectations are reasoned from the guide and its cited server and framework sources.
+REASONED: following block; planted-file denial, directory listing and ACME/lookalike paths; the client-bundle scan has its own block after it. No configured web-server deployment or run outcome is recorded here; expectations are reasoned from the guide and its cited server and framework sources. The block exits 1 when a probe returns `PLANTED-SECRET` or a 2xx, `/uploads/` answers 200, the challenge token answers 403, or `/.well-known-backup/config` answers a 2xx while a real file is there. Otherwise it exits 3 when a step is inconclusive or a removal fails, including a bare 404 from that lookalike path with no file behind it, and 0 when every classified probe passes.
 
 ```bash
 # Plant a real file at a denied dotfile path so a 403/404 proves the RULE fired, not that the file is
-# absent (Caddy's `respond ... 404` is 404 BY DESIGN, and /.env may simply not exist). Set DOCROOT to THIS
-# host's real document root (nginx `root` / Apache DocumentRoot); the check is INCONCLUSIVE unless the plant
+# absent (Caddy's `respond ... 404` is 404 BY DESIGN, and /.env may simply not exist). Put THIS host's real
+# document root (nginx `root` / Apache DocumentRoot) on the set -- line; the check is INCONCLUSIVE unless the plant
 # lands. mktemp creates the probe exclusively so it never clobbers a real file, and only that file is
 # removed. --noproxy so no client proxy answers; the body is shown so leaked content is visible:
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set +e                                # errexit off here, so a probe that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_YOUR_DOCUMENT_ROOT'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then its document root as an absolute path: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  DOCROOT=/var/www/html
-  result=0                              # 3 once any step is inconclusive or a removal fails; the block exits with it after its cleanup
-  if probe=$(sudo mktemp "$DOCROOT/.env.probeXXXXXX" 2>/dev/null); then
+  case "$2" in
+    ""|*REPLACE_WITH_*|[!/]*|*[[:cntrl:]]*) echo "substitute this host's document root, an absolute path, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  denied_probes() (                     # the host, then each path: every response must be 403 or 404 without PLANTED-SECRET
+    set -- "$1" 0 "${@:2}"              # the host, these probes' status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the paths still to probe
+    while [ "$#" -gt 2 ]; do
+      set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $3\n" "https://$1$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:4}"
+      set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}" "${@:5}"   # the host, the status so far, the path, what curl printed, curl's exit status, then the paths still to probe
+      printf '%s' "$4"
+      case "$5:$4" in
+        0:*PLANTED-SECRET*) echo "FINDING: $3 returned PLANTED-SECRET"; set -- "$1" 1 "${@:3}" ;;
+        0:*'  <= 403 '*|0:*'  <= 404 '*) ;;
+        0:*'  <= 2'??' '*) echo "FINDING: $3 answered with a 2xx, so the deny rule did not fire"; set -- "$1" 1 "${@:3}" ;;
+        0:*) echo "inconclusive: $3 answered neither 403 nor 404"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+        *) echo "inconclusive: curl exit $5 for $3"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+      esac
+      set -- "$1" "$2" "${@:6}"
+    done
+    exit "$2"
+  )
+  acme_probe() (                        # the host, the scheme, then the token's name: the response must be probe, never 403
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -w '\n%{http_code}' "$2://$1/.well-known/acme-challenge/$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"             # the host, the scheme, the name, curl's exit status, then the body and HTTP code
+    set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"        # ..., curl's exit status, the body, then the HTTP code
+    printf '%s\n' "$5"
+    case "$4:$6:$5" in
+      0:200:probe) exit 0 ;;
+      0:403:*) echo "FINDING: the challenge token answered 403 over $2, so the deny rules block the ACME exemption"; exit 1 ;;
+      0:*) echo "inconclusive: the challenge token answered $6 over $2 without the body probe"; exit 3 ;;
+      *) echo "inconclusive: curl exit $4 for the challenge token over $2"; exit 3 ;;
+    esac
+  )
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0; the block exits with it after its cleanup
+  set -- "$1" "$2" "$3" "$(if sudo mktemp "$2/.env.probeXXXXXX" 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # the host, the document root, the status so far, the probe's path, then mktemp's exit status
+  if [ "$5" = 0 ]; then
     # mktemp makes it root-only (0600); chmod so the web-server worker can READ it, or its 403 is a FILE
     # PERMISSION denial (not the deny rule) and the check would false-pass with no rule configured:
-    if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
-      for p in "/${probe##*/}" /.git/config /config.php.bak /db.sql; do
-        curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://$1$p" || result=3
-      done
+    if printf 'PLANTED-SECRET' | sudo tee "$4" >/dev/null && sudo chmod 0644 "$4"; then
+      denied_probes "$1" "/${4##*/}" /.git/config /config.php.bak /db.sql
+      case "$?:$3" in 0:*) ;; 1:*) set -- "$1" "$2" 1 "$4" ;; *:1) ;; *) set -- "$1" "$2" 3 "$4" ;; esac   # fold those probes' status into the block's, ranked as above
       # every line must be 403 or 404 and must NOT print PLANTED-SECRET. The .env.probe* line is the POSITIVE
       # CONTROL (a world-readable real file under the deny rules), so its 403/404 is the rule, not permissions
       # or absence; a bare 404 on the others could be absence, so plant one at each to be sure
     else
       echo "inconclusive: could not prepare the probe file"
-      result=3
+      [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"
     fi
-    sudo rm -f "$probe" || result=3
+    sudo rm -f "$4" || { [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"; }
   else
-    echo "inconclusive: could not create a probe under $DOCROOT; point it at the writable document root"
-    result=3
+    echo "inconclusive: could not create a probe under $2; point it at the writable document root"
+    set -- "$1" "$2" 3
   fi
+  set -- "$1" "$2" "$3"
   # uploads/backups directory: an existing, non-empty, index-less dir must NOT return a 200 autoindex under
   # Options -Indexes. Plant a throwaway file so a listing would actually reveal something; inconclusive if the
   # directory does not exist:
-  if u=$(sudo mktemp "$DOCROOT/uploads/listcheckXXXXXX" 2>/dev/null); then
-    curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/" || result=3   # 403/404, never a 200 listing
-    sudo rm -f "$u" || result=3
+  set -- "$1" "$2" "$3" "$(if sudo mktemp "$2/uploads/listcheckXXXXXX" 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # ..., the throwaway file's path, then mktemp's exit status
+  if [ "$5" = 0 ]; then
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # ..., curl's exit status, then the HTTP code
+    printf '%s\n' "$6"                  # 403/404, never a 200 listing
+    case "$5:$6" in
+      0:403|0:404) ;;
+      0:200) echo "FINDING: /uploads/ answered 200, where an index-less directory must give 403 or 404, so it is listed"; set -- "$1" "$2" 1 "$4" ;;
+      0:*) echo "inconclusive: /uploads/ answered $6, neither 403 or 404 nor a 200 listing"; [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4" ;;
+      *) echo "inconclusive: curl exit $5 for /uploads/"; [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4" ;;
+    esac
+    sudo rm -f "$4" || { [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"; }
   else
-    echo "inconclusive: $DOCROOT/uploads does not exist or is not writable"
-    result=3
+    echo "inconclusive: $2/uploads does not exist or is not writable"
+    [ "$3" = 1 ] || set -- "$1" "$2" 3
   fi
+  set -- "$1" "$2" "$3"
 
-  acme="$DOCROOT/.well-known/acme-challenge"
-  if sudo test -d "$acme" && tok=$(sudo mktemp "$acme/probeXXXXXX" 2>/dev/null); then
-    if printf 'probe' | sudo tee "$tok" >/dev/null && sudo chmod 0644 "$tok"; then   # readable, or a 403 is a permission denial not the exemption
-      name=${tok##*/}
-      curl -q -g -sS --noproxy '*' "https://$1/.well-known/acme-challenge/$name" || result=3   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
-      curl -q -g -sS --noproxy '*' "http://$1/.well-known/acme-challenge/$name" || result=3    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+  set -- "$1" "$2" "$3" "$(if sudo test -d "$2/.well-known/acme-challenge" && sudo mktemp "$2/.well-known/acme-challenge/probeXXXXXX" 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # ..., the token's path, then the exit status of test and mktemp
+  if [ "$5" = 0 ]; then
+    if printf 'probe' | sudo tee "$4" >/dev/null && sudo chmod 0644 "$4"; then   # readable, or a 403 is a permission denial not the exemption
+      acme_probe "$1" https "${4##*/}"  # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
+      case "$?:$3" in 0:*) ;; 1:*) set -- "$1" "$2" 1 "$4" ;; *:1) ;; *) set -- "$1" "$2" 3 "$4" ;; esac
+      acme_probe "$1" http "${4##*/}"   # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+      case "$?:$3" in 0:*) ;; 1:*) set -- "$1" "$2" 1 "$4" ;; *:1) ;; *) set -- "$1" "$2" 3 "$4" ;; esac
     else
       echo "inconclusive: could not prepare the challenge file"
-      result=3
+      [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"
     fi
-    sudo rm -f "$tok" || result=3
+    sudo rm -f "$4" || { [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4"; }
   else
-    echo "inconclusive: $acme does not exist"
-    result=3
+    echo "inconclusive: $2/.well-known/acme-challenge does not exist"
+    [ "$3" = 1 ] || set -- "$1" "$2" 3
   fi
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config" || result=3
+  set -- "$1" "$2" "$3"
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # ..., curl's exit status, then the HTTP code
+  printf '%s\n' "$5"
   # must be 403 or 404: a directory that only starts with "well-known" must not inherit the exemption. A bare
   # 404 is inconclusive here (nothing is there); create a real .well-known-backup/config to be certain a
   # served 200 would be the finding, then remove it
-  exit "$result"                        # after every cleanup attempt above: 3 if any step was inconclusive or a removal failed, else 0
+  case "$4:$5" in
+    0:403) ;;
+    0:404|0:2??)
+      if sudo test -f "$2/.well-known-backup/config"; then
+        case "$5" in 404) ;; *) echo "FINDING: /.well-known-backup/config answered $5, so the lookalike directory inherited the exemption"; set -- "$1" "$2" 1 ;; esac
+      else
+        echo "inconclusive: nothing is at $2/.well-known-backup/config, so its $5 does not show whether the rule fired"; [ "$3" = 1 ] || set -- "$1" "$2" 3
+      fi ;;
+    0:*) echo "inconclusive: /.well-known-backup/config answered $5, neither 403 nor 404"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    *) echo "inconclusive: curl exit $4 for /.well-known-backup/config"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
+  echo "block exit $3; the response bodies, and a 404 from /.git/config, /config.php.bak or /db.sql, where nothing was planted, are not classified, so judge them yourself"
+  exit "$3"                             # after every cleanup attempt above: 1 if a probe found a planted secret, a listing or a 403 on the challenge token, else 3 if any step was inconclusive or a removal failed, else 0
 )
+```
 
+```bash
+# REASONED: client-bundle scan per the guide's cited Next.js environment variables and GNU grep 3.12 exit status and error handling; no built bundle was scanned here, and no deployment outcome is recorded.
 (                                       # a subshell, so the exit below ends only this check
-  result=0 scanned=0
-  for d in .next/static build dist; do
-    [ -d "$d" ] || { echo "$d: absent, nothing scanned"; continue; }
-    scanned=1
-    if grep -rn "sk-\|AKIA\|ghp_\|sb_secret_\|-----BEGIN" "$d"; then rc=0; else rc=$?; fi; echo "$d exit: $rc"
-    case $rc in
-      0) result=1 ;;                                # a match is a finding, and it outranks an error
-      1) ;;
-      *) [ "$result" -eq 1 ] || result=3 ;;         # a grep error is inconclusive
-    esac
+  set -- 0 0 .next/static build dist    # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), whether any directory was scanned, then the directories still to scan
+  while [ "$#" -gt 2 ]; do
+    if [ -d "$3" ]; then
+      set -- "$1" 1 "${@:3}"
+      if grep -rn "sk-\|AKIA\|ghp_\|sb_secret_\|-----BEGIN" "$3"; then set -- "$1" "$2" "$3" 0 "${@:4}"; else set -- "$1" "$2" "$3" "$?" "${@:4}"; fi; echo "$3 exit: $4"
+      case "$4" in
+        0) set -- 1 "${@:2}" ;;                     # a match is a finding, and it outranks an error
+        1) ;;
+        *) [ "$1" = 1 ] || set -- 3 "${@:2}" ;;     # a grep error is inconclusive
+      esac
+      set -- "$1" "$2" "${@:5}"
+    else
+      echo "$3: absent, nothing scanned"
+      set -- "$1" "$2" "${@:4}"
+    fi
   done
-  [ "$scanned" -eq 1 ] || result=3                  # no directory existed, so nothing was scanned
-  exit "$result"
+  [ "$2" = 1 ] || set -- 3 "$2"                     # no directory existed, so nothing was scanned
+  exit "$1"
 )
 # run against the built client bundle, not the source. Exit 1 with no output is clean, exit 0
 # is a match, and exit 2 is a grep failure that is NOT clean. Do not send the errors to
 # /dev/null and read silence as a pass: a missing directory is an error (exit 2), and
 # discarding its error message leaves silence, which looks exactly like success. A clean result is evidence, not proof:
 # a bundler can split or encode a value, so scan for the literal secret as well
-# The block itself exits 1 when any directory matched, 3 when a grep failed or no directory existed,
+# The bundle scan above exits 1 when any directory matched, 3 when a grep failed or no directory existed,
 # and 0 otherwise.
 ```
 
-REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its result arms with status 0; the current form, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1, was not re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; client-bundle scan, per the guide's cited Next.js environment variables and GNU grep 3.12 exit status and error handling, with the dotfile/backup denial, listing and ACME/lookalike checks of the block above it, per the cited nginx core module, nginx access module, Apache core Options, Caddy matchers and RFC 8555 section 8.3 HTTP-01 validation. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the planted-file checks and the bundle scan as one block, before its host guard was added, and were not repeated on the guarded block. That earlier form ended its result arms with status 0. Those runs were not repeated on the next form either, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1. On the current form, in which the two checks are separate blocks, the planted-file block takes its document root on its `set --` line and exits 1 on a finding, and both keep their values in positional parameters, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses; ShellCheck was not run on it, and no demonstration was re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
-REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0; the current form, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed, was not re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
-against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and put its
-served host name on the block's `set --` line. On an isolated test host, run before and after enabling the
+REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0. Those runs were not repeated on the next form either, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed. On the current form, which also exits 1 when a probe returns PLANTED-SECRET, takes the document root on its `set --` line and keeps its values in positional parameters, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses; ShellCheck was not run on it, and no demonstration was re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+against real content. Use GNU `mktemp`, and put this host's served host name and its document root on
+the block's `set --` line. On an isolated test host, run before and after enabling the
 deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
-return 403 or 404 without that body. A failed plant or curl transfer is inconclusive. The block attempts to remove every plant, and it exits 3 when a step was inconclusive or a removal failed.
+return 403 or 404 without that body. A failed plant or curl transfer is inconclusive, and so is a 200 without that body or any other code. The block attempts to remove every plant, and it exits 1 when a probe returned `PLANTED-SECRET`, otherwise 3 when a step was inconclusive or a removal failed, and otherwise 0.
 
 ```bash
 # REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
 # runtime is available, and network restrictions prevent installing one. Expected exposed/fixed
 # outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
 # references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
-# block before its host guard was added. That form's inconclusive arms ended with status 0; this form,
-# which exits 3 after attempting its cleanup when a step is inconclusive or a removal fails, was not re-checked.
+# block before its host guard was added. That form's inconclusive arms ended with status 0; the later
+# forms, which exit 3 after attempting their cleanup when a step is inconclusive or a removal fails,
+# were not re-checked, except that bash -n and stub runs checked this one, which also exits 1 on PLANTED-SECRET.
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set +e                                # errexit off here, so a plant that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_YOUR_DOCUMENT_ROOT'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then its document root as an absolute path: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  DOCROOT=/var/www/html
-  result=0                              # 3 once any plant or transfer is inconclusive or a removal fails; the block exits with it after its cleanup
-  for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
-    template="$DOCROOT/probeXXXXXX"
-    [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
-    if probe=$(sudo mktemp --suffix="$suffix" "$template" 2>/dev/null); then
-      if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
-        p="/${probe##*/}"
-        curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-          -w "  <= %{http_code} $p\n" "https://$1$p" || { echo "inconclusive: curl failed"; result=3; }
-        # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
-      else
-        echo "inconclusive: could not prepare $probe"
-        result=3
-      fi
-      sudo rm -f "$probe" || result=3
+  case "$2" in
+    ""|*REPLACE_WITH_*|[!/]*|*[[:cntrl:]]*) echo "substitute this host's document root, an absolute path, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  plant_probe() (                       # the host, the document root, then one suffix ('' for the generic dotfile): plant, probe, then remove
+    set -- "$1" "$2" "$3" "$2/probeXXXXXX"
+    [ -n "$3" ] || set -- "$1" "$2" "$3" "$2/.probeXXXXXX"
+    set -- "$1" "$2" "$3" "$(if sudo mktemp --suffix="$3" "$4" 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # the host, the document root, the suffix, the plant's path, then mktemp's exit status
+    [ "$5" = 0 ] || { echo "inconclusive: could not plant suffix '$3' under $2"; exit 3; }
+    set -- "$1" "$2" "$3" "$4" 0        # the 5th value is this plant's status so far, ranked as below
+    if printf 'PLANTED-SECRET' | sudo tee "$4" >/dev/null && sudo chmod 0644 "$4"; then
+      set -- "$1" "$2" "$3" "$4" "$5" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w "  <= %{http_code} /${4##*/}\n" "https://$1/${4##*/}"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"   # ..., what curl printed, then curl's exit status
+      printf '%s' "$6"
+      # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
+      case "$7:$6" in
+        0:*PLANTED-SECRET*) echo "FINDING: /${4##*/} returned PLANTED-SECRET"; set -- "$1" "$2" "$3" "$4" 1 ;;
+        0:*'  <= 403 '*|0:*'  <= 404 '*) ;;
+        0:*) echo "inconclusive: /${4##*/} answered without PLANTED-SECRET but with neither 403 nor 404"; set -- "$1" "$2" "$3" "$4" 3 ;;
+        *) echo "inconclusive: curl failed"; set -- "$1" "$2" "$3" "$4" 3 ;;
+      esac
     else
-      echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
-      result=3
+      echo "inconclusive: could not prepare $4"
+      set -- "$1" "$2" "$3" "$4" 3
     fi
+    sudo rm -f "$4" || { [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3; }
+    exit "$5"
+  )
+  set -- "$1" "$2" 0 '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz   # the host, the document root, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the suffixes still to plant
+  while [ "$#" -gt 3 ]; do
+    plant_probe "$1" "$2" "$4"
+    case "$?:$3" in 0:*) ;; 1:*) set -- "$1" "$2" 1 "${@:4}" ;; *:1) ;; *) set -- "$1" "$2" 3 "${@:4}" ;; esac   # fold that plant's status into the block's, ranked as above
+    set -- "$1" "$2" "$3" "${@:5}"
   done
-  exit "$result"                        # after every removal was attempted: 3 if any step was inconclusive or a removal failed, else 0
+  echo "block exit $3"
+  exit "$3"                             # after every removal was attempted: 1 if a probe returned PLANTED-SECRET, else 3 if any step was inconclusive or a removal failed, else 0
 )
 ```
 
@@ -60886,14 +61095,14 @@ Claims (full source mapping in the JSON block below):
 - verify-lookalike (REASONED; nginx, apache, caddy, caddy-rolling): Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.
 - verify-bundle (REASONED; next, vite, cra, grep): Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.
 - verify-backup (REASONED; nginx, apache, caddy, caddy-rolling): Known previously deployed backup URLs should return 403 or 404 without the file contents.
-- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Only shell syntax and suffix creation were checked, on an earlier form whose inconclusive arms exited 0, not on this form or a server.
+- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Syntax and suffix creation were checked on an earlier form whose inconclusive arms exited 0; this form had only bash -n and stub runs, none on a server.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "3fa29a0cb0557f181a4b8f660f0515483f5375fceff0e23f212d5384278c6363",
+  "body_sha256": "7710fe4c8efac9fbcb11cf6d0af67fd4c809fed7a3d7d5a1b916ed74ac081860",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -61038,9 +61247,9 @@ Claims (full source mapping in the JSON block below):
     "verify-listing": {"text": "Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED", "verify": [1]},
     "verify-acme": {"text": "Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive.", "components": ["nginx", "apache", "acme-http01"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a", "acme-http01:se60bdd68e41d"], "status": "REASONED", "verify": [1]},
     "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
-    "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [1]},
+    "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [2]},
     "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
-    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Only shell syntax and suffix creation were checked, on an earlier form whose inconclusive arms exited 0, not on this form or a server.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [2]}
+    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Syntax and suffix creation were checked on an earlier form whose inconclusive arms exited 0; this form had only bash -n and stub runs, none on a server.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [3]}
   }
 }
 ````

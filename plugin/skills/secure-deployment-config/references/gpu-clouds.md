@@ -74,39 +74,68 @@ SSH: authenticate with your own key, not a password. Lambda requires an SSH key 
 
 REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no service run is recorded. Expected readings below follow the cited platform documentation, the Vast.ai base-image portal configurator at commit 00064421641881c1f83ff58c55f13cbc10cbea4d, Jupyter Server v2.18.0 implementation, REST specification and security documentation, iproute2 v6.12.0 ss manual and implementation, and Linux man-pages-5.13 network namespace isolation. This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. This is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each mapped port from outside.
 
-REASONED: following block; this guide's test design compares anonymous and valid-token requests directly to loopback `:8888/api/contents`. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in `Authorization: token` or the `token` query parameter; password-only and cookie-authenticated requests need separate controls. The Sources entries below pin the contents route, authenticated GET, API refusal, token handling and authentication/authorization defaults; the REST specification documents the successful GET response as HTTP 200. These are source-based expectations, not observed deployment results; the missing deployment and credentials prevent the live comparison here.
+REASONED: following block; this guide's test design compares anonymous and valid-token requests directly to loopback `:8888/api/contents`. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in `Authorization: token` or the `token` query parameter; password-only and cookie-authenticated requests need separate controls. The Sources entries below pin the contents route, authenticated GET, API refusal, token handling and authentication/authorization defaults; the REST specification documents the successful GET response as HTTP 200. These are source-based expectations, not observed deployment results; the missing deployment and credentials prevent the live comparison here. The block exits 1 when the anonymous request gets a 2xx data response, 3 when a request fails, the anonymous request gets anything but 403 or a 2xx, or the valid-token positive control does not return 200, 2 when its token guard refuses, and otherwise 0; it leaves the listener table for you to judge.
 
 ```bash
-# Inventory assumes normal live kernel/proc inputs, without ss input-file environment overrides.
-ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
-           # the platform's NAT/proxy publication. A port here may be private OR public (once exposed/
-           # mapped), and a port published by the platform need not appear here at all, so cross-check
-           # against the platform's port mappings and probe each MAPPED port from outside (below).
-# Does the LISTENER itself demand auth? Test it DIRECTLY on loopback, with no platform proxy in the path,
-# as a matched pair: this guide's test design. Jupyter Server v2.18.0 accepts
-# 'Authorization: token <token>' or ?token=. With token auth enabled and no session cookie,
-# /api/contents returns 403 without credentials, not a login redirect. For the route at this URL,
-# default authorization and an existing readable path, valid-token GET completes the JSON model;
-# the REST specification documents HTTP 200 for this successful GET.
-# Any anonymous data response is a finding. Substitute the real token.
-(
-  # Feed the token to curl on stdin (curl --header @-), never in argv:
-  # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The Jupyter token you substitute on the set -- line enters shell history.
-  # Clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the token from set -x
-  # tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Jupyter token on the set -- line above; not probing"; exit 2 ;; esac
-  curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
-    --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents
-  printf 'Authorization: token %s\n' "$1" | curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
-    --connect-timeout 5 --max-time 10 -H @- http://127.0.0.1:8888/api/contents
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  # Inventory assumes normal live kernel/proc inputs, without ss input-file environment overrides.
+  ss -tlnp ||  # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
+               # the platform's NAT/proxy publication. A port here may be private OR public (once exposed/
+               # mapped), and a port published by the platform need not appear here at all, so cross-check
+               # against the platform's port mappings and probe each MAPPED port from outside (next block).
+    { echo "ss -tlnp exit $?; inconclusive"; set -- 3; }
+  # Does the LISTENER itself demand auth? Test it DIRECTLY on loopback, with no platform proxy in the path,
+  # as a matched pair: this guide's test design. Jupyter Server v2.18.0 accepts
+  # 'Authorization: token <token>' or ?token=. With token auth enabled and no session cookie,
+  # /api/contents returns 403 without credentials, not a login redirect. For the route at this URL,
+  # default authorization and an existing readable path, valid-token GET completes the JSON model;
+  # the REST specification documents HTTP 200 for this successful GET.
+  # Any anonymous data response is a finding. Substitute the real token.
+  (
+    # Feed the token to curl on stdin (curl --header @-), never in argv:
+    # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The Jupyter token you substitute on the set -- line enters shell history.
+    # Clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the token from set -x
+    # tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the Jupyter token on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w 'jupyter no-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
+      --connect-timeout 5 --max-time 10 http://127.0.0.1:8888/api/contents; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its no-token line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      0:'jupyter no-token=403 '*) ;;
+      0:'jupyter no-token=2'??' '*) echo "FINDING: an anonymous request to /api/contents got a data response"; set -- "$1" 1 ;;
+      0:*) echo "the no-token request got neither the 403 refusal nor a data response; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the no-token request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if printf 'Authorization: token %s\n' "$1" | curl -q -g -sS -o /dev/null -w 'jupyter with-token=%{http_code} exit=%{exitcode}\n' --noproxy '*' \
+      --connect-timeout 5 --max-time 10 -H @- http://127.0.0.1:8888/api/contents; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its with-token line
+    printf '%s\n' "$4"
+    case "$3:$4" in
+      0:'jupyter with-token=200 '*) ;;
+      0:*) echo "the valid-token request did not return 200, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the valid-token request failed, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the listener table is not classified, so judge it yourself, then probe each mapped port from outside with the next block"
+  exit "$1"
 )
+```
+
+```bash
+# REASONED: outside probe of each exposed mapping, per the cited RunPod, Vast.ai, Modal and Jupyter sources; no platform deployment, outside probe host or workload credentials are available, and no run is recorded.
 # Then confirm the SAME listener is authenticated FROM OUTSIDE, once PER exposed port/mapping. A probe of
 # the platform proxy hostname shows reachability and that something gates the URL, but a 401/200 there can
 # be the PLATFORM proxy rather than the listener, so read it with the direct-loopback pair above: a no-
@@ -124,14 +153,19 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the URL on the set -- line above; not probing"; exit 2 ;; esac
   case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the token on the set -- line above; not probing"; exit 2 ;; esac
-  curl -q -g -sS -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 "$1"
-  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H @- "$1"
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status: 3 once a request fails, otherwise 0
+  curl -q -g -sS -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 "$1" ||
+    { echo "curl exit $?: the no-credential request failed; inconclusive"; set -- "$1" "$2" 3; }
+  printf 'Authorization: Bearer %s\n' "$2" | curl -q -g -sS -o /dev/null -w 'with-cred=%{http_code} exit=%{exitcode}\n' --noproxy '*' --connect-timeout 5 --max-time 10 -H @- "$1" ||
+    { echo "curl exit $?: the with-credential request failed; inconclusive"; set -- "$1" "$2" 3; }
+  echo "block exit $3; neither code is classified, because this block cannot see whether a 200 returns app data or whose 401 it is: read them with the direct-loopback pair in the block above"
+  exit "$3"
 )
 ```
 
-REASONED: exposure interpretation from the cited platform publication and Jupyter authentication documentation; no platform deployment or outside probe host is available. Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). In this guide's assessment, any anonymous Jupyter data response is a finding, whichever of these platforms it runs on; a valid session cookie is authentication, and a 403 error response is not data access.
+REASONED: exposure interpretation from the cited platform publication and Jupyter authentication documentation; no platform deployment or outside probe host is available. Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). In this guide's assessment, any anonymous Jupyter data response is a finding, whichever of these platforms it runs on; a valid session cookie is authentication, and a 403 error response is not data access. The outside block above exits 2 when its guard refuses, 3 when a request fails and otherwise 0, because it cannot see whether a 200 returns app data or which layer sent a 401, so read its codes with the direct-loopback pair.
 
-REASONED: following block; this guide's test design for the Vast.ai portal's path exemptions and port exclusions has no live run: no Vast.ai instance or outside probe host is available. For an authenticated external mapping at base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the cited configurator lines 175-186 and 323-387 generate resolver 200, exempt-path backend responses and a Basic-auth challenge elsewhere. Before probing, establish harmless known private content at an exempt path and a non-exempt path, and obtain the portal's actual `WWW-Authenticate` header independently; confirm that the backend's own challenge differs. Substitute inside the quotes: mapped host:port, both paths starting with `/`, a distinctive non-secret body marker shared by those private resources, and that exact portal header line. If these prerequisites cannot be established, the result is INCONCLUSIVE. A public manifest is not private content merely because it returns 200. Anonymous matching content is a finding when that path is private; a protected-path 401 with the independently distinguished portal header matches the generated challenge, while a backend 401 or any unexplained response is INCONCLUSIVE. Disabled authentication and excluded ports can expose the same content, but these probes cannot diagnose which setting caused access. The resolver's 200 tests reachability only. Headers and bodies remain visible for inspection; transport failures are INCONCLUSIVE. The block exits once, after all three probes: with status 1 if any probe printed FINDING, with status 0 only if every probe printed PORTAL CHALLENGE, and otherwise with status 3. A resolver 200 without the private marker prints INCONCLUSIVE, so read each probe's line as well as the status. The block uses plain HTTP, the image default; with `ENABLE_HTTPS=true` and valid instance certificates, adjust the scheme. Repeat for each mapped port the portal proxies.
+REASONED: following block; this guide's test design for the Vast.ai portal's path exemptions and port exclusions has no live run: no Vast.ai instance or outside probe host is available. For an authenticated external mapping at base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the cited configurator lines 175-186 and 323-387 generate resolver 200, exempt-path backend responses and a Basic-auth challenge elsewhere. Before probing, establish harmless known private content at an exempt path and a non-exempt path, and obtain the portal's actual `WWW-Authenticate` header independently; confirm that the backend's own challenge differs. Substitute inside the quotes: mapped host:port, both paths starting with `/`, a distinctive non-secret body marker shared by those private resources, and that exact portal header line. If these prerequisites cannot be established, the result is INCONCLUSIVE. A public manifest is not private content merely because it returns 200. Anonymous matching content is a finding when that path is private; a protected-path 401 with the independently distinguished portal header matches the generated challenge, while a backend 401 or any unexplained response is INCONCLUSIVE. Disabled authentication and excluded ports can expose the same content, but these probes cannot diagnose which setting caused access. The resolver's 200 tests reachability only. Headers and bodies remain visible for inspection; transport failures are INCONCLUSIVE. The block exits once, after all three probes: with status 1 if any probe printed FINDING, with status 0 only if the resolver probe printed REACHABLE and the exempt-path and private-path probes printed PORTAL CHALLENGE, and otherwise with status 3. A resolver 200 without the private marker prints REACHABLE, because that 200 tests reachability only, and any other resolver answer prints INCONCLUSIVE, so read each probe's line as well as the status. The block uses plain HTTP, the image default; with `ENABLE_HTTPS=true` and valid instance certificates, adjust the scheme. Repeat for each mapped port the portal proxies.
 
 ```bash
 # Anonymous probes only; no credential enters this block.
@@ -155,7 +189,9 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
     set -- "$1" "$2" "$3" "$4" "${5%%$'\n\n'*}" "${5#*$'\n\n'}"
     case "${6%$'\nhttp='*}" in
       *"$3"*) echo 'FINDING: known private content returned anonymously'; exit 1 ;;
-      *) case "$6" in
+      *) case "$2:$6" in
+        /portal-resolver:*$'\nhttp=200 exit=0 err=\n'*) echo 'REACHABLE: the resolver answered 200, which tests reachability only' ;;
+        /portal-resolver:*) echo 'INCONCLUSIVE: the resolver did not answer 200'; exit 3 ;;
         *$'\nhttp=401 exit=0 err=\n'*)
           case "$5"$'\n' in
             *$'\n'"$4"$'\n'*) echo 'PORTAL CHALLENGE: matches the independently distinguished header' ;;
@@ -165,14 +201,14 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
       esac ;;
     esac
   )
-  # Each probe's status is appended to the positional values: 1 finding, 3 inconclusive, 0 portal challenge.
+  # Each probe's status is appended to the positional values: 1 finding, 3 inconclusive, 0 portal challenge or, for the resolver, a 200.
   portal_probe "$1" /portal-resolver "$4" "$5"
   set -- "$@" "$?"
   portal_probe "$1" "$2" "$4" "$5"
   set -- "$@" "$?"
   portal_probe "$1" "$3" "$4" "$5"
   set -- "$@" "$?"
-  # The block exits once: 1 if any probe found private content, else 0 only if all three saw the portal challenge, else 3.
+  # The block exits once: 1 if any probe found private content, else 0 only if the resolver answered 200 and both paths saw the portal challenge, else 3.
   case "$6:$7:$8" in 1:*|*:1:*|*:1) exit 1 ;; 0:0:0) exit 0 ;; *) exit 3 ;; esac
 )
 ```
@@ -341,7 +377,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "58660beb63b5c9f9ef8f90d917e85349c0c3ae4a9926437dd04c2bd3d774e3a7",
+  "body_sha256": "a32fd6fb5333c8e2499e89e5a79c3b566548a1be331c5f8166fda793b987f95f",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -538,8 +574,8 @@ Claims (full source mapping in the JSON block below):
     "verify-inventory": {"text": "This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. It is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each from outside.", "components": ["runpod", "vast", "iproute2", "network-namespaces"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s6c87acff18cf", "iproute2:sf8fdfa16eb3f", "iproute2:s1e96518d2ede", "network-namespaces:s427c923e346f"], "status": "REASONED", "verify": [1]},
     "verify-jupyter": {"text": "This guide's test design compares anonymous and valid-token requests directly to loopback :8888/api/contents; any anonymous data response is a finding, in this guide's assessment. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect.", "components": ["jupyter", "jupyter-contents"], "sources": ["jupyter:sc703a8030c8f", "jupyter-contents:sdc3ad9152505", "jupyter-contents:sf0a3ea8ee42e", "jupyter-contents:s4bdc7b9183f3", "jupyter-contents:s4e7504ed1ac8", "jupyter-contents:s83f1081e863e", "jupyter-contents:s6c884bdf8fb4"], "status": "REASONED", "verify": [1]},
     "verify-jupyter-token": {"text": "For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, default authorization, the route at :8888/api/contents and an existing readable path, valid-token GET completes the JSON model (the REST specification documents HTTP 200). Tokens are accepted in Authorization: token or the token query parameter; password-only and cookie-authenticated requests need separate controls.", "components": ["jupyter", "jupyter-contents"], "sources": ["jupyter:sc703a8030c8f", "jupyter-contents:sdc3ad9152505", "jupyter-contents:sf0a3ea8ee42e", "jupyter-contents:s4e7504ed1ac8", "jupyter-contents:s52316685e1e4", "jupyter-contents:s83f1081e863e", "jupyter-contents:s6c884bdf8fb4", "jupyter-contents:sb7fab0e85c94", "jupyter-contents:s58a8a77857b5"], "status": "REASONED", "verify": [1]},
-    "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
-    "verify-portal-exempt": {"text": "For an authenticated portal mapping at the cited commit, this guide expects resolver 200, exempt-path backend responses and a Basic challenge elsewhere, distinguishable only with a portal header known to differ from the backend. Anonymous known private content is a finding when that path is private; transport failures, backend 401s and unexplained responses are INCONCLUSIVE.", "components": ["vast-image"], "sources": ["vast-image:sae1085635ff9", "vast-image:s4a05112af859", "vast-image:sd9c32e411f08", "vast-image:s3c43b58f9e41"], "status": "REASONED", "verify": [2]},
+    "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [2]},
+    "verify-portal-exempt": {"text": "For an authenticated portal mapping at the cited commit, this guide expects resolver 200, exempt-path backend responses and a Basic challenge elsewhere, distinguishable only with a portal header known to differ from the backend. Anonymous known private content is a finding when that path is private; transport failures, backend 401s and unexplained responses are INCONCLUSIVE.", "components": ["vast-image"], "sources": ["vast-image:sae1085635ff9", "vast-image:s4a05112af859", "vast-image:sd9c32e411f08", "vast-image:s3c43b58f9e41"], "status": "REASONED", "verify": [3]},
     "remote-desktop": {"text": "At Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the linux-desktop launcher configures x11vnc on port 5900 with a password from VNC_PASSWORD, falling back to OPEN_BUTTON_TOKEN when VNC_PASSWORD is unset or empty. These citations do not establish other templates' ports or password defaults, or the strength of the effective VNC password.", "components": ["vast-image"], "sources": ["vast-image:s0428d55e9145", "vast-image:s44f3439f13de"], "status": "REASONED"},
     "remote-desktop-browser": {"text": "At Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the linux-desktop template README describes OPEN_BUTTON_TOKEN as randomly generated on first boot and visible in instance logs, and offers Selkies WebRTC and Guacamole browser VNC alongside direct VNC. This guide's advice: check both browser and direct VNC listeners and their public mappings for missing or weak authentication.", "components": ["runpod", "vast", "vast-image"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast-image:s1b8c6c46f358", "vast-image:s44f3439f13de"], "status": "REASONED"},
     "remote-desktop-direct": {"text": "In this guide's reasoning, a browser VNC page's HTTPS does not protect a separately reachable VNC connection, so a direct VNC mapping needs its own strong password and an encrypted tunnel, or should be kept off the public mapping. This guide's advice: test a direct VNC mapping with a VNC client, since browser VNC access controls and this guide's HTTP status checks may not cover it.", "components": ["runpod", "vast", "vast-image"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast-image:s1b8c6c46f358"], "status": "REASONED"}
