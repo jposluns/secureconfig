@@ -101,7 +101,7 @@ or an identity-aware proxy that enforces MFA.
 
 ## 5. Verify
 
-REASONED: following block; listener/publication inventory and external versus allowed-vantage controls, per the guide's cited Supabase self-hosting with Docker and Supabase docker-compose.yml. No Supabase deployment or container runtime is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Those runs covered the inventory in an earlier form, a bare ss at top level with no status of its own; the repository's gate suite checks the current form with bash -n and ShellCheck 0.11.0 like every block. The inventory block exits 3 when ss fails and otherwise 0, leaving every listener for you to judge. No deployed listener was inspected: exposed ports answer externally; fixed ports are private and still work from an allowed vantage, corroborated by effective publication mappings. Credential outcomes described below also remain unobserved. Each probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so
+REASONED: following block; listener/publication inventory and external versus allowed-vantage controls, per the guide's cited Supabase self-hosting with Docker and Supabase docker-compose.yml. No Supabase deployment or container runtime is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Those runs covered the inventory in an earlier form, a bare ss at top level with no status of its own; the repository's gate suite checks the current form with bash -n and ShellCheck 0.11.0 like every block. The inventory block exits 2 when ss is not installed, so nothing is listed, 3 when ss fails and otherwise 0, leaving every listener for you to judge. No deployed listener was inspected: exposed ports answer externally; fixed ports are private and still work from an allowed vantage, corroborated by effective publication mappings. Credential outcomes described below also remain unobserved. Each probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so
 none was stood up in its exposed and fixed states. Each names its expected exposed and fixed result so
 it discriminates against a live instance. These expectations follow the cited vendor documentation, including the check that forges
 a token with the demo `JWT_SECRET`, which is the check that proves the secret itself was rotated rather
@@ -120,8 +120,9 @@ refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 # REASONED: listener expectations follow the cited vendor documentation; no container runtime is available.
 # On the host: these published listeners should be bound to loopback or an internal interface.
 # Docker publishes through NAT, so also test each port from an external host over IPv4 and IPv6.
-(                                   # a subshell, so the exit below ends only the subshell
-  set -- 0                          # this block's status: 3 if ss fails, otherwise 0, because you judge the listeners it prints
+(                                   # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  set -- 0                          # this block's status: 2 if ss is missing (the line above), 3 if ss fails, otherwise 0, because you judge the listeners it prints
   if ss -tlnp; then :; else         # read every listener; 8000/5432/6543: loopback or internal only
     echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- 3
   fi
@@ -289,7 +290,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "23de38a6d1c28aa8e1188bebb81549350a4f77c4e01c88bed5ecca3f102462e2",
+  "body_sha256": "628fac954920c3d6837bb2eb0574daa1f07d9c328ba3eea9f1cbfbef0ceef45f",
   "components": {
     "docs": {
       "name": "Supabase documentation",

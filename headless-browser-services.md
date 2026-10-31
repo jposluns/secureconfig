@@ -172,7 +172,7 @@ unpublished wherever these run.
 
 ## Verify
 
-REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. The bash -n and ss runs recorded here covered both blocks in earlier forms: the inventory then ran ss at top level with no status of its own, and the guarded probe block's guard refusals left the subshell with status 0. Neither run was repeated on the current forms, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. The inventory block exits 1 when a port it names is bound to a wildcard address, 3 when ss fails, and otherwise 0, leaving every other address for you to judge. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
+REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. The bash -n and ss runs recorded here covered both blocks in earlier forms: the inventory then ran ss at top level with no status of its own, and the guarded probe block's guard refusals left the subshell with status 0. Neither run was repeated on the current forms, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. The inventory block exits 1 when a port it names is bound to a wildcard address, 3 when ss fails, 2 when ss is not installed, so nothing is listed, and otherwise 0, leaving every other address for you to judge. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
 without an isolated network namespace, and has none. No exposed or fixed service was run.
 Each names its expected exposed and fixed result so
 it discriminates when run against a live instance, based on the cited vendor documentation and pinned sources. Run each
@@ -188,7 +188,8 @@ curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 # the authoring host lacks an isolated network namespace for authorized live listeners.
 # On the host: these listeners should be bound to loopback or an internal interface, not a wildcard.
 # The block also checks the distributed Grid ports (5553, 5556, 5557, 5559); judge your Playwright port yourself if you run it.
-(                                   # a subshell, so the exit below ends only the subshell
+(                                   # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
   printf '%s' "$2"   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900/5553/5556/5557/5559: loopback or internal only
@@ -410,7 +411,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "149a882f4996b5a45214d8e37fca5c6258a79f636e3f59d9d527619831502022",
+  "body_sha256": "0044a00172ee032e53b4dfcd19241150db6ccfadaa663e2522331c284aa2e84f",
   "components": {
     "chromium": {
       "name": "Chromium",
