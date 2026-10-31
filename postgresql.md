@@ -237,7 +237,7 @@ At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-
 
 REASONED: service-check scope from the authoring limitations recorded in this paragraph and the PostgreSQL and pgAudit documentation cited at each check below. This revision's service checks are **REASONED, not demonstrated**. The authoring environment has psql 18.6 and PostgreSQL server binaries, but is read-only and has no authorized writable test deployment. Neither Docker nor Podman was found on `PATH`. Missing binaries are not the reason for the service-test limitation. Earlier execution evidence is not recorded in this file; this does not establish whether a previous author ran the earlier probes.
 
-REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy). The PostgreSQL configuration parse was re-run at marking time with the PostgreSQL 18.6 server binary installed outside PATH at /usr/lib/postgresql/18/bin: postgres -C returned all 14 values from the combined TLS, logging and preload fragments with exit 0, and an ssl=not_a_boolean control was rejected with exit 1 (parameter "ssl" requires a Boolean value); no server was started. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
+REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy). The PostgreSQL configuration parse was re-run at marking time with the PostgreSQL 18.6 server binary installed outside PATH at /usr/lib/postgresql/18/bin: postgres -C returned all 14 values from the combined TLS, logging and preload fragments with exit 0, and an ssl=not_a_boolean control was rejected with exit 1 (parameter "ssl" requires a Boolean value); no server was started. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. The bash -n, ShellCheck, guard and argument runs recorded in this paragraph covered an earlier form of both blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
 
 REASONED: deployment-demonstration procedure per the cited PostgreSQL documentation; no isolated disposable deployment is available in the authoring environment, so this remains the required procedure rather than a recorded run. Demonstrate exposed configurations only in an isolated disposable deployment. Record the server/client versions, fixture, commands, output, and relevant server logs for both states. A DNS error, timeout, missing CA file, or unrelated authentication failure does not prove enforcement.
 
@@ -252,27 +252,27 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DB_HOST' 'REPLACE_WITH_CA_FILE' 'app' 'tls'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 4 ] || { echo "supply host, CA file, role and mode; not probing"; exit 1; }
+  [ "$#" -eq 4 ] || { echo "supply host, CA file, role and mode; not probing"; exit 2; }
   case "$2" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 2 ;;
   esac
   case "$2" in
-    *"'"*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
-    *[[:space:]]*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+    *"'"*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 2 ;;
+    *[[:space:]]*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 2 ;;
   esac
   case "$3" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_]*) echo "supply a simple role name; not probing"; exit 2 ;;
   esac
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 2 ;;
     *)
       case "$1" in
-        *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:-]*) echo "use a single hostname or IP address; not probing"; exit 1 ;;
+        *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.:-]*) echo "use a single hostname or IP address; not probing"; exit 2 ;;
       esac
-      [ -f "$2" ] || { echo "CA file is missing; not probing"; exit 1; }
-      [ -r "$2" ] || { echo "CA file is unreadable; not probing"; exit 1; }
+      [ -f "$2" ] || { echo "CA file is missing; not probing"; exit 2; }
+      [ -r "$2" ] || { echo "CA file is unreadable; not probing"; exit 2; }
       case "$4" in
         tls|wrong)
           psql -X -W -v ON_ERROR_STOP=1 \
@@ -293,7 +293,7 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
           psql -X -W -v ON_ERROR_STOP=1 \
             "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5"
           ;;
-        *) echo "choose tls, wrong, scram, plaintext or sql; not probing"; exit 1 ;;
+        *) echo "choose tls, wrong, scram, plaintext or sql; not probing"; exit 2 ;;
       esac
       ;;
   esac
@@ -322,11 +322,11 @@ Run on the database host, substituting the intended bind address. Inspect every 
 ```bash
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_EXPECTED_BIND_ADDRESS'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "supply the expected bind address; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "supply the expected bind address; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 2 ;;
     *)
       printf 'Expected listener address: %s; inspect every returned row.\n' "$1"
       ss -tlnp 'sport = :5432'
@@ -738,7 +738,7 @@ Claims (full source mapping in the JSON block below):
 - verify-logs (REASONED; docs): Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.
 - verify-audit (REASONED; audit): Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.
 - diagnostics (REASONED; docs): pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.
-- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact.
+- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact. Those checks covered an earlier form of both blocks, whose refusals exited with status 1; the current form was not re-run.
 - local-parsing (DEMONSTRATED; docs): Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.
 - verify-default-grants (REASONED; docs): Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.
 
@@ -747,7 +747,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "b9ac3fa7ed07e0d9e4a599213b464181597708feefb1281709092094cf1fbbd9",
+  "body_sha256": "8018336c8f86ebc4dc36cad369e52769012d7902b3145554c8b191d3b2468ff0",
   "components": {
     "init": {
       "name": "PostgreSQL initdb source",
@@ -897,7 +897,7 @@ Claims (full source mapping in the JSON block below):
     "verify-logs": {"text": "Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.", "components": ["docs"], "sources": ["docs:sf1b3da55ebd5"], "status": "REASONED"},
     "verify-audit": {"text": "Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.", "components": ["audit"], "sources": ["audit:s1825bbe4f88c"], "status": "REASONED"},
     "diagnostics": {"text": "pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.", "components": ["docs"], "sources": ["docs:seed379369be7", "docs:s8754b96a6114", "docs:s3b6607ed7b1a", "docs:s2ab6c4aebc59"], "status": "REASONED"},
-    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
+    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact. Those checks covered an earlier form of both blocks, whose refusals exited with status 1; the current form was not re-run.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
     "local-parsing": {"text": "Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.", "components": ["docs"], "sources": ["docs:s55cbaf1aa910"], "status": "DEMONSTRATED", "evidence": "PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected."},
     "verify-default-grants": {"text": "Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.", "components": ["docs"], "sources": ["docs:s04e81888353f"], "status": "REASONED"}
   }
