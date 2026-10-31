@@ -157,7 +157,7 @@ fixed means a management address only. On a Proxmox VE cluster, where the vendor
 there requires the management-only access lists and firewall below. The new-socket code tries `::`
 then `0.0.0.0`; dual-stack operation is documentation-backed and must be checked on the host.
 
-REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The bash -n, ShellCheck and refusal runs recorded here covered the parser block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. These are file results only; on the Webmin host, exposed miniserv listens on every address with discovery UDP open and offers its login to any client; fixed miniserv listens on the management address only with no discovery socket, a management-network client reaches the login, and from a client outside the allow= networks the connection fails or miniserv refuses it. The exposed and fixed Webmin host behaviours are per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
+REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The bash -n, ShellCheck and refusal runs recorded here covered the parser block in an earlier form, whose guard refusals and result arms ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2, a file that prints `NO effective bind=`, a `listen=` line or `NO allow=` with status 1 and a failed parse with status 3. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. Those Perl fixture runs used an earlier form of the program, whose result arms ended with status 0; the current form, which exits 1 after printing an exposed setting, was not re-run. These are file results only; on the Webmin host, exposed miniserv listens on every address with discovery UDP open and offers its login to any client; fixed miniserv listens on the management address only with no discovery socket, a management-network client reaches the login, and from a client outside the allow= networks the connection fails or miniserv refuses it. The exposed and fixed Webmin host behaviours are per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
 the name and the value are trimmed, and the last occurrence of a setting wins), then applies
 miniserv's rules: `bind=*`, `bind=0`, `bind=0.0.0.0`, `bind=::`, or an empty or missing `bind=` means
@@ -171,7 +171,7 @@ and an empty `allow=` lets every client address try to log in, except those a `d
 `/etc/webmin/restart`. Substitute the file path inside the single quotes (the package default is
 `/etc/webmin/miniserv.conf`), and paste the whole block.
 
-DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. The fixture runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run. This demonstrates file inspection, not running sockets or network isolation.
+DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixtures and printed the recorded outcomes below. The fixture runs used an earlier form of the block, whose guard refusals and result arms ended with status 0; the current form, whose guard refusals exit with status 2, a file that prints `NO effective bind=`, a `listen=` line or `NO allow=` with status 1 and a failed parse with status 3, has not been run. This demonstrates file inspection, not running sockets or network isolation.
 
 ```bash
 (
@@ -198,19 +198,21 @@ DEMONSTRATED: following block; the parser matched Webmin 2.670 on thirty fixture
     $bind = $rv{"bind"}; $bind = "" if ($bind eq "*");
     $v4 = $bind eq "" ? undef : Socket::inet_pton(Socket::AF_INET(), $bind);
     $v6 = (defined($v4) || $bind !~ /:/) ? undef : Socket::inet_pton(Socket::AF_INET6(), $bind);
-    if (!$bind || (defined($v4) && $v4 eq "\0" x 4) || (defined($v6) && $v6 eq "\0" x 16)) { print "NO effective bind=: every address\n"; }
+    if (!$bind || (defined($v4) && $v4 eq "\0" x 4) || (defined($v6) && $v6 eq "\0" x 16)) { print "NO effective bind=: every address\n"; $found = 1; }
     elsif (defined($v4) || (defined($v6) && substr($v6, 0, 12) ne ("\0" x 10) . "\xff\xff")) { print "bind=$bind\n"; }
     else { print "bind=$bind: not a plain IPv4 or IPv6 address; check with ss what miniserv binds\n"; }
     print "sockets=$rv{sockets}: extra listeners, possibly on every address; check ss\n" if ($rv{"sockets"} =~ /\S/);
     print $rv{"listen"} ? "listen=$rv{listen}: UDP discovery socket on every IPv4 address\n" : "no UDP discovery socket\n";
+    $found = 1 if ($rv{"listen"});
     @allow = split(/\s+/, $rv{"allow"});
     @deny = split(/\s+/, $rv{"deny"});
     print "deny=@deny\n" if (@deny);
     print @allow ? "allow=@allow\n" : @deny ? "NO allow=: any client address not on deny= may try to log in\n" : "NO allow=: any client address may try to log in\n";
+    $found = 1 if (!@allow);
     print "sudo=$rv{sudo}: Unix users whom sudo permits can log in as root\n" if ($rv{"sudo"});
-    exit 0;
+    exit($found ? 1 : 0);
   ' "$1"
-  case "$?" in 0) ;; *) echo "could not read $1; not checked" ;; esac
+  case "$?" in 0) ;; 1) exit 1 ;; *) echo "could not read $1; not checked"; exit 3 ;; esac
 )
 ```
 
@@ -250,13 +252,13 @@ default; fixed is enabled and running, with rules that allow 8006, 22 and 3128 o
 addresses, which you confirm in the datacenter and node firewall rules in the web interface. In the web interface, check
 that every administrative user, `root@pam` included, has a second factor.
 
-REASONED: this external-vantage procedure needs each server public address, a known-open control port and a host outside the allowed management network; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the TCP block through `bash -n` and ShellCheck 0.11.0 with no output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. A `timeout` stub returning 124 for the control printed `control 198.51.100.7:22 did not connect (timeout stub invoked); not probing`. The bash -n, ShellCheck and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Expected exposed TCP connects; fixed isolation may refuse or time out, which is only consistent with isolation after the positive control and server inventory checks. The exposed and fixed TCP expectations and that consistency qualification are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Finally, from a host that should not have access, try a TCP connection to each panel port. The block
+REASONED: this external-vantage procedure needs each server public address, a known-open control port and a host outside the allowed management network; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the TCP block through `bash -n` and ShellCheck 0.11.0 with no output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. A `timeout` stub returning 124 for the control printed `control 198.51.100.7:22 did not connect (timeout stub invoked); not probing`. The bash -n, ShellCheck and stub runs recorded here covered the TCP block in an earlier form, whose guard refusals, failed control and result arms ended with status 0; none was re-run on the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0. Expected exposed TCP connects; fixed isolation may refuse or time out, which is only consistent with isolation after the positive control and server inventory checks. The exposed and fixed TCP expectations and that consistency qualification are per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Finally, from a host that should not have access, try a TCP connection to each panel port. The block
 takes one IP address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot
 hide one behind a timeout on the other: run it once for each public address of the server. It also
 takes a port you know is open on that address from this host (for example SSH on 22) as the positive
 control, and stops if the control does not connect. Substitute both inside the single quotes.
 
-DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned. The reused loopback probe runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopback probe with these ports includes the mapped-address connection below. This is probe evidence only; live panel reachability and firewall isolation remain reasoned. The reused loopback probe runs used an earlier form of the block, whose guard refusals, failed control and result arms ended with status 0; the current form, which exits 2 for a guard refusal, 3 for a failed control, and after its probes 1 if any port connected, otherwise 3 if any port was inconclusive, otherwise 0, has not been run.
 
 ```bash
 (
@@ -279,18 +281,20 @@ DEMONSTRATED: following block; recorded reuse of the low-code-builders.md loopba
   command -v timeout >/dev/null || { echo "timeout is not installed here; not probing"; exit 2; }
   # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
   err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$2" 2>&1) ||
-    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 2; }
+    { echo "control $1:$2 did not connect (${err:-timed out}); not probing"; exit 3; }
   echo "control $1:$2 connected"
+  rc=0
   for p in 9090 10000 20000 8006 3128; do
     # shellcheck disable=SC2016  # the single-quoted script is meant to expand $1 and $2 in the child shell
     err=$(LC_ALL=C timeout 5 bash -c ': > "/dev/tcp/$1/$2"' probe "$1" "$p" 2>&1)
     case "$?:$err" in
-      0:*) echo "$1:$p connected: reachable from this host" ;;
+      0:*) echo "$1:$p connected: reachable from this host"; rc=1 ;;
       124:*) echo "$1:$p timed out from this host" ;;
       *"Connection refused"*) echo "$1:$p refused from this host" ;;
-      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}" ;;
+      *) echo "$1:$p inconclusive (not a connection, refusal or timeout): ${err:-no message}"; [ "$rc" -eq 1 ] || rc=3 ;;
     esac
   done
+  exit "$rc"
 )
 ```
 
@@ -403,15 +407,15 @@ Claims (full source mapping in the JSON block below):
 - webmin-loopback (DEMONSTRATED; webmin): Loopback bind with no listen line produced one TCP socket and no UDP.
 - webmin-rate-run (DEMONSTRATED; webmin): Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403.
 - verify-listeners (REASONED; cockpit, webmin, usermin, pve-docs, pve-manager, pve-http, pve-common): Expect management TCP binds and no discovery UDP; this guide assesses clustered Proxmox wildcards as fixed only with management-only ACLs and firewall rules. Pinned new-socket code tries :: then 0.0.0.0; dual-stack operation remains documentation-backed and must be checked on the host.
-- verify-webmin-parser (DEMONSTRATED; webmin): Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof.
-- verify-tcp-loopback (DEMONSTRATED; cockpit, webmin, usermin, pve-docs): Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard.
+- verify-webmin-parser (DEMONSTRATED; webmin): Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof. Runs covered an earlier form whose result arms ended with status 0; the current form was not re-run.
+- verify-tcp-loopback (DEMONSTRATED; cockpit, webmin, usermin, pve-docs): Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard. Runs covered an earlier form whose control and result arms ended with status 0; the current form was not re-run.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "106ccf3775119900bc12082c7ceeff9bbb8a562b0aedc521db2a6cb3d8e695a0",
+  "body_sha256": "cc04a6d272d3342b001718e779adfcdb5eaa278918719c281980fe3f2d2ea6ef",
   "components": {
     "cockpit": {
       "name": "Cockpit",
@@ -539,8 +543,8 @@ Claims (full source mapping in the JSON block below):
     "webmin-loopback": {"text": "Loopback bind with no listen line produced one TCP socket and no UDP.", "components": ["webmin"], "sources": ["webmin:sb8fec2baa0f2"], "status": "DEMONSTRATED", "evidence": "its only socket was TCP `127.0.0.1` on the test port, with no UDP socket."},
     "webmin-rate-run": {"text": "Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403.", "components": ["webmin"], "sources": ["webmin:sa4f7ac343e85", "webmin:sdb2ef2bf9978"], "status": "DEMONSTRATED", "evidence": "the fifth wrong password was delayed past a five-second client timeout by miniserv's growing failure delay, and the right password was then refused with `403` \"Access denied for 127.0.0.1\"."},
     "verify-listeners": {"text": "Expect management TCP binds and no discovery UDP; this guide assesses clustered Proxmox wildcards as fixed only with management-only ACLs and firewall rules. Pinned new-socket code tries :: then 0.0.0.0; dual-stack operation remains documentation-backed and must be checked on the host.", "components": ["cockpit", "webmin", "usermin", "pve-docs", "pve-manager", "pve-http", "pve-common"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc", "pve-manager:s1507ce3e40b8", "pve-docs:s954445cf4e14", "pve-http:sb8d499c6bd8c", "pve-common:s062026297433", "pve-manager:s67c1a8621e22", "pve-manager:sb7f08e4e98ab", "pve-manager:s0b79b5bbd95f", "pve-http:s2f151d3facd0", "pve-common:s022a9e4640ab", "pve-http:s753d88abe320"], "status": "REASONED", "verify": [1]},
-    "verify-webmin-parser": {"text": "Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof.", "components": ["webmin"], "sources": ["webmin:sb8fec2baa0f2", "webmin:sdb2ef2bf9978"], "status": "DEMONSTRATED", "evidence": "On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on the same file, and the block printed the outcomes above; it reported an unreadable path as not checked.", "verify": [2]},
-    "verify-tcp-loopback": {"text": "Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard.", "components": ["cockpit", "webmin", "usermin", "pve-docs"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc"], "status": "DEMONSTRATED", "evidence": "loopback addresses pass, and hex spellings such as `::ffff:0:0` connected to a listener bound to 127.0.0.1", "verify": [3]}
+    "verify-webmin-parser": {"text": "Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof. Runs covered an earlier form whose result arms ended with status 0; the current form was not re-run.", "components": ["webmin"], "sources": ["webmin:sb8fec2baa0f2", "webmin:sdb2ef2bf9978"], "status": "DEMONSTRATED", "evidence": "On each, the copy's parsed values matched Webmin 2.670's own `read_config_file` run on the same file, and the block printed the outcomes above; it reported an unreadable path as not checked.", "verify": [2]},
+    "verify-tcp-loopback": {"text": "Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard. Runs covered an earlier form whose control and result arms ended with status 0; the current form was not re-run.", "components": ["cockpit", "webmin", "usermin", "pve-docs"], "sources": ["cockpit:sc42ba09017c7", "webmin:sb8fec2baa0f2", "usermin:s7fe74c9a3138", "pve-docs:s8538bab3d3fc"], "status": "DEMONSTRATED", "evidence": "loopback addresses pass, and hex spellings such as `::ffff:0:0` connected to a listener bound to 127.0.0.1", "verify": [3]}
   }
 }
 ````
