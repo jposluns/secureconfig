@@ -4833,6 +4833,7 @@ See [memory-locking configuration](https://developer.hashicorp.com/vault/docs/co
 
 ## Verify
 
+DEMONSTRATED: loopback runs, as recorded here and at each block.
 Most checks below were **demonstrated on loopback** against Vault 2.1.1, the release binary with its
 checksum verified against HashiCorp's published SHA256SUMS: a single Raft node running the section 3
 configuration unchanged apart from addresses and paths. The Raft node ran with the API on
@@ -4853,7 +4854,9 @@ it occurs, with the reason, are a wildcard bind (the host forbids binding every 
 as root (the host has no `sudo`), and real network paths and firewalls (the host has no second
 network). These expectations follow the cited Vault documentation. The authoring host has no `sudo`,
 so the first block's `sudo ss -tlnp` ran through a stand-in that runs `ss` without it; as the same
-account, `ss` still showed the Vault process.
+account, `ss` still showed the Vault process. Those runs covered an earlier form of the first block; the
+gate suite's bash -n and ShellCheck 0.11.0 passes cover its current form, which checks for `ss` before
+running it.
 
 REASONED: curl result interpretation: transport or TLS failure is inconclusive, and only matched authenticated controls support a fixed outcome. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The curl `exitcode` and `errormsg` write-out fields require curl 7.75.0 or newer.
 For authenticated and on-host checks, transport failure, TLS failure, an unexpected redirect, or a
@@ -4878,7 +4881,7 @@ this on the Vault host as a non-root admin authorized to inspect audit devices, 
 and read the example AppRole:
 
 ```bash
-# DEMONSTRATED: loopback listener, health, file audit, root revocation and role runs recorded below; ss used the documented non-root stand-in. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1, which took two values and which ended with the role read's status; the current form, which takes INSPECT or REVOKED_ROOT as a third value and exits once with one status for its classified checks, has not been demonstrated.
+# DEMONSTRATED: loopback listener, health, file audit, root revocation and role runs recorded below; ss used the documented non-root stand-in. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1, which took two values and which ended with the role read's status; the current form, which takes INSPECT or REVOKED_ROOT as a third value and exits once with one status for its classified checks, has not been demonstrated. The current form also checks for ss before running sudo ss, exits 2 when ss is missing and no other check found something or was inconclusive, and is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
@@ -4901,9 +4904,14 @@ and read the example AppRole:
   esac
   unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL VAULT_ADDR VAULT_CACERT || exit 2
   export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
-  set -- "$1" "$2" "$3" 0   # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
-  if sudo ss -tlnp; then :; else
-    echo "sudo ss -tlnp exit $?: no socket table to read; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+  set -- "$1" "$2" "$3" 0   # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a refused part, such as a missing ss), which outranks 0
+  if command -v ss >/dev/null; then
+    if sudo ss -tlnp; then :; else
+      echo "sudo ss -tlnp exit $?: no socket table to read; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+    fi
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
   fi
   if vault status -format=json; then :; else
     echo "vault status exit $? (2 means sealed, 1 an error): not the initialized, unsealed operating state; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
@@ -4983,9 +4991,14 @@ and read the example AppRole:
   esac
   unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL VAULT_ADDR VAULT_CACERT || exit 2
   export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
-  set -- "$1" "$2" "$3" 0   # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
-  if sudo ss -tlnp; then :; else
-    echo "sudo ss -tlnp exit $?: no socket table to read; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+  set -- "$1" "$2" "$3" 0   # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a refused part, such as a missing ss), which outranks 0
+  if command -v ss >/dev/null; then
+    if sudo ss -tlnp; then :; else
+      echo "sudo ss -tlnp exit $?: no socket table to read; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
+    fi
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
   fi
   if vault status -format=json; then :; else
     echo "vault status exit $? (2 means sealed, 1 an error): not the initialized, unsealed operating state; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3
@@ -5041,7 +5054,7 @@ and read the example AppRole:
 )
 ```
 
-REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. The inspection checks follow the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints). The inspection checks also follow the guide's cited Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. The bash -n, ShellCheck and stub runs recorded in this paragraph covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. The current form of both blocks, not yet demonstrated, takes `INSPECT` for the scoped admin or `REVOKED_ROOT` for the revoked-root repeat as its third value and exits once: 1 for an empty audit list or a successful revoked-root lookup, 3 for a failed command or positive control with `INSPECT`, and 0 otherwise. With `REVOKED_ROOT`, each exits with 3 only for a failed `ss`, `vault status` or health request or a lookup that fails without the expected error. The socket table, health codes other than `200`, audit delivery and the role bounds stay for you to judge, as the items below describe:
+REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. The inspection checks follow the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints). The inspection checks also follow the guide's cited Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. The bash -n, ShellCheck and stub runs recorded in this paragraph covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. The current form of both blocks, not yet demonstrated, takes `INSPECT` for the scoped admin or `REVOKED_ROOT` for the revoked-root repeat as its third value and exits once: 1 for an empty audit list or a successful revoked-root lookup, 3 for a failed command or positive control with `INSPECT`, 2 when `ss` is missing and no other check found something or was inconclusive, and 0 otherwise. With `REVOKED_ROOT`, each exits with 3 only for a failed `ss`, `vault status` or health request or a lookup that fails without the expected error. Each block checks for `ss` before running `sudo ss -tlnp`. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH, so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it and no check found something, per the guide's cited sudo sudoers manual, secure_path entry. The socket table, health codes other than `200`, audit delivery and the role bounds stay for you to judge, as the items below describe:
 
 - REASONED: bind and TLS comparison: unintended listeners are findings; intended private binds with verified TLS and matched firewall controls are required. The parenthetical host limitations below describe the historical run. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault production hardening (root token, swap, core dumps). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Bind and TLS (demonstrated, TLS in both states; a wildcard bind, `ss` as root and the firewall
   REASONED: the host forbids binding every interface, has no `sudo`, and has no second network):** read the whole socket table. Confirm `8200` is bound to the intended
@@ -5090,6 +5103,7 @@ REASONED: preceding block; all listener, health, audit, root-token and AppRole i
   configuration, not runtime enforcement.
   See the [AppRole role API](https://developer.hashicorp.com/vault/api-docs/auth/approle).
 
+DEMONSTRATED: the loopback runs recorded in this section's introduction.
 On the loopback run, `ss` showed only `127.0.0.1:8200` and `127.0.0.1:8201` for the Vault process.
 Health returned `501` before initialization, `503` while sealed (status exit code `2`) and `200` once
 unsealed (exit code `0`); a plaintext request got `400` "Client sent an HTTP request to an HTTPS
@@ -5109,7 +5123,8 @@ exit=7 err=Failed to connect ...` with the server stopped; with two file audit d
 `request_id` appeared twice in each file. The same follow-up run had a second listener stanza on
 127.0.0.2:8200, and the socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an
 unintended listener with its own cluster port, because `cluster_address` defaults to one port above
-`address`.
+`address`. These runs covered an earlier form of the first block above; the gate suite's bash -n and
+ShellCheck 0.11.0 passes cover its current form, which checks for `ss` before running it.
 
 REASONED: header-file preparation for the ACL and monitoring comparisons: use the intended identity's actual header; the paired requests must distinguish authorized success from anonymous or cross-application denial. Stub arguments contained the header-file path, not its dummy token. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields); Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
@@ -5840,6 +5855,7 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 - curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields): https://curl.se/docs/manpage.html
 - Vault HA redirect implementation (pinned v1.21.0): https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go
 - Vault local-only forwarding implementation (pinned v1.20.0): https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go
+- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
 
 
 <!-- version-basis:start -->
@@ -5907,7 +5923,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8fdbc81928f65c699b602fafaf4fe5c865ae617368cb7e7143e56b9d2dd23c47",
+  "body_sha256": "0acc40bf76af78218db29a24eb3a5885cb57666115667333502d1d56b9e54452",
   "components": {
     "run": {
       "name": "Vault loopback run",
