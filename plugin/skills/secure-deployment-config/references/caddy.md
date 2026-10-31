@@ -136,66 +136,147 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
 ## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.)
 
 ```bash
-caddy validate --config /etc/caddy/Caddyfile
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sI "http://$1/"     # expect a redirect to https://
-  curl -q -g -sI "https://$1/"    # expect 401 without credentials once auth is on
-  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin"     # with the @admin matcher variant: 401
-  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin/x"   # 401 as well
-  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/"          # to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  caddy validate --config /etc/caddy/Caddyfile ||
+    { echo "caddy validate exit $?: the configuration did not validate; inconclusive"; set -- 3; }
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_site_OR_admin'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then site if section 3's basic_auth covers the whole site or admin for its @admin matcher variant: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in
+      site|admin) ;;
+      *) echo "substitute site (basic_auth covers the whole site) or admin (the @admin matcher variant) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$2" 0                  # the 3rd value is this part's status so far, ranked as above
+    curl -q -g -sI "http://$1/" ||      # expect a redirect to https://
+      { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+    curl -q -g -sI "https://$1/" ||     # expect 401 without credentials once auth is on (site); the last request below classifies /
+      { echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$5"                  # with either variant: 401
+    case "$4:$5" in
+      0:401) ;;
+      0:2??) echo "FINDING: /admin answered $5 with no credentials"; set -- "$1" "$2" 1 ;;
+      0:*) echo "HTTP $5 from /admin is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      *) echo "curl exit $4: the /admin request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin/x"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$5"                  # 401 as well
+    case "$4:$5" in
+      0:401) ;;
+      0:2??) echo "FINDING: /admin/x answered $5 with no credentials"; set -- "$1" "$2" 1 ;;
+      0:*) echo "HTTP $5 from /admin/x is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      *) echo "curl exit $4: the /admin/x request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$5"                  # with site, 401 is the pass and a 2xx the finding. With admin, to prove the matcher SCOPES auth to /admin (not the whole site), a non-/admin path must NOT return 401: it reaches the app (a 200, or the app's own redirect or 404). A 401 here means auth is applied site-wide, not scoped to /admin
+    case "$2:$4:$5" in
+      site:0:401|admin:0:2??|admin:0:3??|admin:0:404) ;;
+      site:0:2??) echo "FINDING: / answered $5 with no credentials, so basic_auth does not cover the whole site"; set -- "$1" "$2" 1 ;;
+      admin:0:401) echo "FINDING: / answered 401, so auth is applied site-wide, not scoped to /admin"; set -- "$1" "$2" 1 ;;
+      *:0:*) echo "HTTP $5 from / is not a result this check classifies for $2; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      *) echo "curl exit $4: the request to / failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+    exit "$3"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (
+    # curl reads the admin password from a config stream on stdin (--config -),
+    # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The password you substitute on the set -- line enters shell history.
+    # Clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the password from
+    # set -x tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "${2//\\/\\\\}"
+    set -- "$1" "${2//\"/\\\"}"
+    set -- "$1" "$2" 0                  # the 3rd value is this part's status so far, ranked as above
+    if head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin; then
+      set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+      printf '%s\n' "$5"
+                                       # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
+      case "$4:$5" in
+        0:2??|0:3??|0:404) ;;
+        0:*) echo "HTTP $5 for the 1M body is not the app's own response, so the positive control failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        *) echo "curl exit $4: the 1M request failed, so the positive control failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      esac
+      set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+      printf '%s\n' "$5"
+                                       # 413. Supply credentials: an unauthenticated probe returns 401 and
+                                       # tells you nothing about max_size. Caddy's default order puts
+                                       # request_body ahead of basic_auth, but the limit is enforced when a
+                                       # later handler reads past it, and authentication stops the proxy
+                                       # handler reading at all. A backend with its own limit returns the
+                                       # same code, so attributing the refusal needs an isolated
+                                       # environment with request_body removed
+      case "$4:$5" in
+        0:413) ;;
+        0:*) echo "HTTP $5 for the 11M body is not the expected 413; inconclusive, because the limit applies only when a later handler reads past it"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        *) echo "curl exit $4: the 11M request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      esac
+    else
+      echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; set -- "$1" "$2" 3
+    fi
+    rm -f /tmp/under.bin /tmp/over.bin
+    exit "$3"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. Every check above
+                                       # passes while the app also answers directly on port 3000, which
+                                       # bypasses Caddy's TLS and its authentication. The admin API on TCP: only a loopback
+                                       # address, such as 127.0.0.1:2019 or [::1]:2019, never a
+                                       # public address. A missing 2019 line is not a pass on its own: it also
+                                       # means you moved it to a unix socket or set admin off, so confirm which
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 2019, the admin API's default, is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  if ls -l /run/caddy/admin.sock; then  # if you bound it to a unix socket: it exists and is owner-restricted
+                                       # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
+    echo "unclassified observation: read the socket's mode and owner above; the pass is a socket that is owner-restricted"
+  elif printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ { found = 1 } END { exit !found }'; then
+    echo "no /run/caddy/admin.sock, and the admin API is on TCP: the port 2019 check above classified it"
+  else
+    echo "ls could not list /run/caddy/admin.sock; inconclusive (if the admin API is on TCP or off, the ss -tlnp lines above are the check)"
+    [ "$1" = 1 ] || set -- 3 "$2" "$3"
+  fi
+  echo "block exit $1; the redirect and HTTPS headers and listeners on ports other than 3000 and 2019 are not classified, so judge them yourself"
+  exit "$1"
 )
-head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-(
-  # curl reads the admin password from a config stream on stdin (--config -),
-  # never argv (-u admin:PASSWORD is readable in ps / /proc/<pid>/cmdline).
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The password you substitute on the set -- line enters shell history.
-  # Clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the password from
-  # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
-  set -- "$1" "${2//\\/\\\\}"
-  set -- "$1" "${2//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/under.bin "https://$1/"
-                                     # positive control: under the limit, expect the app's own normal response (a 2xx, or its own 404/redirect), never 413; a 401 means the credentials, not the size limit, were exercised and a 000 means transport failed, either of which voids the control
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
-                                     # 413. Supply credentials: an unauthenticated probe returns 401 and
-                                     # tells you nothing about max_size. Caddy's default order puts
-                                     # request_body ahead of basic_auth, but the limit is enforced when a
-                                     # later handler reads past it, and authentication stops the proxy
-                                     # handler reading at all. A backend with its own limit returns the
-                                     # same code, so attributing the refusal needs an isolated
-                                     # environment with request_body removed
-)
-rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
-                                     # passes while the app also answers directly on port 3000, which
-                                     # bypasses Caddy's TLS and its authentication
-ss -tlnp   # read every listener; the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
-                                     # public address. A missing 2019 line is not a pass on its own: it also
-                                     # means you moved it to a unix socket or set admin off, so confirm which
-ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exists and is owner-restricted
-                                     # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
 ```
 
 ## Common mistakes
@@ -296,7 +377,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "27b14126c80ec7ee3c82f3fc5d9d03a93c4b4e99113405e98811dfb5b12893d0",
+  "body_sha256": "83a3ee34d1989cb9762c885217ee3d5ab3fe88d7d318dc876be25e75ead5d84e",
   "components": {
     "admin": {
       "name": "Caddy admin source",
