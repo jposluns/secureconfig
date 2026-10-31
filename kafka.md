@@ -115,17 +115,17 @@ For a new dynamic quorum, generate the cluster ID once and reuse that exact valu
 
 ```bash
 # Run ONCE; retain the same cluster ID for every node.
-if CLUSTER_ID="$(bin/kafka-storage.sh random-uuid)"; then
+if CLUSTER_ID="$(bin/kafka-storage.sh random-uuid)" && [ -n "$CLUSTER_ID" ]; then
   printf 'Cluster ID: %s\n' "$CLUSTER_ID"
   # First controller only, when bootstrapping a new dynamic quorum with one voter:
   bin/kafka-storage.sh format --cluster-id "$CLUSTER_ID" \
     --config config/controller.properties --standalone
 else
-  echo "cluster ID generation failed; storage not formatted"
+  echo "cluster ID generation failed or printed nothing; storage not formatted"
 fi
 ```
 
-The `if` keeps `CLUSTER_ID` in your shell for the later nodes, and a failed generation prints a message instead of formatting storage; it does not exit, so pasting the block into an interactive shell cannot close that shell.
+The `if` keeps `CLUSTER_ID` in your shell for the later nodes, and when generation fails or prints nothing the block prints a message instead of formatting storage. The block runs no `exit` itself and assumes a fresh shell, as [CONTRIBUTING.md](CONTRIBUTING.md) rule 6 does for Verify blocks; a shell with `set -e` in effect still closes if `format` fails.
 
 Do not run `--standalone` independently on every controller. Follow the documented membership workflow to add the remaining controllers before relying on quorum redundancy. New brokers and controllers joining an existing dynamic quorum are formatted with the same cluster ID and `--no-initial-controllers`. Alternatively, bootstrap multiple controllers with `--initial-controllers`, using the same complete `id@hostname:port:directory-id` list on every initial controller and a distinct directory ID for each controller. Generate directory IDs separately from the shared cluster ID. Formatting is for new storage, not an authentication migration on an existing cluster. See [KRaft provisioning](https://kafka.apache.org/43/operations/kraft/).
 
@@ -236,7 +236,7 @@ bin/kafka-acls.sh --bootstrap-server kafka.example.com:9093 \
   --topic orders --group app-workers --resource-pattern-type literal
 ```
 
-Each removal here and in Verify passes `--force`. Without it, Kafka 4.3.0's `kafka-acls.sh` prints a confirmation question before every removal, reads the answer from the terminal and removes nothing unless the answer is `y` or `Y`. With no terminal to read from, the command stops with an error and exits with status 1. See [AclCommand's removal](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/AclCommand.java#L130-L148), [confirmation](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/AclCommand.java#L383-L389) and [error exit](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/AclCommand.java#L84-L88).
+Each removal here and in Verify passes `--force`. Without it, Kafka 4.3.0's `kafka-acls.sh` prints a confirmation question before every removal, reads the answer with `System.console().readLine()` and removes nothing unless the answer is `y` or `Y`. If Java provides no console, that call fails and `main`'s handler exits with status 1; whether a console exists without a terminal depends on the Java version. See [AclCommand's removal](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/AclCommand.java#L130-L148), [confirmation](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/AclCommand.java#L383-L389) and [error exit](https://github.com/apache/kafka/blob/4.3.0/tools/src/main/java/org/apache/kafka/tools/AclCommand.java#L84-L88).
 
 Inspect matching wildcard and prefix ACLs, including grants to `User:*`, and cluster-level grants. Removing these literal grants does not remove permissions conferred elsewhere. Retire the old shared credential after its remaining uses have been removed.
 
@@ -987,7 +987,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ef9a158b7239f17c6e42bf08d3672dbdce2a2b4166def4443fd58c191c4c2a9e",
+  "body_sha256": "ac30610553b7a2ba345d244cb830258f8c240fc77f52c412b59c842f89954104",
   "components": {
     "default": {
       "name": "Kafka listener default",
