@@ -472,9 +472,9 @@ Add C4's explicit origin only if required, and remove inherited unwanted origins
 
 REASONED: service-comparison scope from the cited v0.34.2 sources; no authorized live deployment or external observer. No service was started or contacted for these checks. All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
 
-REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. The fresh bash -n and ShellCheck run and the historical guard-only tests covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. In that earlier form, V6 also exited with status 1 when its result directory could not be created or protected, and with status 0 after a failed transfer; the current V6 exits with status 3 in both cases. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
+REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results. Native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. The fresh bash -n and ShellCheck run and the historical guard-only tests covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was repeated on the later forms, whose guard refusals exit with status 2. In that earlier form, V6 also exited with status 1 when its result directory could not be created or protected, and with status 0 after a failed transfer, and V1, V2 and V3 ended with the status of their last command. The current V6 exits with status 3 in both of those V6 cases and keeps its values in positional parameters, and the current V1, V2 and V3 report the statuses their sections describe. On the current form, bash -n in Bash 5.3.9 exited 0, stub runs without network access checked its exit statuses, and `tools/run_all_checks.sh` ran ShellCheck 0.11.0 over it with no findings; no server run is recorded, and no demonstration was re-run. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
 
-REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. Those runs covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The V6 arms that stop when the result directory cannot be created or protected are not guard refusals; they exited with status 1 in that earlier form and now exit with status 3, and V6 now also exits with status 3 after any failed transfer, where the earlier form ended with status 0. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
+REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. Those runs covered the four Verify fences in an earlier form, whose guard refusals exited with status 1; none was repeated on the later forms, whose guard refusals exit with status 2; in the current form V1, V2, V3 and V6 also report the statuses their sections describe. The V6 arms that stop when the result directory cannot be created or protected are not guard refusals; they exited with status 1 in that earlier form and now exit with status 3, and V6 now also exits with status 3 after any failed transfer, where the earlier form ended with status 0. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
 
 REASONED: comparison procedure from the cited service and proxy sources; isolated exposed/fixed deployments, identities and observers are unavailable. Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
 
@@ -492,22 +492,25 @@ REASONED: comparison procedure from the cited service and proxy sources; isolate
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|'|'*|*'|'|*'||'*|*[[:space:]]*)
       echo "replace both values; not inspecting"; exit 2 ;;
     *)
-      systemctl cat -- "$1"
-      systemctl show --property=User,Group,UMask,Environment,MainPID -- "$1"
-      ps -C ollama -o pid,user,group,args
-      ss -tlnp
-      stat -c '%U:%G %a %n' /var/lib/ollama /var/lib/ollama/models
-      getfacl -p /var/lib/ollama /var/lib/ollama/models
+      set -- "$1" "$2" 0                # the 3rd value is the block's status: 3 once an inspection command fails, otherwise 0
+      systemctl cat -- "$1" || { echo "systemctl cat exit $?; inconclusive"; set -- "$1" "$2" 3; }
+      systemctl show --property=User,Group,UMask,Environment,MainPID -- "$1" || { echo "systemctl show exit $?; inconclusive"; set -- "$1" "$2" 3; }
+      ps -C ollama -o pid,user,group,args || { echo "ps exit $? (no ollama process, or ps failed); inconclusive"; set -- "$1" "$2" 3; }
+      ss -tlnp || { echo "ss -tlnp exit $?; inconclusive"; set -- "$1" "$2" 3; }
+      stat -c '%U:%G %a %n' /var/lib/ollama /var/lib/ollama/models || { echo "stat exit $?; inconclusive"; set -- "$1" "$2" 3; }
+      getfacl -p /var/lib/ollama /var/lib/ollama/models || { echo "getfacl exit $?; inconclusive"; set -- "$1" "$2" 3; }
       if [ "$2" != NONE ]; then
-        docker ps --format 'table {{.Names}}\t{{.Ports}}'
-        docker inspect --format '{{json .HostConfig.PortBindings}} {{json .NetworkSettings.Networks}} {{json .Config.User}}' -- "$2"
+        docker ps --format 'table {{.Names}}\t{{.Ports}}' || { echo "docker ps exit $?; inconclusive"; set -- "$1" "$2" 3; }
+        docker inspect --format '{{json .HostConfig.PortBindings}} {{json .NetworkSettings.Networks}} {{json .Config.User}}' -- "$2" || { echo "docker inspect exit $?; inconclusive"; set -- "$1" "$2" 3; }
       fi
+      echo "block exit $3; nothing above is classified, so judge every listing against the comparisons below"
+      exit "$3"
       ;;
   esac
 )
 ```
 
-For container-only deployments, systemd inspection may be inapplicable. Inspect the actual container process identity and mounted store; an empty configured container user is not proof of an unprivileged process. Inspect every relevant network namespace, IPv4/IPv6 address, publication, and network attachment.
+For container-only deployments, systemd inspection may be inapplicable. Inspect the actual container process identity and mounted store; an empty configured container user is not proof of an unprivileged process. Inspect every relevant network namespace, IPv4/IPv6 address, publication, and network attachment. The block exits 3 when any inspection command fails, as the systemd or store commands can on a container-only deployment or with the store elsewhere, and otherwise 0, because it classifies nothing and leaves every listing for you to judge.
 
 The exposed comparison shows unintended listeners/publications, root execution, or writable model state. The fixed comparison shows the intended private path and dedicated identity. Check existing regular files and ACLs, service-home signing keys, root-owned configuration, and proxy key separation too.
 
@@ -529,9 +532,17 @@ Expected behavior follows C1's [Docker publication reference](https://docs.docke
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|*'<'*|*'>'*|*example.com*|""|*@*|*/*|*\?*|*\#*|*[[:space:]]*|203.0.113.*|198.51.100.*|192.0.2.*|*2001:db8*)
       echo "supply the real deployment address; not probing"; exit 2 ;;
     *)
-      curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+      if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "http://$1:11434/api/tags"
+        "http://$1:11434/api/tags"; then
+        echo "FINDING: the direct port answered over HTTP, which establishes the bypass even if its status is an error"; exit 1
+      else
+        set -- "$1" "$?"                # the address, then curl's exit status
+        case "$2" in
+          7|28) echo "curl exit $2, no connection (refused, unreachable or timed out): unclassified observation; it is the fixed result only when V1 and firewall evidence attribute it to the disallowed remote path and inference through the approved proxy succeeds"; exit 0 ;;
+          *) echo "curl exit $2: read err above; a resolver failure, local socket error or other local error is inconclusive"; exit 3 ;;
+        esac
+      fi
       ;;
   esac
 )
@@ -539,7 +550,7 @@ Expected behavior follows C1's [Docker publication reference](https://docs.docke
 
 Exposed: an HTTP response establishes that the direct port answered, even if its status is an error. Fixed: refusal or timeout attributable to the actual disallowed remote path, paired with successful inference through the approved proxy.
 
-Read `err`, not merely the exit number. A resolver failure, local socket error, wrong address, stopped service, or unexplained timeout is inconclusive. Correlate the result with V1 and firewall evidence. See C1's [binding documentation](https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx).
+Read `err`, not merely the exit number. A resolver failure, local socket error, wrong address, stopped service, or unexplained timeout is inconclusive. Correlate the result with V1 and firewall evidence. The block exits 1 when the direct port answers over HTTP, 0 with an unclassified-observation line when curl exits 7 or 28 (no connection, or a timeout), which you still attribute as above, and 3 on any other curl failure. See C1's [binding documentation](https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx).
 
 ### V3. Verify authentication and TLS with a real inference request (REASONED: cited Ollama, proxy and curl behavior; no live proxy, certificates, credentials or model)
 
@@ -587,7 +598,7 @@ Use the normal trust store when appropriate. Escape backslashes and double quote
 
 Inspect these files before use: allow only the intended authentication, trust, client-certificate, and test-header settings. Do not include URLs, redirects, proxy settings, insecure TLS options, extra transfers, or request/output overrides. An intentional `resolve` entry can support a hostname-negative test against the same server address. The files are trusted test inputs, not a safe format for untrusted instructions.
 
-The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of curl. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
+The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of curl. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures. The probe exits 0 when the transfer completes, leaving every response for you to compare with the table for your check, and 3 when curl fails; for the wrong-trust, wrong-hostname and client-certificate negatives that failure is the expected fixed result, so read its `err=` text as well as its status.
 
 ```bash
 (
@@ -627,10 +638,15 @@ The following reusable probe reads the client configuration on stdin, keeping cr
         POST|DELETE) set -- "$4" --request "$2" --url "$1" \
           --header "Content-Type: $5" --data-binary "@$3" ;;
       esac
-      curl -q -g -sS --config - --noproxy '*' --connect-timeout 5 --max-time 120 \
+      if curl -q -g -sS --config - --noproxy '*' --connect-timeout 5 --max-time 120 \
         --dump-header /dev/stderr \
         -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "${@:2}" < "$1"
+        "${@:2}" < "$1"; then
+        echo "unclassified observation: compare the headers, body and http= line above with the table for the check you are running"
+      else
+        echo "curl exit $?: the transfer failed; inconclusive, though a certificate or handshake failure is the expected fixed result of a wrong-trust, wrong-hostname or client-certificate negative, so read err above"
+        exit 3
+      fi
       ;;
   esac
 )
@@ -726,28 +742,33 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
           echo "replace placeholders in the client config; not probing"; exit 2 ;;
       esac
-      ollama_probe_dir=$(mktemp -d) || { echo "cannot create result directory"; exit 3; }
-      chmod 700 "$ollama_probe_dir" || { echo "cannot protect results"; exit 3; }
-      ollama_probe_pids=()
-      for ollama_probe_n in 1 2 3 4 5 6 7 8; do
+      set -- "$1" "$2" "$3" "$(if mktemp -d; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "${4%%$'\n'*}" "${4##*$'\n'}"   # URL, body file, client config, the result directory, then mktemp's exit status
+      [ "$5" = 0 ] && [ -n "$4" ] || { echo "cannot create result directory"; exit 3; }
+      chmod 700 "$4" || { echo "cannot protect results"; exit 3; }
+      set -- "$1" "$2" "$3" "$4"
+      while [ "$#" -lt 12 ]; do         # eight transfers: each appends its process ID, and $(($# - 3)) numbers its result files 1 to 8
         curl -q -g -sS --config - --noproxy '*' --connect-timeout 5 --max-time 120 \
           --request POST --header 'Content-Type: application/json' --data-binary "@$2" \
-          --output "$ollama_probe_dir/$ollama_probe_n.body" \
+          --output "$4/$(($# - 3)).body" \
           -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" \
-          < "$3" > "$ollama_probe_dir/$ollama_probe_n.status" \
-          2> "$ollama_probe_dir/$ollama_probe_n.stderr" &
-        ollama_probe_pids+=("$!")
+          < "$3" > "$4/$(($# - 3)).status" \
+          2> "$4/$(($# - 3)).stderr" &
+        set -- "$@" "$!"
       done
-      for ollama_probe_pid in "${ollama_probe_pids[@]}"; do
-        if wait "$ollama_probe_pid"; then
+      set -- "$4" 0 "${@:5}"            # the result directory, the block's status so far, then the eight process IDs
+      while [ "$#" -gt 2 ]; do
+        if wait "$3"; then
           :
         else
           echo "one transfer failed; inspect its status and stderr"
-          set -- "$@" 3   # records the failure; the block exits with status 3 below
+          set -- "$1" 3 "${@:3}"        # records the failure; the block exits with status 3 below
         fi
+        set -- "$1" "$2" "${@:4}"
       done
-      printf 'Results retained in %s\n' "$ollama_probe_dir"
-      [ "$#" -eq 3 ] || exit 3   # status 3 if any transfer failed; otherwise 0, and you judge the results
+      printf 'Results retained in %s\n' "$1"
+      echo "block exit $2; the eight results are not classified, so judge them against the exposed and fixed comparisons below"
+      exit "$2"                         # status 3 if any transfer failed; otherwise 0, and you judge the results
       ;;
   esac
 )
@@ -1184,7 +1205,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "7583c3d770c09dc4faf6aadb36ba94b9b5cbcd6b3dc2f5311ac8963598c430c6",
+  "body_sha256": "16e913b20fcce17103e045a8a376f849a1cafe04800a23b6f5573a7f13f7ddfd",
   "components": {
     "ollama": {
       "name": "Ollama",
