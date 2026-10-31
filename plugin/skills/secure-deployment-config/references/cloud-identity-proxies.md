@@ -103,53 +103,108 @@ REASONED: following block; the cited ALB, IAP and Azure authentication/header do
 # not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code means the origin
 # answered. A resolver failure, a local socket error, or a timeout that did not come from the remote
 # address is inconclusive, never a pass.
-(                                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/" ;;
-  esac
-)
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your identity-aware proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sSI "https://$1/"                      # via proxy, no session: 302 to the IdP, or 401/403
-  # The identity headers below are deliberately forged values, so admin@example.com stays as written.
-  curl -q -g -sS -D - -H "x-amzn-oidc-identity: admin" \
-       -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
-       -H "X-Goog-Authenticated-User-Email: admin@example.com" \
-       "https://$1/whoami"                      # status line and body: the login redirect or a 401/403, never a 200 echoing "admin"
+(                                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (                                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"           # curl's exit status, then its http= line
+    printf '%s\n' "$3"
+    case "$3" in
+      'http=000 '*) ;;
+      *) echo "FINDING: an HTTP code means the origin answered"; exit 1 ;;
+    esac
+    case "$2" in
+      7|28) echo "unclassified observation: read err above, which must name a refusal or timeout reaching YOUR address"; exit 0 ;;
+      *) echo "curl exit $2 is neither a refusal nor a timeout; inconclusive, never a pass"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your identity-aware proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$(if curl -q -g -sSI -w 'http=%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # via proxy, no session: 302 to the IdP, or 401/403
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n\n'*}"   # curl's exit status, then the headers and the http= line
+    set -- "$1" "$2" "$3" "$4" "${4##*$'\n'}"         # the same values, then the http= line alone
+    printf '%s\n' "$4"
+    case "$3:$5" in
+      0:http=401|0:http=403) ;;
+      0:http=302) echo "unclassified observation: read the Location above, which must be your identity provider's sign-in" ;;
+      0:http=2??) echo "FINDING: the proxy answered ${5#http=} to a request with no session"; set -- "$1" 1 ;;
+      0:*) echo "HTTP ${5#http=} with no session is neither a 302 to the IdP, a 401 or 403, nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the request with no session failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    # The identity headers below are deliberately forged values, so admin@example.com stays as written.
+    set -- "$1" "$2" "$(if curl -q -g -sS -D - -w '\nhttp=%{http_code}\n' -H "x-amzn-oidc-identity: admin" \
+         -H "X-MS-CLIENT-PRINCIPAL-NAME: admin" \
+         -H "X-Goog-Authenticated-User-Email: admin@example.com" \
+         "https://$1/whoami"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # status line and body: the login redirect or a 401/403, never a 200 echoing "admin"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n\n'*}"   # curl's exit status, then the response and the http= line
+    set -- "$1" "$2" "$3" "$4" "${4##*$'\n'}"         # the same values, then the http= line alone
+    printf '%s\n' "$4"
+    case "$3:$5" in
+      0:http=401|0:http=403) ;;
+      0:http=302) echo "unclassified observation: read the Location above, which must be the login redirect" ;;
+      0:http=200)
+        case "${4#*$'\r\n\r\n'}" in       # the response body only: the text after the blank line that ends the headers
+          *admin*) echo "FINDING: /whoami answered 200 echoing admin, so the app trusted the forged identity headers"; set -- "$1" 1 ;;
+          *) echo "HTTP 200 from /whoami without admin is neither the login redirect, a 401 or 403, nor the forged identity; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac ;;
+      0:*) echo "HTTP ${5#http=} for the forged headers is neither the login redirect, a 401 or 403, nor a 200; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the forged-header request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the origin's err text on a refusal or timeout, each 302 Location and the other response headers are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; origin isolation, anonymous and forged-header denial, plus signed-assertion discrimination, per the guide's cited AWS, Authenticate users using an Application Load Balancer, Google Cloud IAP, securing your app with signed headers, Azure App Service authentication and authorization and Cloudflare Access, validate JWTs. No cloud origin, IdP or valid assertion is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, before its anonymous and forged-header probes took the app's host on a guarded `set --` line; neither tool was re-run on the guarded block. JSON and YAML parsed, and rejected guards reached no curl stub. For an earlier change, curl 8.18.0 ran the probe shapes against a loopback HTTP listener standing in for the example host (302 on the anonymous HEAD, 401 on `/whoami`) and against a closed loopback port. The `-sI` and `-sSI` shapes, in that curl 8.18.0 run, both printed the full status line and headers on the listener and both exited 7 on the closed port, where `-sI` printed nothing and `-sSI` printed `curl: (7) Failed to connect ...` on stderr. The forged-header probe, in that curl 8.18.0 run, printed only the body without `-D -` and the status line, headers and body with it. The altered-assertion shape, in that curl 8.18.0 run, delivered `x-amzn-oidc-data` through `--header @-` from stdin (the listener received the header; the value was a dummy, not a real assertion) and exited 7 with the connect error against the closed port. Unsubstituted, empty and two-value guard pastes again printed their refusals without reaching a curl stub, in plain bash and under set -u, and a substituted address reached the stub once. These loopback runs record curl's output shape, not vendor proxy behaviour. Those curl 8.18.0 runs used the earlier probe form, which named the example host directly; the guarded form, which refuses example.com, example.net, example.org and their subdomains, has not been run. The bash -n, ShellCheck, guard-paste and stub runs recorded here covered the origin-direct subshell in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form of that subshell, whose guard refusals leave the subshell with status 2. A synthetic JSON/base64url claim mutation preserved encoding but mismatched its unchanged HMAC signature; this does not test vendor verifiers. Live exposed bypass or forged-identity acceptance and fixed isolation, anonymous challenge, valid-assertion acceptance and altered-assertion rejection remain unobserved. After logging in, confirm that the app's own identity check reads the signed assertion (`x-amzn-oidc-data`, `x-goog-iap-jwt-assertion`, `Cf-Access-Jwt-Assertion`) and rejects a forged one. Test directly, because the proxy overwrites the header, so a through-proxy test proves nothing. The direct test, from the origin host, or a host inside the allowed security group, is to first send a request carrying a valid, unexpired assertion and confirm the app accepts it (the positive control), then send one whose signature is unchanged but a non-authorizing claim is altered while the token stays well formed (valid JSON and base64url), and require rejection. Both assertions are credentials (restoring the altered claim makes the copy valid again), so never place either in curl's argv, where other local accounts could read it through `ps` and `/proc/<pid>/cmdline`. The handling for each assertion is to hold the assertion in the positional parameters of a subshell that first runs `trap - DEBUG RETURN ERR`, then `set +x +a +e`, and refuses an empty value or one containing a control character, and to feed it to curl on stdin: `printf 'x-amzn-oidc-data: %s\n' "$1" | curl -q -sS -D - --noproxy '*' --header @- http://127.0.0.1:3000/whoami`. That handling follows CONTRIBUTING rule 7 and assumes a clean shell. That handling keeps the assertion out of argv only, not out of `set -x` tracing or your own account's view of the process, and an assertion pasted on the subshell's `set --` line still enters shell history, so clear it afterwards. Keep the token well formed, because an app that never checks the signature would still reject a token mangled into malformed JSON, which would not prove verification.
+REASONED: preceding block; origin isolation, anonymous and forged-header denial, plus signed-assertion discrimination, per the guide's cited AWS, Authenticate users using an Application Load Balancer, Google Cloud IAP, securing your app with signed headers, Azure App Service authentication and authorization and Cloudflare Access, validate JWTs. No cloud origin, IdP or valid assertion is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, before its anonymous and forged-header probes took the app's host on a guarded `set --` line. JSON and YAML parsed, and rejected guards reached no curl stub. For an earlier change, curl 8.18.0 ran the probe shapes against a loopback HTTP listener standing in for the example host (302 on the anonymous HEAD, 401 on `/whoami`) and against a closed loopback port. The `-sI` and `-sSI` shapes, in that curl 8.18.0 run, both printed the full status line and headers on the listener and both exited 7 on the closed port, where `-sI` printed nothing and `-sSI` printed `curl: (7) Failed to connect ...` on stderr. The forged-header probe, in that curl 8.18.0 run, printed only the body without `-D -` and the status line, headers and body with it. The altered-assertion shape, in that curl 8.18.0 run, delivered `x-amzn-oidc-data` through `--header @-` from stdin (the listener received the header; the value was a dummy, not a real assertion) and exited 7 with the connect error against the closed port. Unsubstituted, empty and two-value guard pastes again printed their refusals without reaching a curl stub, in plain bash and under set -u, and a substituted address reached the stub once. These loopback runs record curl's output shape, not vendor proxy behaviour. Those curl 8.18.0 runs used the earlier probe form, which named the example host directly; the guarded form, which refuses example.com, example.net, example.org and their subdomains, has not been run. The bash -n, ShellCheck, guard-paste and stub runs recorded here covered the origin-direct subshell in an earlier form, whose guard refusals left the subshell with status 0; in the current form its guard refusals leave the subshell with status 2. The current block, which runs that subshell and the anonymous and forged-header probes in one outer subshell that exits once with their combined status, passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. A synthetic JSON/base64url claim mutation preserved encoding but mismatched its unchanged HMAC signature; this does not test vendor verifiers. Live exposed bypass or forged-identity acceptance and fixed isolation, anonymous challenge, valid-assertion acceptance and altered-assertion rejection remain unobserved. After logging in, confirm that the app's own identity check reads the signed assertion (`x-amzn-oidc-data`, `x-goog-iap-jwt-assertion`, `Cf-Access-Jwt-Assertion`) and rejects a forged one. Test directly, because the proxy overwrites the header, so a through-proxy test proves nothing. The direct test, from the origin host, or a host inside the allowed security group, is to first send a request carrying a valid, unexpired assertion and confirm the app accepts it (the positive control), then send one whose signature is unchanged but a non-authorizing claim is altered while the token stays well formed (valid JSON and base64url), and require rejection. Both assertions are credentials (restoring the altered claim makes the copy valid again), so never place either in curl's argv, where other local accounts could read it through `ps` and `/proc/<pid>/cmdline`. The handling for each assertion is to hold the assertion in the positional parameters of a subshell that first runs `trap - DEBUG RETURN ERR`, then `set +x +a +e`, and refuses an empty value or one containing a control character, and to feed it to curl on stdin: `printf 'x-amzn-oidc-data: %s\n' "$1" | curl -q -sS -D - --noproxy '*' --header @- http://127.0.0.1:3000/whoami`. That handling follows CONTRIBUTING rule 7 and assumes a clean shell. That handling keeps the assertion out of argv only, not out of `set -x` tracing or your own account's view of the process, and an assertion pasted on the subshell's `set --` line still enters shell history, so clear it afterwards. Keep the token well formed, because an app that never checks the signature would still reject a token mangled into malformed JSON, which would not prove verification.
 
 - REASONED: default platform-route isolation, per the guide's cited Google Cloud IAP, enabling IAP for Cloud Run and Vercel Authentication documentation. No authorized Cloud Run or Vercel deployment and external probe host are available; live exposed and fixed responses remain unobserved. Reach the app's own default platform hostname from outside your cloud network and confirm it does not serve your app. Fetch a real app route (not just `/`) at your Cloud Run `run.app` URL or your Vercel production domain: use the following block, and read the status line, headers, and body together. A pass is the platform's own challenge, never your app's content: for Cloud Run a 302 redirect to a Google or IAP sign-in, or a 401 from IAP (IAP returns 401 rather than a 302 when the request does not advertise HTML, i.e. no `Accept: text/html` header); for Vercel the Vercel authentication page. A 200 serving your app's own content means the platform URL bypasses the proxy; a 404 or a transport error is inconclusive, never a pass, because a missing service also returns 404.
 
-  REASONED: default platform-route probe, per the same cited Google Cloud IAP and Vercel Authentication documentation; no authorized deployment and external probe host are available for live exposed/fixed checks. In local Bash and Bash with set -u, the unsubstituted, empty, missing-set-line (with a caller URL), zero-value, two-value and embedded-placeholder cases each printed a refusal without reaching the curl stub; a substituted URL reached it once with the expected arguments. Ten values under IFS=0 with set -u were also refused. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. The bash -n, ShellCheck and stub runs recorded here covered the platform-route block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. These local checks do not establish platform behaviour. Substitute the full URL of a real app route inside the quotes, keeping them. This anonymous request carries no secret, so no trap clearing is needed.
+  REASONED: default platform-route probe, per the same cited Google Cloud IAP and Vercel Authentication documentation; no authorized deployment and external probe host are available for live exposed/fixed checks. In local Bash and Bash with set -u, the unsubstituted, empty, missing-set-line (with a caller URL), zero-value, two-value and embedded-placeholder cases each printed a refusal without reaching the curl stub; a substituted URL reached it once with the expected arguments. Ten values under IFS=0 with set -u were also refused. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. The bash -n, ShellCheck and stub runs recorded here covered the platform-route block in an earlier form, whose guard refusals left the subshell with status 0. The current form, whose guard refusals leave the subshell with status 2 and which exits 3 on a 404 or a failed request, passed bash -n and ShellCheck 0.11.0 in the repository's gate suite; no guard-paste or stub run of it is recorded here. These local checks do not establish platform behaviour. Substitute the full URL of a real app route inside the quotes, keeping them. This anonymous request carries no secret, so no trap clearing is needed.
 
   ```bash
   (                                       # a subshell, so your own script arguments are untouched
+    set +e                                # errexit off here, so the request's status is classified below instead of ending the block
     set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_YOUR_PLATFORM_URL/an-app-route'
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
     shift
     [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
     case "$1" in
       *REPLACE_WITH_*|*YOUR_PLATFORM_URL*|"") echo "substitute your own app route URL on the set -- line above; not probing"; exit 2 ;;
-      *) curl -q -g -sS --noproxy '*' -D - "$1" ;;
     esac
+    set -- "$1" "$(if curl -q -g -sS --noproxy '*' -D - -w '\nhttp=%{http_code}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "${2##*$'\n'}" "${2%$'\n\n'*}"   # curl's exit status, then the response and the http= line
+    set -- "$1" "$2" "$3" "${3##*$'\n'}"         # the same values, then the http= line alone
+    printf '%s\n' "$3"
+    case "$2:$4" in
+      0:http=404) echo "HTTP 404: a missing service also returns 404; inconclusive, never a pass"; set -- 3 ;;
+      0:*) set -- 0 ;;
+      *) echo "curl exit $2: a transport error; inconclusive, never a pass"; set -- 3 ;;
+    esac
+    echo "block exit $1; any answer but a 404 is not classified: read the status line, headers and body above, where the platform's own challenge is the pass and your app's content means the platform URL bypasses the proxy"
+    exit "$1"
   )
   ```
 
@@ -267,7 +322,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "97b6c744e603f4e7acf95fbe3ca5d6b2a6e5b8dd927c29aae80a94839c3bf4a5",
+  "body_sha256": "07d92d0589ebe9e2ce5d57dff712f8212b24976325f97f4e6ff45b436aa0488d",
   "components": {
     "aws": {
       "name": "AWS ALB",
