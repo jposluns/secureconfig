@@ -135,26 +135,46 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then a real protected path without its leading slash: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sSI --noproxy '*' "https://$1/"        # public HTTPS endpoint: must succeed without -k; if not, investigate the cert, chain, hostname, or your client trust store, never -k
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" 0                      # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  curl -q -g -sSI --noproxy '*' "https://$1/" ||     # public HTTPS endpoint: must succeed without -k; if not, investigate the cert, chain, hostname, or your client trust store, never -k
+    { echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
   # An unauthenticated request to a real protected path must be REJECTED and a valid credential ACCEPTED. --noproxy
   # disables YOUR client proxy, not a reverse proxy in front of the app, so if the app sits behind an auth proxy this
   # pair cannot tell whether the app or the proxy enforced it: confirm the layer by probing the app directly or in its logs.
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"        # no credentials: expect 401/403
-  curl -q -g -sS --noproxy '*' -H @cred.txt -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"   # valid credential from a file (cred.txt holds a full header line, e.g. "Authorization: Bearer ..."): expect 2xx
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$5"                      # no credentials: expect 401/403
+  case "$4:$5" in
+    0:401|0:403) ;;
+    0:2??) echo "FINDING: the protected path answered $5 with no credentials"; set -- "$1" "$2" 1 ;;
+    0:*) echo "HTTP $5 without credentials is neither the 401/403 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    *) echo "curl exit $4: the request without credentials failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -H @cred.txt -o /dev/null -w '%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$5"                      # valid credential from a file (cred.txt holds a full header line, e.g. "Authorization: Bearer ..."): expect 2xx
+  case "$4:$5" in
+    0:2??) ;;
+    0:*) echo "HTTP $5 with the credential is not the expected 2xx, so the positive control failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    *) echo "curl exit $4: the request with the credential failed (is cred.txt in this directory?); inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
   ss -tlnp ||   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
-    { echo "ss -tlnp failed; inconclusive"; exit 3; }
-  echo "unclassified observation: read every listener above against section 1"
-  exit 0
+    { echo "ss -tlnp failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+  echo "block exit $3; the HTTPS headers and the listener list above are not classified, so judge them yourself: read every listener against section 1"
+  exit "$3"
 )
 ```
 
@@ -298,7 +318,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "4e4acf805340e4fdce7d0ef9692bf80cf5b4b8aca9513f729b51972095b5d8ee",
+  "body_sha256": "2e565adb1a5d3eadf3aee64cb04091da0c6dc41e61922c562b9dc09e7adad53b",
   "components": {
     "django": {
       "name": "Django documentation",

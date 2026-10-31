@@ -116,7 +116,6 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
-ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -138,12 +137,27 @@ ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
   # the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
 )
 (                                       # a subshell, so the exits below end only the subshell
-  out=$(git ls-files config/master.key)                          # git prints nothing
-  rc=$?
-  [ "$rc" -eq 0 ] || { echo "git ls-files exit $rc (run this in the app's repository); inconclusive"; exit 3; }
-  [ -z "$out" ] || { printf '%s\n' "$out"; echo "FINDING: config/master.key is tracked by git"; exit 1; }
-  echo "config/master.key is not tracked by git"
-  exit 0
+  [ -f config/application.rb ] || { echo "no config/application.rb here: run this block from the Rails app's root directory, where git ls-files looks for config/master.key; not checking"; exit 2; }
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; puma/ruby: 127.0.0.1:3000 only (the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address on 3000 as loopback)
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  set -- "$1" "$(if git ls-files config/master.key; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # git prints nothing
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, git's output, then git's exit status
+  if [ "$3" != 0 ]; then
+    echo "git ls-files exit $3 (run this in the app's repository); inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"
+  elif [ -n "$2" ]; then
+    printf '%s' "$2"; echo "FINDING: config/master.key is tracked by git"; set -- 1 "$2" "$3"
+  else
+    echo "config/master.key is not tracked by git"
+  fi
+  echo "block exit $1; listeners on ports other than 3000 are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -227,7 +241,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "cbeb8f935cf7fee5389361bb79c2b959b6e2421780f1bdf7d0e055df73b088ee",
+  "body_sha256": "8a593d4c1d566e55c3fb93304d683c14b21b18610555f21041e860d342d16efe",
   "components": {
     "rails": {
       "name": "Rails documentation",

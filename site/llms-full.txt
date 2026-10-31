@@ -9137,33 +9137,55 @@ Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsuppor
 ## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
 Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
-the status code is printed and you compare it. The unconfigured-name request that ends the first
-block also sets that block's exit status: 0 for the 401 pass, 1 for a 200, and 3 for any other
-code or a curl error. The `apachectl -S` block exits 3 if the command fails and 0 otherwise,
-because you judge the vhost list it prints.
+the status code is printed and you compare it. The first block takes your host name, an
+unconfigured name and a protected path on its `set --` line, and refuses with status 2 if any is
+left unsubstituted or malformed. It classifies two of its requests, to the site root and to the
+unconfigured name, records each outcome as it runs, and exits once at the end: 1 if either
+answers 200, otherwise 3 if either answers anything but 401 or one of its curl or ss commands
+fails, and 0 when both answer 401. The redirect headers and the listener list stay for you to
+judge, and the configuration test and reload line before the subshell does not affect the
+status. The `apachectl -S` block exits 3 if the command fails and 0 otherwise, because you judge
+the vhost list it prints.
 
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_AN_UNCONFIGURED_NAME' 'REPLACE_WITH_A_PROTECTED_PATH'   # the deployment's public host name, then a name your certificate covers that no ServerName or ServerAlias matches (each with no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected path without its leading slash: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sSI --noproxy '*' "http://$1/"            # expect 301 with a https:// Location
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1/"
+  case "$2" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute a name your certificate covers that no ServerName or ServerAlias matches (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  curl -q -g -sSI --noproxy '*' "http://$1/" ||         # expect 301 with a https:// Location
+    { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
                                           # 200 before section 4, 401 after it. Once
                                           # authentication is on, a 200 here is the finding
+  case "$5:$6" in
+    0:401) ;;
+    0:200) echo "FINDING: the site root answered 200 with no credentials; with section 4's authentication on, that is the finding"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "HTTP $6 from the site root is neither the 401 pass nor the 200 finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the site root request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
 
   # Read every listener. Do not filter to the ports you expect: a filter cannot show you a port
   # you did not think of, which is the whole question, and `grep ':(80|443)'` also matches an
   # address such as [2001:db8:80::1]:9000.
-  ss -tlnp
+  ss -tlnp ||
+    { echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
 
   # A request whose name matches no ServerName or ServerAlias does not fail. Apache falls through
   # to "the first listed virtual host that matches" the address and port, so a vhost listed
@@ -9175,19 +9197,21 @@ sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
   # SNI saying your own host name, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
   # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
   # The URL hostname supplies SNI and the Host header; --connect-to changes only the connection destination (your address):
-  code=$(curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
-    --connect-to "REPLACE_WITH_AN_UNCONFIGURED_NAME:443:$1:443" \
-    https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH)
-  rc=$?
-  printf '%s\n' "$code"
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
+    --connect-to "$2:443:$1:443" \
+    "https://$2/$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
                                           # 401 is the pass. 200 means another vhost served the
                                           # protected resource with no authentication at all
-  [ "$rc" -eq 0 ] || { echo "curl exit $rc: a transport, certificate or local error; inconclusive (if your certificate covers no spare name, use the configuration review below)"; exit 3; }
-  case "$code" in
-    401) echo "pass: the unconfigured name was refused with 401"; exit 0 ;;
-    200) echo "FINDING: another vhost served the protected path with no authentication"; exit 1 ;;
-    *) echo "HTTP $code is neither the 401 pass nor the 200 finding; inconclusive"; exit 3 ;;
+  case "$5:$6" in
+    0:401) echo "pass: the unconfigured name was refused with 401" ;;
+    0:200) echo "FINDING: another vhost served the protected path with no authentication"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "HTTP $6 is neither the 401 pass nor the 200 finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: a transport, certificate or local error; inconclusive (if your certificate covers no spare name, use the configuration review below)"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
+  echo "block exit $4; the redirect headers and the listener list above are not classified, so judge them yourself"
+  exit "$4"
 )
 ```
 
@@ -9294,7 +9318,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "a670a3d72d4176ecb4320d46d924c1aa8b19d3e34503aea7f10dd2840cd8d952",
+  "body_sha256": "9f9b01927db5c4d58680d3b1d305ac4f0f65a565bbc1e4238e4aef08fbd2bccf",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -9663,18 +9687,22 @@ sudo nginx -t && sudo systemctl reload nginx
 )
 rm -f /tmp/under.bin /tmp/over.bin
 (                                   # a subshell, so the exits below end only the subshell
-  out=$(ss -tlnp) || { echo "ss -tlnp failed; inconclusive"; exit 3; }
-  printf '%s\n' "$out"   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. All the checks
+  set -- "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the listener table, then ss's exit status
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"
+  [ "$2" = 0 ] || { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  printf '%s' "$1"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. All the checks
                                     # above pass while the app also answers directly on port 3000,
                                     # which bypasses this proxy's TLS and its authentication. That
                                     # bypass is the first common mistake below, and the first item in
                                     # common-mistakes.md
-  printf '%s\n' "$out" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]:") != 1 { found = 1 } END { exit !found }'
-  case "$?" in
-    0) echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; exit 1 ;;
-    1) echo "no port 3000 listener outside loopback; unclassified observation: read every other listener above"; exit 0 ;;
-    *) echo "awk could not read the listener list; inconclusive"; exit 3 ;;
-  esac
+  if printf '%s' "$1" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; exit 1
+  else
+    case "$?" in
+      1) echo "no port 3000 listener outside loopback; unclassified observation: read every other listener above"; exit 0 ;;
+      *) echo "awk could not read the listener list; inconclusive"; exit 3 ;;
+    esac
+  fi
 )
 ```
 
@@ -9786,7 +9814,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "5f39710f2d22a386def62638edd90f3adce4f8d0c4fad6f222c66c6990ad909e",
+  "body_sha256": "09d859a239ca74e119e029d3d6575bf365721a0d0b20d1bb354f5462c50437ba",
   "components": {
     "nginx-source": {
       "name": "nginx source",
@@ -10530,18 +10558,35 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
                                      # environment with request_body removed
 )
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
+(                                    # a subshell, so the exit below ends only the subshell
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. Every check above
                                      # passes while the app also answers directly on port 3000, which
-                                     # bypasses Caddy's TLS and its authentication
-ss -tlnp   # read every listener; the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
+                                     # bypasses Caddy's TLS and its authentication. The admin API on TCP: only a loopback
+                                     # address, such as 127.0.0.1:2019 or [::1]:2019, never a
                                      # public address. A missing 2019 line is not a pass on its own: it also
                                      # means you moved it to a unix socket or set admin off, so confirm which
-(                                    # a subshell, so the exit below ends only the subshell
-  ls -l /run/caddy/admin.sock ||     # if you bound it to a unix socket: it exists and is owner-restricted
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 2019, the admin API's default, is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  if ls -l /run/caddy/admin.sock; then  # if you bound it to a unix socket: it exists and is owner-restricted
                                      # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
-    { echo "ls could not list /run/caddy/admin.sock; inconclusive (if the admin API is on TCP or off, the ss -tlnp lines above are the check)"; exit 3; }
-  echo "unclassified observation: read the socket's mode and owner above; the pass is a socket that is owner-restricted"
-  exit 0
+    echo "unclassified observation: read the socket's mode and owner above; the pass is a socket that is owner-restricted"
+  else
+    echo "ls could not list /run/caddy/admin.sock; inconclusive (if the admin API is on TCP or off, the ss -tlnp lines above are the check)"
+    [ "$1" = 1 ] || set -- 3 "$2" "$3"
+  fi
+  echo "block exit $1; listeners on ports other than 3000 and 2019 are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -10643,7 +10688,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "e6335c74060b55cd3622663749e5a0729a39b3ac29068c2fe81bedb5c9d43711",
+  "body_sha256": "8f4bbf87b4fa623502611a0fa9e3329143ac40429839724cb4440b69026b11f0",
   "components": {
     "admin": {
       "name": "Caddy admin source",
@@ -12321,26 +12366,46 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PROTECTED_PATH'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then a real protected path without its leading slash: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sSI --noproxy '*' "https://$1/"        # public HTTPS endpoint: must succeed without -k; if not, investigate the cert, chain, hostname, or your client trust store, never -k
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" 0                      # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  curl -q -g -sSI --noproxy '*' "https://$1/" ||     # public HTTPS endpoint: must succeed without -k; if not, investigate the cert, chain, hostname, or your client trust store, never -k
+    { echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
   # An unauthenticated request to a real protected path must be REJECTED and a valid credential ACCEPTED. --noproxy
   # disables YOUR client proxy, not a reverse proxy in front of the app, so if the app sits behind an auth proxy this
   # pair cannot tell whether the app or the proxy enforced it: confirm the layer by probing the app directly or in its logs.
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"        # no credentials: expect 401/403
-  curl -q -g -sS --noproxy '*' -H @cred.txt -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"   # valid credential from a file (cred.txt holds a full header line, e.g. "Authorization: Bearer ..."): expect 2xx
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$5"                      # no credentials: expect 401/403
+  case "$4:$5" in
+    0:401|0:403) ;;
+    0:2??) echo "FINDING: the protected path answered $5 with no credentials"; set -- "$1" "$2" 1 ;;
+    0:*) echo "HTTP $5 without credentials is neither the 401/403 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    *) echo "curl exit $4: the request without credentials failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' -H @cred.txt -o /dev/null -w '%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$5"                      # valid credential from a file (cred.txt holds a full header line, e.g. "Authorization: Bearer ..."): expect 2xx
+  case "$4:$5" in
+    0:2??) ;;
+    0:*) echo "HTTP $5 with the credential is not the expected 2xx, so the positive control failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    *) echo "curl exit $4: the request with the credential failed (is cred.txt in this directory?); inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
   ss -tlnp ||   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
-    { echo "ss -tlnp failed; inconclusive"; exit 3; }
-  echo "unclassified observation: read every listener above against section 1"
-  exit 0
+    { echo "ss -tlnp failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+  echo "block exit $3; the HTTPS headers and the listener list above are not classified, so judge them yourself: read every listener against section 1"
+  exit "$3"
 )
 ```
 
@@ -12484,7 +12549,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "4e4acf805340e4fdce7d0ef9692bf80cf5b4b8aca9513f729b51972095b5d8ee",
+  "body_sha256": "2e565adb1a5d3eadf3aee64cb04091da0c6dc41e61922c562b9dc09e7adad53b",
   "components": {
     "django": {
       "name": "Django documentation",
@@ -19724,7 +19789,6 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
 
 ```bash
-ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -19746,12 +19810,27 @@ ss -tlnp   # read every listener; puma/ruby: 127.0.0.1:3000 only
   # the Sidekiq dashboard is the exposure. Then confirm an authorized request does reach it
 )
 (                                       # a subshell, so the exits below end only the subshell
-  out=$(git ls-files config/master.key)                          # git prints nothing
-  rc=$?
-  [ "$rc" -eq 0 ] || { echo "git ls-files exit $rc (run this in the app's repository); inconclusive"; exit 3; }
-  [ -z "$out" ] || { printf '%s\n' "$out"; echo "FINDING: config/master.key is tracked by git"; exit 1; }
-  echo "config/master.key is not tracked by git"
-  exit 0
+  [ -f config/application.rb ] || { echo "no config/application.rb here: run this block from the Rails app's root directory, where git ls-files looks for config/master.key; not checking"; exit 2; }
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; puma/ruby: 127.0.0.1:3000 only (the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address on 3000 as loopback)
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  set -- "$1" "$(if git ls-files config/master.key; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # git prints nothing
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, git's output, then git's exit status
+  if [ "$3" != 0 ]; then
+    echo "git ls-files exit $3 (run this in the app's repository); inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"
+  elif [ -n "$2" ]; then
+    printf '%s' "$2"; echo "FINDING: config/master.key is tracked by git"; set -- 1 "$2" "$3"
+  else
+    echo "config/master.key is not tracked by git"
+  fi
+  echo "block exit $1; listeners on ports other than 3000 are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -19835,7 +19914,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "cbeb8f935cf7fee5389361bb79c2b959b6e2421780f1bdf7d0e055df73b088ee",
+  "body_sha256": "8a593d4c1d566e55c3fb93304d683c14b21b18610555f21041e860d342d16efe",
   "components": {
     "rails": {
       "name": "Rails documentation",

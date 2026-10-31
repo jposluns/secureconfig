@@ -107,33 +107,55 @@ Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsuppor
 ## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
 Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
-the status code is printed and you compare it. The unconfigured-name request that ends the first
-block also sets that block's exit status: 0 for the 401 pass, 1 for a 200, and 3 for any other
-code or a curl error. The `apachectl -S` block exits 3 if the command fails and 0 otherwise,
-because you judge the vhost list it prints.
+the status code is printed and you compare it. The first block takes your host name, an
+unconfigured name and a protected path on its `set --` line, and refuses with status 2 if any is
+left unsubstituted or malformed. It classifies two of its requests, to the site root and to the
+unconfigured name, records each outcome as it runs, and exits once at the end: 1 if either
+answers 200, otherwise 3 if either answers anything but 401 or one of its curl or ss commands
+fails, and 0 when both answer 401. The redirect headers and the listener list stay for you to
+judge, and the configuration test and reload line before the subshell does not affect the
+status. The `apachectl -S` block exits 3 if the command fails and 0 otherwise, because you judge
+the vhost list it prints.
 
 ```bash
 sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_AN_UNCONFIGURED_NAME' 'REPLACE_WITH_A_PROTECTED_PATH'   # the deployment's public host name, then a name your certificate covers that no ServerName or ServerAlias matches (each with no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected path without its leading slash: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sSI --noproxy '*' "http://$1/"            # expect 301 with a https:// Location
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1/"
+  case "$2" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute a name your certificate covers that no ServerName or ServerAlias matches (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  curl -q -g -sSI --noproxy '*' "http://$1/" ||         # expect 301 with a https:// Location
+    { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
                                           # 200 before section 4, 401 after it. Once
                                           # authentication is on, a 200 here is the finding
+  case "$5:$6" in
+    0:401) ;;
+    0:200) echo "FINDING: the site root answered 200 with no credentials; with section 4's authentication on, that is the finding"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "HTTP $6 from the site root is neither the 401 pass nor the 200 finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the site root request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
 
   # Read every listener. Do not filter to the ports you expect: a filter cannot show you a port
   # you did not think of, which is the whole question, and `grep ':(80|443)'` also matches an
   # address such as [2001:db8:80::1]:9000.
-  ss -tlnp
+  ss -tlnp ||
+    { echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
 
   # A request whose name matches no ServerName or ServerAlias does not fail. Apache falls through
   # to "the first listed virtual host that matches" the address and port, so a vhost listed
@@ -145,19 +167,21 @@ sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
   # SNI saying your own host name, which selects YOUR vhost and answers 401, or makes mod_ssl reject the
   # mismatched pair with 421; both look like a pass and neither is the request an attacker sends.
   # The URL hostname supplies SNI and the Host header; --connect-to changes only the connection destination (your address):
-  code=$(curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
-    --connect-to "REPLACE_WITH_AN_UNCONFIGURED_NAME:443:$1:443" \
-    https://REPLACE_WITH_AN_UNCONFIGURED_NAME/REPLACE_WITH_A_PROTECTED_PATH)
-  rc=$?
-  printf '%s\n' "$code"
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' \
+    --connect-to "$2:443:$1:443" \
+    "https://$2/$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
                                           # 401 is the pass. 200 means another vhost served the
                                           # protected resource with no authentication at all
-  [ "$rc" -eq 0 ] || { echo "curl exit $rc: a transport, certificate or local error; inconclusive (if your certificate covers no spare name, use the configuration review below)"; exit 3; }
-  case "$code" in
-    401) echo "pass: the unconfigured name was refused with 401"; exit 0 ;;
-    200) echo "FINDING: another vhost served the protected path with no authentication"; exit 1 ;;
-    *) echo "HTTP $code is neither the 401 pass nor the 200 finding; inconclusive"; exit 3 ;;
+  case "$5:$6" in
+    0:401) echo "pass: the unconfigured name was refused with 401" ;;
+    0:200) echo "FINDING: another vhost served the protected path with no authentication"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "HTTP $6 is neither the 401 pass nor the 200 finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: a transport, certificate or local error; inconclusive (if your certificate covers no spare name, use the configuration review below)"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
+  echo "block exit $4; the redirect headers and the listener list above are not classified, so judge them yourself"
+  exit "$4"
 )
 ```
 
@@ -264,7 +288,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "a670a3d72d4176ecb4320d46d924c1aa8b19d3e34503aea7f10dd2840cd8d952",
+  "body_sha256": "9f9b01927db5c4d58680d3b1d305ac4f0f65a565bbc1e4238e4aef08fbd2bccf",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",

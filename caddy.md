@@ -188,18 +188,35 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
                                      # environment with request_body removed
 )
 rm -f /tmp/under.bin /tmp/over.bin
-ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.0.0.0. Every check above
+(                                    # a subshell, so the exit below ends only the subshell
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. Every check above
                                      # passes while the app also answers directly on port 3000, which
-                                     # bypasses Caddy's TLS and its authentication
-ss -tlnp   # read every listener; the admin API on TCP: only 127.0.0.1:2019 or [::1]:2019, never a
+                                     # bypasses Caddy's TLS and its authentication. The admin API on TCP: only a loopback
+                                     # address, such as 127.0.0.1:2019 or [::1]:2019, never a
                                      # public address. A missing 2019 line is not a pass on its own: it also
                                      # means you moved it to a unix socket or set admin off, so confirm which
-(                                    # a subshell, so the exit below ends only the subshell
-  ls -l /run/caddy/admin.sock ||     # if you bound it to a unix socket: it exists and is owner-restricted
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 2019, the admin API's default, is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  if ls -l /run/caddy/admin.sock; then  # if you bound it to a unix socket: it exists and is owner-restricted
                                      # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
-    { echo "ls could not list /run/caddy/admin.sock; inconclusive (if the admin API is on TCP or off, the ss -tlnp lines above are the check)"; exit 3; }
-  echo "unclassified observation: read the socket's mode and owner above; the pass is a socket that is owner-restricted"
-  exit 0
+    echo "unclassified observation: read the socket's mode and owner above; the pass is a socket that is owner-restricted"
+  else
+    echo "ls could not list /run/caddy/admin.sock; inconclusive (if the admin API is on TCP or off, the ss -tlnp lines above are the check)"
+    [ "$1" = 1 ] || set -- 3 "$2" "$3"
+  fi
+  echo "block exit $1; listeners on ports other than 3000 and 2019 are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -301,7 +318,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "e6335c74060b55cd3622663749e5a0729a39b3ac29068c2fe81bedb5c9d43711",
+  "body_sha256": "8f4bbf87b4fa623502611a0fa9e3329143ac40429839724cb4440b69026b11f0",
   "components": {
     "admin": {
       "name": "Caddy admin source",
