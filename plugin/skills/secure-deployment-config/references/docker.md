@@ -109,11 +109,16 @@ REASONED: publication, redirect, authentication and external isolation checks; n
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input, or ss is not installed), which outranks 0
   docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0/[::] or a host IP) binding; review every container on the host, IPv6 included
   case "$?" in 0) ;; *) echo "docker compose ps failed; inconclusive"; set -- 3 ;; esac
-  ss -tulnp                             # host sockets (TCP and UDP); socket visibility varies by Docker version and config, so a socket listing alone does not prove reachability
-  case "$?" in 0) ;; *) echo "ss -tulnp failed; inconclusive"; set -- 3 ;; esac
+  if command -v ss >/dev/null; then     # a missing ss is a refusal, ranked as above
+    ss -tulnp                           # host sockets (TCP and UDP); socket visibility varies by Docker version and config, so a socket listing alone does not prove reachability
+    case "$?" in 0) ;; *) echo "ss -tulnp failed; inconclusive"; set -- 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
   (                                     # a subshell, so your own script arguments are untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your TLS proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -299,7 +304,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "05584e952ee0f99af0fb3f81ad5a04e674de4a90371d811178cef526b43b3d64",
+  "body_sha256": "cc7bd003eea2b580e12dd3c10e1909f1b3f60e3ee42df4eb100cfffb923fe814",
   "components": {
     "boundary": {
       "name": "Docker Engine minimum boundary",

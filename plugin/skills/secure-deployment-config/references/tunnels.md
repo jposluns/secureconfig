@@ -92,7 +92,8 @@ REASONED: following block; the cited frp authentication, WireGuard quickstart/Cr
 # the WireGuard and firewall reads on the host you are checking, and the ssh -R check on the SSH server.
 # No exit status covers the whole walkthrough. The frp, WireGuard, firewall, ping and counter steps are
 # read-and-judge: their exit statuses are not results, so read their output against the comments. The
-# ssh -R subshell at the end has a status of its own, for that check on that host only.
+# UDP listener read refuses with status 2 when ss is not installed, and otherwise its status is not a
+# result either. The ssh -R subshell at the end has a status of its own, for that check on that host only.
 # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
 # reachability and a valid token). frpc then stays in the FOREGROUND; stop it with Ctrl-C before the
 # next command. This exercises token auth only; auth.token has no effect under auth.method = "oidc".
@@ -109,7 +110,10 @@ frpc -c frpc-emptytoken.toml   # expect the same login failure
 
 sudo wg show wg0          # needs privilege; shows the listen-port (51820) + per-peer state, and a recent 'latest handshake' is the liveness signal. wg show reports CONFIGURATION, so also confirm the interface is running:
 ip link show wg0          # expect the UP flag in the <...> flags; a WireGuard interface usually shows operational 'state UNKNOWN', which is fine. wg show reporting a port while the interface is administratively down is why this check exists
-ss -ulnp                  # read every UDP listener to spot any OTHER, unexpected service; do not rely on it to confirm WireGuard (the in-kernel socket has no owning process to show under -p, and a real host also lists resolved/mDNS)
+(                         # a subshell, so the exit below ends only this step
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  ss -ulnp                # read every UDP listener to spot any OTHER, unexpected service; do not rely on it to confirm WireGuard (the in-kernel socket has no owning process to show under -p, and a real host also lists resolved/mDNS)
+)
 # ufw must be active with a default-deny (or default-reject) incoming policy, or this proves nothing
 # ('inactive' or a default-allow policy would pass it while the port is open). Its status shows
 # ufw-managed rules and defaults, not rules from ufw's rules files:
@@ -149,7 +153,8 @@ ping -c1 192.168.1.50
 sudo nft list chain inet filter forward | grep -E 'iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
 
 # ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
-(          # a subshell, so the exit below ends only the subshell; its status is this check's alone: 3 if ss fails, otherwise 0
+(          # a subshell, so the exit below ends only the subshell; its status is this check's alone: 2 if ss is not installed, 3 if ss fails, otherwise 0
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   ss -tlnp ||   # read every listener; 8080: only a loopback address unless you deliberately published it
     { echo "ss -tlnp failed; inconclusive"; exit 3; }
   echo "unclassified observation: read every listener above; 8080 belongs on a loopback address unless you deliberately published it"
@@ -263,7 +268,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "b1510eebb0e9200c24529e7627621f91d93ffcd76576db3166cc50a1b7c15b85",
+  "body_sha256": "e18b2c17f16c26f302f7de379fc1d8e6a81bb7c156ab3abb876969129bc7de91",
   "components": {
     "frps": {
       "name": "frps source",
