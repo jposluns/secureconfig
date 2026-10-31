@@ -119,18 +119,23 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 # REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in the authoring environment. Expected API status outcomes require a live check; the assessment above traces conditional public-API refusal and the workflows list route's middleware, response body and declared 200 success status; pinned source still establishes the Webhook refusal codes.
 # On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
 # The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains, and before this block reported one exit status for all of its parts.
-# On 2026-10-31 the current form passed bash -n and ran whole against stubs, including those example-domain refusals; no n8n deployment or network was involved; ShellCheck 0.11.0 runs on it in the repository's gate suite, not in that review.
+# On 2026-10-31 an earlier form, before the ss presence check, passed bash -n and ran whole against stubs, including those example-domain refusals; no n8n deployment or network was involved.
+# The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, which also passed bash -n and ShellCheck 0.11.0 and ran whole against stubs with no network in a later review that day, with ss present and passing, present and failing, and missing.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
 # owner-creation data to a live instance as a "test".
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
   set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
-  ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n8n on 127.0.0.1 (or its
-             # private container network), with the Postgres and task-runner ports NOT published. Loopback
-             # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
-  set -- "$1" "$?"                      # the block's status so far, then ss's exit status
-  [ "$2" = 0 ] || { echo "ss -tlnp exit $2: no listener inventory; inconclusive"; set -- 3; }
+  if command -v ss >/dev/null; then     # a missing ss refuses this part with status 2, ranked as above
+    ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n8n on 127.0.0.1 (or its
+               # private container network), with the Postgres and task-runner ports NOT published. Loopback
+               # can be 127.0.0.1 and/or ::1; also probe the real public IPv4/IPv6 path from another host.
+    set -- "$1" "$?"                    # the block's status so far, then ss's exit status
+    [ "$2" = 0 ] || { echo "ss -tlnp exit $2: no listener inventory; inconclusive"; set -- 3; }
+  else
+    echo "ss is not installed here; not listing sockets"; set -- 2
+  fi
   # TLS reachability (proves TLS, not authentication):
   (                                     # a subshell, so your own script arguments are untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_N8N_HOST'   # the public host name your proxy serves n8n on (your N8N_HOST value), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
@@ -506,7 +511,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "1ef968e90a43d6c8d3289ec2a89d84610637993eba9c583ecf315820e1a32524",
+  "body_sha256": "f09bceac29b1bc148dbb6a491f2619a42728292d8d56b1d2c9335a7edffbf064",
   "components": {
     "server": {
       "name": "n8n listener source",
