@@ -172,7 +172,7 @@ Point that block, with `web`, at Sentry's `http://tracker.example.com:9000/`: be
 - [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
 - [Sentry self-hosted 26.8.0 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63).
 - [Sentry 26.8.0 registration and single-organization membership (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py).
-- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
+- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655).
 
 
 <!-- version-basis:start -->
@@ -225,7 +225,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fe153a02aae84a9d748e8a2a362dac75a1e9001149e9f631428f0912b2908395",
+  "body_sha256": "bf08d8ccb68d7172c334bd62968c0b5c74669dbed084c584025cb570e8554318",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",

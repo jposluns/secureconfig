@@ -84,7 +84,7 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 
 ## Verify
 
-REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. The authoring environment cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run. The checks span hosts and frpc runs in the foreground, so each step is its own block with its own exit status: paste each whole on the host it names. Each block exits 0 when it leaves its output for you to judge against its comments, and 3 when a command whose failure it can recognize fails; the paragraph before each block says which. The frp block also refuses with status 2 when frpc is not installed, and the two listener inventories refuse with status 2 when `ss` is not installed, which in the WireGuard and firewall block holds only while no other read failed. No earlier run of these blocks is recorded; their current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs of each block's passing and failing cases, with `ss` passing, failing and missing, under an inherited `readonly`, `declare -i` and `set -e`. Run this first block on the frp client, from the directory holding `frpc.toml`.
+REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. The authoring environment cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run. The checks span hosts and frpc runs in the foreground, so each step is its own block with its own exit status: paste each whole on the host it names. Each block exits 0 when it leaves its output for you to judge against its comments, and 3 when a command whose failure it can recognize fails; the paragraph before each block says which. The frp block also refuses with status 2 when frpc is not installed, and the two listener inventories refuse with status 2 when `ss` is not installed, which in the WireGuard and firewall block holds only while no other read failed. The frp block records 3 when sed cannot generate a changed config from `frpc.toml`, and otherwise exits 0, leaving the frpc logs for you to judge. No earlier run of these blocks is recorded; their current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs of each block's passing and failing cases, with `ss` passing, failing and missing, under an inherited `readonly`, `declare -i` and `set -e`. Run this first block on the frp client, from the directory holding `frpc.toml`.
 
 ```bash
 (                              # a subshell, so the exits below end only this step
@@ -102,14 +102,14 @@ REASONED: following block; the cited frp authentication, WireGuard quickstart/Cr
   if sed 's/^auth\.token[[:space:]]*=.*/auth.token = "WRONG_VALUE"/' frpc.toml > frpc-wrongtoken.toml; then
     frpc -c frpc-wrongtoken.toml   # expect a token-auth failure (e.g. 'token in login doesn't match token from configuration'), no run id
   else
-    echo "sed exit $?: frpc-wrongtoken.toml was not written; inconclusive"; set -- 3
+    echo "sed exit $?: frpc-wrongtoken.toml could not be generated from frpc.toml; inconclusive"; set -- 3
   fi
   # open-door check: a server whose auth.token is absent or empty accepts an empty token, so confirm your
   # frps also REJECTS an empty-token client; a successful login here means your server has no token set
   if sed 's/^auth\.token[[:space:]]*=.*/auth.token = ""/' frpc.toml > frpc-emptytoken.toml; then
     frpc -c frpc-emptytoken.toml   # expect the same login failure
   else
-    echo "sed exit $?: frpc-emptytoken.toml was not written; inconclusive"; set -- 3
+    echo "sed exit $?: frpc-emptytoken.toml could not be generated from frpc.toml; inconclusive"; set -- 3
   fi
   echo "block exit $1; the frpc logs above are not classified, so judge them against the comments yourself"
   exit "$1"
@@ -175,17 +175,18 @@ REASONED: following block; the routing checks follow the cited WireGuard Cryptok
 )
 ```
 
-REASONED: following block; the counter checks follow the cited nftables manual and WireGuard Cryptokey Routing documentation; no WireGuard server or peer is available here. Confirm the drop is THIS rule acting, not a routing gap or a stale count, with the next three blocks, run on the server, the peer and the server in turn. The counter lives on the server and the traffic comes from the peer. It is a confirmation aid, not a rigorous proof: the counter increments on EVERY matching packet, so run it on an otherwise-idle peer. This first block exits 3 when no line matches, which a missing chain or rule, a failed nft and output in another form all cause, so it cannot tell them apart; otherwise it exits 0 and leaves the counter for you to note.
+REASONED: following block; the counter checks follow the cited nftables manual and WireGuard Cryptokey Routing documentation; no WireGuard server or peer is available here. Confirm the drop is THIS rule acting, not a routing gap or a stale count, with the next three blocks, run on the server, the peer and the server in turn. The counter lives on the server and the traffic comes from the peer. It is a confirmation aid, not a rigorous proof: the counter increments on EVERY matching packet, so run it on an otherwise-idle peer. This first block exits 3 when nft fails, even after printing, or when its output lacks the chain header or the drop rule, which a missing chain, hook or rule and output in another form all cause, so it cannot tell these apart; otherwise it exits 0 and leaves the counter for you to note.
 
 ```bash
 (                         # a subshell, so the exit below ends only this step
-  set +e                  # errexit off here, so an unmatched grep is reported below instead of ending the step
-  set -- 0                # this step's status: 3 if no line matched, otherwise 0, because you note the counter
+  set +e                  # errexit off here, so an unmatched read is reported below instead of ending the step
+  set -o pipefail         # a failed nft then fails the read below even after the filter printed lines
+  set -- 0                # this step's status: 3 if nft failed or the chain header or drop rule did not match, otherwise 0, because you note the counter
   # 1) On the SERVER, read the rule's packet counter. The chain header must say 'type filter hook forward'
-  #    (an unreferenced regular chain gets no traffic) and the grep pins the full match AND the drop verdict
-  #    so a same-match accept rule is not read instead:
-  sudo nft list chain inet filter forward | grep -E 'type filter hook forward|iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
-  case "$?" in 0) ;; *) echo "no line matched, or nft failed; read any error above; inconclusive"; set -- 3 ;; esac
+  #    (an unreferenced regular chain gets no traffic) and the filter pins the full match AND the drop verdict
+  #    so a same-match accept rule is not read instead; it prints both lines and fails unless both matched:
+  sudo nft list chain inet filter forward | awk '/type filter hook forward/ { print; h = 1 } /iifname "wg0" ip saddr 192.168.88.0\/24 ip daddr != 192.168.88.0\/24 counter .* drop/ { print; r = 1 } END { exit !(h && r) }'
+  case "$?" in 0) ;; *) echo "nft failed, or the chain header or drop rule did not match; read any error above; inconclusive"; set -- 3 ;; esac
   echo "block exit $1; the chain header and counter above are not classified, so note the packet count yourself"
   exit "$1"
 )
@@ -204,12 +205,13 @@ REASONED: following block; the forbidden ping for the counter check follows the 
 )
 ```
 
-REASONED: following block; the second counter read follows the cited nftables manual; no WireGuard server is available here. Run it on the server. It exits 3 when no drop-rule line matches, for the same reasons as the first read, and otherwise 0, leaving you to compare the packet count with the first read.
+REASONED: following block; the second counter read follows the cited nftables manual; no WireGuard server is available here. Run it on the server. It exits 3 when nft fails, even after printing, or when no drop-rule line matches, which it cannot tell apart, and otherwise 0, leaving you to compare the packet count with the first read.
 
 ```bash
 (                         # a subshell, so the exit below ends only this step
   set +e                  # errexit off here, so an unmatched grep is reported below instead of ending the step
-  set -- 0                # this step's status: 3 if no line matched, otherwise 0, because you compare the counter
+  set -o pipefail         # a failed nft then fails the read below even after grep printed the rule line
+  set -- 0                # this step's status: 3 if nft failed or no line matched, otherwise 0, because you compare the counter
   # 3) On the SERVER, read the counter again: the packet count must have INCREASED by that ping:
   sudo nft list chain inet filter forward | grep -E 'iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
   case "$?" in 0) ;; *) echo "no line matched, or nft failed; read any error above; inconclusive"; set -- 3 ;; esac
@@ -337,7 +339,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "2aec7eaba702b6da271f05bcb60de0ac7d9ab6eb097b9397d12531d85599372b",
+  "body_sha256": "38fef617cf0b60d7d3d3bba02155dc191b85505f84dea27423a525c110957fa6",
   "components": {
     "frps": {
       "name": "frps source",
