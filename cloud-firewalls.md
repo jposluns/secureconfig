@@ -34,7 +34,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages. No authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics, in an earlier form; for the port-probe block, that form's guard refusals left the subshell with status 0. The rule inventory is now one fence per cloud, and the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of those fences and of the port-probe block, as do stub runs with no network reached. The Google Cloud and Azure fences exit 2 when their guard refuses an unsubstituted value, and each inventory fence exits 3 if a listing command fails and otherwise 0, because you judge every rule it lists. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion inbound SSH rule on the target VM subnet where an NSG is applied, is expected; Microsoft recommends scoping the Bastion source to `AzureBastionSubnet`), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
+REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages. No authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics, in an earlier form; for the port-probe block, that form's guard refusals left the subshell with status 0. The rule inventory is now one fence per cloud, and the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of those fences and of the port-probe block, as do stub runs with no network reached. The Google Cloud and Azure fences exit 2 when their guard refuses an unsubstituted value, and each inventory fence exits 3 if a listing command fails and otherwise 0, because you judge every rule it lists. For a project with no organization, the Google Cloud fence takes `none` in place of the organization ID: it then lists the VPC firewall rules and network firewall policies, skips the hierarchical policy listing and prints an unclassified line saying that hierarchical policies were not listed. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion inbound SSH rule on the target VM subnet where an NSG is applied, is expected; Microsoft recommends scoping the Bastion source to `AzureBastionSubnet`), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
 
 REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation, Google firewall policy and evaluation-order references, and the Azure security-admin rule and applied-rules pages; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
@@ -63,14 +63,14 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
 # Google Cloud, once per project. Whole records, because a table projection drops the enforcement
 # state: an enforced world-open rule and the same rule with "disabled": true project identically.
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORG_ID'   # your organization ID, which this block needs, so without one it cannot report 0: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORG_ID'   # your organization ID, or none for a project with no organization, which skips the hierarchical policy listing: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not listing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not listing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*[[:space:][:cntrl:]]*) echo "substitute your organization ID inside the quotes on the set -- line above; not listing"; exit 2 ;;
   esac
-  set -- "$1" 0                         # your organization ID, then the block's status so far: 3 (a listing failed, inconclusive) outranks 0
+  set -- "$1" 0                         # your organization ID or none, then the block's status so far: 3 (a listing failed, inconclusive) outranks 0
   gcloud compute firewall-rules list --format=json ||
     { echo "gcloud exit $?: the VPC firewall rule listing failed; inconclusive"; set -- "$1" 3; }
   # for each entry with "direction": "INGRESS", "disabled": false and an "allowed" list, work out what
@@ -78,8 +78,12 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
   # ::/0 are the obvious cases, and so is any set of ranges that together cover the internet. An entry
   # with "denied" restricts rather than exposes.
   # firewall-rules list displays Compute Engine firewall rules in this project; also enumerate the policy resources:
-  gcloud compute firewall-policies list --organization="$1" ||   # repeat with --folder=REPLACE_WITH_FOLDER_ID for each relevant folder
-    { echo "gcloud exit $?: the hierarchical firewall policy listing failed; inconclusive"; set -- "$1" 3; }
+  if [ "$1" = none ]; then
+    echo "unclassified observation: none was given for the organization ID, so hierarchical firewall policies were not listed"
+  else
+    gcloud compute firewall-policies list --organization="$1" ||   # repeat with --folder=REPLACE_WITH_FOLDER_ID for each relevant folder
+      { echo "gcloud exit $?: the hierarchical firewall policy listing failed; inconclusive"; set -- "$1" 3; }
+  fi
   gcloud compute network-firewall-policies list ||               # no scope flag lists global and regional policies in this project
     { echo "gcloud exit $?: the network firewall policy listing failed; inconclusive"; set -- "$1" 3; }
   # inspect each hierarchical policy with `gcloud compute firewall-policies describe POLICY_ID --format=json`.
@@ -140,7 +144,7 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
 )
 ```
 
-- REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. The bash -n, ShellCheck and stub runs recorded here covered the port-probe block in an earlier form, whose guard refusals left the subshell with status 0. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs, in which each guard refusal exited 2 without reaching nc, a substituted address reached five nc stubs, an accepted connection exited 1 and an nc failure with no output exited 3. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
+- REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. The bash -n, ShellCheck and stub runs recorded here covered the port-probe block in an earlier form, whose guard refusals left the subshell with status 0. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs, in which each guard refusal exited 2 without reaching nc, a substituted address reached five nc stubs, an accepted connection exited 1, and an nc failure with no output or with usage text exited 3. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
 
   REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
@@ -161,7 +165,10 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
         0:*) echo "FINDING: port $4 accepted a connection from here"; set -- "$2" 1 "${@:5}" ;;
         *:) echo "nc exit ${1##*$'\n'} with no output for port $4: nothing reached the network; inconclusive"
             case "$3" in 1) set -- "$2" 1 "${@:5}" ;; *) set -- "$2" 3 "${@:5}" ;; esac ;;
-        *) set -- "$2" "$3" "${@:5}" ;;     # refused, timed out or a usage error: read the line yourself
+        *[Uu]sage:*|*"invalid option"*|*"unrecognized option"*|*"illegal option"*)
+            echo "nc exit ${1##*$'\n'} with a usage error for port $4: nothing reached the network; inconclusive"
+            case "$3" in 1) set -- "$2" 1 "${@:5}" ;; *) set -- "$2" 3 "${@:5}" ;; esac ;;
+        *) set -- "$2" "$3" "${@:5}" ;;     # refused, timed out or another error: read the line yourself
       esac
     done
     echo "block exit $2; a failed nc line passes only if it reports a refused or timed-out connection, and a usage error is inconclusive, so read each one yourself"
@@ -242,7 +249,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "ea26ac0ea21b7255310752e56de1649b31befe8e154cc86cda6412aa9fc9de82",
+  "body_sha256": "a3fb65779a75d02a5a0af8bc077cce1cc0bf9d5dce42fc92e7530518eba7e395",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",

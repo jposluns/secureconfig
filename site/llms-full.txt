@@ -16672,8 +16672,10 @@ REASONED: identity, filesystem, runtime security context and segmentation checks
 # 1.36.1-glibc, which agrees with the mapping above but does not prove that build made the image.
 # This guide's advice: neither reading shows run-time behaviour, and tags move, so confirm that the image you pull
 # accepts `nc -z -w 3` and makes a TCP connect before relying on the probe.
-# This block exits 1 if probe-forbidden connects, 3 if the ClusterIP cannot be read or the probe-permitted
-# positive control fails, and otherwise 0, leaving probe-forbidden's kubectl output for you to read.
+# This block exits 1 if probe-forbidden connects, 2 if the db Service has no ClusterIP to probe (an empty or
+# None ClusterIP, or one containing characters other than hexadecimal digits, dots and colons), 3 if the
+# ClusterIP cannot be read or the probe-permitted positive control fails, and otherwise 0, leaving
+# probe-forbidden's kubectl output for you to read.
 (                                                    # the whole block in one subshell, so one exit status covers every part of it
   set -- "$(if kubectl get svc db -o jsonpath='{.spec.clusterIP}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "${1##*$'\n'}" "${1%$'\n'*}"                # kubectl's exit status, then the ClusterIP
@@ -16814,7 +16816,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "6fe577e88298df694363099418b9807a3c67547d156c729eeed3e319ff96175f",
+  "body_sha256": "1aebec7da57b179cd121a6e4a50acab780d17b39af6f7438353687adf082b3c0",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -21055,7 +21057,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages. No authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics, in an earlier form; for the port-probe block, that form's guard refusals left the subshell with status 0. The rule inventory is now one fence per cloud, and the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of those fences and of the port-probe block, as do stub runs with no network reached. The Google Cloud and Azure fences exit 2 when their guard refuses an unsubstituted value, and each inventory fence exits 3 if a listing command fails and otherwise 0, because you judge every rule it lists. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion inbound SSH rule on the target VM subnet where an NSG is applied, is expected; Microsoft recommends scoping the Bastion source to `AzureBastionSubnet`), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
+REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages. No authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics, in an earlier form; for the port-probe block, that form's guard refusals left the subshell with status 0. The rule inventory is now one fence per cloud, and the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of those fences and of the port-probe block, as do stub runs with no network reached. The Google Cloud and Azure fences exit 2 when their guard refuses an unsubstituted value, and each inventory fence exits 3 if a listing command fails and otherwise 0, because you judge every rule it lists. For a project with no organization, the Google Cloud fence takes `none` in place of the organization ID: it then lists the VPC firewall rules and network firewall policies, skips the hierarchical policy listing and prints an unclassified line saying that hierarchical policies were not listed. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion inbound SSH rule on the target VM subnet where an NSG is applied, is expected; Microsoft recommends scoping the Bastion source to `AzureBastionSubnet`), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
 
 REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation, Google firewall policy and evaluation-order references, and the Azure security-admin rule and applied-rules pages; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
@@ -21084,14 +21086,14 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
 # Google Cloud, once per project. Whole records, because a table projection drops the enforcement
 # state: an enforced world-open rule and the same rule with "disabled": true project identically.
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORG_ID'   # your organization ID, which this block needs, so without one it cannot report 0: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORG_ID'   # your organization ID, or none for a project with no organization, which skips the hierarchical policy listing: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not listing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not listing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*[[:space:][:cntrl:]]*) echo "substitute your organization ID inside the quotes on the set -- line above; not listing"; exit 2 ;;
   esac
-  set -- "$1" 0                         # your organization ID, then the block's status so far: 3 (a listing failed, inconclusive) outranks 0
+  set -- "$1" 0                         # your organization ID or none, then the block's status so far: 3 (a listing failed, inconclusive) outranks 0
   gcloud compute firewall-rules list --format=json ||
     { echo "gcloud exit $?: the VPC firewall rule listing failed; inconclusive"; set -- "$1" 3; }
   # for each entry with "direction": "INGRESS", "disabled": false and an "allowed" list, work out what
@@ -21099,8 +21101,12 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
   # ::/0 are the obvious cases, and so is any set of ranges that together cover the internet. An entry
   # with "denied" restricts rather than exposes.
   # firewall-rules list displays Compute Engine firewall rules in this project; also enumerate the policy resources:
-  gcloud compute firewall-policies list --organization="$1" ||   # repeat with --folder=REPLACE_WITH_FOLDER_ID for each relevant folder
-    { echo "gcloud exit $?: the hierarchical firewall policy listing failed; inconclusive"; set -- "$1" 3; }
+  if [ "$1" = none ]; then
+    echo "unclassified observation: none was given for the organization ID, so hierarchical firewall policies were not listed"
+  else
+    gcloud compute firewall-policies list --organization="$1" ||   # repeat with --folder=REPLACE_WITH_FOLDER_ID for each relevant folder
+      { echo "gcloud exit $?: the hierarchical firewall policy listing failed; inconclusive"; set -- "$1" 3; }
+  fi
   gcloud compute network-firewall-policies list ||               # no scope flag lists global and regional policies in this project
     { echo "gcloud exit $?: the network firewall policy listing failed; inconclusive"; set -- "$1" 3; }
   # inspect each hierarchical policy with `gcloud compute firewall-policies describe POLICY_ID --format=json`.
@@ -21161,7 +21167,7 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
 )
 ```
 
-- REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. The bash -n, ShellCheck and stub runs recorded here covered the port-probe block in an earlier form, whose guard refusals left the subshell with status 0. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs, in which each guard refusal exited 2 without reaching nc, a substituted address reached five nc stubs, an accepted connection exited 1 and an nc failure with no output exited 3. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
+- REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. The bash -n, ShellCheck and stub runs recorded here covered the port-probe block in an earlier form, whose guard refusals left the subshell with status 0. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs, in which each guard refusal exited 2 without reaching nc, a substituted address reached five nc stubs, an accepted connection exited 1, and an nc failure with no output or with usage text exited 3. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
 
   REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
@@ -21182,7 +21188,10 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
         0:*) echo "FINDING: port $4 accepted a connection from here"; set -- "$2" 1 "${@:5}" ;;
         *:) echo "nc exit ${1##*$'\n'} with no output for port $4: nothing reached the network; inconclusive"
             case "$3" in 1) set -- "$2" 1 "${@:5}" ;; *) set -- "$2" 3 "${@:5}" ;; esac ;;
-        *) set -- "$2" "$3" "${@:5}" ;;     # refused, timed out or a usage error: read the line yourself
+        *[Uu]sage:*|*"invalid option"*|*"unrecognized option"*|*"illegal option"*)
+            echo "nc exit ${1##*$'\n'} with a usage error for port $4: nothing reached the network; inconclusive"
+            case "$3" in 1) set -- "$2" 1 "${@:5}" ;; *) set -- "$2" 3 "${@:5}" ;; esac ;;
+        *) set -- "$2" "$3" "${@:5}" ;;     # refused, timed out or another error: read the line yourself
       esac
     done
     echo "block exit $2; a failed nc line passes only if it reports a refused or timed-out connection, and a usage error is inconclusive, so read each one yourself"
@@ -21263,7 +21272,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "ea26ac0ea21b7255310752e56de1649b31befe8e154cc86cda6412aa9fc9de82",
+  "body_sha256": "a3fb65779a75d02a5a0af8bc077cce1cc0bf9d5dce42fc92e7530518eba7e395",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
@@ -51586,10 +51595,11 @@ authority and contain it at the infrastructure layer, not with login alone:
 
 ## Verify
 
-REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; no live builder has answered it. The checks are now four fences, each ending with its own exit status: the host inventory, the outside TCP check of port 5003 with its port 443 positive control, the builder transport note and the Dify key pair. The gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2.
+REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; no live builder has answered it. The checks are now four fences, each ending with its own exit status: the host inventory (which refuses with status 2 when `ss` is not installed), the outside TCP check of port 5003 with a positive control on a port you name, the builder transport note and the Dify key pair. The gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2.
 
 ```bash
 (                                               # the whole block in one subshell, so one exit status covers every part of it
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   set -- 0                                      # the block's status so far: 3 (a command failed, inconclusive) outranks 0
   ss -tlnp ||                                   # read the whole list: app ports on 127.0.0.1; 80/443
                                                 # public only where Dify's own nginx is the TLS edge.
@@ -51615,38 +51625,42 @@ REASONED: following block; listener inventory, Dify publication and TCP reachabi
 # namespace, and has none; Docker is unavailable. Default enabled/published: expect connection success;
 # section 1 override and recreation: refusal/timeout with the positive control succeeding.
 # See the pinned Compose publication and daemon startup sources.
-# Run this block from an outside network. It exits 1 if port 5003 accepts a connection, 3 if the port 443
-# positive control fails or nc fails on 5003 with no output, and otherwise 0, leaving nc's 5003 line to you.
+# Run this block from an outside network. Give it your address and a port you know is open there, such as 443
+# where your TLS edge is this address. It exits 1 if port 5003 accepts a connection, 3 if that positive control
+# fails or nc fails on 5003 with no output, and otherwise 0, leaving nc's 5003 line to you.
 (                                               # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP' 'REPLACE_WITH_AN_OPEN_PORT'   # your address, then a port you know is open on it: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" "$(if nc -vz -w 3 "$1" 5003 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # from an outside network, and the authority here:
+  case "$2" in
+    ""|*[!0123456789]*) echo "substitute a port you know is open on your address, in digits, as the second value on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$(if nc -vz -w 3 "$1" 5003 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # from an outside network, and the authority here:
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
-  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"      # your address, nc's exit status, then what it printed
-  printf '%s' "$3"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}" # your address, the control port, nc's exit status, then what it printed
+  printf '%s' "$4"
   # a refusal or timeout from YOUR address is the pass ONLY if your packets reach the host at all: as a
-  # positive control, this block runs nc -vz -w 3 against the same address on a port you know is open
-  # (your TLS edge, 443), which must succeed; if the control also times out the path is filtered and the 5003 result is
+  # positive control, this block runs nc -vz -w 3 against the same address on the port you named as open
+  # (443 only where your TLS edge is this address), which must succeed. If the control also times out the path is filtered and the 5003 result is
   # inconclusive (the port could still be open from another network). A local error, an unsupported
   # option (BusyBox netcat rejects -v), or exit 1 with no output is inconclusive: nothing reached the network
-  set -- "$1" "$2" "$3" "$(if nc -vz -w 3 "$1" 443 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # then the positive control's exit status and what it printed
-  printf '%s' "$5"
-  case "$2:$4" in
+  set -- "$1" "$2" "$3" "$4" "$(if nc -vz -w 3 "$1" "$2" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # then the positive control's exit status and what it printed
+  printf '%s' "$6"
+  case "$3:$5" in
     0:*) echo "FINDING: port 5003 accepted a TCP connection from here, which proves exposure; block exit 1"; exit 1 ;;
     *:0) ;;
-    *) echo "nc exit $4 on the port 443 positive control, so the path may be filtered and the 5003 result is inconclusive; block exit 3"; exit 3 ;;
+    *) echo "nc exit $5 on the port $2 positive control, so the path may be filtered and the 5003 result is inconclusive; block exit 3"; exit 3 ;;
   esac
-  if [ -n "$3" ]; then
+  if [ -n "$4" ]; then
     echo "block exit 0; the 5003 line above passes only if it reports a refusal or timeout reaching your address, so read it yourself"
     exit 0
   fi
-  echo "nc exit $2 with no output for 5003: nothing reached the network; inconclusive; block exit 3"
+  echo "nc exit $3 with no output for 5003: nothing reached the network; inconclusive; block exit 3"
   exit 3
 )
 ```
@@ -51972,7 +51986,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "0bd05c61d0f9a6ea3f0d8fdedbe271b42ae4cb1e809162064c8e1e16d68cd387",
+  "body_sha256": "56ba6f046e81e45af7d708dfeff1103d93155a6eab9855ee7834f9e31d6dea6a",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
@@ -54167,17 +54181,18 @@ The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbid
 
 REASONED: the proxy check is not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](https://github.com/jposluns/secureconfig/blob/main/fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. The header request in the last fence below takes your configured host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; no proxy has answered it, and its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs in which each guard refusal exited 2. The header request checks the TLS connection and authentication response, and a browser check confirms the login gates the UI, so that fence exits 3 when curl fails and otherwise 0, leaving the response and the browser check to you.
 
-REASONED: the Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code. The expectation drawn from the same v2.5.5 sources is that a Fooocus process started on the host as above should show `127.0.0.1:7865` in `ss`, and that the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](https://github.com/jposluns/secureconfig/blob/main/docker.md#4-verify)). A container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and a container published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the port-loop block's `set --` line. The port-loop block probes every port even when an earlier probe fails, and exits 1 if any port answers with an HTTP code, otherwise 3 if any curl fails other than by failing to connect (exit 7) or timing out (exit 28), and otherwise 0, so read each `port=` line: a refusal or timeout passes only when its `err` text shows that it reached your address. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
+REASONED: the listener inventory in the following fence, which refuses with status 2 when `ss` is not installed, and the Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code. The expectation drawn from the same v2.5.5 sources is that a Fooocus process started on the host as above should show `127.0.0.1:7865` in `ss`, and that the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](https://github.com/jposluns/secureconfig/blob/main/docker.md#4-verify)). A container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and a container published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the port-loop block's `set --` line. The port-loop block probes every port even when an earlier probe fails, and exits 1 if any port answers with an HTTP code, otherwise 3 if any curl fails other than by failing to connect (exit 7) or timing out (exit 28), and otherwise 0, so read each `port=` line: a refusal or timeout passes only when its `err` text shows that it reached your address. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
 ```bash
 # ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090; Fooocus 7865. The authoring host forbids listeners without an isolated network namespace, and has none; expected outcomes and sources above.
-# Run this block on the host itself. It exits 3 if ss fails and otherwise 0, because you judge every listener it prints.
+# Run this block on the host itself. It exits 2 if ss is not installed, 3 if ss fails and otherwise 0, because you judge every listener it prints.
 (                                                   # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   if ss -tlnp; then  # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
     echo "block exit 0; unclassified observation: read every listener above, where 8188, 7860, 9090 and 7865 each pass only on 127.0.0.1"
     exit 0
   else
-    echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"
+    echo "ss -tlnp exit $?: the listener inventory failed; inconclusive; block exit 3"
     exit 3
   fi
 )
@@ -54404,7 +54419,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "62214306d8240db304d59cbb1a646bb187832ad39f50534f2f99f3ec48de73fa",
+  "body_sha256": "8b04791ee760556b9ce08ae5df5766d859cad125f19f8096963a8202cc5a44ef",
   "components": {
     "comfy": {
       "name": "ComfyUI",

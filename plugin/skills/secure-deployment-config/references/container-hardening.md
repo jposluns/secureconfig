@@ -233,8 +233,10 @@ REASONED: identity, filesystem, runtime security context and segmentation checks
 # 1.36.1-glibc, which agrees with the mapping above but does not prove that build made the image.
 # This guide's advice: neither reading shows run-time behaviour, and tags move, so confirm that the image you pull
 # accepts `nc -z -w 3` and makes a TCP connect before relying on the probe.
-# This block exits 1 if probe-forbidden connects, 3 if the ClusterIP cannot be read or the probe-permitted
-# positive control fails, and otherwise 0, leaving probe-forbidden's kubectl output for you to read.
+# This block exits 1 if probe-forbidden connects, 2 if the db Service has no ClusterIP to probe (an empty or
+# None ClusterIP, or one containing characters other than hexadecimal digits, dots and colons), 3 if the
+# ClusterIP cannot be read or the probe-permitted positive control fails, and otherwise 0, leaving
+# probe-forbidden's kubectl output for you to read.
 (                                                    # the whole block in one subshell, so one exit status covers every part of it
   set -- "$(if kubectl get svc db -o jsonpath='{.spec.clusterIP}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "${1##*$'\n'}" "${1%$'\n'*}"                # kubectl's exit status, then the ClusterIP
@@ -375,7 +377,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "6fe577e88298df694363099418b9807a3c67547d156c729eeed3e319ff96175f",
+  "body_sha256": "1aebec7da57b179cd121a6e4a50acab780d17b39af6f7438353687adf082b3c0",
   "components": {
     "docker": {
       "name": "Docker documentation",

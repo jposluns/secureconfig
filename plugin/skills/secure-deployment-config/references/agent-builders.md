@@ -138,10 +138,11 @@ authority and contain it at the infrastructure layer, not with login alone:
 
 ## Verify
 
-REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; no live builder has answered it. The checks are now four fences, each ending with its own exit status: the host inventory, the outside TCP check of port 5003 with its port 443 positive control, the builder transport note and the Dify key pair. The gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2.
+REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; no live builder has answered it. The checks are now four fences, each ending with its own exit status: the host inventory (which refuses with status 2 when `ss` is not installed), the outside TCP check of port 5003 with a positive control on a port you name, the builder transport note and the Dify key pair. The gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2.
 
 ```bash
 (                                               # the whole block in one subshell, so one exit status covers every part of it
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   set -- 0                                      # the block's status so far: 3 (a command failed, inconclusive) outranks 0
   ss -tlnp ||                                   # read the whole list: app ports on 127.0.0.1; 80/443
                                                 # public only where Dify's own nginx is the TLS edge.
@@ -167,38 +168,42 @@ REASONED: following block; listener inventory, Dify publication and TCP reachabi
 # namespace, and has none; Docker is unavailable. Default enabled/published: expect connection success;
 # section 1 override and recreation: refusal/timeout with the positive control succeeding.
 # See the pinned Compose publication and daemon startup sources.
-# Run this block from an outside network. It exits 1 if port 5003 accepts a connection, 3 if the port 443
-# positive control fails or nc fails on 5003 with no output, and otherwise 0, leaving nc's 5003 line to you.
+# Run this block from an outside network. Give it your address and a port you know is open there, such as 443
+# where your TLS edge is this address. It exits 1 if port 5003 accepts a connection, 3 if that positive control
+# fails or nc fails on 5003 with no output, and otherwise 0, leaving nc's 5003 line to you.
 (                                               # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP' 'REPLACE_WITH_AN_OPEN_PORT'   # your address, then a port you know is open on it: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" "$(if nc -vz -w 3 "$1" 5003 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # from an outside network, and the authority here:
+  case "$2" in
+    ""|*[!0123456789]*) echo "substitute a port you know is open on your address, in digits, as the second value on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$(if nc -vz -w 3 "$1" 5003 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # from an outside network, and the authority here:
                                                 # EXPOSE_PLUGIN_DEBUGGING_PORT can move it, so the ps output above is the authority on which port to probe
-  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"      # your address, nc's exit status, then what it printed
-  printf '%s' "$3"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}" # your address, the control port, nc's exit status, then what it printed
+  printf '%s' "$4"
   # a refusal or timeout from YOUR address is the pass ONLY if your packets reach the host at all: as a
-  # positive control, this block runs nc -vz -w 3 against the same address on a port you know is open
-  # (your TLS edge, 443), which must succeed; if the control also times out the path is filtered and the 5003 result is
+  # positive control, this block runs nc -vz -w 3 against the same address on the port you named as open
+  # (443 only where your TLS edge is this address), which must succeed. If the control also times out the path is filtered and the 5003 result is
   # inconclusive (the port could still be open from another network). A local error, an unsupported
   # option (BusyBox netcat rejects -v), or exit 1 with no output is inconclusive: nothing reached the network
-  set -- "$1" "$2" "$3" "$(if nc -vz -w 3 "$1" 443 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # then the positive control's exit status and what it printed
-  printf '%s' "$5"
-  case "$2:$4" in
+  set -- "$1" "$2" "$3" "$4" "$(if nc -vz -w 3 "$1" "$2" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # then the positive control's exit status and what it printed
+  printf '%s' "$6"
+  case "$3:$5" in
     0:*) echo "FINDING: port 5003 accepted a TCP connection from here, which proves exposure; block exit 1"; exit 1 ;;
     *:0) ;;
-    *) echo "nc exit $4 on the port 443 positive control, so the path may be filtered and the 5003 result is inconclusive; block exit 3"; exit 3 ;;
+    *) echo "nc exit $5 on the port $2 positive control, so the path may be filtered and the 5003 result is inconclusive; block exit 3"; exit 3 ;;
   esac
-  if [ -n "$3" ]; then
+  if [ -n "$4" ]; then
     echo "block exit 0; the 5003 line above passes only if it reports a refusal or timeout reaching your address, so read it yourself"
     exit 0
   fi
-  echo "nc exit $2 with no output for 5003: nothing reached the network; inconclusive; block exit 3"
+  echo "nc exit $3 with no output for 5003: nothing reached the network; inconclusive; block exit 3"
   exit 3
 )
 ```
@@ -524,7 +529,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "0bd05c61d0f9a6ea3f0d8fdedbe271b42ae4cb1e809162064c8e1e16d68cd387",
+  "body_sha256": "56ba6f046e81e45af7d708dfeff1103d93155a6eab9855ee7834f9e31d6dea6a",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
