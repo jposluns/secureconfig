@@ -349,7 +349,7 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Apache httpd 2.4.69 htpasswd usage (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
 - OWASP Password Storage Cheat Sheet at 72865b1e3b5754246a101778dc00b37f9c233373, legacy bcrypt work factor (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
 - Cloudflare Access MFA documentation at c896795b8e8bab68d05ae78d64c9cbcda1fdb104, application or policy MFA (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
-- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 
 
 <!-- version-basis:start -->
@@ -415,7 +415,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "59f64ab69f97732d56e62971fef37a4ba8c705eff73eb9974d4e6d3192382b22",
+  "body_sha256": "224b79522f518fee6c708430d9798762b450e1bbba5db71dd142ae23ec644e57",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",
