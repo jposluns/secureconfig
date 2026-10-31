@@ -122,7 +122,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
+   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0, and the fixture runs were not repeated. On the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
 
    ```bash
    (
@@ -169,7 +169,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
      case "$1:$2" in
        0:) echo "pass: application_type has the value the expression checks; block exit 0"; exit 0 ;;
        1:) echo "FINDING: application_type is absent, which the server defaults to web, or is not the value the expression checks; block exit 1"; exit 1 ;;
-       *) echo "python3 exit $1: the body was not read as a JSON object (read any error above); block exit 3, inconclusive"; exit 3 ;;
+       *) echo "python3 exit $1: python3 failed or the body was not read as a JSON object (read any error above); block exit 3, inconclusive"; exit 3 ;;
      esac
    )
    ```
@@ -259,7 +259,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "02b8acd74206067f2099ec98bb9130fc803374b02c5691f97ea048007a0bdb65",
+  "body_sha256": "67e8c37bc54a00b0784ca93ffc7452b7e4030e622d441ecc18798412446a6c02",
   "components": {
     "mcp": {
       "name": "MCP",
