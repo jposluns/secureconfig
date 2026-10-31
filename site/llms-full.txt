@@ -28903,15 +28903,15 @@ For either UI, loopback binding suits a proxy in the same network namespace. For
 
 REASONED: verification scope from the recorded authoring limitations; no target cluster, container runtime, node access or audit collector is available. All deployment checks below are **REASONED, not demonstrated**: the authoring environment has no target cluster or Docker/Podman runtime, and no access to the target node or audit collector; the authoring host forbids opening listeners without an isolated network namespace, and has none. Expected outcomes follow the cited vendor behavior; no deployment result is claimed.
 
-DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. In a further run on 2026-10-13 (UTC), after the cluster, REST and UI guards' `example.com` test was made case-insensitive, each of the three refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to its first curl call unchanged. Before the change, the three forms that are not all lowercase reached curl in all three guards. The three guards were later extended to refuse `example.net` and `example.org` in any letter case. In a further run on 2026-10-13 (UTC), with Bash 5.3.9, each block was saved to a file and run with its commands unchanged except fixture values, and curl, python3 and date were stubbed. In that further run, each of the three guards refused `example.net`, `EXAMPLE.NET`, `es.Example.Net`, `example.org`, `EXAMPLE.ORG`, `es.Example.Org`, `example.com`, `EXAMPLE.COM`, `Example.Com`, `es.EXAMPLE.com` and `example.network.test` with exit 1 before any curl call. Each of the three guards passed `Dummy.Valid.test` to curl unchanged in that run, exiting 0 after 11, 1 and 2 curl calls in the cluster, REST and UI blocks. Before the extension, the `.net` and `.org` hosts and `example.network.test` reached curl while the `.com` forms were refused. The test is a substring match, so it also refuses longer names that contain `example.net` or `example.org`, such as `example.network.test`. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results. The guard and stub runs recorded here, and the bash -n runs of the seven guarded shell blocks, covered an earlier form of those blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2.
+DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. In a further run on 2026-10-13 (UTC), after the cluster, REST and UI guards' `example.com` test was made case-insensitive, each of the three refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to its first curl call unchanged. Before the change, the three forms that are not all lowercase reached curl in all three guards. The three guards were later extended to refuse `example.net` and `example.org` in any letter case. In a further run on 2026-10-13 (UTC), with Bash 5.3.9, each block was saved to a file and run with its commands unchanged except fixture values, and curl, python3 and date were stubbed. In that further run, each of the three guards refused `example.net`, `EXAMPLE.NET`, `es.Example.Net`, `example.org`, `EXAMPLE.ORG`, `es.Example.Org`, `example.com`, `EXAMPLE.COM`, `Example.Com`, `es.EXAMPLE.com` and `example.network.test` with exit 1 before any curl call. Each of the three guards passed `Dummy.Valid.test` to curl unchanged in that run, exiting 0 after 11, 1 and 2 curl calls in the cluster, REST and UI blocks. Before the extension, the `.net` and `.org` hosts and `example.network.test` reached curl while the `.com` forms were refused. The test is a substring match, so it also refuses longer names that contain `example.net` or `example.org`, such as `example.network.test`. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results. The guard and stub runs recorded here, and the bash -n runs of the seven guarded shell blocks, covered an earlier form of those blocks, whose refusals exited with status 1 and whose cluster block is now split into the first five blocks below. The current forms, whose refusals exit with status 2 and whose results set the exit status, are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, not by the runs recorded here.
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
-- REASONED: substitution and paste procedure for the guarded block; re-run at marking time, the unsubstituted guard refused with exit 1 and substituted values reached the first curl call against a local argument recorder; deployed hostname and certificate coverage is not established here; no deployed cluster or its CA certificate is available in the authoring environment. That marking-time re-run covered an earlier form of the block, whose refusals exited with status 1; the current form, whose refusals exit with status 2, was not re-run. Substitute your actual hostname, HTTP port, and CA path inside the single quotes on the `set --` line. Paste the whole block. Use a TLS hostname covered by the deployed certificate.
+- REASONED: substitution and paste procedure for the five guarded cluster blocks; re-run at marking time, the unsubstituted guard refused with exit 1 and substituted values reached the first curl call against a local argument recorder; deployed hostname and certificate coverage is not established here; no deployed cluster or its CA certificate is available in the authoring environment. That marking-time re-run covered an earlier form, a single cluster block whose refusals exited with status 1; the five current blocks, whose refusals exit with status 2, are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes, not by that re-run. Substitute your actual hostname, HTTP port, CA path and each block's other values inside the single quotes on its `set --` line. Paste each whole block. Use a TLS hostname covered by the deployed certificate.
 - REASONED: CA selection from the cited product TLS references; no deployed cluster CA or administrator identity is available. Elasticsearch automatic setup supplies `http_ca.crt`. For OpenSearch, use the **deployed production HTTP CA**, such as `/path/production-ca.pem`, and your production administrator's header file. Do not verify production against the demo CA.
 - REASONED: fixture control from the cited privilege and document APIs; no seeded target cluster is available. Have an administrator confirm that `app-data` and `other-data` each contain a readable document with ID `rbac-probe`. A missing document is not an RBAC-denial result.
-- REASONED: header-file preparation only; re-run at marking time, a disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; no target cluster is available to confirm that the user does not exist. Prepare `/path/audit-probe.header` with a Basic authentication header for a confirmed nonexistent user named `audit_probe` and a deliberately wrong password. Keep all credentials in header files.
-- REASONED: identity comparisons from the cited role and API-key references; no target users or keys are available. Run the RBAC requests once with `/path/app-user.header`, then again with `/path/app-key.header`. On OpenSearch before 3.7, only the internal-user check applies.
+- REASONED: header-file preparation only; re-run at marking time, a disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; no target cluster is available to confirm that the user does not exist. Prepare a header file, such as `/path/audit-probe.header`, with a Basic authentication header for a confirmed nonexistent user named `audit_probe` and a deliberately wrong password, and set its path on the audit block's `set --` line. Keep all credentials in header files.
+- REASONED: identity comparisons from the cited role and API-key references; no target users or keys are available. Run the RBAC block once with `/path/app-user.header` on its `set --` line, then again with `/path/app-key.header`. On OpenSearch before 3.7, only the internal-user check applies.
 
 REASONED: comparison criteria from the cited authorization, CORS and audit references; no target cluster or runtime is available. The expected distinctions are:
 
@@ -28922,15 +28922,16 @@ REASONED: comparison criteria from the cited authorization, CORS and audit refer
 | REASONED: origin comparison from the cited CORS settings; no target cluster or browser-origin fixture is available. CORS | An overly broad policy grants the untrusted origin. | No `Access-Control-Allow-Origin` grant for the untrusted origin. If CORS is enabled, the trusted-origin positive control succeeds and grants exactly that origin. If CORS is disabled, neither origin is granted. Judge the headers, not just the status. See [Elasticsearch CORS](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings) and [OpenSearch CORS](https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/network-settings/). |
 | REASONED: event comparison from the cited audit references; no cluster, collector or eligible Elasticsearch audit licence is available. Audit | Failed authentication returns `401`, but disabled or suppressed auditing produces no corresponding audit event. | The same failure produces a new Elasticsearch `authentication_failed` or OpenSearch `FAILED_LOGIN` event. A `401` alone does not prove auditing. Elasticsearch requires the paid audit tier. See [Elasticsearch audit events](https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events) and [OpenSearch audit fields](https://docs.opensearch.org/latest/security/audit-logs/field-reference/). |
 
-REASONED: following block; cluster authorization, TLS, CORS and audit expectations follow the cited vendor documentation; no target cluster, runtime, node or audit collector was available.
+REASONED: following block; HTTP TLS expectations follow the cited vendor documentation; no target cluster, runtime or node was available. Set the host, CA file, HTTP port and your administrator's header file on its `set --` line.
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' '/path/http_ca.crt' '9200'
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' '/path/http_ca.crt' '9200' 'REPLACE_WITH_ADMIN_HEADER_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "set exactly host, CA file, and HTTP port; not probing"; exit 2; }
-  case "$1|$2|$3" in
+  [ "$#" -eq 4 ] || { echo "set exactly host, CA file, HTTP port, and admin header file; not probing"; exit 2; }
+  case "$1|$2|$3|$4" in
     *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Nn][Ee][Tt]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Oo][Rr][Gg]*) echo "substitute your deployment; not probing"; exit 2 ;;
   esac
   [ -n "$1" ] || { echo "host required; not probing"; exit 2; }
@@ -28938,38 +28939,144 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 2; }
   [ -n "$3" ] || { echo "port required; not probing"; exit 2; }
   case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 2 ;; esac
-  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || { echo "HTTP port must be 1 to 65535; not probing"; exit 2; }
-
-  # Reasoned: no target cluster or container runtime. Anonymous root probe.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    --cacert "$2" "https://$1:$3/"
+  if [ "$3" -ge 1 ] && [ "$3" -le 65535 ]; then :; else echo "HTTP port must be 1 to 65535; not probing"; exit 2; fi
+  [ -r "$4" ] || { echo "readable admin header file required; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
 
   # Reasoned: no target cluster or container runtime. Administrative HTTPS control.
   # Elasticsearch: its HTTP CA (http_ca.crt from automatic setup).
   # OpenSearch: its deployed production HTTP CA and a production admin identity.
-  curl -q -g -sS --fail-with-body --noproxy '*' --connect-timeout 5 --max-time 10 \
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if curl -q -g -sS --fail-with-body --noproxy '*' --connect-timeout 5 --max-time 10 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    --cacert "$2" --header @/path/admin.header "https://$1:$3/" || exit 1
+    --cacert "$2" --header "@$4" "https://$1:$3/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$7"
+  case "$6:${7##*http=}" in
+    "0:200 "*) ;;
+    *) echo "the administrative HTTPS control did not return 200 (curl exit $6); inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
 
   # Reasoned: no target cluster or container runtime. Plaintext TLS probe.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+  if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
     -w '\nhttp=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
-    "http://$1:$3/"
+    "http://$1:$3/"; then
+    set -- "$1" "$2" "$3" "$4" "$5" 0
+  else
+    set -- "$1" "$2" "$3" "$4" "$5" "$?"
+  fi
+  case "$5:$6" in
+    3:*) echo "the plaintext probe is not interpreted, because the administrative control did not return 200" ;;
+    0:0) echo "FINDING: the endpoint answered over plaintext HTTP with the http= status above"; set -- "$1" "$2" "$3" "$4" 1 ;;
+    0:52|0:56) echo "no HTTP response over plaintext (curl exit $6, an empty reply or a reset after connection)" ;;
+    *) echo "curl exit $6 on the plaintext probe: a DNS failure, timeout or unreachable service is inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
+  echo "block exit $5; the cluster JSON from the administrative control is not classified, so judge it yourself"
+  exit "$5"
+)
+```
+
+REASONED: preceding block; TLS comparisons follow the cited Elasticsearch and OpenSearch HTTP TLS references. No target cluster or effective node configuration is available. Local shell checks are recorded above. The administrative HTTPS control must return `200` and cluster JSON before interpreting the plaintext probe. With HTTP TLS enforced, plaintext must receive no HTTP response. Elasticsearch closes a plaintext connection to its HTTPS listener; OpenSearch's enabled REST TLS allows only HTTPS. Expect `http=000` with a reset or empty reply after connection. DNS failures, timeouts, or an unreachable service are inconclusive. Any actual HTTP status, including `401`, means that endpoint answered over plaintext and is a finding. The block exits 3 when the administrative control does not return `200`. Otherwise it exits 1 when the plaintext probe receives any HTTP status, 0 when it ends in an empty reply or a reset after connection, and 3 for any other curl error. The cluster JSON stays for you to judge. See [Elasticsearch HTTP TLS settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings) and [OpenSearch REST TLS](https://docs.opensearch.org/latest/security/configuration/tls/).
+
+REASONED: following block; the RBAC comparison follows the cited Elasticsearch privileges and OpenSearch permissions references; no target cluster or scoped identities were available. Run it once with the application user's header file on its `set --` line and again with the API key's. It exits 1 when the identity reads `other-data` with `200`. Otherwise it exits 3 when the identity does not read `app-data` with `200` or `other-data` answers anything but `403`, and 0 for `200` then `403`. The response bodies stay for you to judge.
+
+```bash
+(
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' '/path/http_ca.crt' '9200' 'REPLACE_WITH_APP_HEADER_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 4 ] || { echo "set exactly host, CA file, HTTP port, and application header file; not probing"; exit 2; }
+  case "$1|$2|$3|$4" in
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Nn][Ee][Tt]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Oo][Rr][Gg]*) echo "substitute your deployment; not probing"; exit 2 ;;
+  esac
+  [ -n "$1" ] || { echo "host required; not probing"; exit 2; }
+  case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 2; }
+  [ -n "$3" ] || { echo "port required; not probing"; exit 2; }
+  case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 2 ;; esac
+  if [ "$3" -ge 1 ] && [ "$3" -le 65535 ]; then :; else echo "HTTP port must be 1 to 65535; not probing"; exit 2; fi
+  [ -r "$4" ] || { echo "readable application header file required; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
 
   # Reasoned: no target cluster or container runtime.
-  # Test app-user.header, then repeat these two requests with app-key.header.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+  # Run this block with app-user.header, then again with app-key.header.
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    --cacert "$2" --header @/path/app-user.header "https://$1:$3/app-data/_doc/rbac-probe"
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+    --cacert "$2" --header "@$4" "https://$1:$3/app-data/_doc/rbac-probe"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$7"
+  case "$6:${7##*http=}" in
+    "0:200 "*) ;;
+    *) echo "the identity did not read app-data with 200 (curl exit $6), so the other-data result cannot show scoped access; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    --cacert "$2" --header @/path/app-user.header "https://$1:$3/other-data/_doc/rbac-probe"
+    --cacert "$2" --header "@$4" "https://$1:$3/other-data/_doc/rbac-probe"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$7"
+  case "$6:${7##*http=}" in
+    "0:200 "*) echo "FINDING: the identity read other-data, so it is broader than app-data"; set -- "$1" "$2" "$3" "$4" 1 ;;
+    "0:403 "*) ;;
+    *) echo "other-data answered neither 200 nor 403 (curl exit $6); a 401, 404 or connection error does not demonstrate RBAC; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
+  echo "block exit $5; the response bodies are not classified, so judge them yourself"
+  exit "$5"
+)
+```
+
+REASONED: following block; the anonymous-access comparison follows the cited Elasticsearch anonymous access and security settings references and OpenSearch anonymous authentication; no target cluster or effective node configuration was available. It exits 1 when `GET /`, the `app-data` request or the known document answers `200` without credentials. Otherwise it exits 3 when the administrator does not retrieve the known document with `200`, the anonymous known-document request answers anything but `401`, or a request fails, and 0 otherwise. A 0 covers only the tested endpoints: every node's effective anonymous settings and the recorded exposed-state success stay for you to judge.
+
+```bash
+(
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
+  # Positive discriminator: use the URL-encoded path of a document previously
+  # observed returning 200 and its expected contents WITHOUT credentials.
+  # Establish that exposed-state control only in an isolated test cluster.
+  # Substitute inside the quotes, retaining the leading slash.
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' '/path/http_ca.crt' '9200' 'REPLACE_WITH_ADMIN_HEADER_FILE' '/REPLACE_WITH_KNOWN_DOCUMENT_PATH'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 5 ] || { echo "set exactly host, CA file, HTTP port, admin header file, and known document path; not probing"; exit 2; }
+  case "$1|$2|$3|$4|$5" in
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Nn][Ee][Tt]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Oo][Rr][Gg]*) echo "substitute your deployment; not probing"; exit 2 ;;
+  esac
+  [ -n "$1" ] || { echo "host required; not probing"; exit 2; }
+  case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 2; }
+  [ -n "$3" ] || { echo "port required; not probing"; exit 2; }
+  case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 2 ;; esac
+  if [ "$3" -ge 1 ] && [ "$3" -le 65535 ]; then :; else echo "HTTP port must be 1 to 65535; not probing"; exit 2; fi
+  [ -r "$4" ] || { echo "readable admin header file required; not probing"; exit 2; }
+  case "${5-}" in
+    *REPLACE_WITH_*|"") echo "known document path required; not probing"; exit 2 ;;
+    /*) ;;
+    *) echo "document path must start with /; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$5" 0     # the 6th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+
+  # Reasoned: no target cluster or container runtime. Anonymous root probe.
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    --cacert "$2" "https://$1:$3/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$8"
+  case "$7:${8##*http=}" in
+    "0:200 "*) echo "FINDING: GET / answered 200 without credentials; read the body above for cluster JSON"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    0:*) ;;
+    *) echo "curl exit $7 on the anonymous root probe; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
 
   # Reasoned: no target cluster or container runtime. Endpoint-specific check.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    --cacert "$2" "https://$1:$3/app-data/_doc/rbac-probe"
+    --cacert "$2" "https://$1:$3/app-data/_doc/rbac-probe"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$8"
+  case "$7:${8##*http=}" in
+    "0:200 "*) echo "FINDING: app-data/_doc/rbac-probe answered 200 without credentials, an anonymous read grant"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    0:*) ;;
+    *) echo "curl exit $7 on the endpoint-specific check; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
 
   # Effective configuration means what each restarted process actually loaded:
   # inspect its selected config directory, flattened and nested YAML, resolved
@@ -28978,65 +29085,136 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   # from a filtered Nodes Info response are not proof of absence.
   # Require xpack.security.enabled: true and anonymous.roles absent everywhere.
 
-  # Positive discriminator: use the URL-encoded path of a document previously
-  # observed returning 200 and its expected contents WITHOUT credentials.
-  # Establish that exposed-state control only in an isolated test cluster.
-  # Substitute inside the quotes, retaining the leading slash.
-  set -- "$1" "$2" "$3" '/REPLACE_WITH_KNOWN_DOCUMENT_PATH'
-  case "${4-}" in
-    *REPLACE_WITH_*|"") echo "known document path required; not probing"; exit 2 ;;
-    /*) ;;
-    *) echo "document path must start with /; not probing"; exit 2 ;;
-  esac
   # Administrator must still retrieve that same document with 200 and its
   # expected contents; deletion or a different document invalidates the control.
-  curl -q -g -sS --fail-with-body --noproxy '*' --connect-timeout 5 --max-time 10 \
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --fail-with-body --noproxy '*' --connect-timeout 5 --max-time 10 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    --cacert "$2" --header @/path/admin.header "https://$1:$3$4" || exit 1
+    --cacert "$2" --header "@$4" "https://$1:$3$5"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$8"
+  case "$7:${8##*http=}" in
+    "0:200 "*) ;;
+    *) echo "the administrator did not retrieve the known document with 200 (curl exit $7), so a 401 below proves nothing; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
   # Reasoned: exposed anonymous read grant -> 200 and expected document;
   # roles removed and every node restarted -> 401. Other outcomes unresolved.
   # For OpenSearch, apply and read back anonymous_auth_enabled: false instead.
   # Without the recorded exposed-state success, this discriminator is unresolved.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    --cacert "$2" "https://$1:$3$4"
+    --cacert "$2" "https://$1:$3$5"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$8"
+  case "$7:${8##*http=}" in
+    "0:200 "*) echo "FINDING: the known document answered 200 without credentials"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    "0:401 "*) ;;
+    *) echo "the anonymous known-document request answered neither 200 nor 401 (curl exit $7); unresolved, so inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+  esac
+  echo "block exit $6; the document contents, every node's effective anonymous settings and the recorded exposed-state success are not classified, so judge them yourself"
+  exit "$6"
+)
+```
+
+REASONED: following block; the CORS comparison follows the cited Elasticsearch and OpenSearch CORS settings; no target cluster or browser-origin fixture was available. Set your trusted origin, with its scheme, on its `set --` line. It exits 3 when either preflight request fails and otherwise 0, because the `Access-Control-Allow-Origin` headers stay for you to judge against the table above.
+
+```bash
+(
+  set +e                                # errexit off here, so a probe that ends nonzero is recorded below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' '/path/http_ca.crt' '9200' 'REPLACE_WITH_TRUSTED_ORIGIN'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 4 ] || { echo "set exactly host, CA file, HTTP port, and trusted origin; not probing"; exit 2; }
+  case "$1|$2|$3|$4" in
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Nn][Ee][Tt]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Oo][Rr][Gg]*) echo "substitute your deployment; not probing"; exit 2 ;;
+  esac
+  [ -n "$1" ] || { echo "host required; not probing"; exit 2; }
+  case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 2; }
+  [ -n "$3" ] || { echo "port required; not probing"; exit 2; }
+  case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 2 ;; esac
+  if [ "$3" -ge 1 ] && [ "$3" -le 65535 ]; then :; else echo "HTTP port must be 1 to 65535; not probing"; exit 2; fi
+  case "$4" in
+    *[[:space:][:cntrl:]]*) echo "the trusted origin must not contain spaces or control characters; not probing"; exit 2 ;;
+    https://?*|http://?*) ;;
+    *) echo "the trusted origin must start with https:// or http://; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 3 (inconclusive) outranks 0
 
   # Reasoned: no target cluster or container runtime.
   # Browser preflights send no credentials.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+  if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
     --cacert "$2" --include --request OPTIONS \
     --header 'Origin: https://untrusted.example.org' \
     --header 'Access-Control-Request-Method: GET' \
     --header 'Access-Control-Request-Headers: authorization' \
-    "https://$1:$3/app-data/_doc/rbac-probe"
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+    "https://$1:$3/app-data/_doc/rbac-probe"; then :; else
+    echo "curl exit $? on the untrusted-origin preflight; inconclusive"; set -- "$1" "$2" "$3" "$4" 3
+  fi
+  if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
     --cacert "$2" --include --request OPTIONS \
-    --header 'Origin: https://app.example.com' \
+    --header "Origin: $4" \
     --header 'Access-Control-Request-Method: GET' \
     --header 'Access-Control-Request-Headers: authorization' \
-    "https://$1:$3/app-data/_doc/rbac-probe"
+    "https://$1:$3/app-data/_doc/rbac-probe"; then :; else
+    echo "curl exit $? on the trusted-origin preflight; inconclusive"; set -- "$1" "$2" "$3" "$4" 3
+  fi
+  echo "block exit $5; the Access-Control-Allow-Origin headers are not classified, so judge them yourself"
+  exit "$5"
+)
+```
+
+REASONED: following block; the audit probe follows the cited Elasticsearch audit events and OpenSearch audit fields references; no cluster, collector or eligible Elasticsearch audit licence was available. Set the audit-probe header file on its `set --` line. It also refuses with status 2 when `python3` is missing. It exits 3 when the marker cannot be generated, a command fails or the probe does not receive `401`, and otherwise 0; the matching audit event stays for you to judge, as described below.
+
+```bash
+(
+  set +e                                # errexit off here, so a command that ends nonzero is recorded below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SEARCH_HOST' '/path/http_ca.crt' '9200' 'REPLACE_WITH_AUDIT_PROBE_HEADER_FILE'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 4 ] || { echo "set exactly host, CA file, HTTP port, and audit-probe header file; not probing"; exit 2; }
+  case "$1|$2|$3|$4" in
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Nn][Ee][Tt]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Oo][Rr][Gg]*) echo "substitute your deployment; not probing"; exit 2 ;;
+  esac
+  [ -n "$1" ] || { echo "host required; not probing"; exit 2; }
+  case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 2 ;; esac
+  [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 2; }
+  [ -n "$3" ] || { echo "port required; not probing"; exit 2; }
+  case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 2 ;; esac
+  if [ "$3" -ge 1 ] && [ "$3" -le 65535 ]; then :; else echo "HTTP port must be 1 to 65535; not probing"; exit 2; fi
+  [ -r "$4" ] || { echo "readable audit-probe header file required; not probing"; exit 2; }
 
   # Reasoned: no cluster, audit collector, or eligible ES audit license here.
   # audit-probe.header contains Basic auth for a nonexistent audit_probe user.
   # Requires python3. Generate and record a fresh harmless marker for each run.
-  set -- "$1" "$2" "$3" "$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
-  case "$4" in
-    ""|*[!0123456789abcdef]*) echo "marker generation failed; not probing"; exit 1 ;;
+  command -v python3 > /dev/null || { echo "python3 is required to generate the marker; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" "$4" 0 "$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"   # the block's status so far (3, inconclusive, outranks 0), then the marker
+  case "$6" in
+    ""|*[!0123456789abcdef]*) echo "marker generation failed; not probing"; exit 3 ;;
   esac
-  [ "${#4}" -eq 32 ] || { echo "invalid marker; not probing"; exit 1; }
-  printf 'audit body marker=%s\n' "$4"
-  date -u '+%Y-%m-%dT%H:%M:%SZ'
-  printf '{"query":{"term":{"audit_probe_marker":"%s"}}}\n' "$4" |
-    curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+  [ "${#6}" -eq 32 ] || { echo "invalid marker; not probing"; exit 3; }
+  printf 'audit body marker=%s\n' "$6"
+  if date -u '+%Y-%m-%dT%H:%M:%SZ'; then :; else
+    echo "date exit $?: record the start time yourself; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 "$6"
+  fi
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf '{"query":{"term":{"audit_probe_marker":"%s"}}}\n' "$6" | curl \
+      -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
       -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      --cacert "$2" --header @/path/audit-probe.header \
+      --cacert "$2" --header "@$4" \
       --header 'Content-Type: application/json' --request POST \
-      --data-binary @- "https://$1:$3/app-data/_search"
-  date -u '+%Y-%m-%dT%H:%M:%SZ'
+      --data-binary @- "https://$1:$3/app-data/_search"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$8"
+  case "$7:${8##*http=}" in
+    "0:401 "*) ;;
+    *) echo "the audit probe did not receive 401 (curl exit $7), so it did not exercise failed authentication; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 "$6" ;;
+  esac
+  if date -u '+%Y-%m-%dT%H:%M:%SZ'; then :; else
+    echo "date exit $?: record the end time yourself; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 "$6"
+  fi
+  echo "block exit $5; the audit records are not classified: find the matching new event yourself"
+  exit "$5"
 )
 ```
-
-REASONED: preceding block; TLS, RBAC, anonymous-access, CORS and audit comparisons follow the cited Elasticsearch and OpenSearch HTTP TLS, privileges, anonymous authentication, CORS, audit settings and event references. No target cluster, effective node configuration, audit collector or eligible Elasticsearch audit licence is available. Local shell checks are recorded above. The administrative HTTPS control must return `200` and cluster JSON before interpreting the plaintext probe. With HTTP TLS enforced, plaintext must receive no HTTP response. Elasticsearch closes a plaintext connection to its HTTPS listener; OpenSearch's enabled REST TLS allows only HTTPS. Expect `http=000` with a reset or empty reply after connection. DNS failures, timeouts, or an unreachable service are inconclusive. Any actual HTTP status, including `401`, means that endpoint answered over plaintext and is a finding. See [Elasticsearch HTTP TLS settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings) and [OpenSearch REST TLS](https://docs.opensearch.org/latest/security/configuration/tls/).
 
 REASONED: event attribution from the cited audit-event references; no target cluster or audit collector is available. For the audit check, expect `401` and require a matching NEW REST-layer Elasticsearch `authentication_failed` or OpenSearch `FAILED_LOGIN` event. Inspect the receiving node's new `CLUSTERNAME_audit.json` entries or the corresponding OpenSearch audit index and separately collected copy. Match the recorded time interval, `audit_probe` identity, POST method, and `/app-data/_search` path. Run probes separately so each event can be attributed to its request.
 
@@ -29049,9 +29227,43 @@ REASONED: audit-evidence limits from the cited event and collection references; 
 REASONED: listener inventory from the cited ss manual; target-node access is unavailable. On the node itself, inspect listeners:
 
 ```bash
-# Reasoned: no access to the target node. Run ON that node; substitute actual ports.
-ss -tlnp 'sport = :9200'
-ss -tlnp 'sport = :9300'
+# Reasoned: no access to the target node. Run ON that node; substitute actual ports on the set -- line.
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so an ss that ends nonzero is recorded below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK '9200' '9300'   # the HTTP port, then the transport port: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "set exactly the HTTP and transport ports; not probing"; exit 2; }
+  case "$1" in ""|*[!0123456789]*) echo "numeric HTTP port required; not probing"; exit 2 ;; esac
+  case "$2" in ""|*[!0123456789]*) echo "numeric transport port required; not probing"; exit 2 ;; esac
+  if [ "$1" -ge 1 ] && [ "$1" -le 65535 ] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then :; else echo "ports must be 1 to 65535; not probing"; exit 2; fi
+  command -v ss > /dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 3 (inconclusive) outranks 0
+  set -- "$1" "$2" "$3" "$(if ss -tlnp "sport = :$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # ss's exit status, then its listener table
+  printf '%s' "$5"
+  if [ "$4" != 0 ]; then
+    echo "ss exit $4 for port $1; inconclusive"; set -- "$1" "$2" 3
+  else
+    case "${5%$'\n'}" in
+      *$'\n'*) ;;
+      *) echo "no listener on port $1: inconclusive until the running process and its actual ports are located"; set -- "$1" "$2" 3 ;;
+    esac
+  fi
+  set -- "$1" "$2" "$3" "$(if ss -tlnp "sport = :$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # ss's exit status, then its listener table
+  printf '%s' "$5"
+  if [ "$4" != 0 ]; then
+    echo "ss exit $4 for port $2; inconclusive"; set -- "$1" "$2" 3
+  else
+    case "${5%$'\n'}" in
+      *$'\n'*) ;;
+      *) echo "no listener on port $2: inconclusive until the running process and its actual ports are located"; set -- "$1" "$2" 3 ;;
+    esac
+  fi
+  echo "block exit $3; the listener addresses are not classified, so judge each against the expected loopback or private binds"
+  exit "$3"
+)
 ```
 
 REASONED: listener interpretation from the cited port defaults and Docker configuration; target-node and container-runtime access are unavailable. These use `ss`'s own port filter, avoiding accidental PID matches. For Elasticsearch 8.19.22 and 9.5.4, the source defaults are `9200-9300` for HTTP and `9300-9399` for transport; each binds an available port. The transport upper bound is 9399, not 9400. See the pinned `HttpTransportSettings` and `TransportSettings` Sources below. Inspect the actual ports used by either product. Expect loopback or deliberate private listeners. The exception is an official Docker container on a bridge or user-defined network (not host networking): its bundled `network.host: 0.0.0.0` makes wildcard listeners inside the container the default unless it was overridden, so check instead that 9200 is reachable only from intended clients and 9300 only from cluster peers. With host networking, a wildcard listener is a finding like any other. An unexpected public or wildcard listener is a finding to review against the network controls; no output is inconclusive until the running process and its actual ports are located.
@@ -29062,7 +29274,7 @@ REASONED: deployment scope from the cited product APIs; no target cluster, eligi
 
 REASONED: fixture and substitution instructions per the cited product APIs and the local preparation recorded above; no isolated test deployment is available in the authoring environment. Use isolated test deployments for exposed-state fixtures. Substitute values inside single quotes and paste whole shell blocks. Values containing a literal apostrophe need proper shell quoting. Keep credentials in the protected header files described above, with tracing disabled. The following blocks assume the shell's normal builtins.
 
-REASONED: body-file and per-request procedure for the REST block below, per the cited product APIs. In a re-run at marking time, before the guard's `example.com` test was made case-insensitive, the guard in that block refused a placeholder, a missing body file, an unsupported method and a relative path with exit 1 and dispatched valid values to a local argument recorder, and a parsed JSON body was saved as a mode-0600 file. On 2026-10-13 (UTC), with Bash 5.3.9 and a stub curl executable, the edited guard refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to curl unchanged, where before the edit the three forms that are not all lowercase reached curl. After the later extension of the guard to `example.net` and `example.org` in any letter case, a further run on 2026-10-13 (UTC) used Bash 5.3.9, with the block saved to a file and run with its commands unchanged except fixture values, and with curl, python3 and date stubbed. That further run refused `example.net`, `EXAMPLE.NET`, `es.Example.Net`, `example.org`, `EXAMPLE.ORG`, `es.Example.Org`, `example.com`, `EXAMPLE.COM`, `Example.Com`, `es.EXAMPLE.com` and `example.network.test` with exit 1 before any curl call and passed `Dummy.Valid.test` to its one curl call unchanged. Before the extension, the `.net` and `.org` hosts and `example.network.test` reached curl while the `.com` forms were refused. The test is a substring match, so it also refuses longer names that contain `example.net` or `example.org`, such as `example.network.test`; no target cluster is available. Every run recorded in this paragraph covered an earlier form of the REST block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
+REASONED: body-file and per-request procedure for the REST block below, per the cited product APIs. In a re-run at marking time, before the guard's `example.com` test was made case-insensitive, the guard in that block refused a placeholder, a missing body file, an unsupported method and a relative path with exit 1 and dispatched valid values to a local argument recorder, and a parsed JSON body was saved as a mode-0600 file. On 2026-10-13 (UTC), with Bash 5.3.9 and a stub curl executable, the edited guard refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to curl unchanged, where before the edit the three forms that are not all lowercase reached curl. After the later extension of the guard to `example.net` and `example.org` in any letter case, a further run on 2026-10-13 (UTC) used Bash 5.3.9, with the block saved to a file and run with its commands unchanged except fixture values, and with curl, python3 and date stubbed. That further run refused `example.net`, `EXAMPLE.NET`, `es.Example.Net`, `example.org`, `EXAMPLE.ORG`, `es.Example.Org`, `example.com`, `EXAMPLE.COM`, `Example.Com`, `es.EXAMPLE.com` and `example.network.test` with exit 1 before any curl call and passed `Dummy.Valid.test` to its one curl call unchanged. Before the extension, the `.net` and `.org` hosts and `example.network.test` reached curl while the `.com` forms were refused. The test is a substring match, so it also refuses longer names that contain `example.net` or `example.org`, such as `example.network.test`; no target cluster is available. Every run recorded in this paragraph covered an earlier form of the REST block, whose refusals exited with status 1; the current form, whose refusals exit with status 2 and which exits 3 when curl fails, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes, not by those runs. For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
 
 REASONED: following block; REST fixture comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access was available.
 
@@ -29077,20 +29289,25 @@ REASONED: following block; REST fixture comparisons follow the cited product API
   esac
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 2 ;; esac
   case "$3" in ""|*[!0123456789]*) echo "numeric port required; not probing"; exit 2 ;; esac
-  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 2
-  [ -r "$2" ] && [ -r "$4" ] && [ -r "$7" ] || { echo "readable CA, header, and body files required"; exit 2; }
+  if [ "$3" -ge 1 ] && [ "$3" -le 65535 ]; then :; else echo "port must be 1 to 65535; not probing"; exit 2; fi
+  if [ -r "$2" ] && [ -r "$4" ] && [ -r "$7" ]; then :; else echo "readable CA, header, and body files required"; exit 2; fi
   case "$5" in GET|POST|PUT) ;; *) echo "unsupported method; not probing"; exit 2 ;; esac
   case "$6" in /*) ;; *) echo "request path must start with /; not probing"; exit 2 ;; esac
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" 0   # the 8th value is the block's status: 3 (inconclusive) or 0
   # REASONED: no target cluster, eligible ES licence, or repository access.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 120 \
+  if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 120 \
     --cacert "$2" --header "@$4" --header 'Content-Type: application/json' \
     --request "$5" --data-binary "@$7" \
     -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    "https://$1:$3$6"
+    "https://$1:$3$6"; then :; else
+    echo "curl exit $?: the request failed; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" 3
+  fi
+  echo "block exit $8; the HTTP status and response contents are not classified, so judge them against the tables yourself"
+  exit "$8"
 )
 ```
 
-REASONED: preceding block; REST request and response comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access is available. Local file and argument checks are recorded above. Judge the HTTP status and response contents, not the shell's final status alone. A transport failure or `401` is not evidence of correct field/document restrictions.
+REASONED: preceding block; REST request and response comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access is available. Local file and argument checks are recorded above. Judge the HTTP status and response contents, not the shell's final status alone: the block exits 3 when curl fails and otherwise 0. A transport failure or `401` is not evidence of correct field/document restrictions.
 
 ### Verify field and document restrictions (REASONED: retrieval and aggregation comparisons from the cited Elasticsearch and OpenSearch FLS, DLS and API references; no live clusters or eligible Elasticsearch FLS/DLS licence are available)
 
@@ -29145,11 +29362,15 @@ REASONED: following block; storage inspection follows the cited findmnt, lsblk a
   case "$1|$2" in *REPLACE_WITH_*) echo "substitute your storage; not probing"; exit 2 ;; esac
   case "$1" in /*) ;; *) echo "absolute data path required"; exit 2 ;; esac
   case "$2" in ""|-*|*/*) echo "mapping name required"; exit 2 ;; esac
-  [ -d "$1" ] || { echo "data directory missing; unresolved"; exit 1; }
+  [ -d "$1" ] || { echo "data directory missing; not probing"; exit 2; }
+  set +e                                # errexit off here, so a command that ends nonzero is recorded below instead of ending the block
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 3 (inconclusive) outranks 0
   # REASONED: no access to the target node or encrypted storage.
-  findmnt -T "$1" || exit 1
-  lsblk -o NAME,TYPE,FSTYPE,MOUNTPOINTS || exit 1
-  cryptsetup status "$2"
+  if findmnt -T "$1"; then :; else echo "findmnt exit $?; inconclusive"; set -- "$1" "$2" 3; fi
+  if lsblk -o NAME,TYPE,FSTYPE,MOUNTPOINTS; then :; else echo "lsblk exit $?; inconclusive"; set -- "$1" "$2" 3; fi
+  if cryptsetup status "$2"; then :; else echo "cryptsetup status exit $?; inconclusive"; set -- "$1" "$2" 3; fi
+  echo "block exit $3; the mount and device chain is not classified, so confirm yourself that the data path traverses the intended encrypted mapping"
+  exit "$3"
 )
 ```
 
@@ -29161,14 +29382,35 @@ REASONED: following block; startup comparison follows the cited systemd assertio
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SERVICE_UNIT'
+  set +e                                # errexit off here, so a command that ends nonzero is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SERVICE_UNIT' 'REPLACE_WITH_unavailable_OR_restored'   # the test service unit, then unavailable (the test mount made unavailable) or restored (the encrypted mount restored, the positive control): replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "set exactly one service unit; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "set exactly the service unit and the phase; not probing"; exit 2; }
   case "$1" in ""|-*|*REPLACE_WITH_*|*/*) echo "substitute the test service unit"; exit 2 ;; esac
+  case "$2" in unavailable|restored) ;; *) echo "substitute unavailable or restored as the phase; not probing"; exit 2 ;; esac
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # REASONED: isolated target service and unavailable-mount fixture absent.
-  systemctl start "$1"
-  systemctl --no-pager status "$1"
+  if systemctl start "$1"; then
+    case "$2" in
+      unavailable) echo "FINDING: the service started with the test mount unavailable, so startup is not enforced"; set -- "$1" "$2" 1 ;;
+    esac
+  else
+    set -- "$1" "$2" "$3" "$?"
+    case "$2" in
+      unavailable) echo "systemctl start exit $4: read the status below; the pass is a failure caused by the unavailable mount, and permission errors or unrelated failures are inconclusive" ;;
+      restored) echo "systemctl start exit $4: the positive control failed; inconclusive"; set -- "$1" "$2" 3 ;;
+    esac
+  fi
+  if systemctl --no-pager status "$1"; then :; else
+    set -- "$1" "$2" "$3" "$?"
+    case "$4" in
+      1|2|3) ;;                         # the unit's state, not a failed command
+      *) echo "systemctl status exit $4; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+  fi
+  echo "block exit $3; the cause of a start failure and any writes to the ordinary directory are not classified, so judge them yourself"
+  exit "$3"
 )
 ```
 
@@ -29196,15 +29438,37 @@ REASONED: following block; object encryption and access comparisons follow the c
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AWS_PROFILE' 'REPLACE_WITH_BUCKET' 'REPLACE_WITH_OBJECT_KEY'
+  set +e                                # errexit off here, so a command that ends nonzero is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AWS_PROFILE' 'REPLACE_WITH_BUCKET' 'REPLACE_WITH_OBJECT_KEY' 'REPLACE_WITH_permitted_OR_restricted'   # the profile, bucket and object key, then permitted (a principal that must read the object) or restricted (the principal whose S3 or KMS access was removed): replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "set profile, bucket, and object key; not probing"; exit 2; }
-  case "$1|$2|$3" in *REPLACE_WITH_*) echo "substitute the test object and identity"; exit 2 ;; esac
-  [ -n "$1" ] && [ -n "$2" ] && [ -n "$3" ] || exit 2
+  [ "$#" -eq 4 ] || { echo "set profile, bucket, object key, and phase; not probing"; exit 2; }
+  case "$1|$2|$3|$4" in *REPLACE_WITH_*) echo "substitute the test object and identity"; exit 2 ;; esac
+  if [ -n "$1" ] && [ -n "$2" ] && [ -n "$3" ]; then :; else echo "profile, bucket, and object key required; not probing"; exit 2; fi
+  case "$4" in permitted|restricted) ;; *) echo "substitute permitted or restricted as the phase; not probing"; exit 2 ;; esac
+  command -v aws > /dev/null || { echo "aws (AWS CLI v2) not found; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # REASONED: no repository, provider credentials, or KMS test identities.
-  aws --profile "$1" --no-cli-pager s3api head-object --bucket "$2" --key "$3"
-  aws --profile "$1" --no-cli-pager s3api get-object --bucket "$2" --key "$3" /dev/null
+  if aws --profile "$1" --no-cli-pager s3api head-object --bucket "$2" --key "$3"; then :; else
+    set -- "$1" "$2" "$3" "$4" "$5" "$?"
+    case "$4" in
+      permitted) echo "head-object exit $6: the permitted principal could not read the object's metadata; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+      restricted) echo "head-object exit $6 for the restricted principal: read the error" ;;
+    esac
+  fi
+  if aws --profile "$1" --no-cli-pager s3api get-object --bucket "$2" --key "$3" /dev/null; then
+    case "$4" in
+      restricted) echo "FINDING: the restricted principal downloaded the object"; set -- "$1" "$2" "$3" "$4" 1 ;;
+    esac
+  else
+    set -- "$1" "$2" "$3" "$4" "$5" "$?"
+    case "$4" in
+      permitted) echo "get-object exit $6: the permitted principal could not download the object, so the positive control failed; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+      restricted) echo "get-object exit $6: read the error and the provider's authorization or audit evidence; only the S3 or KMS denial under test is the pass, and a missing object, expired credentials or a network error is inconclusive" ;;
+    esac
+  fi
+  echo "block exit $5; the object's encryption mode and key, and the cause of a restricted failure, are not classified, so judge them yourself"
+  exit "$5"
 )
 ```
 
@@ -29239,15 +29503,29 @@ REASONED: following block; UI TLS comparison follows the cited Kibana and Dashbo
   case "$1|$2|$3" in *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Nn][Ee][Tt]*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Oo][Rr][Gg]*) echo "substitute your UI deployment"; exit 2 ;; esac
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address"; exit 2 ;; esac
   case "$3" in ""|*[!0123456789]*) echo "numeric UI port required"; exit 2 ;; esac
-  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 2
+  if [ "$3" -ge 1 ] && [ "$3" -le 65535 ]; then :; else echo "UI port must be 1 to 65535; not probing"; exit 2; fi
   [ -r "$2" ] || { echo "readable UI CA file required"; exit 2; }
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # REASONED: no running UI, deployed certificates, or network test paths.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     --cacert "$2" --output /dev/null --dump-header - \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$3/"
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1:$3/"; then :; else
+    echo "curl exit $? on the HTTPS request: CA-validated HTTPS did not succeed; inconclusive"; set -- "$1" "$2" "$3" 3
+  fi
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     --output /dev/null --dump-header - \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$3/"
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:$3/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$6"
+  case "$5:${6##*http=}" in
+    0:2??' '*|0:3??' '*) echo "FINDING: plaintext on the UI port answered with the http= status above, a page or redirect served without TLS"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "plaintext on the UI port answered with the http= status above: an explicit protocol rejection is the pass and a UI page a finding, so read the headers; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    52:*|56:*) echo "no HTTP response over plaintext (curl exit $5, a connection close or reset)" ;;
+    *) echo "curl exit $5 on the plaintext request: a timeout, DNS failure or other error alone cannot show rejection; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  echo "block exit $4; the HTTPS response is not classified, so judge it against the expected UI response yourself"
+  exit "$4"
 )
 ```
 
@@ -29266,9 +29544,15 @@ REASONED: following block; UI listener inspection follows the cited UI settings 
   shift
   [ "$#" -eq 1 ] || { echo "set exactly one UI port; not probing"; exit 2; }
   case "$1" in ""|*[!0123456789]*) echo "substitute the numeric UI port"; exit 2 ;; esac
-  [ "$1" -ge 1 ] && [ "$1" -le 65535 ] || exit 2
+  if [ "$1" -ge 1 ] && [ "$1" -le 65535 ]; then :; else echo "UI port must be 1 to 65535; not probing"; exit 2; fi
+  command -v ss > /dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  set -- "$1" 0                         # the 2nd value is the block's status: 3 (inconclusive) or 0
   # REASONED: no access to the target UI host. Run on that host.
-  ss -tlnp "sport = :$1"
+  if ss -tlnp "sport = :$1"; then :; else
+    echo "ss exit $?; inconclusive"; set -- "$1" 3
+  fi
+  echo "block exit $2; the listener addresses are not classified, so judge them against the intended loopback or private bind yourself"
+  exit "$2"
 )
 ```
 
@@ -29578,7 +29862,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "07180e556bd99b150f2ef1df9751135848df1f3bf2f705ebea31f75dcd3378c4",
+  "body_sha256": "ad5bdeb86b6c028b26e7b3ecb7306797870093a97e41e79898b21e339d5116a2",
   "components": {
     "es-api": {
       "name": "Elasticsearch API",
@@ -30077,20 +30361,20 @@ Claims (full source mapping in the JSON block below):
     "dash-default": {"text": "Dashboards 3.8.0 sample defaults localhost:5601 with server TLS disabled; inspect installation/container overrides.", "components": ["dash"], "sources": ["dash:sae1b7f23ca6c"], "status": "REASONED"},
     "dash-tls": {"text": "Dashboards server.ssl protects UI, cookie.secure restricts session cookie to HTTPS, and opensearch.ssl CA/full verification protects the backend hop; restart after changes.", "components": ["dash36"], "sources": ["dash36:sea686fca5804"], "status": "REASONED"},
     "ui-network": {"text": "UI binding is independent of 9200/9300; loopback suits only a same-namespace proxy, while private access requires intended interface, matching certificates and network restrictions.", "components": ["kb", "dash36"], "sources": ["kb:sf71765842118", "dash36:sea686fca5804"], "status": "REASONED"},
-    "verify-rbac": {"text": "Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only.", "components": ["es", "os"], "sources": ["es:see6eaa520863", "os:sbd093eef861b"], "status": "REASONED", "verify": [1]},
-    "verify-anonymous": {"text": "Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient.", "components": ["es", "os"], "sources": ["es:s204396515260", "os:s7d28cfa527a1"], "status": "REASONED", "verify": [1]},
+    "verify-rbac": {"text": "Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only.", "components": ["es", "os"], "sources": ["es:see6eaa520863", "os:sbd093eef861b"], "status": "REASONED", "verify": [2]},
+    "verify-anonymous": {"text": "Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient.", "components": ["es", "os"], "sources": ["es:s204396515260", "os:s7d28cfa527a1"], "status": "REASONED", "verify": [3]},
     "verify-tls": {"text": "Admin HTTPS must return 200/cluster JSON before interpreting plaintext; TLS listener must return no HTTP status, with DNS/timeouts/unreachable states inconclusive.", "components": ["es", "os"], "sources": ["es:sce3095052f8d", "os:s4e3281cb3d23"], "status": "REASONED", "verify": [1]},
-    "verify-cors": {"text": "Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted.", "components": ["es", "os"], "sources": ["es:s0f65658e7273", "os:s3f64f7b4cf84"], "status": "REASONED", "verify": [1]},
-    "verify-audit": {"text": "Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery.", "components": ["es", "os"], "sources": ["es:sfc6fef9020b3", "os:sbad13e007c8f"], "status": "REASONED", "verify": [1]},
-    "verify-audit-body": {"text": "Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration.", "components": ["es", "os"], "sources": ["es:s5603a653318d", "os:sbad13e007c8f"], "status": "REASONED", "verify": [1]},
-    "verify-listeners": {"text": "Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive.", "components": ["es8", "es9", "host"], "sources": ["es8:s59c2dd10f083", "es9:s1f0a06e68675", "host:s1b4e67e38127"], "status": "REASONED", "verify": [2]},
-    "verify-fls-dls": {"text": "Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim.", "components": ["es819", "os36"], "sources": ["es819:s805957cad810", "es819:s52adbc714b10", "os36:s42d975e3cd92", "os36:sade7ff6b2bb3"], "status": "REASONED", "verify": [3]},
-    "verify-storage": {"text": "Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata.", "components": ["host"], "sources": ["host:s42b4720299f5", "host:sd23c3d0f42a7", "host:s252144371961"], "status": "REASONED", "verify": [4]},
-    "verify-mount": {"text": "Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully.", "components": ["host"], "sources": ["host:s64522c42b5bc", "host:s9823c4e9efa4"], "status": "REASONED", "verify": [5]},
-    "verify-snapshot": {"text": "Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry.", "components": ["es819", "os36"], "sources": ["es819:sb98bd971e2f6", "es819:s3e5630e4430d", "os36:sf0940d73ed6e"], "status": "REASONED", "verify": [3]},
-    "verify-object-key": {"text": "Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation.", "components": ["cloud"], "sources": ["cloud:se54783905d19", "cloud:sc53339f5429f", "cloud:se1e1c91f80b4"], "status": "REASONED", "verify": [6]},
-    "verify-ui": {"text": "Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding.", "components": ["kb", "dash36", "host"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804", "host:s1b4e67e38127"], "status": "REASONED", "verify": [7, 8]},
-    "verify-ui-backend": {"text": "Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication.", "components": ["kb", "dash36"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804"], "status": "REASONED", "verify": [7, 8]}
+    "verify-cors": {"text": "Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted.", "components": ["es", "os"], "sources": ["es:s0f65658e7273", "os:s3f64f7b4cf84"], "status": "REASONED", "verify": [4]},
+    "verify-audit": {"text": "Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery.", "components": ["es", "os"], "sources": ["es:sfc6fef9020b3", "os:sbad13e007c8f"], "status": "REASONED", "verify": [5]},
+    "verify-audit-body": {"text": "Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration.", "components": ["es", "os"], "sources": ["es:s5603a653318d", "os:sbad13e007c8f"], "status": "REASONED", "verify": [5]},
+    "verify-listeners": {"text": "Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive.", "components": ["es8", "es9", "host"], "sources": ["es8:s59c2dd10f083", "es9:s1f0a06e68675", "host:s1b4e67e38127"], "status": "REASONED", "verify": [6]},
+    "verify-fls-dls": {"text": "Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim.", "components": ["es819", "os36"], "sources": ["es819:s805957cad810", "es819:s52adbc714b10", "os36:s42d975e3cd92", "os36:sade7ff6b2bb3"], "status": "REASONED", "verify": [7]},
+    "verify-storage": {"text": "Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata.", "components": ["host"], "sources": ["host:s42b4720299f5", "host:sd23c3d0f42a7", "host:s252144371961"], "status": "REASONED", "verify": [8]},
+    "verify-mount": {"text": "Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully.", "components": ["host"], "sources": ["host:s64522c42b5bc", "host:s9823c4e9efa4"], "status": "REASONED", "verify": [9]},
+    "verify-snapshot": {"text": "Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry.", "components": ["es819", "os36"], "sources": ["es819:sb98bd971e2f6", "es819:s3e5630e4430d", "os36:sf0940d73ed6e"], "status": "REASONED", "verify": [7]},
+    "verify-object-key": {"text": "Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation.", "components": ["cloud"], "sources": ["cloud:se54783905d19", "cloud:sc53339f5429f", "cloud:se1e1c91f80b4"], "status": "REASONED", "verify": [10]},
+    "verify-ui": {"text": "Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding.", "components": ["kb", "dash36", "host"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804", "host:s1b4e67e38127"], "status": "REASONED", "verify": [11, 12]},
+    "verify-ui-backend": {"text": "Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication.", "components": ["kb", "dash36"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804"], "status": "REASONED", "verify": [11, 12]}
   }
 }
 ````
