@@ -83,8 +83,27 @@ When a team needs configuration secrets in git (for example GitOps deployments),
 ## Verify (REASONED: scanner outcomes follow the cited gitleaks source, by source reading, and README, and secret-handling guidance; no exposed/fixed scan run is recorded)
 
 ```bash
-gitleaks git . && echo clean
-grep -rlIE "sk-|AKIA|ASIA|ghp_|-----BEGIN" --exclude-dir=node_modules --exclude-dir=.git .   # -r recurses, -l prints only the filename (never the matching secret), -I assumes unprocessed input does not match after null binary data is discovered, --exclude-dir skips a whole tree rather than filtering matched lines; -E uses extended regular expressions; as this guide's assessment, this scan is crude but fast
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a check that ends nonzero is recorded in the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  gitleaks git . && echo clean
+  set -- "$1" "$?"                      # gitleaks's exit status: 0 with no leaks, 1 for leaks or an error
+  [ "$2" = 0 ] || { echo "gitleaks exit $2: leaks or an error, so not a pass; read its output above"; set -- 3; }
+  set -- "$1" "$(if grep -rlIE "sk-|AKIA|ASIA|ghp_|-----BEGIN" --exclude-dir=node_modules --exclude-dir=.git .; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # -r recurses, -l prints only the filename (never the matching secret), -I assumes unprocessed input does not match after null binary data is discovered, --exclude-dir skips a whole tree rather than filtering matched lines; -E uses extended regular expressions; as this guide's assessment, this scan is crude but fast
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the block's status so far, the file list, then grep's exit status
+  printf '%s' "$2"
+  case "$3" in
+    0) echo "FINDING: inspect each file listed above privately"; set -- 1 "$2" "$3" ;;
+    1) echo "no match for these patterns only; this is not proof that no secret is present" ;;
+    *) if [ -n "$2" ]; then
+         echo "FINDING: inspect each file listed above privately; grep exit $3 also means some files were not read"; set -- 1 "$2" "$3"
+       else
+         echo "grep exit $3: a read error, so the pattern search failed; inconclusive"; set -- 3 "$2" "$3"
+       fi ;;
+  esac
+  echo "block exit $1"
+  exit "$1"
+)
 ```
 
 On every push, gitleaks (8.19.1 or later; see rule 4 for older releases) must exit 0 with no findings (the `&& echo clean` then prints `clean`). As this guide's assessment, the grep is a supplementary pattern search, not proof that no secret is present: as this guide's advice, treat any filename it prints as a finding to inspect privately, empty output as no match for these patterns only, and a non-zero exit caused by a read error as a failed check. gitleaks, which scans by rule rather than by a few prefixes, is the primary gate.
@@ -218,7 +237,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "03eeae46033da2b10de05d75e38398d07460a718a9b25ba4e476511ec01be8ae",
+  "body_sha256": "f0f57bfca4dfee70d7a2e00fdd1347991de7050b161f80142f3da893370d3060",
   "components": {
     "git-ignore": {
       "name": "Git ignore patterns",

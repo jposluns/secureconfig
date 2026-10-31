@@ -110,19 +110,40 @@ Do not ship `curl -k`, `verify=False`, `rejectUnauthorized: false`, or `NODE_TLS
 
 ## 5. Verify
 
-DEMONSTRATED: following block; local certificate-output inspection only. On 2026-10-05 in private /dev/shm scratch, OpenSSL 3.5.5 ran the printed x509 command on three disposable one-day RSA certificates. Missing-SAN and CA:TRUE fixtures each exited 0 but lacked the required SAN or leaf constraint; the fixed fixture also exited 0 and printed DNS:app.internal, IP Address:127.0.0.1 and critical CA:FALSE. Subject and validity dates printed for all three.
+DEMONSTRATED: following block; local certificate-output inspection only. On 2026-10-05 in private /dev/shm scratch, OpenSSL 3.5.5 ran the printed x509 command on three disposable one-day RSA certificates. Missing-SAN and CA:TRUE fixtures each exited 0 but lacked the required SAN or leaf constraint; the fixed fixture also exited 0 and printed DNS:app.internal, IP Address:127.0.0.1 and critical CA:FALSE. Subject and validity dates printed for all three. The recorded x509 runs used an earlier form of the block, the bare x509 command at top level, whose status was x509's own; none was re-run on the current form, which exits 1 when the output lacks a subjectAltName or CA:FALSE, 3 when x509 fails, and 0 otherwise.
 
 ```bash
-openssl x509 -in server.crt -noout -subject -dates -ext subjectAltName,basicConstraints
+(                                       # a subshell, so the exits below end only the subshell, not your shell
+  set -- "$(if openssl x509 -in server.crt -noout -subject -dates -ext subjectAltName,basicConstraints; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1%$'\n'*}" "${1##*$'\n'}" 0  # x509's output, its exit status, then the block's status so far: 1 (a finding) outranks 0
+  printf '%s' "$1"
+  [ "$2" = 0 ] || { echo "openssl x509 exit $2: it could not read server.crt; inconclusive"; exit 3; }
+  case "$1" in                          # x509 exits 0 even with no SAN, so read its output, not its status
+    *'X509v3 Subject Alternative Name'*) ;;
+    *) echo "FINDING: server.crt has no subjectAltName, so it cannot cover the names and IPs your clients use"; set -- "$1" "$2" 1 ;;
+  esac
+  case "$1" in
+    *CA:FALSE*) ;;
+    *) echo "FINDING: basicConstraints is not marked CA:FALSE, so the certificate is not limited to a leaf"; set -- "$1" "$2" 1 ;;
+  esac
+  echo "block exit $3; whether the subjectAltName covers every name and IP your clients use, and the subject and dates, are not classified, so judge them yourself"
+  exit "$3"
+)
 ```
 
 REASONED: following block; live TLS identity, failure handling and client-trust checks follow the cited OpenSSL and mkcert documentation. No app.internal service or client trust-store installation was supplied for these checks. The local x509 run above does not demonstrate a handshake or installed trust; expected outcomes and limitations are stated below.
 
 ```bash
-openssl s_client -connect app.internal:443 -servername app.internal -verify_hostname app.internal -verify_return_error -CAfile server.crt </dev/null
+(                                       # a subshell, so the exits below end only the subshell, not your shell
+  if openssl s_client -connect app.internal:443 -servername app.internal -verify_hostname app.internal -verify_return_error -CAfile server.crt </dev/null; then
+    echo "pass: s_client exited 0, so the chain verified against server.crt and the name app.internal matched; this does not show the trust-store install"; exit 0
+  else
+    echo "s_client exit $?: a name or chain verification failure (read the verify error above) or a connection failure; inconclusive"; exit 3
+  fi
+)
 ```
 
-REASONED: preceding block; live TLS identity, failure handling and installed client trust, per the guide's cited OpenSSL documentation and curl curl-8_12_1 normal certificate verification and --insecure. No app.internal service or writable system trust store is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. OpenSSL 3.5.5 generated RSA and ECDSA certificates; offline x509 inspection exited 0 for missing-SAN, IP-only, CA:TRUE and fixed fixtures, displaying their differing extensions. Offline verify accepted the matching hostname even without a DNS SAN, rejected wrong names with error 62 and distinguished IP identities with error 64. Handshake and installed-trust outcomes below remain unobserved. A pass prints `Verification: OK`, `Verified peername: app.internal`, and `Verify return code: 0 (ok)`, and the command exits 0. Without `-verify_hostname` the check ignores the name, and without `-verify_return_error` `s_client` reports a failure yet still completes the handshake and exits 0; with both, a name mismatch or an untrusted chain closes the connection and exits non-zero (`Verify return code: 62 (hostname mismatch)` for the wrong name). Read the first command's output rather than its exit status (it exits 0 even with no SAN): confirm a `subjectAltName` covering every name and IP clients use and `basicConstraints` marked `CA:FALSE`, and use `-verify_ip <addr>` to check an IP identity. The reason is that `-verify_hostname` falls back to the Common Name whenever the certificate carries no DNS-name SAN entry (even if it has an IP SAN), so a CN-only or IP-only certificate can still pass a hostname check. The `s_client` check supplies trust explicitly with `-CAfile`, so it proves the certificate and name but not that the section-4 trust-store install took effect; confirm that separately from each client with its normal configuration (for the system store, a plain `curl https://app.internal/` with no `--cacert` should fail before `update-ca-certificates` and succeed after).
+REASONED: preceding block; live TLS identity, failure handling and installed client trust, per the guide's cited OpenSSL documentation and curl curl-8_12_1 normal certificate verification and --insecure. No app.internal service or writable system trust store is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of the block, the bare s_client command at top level, whose status was its own. Its current form, which exits 0 when s_client exits 0 and 3 otherwise, passes the repository's shell-block gate (bash -n and ShellCheck 0.11.0) but was not stub-run. OpenSSL 3.5.5 generated RSA and ECDSA certificates; offline x509 inspection exited 0 for missing-SAN, IP-only, CA:TRUE and fixed fixtures, displaying their differing extensions. Those statuses are x509's own; the first block's current form, which reads that output itself, was not run on these fixtures. Offline verify accepted the matching hostname even without a DNS SAN, rejected wrong names with error 62 and distinguished IP identities with error 64. Handshake and installed-trust outcomes below remain unobserved. A pass prints `Verification: OK`, `Verified peername: app.internal`, and `Verify return code: 0 (ok)`, and the command exits 0. Without `-verify_hostname` the check ignores the name, and without `-verify_return_error` `s_client` reports a failure yet still completes the handshake and exits 0; with both, a name mismatch or an untrusted chain closes the connection and exits non-zero (`Verify return code: 62 (hostname mismatch)` for the wrong name). Read x509's output rather than x509's own exit status (x509 exits 0 even with no SAN): confirm a `subjectAltName` covering every name and IP clients use and `basicConstraints` marked `CA:FALSE`, and use `-verify_ip <addr>` to check an IP identity. The first block reports a finding, status 1, when that output has no `subjectAltName` or no `CA:FALSE`, but whether the SAN covers every name and IP is yours to judge. The reason is that `-verify_hostname` falls back to the Common Name whenever the certificate carries no DNS-name SAN entry (even if it has an IP SAN), so a CN-only or IP-only certificate can still pass a hostname check. The `s_client` check supplies trust explicitly with `-CAfile`, so it proves the certificate and name but not that the section-4 trust-store install took effect; confirm that separately from each client with its normal configuration (for the system store, a plain `curl https://app.internal/` with no `--cacert` should fail before `update-ca-certificates` and succeed after).
 
 ## Limits to plan around
 
@@ -246,7 +267,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "bdeeb8bd8e50eaf52ea7426e1d35acf64a622d18681c61c631df390886b65c1d",
+  "body_sha256": "196780f12072f4617b4c87d0e6383ebf32a7a6ab0b4e038fc4b70e68eb9beb53",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -471,7 +492,7 @@ Claims (full source mapping in the JSON block below):
     "requests-trust": {"text": "REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.", "components": ["openssl", "requests"], "sources": ["openssl:se5d70578564e", "requests:s21c6be6f6df4"], "status": "REASONED"},
     "node-trust": {"text": "NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.", "components": ["mkcert", "node"], "sources": ["mkcert:s41ae17dba4ce", "node:s402034f5dcea"], "status": "REASONED"},
     "verification-bypasses": {"text": "Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0. Node.js v24.22.0 scopes the bypasses to process-environment TLS validation, client-connection server verification or server rejection with requestCert=true; accepting attacker certificates and persistence into production are this guide's assessment.", "components": ["openssl", "requests", "curl-source", "node-v24"], "sources": ["openssl:se5d70578564e", "requests:scff02f87cf30", "curl-source:s60820cd231e1", "node-v24:sbfee17929443", "node-v24:s684a71cf8b6e", "node-v24:s025a5157269c"], "status": "REASONED"},
-    "verify-extensions": {"text": "Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "DEMONSTRATED", "evidence": "On 2026-10-05 in private /dev/shm scratch, OpenSSL 3.5.5 ran the printed x509 command on three disposable one-day RSA certificates. Missing-SAN and CA:TRUE fixtures each exited 0 but lacked the required SAN or leaf constraint; the fixed fixture also exited 0 and printed DNS:app.internal, IP Address:127.0.0.1 and critical CA:FALSE. Subject and validity dates printed for all three.", "verify": [1]},
+    "verify-extensions": {"text": "Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "DEMONSTRATED", "evidence": "On 2026-10-05 in private /dev/shm scratch, OpenSSL 3.5.5 ran the printed x509 command on three disposable one-day RSA certificates. Missing-SAN and CA:TRUE fixtures each exited 0 but lacked the required SAN or leaf constraint; the fixed fixture also exited 0 and printed DNS:app.internal, IP Address:127.0.0.1 and critical CA:FALSE. Subject and validity dates printed for all three. The recorded x509 runs used an earlier form of the block, the bare x509 command at top level, whose status was x509's own; none was re-run on the current form, which exits 1 when the output lacks a subjectAltName or CA:FALSE, 3 when x509 fails, and 0 otherwise.", "verify": [1]},
     "verify-tls": {"text": "The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0.", "components": ["openssl"], "sources": ["openssl:s581d7ad32359", "openssl:se5d70578564e"], "status": "REASONED", "verify": [2]},
     "verify-failures": {"text": "Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62.", "components": ["openssl"], "sources": ["openssl:s581d7ad32359", "openssl:se5d70578564e"], "status": "REASONED", "verify": [2]},
     "verify-identity": {"text": "Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks.", "components": ["openssl"], "sources": ["openssl:se5d70578564e"], "status": "REASONED", "verify": [2]},

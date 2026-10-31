@@ -74,20 +74,36 @@ REASONED: final-response header inspection follows the cited MDN header document
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'final: %{http_code} %{url_effective}\n' "https://$1/"
+  set +e                                # errexit off here, so a check that ends nonzero is classified below instead of ending the block
+  set -- "$(if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'final: %{http_code} %{url_effective}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1##*$'\n'}" "${1%$'\n'*}"   # curl's exit status, then every response's headers and the final: line
+  printf '%s' "$2"
+  # In that final response check VALUES, not just presence: Strict-Transport-Security with a large,
+  # non-zero max-age (max-age=0 disables HSTS); an ENFORCING Content-Security-Policy, not only
+  # Content-Security-Policy-Report-Only (which enforces nothing); X-Content-Type-Options nosniff;
+  # Referrer-Policy strict-origin-when-cross-origin; Permissions-Policy denying camera, microphone, and
+  # geolocation; and an effective deny-framing policy: CSP frame-ancestors 'none', or X-Frame-Options
+  # DENY with NO enforcing frame-ancestors overriding it (an enforcing frame-ancestors always wins over
+  # X-Frame-Options, so frame-ancestors * with X-Frame-Options: DENY still allows framing). A header
+  # missing from the final response, or present only on an earlier hop, is a finding; a failed fetch is
+  # inconclusive. The block exits 1 if the final response lacks Strict-Transport-Security, an enforcing
+  # Content-Security-Policy, X-Content-Type-Options, Referrer-Policy or Permissions-Policy, or has
+  # neither X-Frame-Options nor a frame-ancestors directive in an enforcing Content-Security-Policy; 3 if
+  # the fetch fails or the header check cannot run; otherwise 0, leaving every header value for you
+  # to judge.
+  if [ "$1" != 0 ]; then
+    echo "curl exit $1: the fetch failed; inconclusive"; set -- 3
+  elif printf '%s' "$2" | awk '{ sub(/\r$/, "") } /^HTTP\// { seen = 1; sts = csp = nosniff = ref = perm = xfo = fa = 0; next } { i = index($0, ":"); if (i < 2) next; n = tolower(substr($0, 1, i - 1)); v = tolower(substr($0, i + 1)) } n == "strict-transport-security" { sts = 1 } n == "content-security-policy" { csp = 1; gsub(/ /, "", v); gsub(/\t/, "", v); gsub(/,/, ";", v); if (index(";" v, ";frame-ancestors")) fa = 1 } n == "x-content-type-options" { nosniff = 1 } n == "referrer-policy" { ref = 1 } n == "permissions-policy" { perm = 1 } n == "x-frame-options" { xfo = 1 } END { if (!seen) exit 3; m = 0; if (!sts) { print "FINDING: strict-transport-security is missing from the final response"; m = 1 }; if (!csp) { print "FINDING: content-security-policy is missing from the final response"; m = 1 }; if (!nosniff) { print "FINDING: x-content-type-options is missing from the final response"; m = 1 }; if (!ref) { print "FINDING: referrer-policy is missing from the final response"; m = 1 }; if (!perm) { print "FINDING: permissions-policy is missing from the final response"; m = 1 }; if (!xfo && !fa) { print "FINDING: the final response has no deny-framing policy: neither x-frame-options nor a frame-ancestors directive in an enforcing content-security-policy"; m = 1 }; exit m }'; then
+    set -- 0
+  else
+    case "$?" in 1) set -- 1 ;; 3) echo "awk found no response in curl's output; inconclusive"; set -- 3 ;; *) echo "awk exit $?: the header check could not run; inconclusive"; set -- 3 ;; esac
+  fi
+  echo "block exit $1; the header values are not classified, so judge them yourself against the comments above"
+  exit "$1"
 )
-# In that final response check VALUES, not just presence: Strict-Transport-Security with a large,
-# non-zero max-age (max-age=0 disables HSTS); an ENFORCING Content-Security-Policy, not only
-# Content-Security-Policy-Report-Only (which enforces nothing); X-Content-Type-Options nosniff;
-# Referrer-Policy strict-origin-when-cross-origin; Permissions-Policy denying camera, microphone, and
-# geolocation; and an effective deny-framing policy: CSP frame-ancestors 'none', or X-Frame-Options
-# DENY with NO enforcing frame-ancestors overriding it (an enforcing frame-ancestors always wins over
-# X-Frame-Options, so frame-ancestors * with X-Frame-Options: DENY still allows framing). A header
-# missing from the final response, or present only on an earlier hop, is a finding; a failed fetch is
-# inconclusive.
 ```
 
-REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; neither tool was re-run on the guarded block, and the guard has not been run. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
+REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and before the block classified the final response's headers and exited with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
 
 REASONED: shared-cache caller separation, per the guide's cited MDN Cache-Control. No deployed shared cache or authenticated A/B accounts are available; this prose supplies no local command or configuration to execute. No response sequence was observed. Exposed caching replays a previous caller's private content; fixed responses after warming the same URL belong only to their current authenticated or anonymous caller. For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
@@ -189,7 +205,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "b2b9ce382311f0bdae7bbcefb1f917ec913b675f6fa6862cad5a002ce9cb5f4a",
+  "body_sha256": "a349943ef4844d606d158bcb8e42d64b131a5e74fa785391ac55b7d929cb9275",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
