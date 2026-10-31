@@ -107,18 +107,23 @@ REASONED: listener and firewall inventory; no exposed/fixed run is recorded in t
   if command -v ss > /dev/null; then
     sudo ss -4 -tulnp || { echo "ss -4 exit $?: the IPv4 listener list failed; inconclusive"; set -- 3; }   # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
     sudo ss -6 -tulnp || { echo "ss -6 exit $?: the IPv6 listener list failed; inconclusive"; set -- 3; }   # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
+    set -- "$1" listed            # the 2nd value says whether ss ran, so the last line names the listeners only when it did
   else
     echo "ss is not installed here; not listing sockets"
     case "$1" in 0) set -- 2 ;; esac
+    set -- "$1" unlisted
   fi
   if command -v ufw > /dev/null || [ -x /usr/sbin/ufw ]; then
-    sudo ufw status verbose || { echo "ufw status exit $?: the firewall status failed; inconclusive"; set -- 3; }   # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
+    sudo ufw status verbose || { echo "ufw status exit $?: the firewall status failed; inconclusive"; set -- 3 "$2"; }   # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
   else
     # with no ufw, as on a firewalld host, this block never exits 0: it exits 2, or 3 if a listener list failed
     echo "ufw is not installed here, so its status was not read: on a firewalld system read the zone with firewall-cmd --list-all as section 2 shows; not checking"
-    case "$1" in 0) set -- 2 ;; esac
+    case "$1" in 0) set -- 2 "$2" ;; esac
   fi
-  echo "block exit $1; the listeners and the firewall status are not classified, so judge them against the comments"
+  case "$2" in
+    listed) echo "block exit $1; the listeners and the firewall status are not classified, so judge them against the comments" ;;
+    *) echo "block exit $1; the firewall status is not classified, so judge it against the comments" ;;
+  esac
   exit "$1"
 )
 ```
@@ -306,7 +311,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "be7562d73e35e91d1852a22d08ba4496946dabfd8e58e7da3368b000a72759e5",
+  "body_sha256": "685fc3a1da70487fa46b8d9f74f054cbf82eb02e1e050872a172c10d022c1cbc",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",

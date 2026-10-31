@@ -139,12 +139,14 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 # input, and otherwise 0.
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is not installed, or a part refused its input), which outranks 0
   if command -v ss >/dev/null; then
     ss -tlnp || { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; set -- 3; }   # read every listener; 5000: 127.0.0.1 only
+    set -- "$1" listed                  # the 2nd value says whether ss ran, so the last line names the listeners only when it did
   else
     echo "ss is not installed here; not listing sockets"
     case "$1" in 0) set -- 2 ;; esac
+    set -- "$1" unlisted
   fi
   (
     # Each credential reaches curl on stdin via a config file (curl --config -), never
@@ -245,8 +247,11 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
     esac
     exit "$6"
   )
-  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  echo "block exit $1; the listeners are not classified, so read every one against the comment on the ss line"
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 "$2" ;; 2:0) set -- 2 "$2" ;; 2:*|*:1) ;; *) set -- 3 "$2" ;; esac   # fold that part's status into the block's, ranked as above
+  case "$2" in
+    listed) echo "block exit $1; the listeners are not classified, so read every one against the comment on the ss line" ;;
+    *) echo "block exit $1; ss did not run, so there is no listener list to read" ;;
+  esac
   exit "$1"
 )
 ```
@@ -283,7 +288,7 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 )
 ```
 
-REASONED: preceding block; external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment, so no reachability result is recorded. The first block's listener inventory, proxy/backend authentication and experiment authorization are declared by its own leading comment and follow the cited MLflow host/binding and authentication documentation; no deployed server, credentials or experiment-permission fixture is available for them. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The second block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted. Those curl-stub runs covered an earlier form of the first block, that guard included, before its `command -v ss` check; the first block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with `ss` present and passing, present and failing, and missing.
+REASONED: preceding block; external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment, so no reachability result is recorded. The first block's listener inventory, proxy/backend authentication and experiment authorization are declared by its own leading comment and follow the cited MLflow host/binding and authentication documentation; no deployed server, credentials or experiment-permission fixture is available for them. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The second block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted. Those curl-stub runs covered an earlier form of the first block, that guard included, before its `command -v ss` check. Stub runs with `ss` present and passing, present and failing, and missing covered a later form, whose last line named the listeners even when `ss` was missing. The first block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs under the same three `ss` conditions, in which its last line named the listeners only when `ss` ran.
 
 ## Common mistakes
 
@@ -385,7 +390,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "0768ba5b0505d41b420ed99d47ad144daeecebbb925eaa24655674644165e5a4",
+  "body_sha256": "3e2b50f2fa463baefc1046948ea9107b8e6fb9ddf5e1cd18d35717ee8108254d",
   "components": {
     "source": {
       "name": "MLflow pinned source",

@@ -21425,18 +21425,23 @@ REASONED: listener and firewall inventory; no exposed/fixed run is recorded in t
   if command -v ss > /dev/null; then
     sudo ss -4 -tulnp || { echo "ss -4 exit $?: the IPv4 listener list failed; inconclusive"; set -- 3; }   # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
     sudo ss -6 -tulnp || { echo "ss -6 exit $?: the IPv6 listener list failed; inconclusive"; set -- 3; }   # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
+    set -- "$1" listed            # the 2nd value says whether ss ran, so the last line names the listeners only when it did
   else
     echo "ss is not installed here; not listing sockets"
     case "$1" in 0) set -- 2 ;; esac
+    set -- "$1" unlisted
   fi
   if command -v ufw > /dev/null || [ -x /usr/sbin/ufw ]; then
-    sudo ufw status verbose || { echo "ufw status exit $?: the firewall status failed; inconclusive"; set -- 3; }   # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
+    sudo ufw status verbose || { echo "ufw status exit $?: the firewall status failed; inconclusive"; set -- 3 "$2"; }   # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
   else
     # with no ufw, as on a firewalld host, this block never exits 0: it exits 2, or 3 if a listener list failed
     echo "ufw is not installed here, so its status was not read: on a firewalld system read the zone with firewall-cmd --list-all as section 2 shows; not checking"
-    case "$1" in 0) set -- 2 ;; esac
+    case "$1" in 0) set -- 2 "$2" ;; esac
   fi
-  echo "block exit $1; the listeners and the firewall status are not classified, so judge them against the comments"
+  case "$2" in
+    listed) echo "block exit $1; the listeners and the firewall status are not classified, so judge them against the comments" ;;
+    *) echo "block exit $1; the firewall status is not classified, so judge it against the comments" ;;
+  esac
   exit "$1"
 )
 ```
@@ -21624,7 +21629,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "be7562d73e35e91d1852a22d08ba4496946dabfd8e58e7da3368b000a72759e5",
+  "body_sha256": "685fc3a1da70487fa46b8d9f74f054cbf82eb02e1e050872a172c10d022c1cbc",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
@@ -41781,8 +41786,8 @@ access cannot bypass that gateway.
 # inconclusive, never a pass.
 # Run this block on the SurrealDB host: its listener inventory and health check read that host. It exits 2 if a
 # check refuses its input, 3 if the JWT prompt, ss, the health check or either query fails or the health check
-# does not answer 200, otherwise 2 if ss is not installed, and otherwise 0; the listener list and the two query
-# responses stay for you to judge.
+# does not answer 200, otherwise 2 if ss is not installed, and otherwise 0; the listener list, when ss ran, and
+# the two query responses stay for you to judge.
 # Auth discrimination: INFO FOR DB; with no credentials vs with a valid system-user JWT, same NS/DB and
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then
 # the actual HTTPS endpoint.
@@ -41809,27 +41814,32 @@ access cannot bypass that gateway.
   set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 3 (inconclusive) outranks 2 (ss is not installed), which outranks 0
   if command -v ss >/dev/null; then
     ss -tlnp || { echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- "$1" "$2" "$3" 3; }   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
+    set -- "$1" "$2" "$3" "$4" listed   # the 5th value says whether ss ran, so the last line names the listener list only when it did
   else
     echo "ss is not installed here; not listing sockets"
     case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+    set -- "$1" "$2" "$3" "$4" unlisted
   fi
   # guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then its health= line
-  printf '%s' "$6"                      # process up (not an auth check)
-  case "$5:$6" in
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # curl's exit status, then its health= line
+  printf '%s' "$7"                      # process up (not an auth check)
+  case "$6:$7" in
     0:health=200*) ;;
-    0:*) echo "the health check did not answer 200; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
-    *) echo "curl exit $5: the health check failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    0:*) echo "the health check did not answer 200; inconclusive"; set -- "$1" "$2" "$3" 3 "$5" ;;
+    *) echo "curl exit $6: the health check failed; inconclusive"; set -- "$1" "$2" "$3" 3 "$5" ;;
   esac
-  set -- "$4" -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header 'Accept: application/json' \
+  set -- "$4" "$5" -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header 'Accept: application/json' \
     --header "Surreal-NS: $2" --header "Surreal-DB: $3" --data-binary 'INFO FOR DB;' --url "${1%/}/sql" \
-    --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n'   # the block's status so far, then curl's arguments
+    --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n'   # the block's status so far, whether ss ran, then curl's arguments
   echo UNAUTHENTICATED
-  curl -q -g "${@:2}" </dev/null || { echo "curl exit $?: the unauthenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
+  curl -q -g "${@:3}" </dev/null || { echo "curl exit $?: the unauthenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
   echo AUTHENTICATED
-  printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "${@:2}" --header @- || { echo "curl exit $?: the authenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
-  echo "block exit $1; the listener list and the two INFO FOR DB responses are not classified, so judge them against the comments"
+  printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "${@:3}" --header @- || { echo "curl exit $?: the authenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
+  case "$2" in
+    listed) echo "block exit $1; the listener list and the two INFO FOR DB responses are not classified, so judge them against the comments" ;;
+    *) echo "block exit $1; the two INFO FOR DB responses are not classified, so judge them against the comments" ;;
+  esac
   exit "$1"
 )
 # Exposed (auth disabled + /sql enabled): the unauthenticated query returns DB info. Fixed: unauthenticated is
@@ -41950,7 +41960,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "4348925236d68291fbde7ae625a9cc1741c3d5c2f1d6600e859812896eee6407",
+  "body_sha256": "517147837d949a48f8bbbdb0cde6428db56bffc6979c4e04c3cddb903a476430",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",
@@ -52750,12 +52760,14 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 # input, and otherwise 0.
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is not installed, or a part refused its input), which outranks 0
   if command -v ss >/dev/null; then
     ss -tlnp || { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; set -- 3; }   # read every listener; 5000: 127.0.0.1 only
+    set -- "$1" listed                  # the 2nd value says whether ss ran, so the last line names the listeners only when it did
   else
     echo "ss is not installed here; not listing sockets"
     case "$1" in 0) set -- 2 ;; esac
+    set -- "$1" unlisted
   fi
   (
     # Each credential reaches curl on stdin via a config file (curl --config -), never
@@ -52856,8 +52868,11 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
     esac
     exit "$6"
   )
-  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  echo "block exit $1; the listeners are not classified, so read every one against the comment on the ss line"
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 "$2" ;; 2:0) set -- 2 "$2" ;; 2:*|*:1) ;; *) set -- 3 "$2" ;; esac   # fold that part's status into the block's, ranked as above
+  case "$2" in
+    listed) echo "block exit $1; the listeners are not classified, so read every one against the comment on the ss line" ;;
+    *) echo "block exit $1; ss did not run, so there is no listener list to read" ;;
+  esac
   exit "$1"
 )
 ```
@@ -52894,7 +52909,7 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 )
 ```
 
-REASONED: preceding block; external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment, so no reachability result is recorded. The first block's listener inventory, proxy/backend authentication and experiment authorization are declared by its own leading comment and follow the cited MLflow host/binding and authentication documentation; no deployed server, credentials or experiment-permission fixture is available for them. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The second block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted. Those curl-stub runs covered an earlier form of the first block, that guard included, before its `command -v ss` check; the first block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with `ss` present and passing, present and failing, and missing.
+REASONED: preceding block; external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment, so no reachability result is recorded. The first block's listener inventory, proxy/backend authentication and experiment authorization are declared by its own leading comment and follow the cited MLflow host/binding and authentication documentation; no deployed server, credentials or experiment-permission fixture is available for them. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The second block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted. Those curl-stub runs covered an earlier form of the first block, that guard included, before its `command -v ss` check. Stub runs with `ss` present and passing, present and failing, and missing covered a later form, whose last line named the listeners even when `ss` was missing. The first block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs under the same three `ss` conditions, in which its last line named the listeners only when `ss` ran.
 
 ## Common mistakes
 
@@ -52996,7 +53011,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "0768ba5b0505d41b420ed99d47ad144daeecebbb925eaa24655674644165e5a4",
+  "body_sha256": "3e2b50f2fa463baefc1046948ea9107b8e6fb9ddf5e1cd18d35717ee8108254d",
   "components": {
     "source": {
       "name": "MLflow pinned source",

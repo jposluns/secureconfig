@@ -136,8 +136,8 @@ access cannot bypass that gateway.
 # inconclusive, never a pass.
 # Run this block on the SurrealDB host: its listener inventory and health check read that host. It exits 2 if a
 # check refuses its input, 3 if the JWT prompt, ss, the health check or either query fails or the health check
-# does not answer 200, otherwise 2 if ss is not installed, and otherwise 0; the listener list and the two query
-# responses stay for you to judge.
+# does not answer 200, otherwise 2 if ss is not installed, and otherwise 0; the listener list, when ss ran, and
+# the two query responses stay for you to judge.
 # Auth discrimination: INFO FOR DB; with no credentials vs with a valid system-user JWT, same NS/DB and
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then
 # the actual HTTPS endpoint.
@@ -164,27 +164,32 @@ access cannot bypass that gateway.
   set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 3 (inconclusive) outranks 2 (ss is not installed), which outranks 0
   if command -v ss >/dev/null; then
     ss -tlnp || { echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- "$1" "$2" "$3" 3; }   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
+    set -- "$1" "$2" "$3" "$4" listed   # the 5th value says whether ss ran, so the last line names the listener list only when it did
   else
     echo "ss is not installed here; not listing sockets"
     case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+    set -- "$1" "$2" "$3" "$4" unlisted
   fi
   # guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then its health= line
-  printf '%s' "$6"                      # process up (not an auth check)
-  case "$5:$6" in
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # curl's exit status, then its health= line
+  printf '%s' "$7"                      # process up (not an auth check)
+  case "$6:$7" in
     0:health=200*) ;;
-    0:*) echo "the health check did not answer 200; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
-    *) echo "curl exit $5: the health check failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    0:*) echo "the health check did not answer 200; inconclusive"; set -- "$1" "$2" "$3" 3 "$5" ;;
+    *) echo "curl exit $6: the health check failed; inconclusive"; set -- "$1" "$2" "$3" 3 "$5" ;;
   esac
-  set -- "$4" -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header 'Accept: application/json' \
+  set -- "$4" "$5" -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header 'Accept: application/json' \
     --header "Surreal-NS: $2" --header "Surreal-DB: $3" --data-binary 'INFO FOR DB;' --url "${1%/}/sql" \
-    --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n'   # the block's status so far, then curl's arguments
+    --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n'   # the block's status so far, whether ss ran, then curl's arguments
   echo UNAUTHENTICATED
-  curl -q -g "${@:2}" </dev/null || { echo "curl exit $?: the unauthenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
+  curl -q -g "${@:3}" </dev/null || { echo "curl exit $?: the unauthenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
   echo AUTHENTICATED
-  printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "${@:2}" --header @- || { echo "curl exit $?: the authenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
-  echo "block exit $1; the listener list and the two INFO FOR DB responses are not classified, so judge them against the comments"
+  printf 'Authorization: Bearer %s\n' "$probe_jwt" | curl -q -g "${@:3}" --header @- || { echo "curl exit $?: the authenticated query failed; inconclusive"; set -- 3 "${@:2}"; }
+  case "$2" in
+    listed) echo "block exit $1; the listener list and the two INFO FOR DB responses are not classified, so judge them against the comments" ;;
+    *) echo "block exit $1; the two INFO FOR DB responses are not classified, so judge them against the comments" ;;
+  esac
   exit "$1"
 )
 # Exposed (auth disabled + /sql enabled): the unauthenticated query returns DB info. Fixed: unauthenticated is
@@ -305,7 +310,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "4348925236d68291fbde7ae625a9cc1741c3d5c2f1d6600e859812896eee6407",
+  "body_sha256": "517147837d949a48f8bbbdb0cde6428db56bffc6979c4e04c3cddb903a476430",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",
