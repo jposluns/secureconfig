@@ -124,11 +124,23 @@ location /mcp {
 
 ## Verify
 
-REASONED: following block; the ss listener inventory and the guarded direct-origin probe, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding) and curl manual entry (exitcode and errormsg, both added in curl 7.75.0). During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. The direct-origin comparison requires an MCP 2026-07-28 server, fronting layer and second probe host, unavailable in the authoring environment, so neither the exposed result (any HTTP code from your address) nor the fixed one (a refusal or timeout reaching your address, or an answer only from the fronting layer) was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0, then ran with stub ss and curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with the set -- line shortened, or given a second value under IFS=0, the exactly-1-value refusal. The stub curl in that marking-review run (October 2026), with no network and 198.51.100.7 substituted, received http://198.51.100.7:3000/mcp. The bash -n, ShellCheck and stub runs recorded here covered the listener block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
+REASONED: following block; the ss listener inventory, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding). During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. The inventory then shared one block with the direct-origin probe, and that block's bash -n, ShellCheck and stub runs are recorded with the probe below. The inventory now has its own block, run on the MCP host: it exits 3 if `ss -tlnp` fails and otherwise 0 with an unclassified-observation line, because you judge every listener it prints. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by drafting stub runs in October 2026 with no network, in which a stub ss that succeeded gave 0 and one that failed gave 3.
 
 ```bash
-# REASONED: listener isolation follows the cited deployment guidance; no live MCP 2026-07-28 server is available.
-ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
+(                                       # a subshell, so the exit below ends only the subshell; run it on the MCP host
+  if ss -tlnp; then                     # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
+    set -- 0
+  else
+    echo "ss -tlnp exit $?: the listener table could not be read; inconclusive"; set -- 3
+  fi
+  echo "block exit $1; every listener is an unclassified observation, so judge it yourself: the MCP HTTP transport belongs on 127.0.0.1:3000 only, never 0.0.0.0 or ::"
+  exit "$1"
+)
+```
+
+REASONED: following block; the guarded direct-origin probe, run from another host, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding) and curl manual entry (exitcode and errormsg, both added in curl 7.75.0). The direct-origin comparison requires an MCP 2026-07-28 server, fronting layer and second probe host, unavailable in the authoring environment, so neither the exposed result (any HTTP code from your address) nor the fixed one (a refusal or timeout reaching your address, or an answer only from the fronting layer) was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0, then ran with stub ss and curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with the set -- line shortened, or given a second value under IFS=0, the exactly-1-value refusal. The stub curl in that marking-review run (October 2026), with no network and 198.51.100.7 substituted, received http://198.51.100.7:3000/mcp. Those runs covered an earlier form, in one block with the listener inventory, whose guard refusals left the subshell with status 0. The current form exits 1 when your address answers over HTTP, 0 with an unclassified-observation line when curl exits 7 or 28, so that you read err, and 3 for any other curl failure. That form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network. The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
+
+```bash
 # From another host: refused at the origin, or answered only by the fronting layer.
 # read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
 # means the port answered. A resolver failure, a local socket error, or a timeout that did not come
@@ -140,64 +152,98 @@ ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -s -o /dev/null --noproxy '*' -X POST --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/mcp" ;;
   esac
+  set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' -X POST --connect-timeout 5 --max-time 20 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/mcp"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2%%$'\n'*}" "${2##*$'\n'}"           # the address, curl's write-out line, then curl's exit status
+  printf '%s\n' "$2"
+  case "$3" in
+    0) echo "FINDING: http://$1:3000/mcp answered over HTTP, so the port is reachable from this host"; set -- 1 ;;
+    7|28) echo "unclassified observation: a refusal or timeout reaching your address is the pass, while a resolver failure, a local socket error or a timeout that did not come from the remote address is inconclusive"; set -- 0 ;;
+    *) echo "curl exit $3: neither an HTTP answer nor a refusal or timeout; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; curl's err text is not classified, so read it yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; this Probe 1 paragraph and the listener block above it. Probe 1's expected 401 and exposed discovery result rest on the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries, and the listener block on the entries named in the declaration before it, which also records that block's local runs; Probe 1's own local runs are recorded with the following block. **Probe 1 - REASONED, not demonstrated.** No live MCP 2026-07-28 server is available in the authoring environment. Fixed: the unauthenticated request receives the applicable `401` denial; exposed: it returns an actual discovery result without authentication. A login page, redirect, transport failure, or JSON-RPC error does not demonstrate an exposed MCP result. The expected denial and metadata-discovery alternatives follow Authorization and Authorization Server Discovery.
+REASONED: preceding block; this Probe 1 paragraph and the direct-origin block above it. Probe 1's expected 401 and exposed discovery result rest on the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries, and the direct-origin block on the entries named in the declaration before it, which also records that block's local runs; Probe 1's own local runs are recorded with the following block. **Probe 1 - REASONED, not demonstrated.** No live MCP 2026-07-28 server is available in the authoring environment. Fixed: the unauthenticated request receives the applicable `401` denial; exposed: it returns an actual discovery result without authentication. A login page, redirect, transport failure, or JSON-RPC error does not demonstrate an exposed MCP result. The expected denial and metadata-discovery alternatives follow Authorization and Authorization Server Discovery.
 
 REASONED: the header shape of the three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (request headers, header/body validation) and Discovery entry (request shape). No MCP server is available in the authoring environment to answer a mismatched header with HTTP 400 and -32020, or a matching one without it. During marking review (October 2026) the four server/discover bodies in those blocks parsed as JSON, and in each the MCP-Protocol-Version header equalled the protocol version 2026-07-28 in `params._meta`, Mcp-Method equalled the body's method, clientCapabilities and clientInfo were present, and no Mcp-Name header appeared. `Mcp-Name` is deliberately absent: it is required only for `tools/call`, `resources/read`, and `prompts/get`, not `server/discover`. The `MCP-Protocol-Version` header must equal the body's `_meta` version; all three probes satisfy that requirement by construction. See Streamable HTTP and the Discovery request shape.
 
-REASONED: following block; the unauthenticated server/discover probe and well-known metadata read in the following block, and the placeholder guards of all three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries. The authoring environment has no MCP server or authorization server, so neither the fixed 401 nor an exposed discovery result was observed. During marking review (October 2026) the three blocks passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network. Unchanged, each printed its substitute-the-MCP-HTTPS-URL refusal; without its set -- line, the paste-the-whole-block refusal; shortened, its exactly-N-values refusal; and an http:// URL drew the https:// refusal. In the following block an unsubstituted Origin drew the allowed-Origin refusal and a control character the control-character refusal, and with both values substituted the stub received one POST carrying the Origin, MCP-Protocol-Version, Mcp-Method, Content-Type and Accept headers. At the October 2026 marking review the block's well-known read sat outside the subshell, named mcp.example.com and reached the stub in every run. The well-known read now sits in its own subshell and takes the MCP server's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; that guard has not been run, and neither bash -n nor ShellCheck was re-run on the changed block. Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole subshell block.
+REASONED: following block; the unauthenticated server/discover probe and well-known metadata read in the following block, and the placeholder guards of all three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries. The authoring environment has no MCP server or authorization server, so neither the fixed 401 nor an exposed discovery result was observed. During marking review (October 2026) the three blocks passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network. Unchanged, each printed its substitute-the-MCP-HTTPS-URL refusal; without its set -- line, the paste-the-whole-block refusal; shortened, its exactly-N-values refusal; and an http:// URL drew the https:// refusal. In the following block an unsubstituted Origin drew the allowed-Origin refusal and a control character the control-character refusal, and with both values substituted the stub received one POST carrying the Origin, MCP-Protocol-Version, Mcp-Method, Content-Type and Accept headers. At the October 2026 marking review the block's well-known read sat outside the subshell, named mcp.example.com and reached the stub in every run. Those runs covered earlier forms of the three blocks, which did not classify their results. The following block now runs its two parts in one outer subshell with one exit status: 1 when the unauthenticated request returns a discovery result, 0 when it is refused with 401 and the well-known read succeeds, 3 for any other answer or a failed request, and 2 when a part refuses its input and nothing else was found or inconclusive. Its well-known read takes the MCP server's host name on its own guarded `set --` line, which refuses example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network, which also exercised that host-name guard. Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole block.
 
 ```bash
-# REASONED: unauthenticated discovery follows MCP 2026-07-28 Authorization and Authorization Server Discovery; no live server is available.
 # Unauthenticated server/discover: expect 401 (Option A: the WWW-Authenticate header MAY carry
 # resource_metadata; if absent, use the well-known URL below) or the proxy's 401 (Option B).
 # A 400 with JSON-RPC -32020 is a HEADER MISMATCH (missing/malformed Mcp-* headers or a
 # header/body version disagreement), not an authentication verdict: fix the probe, do not
 # read it as a pass or fail of the auth check.
 # --noproxy '*' so a client HTTPS_PROXY cannot answer with its own 401/407 in place of the target.
-(
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MCP_HTTPS_URL' 'REPLACE_WITH_ALLOWED_ORIGIN'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not probing'; exit 2; }
-  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the MCP HTTPS URL; not probing'; exit 2 ;; esac
-  case "$1" in https://*) ;; *) echo 'use an https:// URL; not probing'; exit 2 ;; esac
-  case "$2" in ''|*REPLACE_WITH_*) echo 'substitute the allowed Origin; not probing'; exit 2 ;; esac
-  case "$1$2" in *[[:cntrl:]]*) echo 'control character in input; not probing'; exit 2 ;; esac
-  curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
-    -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
-    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
-)
-# Option A only: FOLLOW the resource_metadata URL from the 401's WWW-Authenticate header WHEN PRESENT
-# (the spec permits well-known-only discovery; fall back to /.well-known/oauth-protected-resource/mcp,
-# then the root below) and confirm it names your authorization server.
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MCP_HOST'   # the host name of the MCP HTTPS URL used above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -s --noproxy '*' "https://$1/.well-known/oauth-protected-resource"   # JSON with "authorization_servers"
+(                                       # the whole block in one subshell, so one exit status covers both parts
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MCP_HTTPS_URL' 'REPLACE_WITH_ALLOWED_ORIGIN'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not probing'; exit 2; }
+    case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the MCP HTTPS URL; not probing'; exit 2 ;; esac
+    case "$1" in https://*) ;; *) echo 'use an https:// URL; not probing'; exit 2 ;; esac
+    case "$2" in ''|*REPLACE_WITH_*) echo 'substitute the allowed Origin; not probing'; exit 2 ;; esac
+    case "$1$2" in *[[:cntrl:]]*) echo 'control character in input; not probing'; exit 2 ;; esac
+    set -- "$1" "$2" "$(if curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
+      -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
+      -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+      -w '\nhttp=%{http_code}\n' \
+      -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"           # the response with its http= line, then curl's exit status
+    printf '%s' "$3"
+    set -- "$1" "$2" "$(printf '%s' "$3" | tr -d ' \t\r\n')" "$4" "${3##*http=}"   # the response without white space, curl's exit status, then the HTTP code
+    set -- "$1" "$2" "$3" "$4" "${5%%[!0123456789]*}" ""
+    case "$3" in *'"resultType":"complete"'*) set -- "$1" "$2" "$3" "$4" "$5" "${6}r" ;; esac
+    case "$3" in *'"supportedVersions"'*) set -- "$1" "$2" "$3" "$4" "$5" "${6}v" ;; esac
+    case "$3" in *'"capabilities"'*) set -- "$1" "$2" "$3" "$4" "$5" "${6}c" ;; esac
+    case "$4:$5:$6" in
+      0:401:*) echo "pass: the unauthenticated server/discover request was refused with 401"; exit 0 ;;
+      0:2??:rvc) echo "FINDING: the unauthenticated server/discover request returned a discovery result (resultType complete, supportedVersions and capabilities)"; exit 1 ;;
+      0:*) echo "HTTP $5 without a discovery result is neither the 401 pass nor an exposed result: a login page, redirect, JSON-RPC error or 400 -32020 header mismatch demonstrates neither; inconclusive"; exit 3 ;;
+      *) echo "curl exit $4: the server/discover request failed; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # Option A only: FOLLOW the resource_metadata URL from the 401's WWW-Authenticate header WHEN PRESENT
+  # (the spec permits well-known-only discovery; fall back to /.well-known/oauth-protected-resource/mcp,
+  # then the root below) and confirm it names your authorization server.
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MCP_HOST'   # the host name of the MCP HTTPS URL used above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    if curl -q -g -s --noproxy '*' "https://$1/.well-known/oauth-protected-resource"; then   # JSON with "authorization_servers"
+      echo
+      echo "unclassified observation (Option A only): confirm that the JSON above names your authorization server in authorization_servers"; exit 0
+    else
+      echo "curl exit $?: the well-known metadata read failed; inconclusive"; exit 3
+    fi
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the response headers and the well-known metadata JSON are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
 REASONED: preceding block; this Probe 2 paragraph and the unauthenticated discovery block above it. Probe 2's expected 403 and exposed discovery result rest on the guide's cited MCP specification 2026-07-28 Streamable HTTP, Discovery and Caching entries; the block above rests on the entries named in the declaration before it, which also records its local runs, and Probe 2's own local runs are recorded with the following block. **Probe 2 - REASONED, not demonstrated.** No live MCP 2026-07-28 server and valid deployment credential are available in the authoring environment. Establish the allowed-Origin positive control before interpreting the negative request. Require a real `DiscoverResult`, including `resultType:"complete"`, `supportedVersions`, `capabilities`, and the `ttlMs`/`cacheScope` caching hints required for complete discovery results. See Discovery and Caching. Fixed: changing only Origin produces `403`; exposed: the disallowed Origin still receives a discovery result. A `403` counts as an Origin rejection only after the otherwise-identical positive control succeeds. See Streamable HTTP, Security & Endpoint.
 
-REASONED: following block; the header-file handling and the allowed and disallowed Origin pair in the following block, per the guide's cited curl manual entry (header files) and MCP specification 2026-07-28 Streamable HTTP entry (Origin validation). The authoring environment has no MCP server or deployment credential, so neither the fixed 403 nor an exposed discovery result for the disallowed Origin was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network: unchanged, without its set -- line, shortened or with an http:// URL, it printed the matching refusal and exited 2, and an unsubstituted or unreadable header-file path drew its own refusal. With a mode-0600 fixture header file, the stub received -H with @ and the file's path in both calls, the Origin changed from the allowed value to https://attacker.example, and the fixture token appeared in neither argument list. Header files keep credential values out of curl's argv; this does not protect a secret copied into shell history, exposed through tracing, or readable by the account owner. See [secrets.md](secrets.md) and the curl manual.
+REASONED: following block; the header-file handling and the allowed and disallowed Origin pair in the following block, per the guide's cited curl manual entry (header files) and MCP specification 2026-07-28 Streamable HTTP entry (Origin validation). The authoring environment has no MCP server or deployment credential, so neither the fixed 403 nor an exposed discovery result for the disallowed Origin was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network: unchanged, without its set -- line, shortened or with an http:// URL, it printed the matching refusal and exited 2, and an unsubstituted or unreadable header-file path drew its own refusal. With a mode-0600 fixture header file, the stub received -H with @ and the file's path in both calls, the Origin changed from the allowed value to https://attacker.example, and the fixture token appeared in neither argument list. Those runs covered an earlier form of the block, which did not classify its two requests. The current form exits 1 when the disallowed Origin still receives a discovery result, 0 when the positive control returns a complete discovery result and the disallowed Origin is refused with 403, 3 when the control fails or a request gives any other answer or fails, and 2 for a guard refusal. That form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network. Header files keep credential values out of curl's argv; this does not protect a secret copied into shell history, exposed through tracing, or readable by the account owner. See [secrets.md](secrets.md) and the curl manual.
 
 ```bash
-# REASONED: Origin rejection follows MCP 2026-07-28 Streamable HTTP security requirements; no live server or deployment credential is available.
 # Origin control (DNS rebinding): a wrong Origin must be rejected even WITH a valid credential. Run the
 # positive control first (ALLOWED Origin + a real server/discover body: require an actual discovery
 # result - resultType:"complete", supportedVersions, capabilities, and ttlMs/cacheScope - not merely a 2xx
@@ -207,6 +253,7 @@ REASONED: following block; the header-file handling and the allowed and disallow
 # Keep the credential in a mode-0600 header file (secrets.md), never on the command line:
 # REPLACE_WITH_AUTH_HEADER_FILE holds a line like "Authorization: Bearer <token>".
 (
+  set +e                                # errexit off here, so a request that ends nonzero is classified below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MCP_HTTPS_URL' 'REPLACE_WITH_ALLOWED_ORIGIN' 'REPLACE_WITH_AUTH_HEADER_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -217,26 +264,56 @@ REASONED: following block; the header-file handling and the allowed and disallow
   case "$3" in ''|*REPLACE_WITH_*) echo 'substitute the mode-0600 auth-header file path on the set -- line above; not probing'; exit 2 ;; esac
   [ -r "$3" ] || { echo 'header file not readable; not probing'; exit 2; }
   case "$1$2$3" in *[[:cntrl:]]*) echo 'control character in input; not probing'; exit 2 ;; esac
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # Allowed Origin + valid credential: require a real DiscoverResult.
-  curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
     -H "@$3" \
     -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
     -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+    -w '\nhttp=%{http_code}\n' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # the status, the response with its http= line, then curl's exit status
+  printf '%s' "$5"
+  set -- "$1" "$2" "$3" "$4" "$(printf '%s' "$5" | tr -d ' \t\r\n')" "$6" "${5##*http=}"   # the response without white space, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7%%[!0123456789]*}" ""
+  case "$5" in *'"resultType":"complete"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}r" ;; esac
+  case "$5" in *'"supportedVersions"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}v" ;; esac
+  case "$5" in *'"capabilities"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}c" ;; esac
+  case "$5" in *'"ttlMs"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}t" ;; esac
+  case "$5" in *'"cacheScope"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}k" ;; esac
+  case "$6:$7:$8" in
+    0:2??:rvctk) echo "positive control: the allowed Origin with your credential returned a complete discovery result" ;;
+    0:*) echo "HTTP $7 without a complete discovery result (resultType complete, supportedVersions, capabilities, ttlMs and cacheScope): the positive control failed, so a 403 below is not attributable to the Origin check; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $6: the positive-control request failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
   # Only the Origin changed to a disallowed value: expect 403.
-  curl -q -g -si --noproxy '*' -X POST --url "$1" -H 'Origin: https://attacker.example' \
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -si --noproxy '*' -X POST --url "$1" -H 'Origin: https://attacker.example' \
     -H "@$3" \
     -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
     -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+    -w '\nhttp=%{http_code}\n' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # the status, the response with its http= line, then curl's exit status
+  printf '%s' "$5"
+  set -- "$1" "$2" "$3" "$4" "$(printf '%s' "$5" | tr -d ' \t\r\n')" "$6" "${5##*http=}"   # the response without white space, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7%%[!0123456789]*}" ""
+  case "$5" in *'"resultType":"complete"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}r" ;; esac
+  case "$5" in *'"supportedVersions"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}v" ;; esac
+  case "$5" in *'"capabilities"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}c" ;; esac
+  case "$6:$7:$8" in
+    0:2??:rvc) echo "FINDING: the disallowed Origin https://attacker.example still received a discovery result"; set -- "$1" "$2" "$3" 1 ;;
+    0:403:*) echo "the disallowed Origin was refused with 403, which counts as an Origin rejection only after the positive control above succeeded" ;;
+    0:*) echo "HTTP $7 for the disallowed Origin is neither the 403 pass nor a discovery result (a 401 is an auth failure and a 400 -32020 a header mismatch, neither an Origin verdict); inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $6: the disallowed-Origin request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  echo "block exit $4; the response headers are not classified, so judge them yourself"
+  exit "$4"
 )
 ```
 
-REASONED: following block; the wrong-audience probe in the following block, per the guide's cited MCP specification 2026-07-28 Authorization entry (audience validation, error codes). During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network: unchanged, without its set -- line, shortened, with an http:// URL, and with an unsubstituted or unreadable header-file path, it printed the matching refusal and exited 2. The stub curl in that marking-review run (October 2026), with no network and a mode-0600 fixture header file, received -H with @ and the file's path, and the fixture token did not appear in its arguments. **Probe 3 - REASONED, not demonstrated.** The authoring environment has no live authorization server with a second registered resource. Use an otherwise valid, unexpired token for that other resource, keeping the endpoint, allowed Origin, and request body unchanged. The audience-validation requirement and `401` outcome come from Authorization and Authorization Security Considerations.
+REASONED: following block; the wrong-audience probe in the following block, per the guide's cited MCP specification 2026-07-28 Authorization entry (audience validation, error codes). During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network: unchanged, without its set -- line, shortened, with an http:// URL, and with an unsubstituted or unreadable header-file path, it printed the matching refusal and exited 2. The stub curl in that marking-review run (October 2026), with no network and a mode-0600 fixture header file, received -H with @ and the file's path, and the fixture token did not appear in its arguments. Those runs covered an earlier form of the block, which did not classify its request. The current form exits 0 for a 401, 1 for a complete discovery result, 3 for any other answer or a failed request, and 2 for a guard refusal; it is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network. **Probe 3 - REASONED, not demonstrated.** The authoring environment has no live authorization server with a second registered resource. Use an otherwise valid, unexpired token for that other resource, keeping the endpoint, allowed Origin, and request body unchanged. The audience-validation requirement and `401` outcome come from Authorization and Authorization Security Considerations.
 
 ```bash
-# REASONED: wrong-audience check follows MCP 2026-07-28 Authorization and Authorization Security Considerations;
-# no live authorization server with a second registered resource is available here.
 # Wrong audience (Option A): a token issued for a DIFFERENT resource must fail with 401. Use an
 # otherwise valid, unexpired token whose aud names another resource (a forged or expired token would
 # fail for the wrong reason), in its own mode-0600 header file. Fixed: 401, the audience is rejected.
@@ -258,11 +335,29 @@ REASONED: following block; the wrong-audience probe in the following block, per 
   [ -r "$3" ] || { echo 'header file not readable; not probing'; exit 2; }
   case "$1$2$3" in *[[:cntrl:]]*) echo 'control character in input; not probing'; exit 2 ;; esac
   # Otherwise-valid token, wrong aud: require 401.
-  curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
+  set -- "$1" "$2" "$3" "$(if curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
     -H "@$3" \
     -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
     -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+    -w '\nhttp=%{http_code}\n' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the response with its http= line, then curl's exit status
+  printf '%s' "$4"
+  set -- "$1" "$2" "$3" "$(printf '%s' "$4" | tr -d ' \t\r\n')" "$5" "${4##*http=}"   # the response without white space, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%%[!0123456789]*}" ""
+  case "$4" in *'"resultType":"complete"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}r" ;; esac
+  case "$4" in *'"supportedVersions"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}v" ;; esac
+  case "$4" in *'"capabilities"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}c" ;; esac
+  case "$4" in *'"ttlMs"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}t" ;; esac
+  case "$4" in *'"cacheScope"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}k" ;; esac
+  case "$5:$6:$7" in
+    0:401:*) echo "pass: the token for another resource was refused with 401, so the audience is rejected"; set -- 0 ;;
+    0:2??:rvctk) echo "FINDING: a token minted for another audience received a complete discovery result"; set -- 1 ;;
+    0:*) echo "HTTP $6 is neither the 401 pass nor a complete discovery result (a login page or JSON-RPC error, even with 2xx, is not acceptance, and a 400 -32020 is a header mismatch); inconclusive"; set -- 3 ;;
+    *) echo "curl exit $5: the wrong-audience request failed; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the response headers are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -366,7 +461,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1346807c224e3b788bd4ec84642e0ae15f04368f526a7f6537e99361197b246b",
+  "body_sha256": "9be780b56d0025d43ab358648382dd0399bf51d3ef8128eac26a8489355f1940",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -460,11 +555,11 @@ Claims (full source mapping in the JSON block below):
     "caddy-stream": {"text": "Caddy flushes text/event-stream immediately and defaults to no read timeout.", "components": ["caddy"], "sources": ["caddy:s3865a73ccda3"], "status": "REASONED"},
     "cache": {"text": "Private caches must separate authorization contexts and result-affecting inputs; cacheScope never replaces access checks; public results may be shared.", "components": ["mcp"], "sources": ["mcp:s047fe3fd0dc0"], "status": "REASONED"},
     "nginx-cache": {"text": "proxy_cache off keeps caching disabled; default methods are GET/HEAD, and POST caching needs explicit configuration.", "components": ["nginx"], "sources": ["nginx:sf3430c5a0b22"], "status": "REASONED"},
-    "verify-network": {"text": "Inventory listeners and probe actual direct origin; any HTTP response proves reachability, local errors and unexplained timeouts are inconclusive.", "components": ["mcp", "curl"], "sources": ["mcp:s6e1c66cfb825", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-anonymous": {"text": "Unauthenticated discovery should get 401; actual discovery data is exposure, while redirects, login pages and RPC/transport errors are inconclusive.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s117c3edbfcd7", "mcp:s1d962c091f09"], "status": "REASONED", "verify": [2]},
-    "verify-origin": {"text": "Require valid-credential allowed-Origin DiscoverResult, including complete/version/capabilities/cache hints; changing only Origin should yield 403.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [3]},
-    "verify-audience": {"text": "Otherwise-valid token for another resource should get 401, not DiscoverResult; no second-resource authorization server was available.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s4b9b953ca683", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [4]},
-    "verify-credential-file": {"text": "Mode-0600 header files keep credentials out of curl argv, without protecting history, tracing or account-owner access.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [3, 4]}
+    "verify-network": {"text": "Inventory listeners and probe actual direct origin; any HTTP response proves reachability, local errors and unexplained timeouts are inconclusive.", "components": ["mcp", "curl"], "sources": ["mcp:s6e1c66cfb825", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1, 2]},
+    "verify-anonymous": {"text": "Unauthenticated discovery should get 401; actual discovery data is exposure, while redirects, login pages and RPC/transport errors are inconclusive.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s117c3edbfcd7", "mcp:s1d962c091f09"], "status": "REASONED", "verify": [3]},
+    "verify-origin": {"text": "Require valid-credential allowed-Origin DiscoverResult, including complete/version/capabilities/cache hints; changing only Origin should yield 403.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [4]},
+    "verify-audience": {"text": "Otherwise-valid token for another resource should get 401, not DiscoverResult; no second-resource authorization server was available.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s4b9b953ca683", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [5]},
+    "verify-credential-file": {"text": "Mode-0600 header files keep credentials out of curl argv, without protecting history, tracing or account-owner access.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [4, 5]}
   }
 }
 ````
