@@ -342,7 +342,7 @@ Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1
 - Tailscale Serve and Funnel distinction: https://tailscale.com/docs/reference/tailscale-cli/serve
 - curl manual (write-out variables `exitcode` and `errormsg` added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ss manual: https://man7.org/linux/man-pages/man8/ss.8.html
-- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 - OWASP SQL injection prevention: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
 
 
@@ -444,7 +444,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "7cc91a63e39008f226b2f92885aacdd182971d4e91e89a25cc751583c1c1e69a",
+  "body_sha256": "f32f2d8ab5237bf48e3a0dbb55bc212b9cf5e903bd7165f3324c1758aad3cc47",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
