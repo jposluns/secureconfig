@@ -199,6 +199,7 @@ Leave the final value as `browser` for a password-only server. If a token is alr
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x
+  set +e                   # errexit off here, so each result below is recorded instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_HTTPS_URL' 'REPLACE_WITH_CA_BUNDLE' 'browser'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -221,37 +222,76 @@ Leave the final value as `browser` for a password-only server. If a token is alr
   [ -f "$2" ] || { echo "CA bundle is not a readable file; not probing"; exit 2; }
   [ -r "$2" ] || { echo "CA bundle is not a readable file; not probing"; exit 2; }
   case "$3" in browser|token) ;; *) echo "choose browser or token; not probing"; exit 2 ;; esac
+  case "$3" in
+    token) command -v python3 > /dev/null || { echo "python3 is required for the token prompt; not probing"; exit 2; } ;;
+  esac
 
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute every placeholder inside the quotes; not probing"; exit 2 ;;
     *)
+      set -- "$1" "$2" "$3" 0   # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a refused token), which outranks 0
       # REASONED: no Jupyter runtime or test deployment in the authoring environment.
       # This request checks certificate validation AND anonymous API access.
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        --cacert "$2" -w '\nanonymous=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+      set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        --cacert "$2" -w '\nanonymous=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then its output
+      printf '%s' "$6"
+      case "$5:$6" in
+        0:*'anonymous=403 '*) ;;
+        0:*'anonymous=2'??' '*) echo "FINDING: the anonymous request was answered with a 2xx, so this URL is reachable without credentials"; set -- "$1" "$2" "$3" 1 ;;
+        0:*'anonymous=3'??' '*|0:*'anonymous=401 '*) echo "unclassified observation: a redirect or 401 challenge, which is the fixed result only if it comes from your login layer; judge it" ;;
+        0:*) echo "the anonymous request was answered with neither the native 403 nor a login redirect; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+        *) echo "curl exit $5: the validated HTTPS request did not complete; a plaintext listener, a certificate that fails validation and a connection failure all end this way, so read err= above; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      esac
 
       # Password-only deployments: perform the browser positive control described below.
-      [ "$3" = token ] || exit 0
-      set -- "$(python3 -c 'import getpass; print(getpass.getpass("Jupyter token: "))')" "$1" "$2"
-      case "$1" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|"") echo "a real token is required; not probing"; exit 2 ;;
-      esac
-      case "$1" in
-        *[[:cntrl:]]*) echo "token contains a control character; not probing"; exit 2 ;;
-      esac
-      # REASONED: no Jupyter runtime or test deployment in the authoring environment.
-      printf 'Authorization: token %s\n' "$1" |
-        curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-          --cacert "$3" --header @- \
-          -w '\nauthenticated=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$2"
+      if [ "$3" = token ]; then
+        (
+          set -- "$(if python3 -c 'import getpass; print(getpass.getpass("Jupyter token: "))'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$1" "$2"
+          set -- "${1%$'\n'*}" "$2" "$3" "${1##*$'\n'}"
+          set -- "${1%$'\n'}" "$2" "$3" "$4"   # the token without print's line ending, the URL, the CA bundle, then python3's exit status
+          [ "$4" = 0 ] || { echo "the token prompt failed (python3 exit $4), so the token requests did not run; inconclusive"; exit 3; }
+          case "$1" in
+            *REPLACE_WITH_*|*'<'*|*'>'*|"") echo "a real token is required; not probing"; exit 2 ;;
+          esac
+          case "$1" in
+            *[[:cntrl:]]*) echo "token contains a control character; not probing"; exit 2 ;;
+          esac
+          set -- "$1" "$2" "$3" 0   # the 4th value is now this part's status so far, ranked as above
+          # REASONED: no Jupyter runtime or test deployment in the authoring environment.
+          set -- "$1" "$2" "$3" "$4" "$(if printf 'Authorization: token %s\n' "$1" |
+            curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+              --cacert "$3" --header @- \
+              -w '\nauthenticated=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+          set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"
+          printf '%s' "$6"
+          case "$5:$6" in
+            0:*'authenticated=200 '*) ;;
+            0:*) echo "the token request did not return 200, so the authenticated positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+            *) echo "curl exit $5: the token request failed, so the authenticated positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+          esac
 
-      # REASONED: no Jupyter runtime or test deployment in the authoring environment.
-      # The deliberately wrong Host below is a non-secret test value, not the destination.
-      printf 'Authorization: token %s\n' "$1" |
-        curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-          --cacert "$3" --header @- --header 'Host: rebinding.example.com' \
-          -w '\nwrong-host=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$2"
+          # REASONED: no Jupyter runtime or test deployment in the authoring environment.
+          # The deliberately wrong Host below is a non-secret test value, not the destination.
+          set -- "$1" "$2" "$3" "$4" "$(if printf 'Authorization: token %s\n' "$1" |
+            curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+              --cacert "$3" --header @- --header 'Host: rebinding.example.com' \
+              -w '\nwrong-host=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+          set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"
+          printf '%s' "$6"
+          case "$5:$6" in
+            0:*'wrong-host=403 '*) ;;
+            0:*'wrong-host=2'??' '*) echo "FINDING: the token request with a wrong Host reached the API"; set -- "$1" "$2" "$3" 1 ;;
+            0:*) echo "the wrong-Host request was answered with neither the native 403 nor a 2xx; a fronting layer's rejection shows only its own rejection; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+            *) echo "curl exit $5: the wrong-Host request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+          esac
+          exit "$4"
+        )
+        case "$?:$4" in 0:*) ;; 1:*) set -- "$1" "$2" "$3" 1 ;; 2:0) set -- "$1" "$2" "$3" 2 ;; 2:*|*:1) ;; *) set -- "$1" "$2" "$3" 3 ;; esac   # fold the token part's status into the block's, ranked as above
+      fi
+      echo "block exit $4; the response bodies, any login redirect or challenge and, without a token, the browser positive control described below are not classified, so judge them yourself"
+      exit "$4"
       ;;
   esac
 )
@@ -280,7 +320,7 @@ For the metrics comparison, set `authenticate_prometheus = False` only in the is
 
 To demonstrate `allow_unauthenticated_access`, identify an extension route using Jupyter's handler machinery without an explicit authentication decorator or public-access declaration. With `True`, its anonymous GET is permitted; with `False`, login is required and its authenticated response remains available. Record the actual route and expected body. If no such route is installed, this feature check remains REASONED from the cited authentication-enforcement documentation; testing an already protected kernel route does not replace it. Explicitly public routes require a separate review of whether their exposure is intentional. [Default authentication enforcement](https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html#jupyter_server.serverapp.ServerApp.allow_unauthenticated_access).
 
-### Cookie-session XSRF and origin checks (REASONED: Cookie/header preparation, cookie GET, XSRF POST, origin/CORS comparisons and kernel cleanup. A live stand-up of Jupyter Server with a disposable default kernel opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No authenticated browser session was exercised. Local marking review ran all five Bash blocks through bash -n and ShellCheck 0.11.0: exit 0 with no output; all fifteen Python configuration blocks passed ASCII, AST and traitlets.Config loading. With external commands stubbed, both written HTTP placeholders exited 1 with "substitute every placeholder inside the quotes; not probing"; valid browser and cookie fixtures exited 0 with one and four CURL_STUB lines respectively. Invalid marker, count, empty, placeholder, angle-bracket, example-host, control-character, scheme, URL and file fixtures exited 1 before curl. These bash -n, ShellCheck and stub runs covered the two guarded HTTP blocks in an earlier form, whose guard refusals exited with status 1; neither was re-run on the current form, whose guard refusals exit with status 2. Python json.loads parsed the POST body as an empty object; dummy Netscape cookie and X-XSRFToken files exercised file arguments only. Expected exposed POST creates a kernel without XSRF and wrong-origin GET returns data; fixed missing XSRF gives 403, valid XSRF gives 201, wrong-origin GET gives 404 and same-origin GET gives 200. Browser CORS and authenticated UI cleanup require the live session, per the guide's cited sources this declaration lists. The guide's cited sources this declaration lists: Jupyter Server identity provider and token-authenticated origin exception; Jupyter Server Host, origin, XSRF, and default authentication implementation; Jupyter Server kernel API implementation; JupyterLab kernel and terminal management; Tornado XSRF cookies and request headers; curl options, stdin headers, cookie files, and diagnostic variables.)
+### Cookie-session XSRF and origin checks (REASONED: Cookie/header preparation, cookie GET, XSRF POST, origin/CORS comparisons and kernel cleanup. A live stand-up of Jupyter Server with a disposable default kernel opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No authenticated browser session was exercised. Local marking review ran all five Bash blocks through bash -n and ShellCheck 0.11.0: exit 0 with no output; all fifteen Python configuration blocks passed ASCII, AST and traitlets.Config loading. With external commands stubbed, both written HTTP placeholders exited 1 with "substitute every placeholder inside the quotes; not probing"; valid browser and cookie fixtures exited 0 with one and four CURL_STUB lines respectively. Invalid marker, count, empty, placeholder, angle-bracket, example-host, control-character, scheme, URL and file fixtures exited 1 before curl. These bash -n, ShellCheck and stub runs covered the two guarded HTTP blocks in an earlier form, whose guard refusals exited with status 1; neither was re-run on the current form, whose guard refusals exit with status 2. Python json.loads parsed the POST body as an empty object; dummy Netscape cookie and X-XSRFToken files exercised file arguments only. Expected exposed POST creates a kernel without XSRF and wrong-origin GET returns data; fixed missing XSRF gives 403, valid XSRF gives 201, wrong-origin GET gives 404 and same-origin GET gives 200. Browser CORS and authenticated UI cleanup require the live session, per the guide's cited sources this declaration lists in two parts. The guide's cited sources this declaration lists (1 of 2): Jupyter Server identity provider and token-authenticated origin exception; Jupyter Server Host, origin, XSRF, and default authentication implementation; Jupyter Server kernel API implementation. The guide's cited sources this declaration lists (2 of 2): JupyterLab kernel and terminal management; Tornado XSRF cookies and request headers; curl options, stdin headers, cookie files, and diagnostic variables.)
 
 **REASONED: no Jupyter runtime, authenticated browser session, or test deployment here.**
 
@@ -296,6 +336,7 @@ Set the base URL to the actual server URL, including any deployment prefix. Set 
 ```bash
 (
   set +x
+  set +e                   # errexit off here, so each result below is recorded instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SERVER_HTTPS_BASE_URL' 'REPLACE_WITH_CA_BUNDLE' \
     'REPLACE_WITH_COOKIE_JAR' 'REPLACE_WITH_XSRF_HEADER_FILE' 'REPLACE_WITH_SAME_ORIGIN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -332,31 +373,64 @@ Set the base URL to the actual server URL, including any deployment prefix. Set 
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"")
       echo "substitute every placeholder inside the quotes; not probing"; exit 2 ;;
     *)
+      set -- "$1" "$2" "$3" "$4" "$5" 0   # the 6th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
       # REASONED: no Jupyter runtime, browser session or test deployment here.
       # Positive control: a live cookie session must retrieve kernel JSON.
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert "$2" --cookie "$3" --header "Origin: $5" \
-        -w '\ncookie-get=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/kernels"
+        -w '\ncookie-get=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/kernels"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"   # curl's exit status, then its output
+      printf '%s' "$8"
+      case "$7:$8" in
+        0:*'cookie-get=200 '*) ;;
+        0:*) echo "the cookie GET did not return 200, so the session positive control failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+        *) echo "curl exit $7: the cookie GET failed, so the session positive control failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      esac
 
       # REASONED: no Jupyter runtime, browser session or test deployment here.
       # Negative XSRF case: same session and origin, but no X-XSRFToken header.
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert "$2" --cookie "$3" --header "Origin: $5" \
         --header 'Content-Type: application/json' --data-binary '{}' \
-        -w '\nmissing-xsrf=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/kernels"
+        -w '\nmissing-xsrf=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/kernels"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"
+      printf '%s' "$8"
+      case "$7:$8" in
+        0:*'missing-xsrf=403 '*) ;;
+        0:*'missing-xsrf=2'??' '*) echo "FINDING: the POST without an XSRF header was accepted; record and shut down any kernel it created"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+        0:*) echo "the POST without an XSRF header was answered with neither 403 nor a 2xx; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+        *) echo "curl exit $7: the POST without an XSRF header failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      esac
 
       # REASONED: no Jupyter runtime, browser session or test deployment here.
       # Positive XSRF control: creates a disposable kernel; record its returned id.
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert "$2" --cookie "$3" --header "Origin: $5" --header "@$4" \
         --header 'Content-Type: application/json' --data-binary '{}' \
-        -w '\nvalid-xsrf=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/kernels"
+        -w '\nvalid-xsrf=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/kernels"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"
+      printf '%s' "$8"
+      case "$7:$8" in
+        0:*'valid-xsrf=201 '*) ;;
+        0:*) echo "the POST with the matching XSRF header did not return 201, so the XSRF positive control failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+        *) echo "curl exit $7: the POST with the matching XSRF header failed, so the XSRF positive control failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      esac
 
       # REASONED: no Jupyter runtime, browser session or test deployment here.
       # Wrong Origin, same authenticated session. This header is not a destination.
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert "$2" --cookie "$3" --header 'Origin: https://cross-origin.example.com' \
-        -w '\nwrong-origin=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/kernels"
+        -w '\nwrong-origin=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/api/kernels"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%$'\n'*}"
+      printf '%s' "$8"
+      case "$7:$8" in
+        0:*'wrong-origin=404 '*) ;;
+        0:*'wrong-origin=2'??' '*) echo "FINDING: the wrong-Origin cookie GET was answered with a 2xx"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+        0:*) echo "the wrong-Origin cookie GET was answered with neither the native 404 nor a 2xx; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+        *) echo "curl exit $7: the wrong-Origin cookie GET failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      esac
+      echo "block exit $6; the response bodies, the kernel ids to record and shut down, and the browser CORS headers are not classified, so judge them yourself"
+      exit "$6"
       ;;
   esac
 )
@@ -664,7 +738,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d41998da39294dd535e9aaefa7067fd142e5e5fc054d77d6776eca618388a03c",
+  "body_sha256": "e9430325d4a04ef5e58da9a558a184fd58e130f12dff6389d1f79c17a6b8d324",
   "components": {
     "server": {
       "name": "Jupyter Server",

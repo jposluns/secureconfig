@@ -802,10 +802,16 @@ REASONED: following block; resource and scope comparisons follow the cited vendo
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*)
           echo "substitute the protected headers file path; not probing"; exit 2 ;;
         *)
-          curl -q -g -sS --noproxy '*' --proto '=https' \
+          [ -f "$2" ] || { echo "the protected headers file is not a readable file; not probing"; exit 2; }
+          [ -r "$2" ] || { echo "the protected headers file is not a readable file; not probing"; exit 2; }
+          if curl -q -g -sS --noproxy '*' --proto '=https' \
             --connect-timeout 5 --max-time 20 --header @- \
             -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-            "$1" < "$2" ;;
+            "$1" < "$2"; then
+            echo "unclassified observation: judge the status and body above against the comparison you are running, for the identity in this headers file"
+          else
+            echo "curl exit $?: the request failed; inconclusive"; exit 3
+          fi ;;
       esac ;;
     *) echo "use HTTPS; not probing"; exit 2 ;;
   esac
@@ -859,13 +865,22 @@ REASONED: following block; console registration comparisons follow the pinned Ap
         *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*)
           echo "substitute the protected signup JSON path; not probing"; exit 2 ;;
         *)
-          curl -q -g -sS --noproxy '*' --proto '=https' \
+          [ -f "$2" ] || { echo "the protected signup JSON is not a readable file; not probing"; exit 2; }
+          [ -r "$2" ] || { echo "the protected signup JSON is not a readable file; not probing"; exit 2; }
+          set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --proto '=https' \
             --connect-timeout 5 --max-time 20 \
             --header 'X-Appwrite-Project: console' \
             --header 'Content-Type: application/json' \
             --data-binary @- \
             -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-            "${1%/}/v1/account" < "$2" ;;
+            "${1%/}/v1/account" < "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+          set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its output
+          printf '%s' "$4"
+          case "$3:$4" in
+            0:*'http=201 '*) echo "FINDING: the registration returned 201 and created an account, which is the finding once root-only registration is on"; exit 1 ;;
+            0:*) echo "unclassified observation: read the error above; only the console-account-limit error shows the restriction, and a duplicate email or password-validation error does not" ;;
+            *) echo "curl exit $3: the registration request failed; inconclusive"; exit 3 ;;
+          esac ;;
       esac ;;
     *) echo "use HTTPS; not probing"; exit 2 ;;
   esac
@@ -955,7 +970,7 @@ REASONED: following block; privileged-credential scanning follows the cited auth
 
 ### Verification status and source work
 
-All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring. Local guard tests
+REASONED: authoring-time shell checks of an earlier form of the three bash blocks; no live service or deployed bundle was available, and the current forms, in which the GET and registration blocks also set their exit status from their request, are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes. All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring. Local guard tests
 refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments,
 and omitted or shortened `set --` lines. These checks establish shell behavior only. No live
 service result or deployed-bundle scan is claimed.
@@ -1228,8 +1243,8 @@ Claims (full source mapping in the JSON block below):
 - verify-uploads (REASONED; appwrite): Compare permitted/unrelated uploads and size-boundary fixtures; mandatory processing requires rejecting over-limit files and confirming accepted-file encryption/scanning.
 - verify-functions (REASONED; appwrite): Compare intended execute roles, unrelated users and privileged server keys, including disabled functions; confirm executor/orchestrator privacy from a second host.
 - verify-bundle (REASONED; pb-docs, appwrite-docs): Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.
-- local-guards (DEMONSTRATED; pb-docs, appwrite-docs): Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. The tests covered earlier forms, whose scan block result arms ended with status 0; current forms were not re-run.
-- local-syntax (DEMONSTRATED; appwrite, pb-docs, appwrite-docs): All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. The runs covered earlier forms, whose scan block result arms ended with status 0; current forms were not re-run.
+- local-guards (DEMONSTRATED; pb-docs, appwrite-docs): Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. The tests covered earlier forms, whose guard refusals left the subshell with status 0 and whose scan block result arms ended with status 0; current forms were not re-run, and gate bash -n and ShellCheck passes cover them.
+- local-syntax (DEMONSTRATED; appwrite, pb-docs, appwrite-docs): All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. The runs covered earlier forms, whose guard refusals left the subshell with status 0 and whose scan block result arms ended with status 0; current forms were not re-run, and gate bash -n and ShellCheck passes cover them.
 - source-limits (REASONED; appwrite-docs, pb-docs, appwrite, utopia-php-database): PocketBase CLI/--dev, Appwrite requester/call-site and utopia-php/database role matching, Database reads/dispatch and status/skip pins remain cited. SQL, Mongo, Memory, Redis and Pool adapter reads are traced; which adapter a given deployment uses is unknown, complete pinned-source verification is not claimed, and live authorization is not demonstrated.
 - source-limits-sql-get (REASONED; utopia-php-database): Pinned MariaDB, MySQL, Postgres and SQLite use SQL getDocument: ID lookup, tenant-query call and permission decoding, with no adapter authorization check. This guide reasons it adds no permission filter with or without collection grants; for non-metadata collections, Database read checks accept collection roles plus document roles only with documentSecurity enabled.
 - source-limits-sql-find (REASONED; utopia-php-database): Pinned SQL find defaults to read, takes shared authorization roles and adds a document-permission predicate only with status enabled. This guide reasons that a collection grant skips that filter; without a grant, enabled authorization with documentSecurity takes the non-skip branch and applies it.
@@ -1249,7 +1264,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-10",
-  "body_sha256": "753722551a3c8c45ff7d4ac63e7c87fcec4d36b72dd26d9fcc44db56d7dbd517",
+  "body_sha256": "0ae75bff563d7833bc48b189ac3f2e51c83728509a1a48f2818c35b09c0ca4f7",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -1512,8 +1527,8 @@ Claims (full source mapping in the JSON block below):
     "verify-uploads": {"text": "Compare permitted/unrelated uploads and size-boundary fixtures; mandatory processing requires rejecting over-limit files and confirming accepted-file encryption/scanning.", "components": ["appwrite"], "sources": ["appwrite:se9480e5807b3", "appwrite:s4ab95ecbf6b5"], "status": "REASONED"},
     "verify-functions": {"text": "Compare intended execute roles, unrelated users and privileged server keys, including disabled functions; confirm executor/orchestrator privacy from a second host.", "components": ["appwrite"], "sources": ["appwrite:s655a0abb9ef0", "appwrite:s8e5272615f2e"], "status": "REASONED"},
     "verify-bundle": {"text": "Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:s773e441dd51c", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED", "verify": [3]},
-    "local-guards": {"text": "Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. The tests covered earlier forms, whose scan block result arms ended with status 0; current forms were not re-run.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite-docs:sa0bd132f7968", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines."},
-    "local-syntax": {"text": "All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. The runs covered earlier forms, whose scan block result arms ended with status 0; current forms were not re-run.", "components": ["appwrite", "pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite:s2bb21218c5ee", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring."},
+    "local-guards": {"text": "Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. The tests covered earlier forms, whose guard refusals left the subshell with status 0 and whose scan block result arms ended with status 0; current forms were not re-run, and gate bash -n and ShellCheck passes cover them.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite-docs:sa0bd132f7968", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines."},
+    "local-syntax": {"text": "All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. The runs covered earlier forms, whose guard refusals left the subshell with status 0 and whose scan block result arms ended with status 0; current forms were not re-run, and gate bash -n and ShellCheck passes cover them.", "components": ["appwrite", "pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite:s2bb21218c5ee", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring."},
     "source-limits": {"text": "PocketBase CLI/--dev, Appwrite requester/call-site and utopia-php/database role matching, Database reads/dispatch and status/skip pins remain cited. SQL, Mongo, Memory, Redis and Pool adapter reads are traced; which adapter a given deployment uses is unknown, complete pinned-source verification is not claimed, and live authorization is not demonstrated.", "components": ["appwrite-docs", "pb-docs", "appwrite", "utopia-php-database"], "sources": ["appwrite-docs:s58ad28816c5d", "pb-docs:s9029ab974cf1", "appwrite:s7ba6f9c71972", "utopia-php-database:s44e735a78b9d", "utopia-php-database:sfda128d99ef9", "utopia-php-database:s610f3fb8fa73", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s3389fa5854d5", "utopia-php-database:s01a8ce8001e0", "utopia-php-database:s3864f749beea", "utopia-php-database:s3965be77f402", "utopia-php-database:s386e19ac0f42", "utopia-php-database:s5439a153bbd6", "utopia-php-database:s8b0dbf5677da", "utopia-php-database:s35cc05f86ccd", "utopia-php-database:s958fb4526355", "utopia-php-database:s590f2ad87ab9", "utopia-php-database:sabffefbbe8f7", "utopia-php-database:sbc944db029cb", "utopia-php-database:s6a9132fbc928", "utopia-php-database:s6324818fa770", "utopia-php-database:sdc4aebfb869d", "utopia-php-database:s4cc1d5739816", "utopia-php-database:sf6aa64548538", "utopia-php-database:s6d59676de4ac", "utopia-php-database:s22782b0cef21", "utopia-php-database:s637a07eb6f05", "utopia-php-database:s68f0dd3f99e1", "utopia-php-database:s9be04229c19a", "utopia-php-database:sa8ac8f3419dd", "utopia-php-database:s942a26817d62", "utopia-php-database:s1da4feb30d76", "utopia-php-database:s3c305a201d46", "utopia-php-database:s553c31c38ee3", "utopia-php-database:s768127e55c8e", "utopia-php-database:s39898214cd29"], "status": "REASONED"},
     "source-limits-sql-get": {"text": "Pinned MariaDB, MySQL, Postgres and SQLite use SQL getDocument: ID lookup, tenant-query call and permission decoding, with no adapter authorization check. This guide reasons it adds no permission filter with or without collection grants; for non-metadata collections, Database read checks accept collection roles plus document roles only with documentSecurity enabled.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3864f749beea", "utopia-php-database:s35cc05f86ccd", "utopia-php-database:s958fb4526355", "utopia-php-database:s590f2ad87ab9", "utopia-php-database:sabffefbbe8f7", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d"], "status": "REASONED"},
     "source-limits-sql-find": {"text": "Pinned SQL find defaults to read, takes shared authorization roles and adds a document-permission predicate only with status enabled. This guide reasons that a collection grant skips that filter; without a grant, enabled authorization with documentSecurity takes the non-skip branch and applies it.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3965be77f402", "utopia-php-database:s386e19ac0f42", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s3389fa5854d5", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"},
