@@ -135,11 +135,17 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 # account's view of the process. Substitute each password INSIDE the
 # single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
 # The block exits 1 for a finding (a 2xx where a refusal is expected), 3 if ss or a request fails or a request
-# answers anything else the comments do not expect, 2 if the credential part refuses its input, and otherwise 0.
+# answers anything else the comments do not expect, 2 if ss is not installed or the credential part refuses its
+# input, and otherwise 0.
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
   set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
-  ss -tlnp || { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; set -- 3; }   # read every listener; 5000: 127.0.0.1 only
+  if command -v ss >/dev/null; then
+    ss -tlnp || { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; set -- 3; }   # read every listener; 5000: 127.0.0.1 only
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
   (
     # Each credential reaches curl on stdin via a config file (curl --config -), never
     # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
@@ -277,7 +283,7 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 )
 ```
 
-REASONED: preceding block; external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment, so no reachability result is recorded. The first block's listener inventory, proxy/backend authentication and experiment authorization are declared by its own leading comment and follow the cited MLflow host/binding and authentication documentation; no deployed server, credentials or experiment-permission fixture is available for them. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the current form of both blocks, that guard included, is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted.
+REASONED: preceding block; external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment, so no reachability result is recorded. The first block's listener inventory, proxy/backend authentication and experiment authorization are declared by its own leading comment and follow the cited MLflow host/binding and authentication documentation; no deployed server, credentials or experiment-permission fixture is available for them. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The second block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted. Those curl-stub runs covered an earlier form of the first block, that guard included, before its `command -v ss` check; the first block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with `ss` present and passing, present and failing, and missing.
 
 ## Common mistakes
 
@@ -379,7 +385,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e3f8fc1dce7b410a14b3c39fbbee153739d3f142382bd027a84054fdcdea7fb3",
+  "body_sha256": "0768ba5b0505d41b420ed99d47ad144daeecebbb925eaa24655674644165e5a4",
   "components": {
     "source": {
       "name": "MLflow pinned source",

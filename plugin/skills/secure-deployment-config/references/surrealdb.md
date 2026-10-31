@@ -136,7 +136,8 @@ access cannot bypass that gateway.
 # inconclusive, never a pass.
 # Run this block on the SurrealDB host: its listener inventory and health check read that host. It exits 2 if a
 # check refuses its input, 3 if the JWT prompt, ss, the health check or either query fails or the health check
-# does not answer 200, and otherwise 0; the listener list and the two query responses stay for you to judge.
+# does not answer 200, otherwise 2 if ss is not installed, and otherwise 0; the listener list and the two query
+# responses stay for you to judge.
 # Auth discrimination: INFO FOR DB; with no credentials vs with a valid system-user JWT, same NS/DB and
 # endpoint. Substitute inside the quotes and paste the whole block; run first against the direct origin, then
 # the actual HTTPS endpoint.
@@ -160,8 +161,13 @@ access cannot bypass that gateway.
     printf '\n'; echo 'secret input failed; not probing'; exit 3   # every check above passed, so the failed prompt is inconclusive
   fi
   [[ "$probe_jwt" =~ ^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-]+$ ]] || { echo 'missing or malformed JWT; not probing'; exit 2; }
-  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 3 (inconclusive) or 0
-  ss -tlnp || { echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- "$1" "$2" "$3" 3; }   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 3 (inconclusive) outranks 2 (ss is not installed), which outranks 0
+  if command -v ss >/dev/null; then
+    ss -tlnp || { echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- "$1" "$2" "$3" 3; }   # inventory, on the host: 8000 on loopback or a private address, never 0.0.0.0
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+  fi
   # guard-conventions: allow fixed loopback health URL http://127.0.0.1:8000/health; no reader-substituted target
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'health=%{http_code}\n' http://127.0.0.1:8000/health; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then its health= line
@@ -299,7 +305,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "459f36e687df9e694f27873783e47a43dda2bdc29b6e13ada3c4f6b5080e1d87",
+  "body_sha256": "4348925236d68291fbde7ae625a9cc1741c3d5c2f1d6600e859812896eee6407",
   "components": {
     "pinned": {
       "name": "SurrealDB CLI and image",

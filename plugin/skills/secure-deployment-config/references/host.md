@@ -98,14 +98,19 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing
 
 ## 4. Verify
 
-REASONED: listener and firewall inventory; no exposed/fixed run is recorded in this guide. Expectations follow the cited iproute2, UFW and firewalld sources; the authoring environment has no authorized target host.
+REASONED: listener and firewall inventory; no exposed/fixed run is recorded in this guide. Expectations follow the cited iproute2, UFW and firewalld sources; the authoring environment has no authorized target host. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH, so the block's `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it, as the guide's cited sudo sudoers manual, secure_path entry describes.
 
 ```bash
 (                                 # a subshell, so the exit below ends only the subshell; run it on the host you are checking
   set +e                          # errexit off here, so a command that fails is recorded below instead of ending the block
-  set -- 0                        # the block's status so far: 3 (a command failed) outranks 2 (the ufw check refused), which outranks 0
-  sudo ss -4 -tulnp || { echo "ss -4 exit $?: the IPv4 listener list failed; inconclusive"; set -- 3; }   # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
-  sudo ss -6 -tulnp || { echo "ss -6 exit $?: the IPv6 listener list failed; inconclusive"; set -- 3; }   # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
+  set -- 0                        # the block's status so far: 3 (a command failed) outranks 2 (the ss or ufw check refused), which outranks 0
+  if command -v ss > /dev/null; then
+    sudo ss -4 -tulnp || { echo "ss -4 exit $?: the IPv4 listener list failed; inconclusive"; set -- 3; }   # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
+    sudo ss -6 -tulnp || { echo "ss -6 exit $?: the IPv6 listener list failed; inconclusive"; set -- 3; }   # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
   if command -v ufw > /dev/null || [ -x /usr/sbin/ufw ]; then
     sudo ufw status verbose || { echo "ufw status exit $?: the firewall status failed; inconclusive"; set -- 3; }   # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
   else
@@ -215,6 +220,7 @@ REASONED: preceding block; key-only login and PAM MFA comparisons follow the cit
 - iproute2 ss TCP sockets, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375
 - iproute2 ss UDP sockets, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L377-L378
 - iproute2 ss explicit IPv4 and IPv6 selection, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L365-L369
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 - Ubuntu noble nc verbose flag, lines 257 to 258, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n257
 - Ubuntu noble nc timeout flag, lines 263 to 266, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n263
 - Ubuntu noble nc zero-I/O scan, lines 308 to 311, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n308
@@ -300,7 +306,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "0c0805d21fbc978935484bd9d27939fba4c7574207ae41c1f8d43280677877af",
+  "body_sha256": "be7562d73e35e91d1852a22d08ba4496946dabfd8e58e7da3368b000a72759e5",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
