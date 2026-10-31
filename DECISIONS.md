@@ -890,20 +890,21 @@ predictions quoted below, words in square brackets replace a pronoun in the quot
   count: B 3. Its effect (applied by #1010): the nine sentences were split inside their headings' declarations
   before row 1.385 closed.
 - **Proxy decision of 2026-10-31 on where a Verify block's status 2 ends and status 3 begins, for the maintainer's
-  later review (#1106).** Decided at 2026-10-31T00:35:00Z under that directive, which the maintainer restated to all
-  orchestrators on 2026-10-30. The question was which status a block reports in five cases that the ruling of 2026-10-30
+  later review (#1106).** Decided at 2026-10-31T00:31:56Z, when the second vote arrived, under that directive, as
+  restated on 2026-10-30. The question was which status a block reports in five cases that the ruling of 2026-10-30
   (#1083) left open: a missing required tool, a failed hidden-prompt read, an unreadable file the reader supplied, a
   shell-state failure after the guards, and a reader who declines a confirmation prompt. The outcome, as the record
   reads:
   "Q1 missing required tool: 2. Q2 hidden-prompt read fails: 3 (an empty or placeholder value after a successful read stays 2). Q3 reader-supplied file unreadable: 2. Q4 shell-state failure after the guards: 2. Q5 reader declines a confirmation: 2."
-  The predictions, as recorded: the orchestrator predicted A, the outcome above, on all five. The guardrails
-  prediction is A on all five, with the reasoning "2 means the block declined to run because of something the
-  reader supplied or the reader's shell state; 3 means an operation the block itself attempted failed"
-  (20261031T003151Z.from-guardrails.cee873686e21.msg). The lab_infra prediction is A on all five, with the reasoning
-  "2 means fix what you supplied or your shell and rerun; 3 means something the block attempted failed"
-  (20261031T003156Z.from-lab_infra.a1ce24caa41c.msg). The record gives the final count: A 3 on each question. Both
-  suggested writing the principle into rule 6, and the wording below is lab_infra's. The principle: a check the block makes before relying on something, such as that a required
-  tool is present, that a file the reader supplied is readable or that the reader's shell state can be cleared, is a
+  The predictions, as recorded: the orchestrator predicted A, the outcome above, on all five. The lab_infra
+  prediction is A on all five, with the reasoning "2 means fix what you supplied or your shell and rerun; 3 means
+  something the block attempted failed" (20261031T003156Z.from-lab_infra.a1ce24caa41c.msg). The guardrails
+  prediction is A on all five, with the reasoning "2 means the block declined to run because of something the reader
+  supplied or the reader's shell state; 3 means an operation the block itself attempted failed"
+  (20261031T003151Z.from-guardrails.cee873686e21.msg). The record gives the final count: A 3 on each question. Both
+  suggested writing the principle into rule 6, and the wording below adapts lab_infra's. The principle: a check the
+  block makes before relying on something, such as that a required tool is present, that a file the reader supplied
+  is readable or that the reader's shell state can be cleared, is a
   guard refusal with status 2 when its failure reflects the reader's setup. The failure of an operation the block
   attempts after its checks passed is status 3, so a file that passes `test -r` but then fails to read is 3, and a
   tool that is present but fails when run is 3. The five cases: a missing required tool is 2; a hidden-prompt read
@@ -943,9 +944,10 @@ predictions quoted below, words in square brackets replace a pronoun in the quot
   fence holds several. Its effect, applied in the same change as this entry: CONTRIBUTING.md rule 6 states that the
   block whose status it governs is the fence the reader pastes, and that a fence holding several subshells either
   feeds their classified outcomes into one status that its last line exits with or is split into separate fences.
-  No guide changes here; fences that do not yet follow this are recoded in later pull requests. The revert path is
-  the maintainer's review: a different ruling replaces the rule 6 sentences on the fence as the unit, and any fence
-  recoded under this decision is recoded again.
+  Rule 6's sentence on a block wrapped in `) || echo "block exit $?"` is unchanged, and how it relates to the fence
+  as the unit is left for the maintainer's review. No guide changes here; fences that do not yet follow this are
+  recoded in later pull requests. The revert path is the maintainer's review: a different ruling replaces the rule 6
+  sentences on the fence as the unit, and any fence recoded under this decision is recoded again.
 
 ## Profile: predicting these rulings
 
