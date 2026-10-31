@@ -106,6 +106,8 @@ Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsuppor
 
 ## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
+REASONED: both blocks below and the exit statuses described here are read from the code of each
+block and the cited Apache documentation; this guide records no run of either.
 Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
 the status code is printed and you compare it. The first block takes your host name, an
 unconfigured name and a protected path on its `set --` line, and refuses with status 2 if any is
@@ -113,11 +115,11 @@ left unsubstituted or malformed, or if the unconfigured name is your own host na
 case. That comparison cannot see your other ServerName and ServerAlias values, so check the name
 against them yourself. The block then runs the configuration test and reload, classifies its
 requests to the site root and to the unconfigured name, records each outcome as it runs, and
-exits once at the end: 1 if either request answers 200, otherwise 3 if either answers anything
-but 401 or the configuration test, the reload or one of its curl or ss commands fails, and 0
-when both answer 401. The redirect headers and the listener list stay for you to judge. The
-`apachectl -S` block exits 3 if the command fails and 0 otherwise, because you judge the vhost
-list it prints.
+exits once at the end. It exits 1 if either request answers 200, otherwise 3 if either answers anything
+but 401 or the configuration test, the reload or one of its curl or ss commands fails, otherwise
+2 if `ss` is not installed, and 0 when both answer 401. The redirect headers and the listener
+list stay for you to judge. The `apachectl -S` block exits 3 if the command fails and 0
+otherwise, because you judge the vhost list it prints.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -140,7 +142,7 @@ list it prints.
   case "$3" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   if sudo apachectl configtest && sudo systemctl reload apache2; then :; else   # httpd on RHEL
     echo "configuration test or reload exit $?: the requests below may test the configuration Apache was already running; inconclusive"; set -- "$1" "$2" "$3" 3
   fi
@@ -161,8 +163,13 @@ list it prints.
   # Read every listener. Do not filter to the ports you expect: a filter cannot show you a port
   # you did not think of, which is the whole question, and `grep ':(80|443)'` also matches an
   # address such as [2001:db8:80::1]:9000.
-  ss -tlnp ||
-    { echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
+  if command -v ss >/dev/null; then
+    ss -tlnp ||
+      { echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+  fi
 
   # A request whose name matches no ServerName or ServerAlias does not fail. Apache falls through
   # to "the first listed virtual host that matches" the address and port, so a vhost listed
@@ -295,7 +302,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "3b69ef78ccd26273a38ce7360f0a1172a0c33422de23407664f88afbf6e7e530",
+  "body_sha256": "b03c96bdca29ba966bc46ac2de86c4e824ab57fc2e382fd228832e1c2d097564",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",

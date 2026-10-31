@@ -160,7 +160,7 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   [ -f "$3" ] || { echo "the session cookie file is unreadable; not probing"; exit 2; }
   [ -r "$3" ] || { echo "the session cookie file is unreadable; not probing"; exit 2; }
   set +e                                # errexit off here, so a check that ends nonzero is recorded below instead of ending the block
-  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sI --noproxy '*' -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the headers, the HTTP code and the redirect URL
   set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and the redirect URL
@@ -199,9 +199,14 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
     *) echo "curl exit $5: the request with the session cookie failed, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
 
-  ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
-             # ingress the platform's required address and port from section 1
-  case "$?" in 0) ;; *) echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
+  if command -v ss >/dev/null; then
+    ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
+               # ingress the platform's required address and port from section 1
+    case "$?" in 0) ;; *) echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+  fi
   # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
   #   app.get('/whoami', (req, res) => res.send(req.ip))
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' "https://$1/whoami"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -337,7 +342,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "2b0bf0a0327dfb09e9ea4e3ebe94bfbaff03c05228b44a636b47201a6d9f1f30",
+  "body_sha256": "b445964be8197cb5a3b18330d9958d503c27032c29dba82417512f3351753d1a",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",

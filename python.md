@@ -148,7 +148,7 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" "$2" 0                      # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" 0                      # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   curl -q -g -sSI --noproxy '*' "https://$1/" ||     # public HTTPS endpoint: must succeed without -k; if not, investigate the cert, chain, hostname, or your client trust store, never -k
     { echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
   # An unauthenticated request to a real protected path must be REJECTED and a valid credential ACCEPTED. --noproxy
@@ -171,8 +171,13 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
     0:*) echo "HTTP $5 with the credential is not the expected 2xx, so the positive control failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
     *) echo "curl exit $4: the request with the credential failed (is cred.txt in this directory?); inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
   esac
-  ss -tlnp ||   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
-    { echo "ss -tlnp failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+  if command -v ss >/dev/null; then
+    ss -tlnp ||   # every listener: loopback for a same-host reverse proxy, or the platform's required address and port from section 1 on managed ingress
+      { echo "ss -tlnp failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$3" in 0) set -- "$1" "$2" 2 ;; esac
+  fi
   echo "block exit $3; the HTTPS headers and the listener list above are not classified, so judge them yourself: read every listener against section 1"
   exit "$3"
 )
@@ -318,7 +323,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "2e565adb1a5d3eadf3aee64cb04091da0c6dc41e61922c562b9dc09e7adad53b",
+  "body_sha256": "0fe0f55d533652cf6eddfe7ae913678f552915abf64fddc7d94f1741824a9da0",
   "components": {
     "django": {
       "name": "Django documentation",
