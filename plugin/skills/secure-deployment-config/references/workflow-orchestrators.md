@@ -217,7 +217,7 @@ Pods can turn an exposed API into cluster compromise.
 ## Verify
 
 REASONED: the nine blocks below each carry their own declaration, in the paragraph before the block or, for the last block, the paragraph after it. Together they hold the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe. Those declarations rest on the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The checks are separate blocks because each tests a different product or vantage, so one product's result can never hide another's in a shared exit status. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs. The origin guard in that stub run (marking review, October 2026) printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the first TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. During marking review (October 2026), the second TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 with dummy credentials on a pseudo-terminal, stubs for every external command and only the known credential helpers delegated to the scratch interpreter. Under bash -e before that revision, each helper exit 73, partial-output failure or empty credential stopped the calling shell at that authenticated probe, so later probes did not run. In those second-review fixtures, where every other external-command stub succeeded, each refusal skipped only its authenticated request and all later probes ran. Valid credentials reached all three authenticated curl stubs with the expected header or JSON before and after, with and without bash -e. All four empty credential cases and each helper failure were also checked without errexit before and after. With PYTHONOPTIMIZE=1 and an empty Argo token, the unchanged helper sent an empty bearer header; the revised helper refused it and skipped the Argo authenticated request, with and without bash -e. In that second review, every completed sequence reached the unchanged direct-origin placeholder refusal; all files exited 2, either at the first unhandled refusal before that revision under bash -e or at the final origin guard. These runs checked shell flow and credential encoding only, not service authentication. During marking review (October 2026), the third TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 through a pseudo-terminal with dummy credentials, stubs for every external command and only the three exact credential helpers delegated to the isolated scratch interpreter. No probe reached a service or read the host socket paths. Before this revision, under bash -e, exit 1 from ss, Temporal, stat or getfacl, and curl exits 6, 7 or 28 from each anonymous or default-account probe, stopped the file at that label and skipped the remaining probes. After this revision, under bash -e, those same cases reached every later label and the final origin-placeholder refusal. Each authenticated curl exit 6, 7 or 28, helper exit 73, partial-output failure and empty credential case reached all later probes before and after; helper refusals sent no authenticated request. Valid dummy credentials produced the expected Basic header, JSON and bearer header before and after. An empty Argo token was also refused with PYTHONOPTIMIZE=1 before and after. With a substituted origin URL, origin curl exits 6, 7 and 28 were reported before and after. The missing-set-line, short-set-line and ftp:// origin cases refused without an origin request before and after. The revised files exited 0 after their labelled continuation messages, including the final origin refusal; this status means the sequence continued, not that any service was secure. These stub runs establish shell flow and encoding only, not service authentication. All of the local runs above covered these checks in earlier forms, when they were one block, and before its three Airflow requests took the Airflow host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. In the latest form those runs covered, the prefect-auth, airflow-valid-token, argo-auth and origin subshells ended with an echo of `skipped or failed; continuing` that printed no status; a later form ended each guarded subshell with an echo of the form `) || echo "origin: block exit $?; continuing"`, and no recorded run covered that form.
-Each of the nine blocks now records every classified result and every failed command in it and exits once: 0 for a pass or for an observation it says it cannot classify, 1 for a finding, 2 for a guard refusal and 3 for a failed or inconclusive check, a finding outranking an inconclusive result and both outranking a refusal. The current form of every block is covered by the bash -n and ShellCheck 0.11.0 passes that the repository's gate suite runs over every block. During drafting (October 2026) each block also ran whole under bash 5.3.9 with stub curl, ss, temporal, stat, getfacl and credential prompts and no network, including the Airflow and origin guards and runs that inherited a readonly variable, a declare -i variable and set -e; those runs test shell flow and status only, not service authentication.
+Each of the nine blocks now records every classified result and every failed command in it and exits once: 0 for a pass or for an observation it says it cannot classify, 1 for a finding, 2 for a guard refusal and 3 for a failed or inconclusive check, a finding outranking an inconclusive result and both outranking a refusal. The current form of every block is covered by the bash -n and ShellCheck 0.11.0 passes that the repository's gate suite runs over every block. During drafting (October 2026) each block also ran whole under bash 5.3.9 with stub curl, ss, temporal, stat, getfacl, tr and credential prompts and no network, including the Airflow and origin guards and runs that inherited a readonly variable, a declare -i variable and set -e. Those runs also covered a missing ss or python3 and malformed and validly spaced JSON answers; they test shell flow and status only, not service authentication.
 The stat and getfacl observations are recorded after the last block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
 live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
@@ -230,12 +230,13 @@ authorized call against the SAME origin, and separately probe the origin directl
 the guarded block at the end, because a rejection seen only through a proxy does not prove the origin enforces
 anything. The write-out fields need curl 7.75.0 or newer; never use `-k`.
 
-REASONED: following block; the ss inventory in the following block rests on the guide's cited `ss` manual and network-namespaces entries and on the default ports in its Prefect, Dagster, Airflow, Temporal, Flower and Argo entries. It classifies no listener, so it exits 0 after printing the table, or 3 if ss fails, and its last line leaves the table for you to read.
+REASONED: following block; the ss inventory in the following block rests on the guide's cited `ss` manual and network-namespaces entries and on the default ports in its Prefect, Dagster, Airflow, Temporal, Flower and Argo entries. It classifies no listener, so it exits 0 after printing the table, or 3 if ss fails, and its last line leaves the table for you to read. If ss is not installed it lists nothing and refuses with status 2.
 
 ```bash
 (                                       # a subshell, so the exit below ends only the subshell
   set +e                                # errexit off here, so a failing ss still reaches the status line below
-  set -- 0                              # the block's status: 3 if ss fails, otherwise 0, because no listener is classified
+  set -- 0                              # the block's status: 2 if ss is missing, 3 if ss fails, otherwise 0, because no listener is classified
+  command -v ss > /dev/null || { echo 'ss is not installed here; not listing sockets'; exit 2; }   # a missing required tool is a refusal
   ss -tlnp || { echo 'ss: exited nonzero; continuing'; set -- 3; }   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8233/5555/2746): not a firewall,
              # publication, routing, or auth check. Inspect container publications and probe external
              # reachability separately; a wildcard bind is a prompt to investigate, not proof of exposure
@@ -267,11 +268,14 @@ REASONED: following block; the Prefect anonymous and authorized calls in the fol
   printf '%s' "$2"
   case "$3:${2##*$'\nprefect-anon http='}" in
     0:401' '*) ;;                       # the anonymous call is refused
-    0:2??' '*)
-      case "${2%$'\nprefect-anon http='*}" in   # a JSON list ends in ], a JSON object in }
-        *']') echo 'FINDING: prefect-anon returned a JSON list with no credential'; set -- 1 ;;
-        *) echo 'prefect-anon: a 2xx without a JSON list is neither the 401 pass nor the finding; inconclusive'; set -- 3 ;;
-      esac ;;
+    0:2??' '*)                          # parse the body, so a list counts whatever JSON whitespace ends it and a malformed body does not
+      if ! command -v python3 > /dev/null; then
+        echo 'prefect-anon: python3 not found, so the 2xx above is not classified'; set -- 2
+      elif printf '%s' "${2%$'\nprefect-anon http='*}" | python3 -I -c 'import json, sys; sys.excepthook = lambda k, e, b: print("python3:", k.__name__, e, file=sys.stderr); d = json.load(sys.stdin.buffer); sys.exit(not isinstance(d, list))'; then
+        echo 'FINDING: prefect-anon returned a JSON list with no credential'; set -- 1
+      else
+        echo 'prefect-anon: a 2xx without a JSON list is neither the 401 pass nor the finding; inconclusive'; set -- 3
+      fi ;;
     0:*) echo 'prefect-anon: an HTTP code other than 401 or a 2xx; inconclusive'; set -- 3 ;;
     *) echo 'prefect-anon: exited nonzero; continuing'; set -- 3 ;;
   esac
@@ -293,8 +297,8 @@ REASONED: following block; the Prefect anonymous and authorized calls in the fol
     set -- "${1%$'\n'*}" "${1##*$'\n'}"   # curl's output, then curl's exit status
     printf '%s' "$1"
     case "$2:${1##*$'\nprefect-auth http='}" in
-      0:2??' '*)
-        case "${1%$'\nprefect-auth http='*}" in *']') exit 0 ;; esac   # a JSON flow list ends in ]
+      0:2??' '*)                        # parse the body: a JSON flow list is a JSON list of objects
+        if printf '%s' "${1%$'\nprefect-auth http='*}" | python3 -I -c 'import json, sys; sys.excepthook = lambda k, e, b: print("python3:", k.__name__, e, file=sys.stderr); d = json.load(sys.stdin.buffer); sys.exit(not (isinstance(d, list) and all(isinstance(f, dict) for f in d)))'; then exit 0; fi
         echo 'prefect-auth: a 2xx without a JSON flow list; inconclusive'; exit 3 ;;
       0:*) echo 'prefect-auth: no JSON flow list with the auth string, so the matched authorized call failed; inconclusive'; exit 3 ;;
       *) echo 'prefect-auth: exited nonzero; inconclusive'; exit 3 ;;
@@ -306,7 +310,7 @@ REASONED: following block; the Prefect anonymous and authorized calls in the fol
 )
 ```
 
-REASONED: following block; the Dagster anonymous query in the following block follows the guide's cited entry Dagster webserver and UI and its pinned Dagster 1.13.24 webserver sources, and no Dagster webserver was available in the authoring environment to show either state.
+REASONED: following block; the Dagster anonymous query in the following block follows the guide's cited entry Dagster webserver and UI and its pinned Dagster 1.13.24 webserver sources, and no Dagster webserver was available in the authoring environment to show either state. Against the origin it cannot report 0: an isolated origin exits 3 and a reachable one answers, since Dagster has no login; sent to the proxy URL, a 401 or login redirect exits 0 and is left for you to judge.
 
 ```bash
 # dagster-webserver 1.13.24's build_middleware() and build_graphql_middleware() add no authentication,
@@ -315,6 +319,8 @@ REASONED: following block; the Dagster anonymous query in the following block fo
 # PythonError, top-level GraphQL errors, and transport failures are inconclusive.
 # Test the proxy separately: send this identical query anonymously and authenticated to the SAME proxy URL.
 # Test origin reachability independently; proxy authentication does not authenticate the OSS origin.
+# Against the origin this block cannot report 0: an isolated origin exits 3 and a reachable one answers, since
+# Dagster has no login; sent to the proxy URL, a 401 or login redirect exits 0 and is left for you to judge.
 (                                       # a subshell, so the exit below ends only the subshell
   set +e                                # errexit off here, so a failed query still reaches the status line below
   # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
@@ -354,7 +360,12 @@ REASONED: following block; the Airflow default-account, valid-account and anonym
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     *)
-      case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      set -- "$1" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      case "${2##*$'\n'}" in            # tr's exit status: after a failure the lower-case name is unknown, so stop before relying on it
+        0) ;;
+        *) echo "airflow-host: tr exited nonzero, so the host name was not compared with example.com, example.net and example.org; not probing"; exit 3 ;;
+      esac
+      case "${2%$'\n'*}" in             # the host name in lower case
         example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
       esac
       set -- "$1" 0                     # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
@@ -365,12 +376,18 @@ REASONED: following block; the Airflow default-account, valid-account and anonym
       set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status, curl's output, then curl's exit status
       printf '%s' "$3"
       case "$4:${3##*$'\nairflow-token http='}" in
-        0:2??' '*)
-          case "$3" in
-            *'"access_token":""'*|*'"access_token": ""'*) echo 'airflow-token: an empty access_token; inconclusive'; set -- "$1" 3 ;;
-            *'"access_token":"'*|*'"access_token": "'*) echo 'FINDING: airflow-token obtained an access_token for the documented airflow/airflow account'; set -- "$1" 1 ;;
-            *) echo 'airflow-token: a 2xx without an access_token; inconclusive'; set -- "$1" 3 ;;
-          esac ;;
+        0:2??' '*)                      # parse the body: the finding is a nonempty access_token string, however the JSON is spaced
+          if ! command -v python3 > /dev/null; then
+            echo 'airflow-token: python3 not found, so the 2xx above is not classified'; set -- "$1" 2
+          elif printf '%s' "${3%$'\nairflow-token http='*}" | python3 -I -c 'import json, sys; sys.excepthook = lambda k, e, b: print("python3:", k.__name__, e, file=sys.stderr); d = json.load(sys.stdin.buffer); t = d.get("access_token") if isinstance(d, dict) else None; sys.exit(0 if isinstance(t, str) and t else 5 if t == "" else 1)'; then
+            echo 'FINDING: airflow-token obtained an access_token for the documented airflow/airflow account'; set -- "$1" 1
+          else
+            case "$?" in                # the parser's status: 5 for an empty access_token, otherwise no access_token or no JSON object
+              5) echo 'airflow-token: an empty access_token; inconclusive' ;;
+              *) echo 'airflow-token: a 2xx without an access_token; inconclusive' ;;
+            esac
+            set -- "$1" 3
+          fi ;;
         0:*) ;;                         # no token for the documented account
         *) echo 'airflow-token: exited nonzero; continuing'; set -- "$1" 3 ;;
       esac
@@ -393,13 +410,11 @@ REASONED: following block; the Airflow default-account, valid-account and anonym
               -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
               -H 'Content-Type: application/json' --data-binary @- "https://$1/auth/token"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
         set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the host, curl's output, then curl's exit status
-        printf '%s' "$2"
+        # the body carries the access_token issued to the valid account, so print only curl's write-out line
+        printf 'airflow-valid-token http=%s\n' "${2##*$'\nairflow-valid-token http='}"
         case "$3:${2##*$'\nairflow-valid-token http='}" in
-          0:2??' '*)
-            case "$2" in
-              *'"access_token":""'*|*'"access_token": ""'*) ;;
-              *'"access_token":"'*|*'"access_token": "'*) exit 0 ;;
-            esac
+          0:2??' '*)                    # parse the body: the pass is a nonempty access_token string, however the JSON is spaced
+            if printf '%s' "${2%$'\nairflow-valid-token http='*}" | python3 -I -c 'import json, sys; sys.excepthook = lambda k, e, b: print("python3:", k.__name__, e, file=sys.stderr); d = json.load(sys.stdin.buffer); t = d.get("access_token") if isinstance(d, dict) else None; sys.exit(not (isinstance(t, str) and t))'; then exit 0; fi
             echo 'airflow-valid-token: no nonempty access_token for the valid account; inconclusive'; exit 3 ;;
           0:*) echo 'airflow-valid-token: no token for the valid account, so the comparison failed; inconclusive'; exit 3 ;;
           *) echo 'airflow-valid-token: exited nonzero; inconclusive'; exit 3 ;;
@@ -446,7 +461,7 @@ REASONED: following block; the Flower dashboard and API calls in the following b
 # prove the dashboard is protected.
 (                                       # the whole block in one subshell, so one exit status covers both calls
   set +e                                # errexit off here, so a failed call still reaches the status line below
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (no python3 to classify the API answer), which outranks 0
   # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
   set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
     -w '\nflower-ui http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' http://flower.internal:5555/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -465,11 +480,15 @@ REASONED: following block; the Flower dashboard and API calls in the following b
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status, curl's output, then curl's exit status
   printf '%s' "$2"
   case "$3:${2##*$'\nflower-api http='}" in
-    0:2??' '*)
-      case "${2#*$'\r\n\r\n'}" in
-        '{'*) echo 'FINDING: flower-api returned a worker list with no credential'; set -- 1 ;;
-        *) echo 'flower-api: a 2xx without a JSON worker list; inconclusive'; [ "$1" = 1 ] || set -- 3 ;;
-      esac ;;
+    0:2??' '*)                          # parse the body: a worker list is a JSON object whose values are all objects, one per worker, even when empty
+      set -- "$1" "${2%$'\nflower-api http='*}"   # the status, then the headers and body without the write-out line
+      if ! command -v python3 > /dev/null; then
+        echo 'flower-api: python3 not found, so the 2xx above is not classified'; [ "$1" != 0 ] || set -- 2
+      elif printf '%s' "${2#*$'\r\n\r\n'}" | python3 -I -c 'import json, sys; sys.excepthook = lambda k, e, b: print("python3:", k.__name__, e, file=sys.stderr); d = json.load(sys.stdin.buffer); sys.exit(not (isinstance(d, dict) and all(isinstance(w, dict) for w in d.values())))'; then
+        echo 'FINDING: flower-api returned a worker list with no credential'; set -- 1
+      else
+        echo 'flower-api: a 2xx without a JSON worker list; inconclusive'; [ "$1" = 1 ] || set -- 3
+      fi ;;
     0:*) ;;                             # no anonymous worker list; an API-disabled answer says nothing about the dashboard, which the call above checks
     *) echo 'flower-api: exited nonzero; continuing'; [ "$1" = 1 ] || set -- 3 ;;
   esac
@@ -494,16 +513,22 @@ REASONED: following block; the Flower socket-directory checks in the following b
 (                                       # the whole block in one subshell, so one exit status covers both checks
   set +e                                # errexit off here, so a failed check still reaches the status line below
   set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
-  set -- "$1" "$(if stat -c '%a %U:%G %u:%g %n' /run/flower /run/flower/flower.sock; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$(if stat -c '%a %U:%G %u:%g %n' /run/flower; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the directory alone, so a missing socket cannot skip its mode check
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status, stat's output, then stat's exit status
   printf '%s' "$2"
   if [ "$3" != 0 ]; then
     echo 'flower-stat: exited nonzero; continuing'; set -- 3
   else
-    case "${2%%' '*}" in                # the directory's mode, the first field of the first line
+    case "${2%%' '*}" in                # the directory's mode, the first field of its line
       *0) ;;
       *) echo 'FINDING: the socket directory grants permissions to other'; set -- 1 ;;
     esac
+  fi
+  set -- "$1" "$(if stat -c '%a %U:%G %u:%g %n' /run/flower/flower.sock; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the socket, whose mode is left for you to read
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status, stat's output, then stat's exit status
+  printf '%s' "$2"
+  if [ "$3" != 0 ]; then
+    echo 'flower-stat: exited nonzero; continuing'; [ "$1" = 1 ] || set -- 3
   fi
   set -- "$1" "$(if getfacl -p /run/flower; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status, getfacl's output, then getfacl's exit status
@@ -546,11 +571,15 @@ REASONED: following block; the Argo anonymous and authorized calls in the follow
   printf '%s' "$2"
   case "$3:${2##*$'\nargo-anon http='}" in
     0:401' '*) ;;                       # a missing token is refused
-    0:200' '*)
-      case "${2#*$'\r\n\r\n'}" in
-        '{'*'"metadata"'*) echo 'FINDING: argo-anon returned a workflow list with no credential'; set -- 1 ;;
-        *) echo 'argo-anon: a 200 without a workflow list; inconclusive'; set -- 3 ;;
-      esac ;;
+    0:200' '*)                          # parse the body: a workflow list is a JSON object with a metadata object and an items list, null or absent
+      set -- "$1" "${2%$'\nargo-anon http='*}"   # the status, then the headers and body without the write-out line
+      if ! command -v python3 > /dev/null; then
+        echo 'argo-anon: python3 not found, so the 200 above is not classified'; set -- 2
+      elif printf '%s' "${2#*$'\r\n\r\n'}" | python3 -I -c 'import json, sys; sys.excepthook = lambda k, e, b: print("python3:", k.__name__, e, file=sys.stderr); d = json.load(sys.stdin.buffer); sys.exit(not (isinstance(d, dict) and isinstance(d.get("metadata"), dict) and isinstance(d.get("items"), (list, type(None)))))'; then
+        echo 'FINDING: argo-anon returned a workflow list with no credential'; set -- 1
+      else
+        echo 'argo-anon: a 200 without a workflow list; inconclusive'; set -- 3
+      fi ;;
     0:403' '*) echo 'argo-anon: a 403 does not prove server mode is off, so confirm the configured --auth-mode; inconclusive'; set -- 3 ;;
     0:*) echo 'argo-anon: a redirect, 404, 5xx or other code that is neither the 401 pass nor the finding; inconclusive'; set -- 3 ;;
     *) echo 'argo-anon: exited nonzero; continuing'; set -- 3 ;;
@@ -578,8 +607,9 @@ REASONED: following block; the Argo anonymous and authorized calls in the follow
     set -- "${1%$'\n'*}" "${1##*$'\n'}"   # curl's output, then curl's exit status
     printf '%s' "$1"
     case "$2:${1##*$'\nargo-auth http='}" in
-      0:200' '*)
-        case "${1#*$'\r\n\r\n'}" in '{'*'"metadata"'*) exit 0 ;; esac
+      0:200' '*)                        # parse the body as the anonymous call does
+        set -- "${1%$'\nargo-auth http='*}"   # the headers and body without the write-out line
+        if printf '%s' "${1#*$'\r\n\r\n'}" | python3 -I -c 'import json, sys; sys.excepthook = lambda k, e, b: print("python3:", k.__name__, e, file=sys.stderr); d = json.load(sys.stdin.buffer); sys.exit(not (isinstance(d, dict) and isinstance(d.get("metadata"), dict) and isinstance(d.get("items"), (list, type(None)))))'; then exit 0; fi
         echo 'argo-auth: a 200 without a workflow list; inconclusive'; exit 3 ;;
       0:*) echo 'argo-auth: the matched authorized call did not return HTTP 200 with a workflow list; inconclusive'; exit 3 ;;
       *) echo 'argo-auth: exited nonzero; inconclusive'; exit 3 ;;
@@ -597,8 +627,9 @@ REASONED: following block; the Argo anonymous and authorized calls in the follow
 # finding, whatever a fronting proxy does. First confirm this SAME origin URL responds from an allowed
 # vantage, then probe it from the untrusted vantage. DNS, TLS, connection errors, and timeouts remain
 # inconclusive. A responding public proxy is only a separate connectivity check.
-# This block cannot report 0: with no HTTP response it exits 3, because the fixed state and a local DNS, TLS or
-# connection failure look the same from here, so read curl's error against the allowed-vantage confirmation.
+# This block cannot report 0: any HTTP response records 1, read from the http= field even when a later transfer
+# error such as curl exit 18 follows it, and with no HTTP response it exits 3, because the fixed state and a local
+# DNS, TLS or connection failure look the same from here, so read curl's error against the allowed-vantage confirmation.
 (
   set +e                                # errexit off here, so a failed probe still reaches the status line below
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORIGIN_URL'
@@ -608,12 +639,14 @@ REASONED: following block; the Argo anonymous and authorized calls in the follow
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute your origin URL on the set -- line above; not probing"; exit 2 ;;
     http://*|https://*)
-      if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-        -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then
-        echo 'FINDING: the origin answered over HTTP from this vantage'; set -- 1
-      else
-        set -- 3
-      fi
+      set -- "$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
+        -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1")"   # curl's write-out line; its http= field, not curl's exit status, says whether a response arrived
+      printf '%s\n' "$1"
+      case "$1" in
+        'origin http=000 '*) set -- 3 ;;  # no HTTP response
+        'origin http='???' '*) echo 'FINDING: the origin answered over HTTP from this vantage'; set -- 1 ;;
+        *) set -- 3 ;;                  # no write-out line, so whether a response arrived is unknown
+      esac
       echo "origin: block exit $1; whether this vantage is untrusted, the allowed-vantage confirmation and any curl error above are not classified, so judge them yourself"
       exit "$1" ;;
     *) echo "give an http:// or https:// URL; not probing"; exit 2 ;;
@@ -831,7 +864,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "9458d99b4c3329b9599fc600238431e7982b22378bfafb1faaf29771ef096f2c",
+  "body_sha256": "8cd6d1507b5a747a319e1e7c1d1bbfd0141e42517107009af1ce94dcf2ccfe00",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
