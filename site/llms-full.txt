@@ -43125,7 +43125,7 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ## 9. Verify
 
-**REASONED:** whole Verify section; every service comparison below rests on the Sources entries cited at that comparison. During marking review (October 2026), the three then-current bash blocks ran from files under Bash 5.3.9(1)-release with a Python 3.14.4 harness and scratch-confined command stubs; each passed `bash -n` and ShellCheck 0.11.0 with exit 0 and no output. The refusal and substituted-input results are recorded at each block's declaration. Earlier declarations elsewhere in this section describe historical authoring runs, which were not independently reproduced in this review. No live Open WebUI, TLS ingress, second-host fixture, identity provider or provider test credentials were supplied for this review. No service response was observed, and the exposed and fixed service comparisons remain REASONED from the pinned source and linked vendor documentation. During marking review (2026-10-14), the block 2 and 3 stub cases were repeated after adding credential refusals; those results are recorded at their declarations. During marking review (2026-10-14), all three then-current Verify bash blocks were extracted to files and each passed Bash 5.3.9(1)-release `bash -n` and ShellCheck 0.11.0 with exit 0 and no output. These syntax and lint checks did not execute the blocks or repeat the stub cases. Every bash -n, ShellCheck and stub run recorded in this section covered the three Verify bash blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2.
+**REASONED:** whole Verify section; every service comparison below rests on the Sources entries cited at that comparison. During marking review (October 2026), the three then-current bash blocks ran from files under Bash 5.3.9(1)-release with a Python 3.14.4 harness and scratch-confined command stubs; each passed `bash -n` and ShellCheck 0.11.0 with exit 0 and no output. The refusal and substituted-input results are recorded at each block's declaration. Earlier declarations elsewhere in this section describe historical authoring runs, which were not independently reproduced in this review. No live Open WebUI, TLS ingress, second-host fixture, identity provider or provider test credentials were supplied for this review. No service response was observed, and the exposed and fixed service comparisons remain REASONED from the pinned source and linked vendor documentation. During marking review (2026-10-14), the block 2 and 3 stub cases were repeated after adding credential refusals; those results are recorded at their declarations. During marking review (2026-10-14), all three then-current Verify bash blocks were extracted to files and each passed Bash 5.3.9(1)-release `bash -n` and ShellCheck 0.11.0 with exit 0 and no output. These syntax and lint checks did not execute the blocks or repeat the stub cases. Every bash -n, ShellCheck and stub run recorded in this section covered the three Verify bash blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Those runs also predate the change that makes each of the three blocks report its result in its exit status (1 for a finding, 2 for a guard refusal, 3 for a failed or inconclusive check, 0 for a pass or a named unclassified observation), so none of them covered the current form.
 
 **REASONED:** operating guidance for every comparison below; no live Open WebUI or ordinary and administrator test accounts in the authoring environment. The operating guidance carries no command of its own, so nothing in it ran locally. The operating guidance rests on the verified-user roles in the guide's cited Open WebUI authentication helpers entry and the additive grants in the guide's cited Open WebUI groups entry: an administrator can pass a check that an ordinary user must fail, so an administrator's success alone cannot separate the exposed state from the fixed one. Run exposed comparisons only on a private, disposable installation. Keep production bootstrap private. Use ordinary users as well as administrators: an administrator's successful request does not demonstrate an ordinary user's boundary.
 
@@ -43135,6 +43135,7 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ```bash
 (
+  set +e                                # errexit off here, so a command that ends nonzero is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'https://chat.example.com'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -43145,19 +43146,42 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
     https://*@*)
       echo "use an HTTPS origin without credentials; not probing"; exit 2 ;;
     https://*)
-      ss -tlnp   # read every listener; the published mapping should be 127.0.0.1:3000 only, never 0.0.0.0 or ::.
-                 # ss shows host listeners, not Docker's NAT: use Docker Engine 28.0+ for loopback publishing
-                 # (older engines let a same-L2 host reach a localhost-published port), confirm the mapping is
-                 # 127.0.0.1:3000->8080/tcp, and from another LAN/VPC host confirm nothing answers on port 3000.
+      set -- "$1" 0                     # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+      set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the listener table, then ss's exit status
+      printf '%s' "$3"   # read every listener; the published mapping should be 127.0.0.1:3000 only, never 0.0.0.0 or ::.
+                         # ss shows host listeners, not Docker's NAT: use Docker Engine 28.0+ for loopback publishing
+                         # (older engines let a same-L2 host reach a localhost-published port), confirm the mapping is
+                         # 127.0.0.1:3000->8080/tcp, and from another LAN/VPC host confirm nothing answers on port 3000.
+                         # The check below also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback.
+      [ "$4" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- "$1" 3 "$3" "$4"; }
+      if printf '%s' "$3" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+        echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- "$1" 1 "$3" "$4"
+      else
+        case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;; esac
+      fi
       curl -q -g -sSI --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${1%/}/"
                                            # serves over TLS without -k; --noproxy so a client proxy cannot answer
+      case "$?" in 0) ;; *) echo "the HTTPS request failed, and a certificate error, local socket error or DNS failure does not prove private ingress; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;; esac
       # Signup state, programmatically: Open WebUI serves its feature flags at /api/config.
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "${1%/}/api/config"
-                                           # JSON feature flags; confirm signup is disabled there (features.enable_signup: false)
+      set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 "${1%/}/api/config"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the response body
+      printf '%s\n' "$4"                  # JSON feature flags; confirm signup is disabled there (features.enable_signup: false)
+      if printf '%s' "$4" | grep -q '"enable_signup" *: *true'; then
+        echo "FINDING: /api/config reports enable_signup true, so ordinary signup is open"; set -- "$1" 1
+      elif [ "$3" != 0 ]; then
+        echo "curl exit $3: the /api/config request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+      elif printf '%s' "$4" | grep -q '"enable_signup" *: *false'; then
+        :
+      else
+        echo "/api/config reported enable_signup as neither true nor false; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+      fi
       # In a private browser window, AFTER your admin account exists: the sign-up option is absent AND an actual
       # registration attempt is REFUSED (a missing button alone is not proof). With signup on, registering a new
       # account yields a pending/unapproved user, not access.
+      echo "block exit $2; listeners other than a non-loopback port 3000, the Docker mapping, the HTTPS response headers and the browser registration attempt are not classified, so judge them yourself"
+      exit "$2"
       ;;
     *) echo "use an HTTPS origin without credentials; not probing"; exit 2 ;;
   esac
@@ -43170,6 +43194,7 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ```bash
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_OPENWEBUI_HOST_IP'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -43180,8 +43205,15 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
     *@*)
       echo "use a host address without credentials; not probing"; exit 2 ;;
     *)
-      curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/"
+      set -- "$1" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{time_connect}' "http://$1:3000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # curl's exit status, then its output
+      printf '%s\n' "${3%$'\n'*}"         # the http= line
+      case "$2:${3##*$'\n'}" in
+        0:*) echo "FINDING: port 3000 answered over HTTP from this host"; exit 1 ;;
+        7:0.000000|28:0.000000) echo "block exit 0, an unclassified observation: nothing answered on port 3000, as the fixed publication requires, but a local error gives the same exit status, so read the err= text above and confirm the intended HTTPS service still works before attributing this to the network boundary"; exit 0 ;;
+        *) echo "curl exit $2 is neither an answer nor a refused or timed-out connection; inconclusive"; exit 3 ;;
+      esac
       ;;
   esac
 )
@@ -43197,6 +43229,7 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ```bash
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'GET' 'REPLACE_WITH_HEADER_FILE' 'REPLACE_WITH_BODY_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -43216,8 +43249,8 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
         *) echo "use GET, POST, DELETE or UPLOAD; not probing"; exit 2 ;;
       esac
       umask 077
-      set -- "$@" "$(mktemp -d)" || exit 1
-      [ -d "$5" ] || { echo "cannot create private results directory"; exit 1; }
+      set -- "$@" "$(mktemp -d)"         # empty if mktemp fails, which the next line catches
+      [ -d "$5" ] || { echo "cannot create private results directory"; exit 3; }
       printf 'Private response directory: %s\n' "$5"
       case "$2" in
         GET)
@@ -43243,6 +43276,11 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
             -H "@$3" -F "file=@$4" -o "$5/body" -D "$5/headers" \
             -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
           ;;
+      esac
+      set -- "$1" "$2" "$3" "$4" "$5" "$?"   # curl's exit status
+      case "$6" in
+        0) echo "block exit 0, an unclassified observation: a completed request is not a pass on its own, so compare the http= line above and the response in $5 with the comparison you are running"; exit 0 ;;
+        *) echo "curl exit $6: the request failed; inconclusive"; exit 3 ;;
       esac
       ;;
     *) echo "use HTTPS or the loopback backend; not probing"; exit 2 ;;
@@ -43416,7 +43454,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "40995d661392e2b2e2d42b622e708db91744e805c9d8660ececa67b4181a397a",
+  "body_sha256": "687c29452975341d01610f4ab8114b17b0ec0f462131609dbdff02da67aa4c9f",
   "components": {
     "webui": {
       "name": "Open WebUI",
@@ -43828,35 +43866,76 @@ Use a valid virtual key whose `allowed_routes` includes `/v1/models`. Substitute
 # STDIN (-H @-) so it never enters curl's arguments, a temp file, or a shell variable; the guard refuses
 # on a placeholder. (The key you substitute on the set -- line does enter your shell history, so use a
 # short-lived key or clear that history line afterward.)
-(
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VIRTUAL_KEY'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 2 ;;
-    *)
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' http://127.0.0.1:4000/v1/models
-  # guard-conventions: allow deliberate bad-key negative control; sk-not-a-real-key is a dummy, not a live credential
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'bad-key=%{http_code} exit=%{exitcode}\n' -H 'Authorization: Bearer sk-not-a-real-key' http://127.0.0.1:4000/v1/models
-  printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\ngood-key=%{http_code} exit=%{exitcode}\n' -H @- http://127.0.0.1:4000/v1/models
-      ;;
-  esac
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VIRTUAL_KEY'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*) echo "substitute the virtual key on the set -- line above; not probing"; exit 2 ;;
+      *)
+        set -- "$1" 0                   # the 2nd value is this part's status so far, ranked as above
+        set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n%{http_code}' http://127.0.0.1:4000/v1/models; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+        set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its output
+        printf '%s\n' "${4%$'\n'*}"     # the no-key= line
+        case "$3:${4##*$'\n'}" in
+          0:401) ;;
+          0:200) echo "FINDING: /v1/models answered 200 with no key"; set -- "$1" 1 ;;
+          0:*) echo "no-key HTTP ${4##*$'\n'} is not LiteLLM's 401; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+          *) echo "curl exit $3: the no-key request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac
+        # guard-conventions: allow deliberate bad-key negative control; sk-not-a-real-key is a dummy, not a live credential
+        set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'bad-key=%{http_code} exit=%{exitcode}\n%{http_code}' -H 'Authorization: Bearer sk-not-a-real-key' http://127.0.0.1:4000/v1/models; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+        set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its output
+        printf '%s\n' "${4%$'\n'*}"     # the bad-key= line
+        case "$3:${4##*$'\n'}" in
+          0:401) ;;
+          0:200) echo "FINDING: /v1/models answered 200 to a wrong key"; set -- "$1" 1 ;;
+          0:*) echo "bad-key HTTP ${4##*$'\n'} is not LiteLLM's 401; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+          *) echo "curl exit $3: the bad-key request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac
+        set -- "$1" "$2" "$(if printf 'Authorization: Bearer %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\ngood-key=%{http_code} exit=%{exitcode}\n%{http_code}' -H @- http://127.0.0.1:4000/v1/models; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+        set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its output
+        printf '%s\n' "${4%$'\n'*}"     # the model list and the good-key= line
+        case "$3:${4##*$'\n'}" in
+          0:200) ;;
+          0:*) echo "good-key HTTP ${4##*$'\n'} is not the 200 model list, so this positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+          *) echo "curl exit $3: the good-key request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac
+        exit "$2"
+        ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # Expected: no-key and bad-key => 401 from LiteLLM; good-key => 200 with the model list (a 200 without a
+  # key is the finding). Then repeat the good-key request through the public https ingress to confirm the
+  # TLS front works. A transport error (exit != 0) is inconclusive, not a pass.
+  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # a listener inventory in THIS network namespace, not a firewall/NAT/publication check:
+                     # confirm 4000 is loopback-only here, then from ANOTHER host confirm 4000 is refused
+                     # externally (a Docker DNAT publication need not appear in this list at all). The check
+                     # below also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback.
+  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:4000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 4000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  echo "block exit $1; listeners on other ports, a Docker publication this list cannot show, the outside-host check of port 4000 and the repeat through your HTTPS ingress are not classified, so judge them yourself"
+  exit "$1"
 )
-# Expected: no-key and bad-key => 401 from LiteLLM; good-key => 200 with the model list (a 200 without a
-# key is the finding). Then repeat the good-key request through the public https ingress to confirm the
-# TLS front works. A transport error (exit != 0) is inconclusive, not a pass.
-ss -tlnp   # a listener inventory in THIS network namespace, not a firewall/NAT/publication check:
-           # confirm 4000 is loopback-only here, then from ANOTHER host confirm 4000 is refused
-           # externally (a Docker DNAT publication need not appear in this list at all).
 ```
 
 The `/v1/models` comparison tests authentication and listing, not successful inference or model authorization. Complete the inference comparisons below too. Inspect IPv4 and IPv6 reachability, published container ports, and any separate metrics listener.
 
 ### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. The bash -n run covered both fences, and the stub runs the request fence, in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. These observations establish neither file-content validation nor API acceptance)
 
-**REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result.
+**REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result. The bash -n and stub runs recorded in the heading above also predate the change that makes both Verify shell fences report their result in their exit status (1 for a finding, 2 for a guard refusal, 3 for a failed or inconclusive check, 0 for a pass or a named unclassified observation), so none of them covered the current form.
 
 Before running it, provision a mode-0600 header file in a private directory containing `Authorization: Bearer ` followed by the appropriate test or administrative key. Use an empty header file for unauthenticated requests. Prepare the JSON body in another protected file, substituting its placeholders before use; `{}` suffices for GET, which ignores that file. Keep URLs free of credentials. The block captures responses privately because management responses can contain keys.
 
@@ -43866,6 +43945,7 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
 
 ```bash
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'POST' 'REPLACE_WITH_HEADER_FILE' 'REPLACE_WITH_JSON_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -43881,8 +43961,8 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
       [ -r "$3" ] || { echo "header file is unreadable"; exit 2; }
       [ -r "$4" ] || { echo "JSON file is unreadable"; exit 2; }
       umask 077
-      set -- "$@" "$(mktemp -d)" || exit 1
-      [ -d "$5" ] || { echo "cannot create private results directory"; exit 1; }
+      set -- "$@" "$(mktemp -d)"         # empty if mktemp fails, which the next line catches
+      [ -d "$5" ] || { echo "cannot create private results directory"; exit 3; }
       printf 'Private response directory: %s\n' "$5"
       case "$2" in
         POST)
@@ -43897,6 +43977,11 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
             -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
           ;;
         *) echo "only GET and POST are supported; not probing"; exit 2 ;;
+      esac
+      set -- "$1" "$2" "$3" "$4" "$5" "$?"   # curl's exit status
+      case "$6" in
+        0) echo "block exit 0, an unclassified observation: a completed request is not a pass on its own, so compare the http= line above and the response in $5 with the comparison you are running"; exit 0 ;;
+        *) echo "curl exit $6: the request failed; inconclusive"; exit 3 ;;
       esac
       ;;
     *) echo "use HTTPS or the loopback backend; not probing"; exit 2 ;;
@@ -44076,7 +44161,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a34d33c4347949a36d9625d0803c520e2b3b0b260136c5093830c6c56311de63",
+  "body_sha256": "83700efd94f3db0aabc6509b2031fc9b343fc511d9acc120346a53356c420368",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",
@@ -45379,7 +45464,7 @@ Consider `launch(run_history=False)`. In 6.28.0 its default is `None`, resolving
 
 ## 9. Verify
 
-**REASONED:** Verification overview and historical authoring report; no live Gradio, HTTPS ingress, second host, or IdP fixture is supplied for this offline run. Per the guide's cited Gradio 6.28.0 Blocks source and Gradio 6.28.0 routes source, compare the exposed/fixed outcomes specified below. In this marking run, three Python examples parsed, all three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with no output, and stubbed guards rejected invalid inputs without curl calls; these are local checks only. The bash -n, ShellCheck and stub runs recorded here covered the base-URL probe block and the protected request helper in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The following environment and run account describes the earlier authoring session. These service checks are **reasoned, not demonstrated**. The authoring environment has no installed Gradio or container runtime, has restricted network access, and provides no authorized live Gradio deployment, second-host ingress fixture, or identity provider. Python syntax, Bash parsing, ShellCheck 0.11.0, and the repository's guard scan were checked locally; they do not demonstrate service behavior. Expected exposed/fixed outcomes rest on the cited Gradio 6.28.0 source and vendor documentation.
+**REASONED:** Verification overview and historical authoring report; no live Gradio, HTTPS ingress, second host, or IdP fixture is supplied for this offline run. Per the guide's cited Gradio 6.28.0 Blocks source and Gradio 6.28.0 routes source, compare the exposed/fixed outcomes specified below. In this marking run, three Python examples parsed, all three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with no output, and stubbed guards rejected invalid inputs without curl calls; these are local checks only. The bash -n, ShellCheck and stub runs recorded here covered the base-URL probe block and the protected request helper in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Every bash -n, ShellCheck and stub run recorded in this section also predates the change that makes each of the three Verify shell blocks report its result in its exit status (1 for a finding, 2 for a guard refusal, 3 for a failed or inconclusive check, 0 for a pass or a named unclassified observation), so none of them covered the current form. The following environment and run account describes the earlier authoring session. These service checks are **reasoned, not demonstrated**. The authoring environment has no installed Gradio or container runtime, has restricted network access, and provides no authorized live Gradio deployment, second-host ingress fixture, or identity provider. Python syntax, Bash parsing, ShellCheck 0.11.0, and the repository's guard scan were checked locally; they do not demonstrate service behavior. Expected exposed/fixed outcomes rest on the cited Gradio 6.28.0 source and vendor documentation.
 
 **REASONED:** Comparison-fixture isolation and evidence collection, per the guide's cited Gradio 6.28.0 Blocks source and Gradio 6.28.0 routes source; no authorized live Gradio or public-ingress fixture is supplied here. The local shell and stub checks recorded above ran, but publication, native refusal, and successful authorized controls remain the expected comparisons below, not observations. Those shell and stub checks covered the base-URL probe block and the protected request helper in an earlier form, whose guard refusals exited with status 1; neither block was re-run in its current form, whose guard refusals exit with status 2. Use a disposable private fixture for exposed comparisons, with harmless data and disposable credentials. Record the installed Gradio version, effective configuration, response content, and the layer issuing each refusal. Do not expose an unauthenticated or vibe-enabled comparison to the internet.
 
@@ -45388,17 +45473,24 @@ Consider `launch(run_history=False)`. In 6.28.0 its default is `None`, resolving
 **REASONED:** The deployment host and a live share-tunnel fixture are unavailable here. On the application host, inspect the listener and the current launch's complete startup output. An exposed fixture with `server_name="0.0.0.0"` should show an all-interface bind; the proxy-backed configuration should show loopback. A shared fixture should print its public URL and be reachable through it; the fixed fresh process must satisfy all three conditions below. See the [launch and sharing implementation](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/blocks.py).
 
 ```bash
-ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO_SERVER_PORT changes it.
-           # Expect loopback unless deliberately exposed. ss shows a local BIND only, and it CANNOT detect
-           # a share=True tunnel: that keeps the listener on loopback and opens an OUTBOUND frpc connection to
-           # Gradio's relay publishing a *.gradio.live URL. Confirm share is off with all three checks, and if you
-           # cannot confirm ALL THREE, treat it as UNKNOWN (not off): (1) the previous app process or
-           # notebook kernel and its tunnel are terminated FIRST (a rerun with share=False in a persistent
-           # kernel clears the URL but can leave the earlier tunnel connected), (2) share=False is set in
-           # the launch() call, and (3) THIS fresh run's full startup output shows no "Running on public
-           # URL: https://<name>.gradio.live" line (a shared run prints it in its startup output, so read the current
-           # launch's output, not a stale log). If you know a former public URL, also confirm it is now
-           # unreachable. Terminate any share tunnel after a demo.
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO_SERVER_PORT changes it.
+             # Expect loopback unless deliberately exposed. ss shows a local BIND only, and it CANNOT detect
+             # a share=True tunnel: that keeps the listener on loopback and opens an OUTBOUND frpc connection to
+             # Gradio's relay publishing a *.gradio.live URL. Confirm share is off with all three checks, and if you
+             # cannot confirm ALL THREE, treat it as UNKNOWN (not off): (1) the previous app process or
+             # notebook kernel and its tunnel are terminated FIRST (a rerun with share=False in a persistent
+             # kernel clears the URL but can leave the earlier tunnel connected), (2) share=False is set in
+             # the launch() call, and (3) THIS fresh run's full startup output shows no "Running on public
+             # URL: https://<name>.gradio.live" line (a shared run prints it in its startup output, so read the current
+             # launch's output, not a stale log). If you know a former public URL, also confirm it is now
+             # unreachable. Terminate any share tunnel after a demo.
+  case "$?" in
+    0) echo "block exit 0, an unclassified observation: ss cannot show a share=True tunnel, so read the listeners above and confirm all three share conditions yourself"; exit 0 ;;
+    *) echo "ss -tlnp failed; inconclusive"; exit 3 ;;
+  esac
+)
 ```
 
 **REASONED:** Native authentication and certificate checks require live HTTPS ingress and an outside client, unavailable here. A served login page does NOT prove the API is gated. Probe a protected API route WITHOUT a Gradio session cookie. With native authentication absent on the isolated comparison fixture, `/gradio_api/info` should return 200 with API information; with native authentication enabled, Gradio's own `login_check` should return 401. See the [protected info route and login check](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/routes.py).
@@ -45410,6 +45502,7 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
 ```bash
 # REASONED: native API authentication and TLS; no live HTTPS Gradio fixture or outside client here. Expected exposed/fixed outcomes follow the cited 6.28.0 handlers.
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_GRADIO_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -45418,9 +45511,17 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*)
       echo "substitute the actual base URL inside the quotes; not probing"; exit 2 ;;
     https://*)
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -D - -o /dev/null -w 'anon=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "${1%/}/gradio_api/info"
+      set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -D - -o /dev/null -w 'anon=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' \
+        "${1%/}/gradio_api/info"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # curl's exit status, then its output
+      printf '%s\n' "${3%$'\n'*}"         # the response headers and the anon= line
+      case "$2:${3##*$'\n'}" in
+        0:401) echo "pass: /gradio_api/info refused the request with 401; a fronting proxy's own 401 looks the same, so attribute it with the protected helper below"; exit 0 ;;
+        0:200) echo "FINDING: /gradio_api/info answered 200 without a Gradio session cookie"; exit 1 ;;
+        0:*) echo "HTTP ${3##*$'\n'} is neither native authentication's 401 nor the exposed 200; inconclusive"; exit 3 ;;
+        *) echo "curl exit $2: a TLS, DNS or connection failure is not an authentication refusal; inconclusive"; exit 3 ;;
+      esac
       ;;
     *) echo "use an HTTPS base URL; not probing"; exit 2 ;;
   esac
@@ -45441,6 +45542,7 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
 
 ```bash
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'GET' 'REPLACE_WITH_HEADER_FILE' 'REPLACE_WITH_BODY_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -45456,8 +45558,8 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
       [ -r "$3" ] || { echo "header file is unreadable"; exit 2; }
       [ -r "$4" ] || { echo "body file is unreadable"; exit 2; }
       umask 077
-      set -- "$@" "$(mktemp -d)" || exit 1
-      [ -d "$5" ] || { echo "cannot create private results directory"; exit 1; }
+      set -- "$@" "$(mktemp -d)"         # empty if mktemp fails, which the next line catches
+      [ -d "$5" ] || { echo "cannot create private results directory"; exit 3; }
       printf 'Private response directory: %s\n' "$5"
       case "$2" in
         GET)
@@ -45478,6 +45580,11 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
             -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
           ;;
         *) echo "use GET, POST or LOGIN; not probing"; exit 2 ;;
+      esac
+      set -- "$1" "$2" "$3" "$4" "$5" "$?"   # curl's exit status
+      case "$6" in
+        0) echo "block exit 0, an unclassified observation: a completed request is not a pass on its own, so compare the http= line above and the response in $5 with the comparison you are running"; exit 0 ;;
+        *) echo "curl exit $6: the request failed; inconclusive"; exit 3 ;;
       esac
       ;;
     *) echo "use HTTPS; not probing"; exit 2 ;;
@@ -45621,7 +45728,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "a20b9f0b32e4d1e065c3db82f6dbe7799297bbfc25ee6f5fb8632c86fa1696be",
+  "body_sha256": "15eab8dcecd45c6b1f239e39c1ea525284ec671061c2ea77f7ad38caf28ac473",
   "components": {
     "gradio": {
       "name": "Gradio",
@@ -58428,10 +58535,11 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Verify
 
-**REASONED:** not demonstrated against a deployed API: no Express or FastAPI deployment or browser session is available here, so which origins real CORS middleware echoes rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials. For an earlier change both pipelines ran with curl 8.18.0: against a loopback listener answering 200 with the listed origin's headers, each printed the status line with both Access-Control headers and exited 0. Both pipelines also ran for an earlier change with curl 8.18.0 against a closed loopback port, where each printed `curl: (7) Failed to connect ...` on stderr and its inconclusive line (the same pipelines without the pipefail subshell exited 1 with empty output, and silently under the old `-s`). Both pipelines also ran for an earlier change with curl 8.18.0 against a stub curl that printed `HTTP/1.1 200 OK`, wrote a transfer error to stderr and returned 18: the pipeline without pipefail exited 0 as if it had passed, while the `set -o pipefail` subshell (the convention litellm.md and search-engines.md use) exited 18, so its `|| echo` printed the inconclusive line. The runs against the loopback listener, the closed loopback port and the stub curl record the pipelines' behaviour, not any deployed middleware's CORS decisions. Those curl 8.18.0 runs covered the earlier form of both pipelines, which named api.example.com and an app.example.com origin directly; the pipelines now take the API host and your app's origin host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and the guarded form has not been run. Those runs also used a form without the block's closing status check: the block now exits with status 3 after either inconclusive line and with status 0 otherwise, leaving the printed headers for you to judge, and that form has not been run either.
+**REASONED:** not demonstrated against a deployed API: no Express or FastAPI deployment or browser session is available here, so which origins real CORS middleware echoes rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials. For an earlier change both pipelines ran with curl 8.18.0: against a loopback listener answering 200 with the listed origin's headers, each printed the status line with both Access-Control headers and exited 0. Both pipelines also ran for an earlier change with curl 8.18.0 against a closed loopback port, where each printed `curl: (7) Failed to connect ...` on stderr and its inconclusive line (the same pipelines without the pipefail subshell exited 1 with empty output, and silently under the old `-s`). Both pipelines also ran for an earlier change with curl 8.18.0 against a stub curl that printed `HTTP/1.1 200 OK`, wrote a transfer error to stderr and returned 18: the pipeline without pipefail exited 0 as if it had passed, while the `set -o pipefail` subshell (the convention litellm.md and search-engines.md use) exited 18, so its `|| echo` printed the inconclusive line. The runs against the loopback listener, the closed loopback port and the stub curl record the pipelines' behaviour, not any deployed middleware's CORS decisions. Those curl 8.18.0 runs covered the earlier form of both pipelines, which named api.example.com and an app.example.com origin directly; the pipelines now take the API host and your app's origin host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and no run recorded here covered the guarded form. Those runs also used a form without the block's classified status: the block now exits with status 1 when `Access-Control-Allow-Origin` echoes the hostile origin, otherwise with status 3 when either probe is inconclusive or your own origin is not returned, and otherwise with status 0, leaving `Access-Control-Allow-Credentials` and any other origin value for you to judge. No run recorded here covered that form either.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
+  set +e                                # errexit off here, so a command that ends nonzero is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_API_HOST' 'REPLACE_WITH_YOUR_APP_HOST'   # the API's public host name, then the host name of the https:// origin your app is served from, each with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -58450,12 +58558,47 @@ Keep the origin list in configuration per environment rather than hardcoding loc
   esac
   # Both probes request /data: change that path to a route your app's browser code calls.
   # The hostile origin https://evil.example is deliberately foreign; keep it as written.
-  (set -o pipefail; curl -q -g -sS -o /dev/null -D - "https://$1/data" -H "Origin: https://evil.example" | grep -iE 'HTTP/|access-control') || { echo "inconclusive: the transfer failed or printed no status line; not a pass"; set -- "$@" 3; }
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS -o /dev/null -D - "https://$1/data" -H "Origin: https://evil.example"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "$(if printf '%s\n' "${4%$'\n'*}" | awk '{ sub(/\r$/, "") } tolower($0) ~ /http\/|access-control/ { print } /^HTTP\// { c = $2; v = "" } tolower(substr($0, 1, 28)) == "access-control-allow-origin:" { v = substr($0, 29); gsub(/^( |\t)+|( |\t)+$/, "", v) } END { printf "\n%s %s", c, v }'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, awk's exit status, then awk's output
+  printf '%s' "${6%$'\n'*}"             # the status and access-control header lines
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%% *}" "${6#* }"     # curl's exit status, awk's exit status, the final HTTP status code, then the last Access-Control-Allow-Origin value
+  if [ "$5" != 0 ]; then
+    echo "awk could not read the response headers; inconclusive"; set -- "$1" "$2" 3 "$6"
+  elif [ "$7" = https://evil.example ]; then
+    echo "FINDING: Access-Control-Allow-Origin echoes the hostile origin https://evil.example"; set -- "$1" "$2" 1 "$6"
+  elif [ "$4" != 0 ] || [ -z "$6" ]; then
+    echo "inconclusive: the transfer failed or printed no status line; not a pass"; set -- "$1" "$2" 3 "$6"
+  else
+    set -- "$1" "$2" "$3" "$6"          # the 4th value is now this probe's HTTP status code
+    case "$4" in 2??) ;; *) echo "HTTP $4 for the hostile origin is not a 2xx status; inconclusive"; set -- "$1" "$2" 3 "$4" ;; esac
+  fi
   # expect: a 2xx status line matching the own-origin probe below, and no Access-Control-Allow-Origin echoing the hostile origin; any other status, a proxy's lone "HTTP/1.1 200 Connection established" line, the inconclusive line, or empty output is inconclusive, not a pass
-  (set -o pipefail; curl -q -g -sS -o /dev/null -D - "https://$1/data" -H "Origin: https://$2" | grep -iE 'HTTP/|access-control') || { echo "inconclusive: the transfer failed or printed no status line; not a pass"; set -- "$@" 3; }
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null -D - "https://$1/data" -H "Origin: https://$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "$(if printf '%s\n' "${5%$'\n'*}" | awk '{ sub(/\r$/, "") } tolower($0) ~ /http\/|access-control/ { print } /^HTTP\// { c = $2; v = "" } tolower(substr($0, 1, 28)) == "access-control-allow-origin:" { v = substr($0, 29); gsub(/^( |\t)+|( |\t)+$/, "", v) } END { printf "\n%s %s", c, v }'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # the hostile probe's HTTP status code, curl's exit status, awk's exit status, then awk's output
+  printf '%s' "${7%$'\n'*}"             # the status and access-control header lines
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7%% *}" "${7#* }"   # then this probe's final HTTP status code and last Access-Control-Allow-Origin value
+  if [ "$6" != 0 ]; then
+    echo "awk could not read the response headers; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3
+  elif [ "$5" != 0 ] || [ -z "$7" ]; then
+    echo "inconclusive: the transfer failed or printed no status line; not a pass"; [ "$3" = 1 ] || set -- "$1" "$2" 3
+  elif [ "$8" != "https://$2" ]; then
+    echo "Access-Control-Allow-Origin does not return your origin https://$2, so this positive control failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3
+  else
+    case "$4:$7" in
+      2??:2??) [ "$4" = "$7" ] || { echo "the hostile-origin probe answered HTTP $4 and yours HTTP $7, so the status lines do not match; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; } ;;
+      *:2??) ;;
+      *) echo "HTTP $7 for your origin is not a 2xx status; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+  fi
   # expect: a 2xx status line, your origin in Access-Control-Allow-Origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
-  # The block exits with status 3 if either probe printed the inconclusive line, and otherwise 0: you judge the printed headers.
-  [ "$#" -eq 2 ] || exit 3
+  # The block exits with status 1 if the hostile origin is echoed, otherwise 3 if either probe printed an inconclusive line, and otherwise 0.
+  echo "block exit $3; Access-Control-Allow-Credentials and any Access-Control-Allow-Origin value other than the two origins, such as *, are not classified, so judge them yourself"
+  exit "$3"
 )
 ```
 
@@ -58506,7 +58649,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "977624d98e498699b20192e7317bcc99331428ba202f85fdd5337fc21d699326",
+  "body_sha256": "f53deb10a490e75844e383cc38d6b01a593720324db19e58ef03f2ec2c68862b",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",
