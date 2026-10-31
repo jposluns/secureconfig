@@ -94,6 +94,29 @@ fi
 # An unchecked restore could leave a half-written bundle for every later gate to read.
 cp "$orig" site/llms-full.txt || { bad "could not restore site/llms-full.txt from $orig"; exit 1; }
 
+echo "== llms-full.txt links are absolute and name repository paths =="
+# site/llms-full.txt is served from https://secureconfig.ai/, where a relative link such as
+# (mfa.md) names a page that does not exist, so scripts/build-llms-full.sh rewrites each one to
+# https://github.com/jposluns/secureconfig/blob/main/<path> (tree/main/ for a directory). The
+# freshness gate above proves the committed file is the build's output. This one runs the
+# build's link check, through scripts/build-llms-full.sh --check-links, on the committed file,
+# so the build and this gate apply one rule. The check parses the file with the pinned
+# markdown-it-py and each piece of raw HTML in it with Python's html.parser. It fails closed on
+# any link, image, link reference definition or listed HTML URL attribute whose target is not
+# an in-page anchor or a URL with a scheme, and on any link into this repository's main branch
+# that names no file or directory in this checkout. The build script's comment above the check
+# lists the attributes and the CSS and srcset forms it refuses. Code spans, fenced code and
+# indented code are code to the parser and are not checked. Its self-test of mutations and
+# clean cases runs first, so what checks the bundle is the shipped rule, and it reads only the
+# working tree, so it stays offline. Heading anchors are not checked here; the local-links gate
+# below checks them in the guides the bundle is built from.
+if llms_links=$(bash scripts/build-llms-full.sh --check-links 2>&1); then
+  ok "site/llms-full.txt has no link target the gate cannot certify, and all $llms_links of its links into this repository's main branch name a path in this checkout"
+else
+  bad "site/llms-full.txt has a link target the gate cannot certify, or a link into this repository that names no path here, or the gate's self-test failed"
+  printf '%s\n' "$llms_links" | sed 's/^/          /'
+fi
+
 echo "== the plugin bundle is current =="
 # plugin/ is generated from the guides by scripts/build-plugin.sh, the same way
 # site/llms-full.txt is, and for the same reason: a bundle that has drifted from the guides ships
@@ -113,6 +136,26 @@ fi
 rm -rf plugin
 cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
 rm -rf "$plugin_tmp"
+
+echo "== the committed generated files match a fresh build of the commit =="
+# The two gates above rebuild in the working tree, so they pass when the working tree is right and
+# the commit is not: a bundle rebuilt but only partly staged (F-PLUGIN-MANIFEST-PARTIAL-STAGE), or
+# a VERSION bump committed without its plugin/plugin.json (F-VERSION-BUMP-NO-REGEN). This gate
+# exports HEAD with git archive on every run and checks the committed plugin.json version against
+# the committed VERSION. Unless git status shows the working tree is HEAD with no change, in which
+# case the gates above already rebuilt HEAD, it also runs the same two builds in the export and
+# compares. The self-test runs first, so what runs is the shipped gate.
+for generated_check in test_generated_committed.py check_generated_committed.py; do
+  if generated_committed=$(python3 -I -B "tools/$generated_check" 2>&1); then
+    printf '%s\n' "$generated_committed"
+    if grep -q '^  FAIL  ' <<< "$generated_committed" || ! grep -q '^  ok    ' <<< "$generated_committed"; then
+      bad "$generated_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$generated_committed"
+    bad "$generated_check failed"
+  fi
+done
 
 echo "== the generated-file record matches how they are generated =="
 # CLAUDE.md names .aiqt/gensrc.json as the record of which sources produce site/llms-full.txt.
@@ -632,6 +675,22 @@ for changelog_check in test_changelog_format.py check_changelog_format.py; do
   else
     printf '%s\n' "$changelog_format"
     bad "$changelog_check failed"
+  fi
+done
+
+echo "== TODO.md: one backlog row per line =="
+# Finding F-TODO-ROW-CONCATENATION: a lost line break joins two banded-table rows onto one line,
+# and Markdown renders the second inside the first row's last cell. #71 committed one, joining
+# rows 1.13 and 1.19. The self-test runs first, so what runs against TODO.md is the shipped gate.
+for todo_check in test_todo_rows.py check_todo_rows.py; do
+  if todo_rows=$(python3 -I -B "tools/$todo_check" 2>&1); then
+    printf '%s\n' "$todo_rows"
+    if grep -q '^  FAIL  ' <<< "$todo_rows" || ! grep -q '^  ok    ' <<< "$todo_rows"; then
+      bad "$todo_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$todo_rows"
+    bad "$todo_check failed"
   fi
 done
 

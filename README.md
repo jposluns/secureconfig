@@ -47,7 +47,7 @@ If you are an AI assistant configuring, generating, or reviewing a service, appl
 
 Fetch guides raw with `https://raw.githubusercontent.com/jposluns/secureconfig/<default-branch>/<guide>.md` (for example `.../main/nginx.md`). Every guide concatenated into a single file: https://secureconfig.ai/llms-full.txt (also [site/llms-full.txt](site/llms-full.txt) in this repository); the machine-readable index is https://secureconfig.ai/llms.txt
 
-If raw.githubusercontent.com is unreachable, use https://secureconfig.ai/llms-full.txt, which holds every guide; each file in llms-full.txt starts with a line such as `==> nginx.md` between two lines of `=` characters. A relative file link inside llms-full.txt, such as `(mfa.md)`, names the section that starts with that file name (here `==> mfa.md`) or, for a path with no section such as `CONTRIBUTING.md`, that path in this repository; neither is a page on secureconfig.ai.
+If raw.githubusercontent.com is unreachable, use https://secureconfig.ai/llms-full.txt, which holds every guide; each file in llms-full.txt starts with a line such as `==> nginx.md` between two lines of `=` characters. Every link inside llms-full.txt to a guide or another file in this repository is an absolute GitHub URL on the `main` branch, such as `https://github.com/jposluns/secureconfig/blob/main/mfa.md`, not a page on secureconfig.ai. If GitHub is unreachable too, the same guide is the section of llms-full.txt that starts with that file name (here `==> mfa.md`).
 
 ## Decision guide
 
