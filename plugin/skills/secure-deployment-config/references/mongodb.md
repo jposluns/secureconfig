@@ -308,7 +308,7 @@ Local checks did run: Bash parsing, ShellCheck, JavaScript syntax parsing, dupli
 Run on every database and router host:
 
 ```bash
-# REASONED: listener inventory; no MongoDB service or permitted netlink socket. Expected binds and network-hardening source follow.
+# Listener inventory; no MongoDB service or permitted netlink socket. Expected binds and network-hardening source follow.
 (                                       # a subshell, so the exits below end only the subshell
   command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
   if ss -tlnp; then
@@ -912,7 +912,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3ba0ca4c87cd1860da34d87fd62a14ea06b55a5321652ca7c49d45072e666cd6",
+  "body_sha256": "8811ef803003fe82057f4a1686022b12b9e6b3d73e53643bd3fafa82d9bfbec7",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
