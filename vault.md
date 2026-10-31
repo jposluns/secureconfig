@@ -414,7 +414,7 @@ network). These expectations follow the cited Vault documentation. The authoring
 so the first block's `sudo ss -tlnp` ran through a stand-in that runs `ss` without it; as the same
 account, `ss` still showed the Vault process.
 
-REASONED: curl result interpretation: transport or TLS failure is inconclusive, and only matched authenticated controls support a fixed outcome. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The curl `exitcode` and `errormsg` write-out fields require curl 7.75.0 or newer.
+REASONED: curl result interpretation: transport or TLS failure is inconclusive, and only matched authenticated controls support a fixed outcome. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The curl `exitcode` and `errormsg` write-out fields require curl 7.75.0 or newer.
 For authenticated and on-host checks, transport failure, TLS failure, an unexpected redirect, or a
 missing positive control is inconclusive, never the fixed state.
 See [curl write-out fields](https://curl.se/docs/manpage.html#-w).
@@ -437,23 +437,23 @@ this on the Vault host as a non-root admin authorized to inspect audit devices, 
 and read the example AppRole:
 
 ```bash
-# DEMONSTRATED: loopback listener, health, file audit, root revocation and role runs recorded below; ss used the documented non-root stand-in.
+# DEMONSTRATED: loopback listener, health, file audit, root revocation and role runs recorded below; ss used the documented non-root stand-in. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
-          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-          [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
-          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
+          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+          [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
           sudo ss -tlnp
           vault status -format=json
           curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -474,19 +474,19 @@ and read the example AppRole:
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
-          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-          [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
-          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
+          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+          [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
           sudo ss -tlnp
           vault status -format=json
           curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -502,16 +502,16 @@ and read the example AppRole:
 )
 ```
 
-REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. The inspection checks follow the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints). The inspection checks also follow the guide's cited Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. Interpret the checks separately; the block's final exit status does not summarize them:
+REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. The inspection checks follow the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints). The inspection checks also follow the guide's cited Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. The bash -n, ShellCheck and stub runs recorded in this paragraph covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Interpret the checks separately; the block's final exit status does not summarize them:
 
-- REASONED: bind and TLS comparison: unintended listeners are findings; intended private binds with verified TLS and matched firewall controls are required. The parenthetical host limitations below describe the historical run. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault production hardening (root token, swap, core dumps). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Bind and TLS (demonstrated, TLS in both states; a wildcard bind, `ss` as root and the firewall
+- REASONED: bind and TLS comparison: unintended listeners are findings; intended private binds with verified TLS and matched firewall controls are required. The parenthetical host limitations below describe the historical run. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault production hardening (root token, swap, core dumps). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Bind and TLS (demonstrated, TLS in both states; a wildcard bind, `ss` as root and the firewall
   REASONED: the host forbids binding every interface, has no `sudo`, and has no second network):** read the whole socket table. Confirm `8200` is bound to the intended
   private address and `8201` to the cluster address, with nothing unexpected. A wildcard or unintended
   listener is a finding. The TLS health request must reach the intended server with certificate
   verification enabled. `ss` shows the bind, not the firewall; "only between nodes" is a firewall
   property. Confirm it with firewall rules and the permitted/forbidden-source probes below.
   See the [listener reference](https://developer.hashicorp.com/vault/docs/configuration/listener/tcp).
-- REASONED: status and health interpretation: initialized and unsealed is the intended operating state; sealed, uninitialized and standby responses must be distinguished as specified here, without treating health as proof of hardening. Per the guide's cited Vault status command (JSON output and exit codes); Vault sys/health status codes. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Server state (demonstrated for `501`, `503` and `200`; the standby and removed-node codes
+- REASONED: status and health interpretation: initialized and unsealed is the intended operating state; sealed, uninitialized and standby responses must be distinguished as specified here, without treating health as proof of hardening. Per the guide's cited Vault status command (JSON output and exit codes); Vault sys/health status codes. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Server state (demonstrated for `501`, `503` and `200`; the standby and removed-node codes
   REASONED, since no multi-node cluster was set up):** status should report `initialized: true` and `sealed: false`.
   Status exit code `2` means sealed; an unsealed standby returns `0`; `1` means an error.
   Health codes `200` active, `429` standby, `501` uninitialized, and `503` sealed are common
@@ -521,7 +521,7 @@ REASONED: preceding block; all listener, health, audit, root-token and AppRole i
   returned codes. A healthy response is a connectivity control, not proof of hardening.
   See [status](https://developer.hashicorp.com/vault/docs/commands/status) and the
   [health API](https://developer.hashicorp.com/vault/api-docs/system/health).
-- REASONED: audit configuration and delivery: no devices or missing delivery is a finding; require the matching request ID at both independent destinations. The parenthetical host limitation below describes the historical run. Per the guide's cited Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault audit list command; Vault audit entry schema (request IDs and token-use fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Audit configuration and delivery (demonstrated for an empty list and for one and two file devices; a
+- REASONED: audit configuration and delivery: no devices or missing delivery is a finding; require the matching request ID at both independent destinations. The parenthetical host limitation below describes the historical run. Per the guide's cited Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault audit list command; Vault audit entry schema (request IDs and token-use fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Audit configuration and delivery (demonstrated for an empty list and for one and two file devices; a
   second device in a separate failure domain REASONED, since the host has no second network):** an empty audit list means requests are served
   unlogged. The fixed configuration lists the intended independent devices. Correlate the successful
   non-root JSON token lookup's `request_id` with `request.id` in the collected audit entries;
@@ -532,7 +532,7 @@ REASONED: preceding block; all listener, health, audit, root-token and AppRole i
   See [audit availability and exemptions](https://developer.hashicorp.com/vault/docs/audit),
   [audit listing](https://developer.hashicorp.com/vault/docs/commands/audit/list), and the
   [audit schema](https://developer.hashicorp.com/vault/docs/audit/schema).
-- REASONED: root revocation: a revoked root lookup must fail while an independently authenticated scoped admin succeeds; successful root lookup is the exposed outcome. Per the guide's cited Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault token concepts (token prefixes, parent and child revocation, root tokens, TTLs, service and batch behavior). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Root revocation (demonstrated):** the scoped-admin token lookup is the positive control. Log that
+- REASONED: root revocation: a revoked root lookup must fail while an independently authenticated scoped admin succeeds; successful root lookup is the exposed outcome. Per the guide's cited Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault token concepts (token prefixes, parent and child revocation, root tokens, TTLs, service and batch behavior). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Root revocation (demonstrated):** the scoped-admin token lookup is the positive control. Log that
   admin in through an auth method: a non-orphan token made with `vault token create` while the root
   token is selected is the root token's child and is revoked with it.
   Repeat the guarded block with the revoked initial root credential still selected and judge its
@@ -542,7 +542,7 @@ REASONED: preceding block; all listener, health, audit, root-token and AppRole i
   or generate a live root credential for testing.
   See [token lookup](https://developer.hashicorp.com/vault/docs/commands/token/lookup) and
   [self-revocation](https://developer.hashicorp.com/vault/docs/commands/token/revoke).
-- REASONED: AppRole inspection: require every section 7 bound; absent limits or broader policies are findings, while denied inspection is inconclusive. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **AppRole configuration (demonstrated):** compare the role read with every parameter in section 7,
+- REASONED: AppRole inspection: require every section 7 bound; absent limits or broader policies are findings, while denied inspection is inconclusive. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **AppRole configuration (demonstrated):** compare the role read with every parameter in section 7,
   including both CIDR restrictions, SecretID TTL/use limits, service-token type, token TTL/max TTL/
   explicit max TTL, zero period, use limit, and exclusion of the default policy. Durations may be
   returned in seconds. A missing role or denied inspection is inconclusive; zero use limits,
@@ -571,7 +571,7 @@ exit=7 err=Failed to connect ...` with the server stopped; with two file audit d
 unintended listener with its own cluster port, because `cluster_address` defaults to one port above
 `address`.
 
-REASONED: header-file preparation for the ACL and monitoring comparisons: use the intended identity's actual header; the paired requests must distinguish authorized success from anonymous or cross-application denial. Stub arguments contained the header-file path, not its dummy token. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields); Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
+REASONED: header-file preparation for the ACL and monitoring comparisons: use the intended identity's actual header; the paired requests must distinguish authorized success from anonymous or cross-application denial. Stub arguments contained the header-file path, not its dummy token. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields); Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
 protected mechanism. The file must contain the actual header, not a shell variable reference.
 Use only the intended authentication header, and remove the file when finished.
@@ -589,26 +589,26 @@ request followed by the same request with the selected credential; response bodi
 to avoid printing secrets or profiles.
 
 ```bash
-# DEMONSTRATED: loopback ACL and active-node monitoring pairs recorded below.
+# DEMONSTRATED: loopback ACL and active-node monitoring pairs recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
     'REPLACE_WITH_CA_FILE' \
     'REPLACE_WITH_TOKEN_HEADER_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
           case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
             *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-              [ -r "$3" ] || { echo "header file is not readable"; exit 1; }
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+              [ -r "$3" ] || { echo "header file is not readable"; exit 2; }
               curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
                 --cacert "$2" -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
               curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -629,21 +629,21 @@ to avoid printing secrets or profiles.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_FULL_HTTPS_API_URL' \
     'REPLACE_WITH_CA_FILE' \
     'REPLACE_WITH_TOKEN_HEADER_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
           case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
             *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-              [ -r "$3" ] || { echo "header file is not readable"; exit 1; }
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+              [ -r "$3" ] || { echo "header file is not readable"; exit 2; }
               curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
                 --cacert "$2" -w 'anonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
               curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -660,13 +660,13 @@ to avoid printing secrets or profiles.
 
 | Check | Request and identity | Fixed outcome and matched positive control | Exposed outcome |
 | --- | --- | --- | --- |
-| REASONED: own-secret positive control: expect authenticated 200 for the existing fixture; failure makes the cross-application comparison inconclusive. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Application's own secret | `GET /v1/kv/data/payments/config`, payments application token | Authenticated `200` for an existing, readable test fixture | Failure makes the cross-application denial inconclusive |
-| REASONED: cross-application denial: expect application 403 and fixture-reader 200 for the same path; application 200 is exposed. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Another application's secret | `GET /v1/kv/data/inventory/config`, payments application token | Application receives `403`; repeat the same URL with a fixture-reader identity authorized for that existing path and require `200` | Application receives `200` |
-| REASONED: active-node metrics: expect anonymous 403 and collector 200; anonymous 200 is exposed. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault metrics API (GET, JSON format, and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Metrics | `GET /v1/sys/metrics`, metrics collector token, directly on the active node | Anonymous `403`, collector `200`, on each API listener of the active node | Anonymous `200` |
-| REASONED: active-node profiling: expect anonymous 403 and authorized operator 200; anonymous 200 is exposed. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Profiling | `GET /v1/sys/pprof/`, separate operator with `read` on `sys/pprof/*`, directly on the active node | Anonymous `403`, authorized operator `200`, on each API listener of the active node | Anonymous `200` |
-| REASONED: collector isolation: expect collector 403 and payments application 200 on the same fixture; collector 200 is exposed. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Collector isolation | `GET /v1/kv/data/payments/config`, metrics collector token | Collector receives `403`; payments application receives `200` for the same existing fixture | Collector receives `200` |
+| REASONED: own-secret positive control: expect authenticated 200 for the existing fixture; failure makes the cross-application comparison inconclusive. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Application's own secret | `GET /v1/kv/data/payments/config`, payments application token | Authenticated `200` for an existing, readable test fixture | Failure makes the cross-application denial inconclusive |
+| REASONED: cross-application denial: expect application 403 and fixture-reader 200 for the same path; application 200 is exposed. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Another application's secret | `GET /v1/kv/data/inventory/config`, payments application token | Application receives `403`; repeat the same URL with a fixture-reader identity authorized for that existing path and require `200` | Application receives `200` |
+| REASONED: active-node metrics: expect anonymous 403 and collector 200; anonymous 200 is exposed. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault metrics API (GET, JSON format, and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Metrics | `GET /v1/sys/metrics`, metrics collector token, directly on the active node | Anonymous `403`, collector `200`, on each API listener of the active node | Anonymous `200` |
+| REASONED: active-node profiling: expect anonymous 403 and authorized operator 200; anonymous 200 is exposed. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Profiling | `GET /v1/sys/pprof/`, separate operator with `read` on `sys/pprof/*`, directly on the active node | Anonymous `403`, authorized operator `200`, on each API listener of the active node | Anonymous `200` |
+| REASONED: collector isolation: expect collector 403 and payments application 200 on the same fixture; collector 200 is exposed. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Collector isolation | `GET /v1/kv/data/payments/config`, metrics collector token | Collector receives `403`; payments application receives `200` for the same existing fixture | Collector receives `200` |
 
-REASONED: fixture and active-node controls: require the authorized 200 control before counting a 403 denial; a 404 or standby selection is inconclusive. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Use non-sensitive fixtures in an isolated test deployment. A `404` is not proof of an ACL denial.
+REASONED: fixture and active-node controls: require the authorized 200 control before counting a 403 denial; a 404 or standby selection is inconclusive. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Use non-sensitive fixtures in an isolated test deployment. A `404` is not proof of an ACL denial.
 For metrics, use the default JSON representation so the positive control does not depend on enabling
 Prometheus output. For both monitoring checks, target the active node directly, or the sole server
 in a single-node deployment. Confirm its role with the guarded status/health check above before
@@ -681,7 +681,7 @@ read policy got `200` on the inventory secret: the exposed outcomes. In the run 
 configuration and its anonymous-access settings left `false`, a collector whose policy added
 `kv/data/*` got `200` on the payments secret, the collector-isolation exposed outcome.
 
-REASONED: HA monitoring: expect an ordinary standby's 307 redirect or the documented local-only forwarding rejection, neither an authentication pass; repeat on the active node for anonymous 403 and authorized 200. No multi-node environment was available. Per the guide's cited Vault HA redirect implementation (pinned v1.21.0); Vault local-only forwarding implementation (pinned v1.20.0); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **REASONED (no multi-node cluster was set up for these runs):** authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
+REASONED: HA monitoring: expect an ordinary standby's 307 redirect or the documented local-only forwarding rejection, neither an authentication pass; repeat on the active node for anonymous 403 and authorized 200. No multi-node environment was available. Per the guide's cited Vault HA redirect implementation (pinned v1.21.0); Vault local-only forwarding implementation (pinned v1.20.0); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **REASONED (no multi-node cluster was set up for these runs):** authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
 `307` to the active node's advertised API address when a leader is available; that redirect is not
 an authentication result. Performance standbys can serve local requests, but the local-only handler
 rejects requests that require forwarding with `400` in the inspected implementation. Do not follow
@@ -693,7 +693,7 @@ Keep both anonymous-access settings disabled on every node's API listeners. Insp
 configuration and repeat the paired checks on each node when it is active during an authorized HA
 test; a pair on the current active node does not verify other nodes' listener settings.
 
-REASONED: separate profiling authorization: collector credentials do not establish a profiling control; require the profiling operator's 200 against anonymous 403, with anonymous 200 the exposed state. Per the guide's cited Vault policies and tokens; Vault profiling API (index path and root namespace); Vault metrics API (GET, JSON format, and root namespace); Vault KV v2 API (data paths and read operations); Vault TCP listener (address defaults, tls_disable, cluster_address). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. A collector's metrics-only policy is not a positive control for profiling; use the separately
+REASONED: separate profiling authorization: collector credentials do not establish a profiling control; require the profiling operator's 200 against anonymous 403, with anonymous 200 the exposed state. Per the guide's cited Vault policies and tokens; Vault profiling API (index path and root namespace); Vault metrics API (GET, JSON format, and root namespace); Vault KV v2 API (data paths and read operations); Vault TCP listener (address defaults, tls_disable, cluster_address). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. A collector's metrics-only policy is not a positive control for profiling; use the separately
 authorized operator. HashiCorp's [debug permissions](https://developer.hashicorp.com/vault/docs/commands/debug#permissions)
 grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling subpaths without
 `sudo`. Leave the collector's policy unchanged. These checks follow the
@@ -722,7 +722,7 @@ run: the contents of process memory are unknown, because every attempt by those 
 `/proc/sys/kernel/yama/ptrace_scope` read `1`. Root was not tested as the observer, because the
 evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
 was set), and no real `vault` client or live Vault service ran, because `vault` was not on the
-evaluation host's PATH. The following
+evaluation host's PATH. These three runs covered an earlier form of the following block, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The following
 login request takes `role_id` and `secret_id` from the request file on
 `vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
 shell history nor `set -x` tracing records it, provided the file is prepared through protected
@@ -735,28 +735,28 @@ login request reads the credentials from stdin, not argv. Its successful output 
 handle it only in a protected session.
 
 ```bash
-# DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below.
+# DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
     'REPLACE_WITH_LOGIN_JSON_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
           case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
             *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
-              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
-              [ -r "$3" ] || { echo "login request file is not readable"; exit 1; }
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+              [ -r "$3" ] || { echo "login request file is not readable"; exit 2; }
               vault write -format=json auth/approle/login - < "$3"
               ;;
           esac
@@ -770,7 +770,7 @@ handle it only in a protected session.
 Use separate credentials for independent cases so consuming a SecretID or token does not confound
 another test:
 
-- REASONED: SecretID single use: require first-login success, reuse rejection and fresh-SecretID success; successful reuse is exposed. Python parsed a dummy role_id/secret_id JSON fixture; no live credentials were used. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login); Vault AppRole authentication (setup, token choice, and child-token constraints). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **SecretID use limit (demonstrated):** a fresh SecretID succeeds once from an allowed source.
+- REASONED: SecretID single use: require first-login success, reuse rejection and fresh-SecretID success; successful reuse is exposed. Python parsed a dummy role_id/secret_id JSON fixture; no live credentials were used. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login); Vault AppRole authentication (setup, token choice, and child-token constraints). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **SecretID use limit (demonstrated):** a fresh SecretID succeeds once from an allowed source.
   An immediate repeat with the same request file must fail with a Vault authentication error;
   another freshly delivered SecretID must succeed. Successful reuse is the exposed state. On the loopback
   run, the section 7 role refused the reuse with `400`, and a role with `secret_id_num_uses=0` accepted
@@ -815,7 +815,7 @@ another test:
   role with no TTL a `lease_duration` of `2764800`, the exposed halves of the type and lease checks. With `token_ttl=10s`, a read at about 15 seconds got `403`,
   while a token from a role with no token TTL (the default lifetime) got `200`.
 
-REASONED: credential and token discriminators: fresh allowed credentials succeed while reused credentials, SecretIDs past the stated expiry margin or disallowed-source credentials fail; token access must stop at the specified use and lifetime bounds. Python parsed the dummy login JSON fixture. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login); Vault AppRole authentication (setup, token choice, and child-token constraints); Vault token concepts (token prefixes, parent and child revocation, root tokens, TTLs, service and batch behavior). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The discriminators come from the
+REASONED: credential and token discriminators: fresh allowed credentials succeed while reused credentials, SecretIDs past the stated expiry margin or disallowed-source credentials fail; token access must stop at the specified use and lifetime bounds. Python parsed the dummy login JSON fixture. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login); Vault AppRole authentication (setup, token choice, and child-token constraints); Vault token concepts (token prefixes, parent and child revocation, root tokens, TTLs, service and batch behavior). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The discriminators come from the
 [AppRole credential and role parameters](https://developer.hashicorp.com/vault/api-docs/auth/approle),
 [AppRole constraints](https://developer.hashicorp.com/vault/docs/auth/approle), and
 [token lifetime rules](https://developer.hashicorp.com/vault/docs/concepts/tokens).
@@ -828,23 +828,23 @@ positive control and must return wrapping information. Unexpectedly successful n
 are findings; their credential-bearing output is discarded.
 
 ```bash
-# DEMONSTRATED: loopback mandatory-wrapping negative requests and matched positive control recorded below.
+# DEMONSTRATED: loopback mandatory-wrapping negative requests and matched positive control recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
-          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-          [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
-          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
+          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+          [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
           if vault write -f auth/approle/role/payments/secret-id > /dev/null; then
             echo "FINDING: unwrapped issuance succeeded"
           else
@@ -896,7 +896,7 @@ unknown, because every attempt by those observers to open `/proc/<pid>/mem` was 
 (Permission denied) on the evaluation host, where `/proc/sys/kernel/yama/ptrace_scope` read `1`.
 Root was not tested as the observer, because the evaluation host refused privilege elevation
 (`sudo -n id` failed because the no-new-privileges flag was set), and no real `vault` client or
-live Vault service ran, because `vault` was not on the evaluation host's PATH. The reasoning from
+live Vault service ran, because `vault` was not on the evaluation host's PATH. These three runs covered an earlier form of both wrapping-lookup blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The reasoning from
 the shell behaviour of file input on stdin applies to both wrapping-lookup blocks below, the
 demonstrated lookup and the recipient-validation lookup. Each passes the protected lookup request,
 wrapping token included, to `vault` from a file on its stdin. Neither block types the token or
@@ -916,28 +916,28 @@ protected JSON lookup request described in section 7, and select the received
 wrapping token through securely injected `VAULT_TOKEN`. Lookup must succeed before unwrapping:
 
 ```bash
-# DEMONSTRATED: loopback wrapping lookup before expiry and after consumption or expiry, recorded below.
+# DEMONSTRATED: loopback wrapping lookup before expiry and after consumption or expiry, recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
     'REPLACE_WITH_WRAPPING_LOOKUP_JSON_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
           case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
             *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
-              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
-              [ -r "$3" ] || { echo "lookup request file is not readable"; exit 1; }
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+              [ -r "$3" ] || { echo "lookup request file is not readable"; exit 2; }
               vault write -format=json sys/wrapping/lookup - < "$3"
               ;;
           esac
@@ -954,23 +954,23 @@ wrapping token through securely injected `VAULT_TOKEN`. Lookup must succeed befo
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE' \
     'REPLACE_WITH_WRAPPING_LOOKUP_JSON_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 1; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
           case "$3" in
-            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 1 ;;
+            *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 3; not probing"; exit 2 ;;
             *)
-              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-              [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
-              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
-              [ -r "$3" ] || { echo "lookup request file is not readable"; exit 1; }
+              case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+              [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+              unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+              export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
+              [ -r "$3" ] || { echo "lookup request file is not readable"; exit 2; }
               vault write -format=json sys/wrapping/lookup - < "$3"
               ;;
           esac
@@ -1010,23 +1010,23 @@ already-unwrapped error. A separate fresh, validated token must still unwrap suc
 Protect the successful output, which contains the SecretID.
 
 ```bash
-# DEMONSTRATED: loopback first unwrap, consumed-token refusal and fresh-token control recorded below.
+# DEMONSTRATED: loopback first unwrap, consumed-token refusal and fresh-token control recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 1; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       case "$2" in
-        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 1 ;;
+        *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 2; not probing"; exit 2 ;;
         *)
-          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 1 ;; esac
-          [ -r "$2" ] || { echo "CA file is not readable"; exit 1; }
-          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 1
-          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 1
+          case "$1" in https://*) ;; *) echo "use an HTTPS URL"; exit 2 ;; esac
+          [ -r "$2" ] || { echo "CA file is not readable"; exit 2; }
+          unset VAULT_SKIP_VERIFY VAULT_AGENT_ADDR VAULT_NAMESPACE VAULT_WRAP_TTL || exit 2
+          export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
           vault unwrap
           ;;
       esac
@@ -1048,14 +1048,14 @@ run it from a machine outside your trusted network, where the fixed state is tha
 Guard the address so the probe cannot run unsubstituted and time out as if the port were closed:
 
 ```bash
-# DEMONSTRATED: local connection-failure discriminator recorded below; this does not demonstrate an external firewall.
+# DEMONSTRATED: local connection-failure discriminator recorded below; this does not demonstrate an external firewall. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
@@ -1069,11 +1069,11 @@ Guard the address so the probe cannot run unsubstituted and time out as if the p
 # REASONED: external isolation and permitted-source control; the host has no second network. Repeat this probe from the sources described below; the cited listener and firewall guidance defines the expected outcomes.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
-    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute value 1; not probing"; exit 2 ;;
     *)
       curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' \
@@ -1095,7 +1095,7 @@ non-zero `time_connect` and curl's certificate-verification error (exit `60`), t
 and against 127.0.0.2, where nothing listens, `time_connect=0.000000` and `Could not connect to
 server` (exit `7`), the refused shape.
 
-REASONED: external isolation control: require a TCP connection from the permitted source and refusal from the forbidden source to the same destination; forbidden-source connectivity is exposed and a failed permitted control is inconclusive. No permitted/forbidden deployment pair was available. Per the guide's cited Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS); curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Pair the forbidden-source check with the same destination and port from a permitted host:
+REASONED: external isolation control: require a TCP connection from the permitted source and refusal from the forbidden source to the same destination; forbidden-source connectivity is exposed and a failed permitted control is inconclusive. No permitted/forbidden deployment pair was available. Per the guide's cited Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS); curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Pair the forbidden-source check with the same destination and port from a permitted host:
 the positive control must establish a TCP connection. For `8201`, use a permitted Vault node.
 If the permitted source cannot route to that destination, the matched control is unavailable;
 record the limitation instead of claiming this probe demonstrates isolation. Confirm the firewall
@@ -1106,7 +1106,7 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 | Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| REASONED: deployment comparisons in this row: require the specified HA responses, delivery to both independent audit destinations, intended binds, unexpected-path rejection by the recipient, and denied external access with a working permitted-source control; missing delivery, unintended binds, accepted unexpected paths and forbidden-source connectivity are findings. No multi-node deployment, recipient implementation or external source pair was available. The guide's cited sources for the deployment comparisons in this row (part 1 of 2): Vault sys/health status codes; Vault HA redirect implementation (pinned v1.21.0); Vault local-only forwarding implementation (pinned v1.20.0); Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault TCP listener (address defaults, tls_disable, cluster_address). The guide's cited sources for the deployment comparisons in this row (part 2 of 2): Vault response wrapping (single use, delivery, validation, and historical 0.8 version note); Vault wrapping lookup API (creation path, time, and original TTL); Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Checks beyond the recorded loopback runs | REASONED from the cited Vault documentation; not demonstrated | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot (part 1 of 2): HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root. The demonstration in that authorized isolated Vault deployment, of what a single loopback node cannot demonstrate, is to cover (part 2 of 2): recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
+| REASONED: deployment comparisons in this row: require the specified HA responses, delivery to both independent audit destinations, intended binds, unexpected-path rejection by the recipient, and denied external access with a working permitted-source control; missing delivery, unintended binds, accepted unexpected paths and forbidden-source connectivity are findings. No multi-node deployment, recipient implementation or external source pair was available. The guide's cited sources for the deployment comparisons in this row (part 1 of 2): Vault sys/health status codes; Vault HA redirect implementation (pinned v1.21.0); Vault local-only forwarding implementation (pinned v1.20.0); Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault TCP listener (address defaults, tls_disable, cluster_address). The guide's cited sources for the deployment comparisons in this row (part 2 of 2): Vault response wrapping (single use, delivery, validation, and historical 0.8 version note); Vault wrapping lookup API (creation path, time, and original TTL); Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Checks beyond the recorded loopback runs | REASONED from the cited Vault documentation; not demonstrated | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot (part 1 of 2): HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root. The demonstration in that authorized isolated Vault deployment, of what a single loopback node cannot demonstrate, is to cover (part 2 of 2): recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
 
 ## Sources (checked September 2026)
 
@@ -1199,30 +1199,30 @@ Claims (full source mapping in the JSON block below):
 - root (REASONED; docs): Bootstrap root has unlimited access and no expiry; retire after testing another auth method, remove helper copy, regenerate only by quorum.
 - cli (REASONED; docs): Credential prompts, token environment/helper selection and protected stdin/files avoid credential arguments.
 - policy (REASONED; docs): Deny-by-default non-root policies, additive grants, KV v2 data path, no writes/listing/sudo, bounded TTL and service-token tradeoffs.
-- role (DEMONSTRATED; docs, run): Every displayed AppRole role parameter is returned by role inspection; example budgets are not defaults.
+- role (DEMONSTRATED; docs, run): Every displayed AppRole role parameter is returned by role inspection; example budgets are not defaults. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - delivery (REASONED; docs): Delivery policy requires wrapping TTL 1s to 60s; protect transfer and lookup JSON, check path/time/original TTL before unwrap.
 - identity (REASONED; docs, jwt-min): Existing workload identity is preferred; Kubernetes names/namespaces and JWT identity/audience binding apply, including the stated 1.17 qualification.
 - bootstrap (REASONED; docs): Unauthenticated health, seal-status, init and leader paths need network isolation; policies cannot close bootstrap paths.
 - storage (REASONED; docs): Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific.
-- bind-test (DEMONSTRATED; docs, run): Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected.
-- cluster-address (DEMONSTRATED; docs, run): cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener.
+- bind-test (DEMONSTRATED; docs, run): Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- cluster-address (DEMONSTRATED; docs, run): cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - bind-limits (REASONED; docs): Wildcard binds, ss as root and actual firewall isolation remain unobserved.
-- health-test (DEMONSTRATED; docs, run): Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive.
+- health-test (DEMONSTRATED; docs, run): Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - health-ha (REASONED; docs): Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning.
-- audit-test (DEMONSTRATED; docs, run): Empty/one/two file-device inspection and request-ID correlation demonstrate local delivery.
+- audit-test (DEMONSTRATED; docs, run): Empty/one/two file-device inspection and request-ID correlation demonstrate local delivery. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - audit-remote (REASONED; docs): Independent failure-domain audit delivery remains unobserved.
-- root-test (DEMONSTRATED; docs, run): Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue.
-- acl-test (DEMONSTRATED; docs, run): Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls.
-- monitor-test (DEMONSTRATED; docs, run): Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both.
+- root-test (DEMONSTRATED; docs, run): Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- acl-test (DEMONSTRATED; docs, run): Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- monitor-test (DEMONSTRATED; docs, run): Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - monitor-ha (REASONED; docs, ha, forward): Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks.
-- secretid (DEMONSTRATED; docs, run): SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy.
-- cidr (DEMONSTRATED; docs, run): SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection.
-- token (DEMONSTRATED; docs, run): Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls.
-- wrap-test (DEMONSTRATED; docs, run): No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control.
-- lookup-test (DEMONSTRATED; docs, run): Lookup returns path/time/original TTL; consumed and expired tokens fail.
+- secretid (DEMONSTRATED; docs, run): SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- cidr (DEMONSTRATED; docs, run): SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- token (DEMONSTRATED; docs, run): Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- wrap-test (DEMONSTRATED; docs, run): No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- lookup-test (DEMONSTRATED; docs, run): Lookup returns path/time/original TTL; consumed and expired tokens fail. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - recipient (REASONED; docs): Receiving application must reject an unexpected creation path; its implementation is not demonstrated.
-- unwrap-test (DEMONSTRATED; docs, run): First unwrap succeeds, reuse fails, fresh control succeeds.
-- connection-test (DEMONSTRATED; docs, curl, run): Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation.
+- unwrap-test (DEMONSTRATED; docs, run): First unwrap succeeds, reuse fails, fresh control succeeds. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- connection-test (DEMONSTRATED; docs, curl, run): Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - external (REASONED; docs, curl): Test actual 8200/8201 destinations from permitted and forbidden sources; routing, local errors and unavailable controls are inconclusive.
 - wrapping-history (REASONED; wrap-history): Some wrapping-token features date from 0.8; do not generalize current behavior to earlier versions.
 
@@ -1231,7 +1231,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f0b688f2e12114164d893920b68050520fa6db397a7d765d78efd46fcc323e9a",
+  "body_sha256": "ba378123b217d360b75764b1e667ee9b18827459ce53902500b2c1dc48dc009c",
   "components": {
     "run": {
       "name": "Vault loopback run",
@@ -1342,30 +1342,30 @@ Claims (full source mapping in the JSON block below):
     "root": {"text": "Bootstrap root has unlimited access and no expiry; retire after testing another auth method, remove helper copy, regenerate only by quorum.", "components": ["docs"], "sources": ["docs:s449e83b31426", "docs:s923f5369652b", "docs:s426748068836"], "status": "REASONED"},
     "cli": {"text": "Credential prompts, token environment/helper selection and protected stdin/files avoid credential arguments.", "components": ["docs"], "sources": ["docs:s6a0b17f5713a", "docs:sab78482b691b", "docs:s0f2cf5468884", "docs:s17fb33326e35", "docs:sd1209454cb98"], "status": "REASONED"},
     "policy": {"text": "Deny-by-default non-root policies, additive grants, KV v2 data path, no writes/listing/sudo, bounded TTL and service-token tradeoffs.", "components": ["docs"], "sources": ["docs:sfbfbd7179dca", "docs:s449e83b31426", "docs:s607f5b7aafbc", "docs:sf7640abb07c2", "docs:s745b51dd1719"], "status": "REASONED"},
-    "role": {"text": "Every displayed AppRole role parameter is returned by role inspection; example budgets are not defaults.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "The role read returned every section 7 value, with durations in seconds.", "verify": [1]},
+    "role": {"text": "Every displayed AppRole role parameter is returned by role inspection; example budgets are not defaults. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "The role read returned every section 7 value, with durations in seconds.", "verify": [1]},
     "delivery": {"text": "Delivery policy requires wrapping TTL 1s to 60s; protect transfer and lookup JSON, check path/time/original TTL before unwrap.", "components": ["docs"], "sources": ["docs:sfbfbd7179dca", "docs:sa79f2fd07092", "docs:sca6c552728d7", "docs:s17fb33326e35", "docs:sd1209454cb98"], "status": "REASONED"},
     "identity": {"text": "Existing workload identity is preferred; Kubernetes names/namespaces and JWT identity/audience binding apply, including the stated 1.17 qualification.", "components": ["docs", "jwt-min"], "sources": ["docs:s3cf51daf4c81", "docs:scfa855ec9d87", "docs:sf213104862ac", "jwt-min:sf213104862ac"], "status": "REASONED"},
     "bootstrap": {"text": "Unauthenticated health, seal-status, init and leader paths need network isolation; policies cannot close bootstrap paths.", "components": ["docs"], "sources": ["docs:sa1a925943f6a", "docs:sabe0751ee280", "docs:s51416363da81", "docs:s1e239e51209c"], "status": "REASONED"},
     "storage": {"text": "Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific.", "components": ["docs"], "sources": ["docs:s60d6655e9803", "docs:s0f36ae51e56b", "docs:sf1aad6c3d00d", "docs:sd032f083ae99"], "status": "REASONED"},
-    "bind-test": {"text": "Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a plaintext request got `400` \"Client sent an HTTP request to an HTTPS server\"", "verify": [1]},
-    "cluster-address": {"text": "cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "verify": [1], "evidence": "socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an unintended listener with its own cluster port, because `cluster_address` defaults to one port above `address`."},
+    "bind-test": {"text": "Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a plaintext request got `400` \"Client sent an HTTP request to an HTTPS server\"", "verify": [1]},
+    "cluster-address": {"text": "cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "verify": [1], "evidence": "socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an unintended listener with its own cluster port, because `cluster_address` defaults to one port above `address`."},
     "bind-limits": {"text": "Wildcard binds, ss as root and actual firewall isolation remain unobserved.", "components": ["docs"], "sources": ["docs:sbfb9c60f21c1", "docs:s0f36ae51e56b"], "status": "REASONED", "verify": [2, 11]},
-    "health-test": {"text": "Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive.", "components": ["docs", "run"], "sources": ["docs:sa1a925943f6a", "docs:s70ec02f4b4d7", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "Health returned `501` before initialization, `503` while sealed (status exit code `2`) and `200` once unsealed (exit code `0`)", "verify": [1]},
+    "health-test": {"text": "Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sa1a925943f6a", "docs:s70ec02f4b4d7", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "Health returned `501` before initialization, `503` while sealed (status exit code `2`) and `200` once unsealed (exit code `0`)", "verify": [1]},
     "health-ha": {"text": "Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning.", "components": ["docs"], "sources": ["docs:sa1a925943f6a", "docs:s70ec02f4b4d7"], "status": "REASONED", "verify": [2]},
-    "audit-test": {"text": "Empty/one/two file-device inspection and request-ID correlation demonstrate local delivery.", "components": ["docs", "run"], "sources": ["docs:sd66fc0bcfb15", "docs:s4bc92d253ba6", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "with two file audit devices, one request's `request_id` appeared twice in each file", "verify": [1]},
+    "audit-test": {"text": "Empty/one/two file-device inspection and request-ID correlation demonstrate local delivery. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sd66fc0bcfb15", "docs:s4bc92d253ba6", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "with two file audit devices, one request's `request_id` appeared twice in each file", "verify": [1]},
     "audit-remote": {"text": "Independent failure-domain audit delivery remains unobserved.", "components": ["docs"], "sources": ["docs:s6a139716500f", "docs:s32194cc039b1"], "status": "REASONED", "verify": [2]},
-    "root-test": {"text": "Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s923f5369652b", "docs:sdb9905c2f649", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A scoped admin created as a child of the root token lost access with it, while an orphan token and a userpass login kept working.", "verify": [1]},
-    "acl-test": {"text": "Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sf7640abb07c2", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the payments token `200` on its own secret and `403` on the inventory secret, where the fixture reader got `200`", "verify": [3]},
-    "monitor-test": {"text": "Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "docs:s1437757f255b", "docs:s84bf68313c5d", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "anonymous requests got `200` on `sys/metrics` and `sys/pprof/`", "verify": [3]},
+    "root-test": {"text": "Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s923f5369652b", "docs:sdb9905c2f649", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A scoped admin created as a child of the root token lost access with it, while an orphan token and a userpass login kept working.", "verify": [1]},
+    "acl-test": {"text": "Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sf7640abb07c2", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the payments token `200` on its own secret and `403` on the inventory secret, where the fixture reader got `200`", "verify": [3]},
+    "monitor-test": {"text": "Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "docs:s1437757f255b", "docs:s84bf68313c5d", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "anonymous requests got `200` on `sys/metrics` and `sys/pprof/`", "verify": [3]},
     "monitor-ha": {"text": "Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks.", "components": ["docs", "ha", "forward"], "sources": ["docs:s1437757f255b", "docs:s84bf68313c5d", "ha:s8c81f240066a", "forward:sfdb628929b01"], "status": "REASONED", "verify": [4]},
-    "secretid": {"text": "SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "SecretIDs 10 seconds past their TTL logged in, while one 70 seconds past it was refused", "verify": [5]},
-    "cidr": {"text": "SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a login from 127.0.0.1 succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2", "verify": [5]},
-    "token": {"text": "Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "100 reads returned `200` before read 101 got `403`; with `token_num_uses=0`, all 101 reads returned `200`.", "verify": [5]},
-    "wrap-test": {"text": "No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sa79f2fd07092", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the same kind of identity's unwrapped request returned the SecretID fields and a sixty-one-second request succeeded", "verify": [6]},
-    "lookup-test": {"text": "Lookup returns path/time/original TTL; consumed and expired tokens fail.", "components": ["docs", "run"], "sources": ["docs:sca6c552728d7", "docs:s17fb33326e35", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A wrapping token looked up three seconds after its two-second TTL failed the same way.", "verify": [7]},
+    "secretid": {"text": "SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "SecretIDs 10 seconds past their TTL logged in, while one 70 seconds past it was refused", "verify": [5]},
+    "cidr": {"text": "SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a login from 127.0.0.1 succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2", "verify": [5]},
+    "token": {"text": "Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "100 reads returned `200` before read 101 got `403`; with `token_num_uses=0`, all 101 reads returned `200`.", "verify": [5]},
+    "wrap-test": {"text": "No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sa79f2fd07092", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the same kind of identity's unwrapped request returned the SecretID fields and a sixty-one-second request succeeded", "verify": [6]},
+    "lookup-test": {"text": "Lookup returns path/time/original TTL; consumed and expired tokens fail. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sca6c552728d7", "docs:s17fb33326e35", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A wrapping token looked up three seconds after its two-second TTL failed the same way.", "verify": [7]},
     "recipient": {"text": "Receiving application must reject an unexpected creation path; its implementation is not demonstrated.", "components": ["docs"], "sources": ["docs:sa79f2fd07092", "docs:sca6c552728d7"], "status": "REASONED", "verify": [8]},
-    "unwrap-test": {"text": "First unwrap succeeds, reuse fails, fresh control succeeds.", "components": ["docs", "run"], "sources": ["docs:sa79f2fd07092", "docs:sd1209454cb98", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the first unwrap returned the SecretID fields, the second failed with `wrapping token is not valid or does not exist`, and a fresh wrapping token unwrapped.", "verify": [9]},
-    "connection-test": {"text": "Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation.", "components": ["docs", "curl", "run"], "sources": ["docs:s1e239e51209c", "curl:s2b2686afaf41", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "against 127.0.0.2, where nothing listens, `time_connect=0.000000` and `Could not connect to server` (exit `7`)", "verify": [10]},
+    "unwrap-test": {"text": "First unwrap succeeds, reuse fails, fresh control succeeds. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sa79f2fd07092", "docs:sd1209454cb98", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the first unwrap returned the SecretID fields, the second failed with `wrapping token is not valid or does not exist`, and a fresh wrapping token unwrapped.", "verify": [9]},
+    "connection-test": {"text": "Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "curl", "run"], "sources": ["docs:s1e239e51209c", "curl:s2b2686afaf41", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "against 127.0.0.2, where nothing listens, `time_connect=0.000000` and `Could not connect to server` (exit `7`)", "verify": [10]},
     "external": {"text": "Test actual 8200/8201 destinations from permitted and forbidden sources; routing, local errors and unavailable controls are inconclusive.", "components": ["docs", "curl"], "sources": ["docs:s0f36ae51e56b", "docs:sb271b7950e37", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [11]},
     "wrapping-history": {"text": "Some wrapping-token features date from 0.8; do not generalize current behavior to earlier versions.", "components": ["wrap-history"], "sources": ["wrap-history:sa79f2fd07092"], "status": "REASONED"}
   }
