@@ -889,6 +889,63 @@ predictions quoted below, words in square brackets replace a pronoun in the quot
   make its completion claim false" (20261028T031812Z.from-lab_infra.de637cc570ae.msg). The record gives the final
   count: B 3. Its effect (applied by #1010): the nine sentences were split inside their headings' declarations
   before row 1.385 closed.
+- **Proxy decision of 2026-10-31 on where a Verify block's status 2 ends and status 3 begins, for the maintainer's
+  later review (#1106).** Decided at 2026-10-31T00:35:00Z under that directive, which the maintainer restated to all
+  orchestrators on 2026-10-30. The question was which status a block reports in five cases that the ruling of 2026-10-30
+  (#1083) left open: a missing required tool, a failed hidden-prompt read, an unreadable file the reader supplied, a
+  shell-state failure after the guards, and a reader who declines a confirmation prompt. The outcome, as the record
+  reads:
+  "Q1 missing required tool: 2. Q2 hidden-prompt read fails: 3 (an empty or placeholder value after a successful read stays 2). Q3 reader-supplied file unreadable: 2. Q4 shell-state failure after the guards: 2. Q5 reader declines a confirmation: 2."
+  The predictions, as recorded: the orchestrator predicted A, the outcome above, on all five. The guardrails
+  prediction is A on all five, with the reasoning "2 means the block declined to run because of something the
+  reader supplied or the reader's shell state; 3 means an operation the block itself attempted failed"
+  (20261031T003151Z.from-guardrails.cee873686e21.msg). The lab_infra prediction is A on all five, with the reasoning
+  "2 means fix what you supplied or your shell and rerun; 3 means something the block attempted failed"
+  (20261031T003156Z.from-lab_infra.a1ce24caa41c.msg). The record gives the final count: A 3 on each question. Both
+  suggested writing the principle into rule 6, and the wording below is lab_infra's. The principle: a check the block makes before relying on something, such as that a required
+  tool is present, that a file the reader supplied is readable or that the reader's shell state can be cleared, is a
+  guard refusal with status 2 when its failure reflects the reader's setup. The failure of an operation the block
+  attempts after its checks passed is status 3, so a file that passes `test -r` but then fails to read is 3, and a
+  tool that is present but fails when run is 3. The five cases: a missing required tool is 2; a hidden-prompt read
+  that fails, from no terminal, end of input or a timeout, is 3, while an empty or placeholder value after a
+  successful read stays 2; and an unreadable file the reader supplied is 2. A shell-state failure after the guards,
+  such as an `unset` or `export` that fails or a username mismatch after the export, is 2, and a reader who declines
+  a confirmation prompt is 2. The alternatives not chosen, with the reason the principle gives against each, were
+  these. A missing required tool at 3, as a failure in the local environment, would report a block that has not yet
+  attempted anything as a failed check, when the absence reflects the reader's setup. A failed hidden-prompt read at
+  2, as the cloudflare.md secret prompt and others exit today and as reader inaction in the timeout case, would treat
+  an operation the block attempts after its checks passed as a refusal. An unreadable file the reader supplied at 3
+  would treat a check of the reader's own input as a failed check. A shell-state failure at 3 would depart from rule
+  7's clear-or-refuse guards, which already exit 2 when the reader's shell state cannot be cleared. A declined
+  confirmation at 1, as the kafka.md ACL confirmation exits today, would read as a finding, and at 3 as a broken
+  check, when the reader chose not to proceed. This decision settles the cases the #1083 ruling left open. It reads
+  that ruling's "failure in the local environment" as the failure of an operation the block attempts, as its own
+  example of a failed `mktemp` is; that reading is part of what the maintainer reviews, since a proxy decision does
+  not reopen a maintainer ruling. Its effect, applied in the same change as this entry: CONTRIBUTING.md rule 6 states
+  the principle and the five cases as examples, and names the failure of an operation the block attempts where it
+  named a failure in the reader's own environment, so a precondition or shell-state refusal is not read as 3. No
+  guide changes here; arms that do not yet follow the line, such as hidden-prompt reads that exit 2 and the kafka.md
+  declined confirmation that exits 1, are recoded in later pull requests. The revert path is the maintainer's
+  review: a different ruling replaces the rule 6 sentences this change adds, and any arm recoded under this decision
+  is recoded again.
+- **Proxy decision of 2026-10-31 on the unit of a Verify block's status, for the maintainer's later review (#1106).**
+  Decided at 2026-10-31T02:11:08Z under that directive, as restated on 2026-10-30, by the unanimous vote of the three
+  orchestrators. The question was what "the block" is whose status rule 6 governs, given that many fences hold
+  several separate `( ... )` subshells and a pasted fence's status is only its last subshell's. The outcome, as the
+  record reads:
+  "Each fence's exit status reflects every classified probe in it: either its subshells feed one status that the fence's last line exits with, or independent checks are split into separate fences with their own statuses; the drafter picks per fence and says why."
+  The predictions, as recorded: the orchestrator predicted A, the outcome above. The lab_infra prediction is A, with
+  the reasoning "the reader acts on the status of what they paste, so a fence must never report 0 when any classified
+  probe in it found a problem" (20261031T021102Z.from-lab_infra.ec6c1cab82fb.msg). The guardrails prediction is A,
+  with the reasoning "a pasted fence whose status reflects only its last subshell lets an earlier finding read as 0"
+  (20261031T021108Z.from-guardrails.fb8d96b40c67.msg). The record gives the final count: A 3. The alternative not
+  chosen was that each `( ... )` subshell is a block and a fence's status is its last block's, disclosed where a
+  fence holds several. Its effect, applied in the same change as this entry: CONTRIBUTING.md rule 6 states that the
+  block whose status it governs is the fence the reader pastes, and that a fence holding several subshells either
+  feeds their classified outcomes into one status that its last line exits with or is split into separate fences.
+  No guide changes here; fences that do not yet follow this are recoded in later pull requests. The revert path is
+  the maintainer's review: a different ruling replaces the rule 6 sentences on the fence as the unit, and any fence
+  recoded under this decision is recoded again.
 
 ## Profile: predicting these rulings
 
