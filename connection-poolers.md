@@ -246,7 +246,7 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 )
 ```
 
-REASONED: preceding block; the listener inventory on the pooler host; no running pooler in the authoring environment, so the expected listeners rest on section 1's settings and the cited PgBouncer configuration and Pgpool-II connection settings entries. The block refuses with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, exits 3 when `ss` or the awk read fails, 1 for a port 9898 listener outside loopback and otherwise 0 with an unclassified-observation line. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs with `ss` replaced by a stub, in which a missing `ss` exited 2, a failing `ss` 3, a `0.0.0.0:9898` listener 1 and loopback-only listeners 0. Read that as an inventory rather than a pass. The application ports (`6432`, `9999`) must each be on `127.0.0.1` or a private address; the PCP control port (`9898`) must be loopback-only, IPv6 included, because section 1 keeps `pcp_listen_addresses` on `localhost`. An entry showing `0.0.0.0:9898`, `[::]:9898`, or `9898` on a private address is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding.
+Read that as an inventory rather than a pass. The application ports (`6432`, `9999`) must each be on `127.0.0.1` or a private address; the PCP control port (`9898`) must be loopback-only, IPv6 included, because section 1 keeps `pcp_listen_addresses` on `localhost`. An entry showing `0.0.0.0:9898`, `[::]:9898`, or `9898` on a private address is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding. The inventory runs on the pooler host, and with no running pooler in the authoring environment its expected listeners rest on section 1's settings and the cited PgBouncer configuration and Pgpool-II connection settings entries. The block refuses with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, exits 3 when `ss` or the awk read fails, 1 for a port 9898 listener outside loopback and otherwise 0 with an unclassified-observation line. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs with `ss` replaced by a stub, in which a missing `ss` exited 2, a failing `ss` 3, a `0.0.0.0:9898` listener 1 and loopback-only listeners 0.
 
 The client hop takes three commands, not one. A single failing connection proves nothing, because a wrong password fails the same way as a refused plaintext connection; and a passing pair proves less than it looks, because a `trust` method in the HBA file lets any password through. Put the real password in `~/.pgpass` at mode `600` rather than the environment, which PostgreSQL says is "not recommended for security reasons" because some systems expose a process's environment to other users.
 
@@ -297,7 +297,7 @@ The client hop takes three commands, not one. A single failing connection proves
 Run the same three against pgpool-II on port 9999 where that is the pooler in front, because nothing above tests its listener. pgpool-II also needs its own effective-policy and admin-channel checks, because the client probes exercise one path and the console inspection below is PgBouncer-specific:
 
 ```bash
-# REASONED: pgpool-II policy check follows the cited pgpool-II documentation;
+# The pgpool-II policy check follows the cited pgpool-II documentation;
 # no running pgpool-II deployment is available in the authoring environment.
 # Effective pgpool-II policy (through the pooler on 9999):
 (                                       # a subshell, so your own script arguments are untouched
@@ -330,7 +330,7 @@ Run the same three against pgpool-II on port 9999 where that is the pooler in fr
 `enable_pool_hba` must read `on` and `ssl` must read `on`, or the rules in `pool_hba.conf` are not the policy being applied; inspect the reload logs for parse or file-access errors, confirm remote sources cannot reach 9898 at all, and test the Unix-socket route with valid and invalid credentials. Restart pgpool-II after changing any setting documented as startup-only.
 
 ```bash
-# REASONED: PCP admin-channel checks follow the cited pgpool-II documentation;
+# The PCP admin-channel checks follow the cited pgpool-II documentation;
 # no running pgpool-II/PCP deployment is available in the authoring environment.
 # Correct credentials must succeed; a wrong password must be refused on
 # authentication, and any other error leaves verification incomplete.
@@ -410,7 +410,7 @@ For the database hop, know what the probe can and cannot tell you:
 These direct-database checks are REASONED from the cited PostgreSQL HBA documentation, not demonstrated: the authoring environment lacks a running pooler/PostgreSQL deployment with distinct application and pooler source addresses. The outcomes of these direct-database checks are likewise REASONED from that documentation, not demonstrated: an exposed database admits the direct application connection while the intended HBA policy rejects it and the permitted controls succeed, and a password, certificate, DNS, or connection failure is inconclusive. Test the bypass the pooler cannot prevent. From an application source that is supposed to go through the pooler, connect to the DATABASE directly with the same credentials and require a rejection, then confirm the permitted pooler egress still connects and the application still connects through the pooler. Give the real destination as `hostaddr` while keeping the certificate host name in `host`, and guard the substituted values:
 
 ```bash
-# REASONED: direct-database isolation follows the cited PostgreSQL HBA documentation;
+# Direct-database isolation follows the cited PostgreSQL HBA documentation;
 # no running pooler/PostgreSQL deployment with distinct application and pooler source addresses is available.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DB_HOSTNAME' 'REPLACE_WITH_DB_IP'
@@ -638,7 +638,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "2bb0dc8fe7e01e13c364808dcc60eaac34891ca79d70d9109624e730a7381de6",
+  "body_sha256": "d8331d53ffa0efedcdc7f3e28b77816137fcb59d5c4a6257408e19213547adb7",
   "components": {
     "pgb-bind": {
       "name": "PgBouncer listener source",
