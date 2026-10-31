@@ -30,18 +30,18 @@ def guards():
     obj = storage[storage.index("\n", signing) + 1:]
     obj = obj[:obj.index('            https://*)')] + '*) echo SAFE ;; esac'
     old_pg = r'''case "$2" in
-      *[[:space:]]*|*"'"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 1 ;;
+      *[[:space:]]*|*"'"*|*\\*) echo "use a CA path without whitespace, quotes or backslashes; not probing"; exit 2 ;;
     esac'''
     old_obj = r'''case "$2" in
       *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*|*'"'*|*\\*)
-        echo "signing failed or returned an unsafe URL; not probing" ;;
+        echo "signing failed or returned an unsafe URL; not probing"; exit 3 ;;
       *) echo SAFE ;; esac'''
     return (("postgresql", old_pg, pg), ("object-storage", old_obj, obj))
 
 
 def evaluate(guard, locale, readonly):
     # Each value runs in the same subshell structure as the guide. Record output and status,
-    # so the object-storage guard's diagnostic-only rejection is not changed into an exit.
+    # so the object-storage guard's failed or unsafe signing result keeps its rule 6 status 3.
     script = "readonly single_quote=x double_quote=x\n" if readonly else ""
     script += "probe() (\n" + guard + "\n)\n"
     for value in VALUES:

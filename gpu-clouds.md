@@ -131,7 +131,7 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 
 REASONED: exposure interpretation from the cited platform publication and Jupyter authentication documentation; no platform deployment or outside probe host is available. Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). In this guide's assessment, any anonymous Jupyter data response is a finding, whichever of these platforms it runs on; a valid session cookie is authentication, and a 403 error response is not data access.
 
-REASONED: following block; this guide's test design for the Vast.ai portal's path exemptions and port exclusions has no live run: no Vast.ai instance or outside probe host is available. For an authenticated external mapping at base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the cited configurator lines 175-186 and 323-387 generate resolver 200, exempt-path backend responses and a Basic-auth challenge elsewhere. Before probing, establish harmless known private content at an exempt path and a non-exempt path, and obtain the portal's actual `WWW-Authenticate` header independently; confirm that the backend's own challenge differs. Substitute inside the quotes: mapped host:port, both paths starting with `/`, a distinctive non-secret body marker shared by those private resources, and that exact portal header line. If these prerequisites cannot be established, the result is INCONCLUSIVE. A public manifest is not private content merely because it returns 200. Anonymous matching content is a finding when that path is private; a protected-path 401 with the independently distinguished portal header matches the generated challenge, while a backend 401 or any unexplained response is INCONCLUSIVE. Disabled authentication and excluded ports can expose the same content, but these probes cannot diagnose which setting caused access. The resolver's 200 tests reachability only. Headers and bodies remain visible for inspection; transport failures are INCONCLUSIVE. The block uses plain HTTP, the image default; with `ENABLE_HTTPS=true` and valid instance certificates, adjust the scheme. Repeat for each mapped port the portal proxies.
+REASONED: following block; this guide's test design for the Vast.ai portal's path exemptions and port exclusions has no live run: no Vast.ai instance or outside probe host is available. For an authenticated external mapping at base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the cited configurator lines 175-186 and 323-387 generate resolver 200, exempt-path backend responses and a Basic-auth challenge elsewhere. Before probing, establish harmless known private content at an exempt path and a non-exempt path, and obtain the portal's actual `WWW-Authenticate` header independently; confirm that the backend's own challenge differs. Substitute inside the quotes: mapped host:port, both paths starting with `/`, a distinctive non-secret body marker shared by those private resources, and that exact portal header line. If these prerequisites cannot be established, the result is INCONCLUSIVE. A public manifest is not private content merely because it returns 200. Anonymous matching content is a finding when that path is private; a protected-path 401 with the independently distinguished portal header matches the generated challenge, while a backend 401 or any unexplained response is INCONCLUSIVE. Disabled authentication and excluded ports can expose the same content, but these probes cannot diagnose which setting caused access. The resolver's 200 tests reachability only. Headers and bodies remain visible for inspection; transport failures are INCONCLUSIVE. The block exits once, after all three probes: with status 1 if any probe printed FINDING, with status 0 only if every probe printed PORTAL CHALLENGE, and otherwise with status 3. A resolver 200 without the private marker prints INCONCLUSIVE, so read each probe's line as well as the status. The block uses plain HTTP, the image default; with `ENABLE_HTTPS=true` and valid instance certificates, adjust the scheme. Repeat for each mapped port the portal proxies.
 
 ```bash
 # Anonymous probes only; no credential enters this block.
@@ -149,25 +149,31 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
     set -- "$@" "$(curl -q -g -sS -i -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --noproxy '*' \
       --connect-timeout 5 --max-time 10 "http://$1$2"; printf '\nprobe-curl-rc=%s\n' "$?")"
     printf '%s\n%s\n' "Probe $2" "$5"
-    case "$5" in *$'\nprobe-curl-rc=0') ;; *) echo 'INCONCLUSIVE: transport failure'; exit ;; esac
+    case "$5" in *$'\nprobe-curl-rc=0') ;; *) echo 'INCONCLUSIVE: transport failure'; exit 3 ;; esac
     set -- "$1" "$2" "$3" "$4" "${5//$'\r'/}"
-    case "$5" in *$'\n\n'*) ;; *) echo 'INCONCLUSIVE: no complete response headers'; exit ;; esac
+    case "$5" in *$'\n\n'*) ;; *) echo 'INCONCLUSIVE: no complete response headers'; exit 3 ;; esac
     set -- "$1" "$2" "$3" "$4" "${5%%$'\n\n'*}" "${5#*$'\n\n'}"
     case "${6%$'\nhttp='*}" in
-      *"$3"*) echo 'FINDING: known private content returned anonymously' ;;
+      *"$3"*) echo 'FINDING: known private content returned anonymously'; exit 1 ;;
       *) case "$6" in
         *$'\nhttp=401 exit=0 err=\n'*)
           case "$5"$'\n' in
             *$'\n'"$4"$'\n'*) echo 'PORTAL CHALLENGE: matches the independently distinguished header' ;;
-            *) echo 'INCONCLUSIVE: 401 without the distinct portal challenge' ;;
+            *) echo 'INCONCLUSIVE: 401 without the distinct portal challenge'; exit 3 ;;
           esac ;;
-        *) echo 'INCONCLUSIVE: no known private content or distinct portal challenge' ;;
+        *) echo 'INCONCLUSIVE: no known private content or distinct portal challenge'; exit 3 ;;
       esac ;;
     esac
   )
+  # Each probe's status is appended to the positional values: 1 finding, 3 inconclusive, 0 portal challenge.
   portal_probe "$1" /portal-resolver "$4" "$5"
+  set -- "$@" "$?"
   portal_probe "$1" "$2" "$4" "$5"
+  set -- "$@" "$?"
   portal_probe "$1" "$3" "$4" "$5"
+  set -- "$@" "$?"
+  # The block exits once: 1 if any probe found private content, else 0 only if all three saw the portal challenge, else 3.
+  case "$6:$7:$8" in 1:*|*:1:*|*:1) exit 1 ;; 0:0:0) exit 0 ;; *) exit 3 ;; esac
 )
 ```
 
@@ -335,7 +341,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "51916cf566abef4d9694b113e3bcc5b3697fe13feb07ad5870c2f065c8d6210f",
+  "body_sha256": "58660beb63b5c9f9ef8f90d917e85349c0c3ae4a9926437dd04c2bd3d774e3a7",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
