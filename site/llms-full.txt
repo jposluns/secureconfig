@@ -13523,7 +13523,7 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line. Both tools also exited 0 without diagnostics on an intermediate form whose check read HOST, PORT and URL with `read` and its field separator fixed to a space; stub runs of that form under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with the parsed URL for a normal parse and with `IFS=:` set beforehand. The same runs reached neither probe for a failed parse, a parser output without its URL field, a readonly `HOST`, `PORT`, `URL`, `PARSED` or `IFS=:`, or an integer `PARSED` after a failed parse; an integer `PARSED` given a parsed endpoint ended that shell with an arithmetic error before either probe. Fed on standard input to `bash -u -s`, the integer and readonly `PARSED` cases with a parsed endpoint abandoned the check, reached neither probe and let the next line run. A later stub run of that intermediate form with `readonly IFS=t` set beforehand reached both probes with mis-split fields, curl receiving ` 443 https://api.test/version`. Both tools exited 0 without diagnostics on the block as it now stands, whose check splits the parsed endpoint by parameter expansion rather than `read` and needs a non-empty HOST, an all-digit PORT, a URL that starts with https:// or http:// and holds no space, and the three fields to rejoin to the parsed line. Stub runs of the current span under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with host api.test, port 443 and URL https://api.test/version for a normal parse, with `IFS=:` set beforehand and with `readonly IFS=t` set beforehand. The same runs printed the failure message and reached neither probe for a failed parse, a parser output without its URL field, a nonnumeric port and an integer `PARSED` after a failed parse; a readonly `URL` or `PARSED` abandoned the check with an error, reached neither probe and let the next line run. An integer `HOST` given a single-label name, and an integer `PARSED` given a parsed endpoint, each ended that shell with an unbound-variable or arithmetic error before either probe; under `bash +u -c` the integer `HOST` case printed the failure message instead, and fed to `bash -u -s` the integer and readonly `PARSED` cases abandoned the check and let the next line run. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line. Both tools also exited 0 without diagnostics on an intermediate form whose check read HOST, PORT and URL with `read` and its field separator fixed to a space; stub runs of that form under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with the parsed URL for a normal parse and with `IFS=:` set beforehand. The same runs reached neither probe for a failed parse, a parser output without its URL field, a readonly `HOST`, `PORT`, `URL`, `PARSED` or `IFS=:`, or an integer `PARSED` after a failed parse; an integer `PARSED` given a parsed endpoint ended that shell with an arithmetic error before either probe. Fed on standard input to `bash -u -s`, the integer and readonly `PARSED` cases with a parsed endpoint abandoned the check, reached neither probe and let the next line run. A later stub run of that intermediate form with `readonly IFS=t` set beforehand reached both probes with mis-split fields, curl receiving ` 443 https://api.test/version`. Both tools exited 0 without diagnostics on the form that followed, whose check splits the parsed endpoint by parameter expansion rather than `read` and needs a non-empty HOST, an all-digit PORT, a URL that starts with https:// or http:// and holds no space, and the three fields to rejoin to the parsed line. Stub runs of that form under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with host api.test, port 443 and URL https://api.test/version for a normal parse, with `IFS=:` set beforehand and with `readonly IFS=t` set beforehand. The same runs printed the failure message and reached neither probe for a failed parse, a parser output without its URL field, a nonnumeric port and an integer `PARSED` after a failed parse; a readonly `URL` or `PARSED` abandoned the check with an error, reached neither probe and let the next line run. An integer `HOST` given a single-label name, and an integer `PARSED` given a parsed endpoint, each ended that shell with an unbound-variable or arithmetic error before either probe; under `bash +u -c` the integer `HOST` case printed the failure message instead, and fed to `bash -u -s` the integer and readonly `PARSED` cases abandoned the check and let the next line run. All of these runs covered forms whose check ran at top level, where its parse-failure arm ended with status 0; the current form, which runs the check in a subshell whose parse-failure arm exits 3, was not re-run. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
@@ -13611,6 +13611,7 @@ PY
 # The check assumes HOST, PORT, URL, PARSED and IFS carry no readonly, integer or other
 # attribute inherited from your shell; such an attribute can abandon the check or mis-assign a
 # field, so run this block in a fresh shell.
+(                                                   # a subshell, so an exit or an error below ends only this check
 if PARSED=$(parse_api_server) && HOST=${PARSED%% *} && URL=${PARSED#* } &&
    PORT=${URL%% *} && URL=${URL#* } && [ "$HOST $PORT $URL" = "$PARSED" ] &&
    [ -n "$HOST" ] && [ -n "${PORT##*[!0123456789]*}" ] &&
@@ -13625,7 +13626,10 @@ if PARSED=$(parse_api_server) && HOST=${PARSED%% *} && URL=${PARSED#* } &&
     -w '%{http_code}\n' "$URL/version"; echo "curl exit $?"
 else
   echo "could not parse the API server endpoint into a host, a numeric port and an http or https URL; skipping both probes" >&2
+  exit 3
 fi
+) || (exit 3)   # status 3 for a failed parse, and also when an attribute inherited from your shell ends the check early
+# The probes themselves leave status 0: read their printed results as below.
 # Exit 0 with ANY status, 200, 401, 403 and 404 alike, means it answered.
 # So does exit 60: curl reached a TLS peer, received a certificate and refused to trust it.
 # That is not necessarily a completed handshake, and it does not need to be: something on
@@ -13703,7 +13707,7 @@ public addresses. And a cluster whose etcd runs on its own machines has hosts th
 never lists, because they carry no kubelet; take their client and peer addresses from wherever you
 configured them and scan those too.
 
-REASONED: multi-vantage corroboration and effective provider ranges, per the guide's cited Amazon EKS cluster endpoint access, GKE control plane network isolation, including how authorized networks work and AKS API server authorized IP ranges. No cluster configuration or separate probe networks are available. Related shell checks exited 0 without diagnostics; the endpoint parser produced the expected host, port and URL for five valid fixtures and rejected two invalid inputs. No live reachability was observed: exposed configuration admits an untrusted source; fixed configuration restricts every intended boundary while an allowed control still works. A failed probe alone remains inconclusive. Be clear about what a pass here is worth. It says that this host, at this moment, over this address
+REASONED: multi-vantage corroboration and effective provider ranges, per the guide's cited Amazon EKS cluster endpoint access, GKE control plane network isolation, including how authorized networks work and AKS API server authorized IP ranges. No cluster configuration or separate probe networks are available. Related shell checks exited 0 without diagnostics on earlier forms of the Verify blocks above, in which the API-server check ran at top level; the current API reachability block, which wraps that check in a subshell, was not re-run. The endpoint parser, which that wrapper left unchanged, produced the expected host, port and URL for five valid fixtures and rejected two invalid inputs. No live reachability was observed: exposed configuration admits an untrusted source; fixed configuration restricts every intended boundary while an allowed control still works. A failed probe alone remains inconclusive. Be clear about what a pass here is worth. It says that this host, at this moment, over this address
 family, could not reach that endpoint. It does not say the cluster is restricted, because your own
 egress, a stale kubeconfig context, a resolver, a tunnel that is down, or a transient failure at the far
 end all produce the same result, and because an allowlist that admits one network you forgot about is
@@ -13831,7 +13835,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "ef9f4365ab81e5cd97a6afb3f1e272f4a45c687d4925ad080e1bb6131272df52",
+  "body_sha256": "c40105091be1953cd19d302e063e118960eba41134c7a6cadb854343f98d5e99",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -21357,21 +21361,28 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
 # "Could not resolve host" and so would otherwise be misreported as blocked
-# guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
-if curl -q -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then rc=0; else rc=$?; fi
-if [ "$rc" -eq 0 ]; then
-  echo "FAIL: connected to a host outside the allow list, egress is not enforced"
-elif [ "$rc" -eq 6 ]; then
-  echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
-elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
-  echo "request failed or timed out (curl exit $rc): inconclusive on its own. curl cannot say why it"
-  echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
-  echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
-  echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
-  echo "or the CNI's NetworkPolicy drop log or counter"
-else
-  echo "unexpected curl exit code $rc, investigate before treating this as a pass"
-fi
+# status: 1 when the connection succeeded, 3 for curl exit 6 or an unexpected code, and 0 for exit 7
+# or 28, which still needs the time_connect and deny-record evidence it prints
+(                                                   # a subshell, so the exit below ends only this check
+  # guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
+  if curl -q -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then rc=0; else rc=$?; fi
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: connected to a host outside the allow list, egress is not enforced"
+    exit 1
+  elif [ "$rc" -eq 6 ]; then
+    echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
+    exit 3
+  elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
+    echo "request failed or timed out (curl exit $rc): inconclusive on its own. curl cannot say why it"
+    echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
+    echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
+    echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
+    echo "or the CNI's NetworkPolicy drop log or counter"
+  else
+    echo "unexpected curl exit code $rc, investigate before treating this as a pass"
+    exit 3
+  fi
+)
 # confirm the metadata options actually took effect
 aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
   --query 'Reservations[].Instances[].MetadataOptions'
@@ -21460,7 +21471,7 @@ Claims (full source mapping in the JSON block below):
 - verify-provider-paths (REASONED; gcp, azure): Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens.
 - verify-deny (REASONED; curl, aws): Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs.
 - verify-allow (REASONED; curl, aws): A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes.
-- verify-negative (REASONED; curl): Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence.
+- verify-negative (REASONED; curl): Known-live disallowed egress must fail: curl success is a finding (block status 1), exit 6 is DNS-inconclusive (block status 3), and 7/28 need zero time_connect plus correlated deny evidence.
 - verify-options (REASONED; aws): Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes.
 
 ````json
@@ -21468,7 +21479,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "ed7287acb15743a98698acc63873f39840d551f60e17cd84af36f7118c4cd54e",
+  "body_sha256": "6a92c8582d1c3c29025f1367d131fff09377b51ed5c1b56d7d7a6125544be942",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -21581,7 +21592,7 @@ Claims (full source mapping in the JSON block below):
     "verify-provider-paths": {"text": "Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens.", "components": ["gcp", "azure"], "sources": ["gcp:sdb98c49a5970", "azure:s5301638a3c81"], "status": "REASONED", "verify": [1]},
     "verify-deny": {"text": "Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s5de42a587ed0"], "status": "REASONED", "verify": [1]},
     "verify-allow": {"text": "A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s9e5244cd7271", "aws:sb525b61fd496"], "status": "REASONED", "verify": [1]},
-    "verify-negative": {"text": "Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-negative": {"text": "Known-live disallowed egress must fail: curl success is a finding (block status 1), exit 6 is DNS-inconclusive (block status 3), and 7/28 need zero time_connect plus correlated deny evidence.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-options": {"text": "Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes.", "components": ["aws"], "sources": ["aws:s8e0b69b2747a", "aws:sb843930c4944"], "status": "REASONED", "verify": [1]}
   }
 }
@@ -57951,15 +57962,19 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.
 
 # GitLab CE: initial root password file check (needs Docker access; the container is named gitlab)
 # absence does not prove the password was rotated; presence means rotate root now
-if state=$(docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null); then
-  case "$state" in
-    PRESENT) echo 'initial_root_password present: rotate root and remove it' ;;
-    ABSENT)  echo 'initial_root_password absent' ;;
-    *)       echo 'the check did not run (unexpected reply from the gitlab container): not a result' ;;
-  esac
-else
-  echo 'the check did not run (docker exec failed for the gitlab container): fix the container, this is not a result'
-fi
+# status: 1 when the file is present, 3 when the check did not run, 0 when the file is absent
+(                                                   # a subshell, so the exit below ends only this check
+  if state=$(docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null); then
+    case "$state" in
+      PRESENT) echo 'initial_root_password present: rotate root and remove it'; exit 1 ;;
+      ABSENT)  echo 'initial_root_password absent' ;;
+      *)       echo 'the check did not run (unexpected reply from the gitlab container): not a result'; exit 3 ;;
+    esac
+  else
+    echo 'the check did not run (docker exec failed for the gitlab container): fix the container, this is not a result'
+    exit 3
+  fi
+)
 ```
 
 REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons, and the GitLab initial-password-file check follow the cited panel, Docker daemon and GitLab sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
@@ -58096,7 +58111,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a24013a853886f7ace8c795caa1c6a31bf9719dbfedcf47d07dae522b20c522f",
+  "body_sha256": "e2df46b37ec9984b326cf26a776fb2bee084dc5868d86d04d791a96745a7f233",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -60637,77 +60652,98 @@ REASONED: following block; planted-file denial, directory listing, ACME/lookalik
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   DOCROOT=/var/www/html
+  result=0                              # 3 once any step is inconclusive or a removal fails; the block exits with it after its cleanup
   if probe=$(sudo mktemp "$DOCROOT/.env.probeXXXXXX" 2>/dev/null); then
     # mktemp makes it root-only (0600); chmod so the web-server worker can READ it, or its 403 is a FILE
     # PERMISSION denial (not the deny rule) and the check would false-pass with no rule configured:
     if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
       for p in "/${probe##*/}" /.git/config /config.php.bak /db.sql; do
-        curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://$1$p"
+        curl -q -g -sS --noproxy '*' -w "  <= %{http_code} $p\n" "https://$1$p" || result=3
       done
       # every line must be 403 or 404 and must NOT print PLANTED-SECRET. The .env.probe* line is the POSITIVE
       # CONTROL (a world-readable real file under the deny rules), so its 403/404 is the rule, not permissions
       # or absence; a bare 404 on the others could be absence, so plant one at each to be sure
     else
       echo "inconclusive: could not prepare the probe file"
+      result=3
     fi
-    sudo rm -f "$probe"
+    sudo rm -f "$probe" || result=3
   else
     echo "inconclusive: could not create a probe under $DOCROOT; point it at the writable document root"
+    result=3
   fi
   # uploads/backups directory: an existing, non-empty, index-less dir must NOT return a 200 autoindex under
   # Options -Indexes. Plant a throwaway file so a listing would actually reveal something; inconclusive if the
   # directory does not exist:
   if u=$(sudo mktemp "$DOCROOT/uploads/listcheckXXXXXX" 2>/dev/null); then
-    curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/"   # 403/404, never a 200 listing
-    sudo rm -f "$u"
+    curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/uploads/" || result=3   # 403/404, never a 200 listing
+    sudo rm -f "$u" || result=3
   else
     echo "inconclusive: $DOCROOT/uploads does not exist or is not writable"
+    result=3
   fi
 
   acme="$DOCROOT/.well-known/acme-challenge"
   if sudo test -d "$acme" && tok=$(sudo mktemp "$acme/probeXXXXXX" 2>/dev/null); then
     if printf 'probe' | sudo tee "$tok" >/dev/null && sudo chmod 0644 "$tok"; then   # readable, or a 403 is a permission denial not the exemption
       name=${tok##*/}
-      curl -q -g -sS --noproxy '*' "https://$1/.well-known/acme-challenge/$name"   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
-      curl -q -g -sS --noproxy '*' "http://$1/.well-known/acme-challenge/$name"    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
+      curl -q -g -sS --noproxy '*' "https://$1/.well-known/acme-challenge/$name" || result=3   # must return "probe", never 403: the exemption lets a real challenge file through (HTTPS webroot access)
+      curl -q -g -sS --noproxy '*' "http://$1/.well-known/acme-challenge/$name" || result=3    # ACME HTTP-01 runs over HTTP:80, so fetch the SAME token over http to confirm that route
     else
       echo "inconclusive: could not prepare the challenge file"
+      result=3
     fi
-    sudo rm -f "$tok"
+    sudo rm -f "$tok" || result=3
   else
     echo "inconclusive: $acme does not exist"
+    result=3
   fi
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config"
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/.well-known-backup/config" || result=3
   # must be 403 or 404: a directory that only starts with "well-known" must not inherit the exemption. A bare
   # 404 is inconclusive here (nothing is there); create a real .well-known-backup/config to be certain a
   # served 200 would be the finding, then remove it
+  exit "$result"                        # after every cleanup attempt above: 3 if any step was inconclusive or a removal failed, else 0
 )
 
-for d in .next/static build dist; do
-  [ -d "$d" ] || { echo "$d: absent, nothing scanned"; continue; }
-  grep -rn "sk-\|AKIA\|ghp_\|sb_secret_\|-----BEGIN" "$d"; echo "$d exit: $?"
-done
+(                                       # a subshell, so the exit below ends only this check
+  result=0 scanned=0
+  for d in .next/static build dist; do
+    [ -d "$d" ] || { echo "$d: absent, nothing scanned"; continue; }
+    scanned=1
+    if grep -rn "sk-\|AKIA\|ghp_\|sb_secret_\|-----BEGIN" "$d"; then rc=0; else rc=$?; fi; echo "$d exit: $rc"
+    case $rc in
+      0) result=1 ;;                                # a match is a finding, and it outranks an error
+      1) ;;
+      *) [ "$result" -eq 1 ] || result=3 ;;         # a grep error is inconclusive
+    esac
+  done
+  [ "$scanned" -eq 1 ] || result=3                  # no directory existed, so nothing was scanned
+  exit "$result"
+)
 # run against the built client bundle, not the source. Exit 1 with no output is clean, exit 0
 # is a match, and exit 2 is a grep failure that is NOT clean. Do not send the errors to
 # /dev/null and read silence as a pass: a missing directory is an error (exit 2), and
 # discarding its error message leaves silence, which looks exactly like success. A clean result is evidence, not proof:
 # a bundler can split or encode a value, so scan for the literal secret as well
+# The block itself exits 1 when any directory matched, 3 when a grep failed or no directory existed,
+# and 0 otherwise.
 ```
 
-REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its result arms with status 0; the current form, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1, was not re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
-REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0; the current form, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed, was not re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
 against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and put its
 served host name on the block's `set --` line. On an isolated test host, run before and after enabling the
 deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
-return 403 or 404 without that body. A failed plant or curl transfer is inconclusive.
+return 403 or 404 without that body. A failed plant or curl transfer is inconclusive. The block attempts to remove every plant, and it exits 3 when a step was inconclusive or a removal failed.
 
 ```bash
 # REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
 # runtime is available, and network restrictions prevent installing one. Expected exposed/fixed
 # outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
 # references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
-# block before its host guard was added.
+# block before its host guard was added. That form's inconclusive arms ended with status 0; this form,
+# which exits 3 after attempting its cleanup when a step is inconclusive or a removal fails, was not re-checked.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -60720,6 +60756,7 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   DOCROOT=/var/www/html
+  result=0                              # 3 once any plant or transfer is inconclusive or a removal fails; the block exits with it after its cleanup
   for suffix in '' .bak .old .orig '~' .sql .sql.gz .dump .tar.gz; do
     template="$DOCROOT/probeXXXXXX"
     [ -n "$suffix" ] || template="$DOCROOT/.probeXXXXXX"
@@ -60727,16 +60764,19 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
       if printf 'PLANTED-SECRET' | sudo tee "$probe" >/dev/null && sudo chmod 0644 "$probe"; then
         p="/${probe##*/}"
         curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-          -w "  <= %{http_code} $p\n" "https://$1$p" || echo "inconclusive: curl failed"
+          -w "  <= %{http_code} $p\n" "https://$1$p" || { echo "inconclusive: curl failed"; result=3; }
         # Fixed: 403/404 and no PLANTED-SECRET. Exposed: 200 and PLANTED-SECRET.
       else
         echo "inconclusive: could not prepare $probe"
+        result=3
       fi
-      sudo rm -f "$probe"
+      sudo rm -f "$probe" || result=3
     else
       echo "inconclusive: could not plant suffix '$suffix' under $DOCROOT"
+      result=3
     fi
   done
+  exit "$result"                        # after every removal was attempted: 3 if any step was inconclusive or a removal failed, else 0
 )
 ```
 
@@ -60828,14 +60868,14 @@ Claims (full source mapping in the JSON block below):
 - verify-lookalike (REASONED; nginx, apache, caddy, caddy-rolling): Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.
 - verify-bundle (REASONED; next, vite, cra, grep): Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.
 - verify-backup (REASONED; nginx, apache, caddy, caddy-rolling): Known previously deployed backup URLs should return 403 or 404 without the file contents.
-- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution.
+- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Only shell syntax and suffix creation were checked, on an earlier form whose inconclusive arms exited 0, not on this form or a server.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "5bb241183147f348632c15456f61edc141d0f385f6cf9e81d64cac6da0e65f28",
+  "body_sha256": "3fa29a0cb0557f181a4b8f660f0515483f5375fceff0e23f212d5384278c6363",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -60982,7 +61022,7 @@ Claims (full source mapping in the JSON block below):
     "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [1]},
     "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
-    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [2]}
+    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Only shell syntax and suffix creation were checked, on an earlier form whose inconclusive arms exited 0, not on this form or a server.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [2]}
   }
 }
 ````
