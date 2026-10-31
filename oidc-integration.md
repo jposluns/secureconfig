@@ -129,7 +129,11 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
     set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # the status so far, jq's exit status, then the issuer and jwks_uri lines
     printf '%s' "$3"
     if [ "$2" != 0 ]; then
-      echo "jq exit $2: the discovery check could not run; inconclusive"; set -- 3
+      case "$2" in
+        126|127) echo "jq exit $2: the discovery check could not run; inconclusive" ;;
+        *) echo "jq exit $2: the discovery document could not be read; inconclusive" ;;
+      esac
+      set -- 3
     elif [ -z "$3" ]; then
       echo "jq printed nothing, and empty output means a failed fetch, not a pass; inconclusive"; set -- 3
     fi
@@ -298,7 +302,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "d38eef98f545484ad8ead702f590f63cf754780c59b4287fba9c20bfe39096de",
+  "body_sha256": "fc047e089aa5d607723d5bb29210926602beeccd78b3fec8a7b60e6388da0e2f",
   "components": {
     "core": {
       "name": "OpenID Connect Core",

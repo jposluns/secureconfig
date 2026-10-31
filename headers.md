@@ -89,10 +89,11 @@ REASONED: final-response header inspection follows the cited MDN header document
   # inconclusive. The block exits 1 if the final response lacks Strict-Transport-Security, an enforcing
   # Content-Security-Policy, X-Content-Type-Options, Referrer-Policy or Permissions-Policy, or has
   # neither X-Frame-Options nor a frame-ancestors directive in an enforcing Content-Security-Policy; 3 if
-  # the fetch fails; otherwise 0, leaving every header value for you to judge.
+  # the fetch fails or the header check cannot run; otherwise 0, leaving every header value for you
+  # to judge.
   if [ "$1" != 0 ]; then
     echo "curl exit $1: the fetch failed; inconclusive"; set -- 3
-  elif printf '%s' "$2" | awk '{ sub(/\r$/, "") } /^HTTP\// { seen = 1; sts = csp = nosniff = ref = perm = xfo = fa = 0; next } { i = index($0, ":"); if (i < 2) next; n = tolower(substr($0, 1, i - 1)); v = tolower(substr($0, i + 1)) } n == "strict-transport-security" { sts = 1 } n == "content-security-policy" { csp = 1; gsub(/ /, "", v); gsub(/\t/, "", v); if (index(";" v, ";frame-ancestors")) fa = 1 } n == "x-content-type-options" { nosniff = 1 } n == "referrer-policy" { ref = 1 } n == "permissions-policy" { perm = 1 } n == "x-frame-options" { xfo = 1 } END { if (!seen) exit 3; m = 0; if (!sts) { print "FINDING: strict-transport-security is missing from the final response"; m = 1 }; if (!csp) { print "FINDING: content-security-policy is missing from the final response"; m = 1 }; if (!nosniff) { print "FINDING: x-content-type-options is missing from the final response"; m = 1 }; if (!ref) { print "FINDING: referrer-policy is missing from the final response"; m = 1 }; if (!perm) { print "FINDING: permissions-policy is missing from the final response"; m = 1 }; if (!xfo && !fa) { print "FINDING: the final response has no deny-framing policy: neither x-frame-options nor a frame-ancestors directive in an enforcing content-security-policy"; m = 1 }; exit m }'; then
+  elif printf '%s' "$2" | awk '{ sub(/\r$/, "") } /^HTTP\// { seen = 1; sts = csp = nosniff = ref = perm = xfo = fa = 0; next } { i = index($0, ":"); if (i < 2) next; n = tolower(substr($0, 1, i - 1)); v = tolower(substr($0, i + 1)) } n == "strict-transport-security" { sts = 1 } n == "content-security-policy" { csp = 1; gsub(/ /, "", v); gsub(/\t/, "", v); gsub(/,/, ";", v); if (index(";" v, ";frame-ancestors")) fa = 1 } n == "x-content-type-options" { nosniff = 1 } n == "referrer-policy" { ref = 1 } n == "permissions-policy" { perm = 1 } n == "x-frame-options" { xfo = 1 } END { if (!seen) exit 3; m = 0; if (!sts) { print "FINDING: strict-transport-security is missing from the final response"; m = 1 }; if (!csp) { print "FINDING: content-security-policy is missing from the final response"; m = 1 }; if (!nosniff) { print "FINDING: x-content-type-options is missing from the final response"; m = 1 }; if (!ref) { print "FINDING: referrer-policy is missing from the final response"; m = 1 }; if (!perm) { print "FINDING: permissions-policy is missing from the final response"; m = 1 }; if (!xfo && !fa) { print "FINDING: the final response has no deny-framing policy: neither x-frame-options nor a frame-ancestors directive in an enforcing content-security-policy"; m = 1 }; exit m }'; then
     set -- 0
   else
     case "$?" in 1) set -- 1 ;; 3) echo "awk found no response in curl's output; inconclusive"; set -- 3 ;; *) echo "awk exit $?: the header check could not run; inconclusive"; set -- 3 ;; esac
@@ -204,7 +205,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "0787ce9587443c0d327a7279b256be57f69795611c8a0de26ddd0dcf95a93b46",
+  "body_sha256": "a349943ef4844d606d158bcb8e42d64b131a5e74fa785391ac55b7d929cb9275",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
