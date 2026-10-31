@@ -91,7 +91,7 @@ Basic authentication is single-factor, and this guide finds no lighttpd entry in
 
 ## 4. Verify
 
-REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. The block classifies its two authentication requests and exits once at the end: 1 if the site root answers a 2xx without credentials or the request carrying another Host answers 200, otherwise 3 if either answers anything but 401 or the configuration test, the reload or a curl or ss command fails, otherwise 2 if `ss` is not installed, and otherwise 0 when both answer 401. The redirect headers and the listener list stay for you to judge, and its last line says so.
+REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. The block classifies its two authentication requests and exits once at the end: 1 if the site root answers a 2xx without credentials or the request carrying another Host answers 200, otherwise 3 if either answers anything but 401 or the configuration test, the reload or a curl or ss command fails, otherwise 2 if `ss` is not installed, and otherwise 0 when both answer 401. The redirect headers, and the listener list when `ss` ran, stay for you to judge, and its last line names them.
 
 REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous. The block takes the site's host name and a protected path on its guarded `set --` line, refuses example.com, example.net, example.org and their subdomains, and only then runs the configuration test and reload. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes; no stub or deployment run of it is recorded here.
 
@@ -134,9 +134,11 @@ REASONED: configuration, redirect, authentication, listener inventory and altern
   if command -v ss >/dev/null; then
     ss -tlnp ||
       { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+    set -- "$1" "$2" "$3" listed        # the 4th value says whether ss ran, so the last line names the listener list only when it did
   else
     echo "ss is not installed here; not listing sockets"
     case "$3" in 0) set -- "$1" "$2" 2 ;; esac
+    set -- "$1" "$2" "$3" unlisted
   fi
 
   # `auth.require` can sit at the top level or inside a `$HTTP["host"]` conditional, and a
@@ -149,20 +151,23 @@ REASONED: configuration, redirect, authentication, listener inventory and altern
   # for name-based TLS virtual-host
   # selection. This guide's advice is to vary Host while keeping the URL and SNI fixed for
   # this auth check:
-  set -- "$1" "$2" "$3" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
     "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
-  printf '%s\n' "$5"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
                                       # This guide interprets 401 as the pass and 200 as the protected
                                       # path served without authentication on this TLS connection to a
                                       # client that sends another host
-  case "$4:$5" in
+  case "$5:$6" in
     0:401) ;;
-    0:200) echo "FINDING: /$2 answered 200 to a request carrying another Host, so it was served without authentication"; set -- "$1" "$2" 1 ;;
-    0:*) echo "HTTP $5 from /$2 with another Host is neither the 401 pass nor the 200 finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
-    *) echo "curl exit $4: the request carrying another Host failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    0:200) echo "FINDING: /$2 answered 200 to a request carrying another Host, so it was served without authentication"; set -- "$1" "$2" 1 "$4" ;;
+    0:*) echo "HTTP $6 from /$2 with another Host is neither the 401 pass nor the 200 finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4" ;;
+    *) echo "curl exit $5: the request carrying another Host failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 "$4" ;;
   esac
-  echo "block exit $3; the redirect headers and the listener list are not classified, so judge them yourself"
+  case "$4" in
+    listed) echo "block exit $3; the redirect headers and the listener list are not classified, so judge them yourself" ;;
+    *) echo "block exit $3; the redirect headers are not classified, so judge them yourself" ;;
+  esac
   exit "$3"
 )
 ```
@@ -273,7 +278,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "e31bb0c598eed51db1658616ad8c360d7d4e2db6bec37fefe34292486d55b4d1",
+  "body_sha256": "209bbf01ba6d3d20f2ce3b61c554c0ba84d1728b4a5b4f62c57ee49e24a34757",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",

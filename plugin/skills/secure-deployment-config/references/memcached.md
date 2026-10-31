@@ -165,11 +165,16 @@ Do not substitute `-o no_lru_crawler` for `-X`. It disables the background crawl
           ps -o pid=,user=,group=,args= -p "$1" || { echo "ps exit $?: no process $1 was listed; inconclusive"; set -- "$1" 3; }
           if command -v ss >/dev/null; then
             ss -tlnup || { echo "ss -tlnup exit $?: the listener list failed; inconclusive"; set -- "$1" 3; }
+            set -- "$1" "$2" listed     # the 3rd value says whether ss ran, so the last line names every listener only when it did
           else
             echo "ss is not installed here; not listing sockets"
             case "$2" in 0) set -- "$1" 2 ;; esac
+            set -- "$1" "$2" unlisted
           fi
-          echo "block exit $2; the release, the options memcached -h lists, the process account and every listener are not classified, so judge them yourself"
+          case "$3" in
+            listed) echo "block exit $2; the release, the options memcached -h lists, the process account and every listener are not classified, so judge them yourself" ;;
+            *) echo "block exit $2; the release, the options memcached -h lists and the process account are not classified, so judge them yourself" ;;
+          esac
           exit "$2"
           ;;
       esac
@@ -517,7 +522,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "4e27f0f58a56cef3e279bbd3d0e6a34fc6401f868c7f9a11bb92650fee5a6297",
+  "body_sha256": "57ef35d716df1dc97e6a33ed6fc2d7cf7c4a2b6d0a932215eb44a778f579836e",
   "components": {
     "stable": {
       "name": "memcached source",
