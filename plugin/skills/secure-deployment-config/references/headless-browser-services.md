@@ -187,11 +187,11 @@ curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 # REASONED: listener inventory follows the cited vendor documentation and pinned sources;
 # the authoring host lacks an isolated network namespace for authorized live listeners.
 # On the host: these listeners should be bound to loopback or an internal interface, not a wildcard.
-# Add the distributed Grid ports (5553, 5556, 5557, 5559) and your Playwright port if you run them.
+# The block also checks the distributed Grid ports (5553, 5556, 5557, 5559); judge your Playwright port yourself if you run it.
 (                                   # a subshell, so the exit below ends only the subshell
   set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
-  printf '%s' "$2"   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900: loopback or internal only
+  printf '%s' "$2"   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900/5553/5556/5557/5559: loopback or internal only
   [ "$3" = 0 ] || { echo "ss -tlnp exit $3: the listener inventory failed; inconclusive"; set -- 3 "$2" "$3"; }
   if printf '%s' "$2" | awk '$4 ~ /:(9222|4442|4443|4444|5555|3000|5900|7900|5553|5556|5557|5559)$/ && ($4 ~ /^0\.0\.0\.0:/ || index($4, "*:") == 1 || index($4, "[::]:") == 1 || index($4, ":::") == 1) { print; found = 1 } END { exit !found }'; then
     echo "FINDING: the rows just above bind a port this block names to a wildcard address, the exposed state"; set -- 1 "$2" "$3"
@@ -410,7 +410,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "1ae0a6e78426174a0706c1c4f0a5d708f780feed85ef291308628a885d6619fb",
+  "body_sha256": "149a882f4996b5a45214d8e37fca5c6258a79f636e3f59d9d527619831502022",
   "components": {
     "chromium": {
       "name": "Chromium",
