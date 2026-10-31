@@ -221,18 +221,19 @@ platform git sources that feed the privileged controllers.
 
 ## Verify
 
-REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks, each with exit 0 and no diagnostics. The October 2026 marking review covered the Argo CD API and Flux webhook blocks in an earlier form, before their curls took the host on a guarded `set --` line; neither tool was re-run on those guarded blocks. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
+REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October 2026 stub runs recorded at each block. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
 also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
 so it discriminates against a live install, based on the cited vendor documentation and pinned source readings. A login page, a
 redirect, a `404`, an HTML body, a TLS error, a `kubectl` `Forbidden`, or a missing-CRD error is
 inconclusive, never the fixed state.
 
-REASONED: the backlog scope note and the token-paste instruction for the Argo CD block below; the scope
-note restates backlog row 2.28, and the paste-alone warning follows CONTRIBUTING rule 7's `read`
-exception. No container runtime, isolated network namespace or Kubernetes cluster is available, so no
-Argo CD response was observed. During marking review (October 2026) the block passed bash -n under
-bash 5.3.9 and ShellCheck 0.11.0 without diagnostics.
+REASONED: the Argo CD API pair in the block below, per the cited Argo CD documentation and pinned
+sources, with the backlog scope note and the token-paste instruction for it; the scope note restates
+backlog row 2.28, and the paste-alone warning follows CONTRIBUTING rule 7's `read` exception. No
+container runtime, isolated network namespace or Kubernetes cluster is available, so no Argo CD response
+was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and
+ShellCheck 0.11.0 without diagnostics.
 In a scratch-local review, the block ran from a file with curl, kubectl, sudo and ss stubbed,
 no network and a pseudo-terminal. Unchanged placeholders and substituted dummy inputs each printed
 'stub curl' twice, 'stub kubectl' six times, 'stub sudo' and 'stub ss' (file exit 0).
@@ -243,9 +244,19 @@ An empty token printed 'supply the token; not probing'; readonly tok printed
 These stub outputs do not verify Argo CD authorization; the live comparison remains anonymous
 401 versus application JSON listing the expected application with a valid token.
 The marking and scratch-local reviews above covered the block's earlier form, which named
-argocd.example.com directly. The anonymous and token-bearing curls now take the Argo CD host on a
-guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and
-the guarded form has not been run.
+argocd.example.com directly and also held the bootstrap Secret check and cluster inventory that the
+next block now runs. The block now takes the Argo CD host, the CA file and an application name on a
+guarded `set --` line that refuses an unsubstituted value and example.com, example.net, example.org and
+their subdomains. It records a finding (1) when the anonymous request answers 2xx with JSON naming that
+application, and 3 when a request fails, the anonymous answer is neither 401 nor such JSON, or the
+token-bearing answer is not a 200 naming the application. A refusal in its token part gives 2, and the
+block exits 0 only for an anonymous 401 beside that token-bearing 200.
+The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over
+every block, and by October 2026 stub runs under bash 5.3.9 with curl stubbed and the token typed at a
+pseudo-terminal. In those runs an anonymous 401 beside a token-bearing 200 naming the application
+exited 0; an anonymous 200 naming it exited 1, also when the token-bearing request failed; an
+anonymous login page, 302 or curl failure, or a token-bearing 403, failure or unnamed 200, exited 3, as
+did no readable /dev/tty; and an empty or readonly token and each `set --` refusal exited 2.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
 also clears the `REDIS_PASSWORD` environment copy, and per-handler RBAC coverage in `argocd-server`.
@@ -255,26 +266,45 @@ In the block below, paste the Argo CD bearer token alone at the hidden prompt: a
 every line after the first for your shell to run.
 
 ```bash
-# REASONED: Argo CD API and cluster inventory checks follow the cited documentation and pinned sources;
-# no container runtime, isolated network namespace or Kubernetes cluster is available.
-# Argo CD API auth, matched pair against the SAME endpoint. Use your real CA, never -k. Anonymous (no
+# Argo CD API auth, matched pair against the SAME endpoint. Use your real CA; never skip verification. Anonymous (no
 # token) must answer 401 fixed (application JSON exposed); with a valid bearer token it must return JSON
 # listing the expected application - the positive control a fronting proxy's 401 cannot fake. Repeat both
 # against the ORIGIN from an authorized location (keep the TLS hostname), and test the gRPC/CLI path too.
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_ARGOCD_HOST'   # the Argo CD server's host name, the name its TLS certificate covers, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+(                                       # the whole block in one subshell, so one exit status covers both requests
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_ARGOCD_HOST' 'REPLACE_WITH_YOUR_CA_FILE' 'REPLACE_WITH_AN_APPLICATION_NAME'   # the Argo CD server's host name, the name its TLS certificate covers, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the path of the CA file that issued that certificate, then the name of an application a valid token lists: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the Argo CD server's host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
+  case "$2" in
+    ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the path of the CA file that issued the Argo CD server's certificate inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  [ -r "$2" ] || { echo "the CA file named on the set -- line above is not readable here; not probing"; exit 2; }
+  case "$3" in
+    ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the name of an application a valid token lists (lowercase letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert "$2" \
     -w '\nanon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-    "https://$1/api/v1/applications"
+    "https://$1/api/v1/applications"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then the response and its anon line
+  printf '%s' "$6"
+  case "$5:${6##*anon http=}" in
+    0:401' '*) ;;
+    0:2??' '*)
+      case "$6" in
+        *'"'"$3"'"'*) echo "FINDING: the anonymous request was answered with application JSON naming $3"; set -- "$1" "$2" "$3" 1 ;;
+        *) echo "the anonymous request was answered with a 2xx that does not name $3 (a login page or a proxy's page is not the fixed state); inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+      esac ;;
+    0:*) echo "the anonymous request was answered with neither 401 nor application JSON (a login page, a redirect or a 404 is not the fixed state); inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the anonymous request failed (a TLS error is not the fixed state); inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
   # token from `argocd account generate-token` (or a login session); read it without echo, pass via stdin.
   # Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
   # an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
@@ -287,54 +317,128 @@ every line after the first for your shell to run.
     { unset -n tok && unset -v tok; } 2>/dev/null ||
       { echo 'a readonly tok is set in this shell; not probing'; exit 2; }
     { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
-    IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty || exit 2; echo
+    IFS= read -r -s -p 'Argo CD bearer token: ' tok < /dev/tty || { echo 'the hidden prompt could not read the token; inconclusive'; exit 3; }; echo
     case "$tok" in ''|*[[:cntrl:]]*) echo 'supply the token; not probing'; exit 2 ;; esac
-    printf 'Authorization: Bearer %s\n' "$tok" \
-      | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_WITH_YOUR_CA_FILE \
+    set -- "$1" "$2" "$3" "$(if printf 'Authorization: Bearer %s\n' "$tok" \
+      | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert "$2" \
           -H @- -w '\nauth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-          "https://$1/api/v1/applications"
+          "https://$1/api/v1/applications"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # curl's exit status, then the response and its auth line
+    printf '%s' "$5"
+    case "$4:${5##*auth http=}" in
+      0:200' '*)
+        case "$5" in
+          *'"'"$3"'"'*) echo "the token-bearing request was answered with 200 naming $3"; exit 0 ;;
+          *) echo "the token-bearing request was answered with 200 but does not name $3, so the positive control failed; inconclusive"; exit 3 ;;
+        esac ;;
+      0:*) echo "the token-bearing request was not answered with 200, so the positive control failed; inconclusive"; exit 3 ;;
+      *) echo "curl exit $4: the token-bearing request failed, so the positive control failed; inconclusive"; exit 3 ;;
+    esac
   )
+  case "$?:$4" in 0:*) ;; 1:*) set -- "$1" "$2" "$3" 1 ;; 2:0) set -- "$1" "$2" "$3" 2 ;; 2:*|*:1) ;; *) set -- "$1" "$2" "$3" 3 ;; esac   # fold the token part's status into the block's, ranked as above
+  echo "block exit $4; the response bodies, the origin and gRPC/CLI repeats, and the argocd-cm and argocd-rbac-cm settings are not classified, so judge them yourself"
+  exit "$4"
 )
-# The bootstrap admin Secret should be gone once the password was rotated (its presence proves retained
-# bootstrap material; its absence alone does not prove the password changed). This prints no secret.
-kubectl -n argocd get secret argocd-initial-admin-secret -o name
-# Network inventory: management access should have no external route. List Services, Ingresses, and
-# Gateway routes, not only the named Service, since another Service, a NodePort, or an HTTPRoute can
-# reach the same pods.
-kubectl -n argocd get svc -o wide
-kubectl -n argocd get networkpolicy -o yaml
-kubectl -n argocd get pods -o wide
-kubectl -n flux-system get svc -o wide
-kubectl get ingress,httproute,grpcroute,tlsroute -A   # also check NodePort Services and host-network/hostPort pods
-sudo ss -tlnp    # speaks only for the node and network namespace it runs in, not the whole cluster
 ```
 
-REASONED: following block; internal socket and policy inventory plus the repo-server metrics probe; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash with exit 0 and no diagnostics. With stubbed curl, placeholder, empty and invalid addresses printed 'supply the actual IPv4 pod address; not probing' (exit 2); shortened and wrong-marker assignments printed 'incomplete probe; not probing' (exit 2). The quoted-count and unquoted-$# control runs, with stubbed curl, IFS=0 and 20 values (marker plus 19), differed: the quoted count printed 'incomplete probe; not probing' (exit 2), while the unquoted-$# control reached the curl stub and printed 'stub curl' (exit 0). A valid fixture with stubbed curl printed 'stub curl' (exit 0). A live repo-server stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster with a supporting CNI, actual component sockets and authorized and unrelated pod vantages is also required. The base policy should return HTTP 200 metrics at both vantages; narrowed policy should return no HTTP response at the unrelated pod while the monitoring pod still returns metrics, per the guide's cited Argo CD Repo-server HTTP metrics and health mux and Argo CD Repo-server component selectors and metrics allowance entries. For internal isolation, inventory actual sockets in each component's network namespace with
+REASONED: following block; the bootstrap Secret check and cluster inventory, per the guide's cited Argo
+CD getting started (initial admin secret), Argo CD Server allow-all ingress policy and Flux security
+model entries; no Kubernetes cluster is available, so no listing was read. Run it where kubectl reaches
+the cluster; its `ss` line speaks only for the node and network namespace it runs in. It records a
+finding (1) when kubectl lists argocd-initial-admin-secret, whose presence the comment in the block reads
+as retained bootstrap material, and treats kubectl's `(NotFound)` error as absence, which alone does not
+prove the password changed. It records 3 when another kubectl error or a failed `sudo ss -tlnp` occurs,
+including a Forbidden or a missing-CRD error, which this section reads as inconclusive; on a cluster
+without the Gateway API CRDs the route listing can fail that way, so list `ingress -A` alone there and
+read it. A missing `ss` gives 2, and every listing is left for you to judge. This form is covered by the
+repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub
+runs with kubectl, sudo and ss stubbed: an absent Secret with every listing succeeding exited 0, a listed
+Secret exited 1 (also when a later listing failed), a Forbidden or a failed listing, `sudo` or `ss`
+exited 3, and a missing `ss` exited 2.
+
+```bash
+(                                       # the whole block in one subshell, so one exit status covers every command in it
+  set +e                                # errexit off here, so a command that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
+  # The bootstrap admin Secret should be gone once the password was rotated (its presence proves retained
+  # bootstrap material; its absence alone does not prove the password changed). This prints no secret.
+  set -- "$1" "$(if kubectl -n argocd get secret argocd-initial-admin-secret -o name 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # kubectl's exit status, then its output
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    0:*secret/argocd-initial-admin-secret*) echo "FINDING: argocd-initial-admin-secret is still present, so the bootstrap material is retained"; set -- 1 ;;
+    0:*) echo "kubectl listed something other than argocd-initial-admin-secret; inconclusive"; set -- 3 ;;
+    *'(NotFound)'*) echo "argocd-initial-admin-secret is absent; that alone does not prove the admin password changed" ;;
+    *) echo "kubectl exit $2: the bootstrap Secret could not be read (a Forbidden is not the fixed state); inconclusive"; set -- 3 ;;
+  esac
+  # Network inventory: management access should have no external route. List Services, Ingresses, and
+  # Gateway routes, not only the named Service, since another Service, a NodePort, or an HTTPRoute can
+  # reach the same pods.
+  kubectl -n argocd get svc -o wide ||
+    { echo "kubectl exit $?: the argocd Service listing failed; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  kubectl -n argocd get networkpolicy -o yaml ||
+    { echo "kubectl exit $?: the argocd NetworkPolicy listing failed; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  kubectl -n argocd get pods -o wide ||
+    { echo "kubectl exit $?: the argocd pod listing failed; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  kubectl -n flux-system get svc -o wide ||
+    { echo "kubectl exit $?: the flux-system Service listing failed; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  kubectl get ingress,httproute,grpcroute,tlsroute -A ||   # also check NodePort Services and host-network/hostPort pods
+    { echo "kubectl exit $?: the route listing failed (a missing-CRD error is not the fixed state; without the Gateway API CRDs, list ingress -A alone and read it); inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  if command -v ss > /dev/null; then
+    sudo ss -tlnp ||   # speaks only for the node and network namespace it runs in, not the whole cluster
+      { echo "sudo ss -tlnp exit $?: the listener inventory failed; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  else
+    echo "ss is not installed here, so the node listener inventory did not run; not listing"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
+  echo "block exit $1; the Service, NetworkPolicy, pod and route listings and the listener table are not classified, so judge them yourself"
+  exit "$1"
+)
+```
+
+REASONED: following block; internal socket and policy inventory plus the repo-server metrics probe; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash with exit 0 and no diagnostics. With stubbed curl, placeholder, empty and invalid addresses printed 'supply the actual IPv4 pod address; not probing' (exit 2); shortened and wrong-marker assignments printed 'incomplete probe; not probing' (exit 2). The quoted-count and unquoted-$# control runs, with stubbed curl, IFS=0 and 20 values (marker plus 19), differed: the quoted count printed 'incomplete probe; not probing' (exit 2), while the unquoted-$# control reached the curl stub and printed 'stub curl' (exit 0). A valid fixture with stubbed curl printed 'stub curl' (exit 0). Those runs covered the block's earlier form, which took no pod role and ended with curl's own status. The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs with curl stubbed. In those runs, at the monitoring pod HTTP 200 exited 0 and HTTP 403 or a timeout exited 3; at the unrelated pod HTTP 200 or 403 exited 1 and a timeout or refusal exited 3; a missing address, a missing or unknown pod role, a wrong marker, a shortened `set --` line and 20 values under IFS=0 each exited 2. A live repo-server stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster with a supporting CNI, actual component sockets and authorized and unrelated pod vantages is also required. The base policy should return HTTP 200 metrics at both vantages; narrowed policy should return no HTTP response at the unrelated pod while the monitoring pod still returns metrics, per the guide's cited Argo CD Repo-server HTTP metrics and health mux and Argo CD Repo-server component selectors and metrics allowance entries. For internal isolation, inventory actual sockets in each component's network namespace with
 `ss -tlnp`, including ports absent from container declarations. Review rendered policies and CNI
 enforcement; a NetworkPolicy object's presence alone proves neither reachability nor denial.
 The following probe is REASONED for the same missing isolation and cluster capabilities above. Run it inside an authorized monitoring pod and an unrelated pod in another
 namespace, against the same actual repo-server pod IP. With the base metrics allowance, expect HTTP
 200 and Prometheus metrics from both. After narrowing the allowance, expect no HTTP response from
 the unrelated pod while the monitoring pod still receives those metrics. A timeout alone, a missing
-curl binary, or a failed positive control is inconclusive. The pinned repo-server mux and
+curl binary, or a failed positive control is inconclusive. Put monitoring or unrelated on the block's
+`set --` line for the pod it runs in. At the monitoring pod it exits 0 for HTTP 200 and 3 otherwise; at
+the unrelated pod it exits 1 for any HTTP response and 3 for none, never 0, because no answer there is
+the narrowed result only beside a monitoring-pod run that exits 0. The pinned repo-server mux and
 NetworkPolicy below supply the exposed-state basis.
 
 ```bash
-# REASONED: repo-server metrics isolation follows the cited pinned mux and NetworkPolicy;
-# no isolated network namespace or Kubernetes cluster is available.
-(
-  set -- secureconfig-probe REPLACE_WITH_REPO_SERVER_POD_IP
-  [ "${1-}" = secureconfig-probe ] && [ "$#" -eq 2 ] || { echo 'incomplete probe; not probing'; exit 2; }
+(                                       # a subshell, so the exits below end only the subshell
+  set -- secureconfig-probe REPLACE_WITH_REPO_SERVER_POD_IP REPLACE_WITH_monitoring_OR_unrelated   # the pod's IPv4 address, then monitoring or unrelated for the pod this runs in
+  [ "${1-}" = secureconfig-probe ] || { echo 'incomplete probe; not probing'; exit 2; }
+  [ "$#" -eq 3 ] || { echo 'incomplete probe; not probing'; exit 2; }
   shift
   case "${1-}" in
     ''|*REPLACE_WITH*|*[!0123456789.]*) echo 'supply the actual IPv4 pod address; not probing'; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8084/metrics"
+  case "$2" in
+    monitoring|unrelated) ;;
+    *) echo 'supply monitoring or unrelated for the pod this runs in; not probing'; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8084/metrics"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the response and its http= line
+  printf '%s' "$4"
+  case "$2:$3:${4##*http=}" in
+    monitoring:0:200' '*) echo "the monitoring pod received HTTP 200"; set -- 0 ;;
+    monitoring:*) echo "the monitoring pod did not receive HTTP 200, so the positive control failed; inconclusive"; set -- 3 ;;
+    unrelated:0:*) echo "FINDING: the unrelated pod received an HTTP response, so the metrics allowance still admits it"; set -- 1 ;;
+    unrelated:7:*|unrelated:28:*) echo "no HTTP response at the unrelated pod: the narrowed result only beside a monitoring-pod run of this block that exits 0, and a timeout alone is inconclusive, so this pod never exits 0 here"; set -- 3 ;;
+    *) echo "curl exit $3: the request failed before any HTTP response; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the response body is not classified, so read it for Prometheus metrics yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; the preceding repo-server guard and this server metrics and profiler comparison; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the guard with exit 0 and no diagnostics, and its stubbed curl and rejection results are recorded in the preceding paragraph. A live Argo CD server stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster with a supporting CNI, the mounted profiler file, and monitoring and unrelated pod vantages is also required. Base metrics should return HTTP 200 at both vantages; narrowed policy should yield no HTTP response at the unrelated pod while the monitoring pod still receives metrics. From the allowed pod the profiler should return 401 disabled, 200 for exact true, and 401 for true plus newline, with metrics still answering. The allowed pod's expected profiler and metrics results are stated per the guide's cited Argo CD Repo-server component selectors and metrics allowance, Argo CD Server unauthenticated HTTP metrics mux and profiler registration, Argo CD Server allow-all ingress policy, and Argo CD Profiler paths and exact file-content gate entries. For server metrics, repeat the guarded pod-IP probe above with the actual server pod IP and
+REASONED: preceding block; the preceding repo-server guard and this server metrics and profiler comparison; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the guard's earlier form with exit 0 and no diagnostics, and that form's stubbed curl and rejection results, with the current form's checks, are recorded in the preceding paragraph. A live Argo CD server stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster with a supporting CNI, the mounted profiler file, and monitoring and unrelated pod vantages is also required. Base metrics should return HTTP 200 at both vantages; narrowed policy should yield no HTTP response at the unrelated pod while the monitoring pod still receives metrics. From the allowed pod the profiler should return 401 disabled, 200 for exact true, and 401 for true plus newline, with metrics still answering. The allowed pod's expected profiler and metrics results are stated per the guide's cited Argo CD Repo-server component selectors and metrics allowance, Argo CD Server unauthenticated HTTP metrics mux and profiler registration, Argo CD Server allow-all ingress policy, and Argo CD Profiler paths and exact file-content gate entries. For server metrics, repeat the guarded pod-IP probe above with the actual server pod IP and
 port `8083`, keeping `/metrics`. This check is also REASONED for the missing isolated network
 namespace and Kubernetes cluster. Before narrowing the server's allow-all policy,
 expect HTTP 200 and Prometheus metrics without credentials from both pods; afterwards only the
@@ -342,7 +446,9 @@ authorized monitoring pod should receive them. From that allowed pod, repeat wit
 `/debug/pprof/cmdline`: expect `401` with profiling disabled, then HTTP 200 and the process command
 line when the mounted file contains exactly `true`. In an isolated demonstration, confirm that
 `true` followed by a newline returns `401` again. Keep `/metrics` as the positive control throughout;
-a failed control is inconclusive. Return profiling to disabled after the demonstration. The pinned
+a failed control is inconclusive. The block's status classifies `/metrics` only: for the profiler path,
+read the printed `http=` code yourself, since a `401` there is the expected disabled result rather than
+a failed control. Return profiling to disabled after the demonstration. The pinned
 metrics mux, profiler wrapper and server NetworkPolicy below distinguish these states.
 
 REASONED: the paired Argo CD `401` reading for the Argo CD API block earlier in this section and the Flux receiver checks
@@ -361,9 +467,19 @@ signature, so the HMAC computation is not verified. In the local marking review,
 authorization or reconciliation; the live comparison remains rejection without a signature
 versus acceptance and reconciliation with a valid signature over the same body.
 The marking and scratch-local reviews above covered the Flux block's earlier form, which named
-flux-webhook.example.com in its `url` assignment. The block now takes the receiver's host on a guarded
-`set --` line, checked before the secret prompt, that refuses example.com, example.net, example.org and
-their subdomains, and the guarded form has not been run.
+flux-webhook.example.com in its `url` assignment and ended with the signed request's own curl status.
+The block now takes the receiver's host and its path after `/hook/` on a guarded `set --` line, checked
+before the secret prompt, that refuses an unsubstituted value and example.com, example.net, example.org
+and their subdomains. It records a finding (1) when the unsigned request is accepted with a 2xx, reads a
+4xx or 5xx answer to it as a rejection, and records 3 when a request fails, the unsigned answer is
+anything else, or the signed request is not accepted with a 2xx. A failed prompt read or signature now
+exits 3 rather than 2. The current form is covered by the repository gate suite's bash -n and
+ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs under bash 5.3.9 with curl
+stubbed, the real python3 signing and the secret typed at a pseudo-terminal. In those runs an unsigned
+401 or 500 beside a signed 200 exited 0, and the stub received the body on stdin and the expected HMAC
+header. An unsigned 200 exited 1, also when the signed request failed; an unsigned 302 or curl failure,
+a signed 401, a failing or silent python3 and no readable /dev/tty exited 3; and an empty secret, a
+readonly hmac or IFS and each `set --` refusal exited 2.
 A bare `401` proves less than it looks: a fronting authentication proxy can return it while the
 underlying `users.anonymous.enabled` is still on, so pair the probe with an authenticated request
 through the same route that should succeed, and read the anonymous and `policy.default` settings from
@@ -375,7 +491,6 @@ signature is `X-Signature: sha256=<hex HMAC of the exact body under the receiver
 bytes without it (must be rejected) and then with it (must be accepted and trigger the reconciliation):
 
 ```bash
-# REASONED: Flux webhook checks follow the cited receiver documentation; no live Flux is available.
 # Read the HMAC key without echo.
 # Python's hmac reads the key from stdin; only the non-secret request body is passed in argv.
 # The hidden prompt keeps the key out of shell history and set +x keeps it out of set -x tracing.
@@ -384,34 +499,55 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # The signature, a replayable HMAC for that exact body, goes to curl on stdin as a header line (-H @-)
 # and the fixed, non-secret body as an argument. Stdin closes the argv channel only: the account owner
 # and root can still read the signature in the subshell and curl.
-(
+(                                       # one subshell, so one exit status covers both requests
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_RECEIVER_HOST'   # the public host name the Flux receiver is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them (the receiver path goes on the url line below)
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_RECEIVER_HOST' 'REPLACE_WITH_RECEIVER_PATH'   # the public host name the Flux receiver is served on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the receiver's path after /hook/: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the receiver's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  { unset -n hmac sig && unset -v hmac sig; } 2>/dev/null ||
-    { echo 'a readonly hmac or sig is set in this shell; not probing'; exit 2; }
+  case "$2" in
+    ""|*REPLACE_WITH_*|*/*|*[?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the receiver's path after /hook/ (no slash, query, fragment or percent sign) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  { unset -n hmac && unset -v hmac; } 2>/dev/null ||
+    { echo 'a readonly hmac is set in this shell; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
-  IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || exit 2; echo
+  IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || { echo 'the hidden prompt could not read the HMAC secret; inconclusive'; exit 3; }; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
-  body='{"ref":"refs/heads/main"}'
-  sig=$(set -o pipefail; printf '%s' "$hmac" | python3 -c \
-    'import hmac, sys; print(hmac.new(sys.stdin.buffer.read(), sys.argv[1].encode(), "sha256").hexdigest())' "$body") ||
-    { echo 'signature generation failed; not probing'; exit 2; }
-  [ -n "$sig" ] || { echo 'signature generation failed; not probing'; exit 2; }
-  url="https://$1/hook/REPLACE_WITH_PATH"
-  printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected
-  printf 'X-Signature: sha256=%s\n' "$sig" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -X POST --data-binary "$body" -H @- -w '\nsigned http=%{http_code}\n' "$url"  # expect accepted
+  set -- "$1" "$2" '{"ref":"refs/heads/main"}'   # the fixed, non-secret request body
+  set -- "$1" "$2" "$3" "$(set -o pipefail; if printf '%s' "$hmac" | python3 -c \
+    'import hmac, sys; print(hmac.new(sys.stdin.buffer.read(), sys.argv[1].encode(), "sha256").hexdigest())' "$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the signature with Python's newline, then the signer's exit status
+  [ "$5" = 0 ] || { echo 'signature generation failed; not probing'; exit 3; }
+  set -- "$1" "$2" "$3" "${4%$'\n'}" 0  # the signature, then the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  [ -n "$4" ] || { echo 'signature generation failed; not probing'; exit 3; }
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if printf '%s' "$3" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "https://$1/hook/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # expect rejected
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # curl's exit status, then the response and its no-sig line
+  printf '%s' "$7"
+  case "$6:${7##*no-sig http=}" in
+    0:2??*) echo "FINDING: the receiver accepted the body without a signature"; set -- "$1" "$2" "$3" "$4" 1 ;;
+    0:4??*|0:5??*) echo "the unsigned request was rejected; read it as rejected rather than as a fixed code" ;;
+    0:*) echo "the unsigned request was answered with neither acceptance nor a 4xx or 5xx rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+    *) echo "curl exit $6: the unsigned request failed; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if printf 'X-Signature: sha256=%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -X POST --data-binary "$3" -H @- -w '\nsigned http=%{http_code}\n' "https://$1/hook/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # expect accepted
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # curl's exit status, then the response and its signed line
+  printf '%s' "$7"
+  case "$6:${7##*signed http=}" in
+    0:2??*) echo "the signed request was accepted; confirm the reconciliation it should trigger" ;;
+    0:*) echo "the signed request was not accepted with a 2xx, so the positive control failed; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+    *) echo "curl exit $6: the signed request failed, so the positive control failed; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
+  echo "block exit $5; the response bodies, the reconciliation the signed request should trigger, and whether a rejection came from the receiver or a proxy are not classified, so judge them yourself"
+  exit "$5"
 )
 ```
 
@@ -690,7 +826,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "c5a0dc32fcaa703483a70b04441dd31639830a858cb01226fa10081b0bac0f48",
+  "body_sha256": "75f98ef46df34b5568f67cc96b4fe90d4e658354fa492e531cebb4d7a3bcb094",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -996,12 +1132,12 @@ Claims (full source mapping in the JSON block below):
     "flux-rbac": {"text": "Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access.", "components": ["flux"], "sources": ["flux:s0669b973542c"], "status": "REASONED"},
     "flux-lockdown": {"text": "Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName.", "components": ["flux"], "sources": ["flux:sf3f80d9941c8"], "status": "REASONED"},
     "verify-argo": {"text": "Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.", "components": ["argo-docs", "argo", "curl"], "sources": ["argo-docs:sf5f1c41f89bd", "argo:s6e8c96d23e05", "curl:s3db522258e44"], "status": "REASONED", "verify": [1]},
-    "verify-bootstrap": {"text": "Absence of the bootstrap Secret proves removal of that material, not password rotation.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af"], "status": "REASONED", "verify": [1]},
-    "verify-inventory": {"text": "Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.", "components": ["argo", "flux"], "sources": ["argo:s743c8187cbd7", "flux:s493859f3b848"], "status": "REASONED", "verify": [1]},
-    "verify-repo-metrics": {"text": "Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s1a13cc06db6d"], "status": "REASONED", "verify": [2]},
+    "verify-bootstrap": {"text": "Absence of the bootstrap Secret proves removal of that material, not password rotation.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af"], "status": "REASONED", "verify": [2]},
+    "verify-inventory": {"text": "Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.", "components": ["argo", "flux"], "sources": ["argo:s743c8187cbd7", "flux:s493859f3b848"], "status": "REASONED", "verify": [2]},
+    "verify-repo-metrics": {"text": "Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s1a13cc06db6d"], "status": "REASONED", "verify": [3]},
     "verify-server-metrics": {"text": "Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.", "components": ["argo"], "sources": ["argo:s028a4769d6c3", "argo:s743c8187cbd7"], "status": "REASONED"},
     "verify-profiler": {"text": "From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:s028a4769d6c3"], "status": "REASONED"},
-    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. The cited curl curl-8_14_1 lines show --data-binary posting data exactly as specified, preserving newlines and carriage returns that --data strips from @file input, reading @- from stdin and @filename from a file, and posting like --data's POST request.", "components": ["flux", "python", "curl"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5", "curl:s3db522258e44", "curl:s9537bb790553", "curl:sd3b039bafbf6"], "status": "REASONED", "verify": [3]},
+    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. The cited curl curl-8_14_1 lines show --data-binary posting data exactly as specified, preserving newlines and carriage returns that --data strips from @file input, reading @- from stdin and @filename from a file, and posting like --data's POST request.", "components": ["flux", "python", "curl"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5", "curl:s3db522258e44", "curl:s9537bb790553", "curl:sd3b039bafbf6"], "status": "REASONED", "verify": [4]},
     "verify-receiver-status": {"text": "Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.", "components": ["flux"], "sources": ["flux:s35bb9a844dcf"], "status": "REASONED"}
   }
 }
