@@ -279,59 +279,136 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure, Gateway TLS/authentication, and API targeting and access, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on this block in an earlier form, while it still held the node scans and before its app checks took the host on a guarded `set --` line. Both tools also exited 0 without diagnostics on an intermediate form whose check read HOST, PORT and URL with `read` and its field separator fixed to a space; stub runs of that form under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with the parsed URL for a normal parse and with `IFS=:` set beforehand. The same runs reached neither probe for a failed parse, a parser output without its URL field, a readonly `HOST`, `PORT`, `URL`, `PARSED` or `IFS=:`, or an integer `PARSED` after a failed parse; an integer `PARSED` given a parsed endpoint ended that shell with an arithmetic error before either probe. Fed on standard input to `bash -u -s`, the integer and readonly `PARSED` cases with a parsed endpoint abandoned the check, reached neither probe and let the next line run. A later stub run of that intermediate form with `readonly IFS=t` set beforehand reached both probes with mis-split fields, curl receiving ` 443 https://api.test/version`. Both tools exited 0 without diagnostics on the form that followed, whose check splits the parsed endpoint by parameter expansion rather than `read` and needs a non-empty HOST, an all-digit PORT, a URL that starts with https:// or http:// and holds no space, and the three fields to rejoin to the parsed line. Stub runs of that form under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with host api.test, port 443 and URL https://api.test/version for a normal parse, with `IFS=:` set beforehand and with `readonly IFS=t` set beforehand. The same runs printed the failure message and reached neither probe for a failed parse, a parser output without its URL field, a nonnumeric port and an integer `PARSED` after a failed parse; a readonly `URL` or `PARSED` abandoned the check with an error, reached neither probe and let the next line run. An integer `HOST` given a single-label name, and an integer `PARSED` given a parsed endpoint, each ended that shell with an unbound-variable or arithmetic error before either probe; under `bash +u -c` the integer `HOST` case printed the failure message instead, and fed to `bash -u -s` the integer and readonly `PARSED` cases abandoned the check and let the next line run. All of these runs covered forms whose check ran at top level, where its parse-failure arm ended with status 0; the current form, which runs the check in a subshell whose parse-failure arm exits 3, was not re-run. Five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure and Gateway TLS/authentication, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, and Kubernetes ports and protocols. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of this block, which also held the API reachability check and the node scans, before its app checks took the host on a guarded `set --` line. On the current form, which runs every part in one subshell and classifies the redirect, the request without credentials and the credentialed positive control, bash -n exited 0 and stub runs with kubectl and curl stubbed gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block, and no live demonstration was re-run. Five YAML blocks parsed. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
-expectations, with their sources, are stated after the next block, in the marker for that block.
+expectations, with their sources, are stated after the node-scan block, in the marker for that block.
 
 ```bash
-# REASONED: workload and API exposure checks follow the cited documentation;
+# REASONED: workload exposure and Gateway checks follow the cited documentation;
 # no Kubernetes cluster or isolated network namespace is available.
-kubectl get svc -A | grep -E 'NodePort|LoadBalancer'                 # only the Gateway's Service
-kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}'    # the public address; DNS points here
-kubectl get certificate -A                                           # Ready=True
-# App checks, run directly with client proxies disabled (the unset below only affects LATER commands).
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Gateway listener and HTTPRoute serve, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g --noproxy '*' -sI "http://$1/"                             # 301 with Location: https:// and your host name
-  curl -q -g --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' "https://$1/"
-                                                                          # no credentials: 401 where basic auth is set
-  # Positive control: confirm the SecurityPolicy attached, and that a valid basic-auth credential (from a
-  # mode-0600 ~/.netrc-style file, never argv) is ACCEPTED by the gateway - it reaches the app rather than
-  # drawing the gateway's basic-auth 401. The app's own login may then answer, so the test is that you NO
-  # LONGER get the gateway's 401 with `WWW-Authenticate: Basic`, not that `/` returns 2xx.
-  kubectl get securitypolicy app-basic-auth -o yaml   # an Accepted "True" condition under .status.ancestors (PolicyStatus)
-  curl -q -g --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" -D - -o /dev/null "https://$1/"
+# Run this where kubectl reaches the cluster. Every part runs in one subshell and the block exits once:
+# 1 for a finding, 3 for a failed command or an inconclusive result, 2 if the app checks refused their
+# input, and 0 otherwise.
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- "$1" "$(if kubectl get svc -A; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # status, the Service list, then kubectl's exit status
+  if printf '%s' "$2" | grep -E 'NodePort|LoadBalancer'; then :; else   # only the Gateway's Service
+    case "$?" in 1) ;; *) echo "grep could not read the Service list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  [ "$3" = 0 ] || { echo "kubectl get svc exit $3; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  kubectl get gateway/eg -o jsonpath='{.status.addresses[0].value}' ||   # the public address; DNS points here
+    { echo "kubectl get gateway exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  kubectl get certificate -A ||                                          # Ready=True
+    { echo "kubectl get certificate exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  # The node scans in the third block below need every node's public addresses, worker nodes included.
+  kubectl get nodes -o wide ||       # control-plane nodes and workers alike, but see below
+    { echo "kubectl get nodes exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+  kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.addresses[*].address}{"\n"}{end}' ||
+    { echo "kubectl get nodes exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
+                                     # -o wide prints only the FIRST external address per node
+  # App checks, run directly with client proxies disabled (--noproxy '*' on every request).
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Gateway listener and HTTPRoute serve, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sI -w 'http=%{http_code} location=%{redirect_url}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the headers and the http= line
+    printf '%s' "$4"                    # 301 with Location: https:// and your host name
+    set -- "$1" "$2" "$3" "${4%$'\n'}"
+    set -- "$1" "$2" "$3" "$(printf '%s' "${4##*$'\n'}" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+    case "$3:$4" in
+      "0:http=301 location=https://$5/"*|"0:http=301 location=https://$5:443/"*) ;;
+      0:*) echo "the plain HTTP request did not get a 301 to https://$1/; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the plain HTTP request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"  # curl's exit status, then the http= line
+    printf '%s\n' "$4"                  # no credentials: 401 where basic auth is set
+    case "$3:$4" in
+      0:http=401) ;;
+      0:http=2??) echo "FINDING: / answered without credentials, so the gateway's basic auth does not cover it"; set -- "$1" 1 ;;
+      0:*) echo "the request without credentials got neither the 401 pass nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the request without credentials failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    # Positive control: confirm the SecurityPolicy attached, and that a valid basic-auth credential (from a
+    # mode-0600 ~/.netrc-style file, never argv) is ACCEPTED by the gateway, so it reaches the app rather than
+    # drawing the gateway's basic-auth 401. The app's own login may then answer, so the test is that you NO
+    # LONGER get the gateway's 401 with `WWW-Authenticate: Basic`, not that `/` returns 2xx.
+    kubectl get securitypolicy app-basic-auth -o yaml ||   # an Accepted "True" condition under .status.ancestors (PolicyStatus)
+      { echo "kubectl get securitypolicy exit $?; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+    if [ -r "$HOME/.secureconfig-app.netrc" ]; then
+      set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS --netrc-file "$HOME/.secureconfig-app.netrc" -D - -o /dev/null "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the response headers
+      printf '%s\n' "$4"
+      if [ "$3" != 0 ]; then
+        echo "curl exit $3: the credentialed request failed, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+      elif printf '%s\n' "$4" | grep -i '^www-authenticate: *basic' > /dev/null; then
+        echo "the gateway's basic-auth challenge answered the credentialed request, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+      else
+        case "$?" in 1) ;; *) echo "grep could not read the response headers; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;; esac
+      fi
+    else                                # a guard: the positive control needs its credential file
+      echo "no readable ~/.secureconfig-app.netrc for the positive control: create it, mode 0600, with a valid credential; not probing with it"
+      case "$2" in 0) set -- "$1" 2 ;; esac
+    fi
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the Service, Gateway, Certificate, node and SecurityPolicy listings and the response headers are not classified, so read them against the comments above"
+  exit "$1"
 )
+```
 
+REASONED: following block; API targeting and access, per the guide's cited Kubernetes ports and protocols, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on the earlier single Verify block that held this check. Both tools also exited 0 without diagnostics on an intermediate form whose check read HOST, PORT and URL with `read` and its field separator fixed to a space; stub runs of that form under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with the parsed URL for a normal parse and with `IFS=:` set beforehand. The same runs reached neither probe for a failed parse, a parser output without its URL field, a readonly `HOST`, `PORT`, `URL`, `PARSED` or `IFS=:`, or an integer `PARSED` after a failed parse; an integer `PARSED` given a parsed endpoint ended that shell with an arithmetic error before either probe. Fed on standard input to `bash -u -s`, the integer and readonly `PARSED` cases with a parsed endpoint abandoned the check, reached neither probe and let the next line run. A later stub run of that intermediate form with `readonly IFS=t` set beforehand reached both probes with mis-split fields, curl receiving ` 443 https://api.test/version`. Both tools exited 0 without diagnostics on the form that followed, whose check splits the parsed endpoint by parameter expansion rather than `read` and needs a non-empty HOST, an all-digit PORT, a URL that starts with https:// or http:// and holds no space, and the three fields to rejoin to the parsed line. Stub runs of that form under `bash -u -c`, with the parser, nc and curl stubbed, reached both probes with host api.test, port 443 and URL https://api.test/version for a normal parse, with `IFS=:` set beforehand and with `readonly IFS=t` set beforehand. The same runs printed the failure message and reached neither probe for a failed parse, a parser output without its URL field, a nonnumeric port and an integer `PARSED` after a failed parse; a readonly `URL` or `PARSED` abandoned the check with an error, reached neither probe and let the next line run. An integer `HOST` given a single-label name, and an integer `PARSED` given a parsed endpoint, each ended that shell with an unbound-variable or arithmetic error before either probe; under `bash +u -c` the integer `HOST` case printed the failure message instead, and fed to `bash -u -s` the integer and readonly `PARSED` cases abandoned the check and let the next line run. All of these runs covered forms whose check ran at top level, where its parse-failure arm ended with status 0, and none covered the later form that ran the check in a subshell whose parse-failure arm exited 3. The current form runs the whole block in one subshell, holds the endpoint in positional parameters instead of named variables, refuses with status 2 when the kubeconfig cannot be read or parsed, and classifies the nc and curl results. On the current form, bash -n exited 0, and stub runs with kubectl, nc and curl stubbed and the real parser gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block, and no live demonstration was re-run. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live reachability outcomes described below remain unobserved.
+
+```bash
 # The API server endpoint, taken WHOLE. Do not rebuild it with :6443. Managed providers
 # serve the API on 443, and a probe of 6443 times out against a cluster that is answering
 # the internet on 443, which reads as a pass.
-API=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-# Whether a schemeless server means HTTP or HTTPS is decided by the TLS settings in the
-# same kubeconfig, on the cluster entry and the user entry both, so read those rather
-# than guessing.
-TLS=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.certificate-authority}{.clusters[0].cluster.certificate-authority-data}{.clusters[0].cluster.insecure-skip-tls-verify}{.users[0].user.client-certificate}{.users[0].user.client-certificate-data}')
-
 # From a machine OUTSIDE any allowed range, against a cluster you are authorized to test.
-# Neutralize the proxy settings, all of them. curl reads ALL_PROXY and all_proxy as well as
-# the per-scheme variables, and it reads ~/.curlrc, which can also turn verification off.
-unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy NO_PROXY no_proxy
+# This step needs python3 and nc on the machine you run it from, neither of which the
+# cluster provides for you. The node scans in the next block also need nmap there.
+# Run this block in a fresh shell: a function or alias named like a command it calls runs
+# in place of that command.
+(                                                   # the whole block in one subshell, so an exit or an error below ends only this check
+  set +e                                            # errexit off here, so a probe that fails is classified below instead of ending the block
+  if command -v python3 > /dev/null && command -v nc > /dev/null; then :; else
+    echo "this check needs python3 and nc on the machine you run it from; not probing"
+    exit 2
+  fi
+  set -- "$(if kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  # Whether a schemeless server means HTTP or HTTPS is decided by the TLS settings in the
+  # same kubeconfig, on the cluster entry and the user entry both, so read those rather
+  # than guessing.
+  set -- "$1" "$(if kubectl config view --minify -o jsonpath='{.clusters[0].cluster.certificate-authority}{.clusters[0].cluster.certificate-authority-data}{.clusters[0].cluster.insecure-skip-tls-verify}{.users[0].user.client-certificate}{.users[0].user.client-certificate-data}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  # A context with no user entry would make the TLS jsonpath error out; every real one names
+  # a user, and kubectl says so if yours does not.
+  case "${1##*$'\n'}:${2##*$'\n'}" in
+    0:0) set -- "${1%$'\n'*}" "${2%$'\n'*}" ;;     # the server, then the TLS settings
+    *) echo "kubectl config view could not read the API server or its TLS settings from your kubeconfig; not probing"; exit 2 ;;
+  esac
 
-# First at the TCP layer, because this is the only part with a clean answer. Did anything
-# accept a connection?
-parse_api_server() {   # a function, not a multiline $(...), so the guard checker keeps its scope tracking for this block
-  python3 - "$API" "$TLS" <<'PY'
+  # Neutralize the proxy settings, all of them. curl reads ALL_PROXY and all_proxy as well as
+  # the per-scheme variables, and it reads ~/.curlrc, which can also turn verification off.
+  unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy NO_PROXY no_proxy ||
+    { echo "cannot clear the proxy variables in this shell; not probing"; exit 2; }
+
+  # First at the TCP layer, because this is the only part with a clean answer. Did anything
+  # accept a connection?
+  parse_api_server() {   # a function, not a multiline $(...), so the guard checker keeps its scope tracking for this block
+    python3 - "$1" "$2" <<'PY'
 import sys, urllib.parse
 raw, tls = sys.argv[1].strip(), sys.argv[2].strip()
 if "://" not in raw:
@@ -346,65 +423,70 @@ if not p.hostname:
 print(p.hostname, p.port or (80 if p.scheme == "http" else 443),
       p.scheme + "://" + p.netloc)
 PY
-}
-# Parsed with python3 rather than cut with sed. A bracketed IPv6 address breaks on the
-# colons, and the failure looks exactly like the clean drop you were hoping for.
-# A bare host with no scheme is also legal in a kubeconfig, and the scheme it implies depends
-# on the TLS settings beside it rather than on a convention, so those are read and the URL the
-# probe uses is the normalized one. Getting that wrong sends both layers of this check at a
-# port the cluster was never using, where a refusal proves nothing.
-# A context with no user entry would make the TLS jsonpath error out; every real one names
-# a user, and kubectl says so if yours does not.
-# This step needs python3 and nc on the machine you run it from, neither of which the
-# cluster provides for you. The node scans in the next block also need nmap there.
-# "succeeded" means something is listening and reachable from here, whatever it does next.
+  }
+  # Parsed with python3 rather than cut with sed. A bracketed IPv6 address breaks on the
+  # colons, and the failure looks exactly like the clean drop you were hoping for.
+  # A bare host with no scheme is also legal in a kubeconfig, and the scheme it implies depends
+  # on the TLS settings beside it rather than on a convention, so those are read and the URL the
+  # probe uses is the normalized one. Getting that wrong sends both layers of this check at a
+  # port the cluster was never using, where a refusal proves nothing.
+  # "succeeded" means something is listening and reachable from here, whatever it does next.
 
-# Both probes sit under one check. They run only when the parse succeeded and parameter
-# expansion, not `read`, split its output into a non-empty HOST, an all-digit PORT and a URL
-# that starts with https:// or http:// and holds no space, and only when those three fields
-# rejoin to exactly the parsed line, so a failure skips both and curl never reaches an empty
-# URL or one left over in your shell.
-# The check assumes HOST, PORT, URL, PARSED and IFS carry no readonly, integer or other
-# attribute inherited from your shell; such an attribute can abandon the check or mis-assign a
-# field, so run this block in a fresh shell.
-(                                                   # a subshell, so an exit or an error below ends only this check
-if PARSED=$(parse_api_server) && HOST=${PARSED%% *} && URL=${PARSED#* } &&
-   PORT=${URL%% *} && URL=${URL#* } && [ "$HOST $PORT $URL" = "$PARSED" ] &&
-   [ -n "$HOST" ] && [ -n "${PORT##*[!0123456789]*}" ] &&
-   case $URL in *' '*) false ;; https://?*|http://?*) true ;; *) false ;; esac; then
-  echo "$URL"
+  # Both probes run only when the parse succeeded and parameter expansion, not `read`, split its
+  # output into a non-empty host, an all-digit port and a URL that starts with https:// or http://
+  # and holds no space, and only when those three fields rejoin to exactly the parsed line, so a
+  # failure skips both and curl never reaches an empty URL. The fields stay in positional
+  # parameters, so no variable inherited from your shell can alter them.
+  set -- "$(if parse_api_server "$1" "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1##*$'\n'}" "${1%$'\n'*}"                # the parser's exit status, then its output
+  set -- "$1" "${2%$'\n'}"                           # the status, then the parsed line
+  set -- "$1" "$2" "${2%% *}" "${2#* }"              # the status, the parsed line, the host, then the port and URL
+  set -- "$1" "$2" "$3" "${4%% *}" "${4#* }"         # the status, the parsed line, the host, the port, the URL
+  if [ "$1" = 0 ] && [ "$3 $4 $5" = "$2" ] && [ -n "$3" ] && [ -n "${4##*[!0123456789]*}" ] &&
+     case $5 in *' '*) false ;; https://?*|http://?*) true ;; *) false ;; esac; then
+    set -- "$3" "$4" "$5"                            # the host, the port, the URL
+  else
+    echo "could not parse the API server endpoint into a host, a numeric port and an http or https URL; skipping both probes" >&2
+    exit 2
+  fi
+  echo "$3"
   # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
-  nc -vz -w 3 "$HOST" "$PORT"
+  if nc -vz -w 3 "$1" "$2"; then set -- "$1" "$2" "$3" 0; else set -- "$1" "$2" "$3" "$?"; fi   # the 4th value is nc's exit status
 
   # Then at the HTTP layer, with verification left ON, under the same check as the TCP probe.
   # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
-  curl -q --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 \
-    -w '%{http_code}\n' "$URL/version"; echo "curl exit $?"
-else
-  echo "could not parse the API server endpoint into a host, a numeric port and an http or https URL; skipping both probes" >&2
-  exit 3
-fi
-) || (exit 3)   # status 3 for a failed parse, and also when an attribute inherited from your shell ends the check early
-# The probes themselves leave status 0: read their printed results as below.
-# Exit 0 with ANY status, 200, 401, 403 and 404 alike, means it answered.
-# So does exit 60: curl reached a TLS peer, received a certificate and refused to trust it.
-# That is not necessarily a completed handshake, and it does not need to be: something on
-# that address answered in TLS, and the 000 printed beside it is not a pass.
-# Exit 7 is "failed to connect", which is the outcome you want. Exit 28 is a TIMEOUT and it
-# is NOT clean evidence either way: a dropped packet and an endpoint that accepted the
-# connection and then stalled both produce it. If you get 28, the nc line above is what
-# tells you which one you had.
-# Any other exit is neither, and two are worth naming.
-# Exit 6 is a name that did not resolve. Do not read that as proof of a private cluster:
-# EKS documents that a private-only endpoint is still "resolved by public DNS servers to a
-# private IP address from the VPC", so a correctly private cluster usually resolves fine
-# and simply refuses the connection. Exit 6 means your resolver had no answer, which is
-# worth understanding before you call it anything.
-# And a TLS-intercepting middlebox on your own network answers every outbound 443 with its own
-# certificate, so it prints exit 60 whether or not the cluster is reachable. Exit 60 means
-# SOMETHING answered, and on a network like that it may not be the thing you aimed at; the
-# unset above defeats a configured proxy and nothing defeats a transparent one except
-# testing from somewhere else.
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 -w '%{http_code}\n' "$3/version"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # nc's exit status, curl's exit status, then the HTTP code
+  printf '%s\n' "$6"; echo "curl exit $5"
+  # Exit 0 with ANY status, 200, 401, 403 and 404 alike, means it answered.
+  # So does exit 60: curl reached a TLS peer, received a certificate and refused to trust it.
+  # That is not necessarily a completed handshake, and it does not need to be: something on
+  # that address answered in TLS, and the 000 printed beside it is not a pass.
+  # Exit 7 is "failed to connect", which is the outcome you want. Exit 28 is a TIMEOUT and it
+  # is NOT clean evidence either way: a dropped packet and an endpoint that accepted the
+  # connection and then stalled both produce it. If you get 28, the nc line above is what
+  # tells you which one you had.
+  # Any other exit is neither, and two are worth naming.
+  # Exit 6 is a name that did not resolve. Do not read that as proof of a private cluster:
+  # EKS documents that a private-only endpoint is still "resolved by public DNS servers to a
+  # private IP address from the VPC", so a correctly private cluster usually resolves fine
+  # and simply refuses the connection. Exit 6 means your resolver had no answer, which is
+  # worth understanding before you call it anything.
+  # And a TLS-intercepting middlebox on your own network answers every outbound 443 with its own
+  # certificate, so it prints exit 60 whether or not the cluster is reachable. Exit 60 means
+  # SOMETHING answered, and on a network like that it may not be the thing you aimed at; the
+  # unset above defeats a configured proxy and nothing defeats a transparent one except
+  # testing from somewhere else.
+  case "$4:$5" in
+    0:*) echo "FINDING: nc connected to port $2, so something accepts TCP connections there from this host"; set -- 1 ;;
+    *:0|*:60) echo "FINDING: curl exit $5, so something answered at $3 from this host"; set -- 1 ;;
+    *:7|*:28) echo "nc did not connect and curl exit $5: nothing accepted a connection from this host"; set -- 0 ;;
+    *:6) echo "curl exit 6: the name did not resolve, which is not proof of a private cluster; inconclusive"; set -- 3 ;;
+    *) echo "curl exit $5 is neither an answer nor a refused or dropped connection; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; a 0 says only that this host, at this moment, over this address family, could not reach the endpoint, so read the paragraphs below before you rely on it"
+  exit "$1"
+)
 ```
 
 ```bash
@@ -414,40 +496,63 @@ fi
 # included: 10250 and 10256 are worker ports, 10250 runs commands in containers, and a
 # kubeadm or k3s cluster built on cloud instances commonly gives every node a public
 # address. A managed cluster hides the control-plane nodes from you, but not its workers,
-# and the kubectl line below tells you which nodes have a public address. Scan the ones
-# that do.
-kubectl get nodes -o wide          # control-plane nodes and workers alike, but see below
-kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.addresses[*].address}{"\n"}{end}'
-                                   # -o wide prints only the FIRST external address per node
-# Paste each subshell below with its value substituted inside the quotes, and the IPv6 one only for a
-# node that has an IPv6 address. A scan that names no host, or a name that failed to resolve, scanned
-# nothing and is inconclusive, never closed.
+# and the kubectl get nodes lines in the first Verify block tell you which nodes have a
+# public address. Scan the ones that do.
+# Paste the whole block once per node, with its IPv4 address and its IPv6 address, or NONE for a
+# node with no IPv6 address, substituted inside the quotes. A scan that names no host, or a name
+# that failed to resolve, scanned nothing and is inconclusive, never closed.
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ONE_NODE_ADDRESS'   # one public address of the node: replace inside the quotes, keeping them
+  set +e                                # errexit off here, so a scan that fails is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ONE_NODE_ADDRESS' 'REPLACE_WITH_ITS_IPV6_ADDRESS_OR_NONE'   # one public address of the node, then the same node's IPv6 address or NONE: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|-*|*[[:space:][:cntrl:]]*) echo "substitute one public address of the node inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  nmap -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 "$1"
-)
-(                                       # the same scan over IPv6
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ITS_IPV6_ADDRESS'   # the same node's IPv6 address: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|-*|*[[:space:][:cntrl:]]*) echo "substitute the node's IPv6 address inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  case "$2" in
+    ""|*REPLACE_WITH_*|-*|*[[:space:][:cntrl:]]*) echo "substitute the node's IPv6 address, or NONE if it has none, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  nmap -6 -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 "$1"
-)
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$(if nmap -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # nmap's exit status, then its report
+  printf '%s\n' "$5"
+  if [ "$4" != 0 ]; then
+    echo "nmap exit $4: the IPv4 scan failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3
+  elif printf '%s\n' "$5" | grep -E '^[0123456789]+/tcp +open( |$)' > /dev/null; then
+    echo "FINDING: a listed port is open on $1 from this host"; set -- "$1" "$2" 1
+  else
+    case "$?:$5" in
+      1:*'Nmap done: 1 IP address (1 host up)'*) ;;
+      1:*) echo "the IPv4 scan named no host or the name did not resolve, so it scanned nothing; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      *) echo "grep could not read the IPv4 scan report; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+  fi
+  if [ "$2" != NONE ]; then             # the same scan over IPv6
+    set -- "$1" "$2" "$3" "$(if nmap -6 -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # nmap's exit status, then its report
+    printf '%s\n' "$5"
+    if [ "$4" != 0 ]; then
+      echo "nmap exit $4: the IPv6 scan failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3
+    elif printf '%s\n' "$5" | grep -E '^[0123456789]+/tcp +open( |$)' > /dev/null; then
+      echo "FINDING: a listed port is open on $2 from this host"; set -- "$1" "$2" 1
+    else
+      case "$?:$5" in
+        1:*'Nmap done: 1 IP address (1 host up)'*) ;;
+        1:*) echo "the IPv6 scan named no host or the name did not resolve, so it scanned nothing; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        *) echo "grep could not read the IPv6 scan report; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      esac
+    fi
+  fi
                                                                      # every one closed or filtered from
                                                                      # outside. 10250 runs commands in
                                                                      # containers; 2379 is the whole of etcd
+  echo "block exit $3; a 0 says only that every listed port was closed or filtered from this host, so keep the authorized positive control described below"
+  exit "$3"
+)
 ```
 
-REASONED: preceding block; node, kubelet and etcd scans with complete address coverage (the Gateway/service inventory, TLS/authentication and API reachability checks sit in the block before it), per the guide's cited Kubernetes ports and protocols; Kubernetes, operating etcd clusters; Kubernetes v1.37.1 server; Kubernetes v1.37.1 source, v1beta1 defaults; and Nmap host discovery. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded. No live scan ran: exposed endpoints answer untrusted sources; in the fixed state, restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families.
+REASONED: preceding block; node, kubelet and etcd scans with complete address coverage (the Gateway, service and node inventory, TLS/authentication and API reachability checks sit in the two blocks before it), per the guide's cited Kubernetes ports and protocols; Kubernetes, operating etcd clusters; Kubernetes v1.37.1 server; Kubernetes v1.37.1 source, v1beta1 defaults; and Nmap host discovery. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the earlier single block, before these node scans were split out and guarded. On the current form, which takes the node's IPv4 address and its IPv6 address or NONE on one guarded `set --` line and classifies the scan report, bash -n exited 0 and stub runs with nmap stubbed gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block. No live scan ran: exposed endpoints answer untrusted sources; in the fixed state, restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families.
 For the node scans, an exposed kubelet is expected to show 10250 open and, when enabled, 10255 open;
 after private binding and network restrictions, neither should be reachable from an untrusted network,
 while an authorized cluster client must still reach 10250. With `readOnlyPort: 0`, 10255 should have
@@ -463,7 +568,7 @@ public addresses. And a cluster whose etcd runs on its own machines has hosts th
 never lists, because they carry no kubelet; take their client and peer addresses from wherever you
 configured them and scan those too.
 
-REASONED: multi-vantage corroboration and effective provider ranges, per the guide's cited Amazon EKS cluster endpoint access, GKE control plane network isolation, including how authorized networks work and AKS API server authorized IP ranges. No cluster configuration or separate probe networks are available. Related shell checks exited 0 without diagnostics on earlier forms of the Verify blocks above, in which the API-server check ran at top level; the current API reachability block, which wraps that check in a subshell, was not re-run. The endpoint parser, which that wrapper left unchanged, produced the expected host, port and URL for five valid fixtures and rejected two invalid inputs. No live reachability was observed: exposed configuration admits an untrusted source; fixed configuration restricts every intended boundary while an allowed control still works. A failed probe alone remains inconclusive. Be clear about what a pass here is worth. It says that this host, at this moment, over this address
+REASONED: multi-vantage corroboration and effective provider ranges, per the guide's cited Amazon EKS cluster endpoint access, GKE control plane network isolation, including how authorized networks work and AKS API server authorized IP ranges. No cluster configuration or separate probe networks are available. Related shell checks exited 0 without diagnostics on earlier forms of the Verify blocks above, in which the API-server check ran at top level. The second Verify block, the API reachability check, now runs that check in one subshell; bash -n and stub runs covered that form, as the marker before that block records, and no live demonstration was re-run. The endpoint parser, which that change left unchanged, produced the expected host, port and URL for five valid fixtures and rejected two invalid inputs. No live reachability was observed: exposed configuration admits an untrusted source; fixed configuration restricts every intended boundary while an allowed control still works. A failed probe alone remains inconclusive. Be clear about what a pass here is worth. It says that this host, at this moment, over this address
 family, could not reach that endpoint. It does not say the cluster is restricted, because your own
 egress, a stale kubeconfig context, a resolver, a tunnel that is down, or a transient failure at the far
 end all produce the same result, and because an allowlist that admits one network you forgot about is
@@ -591,7 +696,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "c40105091be1953cd19d302e063e118960eba41134c7a6cadb854343f98d5e99",
+  "body_sha256": "0fd61f437b2000a1b8daeecac6f146508247d95d80760b7c3aaebc8b73c25de6",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -795,12 +900,12 @@ Claims (full source mapping in the JSON block below):
     "verify-services": {"text": "Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True.", "components": ["kubernetes", "envoy-rolling", "cert-manager"], "sources": ["kubernetes:s04f0c3099fd7", "envoy-rolling:s9ad0f418b20b", "cert-manager:s72bdb97928a8"], "status": "REASONED", "verify": [1]},
     "verify-redirect": {"text": "HTTP should return 301 to the HTTPS application URL.", "components": ["gateway"], "sources": ["gateway:s8d02fbc742ba"], "status": "REASONED", "verify": [1]},
     "verify-basic": {"text": "Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge.", "components": ["curl", "envoy-rolling"], "sources": ["envoy-rolling:sb5fa4f4ffa1a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-api-target": {"text": "Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443.", "components": ["kubernetes"], "sources": ["kubernetes:se41a53ea6778", "kubernetes:sd59fb2f35cd7"], "status": "REASONED", "verify": [1]},
-    "verify-proxies": {"text": "Disable curl config and configured proxies for direct probes; a transparent TLS middlebox can still answer for an unreachable target.", "components": ["curl"], "sources": ["curl:s2b2686afaf41", "curl:s7d4a6e627b1b"], "status": "REASONED", "verify": [1]},
-    "verify-api-tcp": {"text": "Outside allowed ranges, nc success proves something accepted TCP; corroborate failed probes with provider ranges and multiple vantage points.", "components": ["kubernetes", "eks"], "sources": ["kubernetes:sd59fb2f35cd7", "eks:s9724ce882930"], "status": "REASONED", "verify": [1]},
-    "verify-api-http": {"text": "Any HTTP status with curl exit 0 means answered; exit 60 means a TLS peer answered, 7 failed connect, 28 is ambiguous timeout and 6 is DNS failure, not privacy proof.", "components": ["curl", "eks"], "sources": ["curl:s7d4a6e627b1b", "eks:s9724ce882930"], "status": "REASONED", "verify": [1]},
-    "verify-node-scan": {"text": "Scan control-plane hosts first and every public node address in both families; workers alone miss API/etcd and separate etcd hosts are absent from kubectl nodes.", "components": ["kubernetes", "nmap"], "sources": ["kubernetes:sd59fb2f35cd7", "kubernetes:s01f081fed0ff", "nmap:sb7d0e7eb5141", "nmap:s1818abeb3f92", "nmap:s79c95712dd8d"], "status": "REASONED", "verify": [2]},
-    "verify-kubelet": {"text": "Untrusted clients should reach neither kubelet port after isolation, while authorized clients still reach 10250; readOnlyPort=0 should leave no 10255 listener even for authorized clients.", "components": ["kubelet"], "sources": ["kubelet:s98cf98130201", "kubelet:s3fc405855b4a"], "status": "REASONED", "verify": [2]}
+    "verify-api-target": {"text": "Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443.", "components": ["kubernetes"], "sources": ["kubernetes:se41a53ea6778", "kubernetes:sd59fb2f35cd7"], "status": "REASONED", "verify": [2]},
+    "verify-proxies": {"text": "Disable curl config and configured proxies for direct probes; a transparent TLS middlebox can still answer for an unreachable target.", "components": ["curl"], "sources": ["curl:s2b2686afaf41", "curl:s7d4a6e627b1b"], "status": "REASONED", "verify": [2]},
+    "verify-api-tcp": {"text": "Outside allowed ranges, nc success proves something accepted TCP; corroborate failed probes with provider ranges and multiple vantage points.", "components": ["kubernetes", "eks"], "sources": ["kubernetes:sd59fb2f35cd7", "eks:s9724ce882930"], "status": "REASONED", "verify": [2]},
+    "verify-api-http": {"text": "Any HTTP status with curl exit 0 means answered; exit 60 means a TLS peer answered, 7 failed connect, 28 is ambiguous timeout and 6 is DNS failure, not privacy proof.", "components": ["curl", "eks"], "sources": ["curl:s7d4a6e627b1b", "eks:s9724ce882930"], "status": "REASONED", "verify": [2]},
+    "verify-node-scan": {"text": "Scan control-plane hosts first and every public node address in both families; workers alone miss API/etcd and separate etcd hosts are absent from kubectl nodes.", "components": ["kubernetes", "nmap"], "sources": ["kubernetes:sd59fb2f35cd7", "kubernetes:s01f081fed0ff", "nmap:sb7d0e7eb5141", "nmap:s1818abeb3f92", "nmap:s79c95712dd8d"], "status": "REASONED", "verify": [1, 3]},
+    "verify-kubelet": {"text": "Untrusted clients should reach neither kubelet port after isolation, while authorized clients still reach 10250; readOnlyPort=0 should leave no 10255 listener even for authorized clients.", "components": ["kubelet"], "sources": ["kubelet:s98cf98130201", "kubelet:s3fc405855b4a"], "status": "REASONED", "verify": [3]}
   }
 }
 ````
