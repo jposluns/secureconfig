@@ -84,74 +84,143 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 
 ## Verify
 
-REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. The authoring environment cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
+REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. The authoring environment cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run. The checks span hosts and frpc runs in the foreground, so each step is its own block with its own exit status: paste each whole on the host it names. Each block exits 0 when it leaves its output for you to judge against its comments, and 3 when a command whose failure it can recognize fails; the paragraph before each block says which. The frp block also refuses with status 2 when frpc is not installed, and the two listener inventories refuse with status 2 when `ss` is not installed, which in the WireGuard and firewall block holds only while no other read failed. No earlier run of these blocks is recorded; their current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs of each block's passing and failing cases, with `ss` passing, failing and missing, under an inherited `readonly`, `declare -i` and `set -e`. Run this first block on the frp client, from the directory holding `frpc.toml`.
 
 ```bash
-# Paste this walkthrough a step at a time, never whole: it spans hosts, and frpc runs in the foreground.
-# The frp steps run on the frp client, the pings on the peer, the counter reads on the WireGuard server,
-# the WireGuard and firewall reads on the host you are checking, and the ssh -R check on the SSH server.
-# No exit status covers the whole walkthrough. The frp, WireGuard, firewall, ping and counter steps are
-# read-and-judge: their exit statuses are not results, so read their output against the comments. The
-# UDP listener read refuses with status 2 when ss is not installed, and otherwise its status is not a
-# result either. The ssh -R subshell at the end has a status of its own, for that check on that host only.
-# frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
-# reachability and a valid token). frpc then stays in the FOREGROUND; stop it with Ctrl-C before the
-# next command. This exercises token auth only; auth.token has no effect under auth.method = "oidc".
-frpc -c frpc.toml              # expect a 'login to server success, get run id ...' log line
-# negative control: the same config with ONLY the token changed must fail LOGIN for an authentication
-# reason. The exact text is version-dependent, so key on the token/auth reason and the ABSENCE of a
-# 'login to server success', not a literal string; a config-load, DNS, TLS, or connection error does NOT count
-sed 's/^auth\.token[[:space:]]*=.*/auth.token = "WRONG_VALUE"/' frpc.toml > frpc-wrongtoken.toml
-frpc -c frpc-wrongtoken.toml   # expect a token-auth failure (e.g. 'token in login doesn't match token from configuration'), no run id
-# open-door check: a server whose auth.token is absent or empty accepts an empty token, so confirm your
-# frps also REJECTS an empty-token client; a successful login here means your server has no token set
-sed 's/^auth\.token[[:space:]]*=.*/auth.token = ""/' frpc.toml > frpc-emptytoken.toml
-frpc -c frpc-emptytoken.toml   # expect the same login failure
-
-sudo wg show wg0          # needs privilege; shows the listen-port (51820) + per-peer state, and a recent 'latest handshake' is the liveness signal. wg show reports CONFIGURATION, so also confirm the interface is running:
-ip link show wg0          # expect the UP flag in the <...> flags; a WireGuard interface usually shows operational 'state UNKNOWN', which is fine. wg show reporting a port while the interface is administratively down is why this check exists
-(                         # a subshell, so the exit below ends only this step
-  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
-  ss -ulnp                # read every UDP listener to spot any OTHER, unexpected service; do not rely on it to confirm WireGuard (the in-kernel socket has no owning process to show under -p, and a real host also lists resolved/mDNS)
+(                              # a subshell, so the exits below end only this step
+  set +e                       # errexit off here, so an expected login failure does not end the step
+  trap ':' INT                 # Ctrl-C then stops only the frpc in the foreground, and the step goes on to the next command
+  command -v frpc >/dev/null || { echo "frpc is not installed here; not testing"; exit 2; }
+  set -- 0                     # this step's status: 3 if a sed below fails, otherwise 0, because you judge the frpc logs
+  # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
+  # reachability and a valid token). frpc then stays in the FOREGROUND; stop it with Ctrl-C to go on to the
+  # next command. This exercises token auth only; auth.token has no effect under auth.method = "oidc".
+  frpc -c frpc.toml              # expect a 'login to server success, get run id ...' log line
+  # negative control: the same config with ONLY the token changed must fail LOGIN for an authentication
+  # reason. The exact text is version-dependent, so key on the token/auth reason and the ABSENCE of a
+  # 'login to server success', not a literal string; a config-load, DNS, TLS, or connection error does NOT count
+  if sed 's/^auth\.token[[:space:]]*=.*/auth.token = "WRONG_VALUE"/' frpc.toml > frpc-wrongtoken.toml; then
+    frpc -c frpc-wrongtoken.toml   # expect a token-auth failure (e.g. 'token in login doesn't match token from configuration'), no run id
+  else
+    echo "sed exit $?: frpc-wrongtoken.toml was not written; inconclusive"; set -- 3
+  fi
+  # open-door check: a server whose auth.token is absent or empty accepts an empty token, so confirm your
+  # frps also REJECTS an empty-token client; a successful login here means your server has no token set
+  if sed 's/^auth\.token[[:space:]]*=.*/auth.token = ""/' frpc.toml > frpc-emptytoken.toml; then
+    frpc -c frpc-emptytoken.toml   # expect the same login failure
+  else
+    echo "sed exit $?: frpc-emptytoken.toml was not written; inconclusive"; set -- 3
+  fi
+  echo "block exit $1; the frpc logs above are not classified, so judge them against the comments yourself"
+  exit "$1"
 )
-# ufw must be active with a default-deny (or default-reject) incoming policy, or this proves nothing
-# ('inactive' or a default-allow policy would pass it while the port is open). Its status shows
-# ufw-managed rules and defaults, not rules from ufw's rules files:
-sudo ufw status verbose
-# Check IPV6 in /etc/default/ufw: yes applies IPv6 rules; no accepts IPv6 only on loopback.
-# Confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
-# tunnel/proxy path, for BOTH IPv4 and IPv6. The pinned manual describes `ufw show raw`
-# as displaying filter, nat, mangle and raw tables using iptables and ip6tables.
-# The pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables,
-# and IPv6 filter, mangle and raw tables, beyond the status view:
-sudo ufw show raw
-# This guide's reasoning: the iptables/ip6tables report does not replace native nftables inspection.
-# Read the native ruleset, including the forward rule above, separately:
-sudo nft list ruleset
+```
 
-# positive control: from the peer, ping a host reachable ONLY through the tunnel (another peer, or a
-# server-side address in 192.168.88.0/24 that the peer cannot reach on its own LAN), so a success proves
-# WireGuard traversal and server routing rather than a local route
-ping -c1 192.168.88.10
+REASONED: following block; the WireGuard, UDP listener and firewall reads follow the cited WireGuard quickstart, iproute2 manuals, Linux source, Ubuntu Noble ufw manual and source, and nftables manual; no WireGuard host or privileged firewall control is available here. Run it on the host you are checking. It exits 3 when a read fails, 2 when `ss` is not installed and no read failed, and otherwise 0. A host that does not run ufw records 3 for the ufw reads, because the block does not tell a missing ufw from a failed read; read the nft ruleset there instead.
 
-# forbidden destination: from the peer, a host the server would otherwise forward to (its own LAN,
-# reachable through the tunnel if not for this rule) but outside 192.168.88.0/24, so a failure here
-# is attributable to the firewall rule rather than to an address that was never routed or never live
-ping -c1 192.168.1.50          # expect 100 percent packet loss (attribution comes from the counter increase below, not this loss on its own)
+```bash
+(                         # a subshell, so the exit below ends only this step
+  set +e                  # errexit off here, so a failed read is reported below instead of ending the step
+  set -- 0                # this step's status: 3 (a read failed) outranks 2 (ss is not installed), which outranks 0, because you judge what it prints
+  sudo wg show wg0          # needs privilege; shows the listen-port (51820) + per-peer state, and a recent 'latest handshake' is the liveness signal. wg show reports CONFIGURATION, so also confirm the interface is running:
+  case "$?" in 0) ;; *) echo "sudo wg show wg0 failed; inconclusive"; set -- 3 ;; esac
+  ip link show wg0          # expect the UP flag in the <...> flags; a WireGuard interface usually shows operational 'state UNKNOWN', which is fine. wg show reporting a port while the interface is administratively down is why this check exists
+  case "$?" in 0) ;; *) echo "ip link show wg0 failed; inconclusive"; set -- 3 ;; esac
+  if command -v ss >/dev/null; then   # a missing ss is a refusal, ranked as above
+    ss -ulnp                # read every UDP listener to spot any OTHER, unexpected service; do not rely on it to confirm WireGuard (the in-kernel socket has no owning process to show under -p, and a real host also lists resolved/mDNS)
+    case "$?" in 0) ;; *) echo "ss -ulnp failed; inconclusive"; set -- 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
+  # ufw must be active with a default-deny (or default-reject) incoming policy, or this proves nothing
+  # ('inactive' or a default-allow policy would pass it while the port is open). Its status shows
+  # ufw-managed rules and defaults, not rules from ufw's rules files:
+  sudo ufw status verbose
+  case "$?" in 0) ;; *) echo "sudo ufw status verbose failed; inconclusive"; set -- 3 ;; esac
+  # Check IPV6 in /etc/default/ufw: yes applies IPv6 rules; no accepts IPv6 only on loopback.
+  # Confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
+  # tunnel/proxy path, for BOTH IPv4 and IPv6. The pinned manual describes `ufw show raw`
+  # as displaying filter, nat, mangle and raw tables using iptables and ip6tables.
+  # The pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables,
+  # and IPv6 filter, mangle and raw tables, beyond the status view:
+  sudo ufw show raw
+  case "$?" in 0) ;; *) echo "sudo ufw show raw failed; inconclusive"; set -- 3 ;; esac
+  # This guide's reasoning: the iptables/ip6tables report does not replace native nftables inspection.
+  # Read the native ruleset, including the forward rule above, separately:
+  sudo nft list ruleset
+  case "$?" in 0) ;; *) echo "sudo nft list ruleset failed; inconclusive"; set -- 3 ;; esac
+  echo "block exit $1; the WireGuard, UDP listener and firewall output above is not classified, so judge it against the comments yourself"
+  exit "$1"
+)
+```
 
-# confirm the drop is THIS rule acting, not a routing gap or a stale count. The counter lives on the
-# SERVER; the traffic comes from the PEER, so this spans two hosts. It is a confirmation aid, not a
-# rigorous proof: the counter increments on EVERY matching packet, so run it on an otherwise-idle peer.
-# 1) On the SERVER, read the rule's packet counter. The chain header must say 'type filter hook forward'
-#    (an unreferenced regular chain gets no traffic) and the grep pins the full match AND the drop verdict
-#    so a same-match accept rule is not read instead:
-sudo nft list chain inet filter forward | grep -E 'type filter hook forward|iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
-# 2) FROM THE PEER, send the forbidden ping (its own AllowedIPs must include 192.168.1.50, or the packet
-#    never leaves for the server to drop):
-ping -c1 192.168.1.50
-# 3) On the SERVER, read the counter again: the packet count must have INCREASED by that ping:
-sudo nft list chain inet filter forward | grep -E 'iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
+REASONED: following block; the routing checks follow the cited WireGuard Cryptokey Routing and nftables documentation; no peer or tunnel is available here. Run it on the peer. It exits 3 when the positive control gets no reply and otherwise 0. The forbidden ping's loss is the expected result, and a ping that fails for another reason also exits nonzero, so the block leaves that result for you to read.
 
+```bash
+(                         # a subshell, so the exit below ends only this step
+  set +e                  # errexit off here, so the expected loss below does not end the step
+  set -- 0                # this step's status: 3 if the positive control fails, otherwise 0, because you judge the forbidden ping
+  # positive control: from the peer, ping a host reachable ONLY through the tunnel (another peer, or a
+  # server-side address in 192.168.88.0/24 that the peer cannot reach on its own LAN), so a success proves
+  # WireGuard traversal and server routing rather than a local route
+  ping -c1 192.168.88.10
+  case "$?" in 0) ;; *) echo "ping -c1 192.168.88.10 failed: the positive control failed; inconclusive"; set -- 3 ;; esac
+  # forbidden destination: from the peer, a host the server would otherwise forward to (its own LAN,
+  # reachable through the tunnel if not for this rule) but outside 192.168.88.0/24, so a failure here
+  # is attributable to the firewall rule rather than to an address that was never routed or never live
+  ping -c1 192.168.1.50          # expect 100 percent packet loss (attribution comes from the counter increase below, not this loss on its own)
+  echo "block exit $1; the forbidden ping above is not classified, so read its loss yourself"
+  exit "$1"
+)
+```
+
+REASONED: following block; the counter checks follow the cited nftables manual and WireGuard Cryptokey Routing documentation; no WireGuard server or peer is available here. Confirm the drop is THIS rule acting, not a routing gap or a stale count, with the next three blocks, run on the server, the peer and the server in turn. The counter lives on the server and the traffic comes from the peer. It is a confirmation aid, not a rigorous proof: the counter increments on EVERY matching packet, so run it on an otherwise-idle peer. This first block exits 3 when no line matches, which a missing chain or rule, a failed nft and output in another form all cause, so it cannot tell them apart; otherwise it exits 0 and leaves the counter for you to note.
+
+```bash
+(                         # a subshell, so the exit below ends only this step
+  set +e                  # errexit off here, so an unmatched grep is reported below instead of ending the step
+  set -- 0                # this step's status: 3 if no line matched, otherwise 0, because you note the counter
+  # 1) On the SERVER, read the rule's packet counter. The chain header must say 'type filter hook forward'
+  #    (an unreferenced regular chain gets no traffic) and the grep pins the full match AND the drop verdict
+  #    so a same-match accept rule is not read instead:
+  sudo nft list chain inet filter forward | grep -E 'type filter hook forward|iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
+  case "$?" in 0) ;; *) echo "no line matched, or nft failed; read any error above; inconclusive"; set -- 3 ;; esac
+  echo "block exit $1; the chain header and counter above are not classified, so note the packet count yourself"
+  exit "$1"
+)
+```
+
+REASONED: following block; the forbidden ping for the counter check follows the cited WireGuard Cryptokey Routing documentation; no peer is available here. Run it on the peer. It exits 0 whatever the ping's result, which the counter read in the next block attributes.
+
+```bash
+(                         # a subshell, so the exit below ends only this step
+  set +e                  # errexit off here, so the expected loss below does not end the step
+  # 2) FROM THE PEER, send the forbidden ping (its own AllowedIPs must include 192.168.1.50, or the packet
+  #    never leaves for the server to drop):
+  ping -c1 192.168.1.50
+  echo "block exit 0; the ping above is not classified: the counter read on the server attributes it"
+  exit 0
+)
+```
+
+REASONED: following block; the second counter read follows the cited nftables manual; no WireGuard server is available here. Run it on the server. It exits 3 when no drop-rule line matches, for the same reasons as the first read, and otherwise 0, leaving you to compare the packet count with the first read.
+
+```bash
+(                         # a subshell, so the exit below ends only this step
+  set +e                  # errexit off here, so an unmatched grep is reported below instead of ending the step
+  set -- 0                # this step's status: 3 if no line matched, otherwise 0, because you compare the counter
+  # 3) On the SERVER, read the counter again: the packet count must have INCREASED by that ping:
+  sudo nft list chain inet filter forward | grep -E 'iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
+  case "$?" in 0) ;; *) echo "no line matched, or nft failed; read any error above; inconclusive"; set -- 3 ;; esac
+  echo "block exit $1; compare this packet count with the first read yourself"
+  exit "$1"
+)
+```
+
+REASONED: following block; the ssh -R check follows the cited OpenSSH sshd_config and ssh manuals and the iproute2 ss manual; no SSH server is available here. Run it on the SSH server. It exits 2 when `ss` is not installed, 3 when `ss` fails and otherwise 0, leaving the listeners for you to judge.
+
+```bash
 # ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
 (          # a subshell, so the exit below ends only the subshell; its status is this check's alone: 2 if ss is not installed, 3 if ss fails, otherwise 0
   command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
@@ -268,7 +337,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "e18b2c17f16c26f302f7de379fc1d8e6a81bb7c156ab3abb876969129bc7de91",
+  "body_sha256": "2aec7eaba702b6da271f05bcb60de0ac7d9ab6eb097b9397d12531d85599372b",
   "components": {
     "frps": {
       "name": "frps source",
@@ -410,11 +479,11 @@ Claims (full source mapping in the JSON block below):
     "ssh-auth": {"text": "SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
     "ssh-persist": {"text": "Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding.", "components": ["ssh", "autossh-source"], "sources": ["ssh:s1f80cf6ae7f5", "autossh-source:s6398847a2896"], "status": "REASONED"},
     "verify-token": {"text": "Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc", "frps:sc982b975a190"], "status": "REASONED", "verify": [1]},
-    "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "iproute2-docs:s8aa0d96d25e7", "linux-source:sc7cb2448145d", "linux-source:sdfc1a2d0c3cc"], "status": "REASONED", "verify": [1]},
-    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned manual describes ufw show raw as displaying filter, nat, mangle and raw tables using iptables and ip6tables; the pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables. Confirm nothing admits unauthorized external traffic to the tunneled service beyond the intended tunnel or proxy path, for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection.", "components": ["wg", "nft", "ufw-docs", "iproute2-docs", "linux-source", "ufw-source"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b", "ufw-docs:scff3a017f30b", "iproute2-docs:s5d50117b1a36", "linux-source:scd9d50cf72b7", "linux-source:sb02ea8702b2a", "ufw-source:sa61919e3296d", "ufw-source:sf5e201b3987a", "ufw-source:s0b0f73700e57", "ufw-source:s6161b0ad44f0", "ufw-source:s4470c8632bc7", "ufw-source:s1fe29ea7aa5f", "ufw-source:s0dacc2148041"], "status": "REASONED", "verify": [1]},
-    "verify-route": {"text": "An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
-    "verify-counter": {"text": "Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
-    "verify-ssh": {"text": "On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.", "components": ["ssh", "iproute2-docs"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5", "iproute2-docs:s5d50117b1a36"], "status": "REASONED", "verify": [1]}
+    "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "iproute2-docs:s8aa0d96d25e7", "linux-source:sc7cb2448145d", "linux-source:sdfc1a2d0c3cc"], "status": "REASONED", "verify": [2]},
+    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned manual describes ufw show raw as displaying filter, nat, mangle and raw tables using iptables and ip6tables; the pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables. Confirm nothing admits unauthorized external traffic to the tunneled service beyond the intended tunnel or proxy path, for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection.", "components": ["wg", "nft", "ufw-docs", "iproute2-docs", "linux-source", "ufw-source"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b", "ufw-docs:scff3a017f30b", "iproute2-docs:s5d50117b1a36", "linux-source:scd9d50cf72b7", "linux-source:sb02ea8702b2a", "ufw-source:sa61919e3296d", "ufw-source:sf5e201b3987a", "ufw-source:s0b0f73700e57", "ufw-source:s6161b0ad44f0", "ufw-source:s4470c8632bc7", "ufw-source:s1fe29ea7aa5f", "ufw-source:s0dacc2148041"], "status": "REASONED", "verify": [2]},
+    "verify-route": {"text": "An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [3]},
+    "verify-counter": {"text": "Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [4, 5, 6]},
+    "verify-ssh": {"text": "On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.", "components": ["ssh", "iproute2-docs"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5", "iproute2-docs:s5d50117b1a36"], "status": "REASONED", "verify": [7]}
   }
 }
 ````
