@@ -125,45 +125,86 @@ Bind every listener to loopback or a private interface, and put authentication a
 
 ## Verify
 
-REASONED: following block; every probe in this section, including the TCP and UDP listener inventory below for each port it names. Every probe in this section, including the TCP and UDP listener inventory below for each port it names, rests on the guide's cited InfluxDB 2.x configuration options, InfluxDB 1.x configuration, VictoriaMetrics v1.152.0 single-node HTTP fallback, VictoriaMetrics v1.152.0-cluster HTTP fallback binds, and QuestDB HTTP server, PostgreSQL wire protocol, ingestion and minimal HTTP server entries. No InfluxDB, VictoriaMetrics or QuestDB listener ran. During marking review (October 2026) all three Verify blocks passed bash -n under bash 5.3.9, and the inventory's two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Exposed, a listed port shows a public or wildcard bind; fixed, only its intended private address. Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
+REASONED: following block; every probe in this section, including the TCP and UDP listener inventory below for each port it names. Every probe in this section, including the TCP and UDP listener inventory below for each port it names, rests on the guide's cited InfluxDB 2.x configuration options, InfluxDB 1.x configuration, VictoriaMetrics v1.152.0 single-node HTTP fallback, VictoriaMetrics v1.152.0-cluster HTTP fallback binds, and QuestDB HTTP server, PostgreSQL wire protocol, ingestion and minimal HTTP server entries. No InfluxDB, VictoriaMetrics or QuestDB listener ran. During marking review (October 2026) all three Verify blocks passed bash -n under bash 5.3.9, and the inventory's two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Those runs covered all three blocks in earlier forms, whose exit statuses did not classify their results; none was repeated on the current forms, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. Exposed, a listed port shows a public or wildcard bind; fixed, only its intended private address. The inventory block exits 1 when a port it names is bound to a wildcard address, 3 when either ss command fails, and otherwise 0, leaving public and private addresses for you to judge. Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
 
 ```bash
 # REASONED: listener inventory; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
-sudo ss -tlnp    # read the whole table: 8086 and loopback 8088; 8428, 8480, 8481, 8482 and native
-sudo ss -ulnp    # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its intended private
-                 # address, and no metrics or ingest port bound to a public interface
+(                                   # a subshell, so the exit below ends only the subshell
+  # read the whole table: 8086 and loopback 8088; 8428, 8480, 8481, 8482 and native
+  # RPC 8400, 8401; 9000, 9003, 8812, 9009, each only on its intended private
+  # address, and no metrics or ingest port bound to a public interface
+  set -- 0 "$(if sudo ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the TCP listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                         # status, the TCP listener table, then ss's exit status
+  printf '%s' "$2"
+  [ "$3" = 0 ] || { echo "sudo ss -tlnp exit $3: the TCP listener inventory failed; inconclusive"; set -- 3 "$2" "$3"; }
+  set -- "$1" "$2" "$(if sudo ss -ulnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # then the UDP listeners
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"                                    # status, both tables, then this ss's exit status
+  printf '%s' "$3"
+  [ "$4" = 0 ] || { echo "sudo ss -ulnp exit $4: the UDP listener inventory failed; inconclusive"; set -- 3 "$2" "$3" "$4"; }
+  if printf '%s%s' "$2" "$3" | awk '$4 ~ /:(8086|8088|8428|8480|8481|8482|8400|8401|9000|9003|8812|9009)$/ && ($4 ~ /^0\.0\.0\.0:/ || index($4, "*:") == 1 || index($4, "[::]:") == 1 || index($4, ":::") == 1) { print; found = 1 } END { exit !found }'; then
+    echo "FINDING: the rows just above bind a port this block names to a wildcard address, the exposed state"; set -- 1
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener tables; inconclusive"; [ "$1" = 1 ] || set -- 3 ;; esac
+  fi
+  echo "block exit $1; public and private addresses are not classified, so judge every row against the comments yourself"
+  exit "$1"
+)
 ```
 
-REASONED: the outside-host and trusted-host VictoriaMetrics cluster RPC reachability pair, per the guide's cited VictoriaMetrics v1.152.0-cluster HTTP fallback binds, RPC handshake and RPC capabilities entries and its VictoriaMetrics cluster security recommendations entry. During marking review (October 2026) the following block passed bash -n under bash 5.3.9 and ran with no network: unchanged, it printed the substitute-the-storage-node-IP refusal and exited 2; without its set -- line, the paste-the-whole-block refusal. The following block's no-network runs during marking review (October 2026) gave two further results: a host name was rejected by the block's Python ipaddress check with a ValueError; and 127.0.0.1, where nothing listened, printed connection failed with Connection refused and not proof of isolation for 8400 and 8401. **REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable because the authoring host forbids opening listeners without an isolated network namespace, and has none. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP below and run the whole block. Repeat from a trusted cluster host as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
+REASONED: the outside-host and trusted-host VictoriaMetrics cluster RPC reachability pair, per the guide's cited VictoriaMetrics v1.152.0-cluster HTTP fallback binds, RPC handshake and RPC capabilities entries and its VictoriaMetrics cluster security recommendations entry. During marking review (October 2026) the following block passed bash -n under bash 5.3.9 and ran with no network: unchanged, it printed the substitute-the-storage-node-IP refusal and exited 2; without its set -- line, the paste-the-whole-block refusal. The following block's no-network runs during marking review (October 2026) gave two further results: a host name was rejected by the block's Python ipaddress check with a ValueError; and 127.0.0.1, where nothing listened, printed connection failed with Connection refused and not proof of isolation for 8400 and 8401. Those runs covered an earlier form of the block, which took one value, let a host name end it with a Python traceback and exit status 1, and, once past its guards, otherwise exited 0 whatever it printed; none was repeated on the current form, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. **REASONED, not demonstrated:** the VictoriaMetrics cluster RPC check needs a running cluster and probe hosts inside and outside its protected network, unavailable because the authoring host forbids opening listeners without an isolated network namespace, and has none. The `ss` inventory above identifies local binds; it does not prove that `8400` and `8401` are unreachable from outside the cluster network. From an outside host, substitute each storage node's actual IP and `outside` below and run the whole block. Repeat from a trusted cluster host with `trusted` as the positive control. Use any configured replacement ports too, including enabled `-clusternativeListenAddr` listeners. The pinned RPC listener and handshake sources below explain why reachability matters.
 
 ```bash
 # REASONED: cluster RPC isolation and trusted-host control; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_STORAGE_NODE_IP'
+  set +e                                # errexit off here, so the probe's status is read on the line after it instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_STORAGE_NODE_IP' 'REPLACE_WITH_outside_OR_trusted'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the storage node IP; not probing"; exit 2 ;;
   esac
+  case "$2" in
+    outside|trusted) : ;;
+    *) echo "substitute outside (a probe from an outside host) or trusted (the trusted cluster host control) as the second value on the set -- line above; not probing"; exit 2 ;;
+  esac
+  command -v python3 > /dev/null || { echo "python3 is required for this probe; not probing"; exit 2; }
   python3 - "$1" <<'PY'
 import ipaddress
 import socket
 import sys
 
 _, host = sys.argv
-ipaddress.ip_address(host)
+try:
+    ipaddress.ip_address(host)
+except ValueError:
+    print(f"{host} is not an IP address: substitute the storage node's actual IP; not probing")
+    sys.exit(20)
+reachable = 0
 for port in (8400, 8401):
     try:
         with socket.create_connection((host, port), timeout=5):
             print(f"{host}:{port}: TCP REACHABLE")
+            reachable += 1
     except OSError as exc:
         print(f"{host}:{port}: connection failed: {exc}; not proof of isolation")
+sys.exit(21 + reachable)  # 21: neither port connected, 22: one did, 23: both did
 PY
+  set -- "$2" "$?"                      # outside or trusted, then the probe's exit status
+  case "$1:$2" in
+    *:20) set -- 2 ;;
+    outside:22|outside:23) echo "FINDING: a storage RPC port accepted a TCP connection from outside, the exposed state"; set -- 1 ;;
+    outside:21) echo "neither port connected from here: consistent with isolation, not proof; confirm the target, its running listeners and the firewall or network-policy rule responsible, and run the trusted-host control"; set -- 0 ;;
+    trusted:23) echo "the trusted-host control connected to both listeners"; set -- 0 ;;
+    trusted:21|trusted:22) echo "the trusted-host control did not connect to both listeners, so it failed; inconclusive"; set -- 3 ;;
+    *) echo "python3 exit $2: the probe did not finish; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the per-port connection lines above, including any connection error, are not classified beyond this, so read them yourself"
+  exit "$1"
 )
 ```
 
-REASONED: the expected exposed and fixed RPC outcomes, per the guide's cited VictoriaMetrics v1.152.0-cluster RPC handshake and RPC capabilities entries and vmauth authorization proxy entry; no cluster ran, so neither state was observed. An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. A `401` from `vmauth` says nothing about RPC isolation.
+REASONED: the expected exposed and fixed RPC outcomes, per the guide's cited VictoriaMetrics v1.152.0-cluster RPC handshake and RPC capabilities entries and vmauth authorization proxy entry; no cluster ran, so neither state was observed. An exposed listener is expected to report `TCP REACHABLE` from outside; this is an exposure failure even if an HTTP request to that port fails, since RPC is not HTTP. In the fixed state, outside connections must be blocked while the trusted-host control still connects to both running listeners. A timeout or refusal alone is inconclusive: confirm the target, running listener and firewall or network-policy rule responsible. With `outside`, the block exits 1 when either port reports `TCP REACHABLE` and 0 when neither connects, which it reports as consistent with isolation but not proof for that reason; with `trusted`, it exits 0 when both connect and 3 otherwise. It refuses an address that is not an IP literal with status 2, before any connection. A `401` from `vmauth` says nothing about RPC isolation.
 
 ```bash
 # REASONED: HTTP setup, authentication and endpoint-key probes; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.
@@ -181,12 +222,30 @@ REASONED: the expected exposed and fixed RPC outcomes, per the guide's cited Vic
     http://*|https://*) : ;;
     *) echo "expected an http:// or https:// URL; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+  set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${2##*$'\n'}" "${2%$'\n'*}"            # curl's exit status, then its output
+  printf '%s' "$2"
+  set -- "$1" "$2" "${2%$'\n'}"
+  set -- "$1" "$2" "${3##*$'\n'}"                # curl's exit status, its output, then its http= exit= err= line
+  case "$1:$3" in
+    0:"http=401 "*) echo "HTTP 401: this endpoint requires authentication"; set -- 0 ;;
+    0:"http=2"??" "*)
+      case "$2" in
+        *'"allowed":true'*|*'"allowed": true'*) echo "FINDING: the InfluxDB 2.x setup endpoint reports allowed true, so this instance has not been set up"; set -- 1 ;;
+        *'"allowed":false'*|*'"allowed": false'*) echo "the InfluxDB 2.x setup endpoint reports allowed false: the instance is initialized"; set -- 0 ;;
+        *) echo "unclassified observation: a URL alone does not tell this block which engine, or which proxy in front of one, answered, so it does not classify a data answer; read the body above against the expectations for this target; a 200 health response proves nothing on its own"; set -- 0 ;;
+      esac ;;
+    0:"http=3"??" "*|0:"http=404 "*|0:"http=405 "*) echo "a redirect, a 404 or a 405 is inconclusive, never the fixed state"; set -- 3 ;;
+    0:*) echo "an HTTP status this block does not classify; inconclusive"; set -- 3 ;;
+    *) echo "curl exit $1: a transport failure or a TLS error is inconclusive, never the fixed state"; set -- 3 ;;
+  esac
+  echo "block exit $1; a 2xx body other than the setup endpoint's is not classified, so judge it against the expectations below"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; the guarded URL probe above for its setup, authentication and endpoint-key targets, and this paragraph's per-target InfluxDB, VictoriaMetrics and QuestDB expectations and PostgreSQL wire check. The declared scope rests on the guide's cited InfluxDB 2.x setup API, InfluxDB 1.x configuration, InfluxDB 1.x authentication and authorization, VictoriaMetrics v1.152.0 HTTP auth and TLS flags, QuestDB HTTP server and QuestDB PostgreSQL wire protocol entries. No InfluxDB, VictoriaMetrics or QuestDB instance ran; psql is installed in the authoring environment, but there was no QuestDB listener to refuse it. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed the substitute-a-full-URL refusal and exited 2; a URL without a scheme drew the expected-http-or-https refusal; and the setup and snapshot-list URLs reached the stub unchanged. The expected exposed and fixed results are those stated here. Run that block once per target, over `http://` against the default plaintext listener. InfluxDB 2.x `http://tsdb.example.com:8086/api/v2/setup` returns a body containing `"allowed":true` on an un-set-up instance and `"allowed":false` once initialized; the HTTP status is `200` either way, so read the body, not the code. InfluxDB 1.x `http://tsdb.example.com:8086/query?q=SHOW+DATABASES` returns the database list when `auth-enabled` is off and `401` once it is on. VictoriaMetrics `http://tsdb.example.com:8428/api/v1/query?query=up` returns series until `-httpAuth.username` is set or it sits behind `vmauth`, then `401`. QuestDB `http://tsdb.example.com:9000/exec?query=SELECT+1` returns a result set with no `http.user` set and `401` once it is. For the PostgreSQL wire port, confirm separately that `admin` / `quest` is refused with a `psql` connection attempt. Once authentication and TLS are in front, re-run against the `https://` entrypoint to confirm the `401`, and separately confirm the plaintext port is closed from outside, since a `401` from the proxy does not prove the backend listener is unreachable. A `200` health response, a redirect, or a 404 proves none of this on its own.
+REASONED: preceding block; the guarded URL probe above for its setup, authentication and endpoint-key targets, and this paragraph's per-target InfluxDB, VictoriaMetrics and QuestDB expectations and PostgreSQL wire check. The declared scope rests on the guide's cited InfluxDB 2.x setup API, InfluxDB 1.x configuration, InfluxDB 1.x authentication and authorization, VictoriaMetrics v1.152.0 HTTP auth and TLS flags, QuestDB HTTP server and QuestDB PostgreSQL wire protocol entries. No InfluxDB, VictoriaMetrics or QuestDB instance ran; psql is installed in the authoring environment, but there was no QuestDB listener to refuse it. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed the substitute-a-full-URL refusal and exited 2; a URL without a scheme drew the expected-http-or-https refusal; and the setup and snapshot-list URLs reached the stub unchanged. Those runs covered an earlier form of the block, which ended with curl's own status; none was repeated on the current form, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. The block exits 3 for a transport failure, a TLS error, a redirect, a `404`, a `405` or any other status it does not classify, 1 for a `2xx` body containing `"allowed":true`, and 0 for a `401`, for `"allowed":false`, or for any other `2xx`, whose body it leaves for you to read against these expectations. It does not classify a `2xx` data answer as exposed, because a URL alone does not tell it which engine, or which proxy in front of one, answered; a database list, series or a result set returned without credentials is the exposed state below. The expected exposed and fixed results are those stated here. Run that block once per target, over `http://` against the default plaintext listener. InfluxDB 2.x `http://tsdb.example.com:8086/api/v2/setup` returns a body containing `"allowed":true` on an un-set-up instance and `"allowed":false` once initialized; the HTTP status is `200` either way, so read the body, not the code. InfluxDB 1.x `http://tsdb.example.com:8086/query?q=SHOW+DATABASES` returns the database list when `auth-enabled` is off and `401` once it is on. VictoriaMetrics `http://tsdb.example.com:8428/api/v1/query?query=up` returns series until `-httpAuth.username` is set or it sits behind `vmauth`, then `401`. QuestDB `http://tsdb.example.com:9000/exec?query=SELECT+1` returns a result set with no `http.user` set and `401` once it is. For the PostgreSQL wire port, confirm separately that `admin` / `quest` is refused with a `psql` connection attempt. Once authentication and TLS are in front, re-run against the `https://` entrypoint to confirm the `401`, and separately confirm the plaintext port is closed from outside, since a `401` from the proxy does not prove the backend listener is unreachable. A `200` health response, a redirect, or a 404 proves none of this on its own.
 
 REASONED: the VictoriaMetrics v1.152.0 single-node endpoint-key and Basic-auth cases, per the guide's cited VictoriaMetrics v1.152.0 key precedence and Basic fallback, built-in exemptions and key routes, and empty password/key defaults entries. No VictoriaMetrics instance ran; the guarded URL block's local runs are recorded in the previous paragraph. The expected exposed and fixed results are those stated here. **REASONED, not demonstrated:** for v1.152.0 single-node, use the guarded URL block above against `/snapshot/list` and `/metrics` with no credentials. With empty endpoint keys and an empty Basic username, expect `200` and snapshot JSON or metrics text; with a Basic username set and the keys still empty, expect `401`. With nonempty endpoint keys, a request lacking `authKey` must return `401`. In an isolated deployment, also confirm that a correct endpoint key succeeds without Basic credentials, that Basic credentials alone cannot satisfy a nonempty endpoint key, and that ordinary query and ingest requests still require Basic auth. Do not use snapshot creation, deletion or ingestion as a read-only probe. `/health` and `/-/ready` remain unauthenticated under native Basic auth; their success is not a failed data-auth check. Include every enabled optional listener in the `ss` inventory and outside-network isolation checks. The authoring host forbids opening listeners without an isolated network namespace, and has none; these expectations are REASONED from the pinned sources cited for these controls.
 
@@ -306,7 +365,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e9e0c5e98a34487b02ac2e1d91bee60c7779cc40714d058ee8956e230d8af8fa",
+  "body_sha256": "6ea4ad6e8394c7d76d3c698473fd5af00a31ae3100357fd56053af671056e3c7",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",
