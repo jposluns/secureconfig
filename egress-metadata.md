@@ -151,7 +151,8 @@ REASONED: following block; reading a failed probe and running the positive contr
 #   before it fetches a token, so shell history and set -x tracing do not record it.
 # This block cannot exit 0. A token issued over either address family is the finding (1). A failed
 # PUT, which is what a working block produces, is inconclusive (3) until an enforcement-point deny
-# record for this flow corroborates it.
+# record for this flow corroborates it. An HTTP error answer to the PUT (curl exit 22) also records
+# 3, but something answered it, so no network block is on that path.
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
   set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
@@ -162,7 +163,11 @@ REASONED: following block; reading a failed probe and running the positive contr
     set -- "$(if curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "${1%$'\n'*}" "${1##*$'\n'}"
     printf 'PUT exit: %s\n' "$2"
-    [ "$2" = 0 ] || { echo 'no usable token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3; }
+    case "$2" in
+      0) ;;
+      22) echo 'the token PUT got an HTTP error answer (curl exit 22), so the endpoint answered and no network block is on this path; inconclusive'; exit 3 ;;
+      *) echo 'no usable token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3 ;;
+    esac
     case "$1" in ''|*[[:cntrl:]]*) echo 'empty or malformed token; inconclusive'; exit 3 ;; esac
     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/
     echo "FINDING: the metadata service issued a session token to this workload over IPv4, so it is reachable from here"
@@ -178,7 +183,11 @@ REASONED: following block; reading a failed probe and running the positive contr
     set -- "$(if curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "${1%$'\n'*}" "${1##*$'\n'}"
     printf 'PUT6 exit: %s\n' "$2"
-    [ "$2" = 0 ] || { echo 'no usable IPv6 token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3; }
+    case "$2" in
+      0) ;;
+      22) echo 'the IPv6 token PUT got an HTTP error answer (curl exit 22), so the endpoint answered and no network block is on this path; inconclusive'; exit 3 ;;
+      *) echo 'no usable IPv6 token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3 ;;
+    esac
     case "$1" in ''|*[[:cntrl:]]*) echo 'empty or malformed IPv6 token; inconclusive'; exit 3 ;; esac
     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'
     echo "FINDING: the metadata service issued a session token to this workload over IPv6, so it is reachable from here"
@@ -300,32 +309,38 @@ REASONED: following block; reading a failed probe and running the positive contr
   # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
   # not by matching text in its output, since a successful connection also lacks the string
   # "Could not resolve host" and so would otherwise be misreported as blocked.
-  # Status: 1 when the connection succeeded, 3 for curl exit 6 or an unexpected code, and 0 for exit 7
-  # or 28, which still needs the time_connect and deny-record evidence it prints
+  # Status: 1 when the connection succeeded, 0 for exit 7 or 28 with time_connect 0.000000, which
+  # still needs the deny-record evidence it prints, and 3 for exit 7 or 28 after a connection
+  # completed, for curl exit 6 or for an unexpected code
   (                                                 # a subshell, so the exit below ends only this check
     # guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
-    if curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then set -- 0; else set -- "$?"; fi
-    case "$1" in
-      0)
+    set -- "$(if curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "${1##*$'\n'}" "${1%%$'\n'*}"            # curl's exit status, then the time_connect= line
+    printf '%s\n' "$2"
+    case "$1:$2" in
+      0:*)
         echo "FAIL: connected to a host outside the allow list, egress is not enforced"
         exit 1 ;;
-      6)
+      6:*)
         echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
         exit 3 ;;
-      7|28)
+      7:time_connect=0.000000|28:time_connect=0.000000)
         echo "request failed or timed out (curl exit $1): inconclusive on its own. curl cannot say why it"
         echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
         echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
         echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
         echo "or the CNI's NetworkPolicy drop log or counter"
         exit 0 ;;
+      7:*|28:*)
+        echo "curl exit $1 after a connection completed (time_connect above is not 0.000000), so this is not evidence of a block; inconclusive"
+        exit 3 ;;
       *)
         echo "unexpected curl exit code $1, investigate before treating this as a pass"
         exit 3 ;;
     esac
   )
   case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  echo "block exit $1; the positive control's HTTP code, and a negative-control 0 for curl exit 7 or 28, are not classified further, so read them as above"
+  echo "block exit $1; the positive control's HTTP code is not classified further, and a negative-control 0 for curl exit 7 or 28 with time_connect 0.000000 still needs the enforcement-point deny record, so read them as above"
   exit "$1"
 )
 ```
@@ -356,13 +371,15 @@ REASONED: following block; reading a failed probe and running the positive contr
   # [fd00:ec2::254] as well), and State: applied (State: pending means the change is not yet in effect);
   # then re-run the workload-side probes above to confirm the live behaviour.
   case "$1:$2" in
-    0:optional$'\t'*) echo "FINDING: HttpTokens is optional, so the instance answers metadata requests without an IMDSv2 token"; exit 1 ;;
-    0:required$'\t'1$'\t'*$'\t'applied) echo "block exit 0; HttpProtocolIpv6 is not classified, so read it as above" ;;
-    0:required$'\t'1$'\t'*) echo "State is not applied (pending means the change is not yet in effect); inconclusive"; exit 3 ;;
-    0:required$'\t'[0123456789]*) echo "FINDING: HttpPutResponseHopLimit is above 1, so a token response can reach a container an extra hop away"; exit 1 ;;
-    0:*) echo "the metadata options above are not one instance's four values in the expected form; inconclusive"; exit 3 ;;
-    *) echo "aws ec2 describe-instances exit $1: could not read the metadata options; inconclusive"; exit 3 ;;
+    0:optional$'\t'*) echo "FINDING: HttpTokens is optional, so the instance answers metadata requests without an IMDSv2 token"; set -- 1 ;;
+    0:required$'\t'1$'\t'*$'\t'applied) set -- 0 ;;
+    0:required$'\t'1$'\t'*) echo "State is not applied (pending means the change is not yet in effect); inconclusive"; set -- 3 ;;
+    0:required$'\t'[0123456789]*) echo "FINDING: HttpPutResponseHopLimit is above 1, so a token response can reach a container an extra hop away"; set -- 1 ;;
+    0:*) echo "the metadata options above are not one instance's four values in the expected form; inconclusive"; set -- 3 ;;
+    *) echo "aws ec2 describe-instances exit $1: could not read the metadata options; inconclusive"; set -- 3 ;;
   esac
+  echo "block exit $1; HttpProtocolIpv6 is not classified, so read it as above"
+  exit "$1"
 )
 ```
 
@@ -453,7 +470,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "812f8213d3e3f17620fbb5da007c69442bbc7361a669ef5672dbd8ab4f545f88",
+  "body_sha256": "a57fad00a152a13dc92f3ae4b35ab36434878f88ea76a082bf8dcd3426d10cf7",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",

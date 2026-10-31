@@ -13552,7 +13552,7 @@ expectations, with their sources, are stated after the node-scan block, in the m
     { echo "kubectl get gateway exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
   kubectl get certificate -A ||                                          # Ready=True
     { echo "kubectl get certificate exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
-  # The node scans in the third block below need every node's public addresses, worker nodes included.
+  # The node scans in the third Verify block, two blocks below, need every node's public addresses, worker nodes included.
   kubectl get nodes -o wide ||       # control-plane nodes and workers alike, but see below
     { echo "kubectl get nodes exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
   kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.addresses[*].address}{"\n"}{end}' ||
@@ -13703,8 +13703,8 @@ PY
 
   # Then at the HTTP layer, with verification left ON, under the same check as the TCP probe.
   # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 -w '%{http_code}\n' "$3/version"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # nc's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 -w '%{http_code} time_connect=%{time_connect}\n' "$3/version"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # nc's exit status, curl's exit status, then the HTTP code and time_connect
   printf '%s\n' "$6"; echo "curl exit $5"
   # Exit 0 with ANY status, 200, 401, 403 and 404 alike, means it answered.
   # So does exit 60: curl reached a TLS peer, received a certificate and refused to trust it.
@@ -13712,8 +13712,9 @@ PY
   # that address answered in TLS, and the 000 printed beside it is not a pass.
   # Exit 7 is "failed to connect", which is the outcome you want. Exit 28 is a TIMEOUT and it
   # is NOT clean evidence either way: a dropped packet and an endpoint that accepted the
-  # connection and then stalled both produce it. If you get 28, the nc line above is what
-  # tells you which one you had.
+  # connection and then stalled both produce it. If you get 28, the time_connect printed beside
+  # the HTTP code tells you which one you had: it stays 0.000000 only when no connection
+  # completed, so a 28 passes only then, and only when nc did not connect either.
   # Any other exit is neither, and two are worth naming.
   # Exit 6 is a name that did not resolve. Do not read that as proof of a private cluster:
   # EKS documents that a private-only endpoint is still "resolved by public DNS servers to a
@@ -13725,11 +13726,12 @@ PY
   # SOMETHING answered, and on a network like that it may not be the thing you aimed at; the
   # unset above defeats a configured proxy and nothing defeats a transparent one except
   # testing from somewhere else.
-  case "$4:$5" in
+  case "$4:$5:$6" in
     0:*) echo "FINDING: nc connected to port $2, so something accepts TCP connections there from this host"; set -- 1 ;;
-    *:0|*:60) echo "FINDING: curl exit $5, so something answered at $3 from this host"; set -- 1 ;;
-    *:7|*:28) echo "nc did not connect and curl exit $5: nothing accepted a connection from this host"; set -- 0 ;;
-    *:6) echo "curl exit 6: the name did not resolve, which is not proof of a private cluster; inconclusive"; set -- 3 ;;
+    *:0:*|*:60:*) echo "FINDING: curl exit $5, so something answered at $3 from this host"; set -- 1 ;;
+    *:7:*|*:28:*' time_connect=0.000000') echo "nc did not connect and curl exit $5: nothing accepted a connection from this host"; set -- 0 ;;
+    *:28:*) echo "curl exit 28 after a connection completed (time_connect above is not 0.000000), so something accepted the connection and then stalled; inconclusive"; set -- 3 ;;
+    *:6:*) echo "curl exit 6: the name did not resolve, which is not proof of a private cluster; inconclusive"; set -- 3 ;;
     *) echo "curl exit $5 is neither an answer nor a refused or dropped connection; inconclusive"; set -- 3 ;;
   esac
   echo "block exit $1; a 0 says only that this host, at this moment, over this address family, could not reach the endpoint, so read the paragraphs below before you rely on it"
@@ -13762,6 +13764,8 @@ PY
     ""|*REPLACE_WITH_*|-*|*[[:space:][:cntrl:]]*) echo "substitute the node's IPv6 address, or NONE if it has none, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  # From outside, every listed port should be closed or filtered: 10250 runs commands in
+  # containers, and 2379 is the whole of etcd.
   set -- "$1" "$2" "$3" "$(if nmap -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # nmap's exit status, then its report
   printf '%s\n' "$5"
@@ -13791,10 +13795,9 @@ PY
         *) echo "grep could not read the IPv6 scan report; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
       esac
     fi
+  else
+    echo "IPv6 not scanned: NONE was given for this node's IPv6 address"
   fi
-                                                                     # every one closed or filtered from
-                                                                     # outside. 10250 runs commands in
-                                                                     # containers; 2379 is the whole of etcd
   echo "block exit $3; a 0 says only that every listed port was closed or filtered from this host, so keep the authorized positive control described below"
   exit "$3"
 )
@@ -13944,7 +13947,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "0fd61f437b2000a1b8daeecac6f146508247d95d80760b7c3aaebc8b73c25de6",
+  "body_sha256": "af701b98e73bf16a019f0ba5e76d05b2fe4fe4d2ecfcfeddf96bbe3c704ea9c7",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -21422,7 +21425,8 @@ REASONED: following block; reading a failed probe and running the positive contr
 #   before it fetches a token, so shell history and set -x tracing do not record it.
 # This block cannot exit 0. A token issued over either address family is the finding (1). A failed
 # PUT, which is what a working block produces, is inconclusive (3) until an enforcement-point deny
-# record for this flow corroborates it.
+# record for this flow corroborates it. An HTTP error answer to the PUT (curl exit 22) also records
+# 3, but something answered it, so no network block is on that path.
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
   set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
@@ -21433,7 +21437,11 @@ REASONED: following block; reading a failed probe and running the positive contr
     set -- "$(if curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "${1%$'\n'*}" "${1##*$'\n'}"
     printf 'PUT exit: %s\n' "$2"
-    [ "$2" = 0 ] || { echo 'no usable token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3; }
+    case "$2" in
+      0) ;;
+      22) echo 'the token PUT got an HTTP error answer (curl exit 22), so the endpoint answered and no network block is on this path; inconclusive'; exit 3 ;;
+      *) echo 'no usable token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3 ;;
+    esac
     case "$1" in ''|*[[:cntrl:]]*) echo 'empty or malformed token; inconclusive'; exit 3 ;; esac
     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/
     echo "FINDING: the metadata service issued a session token to this workload over IPv4, so it is reachable from here"
@@ -21449,7 +21457,11 @@ REASONED: following block; reading a failed probe and running the positive contr
     set -- "$(if curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "${1%$'\n'*}" "${1##*$'\n'}"
     printf 'PUT6 exit: %s\n' "$2"
-    [ "$2" = 0 ] || { echo 'no usable IPv6 token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3; }
+    case "$2" in
+      0) ;;
+      22) echo 'the IPv6 token PUT got an HTTP error answer (curl exit 22), so the endpoint answered and no network block is on this path; inconclusive'; exit 3 ;;
+      *) echo 'no usable IPv6 token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3 ;;
+    esac
     case "$1" in ''|*[[:cntrl:]]*) echo 'empty or malformed IPv6 token; inconclusive'; exit 3 ;; esac
     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'
     echo "FINDING: the metadata service issued a session token to this workload over IPv6, so it is reachable from here"
@@ -21571,32 +21583,38 @@ REASONED: following block; reading a failed probe and running the positive contr
   # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
   # not by matching text in its output, since a successful connection also lacks the string
   # "Could not resolve host" and so would otherwise be misreported as blocked.
-  # Status: 1 when the connection succeeded, 3 for curl exit 6 or an unexpected code, and 0 for exit 7
-  # or 28, which still needs the time_connect and deny-record evidence it prints
+  # Status: 1 when the connection succeeded, 0 for exit 7 or 28 with time_connect 0.000000, which
+  # still needs the deny-record evidence it prints, and 3 for exit 7 or 28 after a connection
+  # completed, for curl exit 6 or for an unexpected code
   (                                                 # a subshell, so the exit below ends only this check
     # guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
-    if curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then set -- 0; else set -- "$?"; fi
-    case "$1" in
-      0)
+    set -- "$(if curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "${1##*$'\n'}" "${1%%$'\n'*}"            # curl's exit status, then the time_connect= line
+    printf '%s\n' "$2"
+    case "$1:$2" in
+      0:*)
         echo "FAIL: connected to a host outside the allow list, egress is not enforced"
         exit 1 ;;
-      6)
+      6:*)
         echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
         exit 3 ;;
-      7|28)
+      7:time_connect=0.000000|28:time_connect=0.000000)
         echo "request failed or timed out (curl exit $1): inconclusive on its own. curl cannot say why it"
         echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
         echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
         echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
         echo "or the CNI's NetworkPolicy drop log or counter"
         exit 0 ;;
+      7:*|28:*)
+        echo "curl exit $1 after a connection completed (time_connect above is not 0.000000), so this is not evidence of a block; inconclusive"
+        exit 3 ;;
       *)
         echo "unexpected curl exit code $1, investigate before treating this as a pass"
         exit 3 ;;
     esac
   )
   case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  echo "block exit $1; the positive control's HTTP code, and a negative-control 0 for curl exit 7 or 28, are not classified further, so read them as above"
+  echo "block exit $1; the positive control's HTTP code is not classified further, and a negative-control 0 for curl exit 7 or 28 with time_connect 0.000000 still needs the enforcement-point deny record, so read them as above"
   exit "$1"
 )
 ```
@@ -21627,13 +21645,15 @@ REASONED: following block; reading a failed probe and running the positive contr
   # [fd00:ec2::254] as well), and State: applied (State: pending means the change is not yet in effect);
   # then re-run the workload-side probes above to confirm the live behaviour.
   case "$1:$2" in
-    0:optional$'\t'*) echo "FINDING: HttpTokens is optional, so the instance answers metadata requests without an IMDSv2 token"; exit 1 ;;
-    0:required$'\t'1$'\t'*$'\t'applied) echo "block exit 0; HttpProtocolIpv6 is not classified, so read it as above" ;;
-    0:required$'\t'1$'\t'*) echo "State is not applied (pending means the change is not yet in effect); inconclusive"; exit 3 ;;
-    0:required$'\t'[0123456789]*) echo "FINDING: HttpPutResponseHopLimit is above 1, so a token response can reach a container an extra hop away"; exit 1 ;;
-    0:*) echo "the metadata options above are not one instance's four values in the expected form; inconclusive"; exit 3 ;;
-    *) echo "aws ec2 describe-instances exit $1: could not read the metadata options; inconclusive"; exit 3 ;;
+    0:optional$'\t'*) echo "FINDING: HttpTokens is optional, so the instance answers metadata requests without an IMDSv2 token"; set -- 1 ;;
+    0:required$'\t'1$'\t'*$'\t'applied) set -- 0 ;;
+    0:required$'\t'1$'\t'*) echo "State is not applied (pending means the change is not yet in effect); inconclusive"; set -- 3 ;;
+    0:required$'\t'[0123456789]*) echo "FINDING: HttpPutResponseHopLimit is above 1, so a token response can reach a container an extra hop away"; set -- 1 ;;
+    0:*) echo "the metadata options above are not one instance's four values in the expected form; inconclusive"; set -- 3 ;;
+    *) echo "aws ec2 describe-instances exit $1: could not read the metadata options; inconclusive"; set -- 3 ;;
   esac
+  echo "block exit $1; HttpProtocolIpv6 is not classified, so read it as above"
+  exit "$1"
 )
 ```
 
@@ -21724,7 +21744,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "812f8213d3e3f17620fbb5da007c69442bbc7361a669ef5672dbd8ab4f545f88",
+  "body_sha256": "a57fad00a152a13dc92f3ae4b35ab36434878f88ea76a082bf8dcd3426d10cf7",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",

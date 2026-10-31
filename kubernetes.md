@@ -304,7 +304,7 @@ expectations, with their sources, are stated after the node-scan block, in the m
     { echo "kubectl get gateway exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
   kubectl get certificate -A ||                                          # Ready=True
     { echo "kubectl get certificate exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
-  # The node scans in the third block below need every node's public addresses, worker nodes included.
+  # The node scans in the third Verify block, two blocks below, need every node's public addresses, worker nodes included.
   kubectl get nodes -o wide ||       # control-plane nodes and workers alike, but see below
     { echo "kubectl get nodes exit $?; inconclusive"; [ "$1" = 1 ] || set -- 3; }
   kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.addresses[*].address}{"\n"}{end}' ||
@@ -455,8 +455,8 @@ PY
 
   # Then at the HTTP layer, with verification left ON, under the same check as the TCP probe.
   # guard-conventions: allow probe of the API server endpoint read from your own kubeconfig; no reader-substituted placeholder in this probe's argv
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 -w '%{http_code}\n' "$3/version"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # nc's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS -o /dev/null --connect-timeout 3 -m 10 -w '%{http_code} time_connect=%{time_connect}\n' "$3/version"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # nc's exit status, curl's exit status, then the HTTP code and time_connect
   printf '%s\n' "$6"; echo "curl exit $5"
   # Exit 0 with ANY status, 200, 401, 403 and 404 alike, means it answered.
   # So does exit 60: curl reached a TLS peer, received a certificate and refused to trust it.
@@ -464,8 +464,9 @@ PY
   # that address answered in TLS, and the 000 printed beside it is not a pass.
   # Exit 7 is "failed to connect", which is the outcome you want. Exit 28 is a TIMEOUT and it
   # is NOT clean evidence either way: a dropped packet and an endpoint that accepted the
-  # connection and then stalled both produce it. If you get 28, the nc line above is what
-  # tells you which one you had.
+  # connection and then stalled both produce it. If you get 28, the time_connect printed beside
+  # the HTTP code tells you which one you had: it stays 0.000000 only when no connection
+  # completed, so a 28 passes only then, and only when nc did not connect either.
   # Any other exit is neither, and two are worth naming.
   # Exit 6 is a name that did not resolve. Do not read that as proof of a private cluster:
   # EKS documents that a private-only endpoint is still "resolved by public DNS servers to a
@@ -477,11 +478,12 @@ PY
   # SOMETHING answered, and on a network like that it may not be the thing you aimed at; the
   # unset above defeats a configured proxy and nothing defeats a transparent one except
   # testing from somewhere else.
-  case "$4:$5" in
+  case "$4:$5:$6" in
     0:*) echo "FINDING: nc connected to port $2, so something accepts TCP connections there from this host"; set -- 1 ;;
-    *:0|*:60) echo "FINDING: curl exit $5, so something answered at $3 from this host"; set -- 1 ;;
-    *:7|*:28) echo "nc did not connect and curl exit $5: nothing accepted a connection from this host"; set -- 0 ;;
-    *:6) echo "curl exit 6: the name did not resolve, which is not proof of a private cluster; inconclusive"; set -- 3 ;;
+    *:0:*|*:60:*) echo "FINDING: curl exit $5, so something answered at $3 from this host"; set -- 1 ;;
+    *:7:*|*:28:*' time_connect=0.000000') echo "nc did not connect and curl exit $5: nothing accepted a connection from this host"; set -- 0 ;;
+    *:28:*) echo "curl exit 28 after a connection completed (time_connect above is not 0.000000), so something accepted the connection and then stalled; inconclusive"; set -- 3 ;;
+    *:6:*) echo "curl exit 6: the name did not resolve, which is not proof of a private cluster; inconclusive"; set -- 3 ;;
     *) echo "curl exit $5 is neither an answer nor a refused or dropped connection; inconclusive"; set -- 3 ;;
   esac
   echo "block exit $1; a 0 says only that this host, at this moment, over this address family, could not reach the endpoint, so read the paragraphs below before you rely on it"
@@ -514,6 +516,8 @@ PY
     ""|*REPLACE_WITH_*|-*|*[[:space:][:cntrl:]]*) echo "substitute the node's IPv6 address, or NONE if it has none, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  # From outside, every listed port should be closed or filtered: 10250 runs commands in
+  # containers, and 2379 is the whole of etcd.
   set -- "$1" "$2" "$3" "$(if nmap -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # nmap's exit status, then its report
   printf '%s\n' "$5"
@@ -543,10 +547,9 @@ PY
         *) echo "grep could not read the IPv6 scan report; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
       esac
     fi
+  else
+    echo "IPv6 not scanned: NONE was given for this node's IPv6 address"
   fi
-                                                                     # every one closed or filtered from
-                                                                     # outside. 10250 runs commands in
-                                                                     # containers; 2379 is the whole of etcd
   echo "block exit $3; a 0 says only that every listed port was closed or filtered from this host, so keep the authorized positive control described below"
   exit "$3"
 )
@@ -696,7 +699,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "0fd61f437b2000a1b8daeecac6f146508247d95d80760b7c3aaebc8b73c25de6",
+  "body_sha256": "af701b98e73bf16a019f0ba5e76d05b2fe4fe4d2ecfcfeddf96bbe3c704ea9c7",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
