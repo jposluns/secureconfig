@@ -140,41 +140,86 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PROTECTED_PATH' 'REPLACE_WITH_SESSION_COOKIE_FILE'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then a REAL protected route's path without its leading slash, then the path of a file holding a valid session cookie: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sI --noproxy '*' "http://$1/"    # expect 301 with an https:// Location
+  case "$2" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|-|*REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the path of a file holding a valid session cookie inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    *'='*) echo "cookie file path must not contain =; not probing"; exit 2 ;;
+  esac
+  [ -f "$3" ] || { echo "the session cookie file is unreadable; not probing"; exit 2; }
+  [ -r "$3" ] || { echo "the session cookie file is unreadable; not probing"; exit 2; }
+  set +e                                # errexit off here, so a check that ends nonzero is recorded below instead of ending the block
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sI --noproxy '*' -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the headers, the HTTP code and the redirect URL
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and the redirect URL
+  printf '%s' "$6"                     # expect a redirect to an https:// Location: 301 from section 1's code, while a fronting proxy or platform may use another 3xx
+  case "$5:$7" in
+    0:3??" https://"*) ;;
+    0:*) echo "HTTP ${7%% *} with redirect URL '${7#* }' is not the expected redirect to an https:// Location; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the redirect request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
   curl -q -g -sI --noproxy '*' "https://$1/"   # succeeds without -k; shows helmet's headers
+  case "$?" in 0) ;; *) echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
 
   # Auth: probe a REAL protected route (not a placeholder like /api, which often 404s), show the
   # status, and disable client proxies so a denial is attributable. A denial from ANY layer (the app,
   # or a proxy/Access in front) is the pass; the positive control proves auth actually gates rather
   # than the route being broken for everyone.
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/REPLACE_WITH_PROTECTED_PATH"
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code} %{redirect_url}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code and the redirect URL
+  printf '%s\n' "${6%% *}"
                                        # expect 401 or 403 with no credentials
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' \
-    -b REPLACE_WITH_SESSION_COOKIE_FILE "https://$1/REPLACE_WITH_PROTECTED_PATH"
+  case "$5:$6" in
+    "0:401 "*|"0:403 "*) ;;
+    0:2??" "*) echo "FINDING: the protected path answered ${6%% *} with no credentials"; set -- "$1" "$2" "$3" 1 ;;
+    0:3??" "?*) echo "unclassified observation: with no credentials the protected path answered ${6%% *} with a redirect to '${6#* }'; a redirect to the login page of a gate in front of the app is that gate's denial and the pass, and a redirect anywhere else is not, so judge it yourself" ;;
+    0:*) echo "HTTP ${6%% *} with no credentials is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the request with no credentials failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' -b "$3" "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
                                        # expect 200 with a valid session (cookie read from a file, not argv;
-                                       # for a bearer-token route use -H @REPLACE_WITH_AUTH_HEADER_FILE instead of -b)
+                                       # for a bearer-token route name a header file on the set -- line and use -H @"$3" instead of -b)
+  case "$5:$6" in
+    0:200) ;;
+    0:*) echo "HTTP $6 with the session cookie is not the expected 200, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the request with the session cookie failed, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
 
   ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
              # ingress the platform's required address and port from section 1
+  case "$?" in 0) ;; *) echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
   # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
   #   app.get('/whoami', (req, res) => res.send(req.ip))
-  curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' "https://$1/whoami"
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' "https://$1/whoami"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the response body
+  printf '%s\n' "$6"
                                        # req.ip must be your real client IP, never 203.0.113.9: echoing the
                                        # forged value means `trust proxy` is too broad and trusts a
                                        # client-set header. This checks req.ip scoping only, not that the
                                        # proxy strips headers, and does not cover X-Forwarded-Host or -Proto.
                                        # An overwriting proxy can also mask a too-broad setting, so a clean
                                        # result here does not prove the trust boundary by itself
+  case "$5:$6" in
+    0:*203.0.113.9*) echo "FINDING: /whoami echoed the forged 203.0.113.9, so trust proxy trusts a client-set header"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "unclassified observation: /whoami did not echo 203.0.113.9; read its answer above, because a clean result does not prove the trust boundary by itself" ;;
+    *) echo "curl exit $5: the /whoami request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  echo "block exit $4; the HTTPS headers, the Location of a redirect answered with no credentials, the listener list and a clean /whoami answer are not classified, so judge them yourself"
+  exit "$4"
 )
 ```
 
@@ -292,7 +337,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "626944fb63e22169352746aae9f58268b4ff184ac0c8d348f690b8cb732e362f",
+  "body_sha256": "2b0bf0a0327dfb09e9ea4e3ebe94bfbaff03c05228b44a636b47201a6d9f1f30",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",
