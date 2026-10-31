@@ -389,7 +389,8 @@ an endpoint no guide here knows the name of.
 
 - `ss` manual, including that it reports sockets within a network namespace:
   https://man7.org/linux/man-pages/man8/ss.8.html
-- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026):
+  https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 - Nmap port specification, for `-p-` and `--top-ports`:
   https://nmap.org/book/man-port-specification.html
 - Nmap host discovery, for `-Pn`: https://nmap.org/book/man-host-discovery.html

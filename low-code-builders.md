@@ -484,7 +484,7 @@ mean to publish is the finding.
 - Docker `docker exec` environment: https://docs.docker.com/reference/cli/docker/container/exec/
 - Docker packet filtering (`DOCKER-USER`): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2): https://github.com/docker/cli/blob/v27.2.0/cli/command/formatter/container.go and https://github.com/docker/cli/blob/v27.1.2/cli/command/formatter/container.go
-- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 - NocoDB 2026.09.0 README (Docker example JWT secret, Docker image, Auto-upstall and binaries note; checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md
 - NocoDB 2026.09.0 README, Docker with SQLite and Docker with PG sections (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75
 - NocoDB 2026.09.0 README, Auto-upstall section (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90
@@ -628,7 +628,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "69521a5acc7b4ba19446f066e4496fa3eebe38df31423c524cb36d3e2adf3e3b",
+  "body_sha256": "e99e3572dcd1b92e0d44af3ca44ef19cb87d8848424842632d773e04ac9ace4d",
   "components": {
     "nocodb": {
       "name": "NocoDB",
