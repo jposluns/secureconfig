@@ -185,7 +185,7 @@ The Erlang cookie is a shared secret granting powerful node and CLI access. On t
 
 Restart the node through your deployment's service manager after applying listener configuration, including the separate epmd lifecycle change where needed.
 
-## 5. Verify (REASONED: all checks 1-9, their fences, instructions, expected outcomes and authoring-record tables in this section; a live RabbitMQ stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No live exposed/fixed broker, external vantage, allowed administration/application/cluster peers, matching cookies, broker logs or multi-node TLS comparison was established. Per the guide's cited sources this declaration lists in four parts, the exposed and fixed outcomes are those stated at each step. The guide's cited sources this declaration lists (1 of 4): RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions; RabbitMQ virtual hosts and logical isolation; RabbitMQ CLI user, vhost, permission, and tag commands; RabbitMQ management listeners, HTTPS, and roles. The guide's cited sources this declaration lists (2 of 4): RabbitMQ HTTP API authentication and endpoints; RabbitMQ TLS, peer verification, certificate usage, and verification depth; RabbitMQ networking, epmd lifecycle, private bindings, and distribution ports; RabbitMQ diagnostics, remote node selection, and authenticated ping. The guide's cited sources this declaration lists (3 of 4): RabbitMQ CLI authentication and Erlang cookie handling; RabbitMQ definitions imports, sensitive exports, and export transformations; RabbitMQ administration CLI v2 configuration and TLS flags; RabbitMQ inter-node TLS (distribution over TLS); Erlang/OTP 27 distribution over TLS; RabbitMQ queues, durability, and exclusive queue behaviour. The guide's cited sources this declaration lists (4 of 4): RabbitMQ channel exceptions and access-refused errors; Pika TLS context and client certificate example; Pika connection parameters; Pika blocking connection and channel methods; Pika authentication and authorization exceptions; curl password prompts, TLS validation, and diagnostic flags. The exposed and fixed outcomes (1 of 2) per the guide's cited sources this declaration lists: excessive grants and forbidden connections versus scoped grants and denied connections with successful authorized controls; wildcard or public listeners and broad cookie modes versus private bindings and owner-only cookies. The exposed and fixed outcomes (2 of 2) per the guide's cited sources this declaration lists: optional versus required client certificates; unwanted versus approved definitions; plaintext versus authenticated TLS distribution; unrestricted versus tenant-scoped topic operations. Marking review ran 19 Bash blocks through bash -n and ShellCheck 0.11.0 with no findings, and an SC2086 canary produced its expected diagnostic. Stub-only Verify execution exercised argument dispatch and 32 guard refusals under bash -u, printing the corresponding refusal without external commands; valid substitutions reached only stubs. Both embedded Python programs parsed; the TOML example and four INI key/value structures parsed, without native schema validation. The reduced-export overwrite guard reached a stub for an absent path and refused both an existing file and a dangling symlink. The bash -n, ShellCheck and stub runs recorded here covered the section 1 reduced-export block and the guarded blocks of checks 3 to 6 in an earlier form, whose overwrite and placeholder refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Seven reduced-export JSON fixtures printed the empty-sections success, not a definitions object, or review required for each of the five nonempty sections. These local results do not demonstrate broker behaviour. Native RabbitMQ configuration parsing was not run in the October 2026 marking review and remains an open gap. All original absence statements and local-check counts below are historical authoring records, not new host observations; the original test receipts were not reauthenticated.)
+## 5. Verify (REASONED: all checks 1-9, their fences, instructions, expected outcomes and authoring-record tables in this section; a live RabbitMQ stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No live exposed/fixed broker, external vantage, allowed administration/application/cluster peers, matching cookies, broker logs or multi-node TLS comparison was established. Per the guide's cited sources this declaration lists in four parts, the exposed and fixed outcomes are those stated at each step. The guide's cited sources this declaration lists (1 of 4): RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions; RabbitMQ virtual hosts and logical isolation; RabbitMQ CLI user, vhost, permission, and tag commands; RabbitMQ management listeners, HTTPS, and roles. The guide's cited sources this declaration lists (2 of 4): RabbitMQ HTTP API authentication and endpoints; RabbitMQ TLS, peer verification, certificate usage, and verification depth; RabbitMQ networking, epmd lifecycle, private bindings, and distribution ports; RabbitMQ diagnostics, remote node selection, and authenticated ping. The guide's cited sources this declaration lists (3 of 4): RabbitMQ CLI authentication and Erlang cookie handling; RabbitMQ definitions imports, sensitive exports, and export transformations; RabbitMQ administration CLI v2 configuration and TLS flags; RabbitMQ inter-node TLS (distribution over TLS); Erlang/OTP 27 distribution over TLS; RabbitMQ queues, durability, and exclusive queue behaviour. The guide's cited sources this declaration lists (4 of 4): RabbitMQ channel exceptions and access-refused errors; Pika TLS context and client certificate example; Pika connection parameters; Pika blocking connection and channel methods; Pika authentication and authorization exceptions; curl password prompts, TLS validation, and diagnostic flags. The exposed and fixed outcomes (1 of 2) per the guide's cited sources this declaration lists: excessive grants and forbidden connections versus scoped grants and denied connections with successful authorized controls; wildcard or public listeners and broad cookie modes versus private bindings and owner-only cookies. The exposed and fixed outcomes (2 of 2) per the guide's cited sources this declaration lists: optional versus required client certificates; unwanted versus approved definitions; plaintext versus authenticated TLS distribution; unrestricted versus tenant-scoped topic operations. Marking review ran 19 Bash blocks through bash -n and ShellCheck 0.11.0 with no findings, and an SC2086 canary produced its expected diagnostic. Stub-only Verify execution exercised argument dispatch and 32 guard refusals under bash -u, printing the corresponding refusal without external commands; valid substitutions reached only stubs. Both embedded Python programs parsed in an earlier form, without the status 3 exception handlers and check 7's status 3 arm for a non-object export, and neither current form was re-run; the TOML example and four INI key/value structures parsed, without native schema validation. The reduced-export overwrite guard reached a stub for an absent path and refused both an existing file and a dangling symlink. The bash -n, ShellCheck and stub runs recorded here covered the section 1 reduced-export block and the guarded blocks of checks 3 to 6 in an earlier form, whose overwrite and placeholder refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. That earlier form of checks 5 and 6 also exited with status 1 after a failed positive control, a certificate-absent run that exited 0 or an unexpected Python exception, where the current form exits with status 3 unless check 6 already reported an unexpected allow, which keeps status 1. Seven reduced-export JSON fixtures printed the empty-sections success, not a definitions object, or review required for each of the five nonempty sections. Those fixture runs and the bash -n and ShellCheck runs of check 7 covered an earlier form, which exited with status 1 for a non-object export or an unreadable or malformed file; none was re-run on the current form, which exits with status 3 there and keeps status 1 for review required. These local results do not demonstrate broker behaviour. Native RabbitMQ configuration parsing was not run in the October 2026 marking review and remains an open gap. All original absence statements and local-check counts below are historical authoring records, not new host observations; the original test receipts were not reauthenticated.)
 
 Historical authoring record: service behaviour was not demonstrated in the authoring environment. The original review recorded the nine service checks below as REASONED: RabbitMQ/Erlang binaries, `rabbitmqadmin`, Pika, Docker, and Podman were absent, and no broker or external peer test environment was supplied; this marking review does not reassert those historical host observations. Expected service outcomes remain REASONED from the Sources entries named in the section declaration.
 
@@ -359,13 +359,13 @@ An exposed management listener can still require authentication: external reacha
         echo "certificate-present run exited 0; inspect the handshake and broker log"
       else
         echo "positive control failed; the pair is inconclusive"
-        exit 1
+        exit 3
       fi
 
       if sleep 10 | openssl s_client -connect "$1:5671" -servername "$1" \
         -CAfile ca.pem -verify_hostname "$1" -verify_return_error; then
         echo "certificate-absent run exited 0; required rejection was not demonstrated"
-        exit 1
+        exit 3
       else
         echo "negative run failed; require a matching missing-client-certificate broker log"
       fi
@@ -397,10 +397,24 @@ The positive control declares, binds, publishes, and retrieves a message as `app
         *)
           python3 - "$1" "$2" <<'PY'
 import getpass
+import os
 import ssl
 import sys
 import uuid
 import warnings
+
+
+def inconclusive(kind, value, tb):
+    # An unexpected exception, including a failed positive control, is inconclusive:
+    # exit with status 3, unless an unexpected allow was already reported, which keeps status 1.
+    sys.__excepthook__(kind, value, tb)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(1 if findings else 3)
+
+
+findings = []
+sys.excepthook = inconclusive
 
 import pika
 
@@ -410,7 +424,6 @@ context = ssl.create_default_context(cafile="ca.pem")
 context.load_cert_chain("client.pem", "client.key")
 app_password = getpass.getpass("app password: ")
 observer_password = getpass.getpass("observer password: ")
-findings = []
 
 def connect(user, password, vhost):
     return pika.BlockingConnection(pika.ConnectionParameters(
@@ -517,11 +530,26 @@ sudo rabbitmqctl list_permissions -p 'app-prod'
 
 python3 - <<'PY'
 import json
+import os
+import sys
 from pathlib import Path
+
+
+def inconclusive(kind, value, tb):
+    # An unreadable or malformed export is inconclusive: exit with status 3,
+    # keeping status 1 for the review-required findings below.
+    sys.__excepthook__(kind, value, tb)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(3)
+
+
+sys.excepthook = inconclusive
 
 data = json.loads(Path("definitions.redacted.json").read_text())
 if not isinstance(data, dict):
-    raise SystemExit("not a definitions object")
+    print("not a definitions object", file=sys.stderr)
+    sys.exit(3)
 for field in ("users", "permissions", "topic_permissions",
               "parameters", "global_parameters"):
     if data.get(field):
@@ -532,7 +560,7 @@ PY
 
 Compare users and grants with the approved list, including absence of `guest`. For the exposed comparison, use a separately reviewed test fixture containing an unwanted test account or grant and confirm that the inventory detects it. Then repeat on another blank node with the approved file; importing over the first node is not reconciliation.
 
-Run section 1's reduced export and compare it with a private untransformed export from the same test broker containing known test users, vhost grants, topic permissions, and runtime parameters. The selected sections must be removed or empty in the reduced JSON. The local JSON check is deliberately conservative: any retained topic permissions or global parameters also require review. Review all remaining fields for secrets; empty selected sections do not establish that the whole document is safe to share. See [definitions import and export](https://www.rabbitmq.com/docs/definitions) and [exported definition contents](https://www.rabbitmq.com/docs/http-api-reference#get-apidefinitions).
+Run section 1's reduced export and compare it with a private untransformed export from the same test broker containing known test users, vhost grants, topic permissions, and runtime parameters. The selected sections must be removed or empty in the reduced JSON. The local JSON check is deliberately conservative: any retained topic permissions or global parameters also require review. It exits with status 1 when a selected section requires review, and with status 3 when the export cannot be read or is not a definitions object. Review all remaining fields for secrets; empty selected sections do not establish that the whole document is safe to share. See [definitions import and export](https://www.rabbitmq.com/docs/definitions) and [exported definition contents](https://www.rabbitmq.com/docs/http-api-reference#get-apidefinitions).
 
 **8. Inter-node and CLI distribution TLS - REASONED: no Erlang runtime, RabbitMQ broker, or multi-node cluster was available at authoring.** On an authorized test cluster with the section 6 configuration, from an authorized CLI host holding the matching cookie and substituting the deployed long node name for `rabbit@node1.internal`:
 
@@ -557,10 +585,10 @@ Local authoring checks, completed without a broker:
 
 | Check | Observed result |
 |---|---|
-| Bash parsing and ShellCheck | All runnable Bash blocks passed `bash -n` and ShellCheck 0.11.0; an intentional SC2086 canary confirmed that lint diagnostics were active. These runs covered the section 1 reduced-export block and the guarded blocks of checks 3 to 6 in an earlier form, whose overwrite and placeholder refusals exited with status 1, and were not re-run on the current form. |
+| Bash parsing and ShellCheck | All runnable Bash blocks passed `bash -n` and ShellCheck 0.11.0; an intentional SC2086 canary confirmed that lint diagnostics were active. These runs covered the section 1 reduced-export block and the guarded blocks of checks 3 to 6 in an earlier form, whose overwrite and placeholder refusals exited with status 1, and were not re-run on the current form. They also covered the check 7 block in an earlier form, which exited with status 1 for an unreadable, malformed or non-object export, and were not re-run on its current form, which exits with status 3 there. |
 | Placeholder guards | 32 cases stopped locally under `bash -u`: unreplaced values, each empty value, embedded `REPLACE_WITH_*`, marker-only assignment, and omitted assignment with inherited non-marker arguments. These cases ran against an earlier form, whose placeholder refusals exited with status 1; none was re-run on the current form, whose placeholder refusals exit with status 2. |
 | TOML | The example parsed with Python `tomllib`. |
-| Embedded Python | Both programs passed Python syntax parsing. |
+| Embedded Python | Both programs passed Python syntax parsing. Those runs covered an earlier form, without check 6's status 3 exception handler and check 7's status 3 arms for an unreadable, malformed or non-object export, and neither current form was re-run. |
 | RabbitMQ configuration | Key/value structure checked locally and settings traced to current vendor docs; native configuration/schema parsing remains unconfirmed because RabbitMQ and Erlang were absent at authoring. |
 
 Historical authoring record: no broker, container, or whole-corpus gate suite was run in the original review. Local syntax checks do not demonstrate service behaviour.
@@ -730,7 +758,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a4c2141cce5d073507d891f1fa3bdf5ef1ed43dc7c2ab8ccbe9a2ebad73d62e7",
+  "body_sha256": "8f3354ef47ae9a34048495305a39c321a712a0dc1cffc4ace15cea490621d9e3",
   "components": {
     "source": {
       "name": "RabbitMQ source",

@@ -40,8 +40,11 @@ done
 # Keep the plugin manifest's version in lockstep with the repository VERSION (1.0.<pull request
 # number>), so an adopter's updater can tell a refreshed bundle from an earlier one and never has to
 # read stale configuration behind a version that says it is current. The whole-corpus staleness gate
-# re-runs this build and diffs its output, so a plugin.json whose version has drifted from VERSION is
-# caught as a stale bundle; there is no separate version gate to keep in step.
+# re-runs this build in the working tree and diffs its output, so a plugin.json whose version has
+# drifted from VERSION there is caught as a stale bundle. The gate in
+# tools/check_generated_committed.py also checks the committed plugin.json against the
+# committed VERSION, and rebuilds the committed tree
+# when the working tree differs from it, so a bump committed without this rebuild is caught too.
 version=$(cat VERSION)
 printf '%s' "$version" | grep -qxE '1\.0\.[0-9]+' \
   || { echo "VERSION is '$version', not the expected 1.0.<number>; refusing to build" >&2; exit 1; }

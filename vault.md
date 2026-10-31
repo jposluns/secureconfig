@@ -828,7 +828,7 @@ positive control and must return wrapping information. Unexpectedly successful n
 are findings; their credential-bearing output is discarded.
 
 ```bash
-# DEMONSTRATED: loopback mandatory-wrapping negative requests and matched positive control recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run.
+# DEMONSTRATED: loopback mandatory-wrapping negative requests and matched positive control recorded below. The loopback runs used an earlier form of the block, whose guard refusals exited with status 1 and which ended with the positive control's status; the current form, whose guard refusals exit with status 2 and which exits with status 1 after a finding and 3 after a failed positive control, has not been run.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_VAULT_HTTPS_URL' \
     'REPLACE_WITH_CA_FILE'
@@ -847,15 +847,19 @@ are findings; their credential-bearing output is discarded.
           export VAULT_ADDR="$1" VAULT_CACERT="$2" || exit 2
           if vault write -f auth/approle/role/payments/secret-id > /dev/null; then
             echo "FINDING: unwrapped issuance succeeded"
+            set -- "$@" 1   # records the finding; the block exits once, after the positive control
           else
             echo "Refused; this counts only if the sixty-second request below succeeds"
           fi
           if vault write -wrap-ttl=61s -f auth/approle/role/payments/secret-id > /dev/null; then
             echo "FINDING: issuance above the wrapping TTL ceiling succeeded"
+            set -- "$@" 1
           else
             echo "Refused; this counts only if the sixty-second request below succeeds"
           fi
-          vault write -wrap-ttl=60s -f auth/approle/role/payments/secret-id
+          vault write -wrap-ttl=60s -f auth/approle/role/payments/secret-id || set -- "$@" 3
+          # Status: 1 for any finding; otherwise 3 if the positive control failed; otherwise 0.
+          case "${3-}${4-}${5-}" in *1*) exit 1 ;; *3*) exit 3 ;; esac
           ;;
       esac
       ;;
@@ -1218,7 +1222,7 @@ Claims (full source mapping in the JSON block below):
 - secretid (DEMONSTRATED; docs, run): SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - cidr (DEMONSTRATED; docs, run): SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - token (DEMONSTRATED; docs, run): Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
-- wrap-test (DEMONSTRATED; docs, run): No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
+- wrap-test (DEMONSTRATED; docs, run): No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1 and which ended with the positive control's status; the current form has not been run.
 - lookup-test (DEMONSTRATED; docs, run): Lookup returns path/time/original TTL; consumed and expired tokens fail. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
 - recipient (REASONED; docs): Receiving application must reject an unexpected creation path; its implementation is not demonstrated.
 - unwrap-test (DEMONSTRATED; docs, run): First unwrap succeeds, reuse fails, fresh control succeeds. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.
@@ -1231,7 +1235,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ba378123b217d360b75764b1e667ee9b18827459ce53902500b2c1dc48dc009c",
+  "body_sha256": "9c79dd6d8f9dc755e565aa2bccc9557ded7d24dc90d70f22fd4007b29f0b36e8",
   "components": {
     "run": {
       "name": "Vault loopback run",
@@ -1361,7 +1365,7 @@ Claims (full source mapping in the JSON block below):
     "secretid": {"text": "SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "SecretIDs 10 seconds past their TTL logged in, while one 70 seconds past it was refused", "verify": [5]},
     "cidr": {"text": "SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a login from 127.0.0.1 succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2", "verify": [5]},
     "token": {"text": "Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "100 reads returned `200` before read 101 got `403`; with `token_num_uses=0`, all 101 reads returned `200`.", "verify": [5]},
-    "wrap-test": {"text": "No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sa79f2fd07092", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the same kind of identity's unwrapped request returned the SecretID fields and a sixty-one-second request succeeded", "verify": [6]},
+    "wrap-test": {"text": "No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1 and which ended with the positive control's status; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sa79f2fd07092", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the same kind of identity's unwrapped request returned the SecretID fields and a sixty-one-second request succeeded", "verify": [6]},
     "lookup-test": {"text": "Lookup returns path/time/original TTL; consumed and expired tokens fail. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sca6c552728d7", "docs:s17fb33326e35", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A wrapping token looked up three seconds after its two-second TTL failed the same way.", "verify": [7]},
     "recipient": {"text": "Receiving application must reject an unexpected creation path; its implementation is not demonstrated.", "components": ["docs"], "sources": ["docs:sa79f2fd07092", "docs:sca6c552728d7"], "status": "REASONED", "verify": [8]},
     "unwrap-test": {"text": "First unwrap succeeds, reuse fails, fresh control succeeds. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has not been run.", "components": ["docs", "run"], "sources": ["docs:sa79f2fd07092", "docs:sd1209454cb98", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the first unwrap returned the SecretID fields, the second failed with `wrapping token is not valid or does not exist`, and a fresh wrapping token unwrapped.", "verify": [9]},
