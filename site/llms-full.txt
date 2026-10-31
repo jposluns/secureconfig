@@ -18693,20 +18693,35 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g --noproxy '*' -sI "http://$1/"         # expect 307 or 308 with a https:// Location
-  curl -q -g --noproxy '*' -sI "https://$1/"        # succeeds without -k; shows Strict-Transport-Security
-  curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"   # protected [ApiController] API using the cookie scheme: 401 without a cookie
-  ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  curl -q -g --noproxy '*' -sI "http://$1/" ||         # expect 307 or 308 with a https:// Location
+    { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  curl -q -g --noproxy '*' -sI "https://$1/" ||        # succeeds without -k; shows Strict-Transport-Security
+    { echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"                    # protected [ApiController] API using the cookie scheme: 401 without a cookie
+  case "$3:$4" in
+    0:401) echo "401 without a cookie: confirm that an authorized request reaches this API before you read the 401 as a pass" ;;
+    0:2??) echo "FINDING: /api answered $4 without a cookie"; set -- "$1" 1 ;;
+    0:*) echo "HTTP $4 from /api is neither the 401 pass nor a 2xx finding (a page redirect, an OIDC or customized challenge, or a missing route); inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the /api request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  printf '%s' "${3%$'\n'*}"   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
+  [ "${3##*$'\n'}" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  echo "block exit $2; the redirect and HTTPS headers, including Strict-Transport-Security, and the listener list are not classified, so judge them yourself"
+  exit "$2"
 )
 ```
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added, so the guarded section 9 block needs a bash -n re-run before the guarded block's syntax counts as checked. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons. The bash -n run and the separate local guard record covered the five child-section blocks in an earlier form, whose guard refusals ended with status 0; neither was re-run on the current form, whose guard refusals exit with status 2 inside the subshell. Each block now ends with `) || echo "block exit $?"`, which keeps the reader's shell running and prints the subshell's non-zero status, such as `block exit 2` after a refusal; the block pasted whole still reports status 0 because the echo succeeds, and no recorded run covered that ending)
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons. The bash -n run and the separate local guard record covered the five child-section blocks in an earlier form, whose guard refusals ended with status 0, and no recorded run covered the later form that ended each of them with `) || echo "block exit $?"`, which kept status 0 when the block was pasted whole. The current form of all six blocks, which reports each block's result in its exit status, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block; no application response was observed)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
-Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. The final `|| echo "block exit $?"` keeps an enclosing shell running and prints the subshell's status when that status is non-zero: `block exit 2` after a guard refusal, or the last command's status when that command fails. No `block exit` line means the subshell ended with status 0. The block pasted whole still reports status 0 because the echo succeeds, and status 0 does not mean the check passed.
+REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. Every block in section 9, including the one above, records each classified result and each failed request as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed request or an inconclusive result, a finding outranking an inconclusive result. Unless a guard refuses, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The cookie-continuity block also refuses with status 2, before any request, when `./dotnet-verify.cookies` is not readable in the current directory.
 
 #### Production error disclosure (REASONED: the following block tests error representations against the cited error-handling documentation; no .NET runtime or deployed test application, as recorded below.)
 
@@ -18722,14 +18737,33 @@ With the Developer Exception Page exposed, expect a `500` response containing di
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
-        -H 'Accept: text/plain' "$1"
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
-        -H 'Accept: text/html' "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -H 'Accept: text/plain' -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5:$4" in
+    0:*DOTNET_VERIFY_CANARY*) echo "FINDING: the text/plain response contains DOTNET_VERIFY_CANARY, so exception detail reaches the client"; set -- "$1" 1 ;;
+    0:500:*) ;;
+    0:*) echo "HTTP $5 for text/plain is not the expected 500, so the request may not have reached the throwing route; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the text/plain request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -H 'Accept: text/html' -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5:$4" in
+    0:*DOTNET_VERIFY_CANARY*) echo "FINDING: the text/html response contains DOTNET_VERIFY_CANARY, so exception detail reaches the client"; set -- "$1" 1 ;;
+    0:500:*) ;;
+    0:*) echo "HTTP $5 for text/html is not the expected 500, so the request may not have reached the throwing route; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the text/html request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; a 500 without the marker is not classified, so read both bodies for stack traces, source paths, cookies or configuration values and correlate the requests with server logs yourself"
+  exit "$2"
+)
 ```
 
 #### Oversized-request rejection (REASONED: the following block compares body sizes against the cited Kestrel limit; no .NET runtime or deployed body-reading endpoint, as recorded below.)
@@ -18746,18 +18780,35 @@ The fixed expectation is `204` at 1,048,576 bytes and `413` at 1,048,577 bytes. 
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      head -c 1048576 /dev/zero | curl -q -g --noproxy '*' -sS \
-        --http1.1 --connect-timeout 5 --max-time 30 \
-        -H 'Content-Type: application/octet-stream' -H 'Expect:' \
-        --data-binary @- -o /dev/null -w 'at-limit http=%{http_code}\n' "$1"
-      head -c 1048577 /dev/zero | curl -q -g --noproxy '*' -sS \
-        --http1.1 --connect-timeout 5 --max-time 30 \
-        -H 'Content-Type: application/octet-stream' -H 'Expect:' \
-        --data-binary @- -o /dev/null -w 'over-limit http=%{http_code}\n' "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  set +o pipefail                       # pipefail off here, so each status below is curl's, not that of a head cut short when the server answers early
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$(if head -c 1048576 /dev/zero | curl -q -g --noproxy '*' -sS \
+        --http1.1 --connect-timeout 5 --max-time 30 \
+        -H 'Content-Type: application/octet-stream' -H 'Expect:' \
+        --data-binary @- -o /dev/null -w 'at-limit http=%{http_code}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its at-limit line
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "0:at-limit http=204") ;;
+    0:*) echo "HTTP ${4#at-limit http=} at 1,048,576 bytes is not the expected 204, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the at-limit request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if head -c 1048577 /dev/zero | curl -q -g --noproxy '*' -sS \
+        --http1.1 --connect-timeout 5 --max-time 30 \
+        -H 'Content-Type: application/octet-stream' -H 'Expect:' \
+        --data-binary @- -o /dev/null -w 'over-limit http=%{http_code}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its over-limit line
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "0:over-limit http=413") ;;
+    "0:over-limit http=204") echo "FINDING: 1,048,577 bytes were accepted with 204, so no body limit rejected them"; set -- "$1" 1 ;;
+    0:*) echo "HTTP ${4#over-limit http=} at 1,048,577 bytes is neither the 413 pass nor the 204 finding; an authentication denial, parser error or 500 is inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the over-limit request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; which layer returned a 413 is not classified, so keep other limits above the tested threshold before you attribute the rejection to Kestrel"
+  exit "$2"
+)
 ```
 
 #### Diagnostic, OpenAPI, and health access (REASONED: the following block checks endpoint exposure against the cited OpenAPI and health documentation; no deployed endpoints or external test vantage, as recorded below.)
@@ -18776,11 +18827,13 @@ For retained routes, pair the anonymous request with an authorized request throu
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status: 3 (the request failed) or 0
+  printf '%s\n' "${3%$'\n'*}"
+  [ "${3##*$'\n'}" = 0 ] || { echo "curl exit ${3##*$'\n'}: the request failed; inconclusive"; set -- "$1" 3; }
+  echo "block exit $2; the response status and content are not classified, so judge them against the exposed and corrected states above"
+  exit "$2"
+)
 ```
 
 #### Public response headers (REASONED: the following block checks header removal against the cited Kestrel and IIS controls; no deployed Kestrel, IIS or proxy response, as recorded below.)
@@ -18795,12 +18848,14 @@ For retained routes, pair the anonymous request with an authorized request throu
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -D - -o /dev/null \
-        --connect-timeout 5 --max-time 20 "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g --noproxy '*' -sS -D - -o /dev/null \
+        --connect-timeout 5 --max-time 20 "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status: 3 (the request failed) or 0
+  printf '%s' "${3%$'\n'*}"
+  [ "${3##*$'\n'}" = 0 ] || { echo "curl exit ${3##*$'\n'}: the request failed; inconclusive"; set -- "$1" 3; }
+  echo "block exit $2; the returned headers, including any Server or X-Powered-By header, are not classified, so judge them yourself"
+  exit "$2"
+)
 ```
 
 #### Cookie continuity across restart and replicas (REASONED: the following block checks continuity against the cited key-lifetime and cookie-sharing documentation; no running cookie-authenticated application or replicas, as recorded below.)
@@ -18819,13 +18874,32 @@ The anonymous control should return `401`. The request using the original cookie
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
-        -b ./dotnet-verify.cookies "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  [ -r ./dotnet-verify.cookies ] || { echo "no readable ./dotnet-verify.cookies in this directory: save the test account's cookies there as described above; not probing"; exit 2; }
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5" in
+    0:401) ;;
+    0:*) echo "HTTP $5 without the cookie is not the 401 the anonymous control expects; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $3: the request without the cookie failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -b ./dotnet-verify.cookies -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5" in
+    0:200) ;;
+    0:*) echo "HTTP $5 with the original cookie is not the expected 200: key loss is one cause, and cookie renewal, expiry, session-store loss or identity validation are others, so correlate it with application logs; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $3: the request with the cookie failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the identity in the response with the cookie, and which replica answered, are not classified, so judge them yourself"
+  exit "$2"
+)
 ```
 
 Also retain an antiforgery token and its accompanying cookie across a restart, then submit the application's normal protected form. Confirm success without fetching a replacement token first. A lost key ring can invalidate antiforgery tokens independently of whether another authentication mechanism signs the user back in.
@@ -18981,7 +19055,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7d4872a1a249f9db7258a36d7fdf3de02e3e16ce4db2211fbddbb9ac85096ec4",
+  "body_sha256": "4940213fd1978c771e9a5909df170d9cb1edec2a77d7329079ced210f8b09b79",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -19391,7 +19465,7 @@ Keep the H2 console off in production. This property defaults to `false` in both
 spring.h2.console.enabled=false
 ```
 
-Exclude `spring-boot-devtools` from production dependencies and deployed artifacts. When its development defaults are active, it sets error message, stack trace, and binding-error inclusion to `always`, using the version-appropriate prefix, and sets `spring.h2.console.enabled=true`. Console availability still depends on the required H2 components. Verify the production artifact and launch configuration rather than relying only on the normal packaged-application behaviour. See [Boot 3.5 devtools defaults](https://docs.spring.io/spring-boot/3.5/reference/using/devtools.html#using.devtools.property-defaults) and [Boot 4.1 devtools defaults](https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html#using.devtools.property-defaults).
+Exclude `spring-boot-devtools` from production dependencies and deployed artifacts. When its development defaults are active, it sets error message, stack trace, and binding-error inclusion to `always`, using the version-appropriate prefix, and sets `spring.h2.console.enabled=true`. As this guide's own assessment, console availability still depends on the required H2 components. Verify the production artifact and launch configuration rather than relying only on the normal packaged-application behaviour. See [Boot 3.5 devtools defaults](https://docs.spring.io/spring-boot/3.5/reference/using/devtools.html#using.devtools.property-defaults) and [Boot 4.1 devtools defaults](https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html#using.devtools.property-defaults).
 
 ## 7. Bound uploads, forms, and headers
 
@@ -19429,18 +19503,40 @@ None of these properties establishes a universal JSON body limit. Bound other re
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sI --noproxy '*' "https://$1/"        # succeeds without -k; shows Strict-Transport-Security
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/api"   # 401, or 302 to the login page, without credentials
-  ss -tlnp   # read every listener; java: behind a proxy: 127.0.0.1 only
-  grep -c "Using generated security password" app.log   # a positive count records password generation; zero does not prove the default user is absent
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (a command failed) or 0
+  curl -q -g -sI --noproxy '*' "https://$1/" ||        # succeeds without -k; shows Strict-Transport-Security
+    { echo "curl exit $?: the HTTPS request failed; inconclusive"; set -- "$1" 3; }
+  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' "https://$1/api" ||   # 401, or 302 to the login page, without credentials
+    { echo "curl exit $?: the /api request failed; inconclusive"; set -- "$1" 3; }
+  set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  printf '%s' "${3%$'\n'*}"   # read every listener; java: behind a proxy: 127.0.0.1 only
+  [ "${3##*$'\n'}" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- "$1" 3; }
+  echo "block exit $2; the HTTPS headers, including Strict-Transport-Security, the /api status and the listener list are not classified, so judge them yourself"
+  exit "$2"
+)
+```
+
+```bash
+(                                       # a subshell, so the exits below end only the subshell
+  [ -r app.log ] || { echo "no readable app.log in this directory: run this block where the application writes app.log; not counting"; exit 2; }
+  set -- "$(if grep -c "Using generated security password" app.log; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1##*$'\n'}" "${1%%$'\n'*}"  # grep's exit status, then the count
+  printf '%s\n' "$2"   # a positive count records password generation; zero does not prove the default user is absent
+  case "$1" in
+    0) echo "FINDING: app.log records $2 generated security password line(s), so the default user was created with a generated password"; set -- 1 ;;
+    1) echo "a zero generated-password log count is inconclusive"; set -- 3 ;;
+    *) echo "grep exit $1: app.log could not be searched; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; this block cannot exit 0, because a zero count is inconclusive: check the deployed authentication configuration and exercise the intended login method yourself"
+  exit "$1"
 )
 ```
 
 A zero generated-password log count is inconclusive: logging may suppress the message, and setting `spring.security.user.password` avoids password generation while retaining the default account. Check the deployed authentication configuration and exercise the intended login method. A custom `SecurityFilterChain` alone does not remove default-user auto-configuration, and OAuth2/OIDC does not require introducing a local `UserDetailsService`. See [Boot's security auto-configuration rules](https://docs.spring.io/spring-boot/3.5/reference/web/spring-security.html).
 
-The following deployment checks are **REASONED, not demonstrated**. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Those local checks covered the guarded blocks below in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
+REASONED: the deployment checks below are not demonstrated. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Those local checks covered the guarded blocks below in an earlier form, whose guard refusals ended with status 0, and no recorded local check covered the later form that ended each block with `) || echo "block exit $?"`. The current form of every block in this section, which reports its result in its exit status, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
 
-Paste each guarded block whole and substitute inside the single quotes. Each of the following blocks ends with `) || echo "block exit $?"`, which keeps your shell running and prints the subshell's non-zero status; every request in these blocks ends with its own `|| true`, so only a guard refusal prints a line, `block exit 2`. A block pasted whole still reports status 0 because the echo succeeds, so status 0 does not mean the check passed, and no recorded local check covered the closing echo. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
+REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each guarded block whole and substitute inside the single quotes. Every block in this section records each classified result and each failed command as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed command or an inconclusive result, a finding outranking an inconclusive result. Unless a guard refuses, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The generated-password count is a block of its own because it cannot exit 0: a zero count is inconclusive. The blocks that read `./java-verify-auth.headers`, `./below-limit.bin`, `./over-limit.bin` or `app.log` refuse with status 2, before any request or count, when a file they need is not readable in the current directory. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
 
 For authenticated requests, prepare `./java-verify-auth.headers` as a private, mode `0600` file containing the actual request headers for a test identity, one header per line. Use the application's authentication method, such as its session cookie or an accepted authorization header. For uploads, include the matching session and valid CSRF header where required. The blocks pass that file to curl through stdin, keeping credential values out of command arguments. Protect and remove the file after testing. Curl documents [header input and transfer diagnostics](https://curl.se/docs/manpage.html).
 
@@ -19456,35 +19552,70 @@ Reasoned check: run this HTTPS sweep from outside the trusted management network
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      for java_endpoint in health env configprops beans mappings threaddump loggers; do
-        curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
-          -o /dev/null -w 'anonymous %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-          "$1/$java_endpoint" || true
-        curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
-          --header @- -o /dev/null \
-          -w 'authorized %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-          "$1/$java_endpoint" < ./java-verify-auth.headers || true
-      done
-      ;;
   esac
-) || echo "block exit $?"
+  [ -r ./java-verify-auth.headers ] || { echo "no readable ./java-verify-auth.headers in this directory: prepare it as described above; not probing"; exit 2; }
+  set -- "$1" 0 health env configprops beans mappings threaddump loggers   # the 2nd value is the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the endpoints still to request
+  while [ "$#" -gt 2 ]; do
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+      -o /dev/null -w 'anonymous %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      "$1/$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:4}"
+    printf '%s' "${4%$'\n'*}"
+    case "${4##*$'\n'}:${4%$'\n'*}" in
+      0:*': http=2'??' exit='*) echo "FINDING: the public origin answered $3 with a 2xx for the anonymous identity; confirm it came from the application rather than a proxy or generic frontend"; set -- "$1" 1 "${@:3}" ;;
+      0:*) ;;
+      *) echo "curl exit ${4##*$'\n'}: the anonymous request for $3 failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+    esac
+    set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+      --header @- -o /dev/null \
+      -w 'authorized %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      "$1/$3" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:5}"
+    printf '%s' "${4%$'\n'*}"
+    case "${4##*$'\n'}:${4%$'\n'*}" in
+      0:*': http=2'??' exit='*) echo "FINDING: the public origin answered $3 with a 2xx for the authorized identity; confirm it came from the application rather than a proxy or generic frontend"; set -- "$1" 1 "${@:3}" ;;
+      0:*) ;;
+      *) echo "curl exit ${4##*$'\n'}: the authorized request for $3 failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+    esac
+    set -- "$1" "$2" "${@:5}"           # drop this endpoint and its result
+  done
+  echo "block exit $2; answers other than a 2xx are not classified (a 401 or 403 demonstrates access control, not absence), so judge them yourself"
+  exit "$2"
+)
 ```
 
 Reasoned check: run this separate management-authorization sweep on the application host against the HTTP listener at `http://127.0.0.1:8081/actuator`. Adjust the port and base path in both URLs to match your management configuration. Prepare `./java-verify-auth.headers` on that host with an administrator identity accepted by the management security chain.
 
 ```bash
 (
-  for java_endpoint in health env configprops beans mappings threaddump loggers; do
-    curl -q -g -sS --noproxy '*' --proto '=http' --connect-timeout 5 --max-time 20 \
+  [ -r ./java-verify-auth.headers ] || { echo "no readable ./java-verify-auth.headers in this directory: prepare it on this host as described above; not probing"; exit 2; }
+  set -- 0 health env configprops beans mappings threaddump loggers   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the endpoints still to request
+  while [ "$#" -gt 1 ]; do
+    set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --proto '=http' --connect-timeout 5 --max-time 20 \
       -o /dev/null -w 'anonymous %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      "http://127.0.0.1:8081/actuator/$java_endpoint" || true
-    curl -q -g -sS --noproxy '*' --proto '=http' --connect-timeout 5 --max-time 20 \
+      "http://127.0.0.1:8081/actuator/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:3}"
+    printf '%s' "${3%$'\n'*}"
+    case "${3##*$'\n'}:$2:${3%$'\n'*}" in
+      0:health:*': http=401 exit='*) ;;
+      0:*': http=2'??' exit='*) echo "FINDING: the anonymous $2 request answered with a 2xx; an anonymous 2xx from a sensitive endpoint needs investigation"; set -- 1 "${@:2}" ;;
+      0:health:*) echo "the anonymous health request did not get the expected 401; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+      0:*) ;;
+      *) echo "curl exit ${3##*$'\n'}: the anonymous request for $2 failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --proto '=http' --connect-timeout 5 --max-time 20 \
       --header @- -o /dev/null \
       -w 'authorized %{url_effective}: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      "http://127.0.0.1:8081/actuator/$java_endpoint" < ./java-verify-auth.headers || true
+      "http://127.0.0.1:8081/actuator/$2" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:4}"
+    printf '%s' "${3%$'\n'*}"
+    case "${3##*$'\n'}:$2:${3%$'\n'*}" in
+      0:health:*': http=200 exit='*|0:health:*': http=503 exit='*) ;;
+      0:health:*) echo "the administrator's health request did not get a health response (200, or 503 for an unhealthy status), so check the identity in ./java-verify-auth.headers; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+      0:*) ;;
+      *) echo "curl exit ${3##*$'\n'}: the authorized request for $2 failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "${@:2}" ;;
+    esac
+    set -- "$1" "${@:4}"                # drop this endpoint and its result
   done
-) || echo "block exit $?"
+  echo "block exit $1; the administrator's answers from endpoints other than health are not classified (normally 404 with health-only exposure), so judge them yourself and repeat with a non-administrator identity for the 403"
+  exit "$1"
+)
 ```
 
 With the private-listener layout, the public origin must not serve Actuator responses to either identity. On the reachable management listener, the example security chain should reject anonymous health requests with `401`, reject an authenticated non-administrator with `403`, and allow an administrator to receive the health response. Health itself can report an unhealthy status, commonly `503`, so successful authorization is not synonymous with HTTP `200`.
@@ -19501,13 +19632,20 @@ Also check the separate port directly from an external machine. This block assum
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "http://$1:8081/actuator/health" || true
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "http://$1:8081/actuator/health"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}" in
+    0) echo "FINDING: an HTTP response, including 401, shows that an HTTP listener is reachable on public port 8081"; set -- "$1" 1 ;;
+    7) echo "connection refused: consistent with the loopback binding, but corroborate it with ss -tlnp on the server and a successful connection from the intended management path" ;;
+    28) echo "curl exit 28: an external timeout alone is inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit ${3##*$'\n'}: the request failed without an HTTP response; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; a refused connection is not classified until you corroborate it as above"
+  exit "$2"
+)
 ```
 
 Any HTTP response, including `401`, demonstrates that an HTTP listener is reachable on that public port. The fixed loopback binding should prevent that connection. Corroborate external failure with the existing `ss -tlnp` check on the server and a successful connection from the intended management path; an external timeout alone is inconclusive. See [management address binding](https://docs.spring.io/spring-boot/3.5/reference/actuator/monitoring.html#actuator.monitoring.customizing-management-server-address).
@@ -19526,14 +19664,21 @@ Reasoned check: use an isolated test deployment with a known route that triggers
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+  esac
+  [ -r ./java-verify-auth.headers ] || { echo "no readable ./java-verify-auth.headers in this directory: prepare it as described above; not probing"; exit 2; }
+  set -- "$1" 0 "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
         --header @- -H 'Accept: application/json' \
         -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "$1?trace=true&message=true&errors=true" < ./java-verify-auth.headers || true
-      ;;
+        "$1?trace=true&message=true&errors=true" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''http=401 exit='*|0:*$'\n''http=403 exit='*) echo "an authentication response does not test error handling; inconclusive"; set -- "$1" 3 ;;
+    0:*) ;;
+    *) echo "curl exit ${3##*$'\n'}: the request failed; inconclusive"; set -- "$1" 3 ;;
   esac
-) || echo "block exit $?"
+  echo "block exit $2; the error status and the body are not classified, so read them for the marker, stack frames, internal paths and rejected values yourself"
+  exit "$2"
+)
 ```
 
 In the exposed fixture, `always` or `on-param` inclusion can reveal the controlled message, trace, or binding details. With the production settings, Boot's standard error response should omit those details and the exception class even with these parameters. Confirm the expected error status and inspect the body for the marker, stack frames, internal paths, and rejected values. An authentication response does not test error handling. Repeat with `Accept: text/html` and check custom error responses separately. See the [error-inclusion semantics](https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html) and [versioned production defaults](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html).
@@ -19550,15 +19695,24 @@ Reasoned check: test both anonymously and with an identity allowed through appli
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
-        -w '\nanonymous: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" || true
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
-        --header @- -w '\nauthorized: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "$1" < ./java-verify-auth.headers || true
-      ;;
   esac
-) || echo "block exit $?"
+  [ -r ./java-verify-auth.headers ] || { echo "no readable ./java-verify-auth.headers in this directory: prepare it as described above; not probing"; exit 2; }
+  set -- "$1" 0 "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+        -w '\nanonymous: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
+  printf '%s' "${3%$'\n'*}"
+  [ "${3##*$'\n'}" = 0 ] || { echo "curl exit ${3##*$'\n'}: the anonymous request failed; inconclusive"; set -- "$1" 3; }
+  set -- "$1" "$2" "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 20 \
+        --header @- -w '\nauthorized: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        "$1" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''authorized: http=404 exit='*) ;;
+    0:*) echo "the authorized request did not reach the 404 missing-route answer: H2 content is the finding, and a login redirect, 401 or 403 alone does not establish absence; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit ${3##*$'\n'}: the authorized request failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the anonymous response, and any H2 content in either response, are not classified, so judge them yourself"
+  exit "$2"
+)
 ```
 
 An enabled, reachable console can return H2 content or a redirect into it. With the console disabled, a request that passes application security should reach normal missing-route handling, typically `404`, without H2 content. A login redirect, `401`, or `403` alone does not establish absence. Confirm the effective `spring.h2.console.enabled=false` setting and absence of production devtools as well. See the [console properties](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html) and [devtools overrides](https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html#using.devtools.property-defaults).
@@ -19575,18 +19729,34 @@ Reasoned check: use a test upload route that accepts a multipart file field name
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the quotes on the set -- line; not probing"; exit 2 ;;
-    *)
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
+  esac
+  if [ -r ./java-verify-auth.headers ] && [ -r ./below-limit.bin ] && [ -r ./over-limit.bin ]; then :; else
+    echo "./java-verify-auth.headers, ./below-limit.bin and ./over-limit.bin must all be readable in this directory: prepare them as described above; not probing"; exit 2
+  fi
+  set -- "$1" 0 "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
         --header @- --form 'file=@./below-limit.bin' \
         -w '\nbelow limit: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "$1" < ./java-verify-auth.headers || true
-      curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
+        "$1" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''below limit: http=2'??' exit='*) ;;
+    0:*) echo "the 1,024-byte upload did not succeed, so the positive control failed; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit ${3##*$'\n'}: the below-limit request failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS -i --noproxy '*' --proto '=https' --connect-timeout 5 --max-time 30 \
         --header @- --form 'file=@./over-limit.bin' \
         -w '\nover limit: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "$1" < ./java-verify-auth.headers || true
-      ;;
+        "$1" < ./java-verify-auth.headers; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''over limit: http=2'??' exit='*) echo "FINDING: the 1,048,577-byte upload succeeded, so no 1MB file limit rejected it"; set -- "$1" 1 ;;
+    0:*$'\n''over limit: http=401 exit='*|0:*$'\n''over limit: http=403 exit='*|0:*$'\n''over limit: http=404 exit='*) echo "an authentication, CSRF or missing-route answer is not evidence of the multipart limit; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) ;;
+    *) echo "curl exit ${3##*$'\n'}: the over-limit request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
-) || echo "block exit $?"
+  echo "block exit $2; the cause of an over-limit rejection is not classified, so read the response and server logs for a size cause yourself"
+  exit "$2"
+)
 ```
 
 The small upload must reach and succeed at the intended handler. With a deliberately raised limit in an isolated exposed fixture, both files should succeed; with the production limit, the larger file must be rejected because of its size. Inspect the response and server logs for that specific cause. Authentication, CSRF, missing-route, content-validation, and transport failures are not evidence of the multipart limit. A proxy rejection demonstrates the proxy limit; testing Boot's limit also requires reaching the application through an authorized path. See the [multipart limits](https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html).
@@ -19730,7 +19900,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "69a71db4c2d9b88a831e6ee628eb874bcfb0d69aef51b76ff721f534b9fce945",
+  "body_sha256": "9d5595f7ed00c101870054abdf86bb17fbfc06f397483dc6e569a3563a33959b",
   "components": {
     "boot41": {
       "name": "Spring Boot",
@@ -19914,15 +20084,15 @@ Claims (full source mapping in the JSON block below):
     "verify-tls": {"text": "HTTPS must succeed without -k and show HSTS.", "components": ["boot", "security65", "security"], "sources": ["boot:s4f6aa9df744a", "security65:s527bf5b95139", "security:s6fb344722a7c"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Unauthenticated /api should return 401 or a 302 login redirect.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
     "verify-bind": {"text": "Inspect every listener for loopback-only Java binding behind the proxy.", "components": ["boot-docs"], "sources": ["boot-docs:s34f52429c110", "boot-docs:s61bf6b20e945"], "status": "REASONED", "verify": [1]},
-    "verify-user": {"text": "Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
-    "verify-public-management": {"text": "Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [2]},
-    "verify-management-auth": {"text": "On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [3]},
-    "verify-management-port": {"text": "Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED", "verify": [4]},
+    "verify-user": {"text": "Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [2]},
+    "verify-public-management": {"text": "Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [3]},
+    "verify-management-auth": {"text": "On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [4]},
+    "verify-management-port": {"text": "Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED", "verify": [5]},
     "verify-dangerous": {"text": "Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "verify-errors": {"text": "Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:saea08b7576f4", "boot-docs:s6ce5733455c4"], "status": "REASONED", "verify": [5]},
-    "verify-h2": {"text": "Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED", "verify": [6]},
-    "verify-upload": {"text": "1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED", "verify": [7]},
-    "verify-credentials": {"text": "Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [2, 3, 4, 5, 6, 7]}
+    "verify-errors": {"text": "Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:saea08b7576f4", "boot-docs:s6ce5733455c4"], "status": "REASONED", "verify": [6]},
+    "verify-h2": {"text": "Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED", "verify": [7]},
+    "verify-upload": {"text": "1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED", "verify": [8]},
+    "verify-credentials": {"text": "Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [3, 4, 5, 6, 7, 8]}
   }
 }
 ````
@@ -20139,31 +20309,59 @@ PHP 8.x's built-in `session.sid_length` and `session.sid_bits_per_character` def
 
 **REASONED: deployment checks have not been demonstrated.** The authoring environment has no PHP or PHP-FPM runtime, no Docker or Podman, and no supplied PHP/Laravel deployment. The listener, TLS, cookie, authentication, banner, and error-disclosure checks require a real deployment. Expected outcomes are REASONED from the cited PHP, Laravel, curl manual, and fronting-server documentation.
 
-REASONED: paste and probe guidance. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The listener, TLS and cookie comparisons also need a deployed FPM listener and HTTPS application, which were unavailable. Exposed listener: `ss -tlnp` shows a wildcard FPM TCP bind; fixed listener: `ss -xlnp` shows a Unix socket or `ss -tlnp` shows `127.0.0.1:9000`, per the guide's cited PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`) (PHP 8.x). Exposed TLS: the listener block first prints no headers and `exit=60`, the cited certificate failure marker; the backend-dependent `err=` wording names the certificate failure. Fixed TLS: the first request prints response headers and `exit=0` without `-k`; that success marker is REASONED, not stated in the cited exit-code passages. The exit-code distinction follows the curl manual, exit codes 6, 7, 28 and 60 and the `exitcode` and `errormsg` write-out variables (added in curl 7.75.0) (checked October 2026) entry. The Laravel 12.x deployment (nginx example, `APP_DEBUG`) and PHP cURL constants (`CURLOPT_SSL_VERIFYPEER`, `CURLOPT_SSL_VERIFYHOST`, `CURLOPT_CAINFO`) entries back the settings in sections 3 and 4; they do not establish this probe's outcomes. A lack of headers also appears on a DNS failure (`exit=6`), a refused connection (`exit=7`), a timeout (`exit=28`) or plain HTTP on 443, so on its own it does not show a certificate failure. Exposed cookie: `Set-Cookie` omits one of Secure, HttpOnly or SameSite; fixed cookie: `Set-Cookie` includes all three, per the guide's cited PHP session runtime configuration (PHP 8.x) and Laravel 12.x `config/session.php` defaults entries. All five Verify Bash blocks passed `bash -n` and ShellCheck 0.11.0 with no output. Stubbed URL blocks printed `substitute the full HTTPS URL inside the quotes above; not probing` or `substitute the full HTTPS fixture URL inside the quotes above; not probing` for their placeholders; dummy HTTPS URLs reached `curl-stub`. With `bash -u`, empty and extra values and a missing `set --` line printed `substitute the full HTTPS URL inside the quotes above; not probing` or `substitute the full HTTPS fixture URL inside the quotes above; not probing`, `the set -- line needs exactly 1 value; not probing`, and `paste the whole block, including its set -- line; not probing`, respectively. Local marking review (October 2026, Bash 5.3.9, ShellCheck 0.11.0): the listener block passed `bash -n` and ShellCheck with empty stdout/stderr and status 0. Each Bash -u trial used scratch `ss`, `curl` and `grep` stubs; all had empty stderr and real process status 0. The bash -n, ShellCheck and stub runs recorded here covered the listener, route, banner and body blocks in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form of those four blocks, whose guard refusals leave the subshell with status 2. Each of those four blocks now ends with `) || echo "block exit $?"`, which no recorded run covered; the closing echo keeps the shell running and prints the subshell's non-zero status, such as `block exit 2` after a guard refusal, and a refused block pasted whole still reports status 0 because the echo succeeds. Exact stdout of the earlier form follows, with `\n` denoting each printed line feed; the earlier form printed no `block exit` line.  Placeholder: `ss-stub:-xlnp\nsubstitute the full HTTPS URL inside the quotes above; not probing\n` (no curl calls).  Empty value: `ss-stub:-xlnp\nsubstitute the full HTTPS URL inside the quotes above; not probing\n` (no curl calls).  Missing set line: `ss-stub:-xlnp\npaste the whole block, including its set -- line; not probing\n` (no curl calls).  Wrong marker: `ss-stub:-xlnp\npaste the whole block, including its set -- line; not probing\n` (no curl calls).  Extra value: `ss-stub:-xlnp\nthe set -- line needs exactly 1 value; not probing\n` (no curl calls).  Option-like value: `ss-stub:-xlnp\nuse a URL, not an option; not probing\n` (no curl calls).  Spaced URL: `ss-stub:-xlnp\nremove whitespace from the URL; not probing\n` (no curl calls).  The http:// URL: `ss-stub:-xlnp\nuse an https:// URL; not probing\n` (no curl calls).  Bare host: `ss-stub:-xlnp\nuse an https:// URL; not probing\n` (no curl calls).  Certificate with cookie present: `ss-stub:-xlnp\nhttp=000 exit=60 err=SSL certificate problem: unable to get local issuer certificate\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  Certificate with cookie missing: `ss-stub:-xlnp\nhttp=000 exit=60 err=SSL certificate problem: unable to get local issuer certificate\n`.  DNS with cookie present: `ss-stub:-xlnp\nhttp=000 exit=6 err=Could not resolve host\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  DNS with cookie missing: `ss-stub:-xlnp\nhttp=000 exit=6 err=Could not resolve host\n`.  Refusal with cookie present: `ss-stub:-xlnp\nhttp=000 exit=7 err=Failed to connect\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  Refusal with cookie missing: `ss-stub:-xlnp\nhttp=000 exit=7 err=Failed to connect\n`.  Timeout with cookie present: `ss-stub:-xlnp\nhttp=000 exit=28 err=Operation timed out\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  Timeout with cookie missing: `ss-stub:-xlnp\nhttp=000 exit=28 err=Operation timed out\n`.  Success with cookie present: `ss-stub:-xlnp\nHTTP/2 200\nhttp=200 exit=0 err=\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  Success with cookie missing: `ss-stub:-xlnp\nHTTP/2 200\nhttp=200 exit=0 err=\n`.  Success with a trailing slash and cookie present: `ss-stub:-xlnp\nHTTP/2 200\nhttp=200 exit=0 err=\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`. In each curl-stub trial, the two calls were to `https://example.test/base` and `https://example.test/base/login`; the trailing-slash trial used `https://example.test/base/` then `https://example.test/base/login`. No request reached a network. No live outcome was observed. Paste each guarded block whole. Substitute a full HTTPS URL inside the single quotes on its `set --` line; use a URL without a literal apostrophe or embedded credentials. Supply the application's base URL; the cookie request appends `/login`, and no output from it is inconclusive. The `exitcode` and `errormsg` write-out variables require curl 7.75.0 or later per the curl manual, exit codes 6, 7, 28 and 60 and the `exitcode` and `errormsg` write-out variables (added in curl 7.75.0) (checked October 2026) entry. The per-request `|| true` lets a block continue past a failed request, and the closing `|| echo "block exit $?"` keeps a refused or failed block from ending the shell; neither indicates success. In the listener block the cookie `grep` runs last, so no matching `Set-Cookie` line prints `block exit 1`; in the route, banner and body blocks each request ends with `|| true`, so only a guard refusal prints a `block exit` line.
+REASONED: paste and probe guidance. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The listener, TLS and cookie comparisons also need a deployed FPM listener and HTTPS application, which were unavailable. Exposed listener: `ss -tlnp` shows a wildcard FPM TCP bind; fixed listener: `ss -xlnp` shows a Unix socket or `ss -tlnp` shows `127.0.0.1:9000`, per the guide's cited PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`) (PHP 8.x). Exposed TLS: the listener block first prints no headers and `exit=60`, the cited certificate failure marker; the backend-dependent `err=` wording names the certificate failure. Fixed TLS: the first request prints response headers and `exit=0` without `-k`; that success marker is REASONED, not stated in the cited exit-code passages. The exit-code distinction follows the curl manual, exit codes 6, 7, 28 and 60 and the `exitcode` and `errormsg` write-out variables (added in curl 7.75.0) (checked October 2026) entry. The Laravel 12.x deployment (nginx example, `APP_DEBUG`) and PHP cURL constants (`CURLOPT_SSL_VERIFYPEER`, `CURLOPT_SSL_VERIFYHOST`, `CURLOPT_CAINFO`) entries back the settings in sections 3 and 4; they do not establish this probe's outcomes. A lack of headers also appears on a DNS failure (`exit=6`), a refused connection (`exit=7`), a timeout (`exit=28`) or plain HTTP on 443, so on its own it does not show a certificate failure. Exposed cookie: `Set-Cookie` omits one of Secure, HttpOnly or SameSite; fixed cookie: `Set-Cookie` includes all three, per the guide's cited PHP session runtime configuration (PHP 8.x) and Laravel 12.x `config/session.php` defaults entries. All five Verify Bash blocks passed `bash -n` and ShellCheck 0.11.0 with no output. Stubbed URL blocks printed `substitute the full HTTPS URL inside the quotes above; not probing` or `substitute the full HTTPS fixture URL inside the quotes above; not probing` for their placeholders; dummy HTTPS URLs reached `curl-stub`. With `bash -u`, empty and extra values and a missing `set --` line printed `substitute the full HTTPS URL inside the quotes above; not probing` or `substitute the full HTTPS fixture URL inside the quotes above; not probing`, `the set -- line needs exactly 1 value; not probing`, and `paste the whole block, including its set -- line; not probing`, respectively. Local marking review (October 2026, Bash 5.3.9, ShellCheck 0.11.0): the listener block passed `bash -n` and ShellCheck with empty stdout/stderr and status 0. Each Bash -u trial used scratch `ss`, `curl` and `grep` stubs; all had empty stderr and real process status 0. The bash -n, ShellCheck and stub runs recorded here covered all five Bash blocks in earlier forms, in which the listener, route, banner and body blocks left the subshell with status 0 after a guard refusal; no recorded run covered the later form that ended those four blocks with `) || echo "block exit $?"`, which kept status 0 when a block was pasted whole. The current form of all five blocks, which reports each block's result in its exit status under CONTRIBUTING.md rule 6, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. Exact stdout of the earlier form follows, with `\n` denoting each printed line feed; the earlier form printed no `block exit` line.  Placeholder: `ss-stub:-xlnp\nsubstitute the full HTTPS URL inside the quotes above; not probing\n` (no curl calls).  Empty value: `ss-stub:-xlnp\nsubstitute the full HTTPS URL inside the quotes above; not probing\n` (no curl calls).  Missing set line: `ss-stub:-xlnp\npaste the whole block, including its set -- line; not probing\n` (no curl calls).  Wrong marker: `ss-stub:-xlnp\npaste the whole block, including its set -- line; not probing\n` (no curl calls).  Extra value: `ss-stub:-xlnp\nthe set -- line needs exactly 1 value; not probing\n` (no curl calls).  Option-like value: `ss-stub:-xlnp\nuse a URL, not an option; not probing\n` (no curl calls).  Spaced URL: `ss-stub:-xlnp\nremove whitespace from the URL; not probing\n` (no curl calls).  The http:// URL: `ss-stub:-xlnp\nuse an https:// URL; not probing\n` (no curl calls).  Bare host: `ss-stub:-xlnp\nuse an https:// URL; not probing\n` (no curl calls).  Certificate with cookie present: `ss-stub:-xlnp\nhttp=000 exit=60 err=SSL certificate problem: unable to get local issuer certificate\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  Certificate with cookie missing: `ss-stub:-xlnp\nhttp=000 exit=60 err=SSL certificate problem: unable to get local issuer certificate\n`.  DNS with cookie present: `ss-stub:-xlnp\nhttp=000 exit=6 err=Could not resolve host\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  DNS with cookie missing: `ss-stub:-xlnp\nhttp=000 exit=6 err=Could not resolve host\n`.  Refusal with cookie present: `ss-stub:-xlnp\nhttp=000 exit=7 err=Failed to connect\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  Refusal with cookie missing: `ss-stub:-xlnp\nhttp=000 exit=7 err=Failed to connect\n`.  Timeout with cookie present: `ss-stub:-xlnp\nhttp=000 exit=28 err=Operation timed out\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  Timeout with cookie missing: `ss-stub:-xlnp\nhttp=000 exit=28 err=Operation timed out\n`.  Success with cookie present: `ss-stub:-xlnp\nHTTP/2 200\nhttp=200 exit=0 err=\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`.  Success with cookie missing: `ss-stub:-xlnp\nHTTP/2 200\nhttp=200 exit=0 err=\n`.  Success with a trailing slash and cookie present: `ss-stub:-xlnp\nHTTP/2 200\nhttp=200 exit=0 err=\nSet-Cookie: session=x; Secure; HttpOnly; SameSite=Lax\n`. In each curl-stub trial, the two calls were to `https://example.test/base` and `https://example.test/base/login`; the trailing-slash trial used `https://example.test/base/` then `https://example.test/base/login`. No request reached a network. No live outcome was observed. Paste each guarded block whole. Substitute a full HTTPS URL inside the single quotes on its `set --` line; use a URL without a literal apostrophe or embedded credentials. Supply the application's base URL; the cookie request appends `/login`, and no output from it is inconclusive. The `exitcode` and `errormsg` write-out variables require curl 7.75.0 or later per the curl manual, exit codes 6, 7, 28 and 60 and the `exitcode` and `errormsg` write-out variables (added in curl 7.75.0) (checked October 2026) entry. Each block records every classified result and every failed command as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed command or an inconclusive result, a finding outranking an inconclusive result. Unless a guard refuses, each block ends with a `block exit` line that gives its status and names the output it leaves for the reader to judge. In the listener block `exit=60` from the first request is a finding and any other nonzero exit is inconclusive; the cookie request is inconclusive when it fails or prints no `Set-Cookie` line, and a finding when no `Set-Cookie` line carries all of Secure, HttpOnly and SameSite.
 
-REASONED: protected-route comparison. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no protected route or authorized session was available. Exposed: the same route returns protected content anonymously; fixed: it returns that content only to an authorized session and denies or redirects an anonymous request to login. Per the guide's cited Laravel 12.x Fortify and Laravel 12.x starter kits (Fortify, two-factor, rate limiting) entries. The route block passed `bash -n` and ShellCheck 0.11.0 with no output. Its scratch `bash` curl-stub run printed the placeholder guard; a dummy HTTPS URL reached `curl-stub`; `bash -u` empty, extra and missing-`set --` trials printed the substitute, exactly-one-value and paste-whole-block messages. The bash -n, ShellCheck and stub runs recorded here covered the route block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No route response was observed. For the protected-route check, confirm the same route returns the expected protected content to an authorized session. In an isolated exposed-state test, removing the authentication requirement must make that content accessible anonymously; restoring it must produce the documented denial or login redirect. A missing route or an unrelated error is not evidence of authentication.
+REASONED: protected-route comparison. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no protected route or authorized session was available. Exposed: the same route returns protected content anonymously; fixed: it returns that content only to an authorized session and denies or redirects an anonymous request to login. Per the guide's cited Laravel 12.x Fortify and Laravel 12.x starter kits (Fortify, two-factor, rate limiting) entries. The route block passed `bash -n` and ShellCheck 0.11.0 with no output. Its scratch `bash` curl-stub run printed the placeholder guard; a dummy HTTPS URL reached `curl-stub`; `bash -u` empty, extra and missing-`set --` trials printed the substitute, exactly-one-value and paste-whole-block messages. The bash -n, ShellCheck and stub runs recorded here covered the route block in an earlier form, whose guard refusals left the subshell with status 0. Its current form exits 0 for a 401 or 403, 3 for a failed request or a status that is neither a denial nor a redirect, and 0 for a 2xx or a redirect, which it leaves for the reader to judge; that form is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. No route response was observed. For the protected-route check, confirm the same route returns the expected protected content to an authorized session. In an isolated exposed-state test, removing the authentication requirement must make that content accessible anonymously; restoring it must produce the documented denial or login redirect. A missing route or an unrelated error is not evidence of authentication.
 
 REASONED: following block; FPM listener, HTTPS and cookie inspection. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation and, for the TLS status, the curl manual entry, not a recorded run.
 
 ```bash
-ss -xlnp   # read every listener; php-fpm: Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
-(
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_URL'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    *REPLACE_WITH_*|"") echo "substitute the full HTTPS URL inside the quotes above; not probing"; exit 2 ;;
-    -*) echo "use a URL, not an option; not probing"; exit 2 ;;
-    *[[:space:]]*) echo "remove whitespace from the URL; not probing"; exit 2 ;;
-    https://*)
-      curl -q -g --noproxy '*' -sSI --connect-timeout 5 --max-time 20 \
-        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1" || true
-      curl -q -g --noproxy '*' -sI --connect-timeout 5 --max-time 20 -- "${1%/}/login" | grep -i set-cookie   # secure; httponly; samesite=lax
-      ;;
-    *) echo "use an https:// URL; not probing"; exit 2 ;;
-  esac
-) || echo "block exit $?"
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (the URL part refused its input), which outranks 0
+  ss -xlnp ||   # read every listener; php-fpm: Unix socket; with TCP, ss -tlnp shows 127.0.0.1:9000 only
+    { echo "ss -xlnp failed; inconclusive"; set -- 3; }
+  (
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_URL'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      *REPLACE_WITH_*|"") echo "substitute the full HTTPS URL inside the quotes above; not probing"; exit 2 ;;
+      -*) echo "use a URL, not an option; not probing"; exit 2 ;;
+      *[[:space:]]*) echo "remove whitespace from the URL; not probing"; exit 2 ;;
+      https://*) ;;
+      *) echo "use an https:// URL; not probing"; exit 2 ;;
+    esac
+    set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sSI --connect-timeout 5 --max-time 20 \
+      -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    printf '%s' "${3%$'\n'*}"
+    case "${3##*$'\n'}" in
+      0) ;;
+      60) echo "FINDING: exit=60, the cited certificate failure marker: the certificate did not verify"; set -- "$1" 1 ;;
+      *) echo "curl exit ${3##*$'\n'} is not a certificate failure on its own (a DNS failure, refused connection, timeout or plain HTTP on 443 also prints no headers); inconclusive"; set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sI --connect-timeout 5 --max-time 20 -- "${1%/}/login"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the login response headers
+    if [ "$3" != 0 ]; then
+      echo "curl exit $3: the login request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+    elif printf '%s' "$4" | grep -i set-cookie; then   # secure; httponly; samesite=lax
+      if printf '%s' "$4" | awk '{ l = tolower($0); sub(/\r$/, "", l) } l ~ /^set-cookie:/ && l ~ /; *secure *(;|$)/ && l ~ /; *httponly *(;|$)/ && l ~ /; *samesite=/ { found = 1 } END { exit !found }'; then :; else
+        case "$?" in
+          1) echo "FINDING: no Set-Cookie line above carries all of Secure, HttpOnly and SameSite"; set -- "$1" 1 ;;
+          *) echo "awk could not read the Set-Cookie lines; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+        esac
+      fi
+    else
+      echo "no Set-Cookie line from the login page, which is inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+    fi
+    exit "$2"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the listener list, the HTTPS response headers and any Set-Cookie line other than one carrying all three attributes are not classified, so judge them yourself"
+  exit "$1"
+)
 ```
 
 REASONED: following block; anonymous protected-route discrimination. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
@@ -20176,18 +20374,25 @@ REASONED: following block; anonymous protected-route discrimination. The guide r
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the full HTTPS URL inside the quotes above; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
-        -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1" || true
-      # This request sends no session cookie. Expect 401 or 403, or a redirect whose Location is the login
-      # page, and no protected content in the response; an anonymous session Set-Cookie in the response is
-      # permitted (Laravel's StartSession issues one even for a denied request). An unrelated canonical
-      # redirect (for example to a trailing slash) is not a login redirect; a 200 carrying protected content
-      # is a failure. TLS and cookie flags say nothing about whether a route actually refuses an
-      # unauthenticated request.
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status
+  printf '%s' "${3%$'\n'*}"
+  # This request sends no session cookie. Expect 401 or 403, or a redirect whose Location is the login
+  # page, and no protected content in the response; an anonymous session Set-Cookie in the response is
+  # permitted (Laravel's StartSession issues one even for a denied request). An unrelated canonical
+  # redirect (for example to a trailing slash) is not a login redirect; a 200 carrying protected content
+  # is a failure. TLS and cookie flags say nothing about whether a route actually refuses an
+  # unauthenticated request.
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*'http=401 exit='*|0:*'http=403 exit='*) ;;
+    0:*'http=2'??' exit='*|0:*'http=3'??' exit='*) ;;
+    0:*) echo "the response is neither a denial nor a redirect, and a missing route or an unrelated error is not evidence of authentication; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit ${3##*$'\n'}: the request failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; a 2xx or redirect response is not classified, so read it for protected content or a login-page Location yourself"
+  exit "$2"
+)
 ```
 
 **REASONED: inspect the loaded configuration locally.** No PHP executable was available in the authoring environment. On the deployment host, these commands identify CLI configuration and show the production error settings. [PHP command-line options](https://www.php.net/manual/en/features.commandline.options.php).
@@ -20195,12 +20400,25 @@ REASONED: following block; anonymous protected-route discrimination. The guide r
 REASONED: following block; loaded CLI configuration inspection. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
 
 ```bash
-php --ini
-php -i | grep -E '^(display_errors|display_startup_errors|log_errors|error_log|error_reporting|expose_php) =>'
-php -r 'echo "E_ALL=", E_ALL, PHP_EOL;'
+(                                       # a subshell, so the exits below end only the subshell
+  command -v php > /dev/null || { echo "no php command on this host: run this block on the PHP host; not checking"; exit 2; }
+  set -- 0                              # the block's status so far: 3 (a command failed or printed nothing) or 0
+  php --ini || { echo "php --ini exit $?; inconclusive"; set -- 3; }
+  set -- "$1" "$(if php -i; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  if [ "${2##*$'\n'}" != 0 ]; then
+    echo "php -i exit ${2##*$'\n'}; inconclusive"; set -- 3
+  elif printf '%s' "${2%$'\n'*}" | grep -E '^(display_errors|display_startup_errors|log_errors|error_log|error_reporting|expose_php) =>'; then
+    :
+  else
+    echo "php -i listed none of the error settings (grep exit $?); inconclusive"; set -- 3
+  fi
+  php -r 'echo "E_ALL=", E_ALL, PHP_EOL;' || { echo "php -r exit $?; inconclusive"; set -- 3; }
+  echo "block exit $1; the printed values are not classified, so compare them with the expected settings below"
+  exit "$1"
+)
 ```
 
-REASONED: preceding block; loaded CLI configuration inspection and expected error settings. In the authoring environment, `php -v` exited 127 and printed `/usr/bin/bash: line 1: php: command not found`; `php` was not on the command path, and neither network package installation nor an authorized offline PHP package source was available. The block passed `bash -n` and ShellCheck 0.11.0 with no output; its scratch stubs printed `php-stub:--ini`, `grep-stub:-E ^(display_errors|display_startup_errors|log_errors|error_log|error_reporting|expose_php) =>` and `php-stub:-r echo "E_ALL=", E_ALL, PHP_EOL;`. Exposed settings show display or startup errors On, logging Off or `expose_php` On where misconfigured; fixed settings show display and startup errors Off, logging On, a protected log, `expose_php` Off and reporting matched to the installed `E_ALL`. Per the guide's cited PHP command-line inspection (`--ini`, `-i`, `-r`), PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`) and PHP hiding and `expose_php` entries. An effective FPM or Apache comparison still needs that deployed SAPI; a live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No actual CLI or FPM values were observed. Expect `display_errors=Off`, `display_startup_errors=Off`, `log_errors=On`, the intended protected `error_log`, `expose_php=Off`, and `error_reporting` equal to the installed version's `E_ALL`. PHP's diagnostic values can change between versions, so compare against the printed constant rather than a copied integer. CLI inspection does not establish FPM or Apache's effective configuration: inspect that SAPI's loaded files and overrides separately, including the FPM pool settings. Do not publish a `phpinfo()` endpoint.
+REASONED: preceding block; loaded CLI configuration inspection and expected error settings. In the authoring environment, `php -v` exited 127 and printed `/usr/bin/bash: line 1: php: command not found`; `php` was not on the command path, and neither network package installation nor an authorized offline PHP package source was available. The block passed `bash -n` and ShellCheck 0.11.0 with no output; its scratch stubs printed `php-stub:--ini`, `grep-stub:-E ^(display_errors|display_startup_errors|log_errors|error_log|error_reporting|expose_php) =>` and `php-stub:-r echo "E_ALL=", E_ALL, PHP_EOL;`. Those runs covered this block in an earlier form, three top-level commands with no status of their own; its current form refuses with status 2 when no `php` command is found, exits 3 when a command fails or `php -i` lists none of the settings, and is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. Exposed settings show display or startup errors On, logging Off or `expose_php` On where misconfigured; fixed settings show display and startup errors Off, logging On, a protected log, `expose_php` Off and reporting matched to the installed `E_ALL`. Per the guide's cited PHP command-line inspection (`--ini`, `-i`, `-r`), PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`) and PHP hiding and `expose_php` entries. An effective FPM or Apache comparison still needs that deployed SAPI; a live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No actual CLI or FPM values were observed. Expect `display_errors=Off`, `display_startup_errors=Off`, `log_errors=On`, the intended protected `error_log`, `expose_php=Off`, and `error_reporting` equal to the installed version's `E_ALL`. PHP's diagnostic values can change between versions, so compare against the printed constant rather than a copied integer. CLI inspection does not establish FPM or Apache's effective configuration: inspect that SAPI's loaded files and overrides separately, including the FPM pool settings. Do not publish a `phpinfo()` endpoint.
 
 **REASONED: banner and native PHP error disclosure.** No web SAPI or deployment was available. In an isolated deployment matching production, temporarily serve this controlled fixture through the intended PHP handler and proxy. Use PHP's built-in error handler, without framework bootstrapping or application error-handler overrides. Restrict access to the test operator and remove the fixture afterwards. The fixed warning text contains no secret. [PHP `trigger_error()`](https://www.php.net/manual/en/function.trigger-error.php).
 
@@ -20224,18 +20442,31 @@ REASONED: following block; PHP response-banner discrimination. The guide records
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the full HTTPS fixture URL inside the quotes above; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS --connect-timeout 5 --max-time 20 \
-        -D - -o /dev/null \
-        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1" || true
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g --noproxy '*' -sS --connect-timeout 5 --max-time 20 \
+        -D - -o /dev/null \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*$'\n''http=200 exit='*) ;;
+    0:*) echo "the fixture did not answer HTTP 200, and this check requires a successful transfer and that 200; inconclusive"; set -- "$1" 3 "$3" ;;
+    *) echo "curl exit ${3##*$'\n'}: the transfer failed; inconclusive"; set -- "$1" 3 "$3" ;;
+  esac
+  if [ "${3##*$'\n'}" = 0 ]; then
+    if printf '%s' "${3%$'\n'*}" | grep -i '^x-powered-by: *php/' > /dev/null; then
+      echo "FINDING: the response carries X-Powered-By: PHP/, the header expose_php=On sends"; set -- "$1" 1
+    else
+      case "$?" in 1) ;; *) echo "grep could not read the headers; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;; esac
+    fi
+  fi
+  echo "block exit $2; with the header absent, a proxy that strips it in both states is not detected, so attribute the setting through the active SAPI configuration yourself"
+  exit "$2"
+)
 ```
 
-REASONED: preceding block; fixture-header curl probe and PHP banner interpretation. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no proxy response or active SAPI inventory was available. Exposed with `expose_php=On`: successful fixture HTTP 200 with `X-Powered-By: PHP/...` unless a proxy strips it; fixed with Off: successful HTTP 200 without PHP's header. Per the guide's cited PHP hiding and `expose_php` and PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`) entries. The banner block passed `bash -n` and ShellCheck 0.11.0 with no output; scratch `bash` printed its placeholder guard, a dummy HTTPS URL reached `curl-stub`, and `bash -u` empty, extra and missing-`set --` trials printed the matching guard messages. The bash -n, ShellCheck and stub runs recorded here covered the banner block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No response header was observed. With `expose_php=On`, the exposed-state response is expected to contain `X-Powered-By: PHP/...` unless another layer strips it. With `expose_php=Off`, it must be absent. Require a successful transfer and the fixture's expected HTTP 200 response. If the proxy strips the header in both states, this checks the externally visible response only; attribute the PHP setting through the active SAPI configuration. [PHP banner behavior](https://www.php.net/manual/en/security.hiding.php).
+REASONED: preceding block; fixture-header curl probe and PHP banner interpretation. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no proxy response or active SAPI inventory was available. Exposed with `expose_php=On`: successful fixture HTTP 200 with `X-Powered-By: PHP/...` unless a proxy strips it; fixed with Off: successful HTTP 200 without PHP's header. Per the guide's cited PHP hiding and `expose_php` and PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`) entries. The banner block passed `bash -n` and ShellCheck 0.11.0 with no output; scratch `bash` printed its placeholder guard, a dummy HTTPS URL reached `curl-stub`, and `bash -u` empty, extra and missing-`set --` trials printed the matching guard messages. The bash -n, ShellCheck and stub runs recorded here covered the banner block in an earlier form, whose guard refusals left the subshell with status 0; its current form, which exits 1 when the response carries `X-Powered-By: PHP/` and 3 for a failed transfer or a status other than 200, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. No response header was observed. With `expose_php=On`, the exposed-state response is expected to contain `X-Powered-By: PHP/...` unless another layer strips it. With `expose_php=Off`, it must be absent. Require a successful transfer and the fixture's expected HTTP 200 response. If the proxy strips the header in both states, this checks the externally visible response only; attribute the PHP setting through the active SAPI configuration. [PHP banner behavior](https://www.php.net/manual/en/security.hiding.php).
 
-REASONED: fixture-body inspection instruction. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no protected worker log was available. Exposed with display errors On: the fixture HTTP 200 body includes `SECURECONFIG_PHP_ERROR_CANARY`; fixed with display errors Off and logging On: HTTP 200 body includes `SECURECONFIG_PHP_REACHED` without the warning, while the protected log receives `SECURECONFIG_PHP_ERROR_CANARY`. Per the guide's cited PHP controlled warning fixture (`trigger_error`) and PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`) entries. The following body block passed `bash -n` and ShellCheck 0.11.0 with no output. The following body block's scratch `bash` run printed `substitute the full HTTPS fixture URL inside the quotes above; not probing`, and a dummy HTTPS URL reached `curl-stub`. The following body block's `bash -u` empty, extra and missing-`set --` trials printed `substitute the full HTTPS fixture URL inside the quotes above; not probing`, `the set -- line needs exactly 1 value; not probing`, and `paste the whole block, including its set -- line; not probing`, respectively. The bash -n, ShellCheck and stub runs recorded here covered the following body block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No body or log was observed. Then inspect the body from the same fixture URL:
+REASONED: fixture-body inspection instruction. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no protected worker log was available. Exposed with display errors On: the fixture HTTP 200 body includes `SECURECONFIG_PHP_ERROR_CANARY`; fixed with display errors Off and logging On: HTTP 200 body includes `SECURECONFIG_PHP_REACHED` without the warning, while the protected log receives `SECURECONFIG_PHP_ERROR_CANARY`. Per the guide's cited PHP controlled warning fixture (`trigger_error`) and PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`) entries. The following body block passed `bash -n` and ShellCheck 0.11.0 with no output. The following body block's scratch `bash` run printed `substitute the full HTTPS fixture URL inside the quotes above; not probing`, and a dummy HTTPS URL reached `curl-stub`. The following body block's `bash -u` empty, extra and missing-`set --` trials printed `substitute the full HTTPS fixture URL inside the quotes above; not probing`, `the set -- line needs exactly 1 value; not probing`, and `paste the whole block, including its set -- line; not probing`, respectively. The bash -n, ShellCheck and stub runs recorded here covered the following body block in an earlier form, whose guard refusals left the subshell with status 0; its current form, which reports its result in its exit status, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. No body or log was observed. Then inspect the body from the same fixture URL:
 
 REASONED: following block; native PHP and Laravel error-disclosure discrimination. The guide records no PHP/PHP-FPM runtime, container runtime or supplied deployment; expectations follow its cited PHP and Laravel documentation, not a recorded run.
 
@@ -20247,18 +20478,25 @@ REASONED: following block; native PHP and Laravel error-disclosure discriminatio
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the full HTTPS fixture URL inside the quotes above; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS --connect-timeout 5 --max-time 20 \
-        -i \
-        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1" || true
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g --noproxy '*' -sS --connect-timeout 5 --max-time 20 \
+        -i \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' -- "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status
+  printf '%s' "${3%$'\n'*}"
+  case "${3##*$'\n'}:${3%$'\n'*}" in
+    0:*SECURECONFIG_PHP_ERROR_CANARY*) echo "FINDING: the response contains SECURECONFIG_PHP_ERROR_CANARY, so PHP displays the warning to the client"; set -- "$1" 1 ;;
+    0:*SECURECONFIG_PHP_REACHED*$'\n''http=200 exit='*) ;;
+    0:*) echo "the response is not HTTP 200 carrying SECURECONFIG_PHP_REACHED: a blank response, redirect, 404 or other error does not satisfy this check; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit ${3##*$'\n'}: the transfer failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; PHP diagnostics other than the marker, and the protected log entry for this request, are not classified, so check them yourself (a Laravel exception route does not print SECURECONFIG_PHP_REACHED, so there this block exits 3 and you read the response yourself)"
+  exit "$2"
+)
 ```
 
-REASONED: preceding block; native PHP body curl probe, response and log comparison. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no worker log was available. Exposed with display errors On: HTTP 200 contains the warning marker; fixed with display errors Off and logging On: HTTP 200 contains the reached marker without diagnostics and the protected log contains the warning marker. Per the guide's cited PHP controlled warning fixture (`trigger_error`) and PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`) entries. The body block passed `bash -n` and ShellCheck 0.11.0 with no output; scratch `bash` printed its placeholder guard, a dummy HTTPS URL reached `curl-stub`, and `bash -u` empty, extra and missing-`set --` trials printed the matching guard messages. The bash -n, ShellCheck and stub runs recorded here covered the body block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No HTTP or log outcome was observed. In the isolated exposed state, `display_errors=On` with `error_reporting=E_ALL` should disclose `SECURECONFIG_PHP_ERROR_CANARY` in the response. After applying section 5, the HTTP 200 body must contain `SECURECONFIG_PHP_REACHED` without the warning marker or PHP diagnostics, while the protected log receives the warning marker for that request. A blank response, redirect, 404, failed transfer, or missing log entry does not satisfy this check. This fixture tests a runtime warning; it does not exercise startup or parse errors. [PHP error configuration](https://www.php.net/manual/en/errorfunc.configuration.php).
+REASONED: preceding block; native PHP body curl probe, response and log comparison. A live PHP deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no worker log was available. Exposed with display errors On: HTTP 200 contains the warning marker; fixed with display errors Off and logging On: HTTP 200 contains the reached marker without diagnostics and the protected log contains the warning marker. Per the guide's cited PHP controlled warning fixture (`trigger_error`) and PHP 8.x error configuration (`display_errors`, `display_startup_errors`, `log_errors`, `error_log`, `error_reporting`) entries. The body block passed `bash -n` and ShellCheck 0.11.0 with no output; scratch `bash` printed its placeholder guard, a dummy HTTPS URL reached `curl-stub`, and `bash -u` empty, extra and missing-`set --` trials printed the matching guard messages. The bash -n, ShellCheck and stub runs recorded here covered the body block in an earlier form, whose guard refusals left the subshell with status 0. Its current form exits 1 when the response contains `SECURECONFIG_PHP_ERROR_CANARY` and 3 unless it is HTTP 200 carrying `SECURECONFIG_PHP_REACHED`; that form is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. No HTTP or log outcome was observed. In the isolated exposed state, `display_errors=On` with `error_reporting=E_ALL` should disclose `SECURECONFIG_PHP_ERROR_CANARY` in the response. After applying section 5, the HTTP 200 body must contain `SECURECONFIG_PHP_REACHED` without the warning marker or PHP diagnostics, while the protected log receives the warning marker for that request. A blank response, redirect, 404, failed transfer, or missing log entry does not satisfy this check. This fixture tests a runtime warning; it does not exercise startup or parse errors. [PHP error configuration](https://www.php.net/manual/en/errorfunc.configuration.php).
 
-REASONED: Laravel exception-route comparison. A live Laravel deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no controlled route, authorized session or application log was available. Exposed with `APP_DEBUG=true`: the route's response shows the distinctive exception, trace or configuration values; fixed with `APP_DEBUG=false` after rebuilding cached configuration: a generic error response omits those details and the protected application log records the exception. Per the guide's cited Laravel 12.x deployment (nginx example, `APP_DEBUG`) and Laravel 12.x configuration and environment-file security entries. The related body curl block passed `bash -n` and ShellCheck 0.11.0 with no output; scratch `bash` printed its placeholder guard, a dummy HTTPS URL reached `curl-stub`, and `bash -u` empty, extra and missing-`set --` trials printed the matching guard messages. The bash -n, ShellCheck and stub runs recorded here covered the related body curl block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No Laravel response or log was observed. For Laravel 12.x, repeat the body probe against a controlled route that raises an exception with a distinctive, non-secret message. In an isolated deployment, compare `APP_DEBUG=true` with `APP_DEBUG=false`, rebuilding cached configuration after each change. The protected state must show a generic error response without the exception message, trace, or configuration values; confirm the matching exception in the protected application log. The native PHP fixture alone does not establish Laravel's framework error behavior. [Laravel debug mode](https://laravel.com/framework/docs/12.x/deployment#debug-mode).
+REASONED: Laravel exception-route comparison. A live Laravel deployment stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no controlled route, authorized session or application log was available. Exposed with `APP_DEBUG=true`: the route's response shows the distinctive exception, trace or configuration values; fixed with `APP_DEBUG=false` after rebuilding cached configuration: a generic error response omits those details and the protected application log records the exception. Per the guide's cited Laravel 12.x deployment (nginx example, `APP_DEBUG`) and Laravel 12.x configuration and environment-file security entries. The related body curl block passed `bash -n` and ShellCheck 0.11.0 with no output; scratch `bash` printed its placeholder guard, a dummy HTTPS URL reached `curl-stub`, and `bash -u` empty, extra and missing-`set --` trials printed the matching guard messages. The bash -n, ShellCheck and stub runs recorded here covered the related body curl block in an earlier form, whose guard refusals left the subshell with status 0; its current form is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block. Against a Laravel exception route that block exits 3, because the response carries no `SECURECONFIG_PHP_REACHED`, so read the response itself for this comparison. No Laravel response or log was observed. For Laravel 12.x, repeat the body probe against a controlled route that raises an exception with a distinctive, non-secret message. In an isolated deployment, compare `APP_DEBUG=true` with `APP_DEBUG=false`, rebuilding cached configuration after each change. The protected state must show a generic error response without the exception message, trace, or configuration values; confirm the matching exception in the protected application log. The native PHP fixture alone does not establish Laravel's framework error behavior. [Laravel debug mode](https://laravel.com/framework/docs/12.x/deployment#debug-mode).
 
 ## Sources (checked September 2026)
 
@@ -20393,7 +20631,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "0216bc747de253b8c8ef5b99a60787175ab792df6e401becfc9f3a24ff908b1e",
+  "body_sha256": "fe6461aaf03be8ca4c9bbcb00f5483515234ded25a61b4a1ea4101cc18729934",
   "components": {
     "php8": {
       "name": "PHP native configuration",
