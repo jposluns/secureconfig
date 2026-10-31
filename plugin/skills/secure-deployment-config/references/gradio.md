@@ -183,7 +183,7 @@ Consider `launch(run_history=False)`. In 6.28.0 its default is `None`, resolving
 
 ## 9. Verify
 
-**REASONED:** Verification overview and historical authoring report; no live Gradio, HTTPS ingress, second host, or IdP fixture is supplied for this offline run. Per the guide's cited Gradio 6.28.0 Blocks source and Gradio 6.28.0 routes source, compare the exposed/fixed outcomes specified below. In this marking run, three Python examples parsed, all three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with no output, and stubbed guards rejected invalid inputs without curl calls; these are local checks only. The bash -n, ShellCheck and stub runs recorded here covered the base-URL probe block and the protected request helper in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The following environment and run account describes the earlier authoring session. These service checks are **reasoned, not demonstrated**. The authoring environment has no installed Gradio or container runtime, has restricted network access, and provides no authorized live Gradio deployment, second-host ingress fixture, or identity provider. Python syntax, Bash parsing, ShellCheck 0.11.0, and the repository's guard scan were checked locally; they do not demonstrate service behavior. Expected exposed/fixed outcomes rest on the cited Gradio 6.28.0 source and vendor documentation.
+**REASONED:** Verification overview and historical authoring report; no live Gradio, HTTPS ingress, second host, or IdP fixture is supplied for this offline run. Per the guide's cited Gradio 6.28.0 Blocks source and Gradio 6.28.0 routes source, compare the exposed/fixed outcomes specified below. In this marking run, three Python examples parsed, all three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with no output, and stubbed guards rejected invalid inputs without curl calls; these are local checks only. The bash -n, ShellCheck and stub runs recorded here covered the base-URL probe block and the protected request helper in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Every bash -n, ShellCheck and stub run recorded in this section also predates the change that makes each of the three Verify shell blocks report its result in its exit status (1 for a finding, 2 for a guard refusal, 3 for a failed or inconclusive check, 0 for a pass or a named unclassified observation), so none of them covered the current form. The following environment and run account describes the earlier authoring session. These service checks are **reasoned, not demonstrated**. The authoring environment has no installed Gradio or container runtime, has restricted network access, and provides no authorized live Gradio deployment, second-host ingress fixture, or identity provider. Python syntax, Bash parsing, ShellCheck 0.11.0, and the repository's guard scan were checked locally; they do not demonstrate service behavior. Expected exposed/fixed outcomes rest on the cited Gradio 6.28.0 source and vendor documentation.
 
 **REASONED:** Comparison-fixture isolation and evidence collection, per the guide's cited Gradio 6.28.0 Blocks source and Gradio 6.28.0 routes source; no authorized live Gradio or public-ingress fixture is supplied here. The local shell and stub checks recorded above ran, but publication, native refusal, and successful authorized controls remain the expected comparisons below, not observations. Those shell and stub checks covered the base-URL probe block and the protected request helper in an earlier form, whose guard refusals exited with status 1; neither block was re-run in its current form, whose guard refusals exit with status 2. Use a disposable private fixture for exposed comparisons, with harmless data and disposable credentials. Record the installed Gradio version, effective configuration, response content, and the layer issuing each refusal. Do not expose an unauthenticated or vibe-enabled comparison to the internet.
 
@@ -192,17 +192,24 @@ Consider `launch(run_history=False)`. In 6.28.0 its default is `None`, resolving
 **REASONED:** The deployment host and a live share-tunnel fixture are unavailable here. On the application host, inspect the listener and the current launch's complete startup output. An exposed fixture with `server_name="0.0.0.0"` should show an all-interface bind; the proxy-backed configuration should show loopback. A shared fixture should print its public URL and be reachable through it; the fixed fresh process must satisfy all three conditions below. See the [launch and sharing implementation](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/blocks.py).
 
 ```bash
-ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO_SERVER_PORT changes it.
-           # Expect loopback unless deliberately exposed. ss shows a local BIND only, and it CANNOT detect
-           # a share=True tunnel: that keeps the listener on loopback and opens an OUTBOUND frpc connection to
-           # Gradio's relay publishing a *.gradio.live URL. Confirm share is off with all three checks, and if you
-           # cannot confirm ALL THREE, treat it as UNKNOWN (not off): (1) the previous app process or
-           # notebook kernel and its tunnel are terminated FIRST (a rerun with share=False in a persistent
-           # kernel clears the URL but can leave the earlier tunnel connected), (2) share=False is set in
-           # the launch() call, and (3) THIS fresh run's full startup output shows no "Running on public
-           # URL: https://<name>.gradio.live" line (a shared run prints it in its startup output, so read the current
-           # launch's output, not a stale log). If you know a former public URL, also confirm it is now
-           # unreachable. Terminate any share tunnel after a demo.
+(                                       # a subshell, so the exits below end only the subshell
+  set +e                                # errexit off here, so a failed ss is reported below instead of ending the block
+  ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO_SERVER_PORT changes it.
+             # Expect loopback unless deliberately exposed. ss shows a local BIND only, and it CANNOT detect
+             # a share=True tunnel: that keeps the listener on loopback and opens an OUTBOUND frpc connection to
+             # Gradio's relay publishing a *.gradio.live URL. Confirm share is off with all three checks, and if you
+             # cannot confirm ALL THREE, treat it as UNKNOWN (not off): (1) the previous app process or
+             # notebook kernel and its tunnel are terminated FIRST (a rerun with share=False in a persistent
+             # kernel clears the URL but can leave the earlier tunnel connected), (2) share=False is set in
+             # the launch() call, and (3) THIS fresh run's full startup output shows no "Running on public
+             # URL: https://<name>.gradio.live" line (a shared run prints it in its startup output, so read the current
+             # launch's output, not a stale log). If you know a former public URL, also confirm it is now
+             # unreachable. Terminate any share tunnel after a demo.
+  case "$?" in
+    0) echo "block exit 0, an unclassified observation: ss cannot show a share=True tunnel, so read the listeners above and confirm all three share conditions yourself"; exit 0 ;;
+    *) echo "ss -tlnp failed; inconclusive"; exit 3 ;;
+  esac
+)
 ```
 
 **REASONED:** Native authentication and certificate checks require live HTTPS ingress and an outside client, unavailable here. A served login page does NOT prove the API is gated. Probe a protected API route WITHOUT a Gradio session cookie. With native authentication absent on the isolated comparison fixture, `/gradio_api/info` should return 200 with API information; with native authentication enabled, Gradio's own `login_check` should return 401. See the [protected info route and login check](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.28.0/gradio/routes.py).
@@ -214,6 +221,7 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
 ```bash
 # REASONED: native API authentication and TLS; no live HTTPS Gradio fixture or outside client here. Expected exposed/fixed outcomes follow the cited 6.28.0 handlers.
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_GRADIO_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -222,9 +230,17 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|""|*[[:cntrl:]]*)
       echo "substitute the actual base URL inside the quotes; not probing"; exit 2 ;;
     https://*)
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        -D - -o /dev/null -w 'anon=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "${1%/}/gradio_api/info"
+      set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -D - -o /dev/null -w 'anon=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code}' \
+        "${1%/}/gradio_api/info"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"   # curl's exit status, then its output
+      printf '%s\n' "${3%$'\n'*}"         # the response headers and the anon= line
+      case "$2:${3##*$'\n'}" in
+        0:401) echo "pass: /gradio_api/info refused the request with 401; a fronting proxy's own 401 looks the same, so attribute it with the protected helper below"; exit 0 ;;
+        0:200) echo "FINDING: /gradio_api/info answered 200 without a Gradio session cookie"; exit 1 ;;
+        0:*) echo "HTTP ${3##*$'\n'} is neither native authentication's 401 nor the exposed 200; inconclusive"; exit 3 ;;
+        *) echo "curl exit $2: a TLS, DNS or connection failure is not an authentication refusal; inconclusive"; exit 3 ;;
+      esac
       ;;
     *) echo "use an HTTPS base URL; not probing"; exit 2 ;;
   esac
@@ -245,6 +261,7 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
 
 ```bash
 (
+  set +e                                # errexit off here, so a failed request is reported below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ENDPOINT_URL' 'GET' 'REPLACE_WITH_HEADER_FILE' 'REPLACE_WITH_BODY_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -260,8 +277,8 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
       [ -r "$3" ] || { echo "header file is unreadable"; exit 2; }
       [ -r "$4" ] || { echo "body file is unreadable"; exit 2; }
       umask 077
-      set -- "$@" "$(mktemp -d)" || exit 1
-      [ -d "$5" ] || { echo "cannot create private results directory"; exit 1; }
+      set -- "$@" "$(mktemp -d)"         # empty if mktemp fails, which the next line catches
+      [ -d "$5" ] || { echo "cannot create private results directory"; exit 3; }
       printf 'Private response directory: %s\n' "$5"
       case "$2" in
         GET)
@@ -282,6 +299,11 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
             -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
           ;;
         *) echo "use GET, POST or LOGIN; not probing"; exit 2 ;;
+      esac
+      set -- "$1" "$2" "$3" "$4" "$5" "$?"   # curl's exit status
+      case "$6" in
+        0) echo "block exit 0, an unclassified observation: a completed request is not a pass on its own, so compare the http= line above and the response in $5 with the comparison you are running"; exit 0 ;;
+        *) echo "curl exit $6: the request failed; inconclusive"; exit 3 ;;
       esac
       ;;
     *) echo "use HTTPS; not probing"; exit 2 ;;
@@ -425,7 +447,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "a20b9f0b32e4d1e065c3db82f6dbe7799297bbfc25ee6f5fb8632c86fa1696be",
+  "body_sha256": "15eab8dcecd45c6b1f239e39c1ea525284ec671061c2ea77f7ad38caf28ac473",
   "components": {
     "gradio": {
       "name": "Gradio",
