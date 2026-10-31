@@ -169,15 +169,19 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' --cacert ca.pem --cert client-cert.
 
 # GitLab CE: initial root password file check (needs Docker access; the container is named gitlab)
 # absence does not prove the password was rotated; presence means rotate root now
-if state=$(docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null); then
-  case "$state" in
-    PRESENT) echo 'initial_root_password present: rotate root and remove it' ;;
-    ABSENT)  echo 'initial_root_password absent' ;;
-    *)       echo 'the check did not run (unexpected reply from the gitlab container): not a result' ;;
-  esac
-else
-  echo 'the check did not run (docker exec failed for the gitlab container): fix the container, this is not a result'
-fi
+# status: 1 when the file is present, 3 when the check did not run, 0 when the file is absent
+(                                                   # a subshell, so the exit below ends only this check
+  if state=$(docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null); then
+    case "$state" in
+      PRESENT) echo 'initial_root_password present: rotate root and remove it'; exit 1 ;;
+      ABSENT)  echo 'initial_root_password absent' ;;
+      *)       echo 'the check did not run (unexpected reply from the gitlab container): not a result'; exit 3 ;;
+    esac
+  else
+    echo 'the check did not run (docker exec failed for the gitlab container): fix the container, this is not a result'
+    exit 3
+  fi
+)
 ```
 
 REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons, and the GitLab initial-password-file check follow the cited panel, Docker daemon and GitLab sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
@@ -314,7 +318,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a24013a853886f7ace8c795caa1c6a31bf9719dbfedcf47d07dae522b20c522f",
+  "body_sha256": "e2df46b37ec9984b326cf26a776fb2bee084dc5868d86d04d791a96745a7f233",
   "components": {
     "portainer": {
       "name": "Portainer",
