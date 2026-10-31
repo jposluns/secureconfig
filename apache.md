@@ -109,16 +109,17 @@ Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsuppor
 Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
 the status code is printed and you compare it. The first block takes your host name, an
 unconfigured name and a protected path on its `set --` line, and refuses with status 2 if any is
-left unsubstituted or malformed. It classifies two of its requests, to the site root and to the
-unconfigured name, records each outcome as it runs, and exits once at the end: 1 if either
-answers 200, otherwise 3 if either answers anything but 401 or one of its curl or ss commands
-fails, and 0 when both answer 401. The redirect headers and the listener list stay for you to
-judge, and the configuration test and reload line before the subshell does not affect the
-status. The `apachectl -S` block exits 3 if the command fails and 0 otherwise, because you judge
-the vhost list it prints.
+left unsubstituted or malformed, or if the unconfigured name is your own host name in any letter
+case. That comparison cannot see your other ServerName and ServerAlias values, so check the name
+against them yourself. The block then runs the configuration test and reload, classifies its
+requests to the site root and to the unconfigured name, records each outcome as it runs, and
+exits once at the end: 1 if either request answers 200, otherwise 3 if either answers anything
+but 401 or the configuration test, the reload or one of its curl or ss commands fails, and 0
+when both answer 401. The redirect headers and the listener list stay for you to judge. The
+`apachectl -S` block exits 3 if the command fails and 0 otherwise, because you judge the vhost
+list it prints.
 
 ```bash
-sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_AN_UNCONFIGURED_NAME' 'REPLACE_WITH_A_PROTECTED_PATH'   # the deployment's public host name, then a name your certificate covers that no ServerName or ServerAlias matches (each with no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected path without its leading slash: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -133,10 +134,16 @@ sudo apachectl configtest && sudo systemctl reload apache2   # httpd on RHEL
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute a name your certificate covers that no ServerName or ServerAlias matches (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
+  case "$(printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
+    "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
+  esac
   case "$3" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  if sudo apachectl configtest && sudo systemctl reload apache2; then :; else   # httpd on RHEL
+    echo "configuration test or reload exit $?: the requests below may test the configuration Apache was already running; inconclusive"; set -- "$1" "$2" "$3" 3
+  fi
   curl -q -g -sSI --noproxy '*' "http://$1/" ||         # expect 301 with a https:// Location
     { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -288,7 +295,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "9f9b01927db5c4d58680d3b1d305ac4f0f65a565bbc1e4238e4aef08fbd2bccf",
+  "body_sha256": "3b69ef78ccd26273a38ce7360f0a1172a0c33422de23407664f88afbf6e7e530",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",

@@ -87,6 +87,12 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. The authoring environment cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
 
 ```bash
+# Paste this walkthrough a step at a time, never whole: it spans hosts, and frpc runs in the foreground.
+# The frp steps run on the frp client, the pings on the peer, the counter reads on the WireGuard server,
+# the WireGuard and firewall reads on the host you are checking, and the ssh -R check on the SSH server.
+# No exit status covers the whole walkthrough. The frp, WireGuard, firewall, ping and counter steps are
+# read-and-judge: their exit statuses are not results, so read their output against the comments. The
+# ssh -R subshell at the end has a status of its own, for that check on that host only.
 # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
 # reachability and a valid token). frpc then stays in the FOREGROUND; stop it with Ctrl-C before the
 # next command. This exercises token auth only; auth.token has no effect under auth.method = "oidc".
@@ -143,7 +149,7 @@ ping -c1 192.168.1.50
 sudo nft list chain inet filter forward | grep -E 'iifname "wg0" ip saddr 192.168.88.0/24 ip daddr != 192.168.88.0/24 counter .* drop'
 
 # ssh -R: on the SERVER, a forwarded port binds 127.0.0.1 (or [::1]) with GatewayPorts no, never 0.0.0.0
-(          # a subshell, so the exit below ends only the subshell
+(          # a subshell, so the exit below ends only the subshell; its status is this check's alone: 3 if ss fails, otherwise 0
   ss -tlnp ||   # read every listener; 8080: only a loopback address unless you deliberately published it
     { echo "ss -tlnp failed; inconclusive"; exit 3; }
   echo "unclassified observation: read every listener above; 8080 belongs on a loopback address unless you deliberately published it"
@@ -257,7 +263,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "4872e15a8d9949d536300372a397b48b1ed7ba182896d48f8b04ce045e506968",
+  "body_sha256": "b1510eebb0e9200c24529e7627621f91d93ffcd76576db3166cc50a1b7c15b85",
   "components": {
     "frps": {
       "name": "frps source",

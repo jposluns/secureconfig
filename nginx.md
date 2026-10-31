@@ -146,93 +146,158 @@ Mind the client address these headers carry. At a direct internet edge the block
 ## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture.)
 
 ```bash
-sudo nginx -t && sudo systemctl reload nginx
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -sI "http://$1/"        # expect 301 with a https:// Location
-  curl -q -g -sI --max-time 10 "https://$1/"       # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
-  curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 10 "https://$1/"                        # if section 3's auth is applied: an uncredentialed request must be 401/403, never 200
-)
-(
-  # The admin password reaches curl through a config file on stdin (curl
-  # --config -), never through argv: -u admin:PASSWORD is world-readable via
-  # ps and /proc/<pid>/cmdline on a shared host. Paste the whole parenthesised
-  # block, including its set -- line. (The TLS-floor, size-prep and rate-limit
-  # steps sit inside the same block only so the host and password are entered
-  # once.)
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The password you substitute on the set -- line enters shell history.
-  # Clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the password from
-  # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
-  set -- "$1" "${2//\\/\\\\}"
-  set -- "$1" "${2//\"/\\\"}"
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 10 --config - "https://$1/"   # with credentials: your app's response, never 401
-  curl -q -g -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 "https://$1/"   # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
-  head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 20 --config - --data-binary @/tmp/under.bin "https://$1/"
-                                    # positive control: must be your app's normal response to this POST
-                                    # (for example 200/204/405), never 413. A 401 means the credentials, not
-                                    # the size limit, were exercised, and a 000 means transport failed: either voids the control
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"
-                                    # 413. The 9M control is the discriminating half: nginx's default
-                                    # client_max_body_size is 1m, so 9M is refused until `10m` is set,
-                                    # while 11M returns 413 either way. Neither status says WHICH layer
-                                    # refused: a backend with its own limit produces the same codes. To
-                                    # attribute it to nginx, set `client_max_body_size 0` in an isolated
-                                    # environment, which disables the check entirely; commenting the
-                                    # directive out only restores the 1m default and still returns 413
-  seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
-                                    # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
-                                    # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
-                                    # phase, so an unauthenticated flood still exercises the limiter, which
-                                    # is keyed on $binary_remote_addr (the client address). Expect 503s
-                                    # (the limiter rejecting; limit_req_status defaults to 503) mixed with
-                                    # 401s if section 3's auth covers /, or with 200s if it does not.
-                                    # A 503 is not conclusive on its own: `limit_conn` also returns
-                                    # 503, and an upstream under load returns it too, so this does not
-                                    # establish that either nginx limiter fired. Attributing it needs an
-                                    # isolated environment with both limiters disabled as a baseline,
-                                    # then each enabled alone, with the arrival rate actually measured
-)
-rm -f /tmp/under.bin /tmp/over.bin
-(                                   # a subshell, so the exits below end only the subshell
-  set -- "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the listener table, then ss's exit status
-  set -- "${1%$'\n'*}" "${1##*$'\n'}"
-  [ "$2" = 0 ] || { echo "ss -tlnp failed; inconclusive"; exit 3; }
-  printf '%s' "$1"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. All the checks
-                                    # above pass while the app also answers directly on port 3000,
-                                    # which bypasses this proxy's TLS and its authentication. That
-                                    # bypass is the first common mistake below, and the first item in
-                                    # common-mistakes.md
-  if printf '%s' "$1" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
-    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; exit 1
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  if sudo nginx -t && sudo systemctl reload nginx; then :; else
+    echo "nginx -t or reload exit $?: the requests below may test the configuration nginx was already running; inconclusive"; set -- 3
+  fi
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_auth_OR_open'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then auth if section 3's auth covers location / or open if you left / public on purpose: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in
+      auth|open) ;;
+      *) echo "substitute auth (section 3's auth covers location /) or open (you left / public on purpose) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$2" 0                  # the 3rd value is this part's status so far, ranked as above
+    curl -q -g -sI "http://$1/" ||      # expect 301 with a https:// Location
+      { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+    if curl -q -g -sI --max-time 10 "https://$1/"; then :; else   # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
+      set -- "$1" "$2" "$3" "$?"
+      case "$4" in
+        60) echo "FINDING: curl exit 60, a certificate that did not verify, and a cert error means TLS is misconfigured"; set -- "$1" "$2" 1 ;;
+        *) echo "curl exit $4: the HTTPS request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      esac
+    fi
+    set -- "$1" "$2" "$3" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 10 "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$5"                  # if section 3's auth is applied: an uncredentialed request must be 401/403, never 200
+    case "$2:$4:$5" in
+      auth:0:401|auth:0:403|open:0:*) ;;
+      auth:0:2??) echo "FINDING: / answered $5 with no credentials, though section 3's auth should cover it"; set -- "$1" "$2" 1 ;;
+      auth:0:*) echo "HTTP $5 without credentials is neither the 401/403 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      *) echo "curl exit $4: the request without credentials failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+    exit "$3"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  (
+    # The admin password reaches curl through a config file on stdin (curl
+    # --config -), never through argv: -u admin:PASSWORD is world-readable via
+    # ps and /proc/<pid>/cmdline on a shared host. Paste the whole parenthesised
+    # block, including its set -- line. (The TLS-floor, size-prep and rate-limit
+    # steps sit inside the same block only so the host and password are entered
+    # once.)
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    # The password you substitute on the set -- line enters shell history.
+    # Clear that history line afterward.
+    # Stdin closes the argv channel only: it does not hide the password from
+    # set -x tracing or your own account's view of the process.
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_PASSWORD'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the admin password: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "${2//\\/\\\\}"
+    set -- "$1" "${2//\"/\\\"}"
+    set -- "$1" "$2" 0                  # the 3rd value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 10 --config - "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$5"                  # with credentials: your app's response, never 401
+    case "$4:$5" in
+      0:401) echo "HTTP 401 with the credentials, so they were refused; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      0:*) ;;
+      *) echo "curl exit $4: the request with credentials failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$(if curl -q -g -s -o /dev/null -w 'http=%{http_code} err=%{errormsg}\n' --max-time 10 --tlsv1.1 --tls-max 1.1 "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then its http= and err= line
+    printf '%s\n' "$5"                  # protocol floor: offering only TLS 1.1 MUST be rejected. The pass is specifically a `protocol_version` alert (the server refuses the version); a generic handshake failure (for example no shared cipher) or a local "could not load"/policy error is inconclusive, not proof. This shows the 1.1 boundary; the same TLSv1.2+ floor also refuses 1.0, which you confirm separately with `--tlsv1.0 --tls-max 1.0`
+    case "$4:$5" in
+      0:*) echo "FINDING: a handshake offering only TLS 1.1 succeeded, so the TLSv1.2+ floor is not in force"; set -- "$1" "$2" 1 ;;
+      *protocol?version*) ;;
+      *) echo "curl exit $4 without a protocol_version alert, which is not proof of the floor; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    esac
+    if head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin; then
+      set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 20 --config - --data-binary @/tmp/under.bin "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+      printf '%s\n' "$5"
+                                      # positive control: must be your app's normal response to this POST
+                                      # (for example 200/204/405), never 413. A 401 means the credentials, not
+                                      # the size limit, were exercised, and a 000 means transport failed: either voids the control
+      case "$4:$5" in
+        0:401|0:413) echo "HTTP $5 for the 9M body voids the positive control; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        0:2??|0:3??|0:4??) ;;
+        0:*) echo "HTTP $5 for the 9M body is not your app's normal response; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        *) echo "curl exit $4: the 9M request failed, which voids the positive control; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      esac
+      set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+      printf '%s\n' "$5"
+                                      # 413. The 9M control is the discriminating half: nginx's default
+                                      # client_max_body_size is 1m, so 9M is refused until `10m` is set,
+                                      # while 11M returns 413 either way. Neither status says WHICH layer
+                                      # refused: a backend with its own limit produces the same codes. To
+                                      # attribute it to nginx, set `client_max_body_size 0` in an isolated
+                                      # environment, which disables the check entirely; commenting the
+                                      # directive out only restores the 1m default and still returns 413
+      case "$4:$5" in
+        0:413) ;;
+        0:2??) echo "FINDING: the 11M body was accepted with $5, so no body-size limit refused it"; set -- "$1" "$2" 1 ;;
+        0:*) echo "HTTP $5 for the 11M body is neither the 413 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        *) echo "curl exit $4: the 11M request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      esac
+    else
+      echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3
+    fi
+    seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
+                                      # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
+                                      # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
+                                      # phase, so an unauthenticated flood still exercises the limiter, which
+                                      # is keyed on $binary_remote_addr (the client address). Expect 503s
+                                      # (the limiter rejecting; limit_req_status defaults to 503) mixed with
+                                      # 401s if section 3's auth covers /, or with 200s if it does not.
+                                      # A 503 is not conclusive on its own: `limit_conn` also returns
+                                      # 503, and an upstream under load returns it too, so this does not
+                                      # establish that either nginx limiter fired. Attributing it needs an
+                                      # isolated environment with both limiters disabled as a baseline,
+                                      # then each enabled alone, with the arrival rate actually measured
+    rm -f /tmp/under.bin /tmp/over.bin
+    exit "$3"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listener table
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. All the checks
+                                      # above pass while the app also answers directly on port 3000,
+                                      # which bypasses this proxy's TLS and its authentication. That
+                                      # bypass is the first common mistake below, and the first item in
+                                      # common-mistakes.md
+  if [ "$3" != 0 ]; then
+    echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"
+  elif printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
   else
     case "$?" in
-      1) echo "no port 3000 listener outside loopback; unclassified observation: read every other listener above"; exit 0 ;;
-      *) echo "awk could not read the listener list; inconclusive"; exit 3 ;;
+      1) echo "no port 3000 listener outside loopback; unclassified observation: read every other listener above" ;;
+      *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;;
     esac
   fi
+  echo "block exit $1; the redirect and HTTPS headers, the rate-limit counts, the uncredentialed status with open, and listeners other than port 3000 are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -344,7 +409,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "09d859a239ca74e119e029d3d6575bf365721a0d0b20d1bb354f5462c50437ba",
+  "body_sha256": "c5ba1d8c19896716f81781c190403ae6015ef9b362d79b26beee95848d67cd37",
   "components": {
     "nginx-source": {
       "name": "nginx source",
