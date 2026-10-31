@@ -306,7 +306,7 @@ REASONED: preceding block; frontend key comparison, and this paragraph's combine
 
 REASONED: Weaviate and Chroma fronted checks. A live Weaviate or Chroma stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No authenticated TLS frontends or authorized identities were available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output. The curl stub printed three argument lists and exited 0, including the unchanged placeholder header-file argument; this does not validate a real header file. Those runs covered the block in an earlier form that named weaviate.example.com and chroma.example.com in one fence. The Weaviate and Chroma checks are now separate fences whose guarded `set --` lines take their hosts and refuse example.com, example.net, example.org and their subdomains, and the Weaviate line also takes the header file path, which it refuses unless readable. Their current forms are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes, and no stub run of them is recorded here. Each exits 1 when its anonymous request answers a 2xx; the Weaviate fence exits 0 when that request answers 401 or 403 and the header-file request answers 200, the Chroma fence exits 0 on 401 or 403, and any other result exits 3. Expected exposed Weaviate or unprotected Chroma accepts anonymous requests; fixed frontends return 401/403 anonymously and succeed for authorized users, per the guide's cited Weaviate authentication (anonymous access, API key, OIDC variables); Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables) entries. For Weaviate and Chroma, the fronted client checks still apply:
 
-REASONED: following block; the Weaviate check follows the cited Weaviate authentication documentation, which distinguishes native from fronting authorization; no live outcome for this frontend is recorded.
+REASONED: following block; the Weaviate check follows the cited Weaviate authentication documentation (anonymous access, API key, OIDC variables); no live outcome for this frontend is recorded.
 
 ```bash
 # --noproxy '*' so a forward proxy's CONNECT "200 Connection established" cannot masquerade as the
@@ -579,7 +579,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "2230f9c57d5efe9a0c03a8ebc4222b2952e3b32f493c2a91e3c0d7fb21c2cc54",
+  "body_sha256": "209736e6e1b7517c658efcd386c7f1432c1f178dc433ef02c52d11f542e867aa",
   "components": {
     "q": {
       "name": "Qdrant source",
