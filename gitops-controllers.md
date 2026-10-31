@@ -247,16 +247,25 @@ The marking and scratch-local reviews above covered the block's earlier form, wh
 argocd.example.com directly and also held the bootstrap Secret check and cluster inventory that the
 next block now runs. The block now takes the Argo CD host, the CA file and an application name on a
 guarded `set --` line that refuses an unsubstituted value and example.com, example.net, example.org and
-their subdomains. It records a finding (1) when the anonymous request answers 2xx with JSON naming that
-application, and 3 when a request fails, the anonymous answer is neither 401 nor such JSON, or the
-token-bearing answer is not a 200 naming the application. A refusal in its token part gives 2, and the
-block exits 0 only for an anonymous 401 beside that token-bearing 200.
+their subdomains. It refuses with 2 before any request when python3 is not installed, and python3 parses
+each 2xx body: a response names the application only when it is an application list, a JSON object whose
+`items` array holds an item with that `metadata.name`. It records a finding (1) when the anonymous
+request answers 2xx with such a list, and 3 when a request fails, the anonymous answer is neither 401
+nor such a list, the token-bearing answer is not a 200 with such a list, or python3 cannot parse a body,
+so HTML, invalid JSON and JSON that is not such a list are inconclusive. A refusal in its token part
+gives 2, and the block exits 0 only for an anonymous 401 beside that token-bearing 200.
 The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over
-every block, and by October 2026 stub runs under bash 5.3.9 with curl stubbed and the token typed at a
-pseudo-terminal. In those runs an anonymous 401 beside a token-bearing 200 naming the application
-exited 0; an anonymous 200 naming it exited 1, also when the token-bearing request failed; an
-anonymous login page, 302 or curl failure, or a token-bearing 403, failure or unnamed 200, exited 3, as
-did no readable /dev/tty; and an empty or readonly token and each `set --` refusal exited 2.
+every block, and by October 2026 stub runs under bash 5.3.9 with curl stubbed, the real python3 parsing
+and the token typed at a pseudo-terminal. In those runs an anonymous 401 beside a token-bearing 200 whose
+list held the application exited 0; an anonymous 200 whose list held it exited 1, also when the
+token-bearing request failed or answered 403 or the token was empty or readonly. A 200 at either request
+holding HTML, invalid JSON, `{"error":"demo"}` for an application named demo, a list naming only
+another application with demo in an annotation or `spec.name`, a null or non-array `items`, or a
+top-level array exited 3.
+So did an anonymous login page, 302 or curl failure, a token-bearing 403 or failure, a failing python3
+and no readable /dev/tty. A missing python3, each `set --` refusal, and beside an anonymous 401 an empty
+or readonly token or a readonly IFS exited 2; an inherited `set -e`, `set -u` or `declare -i tok` left
+these results unchanged.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
 also clears the `REDIS_PASSWORD` environment copy, and per-handler RBAC coverage in `argocd-server`.
@@ -289,6 +298,7 @@ every line after the first for your shell to run.
   case "$3" in
     ""|*REPLACE_WITH_*|*[!abcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "substitute the name of an application a valid token lists (lowercase letters, digits, dots and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
+  command -v python3 > /dev/null || { echo "python3 is not installed here; not probing"; exit 2; }   # python3 parses each response below
   set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert "$2" \
     -w '\nanon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -298,9 +308,11 @@ every line after the first for your shell to run.
   case "$5:${6##*anon http=}" in
     0:401' '*) ;;
     0:2??' '*)
-      case "$6" in
-        *'"'"$3"'"'*) echo "FINDING: the anonymous request was answered with application JSON naming $3"; set -- "$1" "$2" "$3" 1 ;;
-        *) echo "the anonymous request was answered with a 2xx that does not name $3 (a login page or a proxy's page is not the fixed state); inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(printf '%s' "${6%$'\n'anon http=*}" | python3 -c 'import json, sys; items = (lambda data: data.get("items", False) if isinstance(data, dict) else False)(json.load(sys.stdin)); sys.exit(12 if items is not None and not isinstance(items, list) else 10 if any(isinstance(item, dict) and isinstance(item.get("metadata"), dict) and item.get("metadata").get("name") == sys.argv[1] for item in items or ()) else 11)' "$3"; printf '%s' "$?")"   # python3 exits 10 when an item's metadata.name in the application list is $3, 11 for a list without it, 12 for other JSON and nonzero otherwise
+      case "$7" in
+        10) echo "FINDING: the anonymous request was answered with application JSON naming $3"; set -- "$1" "$2" "$3" 1 ;;
+        11|12) echo "the anonymous request was answered with a 2xx that does not name $3 (a login page or a proxy's page is not the fixed state); inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+        *) echo "python3 exit $7: the anonymous 2xx response could not be parsed as JSON; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
       esac ;;
     0:*) echo "the anonymous request was answered with neither 401 nor application JSON (a login page, a redirect or a 404 is not the fixed state); inconclusive"; set -- "$1" "$2" "$3" 3 ;;
     *) echo "curl exit $5: the anonymous request failed (a TLS error is not the fixed state); inconclusive"; set -- "$1" "$2" "$3" 3 ;;
@@ -327,9 +339,11 @@ every line after the first for your shell to run.
     printf '%s' "$5"
     case "$4:${5##*auth http=}" in
       0:200' '*)
-        case "$5" in
-          *'"'"$3"'"'*) echo "the token-bearing request was answered with 200 naming $3"; exit 0 ;;
-          *) echo "the token-bearing request was answered with 200 but does not name $3, so the positive control failed; inconclusive"; exit 3 ;;
+        set -- "$1" "$2" "$3" "$4" "$5" "$(printf '%s' "${5%$'\n'auth http=*}" | python3 -c 'import json, sys; items = (lambda data: data.get("items", False) if isinstance(data, dict) else False)(json.load(sys.stdin)); sys.exit(12 if items is not None and not isinstance(items, list) else 10 if any(isinstance(item, dict) and isinstance(item.get("metadata"), dict) and item.get("metadata").get("name") == sys.argv[1] for item in items or ()) else 11)' "$3"; printf '%s' "$?")"   # the same parse and statuses as above
+        case "$6" in
+          10) echo "the token-bearing request was answered with 200 naming $3"; exit 0 ;;
+          11|12) echo "the token-bearing request was answered with 200 but does not name $3, so the positive control failed; inconclusive"; exit 3 ;;
+          *) echo "python3 exit $6: the token-bearing response could not be parsed as JSON, so the positive control failed; inconclusive"; exit 3 ;;
         esac ;;
       0:*) echo "the token-bearing request was not answered with 200, so the positive control failed; inconclusive"; exit 3 ;;
       *) echo "curl exit $4: the token-bearing request failed, so the positive control failed; inconclusive"; exit 3 ;;
@@ -350,11 +364,13 @@ as retained bootstrap material, and treats kubectl's `(NotFound)` error as absen
 prove the password changed. It records 3 when another kubectl error or a failed `sudo ss -tlnp` occurs,
 including a Forbidden or a missing-CRD error, which this section reads as inconclusive; on a cluster
 without the Gateway API CRDs the route listing can fail that way, so list `ingress -A` alone there and
-read it. A missing `ss` gives 2, and every listing is left for you to judge. This form is covered by the
-repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub
-runs with kubectl, sudo and ss stubbed: an absent Secret with every listing succeeding exited 0, a listed
-Secret exited 1 (also when a later listing failed), a Forbidden or a failed listing, `sudo` or `ss`
-exited 3, and a missing `ss` exited 2.
+read it. A missing `ss` gives 2 only when nothing else was recorded (an earlier finding stays 1 and an
+earlier failure 3), and every listing is left for you to judge. This form is covered by the repository
+gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs with
+kubectl, sudo and ss stubbed: an absent Secret with every listing succeeding exited 0, a listed Secret
+exited 1 (also when a later listing, `sudo` or `ss` failed), and a Forbidden or a failed listing, `sudo`
+or `ss` exited 3. A missing `ss` alone exited 2, beside a listed Secret 1, and beside a Forbidden or a
+failed listing 3.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every command in it
@@ -396,7 +412,7 @@ exited 3, and a missing `ss` exited 2.
 )
 ```
 
-REASONED: following block; internal socket and policy inventory plus the repo-server metrics probe; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash with exit 0 and no diagnostics. With stubbed curl, placeholder, empty and invalid addresses printed 'supply the actual IPv4 pod address; not probing' (exit 2); shortened and wrong-marker assignments printed 'incomplete probe; not probing' (exit 2). The quoted-count and unquoted-$# control runs, with stubbed curl, IFS=0 and 20 values (marker plus 19), differed: the quoted count printed 'incomplete probe; not probing' (exit 2), while the unquoted-$# control reached the curl stub and printed 'stub curl' (exit 0). A valid fixture with stubbed curl printed 'stub curl' (exit 0). Those runs covered the block's earlier form, which took no pod role and ended with curl's own status. The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs with curl stubbed. In those runs, at the monitoring pod HTTP 200 exited 0 and HTTP 403 or a timeout exited 3; at the unrelated pod HTTP 200 or 403 exited 1 and a timeout or refusal exited 3; a missing address, a missing or unknown pod role, a wrong marker, a shortened `set --` line and 20 values under IFS=0 each exited 2. A live repo-server stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster with a supporting CNI, actual component sockets and authorized and unrelated pod vantages is also required. The base policy should return HTTP 200 metrics at both vantages; narrowed policy should return no HTTP response at the unrelated pod while the monitoring pod still returns metrics, per the guide's cited Argo CD Repo-server HTTP metrics and health mux and Argo CD Repo-server component selectors and metrics allowance entries. For internal isolation, inventory actual sockets in each component's network namespace with
+REASONED: internal socket and policy inventory and the run records of the repo-server metrics probe below, whose declaration is the paragraph after that block; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash with exit 0 and no diagnostics. With stubbed curl, placeholder, empty and invalid addresses printed 'supply the actual IPv4 pod address; not probing' (exit 2); shortened and wrong-marker assignments printed 'incomplete probe; not probing' (exit 2). The quoted-count and unquoted-$# control runs, with stubbed curl, IFS=0 and 20 values (marker plus 19), differed: the quoted count printed 'incomplete probe; not probing' (exit 2), while the unquoted-$# control reached the curl stub and printed 'stub curl' (exit 0). A valid fixture with stubbed curl printed 'stub curl' (exit 0). Those runs covered the block's earlier form, which took no pod role and ended with curl's own status. The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs with curl stubbed. In those runs, at the monitoring pod HTTP 200 exited 0 and HTTP 403 or a timeout exited 3; at the unrelated pod HTTP 200 or 403 exited 1 and a timeout or refusal exited 3; a missing address, a missing or unknown pod role, a wrong marker, a shortened `set --` line and 20 values under IFS=0 each exited 2. A live repo-server stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster with a supporting CNI, actual component sockets and authorized and unrelated pod vantages is also required. The base policy should return HTTP 200 metrics at both vantages; narrowed policy should return no HTTP response at the unrelated pod while the monitoring pod still returns metrics, per the guide's cited Argo CD Repo-server HTTP metrics and health mux and Argo CD Repo-server component selectors and metrics allowance entries. For internal isolation, inventory actual sockets in each component's network namespace with
 `ss -tlnp`, including ports absent from container declarations. Review rendered policies and CNI
 enforcement; a NetworkPolicy object's presence alone proves neither reachability nor denial.
 The following probe is REASONED for the same missing isolation and cluster capabilities above. Run it inside an authorized monitoring pod and an unrelated pod in another
@@ -451,10 +467,11 @@ read the printed `http=` code yourself, since a `401` there is the expected disa
 a failed control. Return profiling to disabled after the demonstration. The pinned
 metrics mux, profiler wrapper and server NetworkPolicy below distinguish these states.
 
-REASONED: the paired Argo CD `401` reading for the Argo CD API block earlier in this section and the Flux receiver checks
-for the block below, per the guide's cited Argo CD anonymous-access and RBAC entries, Flux notification
-Receivers entry and Python HMAC entries, with the paste-alone warning per CONTRIBUTING rule 7's `read`
-exception. No live Argo CD or Flux installation is available, so no receiver response or reconciliation
+REASONED: the paired Argo CD `401` reading for the Argo CD API block earlier in this section, the Flux receiver checks
+for the block below, the receiver status and rejection reading and the pass criteria of the guarded checks, per the
+guide's cited Argo CD anonymous-access and RBAC entries, Flux notification Receivers entry and Python HMAC entries.
+The paste-alone warning follows CONTRIBUTING rule 7's `read` exception. No live Argo CD or Flux installation is
+available, so no status, rejection, receiver response or reconciliation
 was observed. During marking review (October 2026) the Flux block passed bash -n under bash 5.3.9 and
 ShellCheck 0.11.0 without diagnostics.
 In a scratch-local review, the block ran from a file with curl and python3 stubbed, no network
@@ -480,6 +497,16 @@ stubbed, the real python3 signing and the secret typed at a pseudo-terminal. In 
 header. An unsigned 200 exited 1, also when the signed request failed; an unsigned 302 or curl failure,
 a signed 401, a failing or silent python3 and no readable /dev/tty exited 3; and an empty secret, a
 readonly hmac or IFS and each `set --` refusal exited 2.
+Read the receiver's status without printing the default table, full status, condition messages, or
+`.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
+receiver): select the name and the Ready condition explicitly. The rejection status is type- and
+version-dependent, so read it as rejected rather than a fixed code. A malformed-payload error or a
+proxy-only rejection is inconclusive; repeat against the receiver origin from an authorized location.
+Because these checks discriminate on a response rather than on silence, an unsubstituted value cannot
+read as a pass; the guarded `set --` lines in the Argo CD and Flux blocks refuse an unsubstituted host
+and keep the requests off reserved example hosts. A bare reachability probe of your own public address,
+whose pass is nothing answering, needs the guarded-subshell form for a further reason: an unsubstituted
+address could otherwise time out and read as closed.
 A bare `401` proves less than it looks: a fronting authentication proxy can return it while the
 underlying `users.anonymous.enabled` is still on, so pair the probe with an authenticated request
 through the same route that should succeed, and read the anonymous and `policy.default` settings from
@@ -550,20 +577,6 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   exit "$5"
 )
 ```
-
-REASONED: receiver status and rejection reading and the pass criteria of the guarded checks above, per
-the guide's cited Flux notification Receivers and Argo CD RBAC entries; no live Argo CD or Flux installation
-is available, so no status, rejection or response was observed.
-Read the receiver's status without printing the default table, full status, condition messages, or
-`.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
-receiver): select the name and the Ready condition explicitly. The rejection status is type- and
-version-dependent, so read it as rejected rather than a fixed code. A malformed-payload error or a
-proxy-only rejection is inconclusive; repeat against the receiver origin from an authorized location.
-Because these checks discriminate on a response rather than on silence, an unsubstituted value cannot
-read as a pass; the guarded `set --` lines in the Argo CD and Flux blocks refuse an unsubstituted host
-and keep the requests off reserved example hosts. A bare reachability probe of your own public address,
-whose pass is nothing answering, needs the guarded-subshell form for a further reason: an unsubstituted
-address could otherwise time out and read as closed.
 
 ## Sources (checked September 2026)
 
@@ -826,7 +839,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "ff6a83157f529680d3a3716dcaead724fbb008d1cfa21445e896815dc398f02f",
+  "body_sha256": "85369075c037b3f77df005afa2a71cc0a6f52d8b73e68e398b591a5cb3bee82b",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
