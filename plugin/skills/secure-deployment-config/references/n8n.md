@@ -119,7 +119,7 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 # REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in the authoring environment. Expected API status outcomes require a live check; the assessment above traces conditional public-API refusal and the workflows list route's middleware, response body and declared 200 success status; pinned source still establishes the Webhook refusal codes.
 # On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
 # The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains, and before this block reported one exit status for all of its parts.
-# On 2026-10-31 the current form passed bash -n and ran whole against stubs, including those example-domain refusals; no n8n deployment or network was involved.
+# On 2026-10-31 the current form passed bash -n and ran whole against stubs, including those example-domain refusals; no n8n deployment or network was involved; ShellCheck 0.11.0 runs on it in the repository's gate suite, not in that review.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
 # owner-creation data to a live instance as a "test".
@@ -506,7 +506,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "59169111c6710536c1483106a7cf557a80cdbc0b47ea9ee70516b99a1e824921",
+  "body_sha256": "1ef968e90a43d6c8d3289ec2a89d84610637993eba9c583ecf315820e1a32524",
   "components": {
     "server": {
       "name": "n8n listener source",

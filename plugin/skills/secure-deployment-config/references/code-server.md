@@ -82,6 +82,10 @@ REASONED: following block; listener inventory and direct-origin reachability, pe
     -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "${4%%$'\n'*}" "${4##*$'\n'}"  # curl's write-out line, then its exit status
   printf '%s\n' "$1"
+  case "$1" in
+    'origin http=000 '*) ;;             # no HTTP code, so curl's exit status below decides
+    'origin http='[0123456789][0123456789][0123456789]' '*) set -- "$1" 0 ;;   # an HTTP code is a response even if the transfer then failed
+  esac
   if [ "$2" = 0 ]; then
     echo "FINDING: the origin answered HTTP directly, so it is reachable"; set -- 1
   else
@@ -206,7 +210,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "16dbf7e539bea6f3887d038148f07cf1093d394ec09ce462f0105978d33a9fc5",
+  "body_sha256": "e0d43f6557726ca6d38a8107a9fe375fc5cda077de8132d3223e5a431194ef5c",
   "components": {
     "server": {
       "name": "code-server",
