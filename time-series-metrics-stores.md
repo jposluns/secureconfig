@@ -287,7 +287,7 @@ REASONED: the VictoriaMetrics v1.152.0 single-node endpoint-key and Basic-auth c
 
 - QuestDB minimal HTTP server (`9003`, `http.health.check.authentication.required` defaults to `true`; `false` permits unauthenticated health checks): https://questdb.com/docs/configuration/http-min-server/
 - QuestDB TLS encryption (Enterprise only; `tls.enabled`): https://questdb.com/docs/configuration/tls/
-- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 
 
 <!-- version-basis:start -->
@@ -367,7 +367,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "29d4a5b620c289ce3a4cc7cbcce8978d9f4b64cd7542ca1cf1c9ecbbc486eff6",
+  "body_sha256": "7d898016e9f5bf82d05ee05d1942c4f45ae1d996ed739268d7e62f95988f653c",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",
