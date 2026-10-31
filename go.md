@@ -192,7 +192,7 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is missing, recorded only while nothing else was), which outranks 0
   curl -q -g -sI "http://$1/"         # expect 301 with a https:// Location
   set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
   [ "$3" = 0 ] || { echo "curl exit $3: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
@@ -221,7 +221,7 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
   printf '%s\n' "$4"                    # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
   case "$3" in
     0) ;;
-    7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above shows any 6060 listener on another address" ;;
+    7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above, if one was printed, shows any 6060 listener on another address" ;;
     *) echo "curl exit $3: the local diagnostic request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -233,10 +233,12 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
     0:*) echo "HTTP $4 from /debug/pprof/ is neither the 404 pass nor the 200 finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     *) echo "curl exit $3: the /debug/pprof/ request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
-  echo "block exit $2; the redirect and HTTPS headers, the listener list and the local diagnostic answer are not classified, so judge them yourself"
+  echo "block exit $2; the redirect and HTTPS headers, any listener list printed above and the local diagnostic answer are not classified, so judge them yourself"
   exit "$2"
 )
 ```
+
+REASONED: the missing-`ss` handling in the block above, per CONTRIBUTING rule 6 and the block's own text. When `command -v ss` finds no `ss`, the block prints `ss is not installed here; not listing sockets`, skips the listener list and still runs its other probes. That refusal makes the block's status 2 only while no other part has found something or been inconclusive, so a finding still exits 1 and an inconclusive part 3, whether it comes before or after the refusal, and a block that would otherwise pass exits 2, never 0. A `ss` that runs and fails is inconclusive and records 3.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -365,7 +367,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "363e4f69497c9b8f329f0d7b77dd608ac9e883903aa92451064bab4dd3d03b33",
+  "body_sha256": "3eaa819aa5e806fd83ba10bda08c2d4b85422c7b8e8c595934d294e7f5160995",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",

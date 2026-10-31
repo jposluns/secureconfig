@@ -17660,7 +17660,7 @@ Defer the full header catalogue and values to [headers.md](https://github.com/jp
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is missing, recorded only while nothing else was), which outranks 0
   curl -q -g -sI "http://$1/"         # expect 301 with a https:// Location
   set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
   [ "$3" = 0 ] || { echo "curl exit $3: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
@@ -17689,7 +17689,7 @@ Defer the full header catalogue and values to [headers.md](https://github.com/jp
   printf '%s\n' "$4"                    # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
   case "$3" in
     0) ;;
-    7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above shows any 6060 listener on another address" ;;
+    7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above, if one was printed, shows any 6060 listener on another address" ;;
     *) echo "curl exit $3: the local diagnostic request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
   set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -17701,10 +17701,12 @@ Defer the full header catalogue and values to [headers.md](https://github.com/jp
     0:*) echo "HTTP $4 from /debug/pprof/ is neither the 404 pass nor the 200 finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     *) echo "curl exit $3: the /debug/pprof/ request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
   esac
-  echo "block exit $2; the redirect and HTTPS headers, the listener list and the local diagnostic answer are not classified, so judge them yourself"
+  echo "block exit $2; the redirect and HTTPS headers, any listener list printed above and the local diagnostic answer are not classified, so judge them yourself"
   exit "$2"
 )
 ```
+
+REASONED: the missing-`ss` handling in the block above, per CONTRIBUTING rule 6 and the block's own text. When `command -v ss` finds no `ss`, the block prints `ss is not installed here; not listing sockets`, skips the listener list and still runs its other probes. That refusal makes the block's status 2 only while no other part has found something or been inconclusive, so a finding still exits 1 and an inconclusive part 3, whether it comes before or after the refusal, and a block that would otherwise pass exits 2, never 0. A `ss` that runs and fails is inconclusive and records 3.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -17833,7 +17835,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "363e4f69497c9b8f329f0d7b77dd608ac9e883903aa92451064bab4dd3d03b33",
+  "body_sha256": "3eaa819aa5e806fd83ba10bda08c2d4b85422c7b8e8c595934d294e7f5160995",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
@@ -23681,7 +23683,7 @@ At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-
 
 REASONED: service-check scope from the authoring limitations recorded in this paragraph and the PostgreSQL and pgAudit documentation cited at each check below. This revision's service checks are **REASONED, not demonstrated**. The authoring environment has psql 18.6 and PostgreSQL server binaries, but is read-only and has no authorized writable test deployment. Neither Docker nor Podman was found on `PATH`. Missing binaries are not the reason for the service-test limitation. Earlier execution evidence is not recorded in this file; this does not establish whether a previous author ran the earlier probes.
 
-REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy). The PostgreSQL configuration parse was re-run at marking time with the PostgreSQL 18.6 server binary installed outside PATH at /usr/lib/postgresql/18/bin: postgres -C returned all 14 values from the combined TLS, logging and preload fragments with exit 0, and an ssl=not_a_boolean control was rejected with exit 1 (parameter "ssl" requires a Boolean value); no server was started. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. The bash -n, ShellCheck, guard and argument runs recorded in this paragraph covered an earlier form of both blocks, whose refusals exited with status 1; on the current form, whose refusals exit with status 2 and whose classified results exit 0, 1 or 3, the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the guard and argument cases were not re-run. The current form's refusals include the listener block's refusal when `ss` is missing, and stub runs of that block, with a stand-in `ss` present and passing, present and failing, and absent, exited 0, 3 and 2 under an inherited `readonly`, `declare -i` and `set -e`; no PostgreSQL server or real `ss` was involved. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
+REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy). The PostgreSQL configuration parse was re-run at marking time with the PostgreSQL 18.6 server binary installed outside PATH at /usr/lib/postgresql/18/bin: postgres -C returned all 14 values from the combined TLS, logging and preload fragments with exit 0, and an ssl=not_a_boolean control was rejected with exit 1 (parameter "ssl" requires a Boolean value); no server was started. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. The bash -n, ShellCheck, guard and argument runs recorded in this paragraph covered an earlier form of both blocks, whose refusals exited with status 1; on the current form, whose refusals exit with status 2 and whose classified results exit 0, 1 or 3, the repository gate suite's bash -n and ShellCheck 0.11.0 checks pass, and the guard and argument cases recorded above were not repeated. The current form's refusals include the listener block's refusal when `ss` is missing, and stub runs of that block, with a stand-in `ss` present and passing, present and failing, and absent, exited 0, 3 and 2 under an inherited `readonly`, `declare -i` and `set -e`; no PostgreSQL server or real `ss` was involved. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
 
 REASONED: deployment-demonstration procedure per the cited PostgreSQL documentation; no isolated disposable deployment is available in the authoring environment, so this remains the required procedure rather than a recorded run. Demonstrate exposed configurations only in an isolated disposable deployment. Record the server/client versions, fixture, commands, output, and relevant server logs for both states. A DNS error, timeout, missing CA file, or unrelated authentication failure does not prove enforcement.
 
@@ -24228,7 +24230,7 @@ Claims (full source mapping in the JSON block below):
 - verify-logs (REASONED; docs): Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.
 - verify-audit (REASONED; audit): Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.
 - diagnostics (REASONED; docs): pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.
-- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact. Those checks covered an earlier form of both blocks, whose refusals exited with status 1; the current form was not re-run.
+- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact. They covered an earlier form of both blocks, whose refusals exited with status 1, and their guard and argument cases were not repeated; the current form is covered by gate-suite bash -n and ShellCheck 0.11.0 passes and by listener-block stub runs with ss passing, failing and missing.
 - local-parsing (DEMONSTRATED; docs): Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.
 - verify-default-grants (REASONED; docs): Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.
 
@@ -24237,7 +24239,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "249c6458ea38d2542256762833eb42f491053667dcb795e489efd4321ff0b75b",
+  "body_sha256": "8dfdaa5890bde912d02bc09c4b2deb85d5a5f6b4cd58956274ad0ea39a47a7a9",
   "components": {
     "init": {
       "name": "PostgreSQL initdb source",
@@ -24387,7 +24389,7 @@ Claims (full source mapping in the JSON block below):
     "verify-logs": {"text": "Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.", "components": ["docs"], "sources": ["docs:sf1b3da55ebd5"], "status": "REASONED"},
     "verify-audit": {"text": "Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.", "components": ["audit"], "sources": ["audit:s1825bbe4f88c"], "status": "REASONED"},
     "diagnostics": {"text": "pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.", "components": ["docs"], "sources": ["docs:seed379369be7", "docs:s8754b96a6114", "docs:s3b6607ed7b1a", "docs:s2ab6c4aebc59"], "status": "REASONED"},
-    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact. Those checks covered an earlier form of both blocks, whose refusals exited with status 1; the current form was not re-run.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
+    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact. They covered an earlier form of both blocks, whose refusals exited with status 1, and their guard and argument cases were not repeated; the current form is covered by gate-suite bash -n and ShellCheck 0.11.0 passes and by listener-block stub runs with ss passing, failing and missing.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
     "local-parsing": {"text": "Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.", "components": ["docs"], "sources": ["docs:s55cbaf1aa910"], "status": "DEMONSTRATED", "evidence": "PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected."},
     "verify-default-grants": {"text": "Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.", "components": ["docs"], "sources": ["docs:s04e81888353f"], "status": "REASONED"}
   }
