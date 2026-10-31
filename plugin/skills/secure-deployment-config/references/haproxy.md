@@ -297,10 +297,11 @@ every line after the first for your shell to run.
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls no-cert= line
   printf '%s\n' "$8"
   case "$7:$8" in
-    0:"mtls no-cert="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;   # a code not of three characters from 0123456789 reaches the last arm: inconclusive
+    0:"mtls no-cert="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;   # a code not of three characters from 0123456789 reaches one of the last two arms: inconclusive
     "35:mtls no-cert=000 "*|"56:mtls no-cert=000 "*) ;;   # rejected at TLS with no HTTP status received; reading curl's handshake (35) and receive (56) errors as the server's certificate rejection is reasoned, not sourced
     *:"mtls no-cert=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *:"mtls no-cert="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request without a client certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    35:*|56:*) echo "curl exit $7 came with a malformed write-out line, so it cannot be read as a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$2" --key "$3" \
@@ -312,14 +313,16 @@ every line after the first for your shell to run.
     "35:mtls untrusted=000 "*|"56:mtls untrusted=000 "*) ;;
     *:"mtls untrusted=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *:"mtls untrusted="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request with the untrusted certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    35:*|56:*) echo "curl exit $7 came with a malformed write-out line, so it cannot be read as a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$4" --key "$5" \
     -o /dev/null -w 'mtls trusted=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls trusted= line
   printf '%s\n' "$8"
-  case "$7" in
-    0) ;;
+  case "$7:$8" in
+    0:"mtls trusted="[0123456789][0123456789][0123456789]" "*) ;;   # any code of three characters from 0123456789 is the admission, a 401 from Basic auth included
+    0:*) echo "curl exit 0 came with a malformed write-out line, so the positive control cannot be read; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *) echo "curl exit $7: the trusted certificate was not admitted, so the positive control failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   echo "block exit $6; the HTTP codes are not classified (a trusted certificate may still draw 401 from Basic auth), and exit 35 or 56 reads as a TLS rejection only beside an admitted trusted certificate, so judge the lines above yourself"
@@ -430,7 +433,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "82683756fe5b75bb7a9a50c144a63120d88e6adb4f0cd7dea12468293940ba49",
+  "body_sha256": "d2feed52638b0fb5736dd12ba940bb27a5bb2fc765bec492b0f15a8b22908a8d",
   "components": {
     "haproxy": {
       "name": "HAProxy",

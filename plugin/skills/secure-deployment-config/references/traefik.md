@@ -141,7 +141,7 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker, sudo, rm and ss and no network, which ran the guards and every exit status; no Traefik answered them. The first block records 2 for a missing `ss` only when nothing else was recorded, because none of its other parts needs `ss`, and 3 when `sudo ss -tlnp` runs and fails.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker, sudo, rm and ss and no network, which ran the guards and every exit status; no Traefik answered them. The first block records 2 for a missing `ss` only when nothing else was recorded, because none of its other parts needs `ss`, and 3 when `sudo ss -tlnp` runs and fails. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH (the guide's cited sudo sudoers manual, secure_path entry), so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -349,6 +349,7 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Apache httpd 2.4.69 htpasswd usage (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
 - OWASP Password Storage Cheat Sheet at 72865b1e3b5754246a101778dc00b37f9c233373, legacy bcrypt work factor (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
 - Cloudflare Access MFA documentation at c896795b8e8bab68d05ae78d64c9cbcda1fdb104, application or policy MFA (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
+- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
 
 
 <!-- version-basis:start -->
@@ -414,7 +415,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c46f287255a06982b63efb655972f340f118ed51d38f2e045bbb8ebd033c8b82",
+  "body_sha256": "59f64ab69f97732d56e62971fef37a4ba8c705eff73eb9974d4e6d3192382b22",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",

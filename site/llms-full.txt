@@ -11400,10 +11400,11 @@ every line after the first for your shell to run.
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls no-cert= line
   printf '%s\n' "$8"
   case "$7:$8" in
-    0:"mtls no-cert="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;   # a code not of three characters from 0123456789 reaches the last arm: inconclusive
+    0:"mtls no-cert="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request without a client certificate was admitted"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;   # a code not of three characters from 0123456789 reaches one of the last two arms: inconclusive
     "35:mtls no-cert=000 "*|"56:mtls no-cert=000 "*) ;;   # rejected at TLS with no HTTP status received; reading curl's handshake (35) and receive (56) errors as the server's certificate rejection is reasoned, not sourced
     *:"mtls no-cert=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *:"mtls no-cert="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request without a client certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    35:*|56:*) echo "curl exit $7 came with a malformed write-out line, so it cannot be read as a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$2" --key "$3" \
@@ -11415,14 +11416,16 @@ every line after the first for your shell to run.
     "35:mtls untrusted=000 "*|"56:mtls untrusted=000 "*) ;;
     *:"mtls untrusted=000 "*) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *:"mtls untrusted="[0123456789][0123456789][0123456789]" "*) echo "FINDING: the request with the untrusted certificate received an HTTP status before curl exit $7, so TLS admitted it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+    35:*|56:*) echo "curl exit $7 came with a malformed write-out line, so it cannot be read as a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *) echo "curl exit $7 is not a TLS rejection; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 --cert "$4" --key "$5" \
     -o /dev/null -w 'mtls trusted=%{http_code} exit=%{exitcode}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then its mtls trusted= line
   printf '%s\n' "$8"
-  case "$7" in
-    0) ;;
+  case "$7:$8" in
+    0:"mtls trusted="[0123456789][0123456789][0123456789]" "*) ;;   # any code of three characters from 0123456789 is the admission, a 401 from Basic auth included
+    0:*) echo "curl exit 0 came with a malformed write-out line, so the positive control cannot be read; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
     *) echo "curl exit $7: the trusted certificate was not admitted, so the positive control failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
   esac
   echo "block exit $6; the HTTP codes are not classified (a trusted certificate may still draw 401 from Basic auth), and exit 35 or 56 reads as a TLS rejection only beside an admitted trusted certificate, so judge the lines above yourself"
@@ -11533,7 +11536,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "82683756fe5b75bb7a9a50c144a63120d88e6adb4f0cd7dea12468293940ba49",
+  "body_sha256": "d2feed52638b0fb5736dd12ba940bb27a5bb2fc765bec492b0f15a8b22908a8d",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -11765,7 +11768,7 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker, sudo, rm and ss and no network, which ran the guards and every exit status; no Traefik answered them. The first block records 2 for a missing `ss` only when nothing else was recorded, because none of its other parts needs `ss`, and 3 when `sudo ss -tlnp` runs and fails.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker, sudo, rm and ss and no network, which ran the guards and every exit status; no Traefik answered them. The first block records 2 for a missing `ss` only when nothing else was recorded, because none of its other parts needs `ss`, and 3 when `sudo ss -tlnp` runs and fails. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH (the guide's cited sudo sudoers manual, secure_path entry), so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -11973,6 +11976,7 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Apache httpd 2.4.69 htpasswd usage (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
 - OWASP Password Storage Cheat Sheet at 72865b1e3b5754246a101778dc00b37f9c233373, legacy bcrypt work factor (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
 - Cloudflare Access MFA documentation at c896795b8e8bab68d05ae78d64c9cbcda1fdb104, application or policy MFA (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
+- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655)
 
 
 <!-- version-basis:start -->
@@ -12038,7 +12042,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c46f287255a06982b63efb655972f340f118ed51d38f2e045bbb8ebd033c8b82",
+  "body_sha256": "59f64ab69f97732d56e62971fef37a4ba8c705eff73eb9974d4e6d3192382b22",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",
