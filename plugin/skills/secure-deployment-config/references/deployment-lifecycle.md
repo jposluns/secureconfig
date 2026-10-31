@@ -28,7 +28,7 @@ This repository's per-service guides check TLS, binding, and authentication from
 
 A `curl` or `ss -tlnp` run on the host itself cannot see a firewall the host does not know about, or a platform-level bypass like Docker's iptables rules ([docker.md](docker.md)). Verify from a second network: a phone hotspot, a cloud shell, or a second VM.
 
-- Port-by-port with an `nc -vz -w 3` loop over the ports the loop command below lists, or a full sweep with `nmap -Pn -p-` (per the nmap reference, which documents `-p-` and `-p 1-65535` as equivalent port-range syntax). The full sweep, per the same nmap reference, covers TCP only, so inventory and separately probe any UDP service with `nmap -sU` on its ports. The scanning rule, per the same nmap reference, is to only scan hosts you own or are authorized to test. Run either form only through the [guarded Verify block](#verify), which refuses an unsubstituted address before probing, rather than with the address typed into a bare command. The block's IPv4 arm runs the full sweep as `nmap -Pn -p- "$1"`; for the loop, replace only that arm's `nmap -Pn -p- "$1"` with `for p in 22 80 443 3000 5432 6379 27017; do nc -vz -w 3 "$1" "$p"; done`, keeping the whole guard and substituting inside the quotes on `set --`. Ubuntu noble netcat-openbsd documents `-v` as verbose output, `-z` as scanning without sending data and `-w` as a connection/idle timeout. BusyBox 1.36.1 small `nc` lacks `-v` and `-z`, and has `-w` only with `NC_EXTRA`; its `NC_110_COMPAT` applet lists `-v` and `-w`, with `-z` conditional on `NC_EXTRA`. CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative; Ncat 7.92's option behaviour is not established here, nor is traditional or GNU netcat behaviour. Check the installed variant. As this guide's assessment, refusal or timeout shows only that this connection failed; an unsupported-option error, local error or silent exit is inconclusive.
+- Port-by-port with one `nc -vz -w 3` probe for each of the ports the commands below list, or a full sweep with `nmap -Pn -p-` (per the nmap reference, which documents `-p-` and `-p 1-65535` as equivalent port-range syntax). The full sweep, per the same nmap reference, covers TCP only, so inventory and separately probe any UDP service with `nmap -sU` on its ports. The scanning rule, per the same nmap reference, is to only scan hosts you own or are authorized to test. Run either form only through the [guarded Verify block](#verify), which refuses an unsubstituted address before probing, rather than with the address typed into a bare command. The IPv4 block runs the full sweep as `nmap -Pn -p- "$1"` in the condition of an `if`; for the port-by-port form, replace only that `nmap -Pn -p- "$1"` with `nc -vz -w 3 "$1" 22; nc -vz -w 3 "$1" 80; nc -vz -w 3 "$1" 443; nc -vz -w 3 "$1" 3000; nc -vz -w 3 "$1" 5432; nc -vz -w 3 "$1" 6379; nc -vz -w 3 "$1" 27017`, keeping the whole guard and substituting inside the quotes on `set --`. With that swap the block exits 3 whatever the ports do, and its nmap messages do not apply, so read nc's own line for each port instead of the block's status. As this guide's assessment, that is because netcat-openbsd prints those lines on standard error, which the block does not capture, so the block never sees an nmap report. Ubuntu noble netcat-openbsd documents `-v` as verbose output, `-z` as scanning without sending data and `-w` as a connection/idle timeout. BusyBox 1.36.1 small `nc` lacks `-v` and `-z`, and has `-w` only with `NC_EXTRA`; its `NC_110_COMPAT` applet lists `-v` and `-w`, with `-z` conditional on `NC_EXTRA`. CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative; Ncat 7.92's option behaviour is not established here, nor is traditional or GNU netcat behaviour. Check the installed variant. As this guide's assessment, refusal or timeout shows only that this connection failed; an unsupported-option error, local error or silent exit is inconclusive.
 - Check every address the service actually has, not just the one you remember configuring: the public IPv4 address, the public IPv6 address if the host has one, and any platform-assigned URL alongside your custom domain (a PaaS default subdomain, per [paas.md](paas.md), often stays reachable even when the custom domain is fronted). A scan of one address that misses the others is not a clean result, it is an incomplete one.
 - Cross-reference what is already indexed about your IP with a passive internet-wide scanner such as Shodan or Censys; both build a continuously updated index of internet-connected hosts and services, so a stale exposure can show up there before you find it yourself ([cloud-firewalls.md](cloud-firewalls.md) covers the firewall rules this is checking).
 
@@ -75,33 +75,58 @@ Where a system cannot revoke immediately, such as a session cached until its own
 
 ## Verify
 
-REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. The four checks are separate blocks, each with its own exit status: the IPv4 scan, the IPv6 scan, the retired-name DNS check and the certificate check. The retired-name block cannot exit 0 by design, because it reads your configured resolver only: it exits 1 for any answer and 3 otherwise, and only the authoritative check in its comment can establish removal.
 
 ```bash
 # From a second network, not the host itself:
-(                                                      # a subshell, so your own script arguments are untouched
+(                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) nmap -Pn -p- "$1" ;;                        # TCP only: only the intended ports answer here; probe any UDP service separately (nmap -sU)
-    # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
-    # inconclusive, not a clean result
+  esac
+  set -- "$(if nmap -Pn -p- "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # TCP only: only the intended ports answer here; probe any UDP service separately (nmap -sU)
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"   # nmap's report, then its exit status
+  printf '%s' "$1"
+  # and the scan actually ran: nmap reporting a host down, a permission error, or no output at all is
+  # inconclusive, not a clean result
+  case "$2:$1" in
+    0:|0:*'(0 hosts up)'*) echo "nmap printed no report or reported the host down; inconclusive, not a clean result"; exit 3 ;;
+    0:*) echo "block exit 0; the open ports nmap lists above are not classified, so judge them yourself"; exit 0 ;;
+    *) echo "nmap exit $2: the scan did not complete; inconclusive, not a clean result"; exit 3 ;;
   esac
 )
-(                                                      # a subshell, so your own script arguments are untouched
+```
+
+REASONED: following block; outside-network IPv6 scan, per the cited Nmap documentation; no deployment or second-network probe host was supplied, and no run is recorded. Run it only when the host has a public IPv6 address, and skip it otherwise, because an unsubstituted placeholder is refused with status 2. Like the IPv4 block, it exits 0 when nmap ran and reported the host up, leaving the open ports it lists for you to judge, and 3 when the scan failed, printed nothing or reported the host down.
+
+```bash
+# From a second network, not the host itself:
+(                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IPV6'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) nmap -Pn -6 -p- "$1" ;;                      # same, over the public IPv6 address (TCP only)
-                                                    # same reading: a scan that did not run is not a clean scan
+  esac
+  set -- "$(if nmap -Pn -6 -p- "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # same, over the public IPv6 address (TCP only)
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"   # nmap's report, then its exit status
+  printf '%s' "$1"
+  # same reading: a scan that did not run is not a clean scan
+  case "$2:$1" in
+    0:|0:*'(0 hosts up)'*) echo "nmap printed no report or reported the host down; inconclusive, not a clean result"; exit 3 ;;
+    0:*) echo "block exit 0; the open ports nmap lists above are not classified, so judge them yourself"; exit 0 ;;
+    *) echo "nmap exit $2: the scan did not complete; inconclusive, not a clean result"; exit 3 ;;
   esac
 )
+```
+
+REASONED: following block; retired-name DNS check, per the cited dig documentation and DNS RFCs, including RFC 2308 section 2; no retired host name or authoritative DNS zone was supplied, and no run is recorded. This block cannot exit 0 by design: it reads your configured resolver only, so it exits 1 when that resolver returns any A, AAAA or CNAME answer and 3 otherwise, including empty answers and a failed lookup or request. Removal is decided by the authoritative check in its comment, `dig @AUTH_NS name TYPE +norecurse` against each authoritative nameserver, which must give NXDOMAIN or NOERROR/NODATA with no CNAME.
+
+```bash
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_RETIRED_HOST'   # the retired preview or service host name whose DNS record you removed, no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -113,9 +138,49 @@ REASONED: outside-network scans, DNS retirement and certificate inspection; no d
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sI "https://$1/"          # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
-  for t in A AAAA CNAME; do echo "$t:"; dig +short "$1" "$t"; done   # checks your configured resolver only, so it is not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), and no lookup returns it to 0
+  curl -q -g -sI "https://$1/" ||       # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
+    { echo "curl exit $?: the request failed, which is not proof the record is gone; inconclusive"; set -- "$1" 3; }
+  # The three dig lookups below check your configured resolver only, so they are not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
+  echo "A:"
+  set -- "$1" "$2" "$(if dig +short "$1" A; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the block's status, dig's answer, then dig's exit status
+  printf '%s' "$3"
+  case "$4:$3" in
+    0:) [ "$2" = 1 ] || set -- "$1" 3 ;;          # no answer: inconclusive on its own
+    0:*) set -- "$1" 1 ;;                          # an answer: that resolver still returns a mapping
+    *) echo "dig exit $4: the A lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "AAAA:"
+  set -- "$1" "$2" "$(if dig +short "$1" AAAA; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"
+  printf '%s' "$3"
+  case "$4:$3" in
+    0:) [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) set -- "$1" 1 ;;
+    *) echo "dig exit $4: the AAAA lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "CNAME:"
+  set -- "$1" "$2" "$(if dig +short "$1" CNAME; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"
+  printf '%s' "$3"
+  case "$4:$3" in
+    0:) [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) set -- "$1" 1 ;;
+    *) echo "dig exit $4: the CNAME lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  case "$2" in
+    1) echo "FINDING: your resolver still returns a mapping for $1; investigate before you release the target" ;;
+    *) echo "no answer from your resolver, or a failed lookup or request: inconclusive, so confirm removal at each authoritative nameserver as the comment above says" ;;
+  esac
+  echo "block exit $2; the HTTPS headers above are not classified, and this block cannot exit 0 by design: your resolver is not authoritative, so only the authoritative check in the comment above can establish removal"
+  exit "$2"                             # 1 or 3, never 0, by design: the authoritative check decides removal
 )
+```
+
+REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 documentation; no live app host name was supplied, and no run is recorded. Run it from outside on a schedule: it exits 0 when s_client verified the chain and the name and x509 printed the notAfter date, which it leaves for you to judge, and 3 when s_client or x509 failed, so an expired, untrusted or misnamed certificate gives 3.
+
+```bash
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the live app's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -127,9 +192,15 @@ REASONED: outside-network scans, DNS retirement and certificate inspection; no d
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  openssl s_client -connect "$1:443" -servername "$1" \
-    -verify_hostname "$1" -verify_return_error </dev/null \
-    | openssl x509 -noout -enddate                        # run from outside on a schedule
+  set -- "$1" "$(if openssl s_client -connect "$1:443" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error </dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # s_client's own status, captured before x509 reads its output
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"         # the host, s_client's output, then its exit status
+  [ "$3" = 0 ] || { echo "s_client exit $3: verification failed (an expired, untrusted or misnamed certificate fails here) or the connection did; inconclusive"; exit 3; }
+  printf '%s\n' "$2" \
+    | openssl x509 -noout -enddate ||              # run from outside on a schedule
+    { echo "openssl x509 exit $?: it could not read the served certificate; inconclusive"; exit 3; }
+  echo "block exit 0; s_client verified the chain and the name, and the notAfter date above is not classified, so judge it yourself"
+  exit 0
 )
 ```
 
@@ -229,7 +300,7 @@ Components (recorded basis):
 Claims (full source mapping in the JSON block below):
 
 - outside (REASONED; nmap): Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour.
-- tcp-scan (REASONED; nmap, openbsd-nc, ubuntu-nc, c9s-nmap, busybox): Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. Use the house placeholder guard for both. Ubuntu noble netcat-openbsd documents -v verbosity, -z scanning and -w timeout; BusyBox 1.36.1 small nc lacks -v/-z and needs NC_EXTRA for -w, while its NC_110_COMPAT applet lists -v/-w and needs NC_EXTRA for -z. CentOS Stream 9 packages Ncat 7.92 as nc; its option behaviour and traditional/GNU netcat remain unestablished. As this guide's assessment, refusal or timeout shows only connection failure; unsupported-option errors, local errors and silent exits are inconclusive.
+- tcp-scan (REASONED; nmap, openbsd-nc, ubuntu-nc, c9s-nmap, busybox): Sweep authorized hosts with nmap -Pn -p-; the guide also gives nc port probes. Use the house placeholder guard for both. Ubuntu noble netcat-openbsd documents -v verbosity, -z scanning and -w timeout; BusyBox 1.36.1 small nc lacks -v/-z and needs NC_EXTRA for -w, while its NC_110_COMPAT applet lists -v/-w and needs NC_EXTRA for -z. CentOS Stream 9 packages Ncat 7.92 as nc; its option behaviour and traditional/GNU netcat remain unestablished. As this guide's assessment, refusal or timeout shows only connection failure; unsupported-option errors, local errors and silent exits are inconclusive.
 - udp-scan (REASONED; nmap): The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU.
 - all-addresses (REASONED; nmap, vercel): Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others.
 - passive-index (REASONED; shodan, censys): Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan.
@@ -256,7 +327,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "c9bdf1734588a2411c18bbccff5e7b6f1bc4807bc3d724ae9bc9dfcf7eb3cf2b",
+  "body_sha256": "1c1822b2d79c736033e81216f612e68a4bee35538c34f0bd008855eb659149b1",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
@@ -461,7 +532,7 @@ Claims (full source mapping in the JSON block below):
   },
   "claims": {
     "outside": {"text": "Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED"},
-    "tcp-scan": {"text": "Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. Use the house placeholder guard for both. Ubuntu noble netcat-openbsd documents -v verbosity, -z scanning and -w timeout; BusyBox 1.36.1 small nc lacks -v/-z and needs NC_EXTRA for -w, while its NC_110_COMPAT applet lists -v/-w and needs NC_EXTRA for -z. CentOS Stream 9 packages Ncat 7.92 as nc; its option behaviour and traditional/GNU netcat remain unestablished. As this guide's assessment, refusal or timeout shows only connection failure; unsupported-option errors, local errors and silent exits are inconclusive.", "components": ["nmap", "openbsd-nc", "ubuntu-nc", "c9s-nmap", "busybox"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141", "openbsd-nc:s0c8b1a738e7b", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "c9s-nmap:s3ab25d24e37a", "busybox:s34bdee292f79", "busybox:sd707e18625cc", "busybox:s14b89daa008d"], "status": "REASONED"},
+    "tcp-scan": {"text": "Sweep authorized hosts with nmap -Pn -p-; the guide also gives nc port probes. Use the house placeholder guard for both. Ubuntu noble netcat-openbsd documents -v verbosity, -z scanning and -w timeout; BusyBox 1.36.1 small nc lacks -v/-z and needs NC_EXTRA for -w, while its NC_110_COMPAT applet lists -v/-w and needs NC_EXTRA for -z. CentOS Stream 9 packages Ncat 7.92 as nc; its option behaviour and traditional/GNU netcat remain unestablished. As this guide's assessment, refusal or timeout shows only connection failure; unsupported-option errors, local errors and silent exits are inconclusive.", "components": ["nmap", "openbsd-nc", "ubuntu-nc", "c9s-nmap", "busybox"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141", "openbsd-nc:s0c8b1a738e7b", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "c9s-nmap:s3ab25d24e37a", "busybox:s34bdee292f79", "busybox:sd707e18625cc", "busybox:s14b89daa008d"], "status": "REASONED"},
     "udp-scan": {"text": "The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd"], "status": "REASONED"},
     "all-addresses": {"text": "Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others.", "components": ["nmap", "vercel"], "sources": ["nmap:sf8404f695ccd", "vercel:se6089d5c4e96"], "status": "REASONED"},
     "passive-index": {"text": "Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan.", "components": ["shodan", "censys"], "sources": ["shodan:scf863db67f1e", "censys:s1e64a007a91f"], "status": "REASONED"},
@@ -479,9 +550,9 @@ Claims (full source mapping in the JSON block below):
     "certificate-monitor": {"text": "Monitor certificate expiry externally. As this guide's assessment, a renewal cron can silently fail while the host's view looks fine; its advice is a scheduled external openssl s_client or third-party monitor. Certbot v2.3.0 dry-run uses staging unless a custom server is set, saves no test certificates and runs applicable deploy hooks only with --run-deploy-hooks after success, using the active certificate. The user guide separates dry-run from live renewal; this guide infers that dry-run cannot establish the last real renewal's success. Nmap is outside-check context only.", "components": ["nmap", "openssl", "certbot-v230"], "sources": ["nmap:sf8404f695ccd", "openssl:s00aaf106164f", "openssl:s0856f4a58574", "certbot-v230:s5def4225771f", "certbot-v230:se96df86ba351", "certbot-v230:sc37d1ffd6192", "certbot-v230:s77de4441a9e5"], "status": "REASONED"},
     "offboarding": {"text": "When a person leaves, revoke every touched layer, not only the password: identity-provider membership, proxy/app sessions on each service, personal tokens and API keys (this guide's recommendation), and revoke the second factor alongside the account. Entra documents blocking sign-ins and revoking refresh tokens; application sessions require application revocation, access-token lifetimes vary, and supported-service CAE critical-event enforcement can take up to 15 minutes. Cloudflare documents per-user revocation, but an active IdP profile can start a new session; user logout stops acceptance of issued tokens in 20-30 seconds. OAuth2 Proxy documents cookie expiry/refresh; Authelia documents cookie expiry and session destruction, overridden by remember-me; neither passage establishes immediate per-user revocation. RFC 7009 specifies immediate invalidation with possible propagation delay and conditional access-token revocation support. OWASP requires secure revocation of unneeded or potentially compromised secrets. NIST requires CSPs to promptly invalidate authenticators when the CSP determines that the subscriber no longer meets its eligibility requirements. Where immediate revocation is unavailable, measure and shrink maximum time-to-revoke (this guide's recommendation). Provider-membership removal, every application's session-revocation mechanism and this deployment's measured maximum time-to-revoke remain unestablished. Follow authentication.md's REASONED replay check: matched requests must succeed before revocation, then old credentials must be refused without protected data within each configured maximum; these are test expectations, not observations.", "components": ["access", "owasp-docs", "entra-docs", "cloudflare-access", "oauth2-proxy", "authelia", "oauth-revocation", "nist"], "sources": ["access:s7cafe1b17afd", "owasp-docs:seb866a1f94e9", "entra-docs:s983f45259faa", "entra-docs:scb38e683ae3f", "entra-docs:s9ff4d6ed4cfe", "entra-docs:sca6feea4b601", "cloudflare-access:sf2dbab0fc574", "cloudflare-access:sa0e3eb928f4a", "oauth2-proxy:s32cedbc14f60", "authelia:sc844fe82794f", "oauth-revocation:s3383c9f41cc2", "nist:s2a689905c161"], "status": "REASONED"},
     "verify-ipv4": {"text": "From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [1]},
-    "verify-ipv6": {"text": "Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [1]},
-    "verify-dns": {"text": "curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive.", "components": ["dns", "dns-rfcs"], "sources": ["dns:s54cff06bb882", "dns-rfcs:s1d32db254435"], "status": "REASONED", "verify": [1]},
-    "verify-certificate": {"text": "The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No observed outcome is recorded; Nmap is outside-check context only.", "components": ["nmap", "openssl"], "sources": ["nmap:sf8404f695ccd", "openssl:s00aaf106164f", "openssl:s0856f4a58574"], "status": "REASONED", "verify": [1]}
+    "verify-ipv6": {"text": "Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [2]},
+    "verify-dns": {"text": "curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive.", "components": ["dns", "dns-rfcs"], "sources": ["dns:s54cff06bb882", "dns-rfcs:s1d32db254435"], "status": "REASONED", "verify": [3]},
+    "verify-certificate": {"text": "The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No observed outcome is recorded; Nmap is outside-check context only.", "components": ["nmap", "openssl"], "sources": ["nmap:sf8404f695ccd", "openssl:s00aaf106164f", "openssl:s0856f4a58574"], "status": "REASONED", "verify": [4]}
   }
 }
 ````
