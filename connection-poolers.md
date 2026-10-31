@@ -230,6 +230,7 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 
 ```bash
 (                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null 2>&1 || { echo 'ss is not installed here; not listing sockets'; exit 2; }
   set -- "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the listener table, then ss's exit status
   set -- "${1%$'\n'*}" "${1##*$'\n'}"
   printf '%s' "$1"   # read every listener; 6432/9999/9898
@@ -245,7 +246,7 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 )
 ```
 
-Read that as an inventory rather than a pass. The application ports (`6432`, `9999`) must each be on `127.0.0.1` or a private address; the PCP control port (`9898`) must be loopback-only, IPv6 included, because section 1 keeps `pcp_listen_addresses` on `localhost`. An entry showing `0.0.0.0:9898`, `[::]:9898`, or `9898` on a private address is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding.
+REASONED: preceding block; the listener inventory on the pooler host; no running pooler in the authoring environment, so the expected listeners rest on section 1's settings and the cited PgBouncer configuration and Pgpool-II connection settings entries. The block refuses with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, exits 3 when `ss` or the awk read fails, 1 for a port 9898 listener outside loopback and otherwise 0 with an unclassified-observation line. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs with `ss` replaced by a stub, in which a missing `ss` exited 2, a failing `ss` 3, a `0.0.0.0:9898` listener 1 and loopback-only listeners 0. Read that as an inventory rather than a pass. The application ports (`6432`, `9999`) must each be on `127.0.0.1` or a private address; the PCP control port (`9898`) must be loopback-only, IPv6 included, because section 1 keeps `pcp_listen_addresses` on `localhost`. An entry showing `0.0.0.0:9898`, `[::]:9898`, or `9898` on a private address is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding.
 
 The client hop takes three commands, not one. A single failing connection proves nothing, because a wrong password fails the same way as a refused plaintext connection; and a passing pair proves less than it looks, because a `trust` method in the HBA file lets any password through. Put the real password in `~/.pgpass` at mode `600` rather than the environment, which PostgreSQL says is "not recommended for security reasons" because some systems expose a process's environment to other users.
 
@@ -261,13 +262,18 @@ The client hop takes three commands, not one. A single failing connection proves
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  { unset -n PGPASSWORD && unset -v PGPASSWORD; } 2>/dev/null || { echo 'cannot clear PGPASSWORD in this shell; not probing'; exit 2; }
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # 1. Must FAIL, and the error must name TLS rather than authentication.
-  if psql -X "host=$1 port=6432 dbname=app user=app sslmode=disable" -c 'SELECT 1;'; then
-    echo "FINDING: the plaintext connection succeeded"; set -- "$1" 1
-  else
-    echo "psql exit $?: the plaintext connection failed; read its error above, which must name TLS rather than authentication"
-  fi
+  set -- "$1" "$2" "$(if psql -X "host=$1 port=6432 dbname=app user=app sslmode=disable" -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$3" in
+    0:*) echo "FINDING: the plaintext connection succeeded"; set -- "$1" 1 ;;
+    *SSL*|*TLS*|*encryption*) echo "psql exit $4: the plaintext connection failed; read its error above, which must name TLS rather than authentication" ;;
+    *) echo "psql exit $4: the plaintext connection failed without naming SSL, TLS or encryption, so it is not the expected refusal; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2"                      # the host and the status so far
   # 2. Must SUCCEED. The control: the credential is good, so the failure above was the TLS requirement,
   #    not a bad password.
   if psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'; then :; else
@@ -275,12 +281,15 @@ The client hop takes three commands, not one. A single failing connection proves
   fi
   # 3. Must FAIL on authentication. Without this, a `trust` method in auth_hba_file passes both above while
   #    checking no password at all. The wrong password is a literal here, not a real secret.
-  if PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'; then
-    echo "FINDING: the wrong password was accepted"; set -- "$1" 1
-  else
-    echo "psql exit $?: the wrong password was refused; read its error above, which must name authentication"
-  fi
-  echo "block exit $2; the error texts of the first and third connections are not classified, so judge them yourself"
+  set -- "$1" "$2" "$(if PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the wrong password was accepted"; set -- "$1" 1 ;;
+    *authentication*) echo "psql exit $4: the wrong password was refused; read its error above, which must name authentication" ;;
+    *) echo "psql exit $4: the wrong-password connection failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the error texts of the first and third connections are checked only for a TLS or authentication word, so judge them yourself"
   exit "$2"
 )
 ```
@@ -331,12 +340,15 @@ Run the same three against pgpool-II on port 9999 where that is the pooler in fr
   if pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W; then :; else   # enter the correct PCP password: succeeds
     echo "pcp_node_count exit $?: the correct-password control failed; inconclusive"; set -- 3
   fi
-  if pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W; then           # enter a wrong password: must be refused on authentication
-    echo "FINDING: the wrong PCP password was accepted"; set -- 1
-  else
-    echo "pcp_node_count exit $?: the wrong password was refused; read its error above, which must name authentication"
-  fi
-  echo "block exit $1; the second command's error text is not classified, so judge it yourself"
+  set -- "$1" "$(if pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # enter a wrong password: must be refused on authentication
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status so far, the command's output and errors, then its exit status
+  printf '%s' "$2"
+  case "$3:$(printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the wrong PCP password was accepted"; set -- 1 ;;
+    *authentication*) echo "pcp_node_count exit $3: the wrong password was refused; read its error above, which must name authentication" ;;
+    *) echo "pcp_node_count exit $3: the wrong-password command failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  echo "block exit $1; the second command's error text is checked only for the word authentication, so judge it yourself"
   exit "$1"
 )
 ```
@@ -470,16 +482,20 @@ None of this tests the privileged name, and testing an unlisted one only proves 
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  { unset -n PGPASSWORD && unset -v PGPASSWORD; } 2>/dev/null || { echo 'cannot clear PGPASSWORD in this shell; not probing'; exit 2; }
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   if psql -X "host=$1 port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'; then :; else
     echo "psql exit $?: the pgbadmin login with the correct password failed; inconclusive"; set -- "$1" 3
   fi
-  if PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'; then
-    echo "FINDING: the console admitted pgbadmin with a wrong password"; set -- "$1" 1
-  else
-    echo "psql exit $?: the wrong password was refused; read its error above, which must be a refusal at login"
-  fi
-  echo "block exit $2; the second command's error text is not classified, so judge it yourself"
+  set -- "$1" "$2" "$(if PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the console admitted pgbadmin with a wrong password"; set -- "$1" 1 ;;
+    *authentication*) echo "psql exit $4: the wrong password was refused; read its error above, which must be a refusal at login" ;;
+    *) echo "psql exit $4: the wrong-password login failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the second command's error text is checked only for the word authentication, so judge it yourself"
   exit "$2"
 )
 ```
@@ -622,7 +638,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "026f059a4bb1730658ae3ae7398f44036882faca527b27355687f8f0fbeb2547",
+  "body_sha256": "2bb0dc8fe7e01e13c364808dcc60eaac34891ca79d70d9109624e730a7381de6",
   "components": {
     "pgb-bind": {
       "name": "PgBouncer listener source",
