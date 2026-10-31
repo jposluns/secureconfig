@@ -46,29 +46,38 @@ fi
 # longdesc, poster, action, formaction, data, cite, background, codebase, classid, usemap,
 # manifest, icon, lowsrc, dynsrc and profile, each URL in ping and archive, the url= part of a
 # meta content attribute, and each url(...) in a style attribute or style element. A target
-# passes only if it is an in-page anchor or has a scheme, and a link into this repository's main
-# branch passes only if it names a file or directory present in this checkout. Any srcset or
-# imagesrcset fails, as does CSS that holds a backslash, @import, image-set( or src(, a url( that
-# does not close, and a style element that continues outside the HTML that opens it. Code spans,
-# fenced code and indented code are code to the parser, so a link-shaped string inside them is
-# not checked. A self-test of at least one mutation per form, and of clean cases, runs before the
-# bundle is read, so what checks the bundle is the shipped rule. It reads only the working tree,
-# so it stays offline. The build runs it on its output before writing site/llms-full.txt, and
-# the gate in tools/run_all_checks.sh runs it on the committed file through --check-links, so
-# the build and the gate apply one rule.
+# passes only if it is an in-page anchor or has a scheme, and one that urllib.parse cannot split
+# fails. An http or https URL whose host is github.com, ignoring case, a leading www. and a
+# trailing dot, and whose first two path segments are jposluns and secureconfig in any case is a
+# link into this repository. Its blob/main/ and raw/main/ routes must name a file present in
+# this checkout and its tree/main/ route a directory, after percent-decoding, with the route
+# name in any case and the branch spelled main. An empty path, a leading slash or a .. segment
+# fails. Its other routes, such as another branch or commit, a pull request or the repository
+# itself, pass as URLs with a scheme and are not checked. Any srcset or imagesrcset fails, as
+# does CSS that holds a backslash, @import, image-set( or src(, a url( that does not close, a
+# style element that continues outside the HTML that opens it, and raw HTML that html.parser
+# leaves unfinished, such as a tag still open at the end of the piece. Code spans, fenced code
+# and indented code are code to the parser, so a link-shaped string inside them is not checked.
+# A self-test runs before the bundle is read, so what checks the bundle is the shipped rule. It
+# has at least one mutation for each form, HTML attribute and CSS form named here and for each
+# spelling of a repository link, and clean cases. It reads only the working tree, so it stays
+# offline. The build runs it on its output before writing site/llms-full.txt, and the gate in
+# tools/run_all_checks.sh runs it on the committed file through --check-links, so the build and
+# the gate apply one rule.
 IFS= read -r -d '' certify <<'PY' || true
 import html.parser
 import os
 import re
 import sys
-from urllib.parse import unquote
+from urllib.parse import unquote, urlsplit
 
 sys.path.insert(0, "tools")
 from check_verify_marking import ParserUnavailable, gate_parser
 
 SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
-SELF = re.compile(r"^https://github\.com/jposluns/secureconfig/(blob|tree)/main/([^#?]+)")
 REPO = "https://github.com/jposluns/secureconfig"
+# The routes into this repository's main branch that name a path, and what each path must be.
+ROUTES = {"blob": "file", "raw": "file", "tree": "directory"}
 # HTML attributes whose value is one URL, and those whose value is a space-separated URL list.
 ONE_URL = {
     "href", "xlink:href", "src", "longdesc", "poster", "action", "formaction", "data", "cite",
@@ -126,18 +135,51 @@ MUTATIONS = [
     '<table><tr><td background="mfa.png">x</td></tr></table>',
     '<svg><a xlink:href="mfa.md">x</a></svg>',
     '<meta http-equiv="refresh" content="0; url=mfa.md">',
+    '<object codebase="mfa/"></object>',
+    '<object classid="mfa.md"></object>',
+    '<img src="https://example.com/a.png" usemap="mfa.md">',
+    '<html manifest="mfa.md">',
+    '<command icon="mfa.png">',
+    '<img src="https://example.com/a.png" lowsrc="mfa.png">',
+    '<img src="https://example.com/a.png" dynsrc="mfa.png">',
+    '<head profile="mfa.md">',
+    '<applet archive="https://example.com/a.jar mfa.jar"></applet>',
+    "<style>\n@import 'https://example.com/a.css';\n</style>",
+    "<div style='background: image-set(\"https://example.com/a.png\" 1x)'>x</div>",
+    '<div style="background: src(https://example.com/a.png)">x</div>',
+    '<div>\n<a href="mfa.md"\n\ntitle="y">x</a></div>',
+    '<a href="http://[nope/a">x</a>',
     f"[x]({REPO}/blob/main/nope-missing.md)",
     f"[x]({REPO}/blob/main/tools/)",
     f"[x]({REPO}/tree/main/mfa.md/)",
     f"[x]({REPO}/blob/main/../mfa.md)",
     f"[x]({REPO}/blob/main//etc/hostname)",
+    f"[x]({REPO}/blob/main/)",
+    f"[x]({REPO}/blob/main)",
+    f"[x]({REPO}/tree/main/)",
+    f"[x]({REPO}/blob/main/nope%2Dmissing.md)",
+    f"[x]({REPO}/raw/main/nope-missing.md)",
+    f"[x]({REPO}/Blob/main/nope-missing.md)",
+    "[x](https://GITHUB.COM/jposluns/secureconfig/blob/main/nope-missing.md)",
+    "[x](https://GITHUB.COM/jposluns/secureconfig/blob/main/)",
+    "[x](http://github.com/jposluns/secureconfig/blob/main/nope-missing.md)",
+    "[x](http://github.com/jposluns/secureconfig/tree/main/mfa.md/)",
+    "[x](https://www.github.com/jposluns/secureconfig/blob/main/nope-missing.md)",
+    "[x](https://www.github.com:443/jposluns/secureconfig/blob/main/tools/)",
+    "[x](https://github.com/JPosluns/SecureConfig/blob/main/nope-missing.md)",
+    "[x](https://github.com./jposluns/secureconfig/blob/main/nope-missing.md)",
     f"[x]: {REPO}/blob/main/nope-missing.md",
     f'<a href="{REPO}/blob/main/nope-missing.md">x</a>',
+    '<a href="HTTP://GitHub.com/jposluns/secureconfig/blob/main/nope-missing.md">x</a>',
 ]
 CLEAN = [
     f"[x]({REPO}/blob/main/mfa.md)",
     f'[x]({REPO}/blob/main/mfa.md#a "title")',
     f"[x](<{REPO}/tree/main/tools/>)",
+    f"[x]({REPO}/blob/main/m%66a.md) and [y]({REPO}/raw/main/mfa.md)",
+    "[x](http://github.com/jposluns/secureconfig/blob/main/mfa.md)",
+    "[x](https://WWW.GitHub.com/JPosluns/SecureConfig/tree/main/tools/)",
+    f"[x]({REPO}) and [y]({REPO}/pull/450) and [z]({REPO}/blob/0123abc/nope-missing.md)",
     f"[x]: {REPO}/blob/main/mfa.md",
     f'<a href="{REPO}/blob/main/mfa.md" ping="https://example.com/p">x</a>',
     f'See <a href\n="{REPO}/blob/main/mfa.md">x</a>.',
@@ -212,7 +254,12 @@ def pieces(parser, text):
         elif token.type in ("html_inline", "html_block"):
             raw = Html()
             raw.feed(token.content)
+            # Text html.parser holds back, such as a tag still open at the end of the piece, is
+            # not reported to Html, so it fails rather than pass unread.
+            unread = raw.rawdata.strip(" \t\n\f\r")
             raw.close()
+            if unread:
+                yield line, "raw HTML that html.parser leaves unfinished", None
             for form, target in raw.found:
                 yield line, form, target
             for css in raw.css:
@@ -229,12 +276,18 @@ def verdict(form, target):
         return f"{form} is never certified", False
     if target.startswith("#"):
         return None, False
-    match = SELF.match(target)
-    if match:
-        kind, path = match.group(1), unquote(match.group(2)).rstrip("/")
-        found = os.path.isdir(path) if kind == "tree" else os.path.isfile(path)
-        if path.startswith("/") or ".." in path.split("/") or not found:
-            what = "directory" if kind == "tree" else "file"
+    try:
+        parts = urlsplit(target)
+        host = (parts.hostname or "").casefold().rstrip(".").removeprefix("www.")
+    except ValueError:
+        return f'{form} target "{target}" cannot be split as a URL', False
+    segments = parts.path.split("/")
+    owner, repo, route, ref = [unquote(segment) for segment in segments[1:5] + ["", "", "", ""]][:4]
+    if (parts.scheme in ("http", "https") and host == "github.com" and owner.casefold() == "jposluns"
+            and repo.casefold() == "secureconfig" and route.casefold() in ROUTES and ref == "main"):
+        what, path = ROUTES[route.casefold()], unquote("/".join(segments[5:])).rstrip("/")
+        found = os.path.isdir(path) if what == "directory" else os.path.isfile(path)
+        if not path or path.startswith("/") or ".." in path.split("/") or not found:
             return f"{form} {target} names no {what} in this checkout", True
         return None, True
     if SCHEME.match(target):
