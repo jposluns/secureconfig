@@ -22,7 +22,7 @@ deployment-lifecycle.md	initialize-secrets	525
 deployment-lifecycle.md	offboarding	1681
 deployment-lifecycle.md	registration	563
 deployment-lifecycle.md	reverify	786
-deployment-lifecycle.md	tcp-scan	599
+deployment-lifecycle.md	tcp-scan	598
 docker.md	alternate-entry	679
 docker.md	auth	617
 docker.md	secrets	411
