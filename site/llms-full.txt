@@ -6573,7 +6573,7 @@ REASONED: host listener inventory (step 1) in the following block, per the Keycl
 )
 ```
 
-REASONED: following block; Compose publication cross-check per the shipped Compose file cited below; no Compose deployment of either provider is available in the authoring environment, so no publication table was observed. Run it from the identity provider's Compose project directory. It exits 2 when `docker` is not installed, which on a host that runs Keycloak without Docker means this check does not apply, or when `docker compose version` fails, as it does without the Compose plugin, 3 when `docker compose ps` fails, and otherwise 0, leaving the published ports for you to judge, since a proxy in the same project publishing 443 is expected.
+REASONED: following block; Compose publication cross-check per the shipped Compose file and the Docker Compose CLI reference cited below; no Compose deployment of either provider is available in the authoring environment, so no publication table was observed. Run it from the identity provider's Compose project directory. It exits 2 when `docker` is not installed, which on a host that runs Keycloak without Docker means this check does not apply, or when `docker compose version` fails, which this guide expects without the Compose plugin, 3 when `docker compose ps` fails, and otherwise 0, leaving the published ports for you to judge, since a proxy in the same project publishing 443 is expected.
 
 ```bash
 # ss on the HOST does not see a container's own namespace, and a published Docker port
@@ -6618,9 +6618,11 @@ REASONED: following block; steps 2 to 5 per the Keycloak hostname, reverse proxy
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "${1,,}" in   # host names ignore letter case; bash lowercases the value itself, so no outside command can fail here
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|master|*/*|*[?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the realm your applications use (not master; no slash, query, fragment or percent sign) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -6636,14 +6638,15 @@ REASONED: following block; steps 2 to 5 per the Keycloak hostname, reverse proxy
   #    hostname answers from out here. Use the realm your APPLICATIONS use, not master:
   #    section 3 restricts the master realm to your administrators' range, so probing it here
   #    would test the wrong thing and tell you nothing about the realm your applications use.
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS "https://$1/realms/$2/.well-known/openid-configuration"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then the discovery document
+  # python3 reads the discovery document straight from curl through a pipe, never from a shell capture,
+  # which would silently drop a NUL byte, and exits 4 for an issuer that is not a string or holds a NUL byte.
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS "https://$1/realms/$2/.well-known/openid-configuration" | python3 -c 'import json,sys; d=json.load(sys.stdin.buffer); i=d["issuer"]; isinstance(i, str) or sys.exit(4); chr(0) in i and sys.exit(4); print(i)'; then printf '\n%s %s' "${PIPESTATUS[0]}" "${PIPESTATUS[1]}"; else printf '\n%s %s' "${PIPESTATUS[0]}" "${PIPESTATUS[1]}"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's and python3's exit statuses, then all python3 printed, ending in print's own newline
+  set -- "$1" "$2" "$3" "$4" "${5%% *}" "$6" "${5#* }"   # curl's exit status, python3's output, then python3's exit status
   if [ "$5" != 0 ]; then
     echo "curl exit $5: the discovery request failed, so the positive control failed; inconclusive"; set -- "$1" "$2" "$3" 3
   else
-    set -- "$1" "$2" "$3" "$4" "$(if printf '%s' "$6" | python3 -c 'import json,sys; d=json.load(sys.stdin); i=d["issuer"]; isinstance(i, str) or sys.exit(4); print(i)'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # python3's exit status, then all it printed, ending in print's own newline
-    set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'}"   # the whole issuer without that newline, so an issuer with a line break in it cannot match
+    set -- "$1" "$2" "$3" "$4" "$7" "${6%$'\n'}"   # python3's exit status, then the whole issuer without print's newline, so an issuer with a line break in it cannot match
     printf '%s\n' "$6"
     # It must print YOUR issuer URL. A 200 alone proves only that something answered: a wrong
     # upstream or a generic responder satisfies it while the real provider sits exposed
@@ -6740,9 +6743,11 @@ REASONED: following block; steps 2 to 5 per the Keycloak hostname, reverse proxy
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "${1,,}" in   # host names ignore letter case; bash lowercases the value itself, so no outside command can fail here
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy NO_PROXY no_proxy ||
     { echo "a proxy variable is readonly in this shell and cannot be cleared; not probing"; exit 2; }
   set -- "$1" 0 8080 8443 9000 9300 9443   # the host, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports still to probe
@@ -6752,8 +6757,8 @@ REASONED: following block; steps 2 to 5 per the Keycloak hostname, reverse proxy
     echo "=== $3: curl exit $4"
     printf '%s\n' "$5"
     # Exit 0 means curl completed the HTTP operation, so treat it as an answer. Exit 7 reports
-    # a connection failure. Treat that as the isolation outcome you want only after checking
-    # the diagnostic and target. This guide infers that exits 52 and 56 follow an accepted
+    # a connection failure, which is consistent with isolation but not proof of it, and counts only
+    # once the diagnostic shows the target you meant. This guide infers that exits 52 and 56 follow an accepted
     # connection, so a listener is reachable; inspect the diagnostic. Other exits require diagnostic review.
     # Exit 28 is a timeout and does NOT settle it on its own: this guide infers that a port
     # that accepted you and then went quiet, and one never reached, can both end there.
@@ -6768,7 +6773,7 @@ REASONED: following block; steps 2 to 5 per the Keycloak hostname, reverse proxy
     # gives exit 28 on every port, so this block then ends with 3 and the diagnostics decide it.
     case "$4" in
       0|52|56) echo "FINDING: port $3 accepted the connection from out here (curl exit $4), so a listener is reachable"; set -- "$1" 1 "${@:3}" ;;
-      7) echo "port $3: a connection failure, the isolation outcome you want once the diagnostic above shows the target you meant" ;;
+      7) echo "port $3: connection failed (curl exit 7), consistent with isolation from this host but not proof of it; it counts only if the diagnostic above shows the target you meant" ;;
       *) echo "port $3: curl exit $4 does not settle it on its own; read the diagnostic above; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
     esac
     set -- "$1" "$2" "${@:6}"
@@ -6793,7 +6798,7 @@ REASONED: following block; steps 2 to 5 per the Keycloak hostname, reverse proxy
 #    by the client-id form of the same mechanism and is not in the user list at all.
 ```
 
-REASONED: preceding block; step 7's direct port probes, step 8's bootstrap-account lookup, the repeat coverage across addresses and families and the surfaces these blocks do not test, per the cited Keycloak and authentik documentation, pinned sources and curl exit-code documentation. No deployed provider, isolated network namespace for listeners, or public address is available in the authoring environment, so none of the steps ran against a provider. The marking-time bash -n and ShellCheck 0.11.0 passes covered the earlier single-block form; the current blocks are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the stub runs recorded at the top of this section. The pinned curl and Keycloak sources support the documented exit codes, timeout options, proxy controls and listener defaults; no deployed outcome was observed. The step 7 block takes your public host name on its `set --` line and refuses with status 2 if it is left unsubstituted or malformed, if it is example.com, example.net, example.org or one of their subdomains, or if a proxy variable cannot be cleared. It records a finding (1) for a port whose curl exit is 0, 52 or 56, records an inconclusive result (3) for exit 28 or any other exit except 7, and reads exit 7 as the pass you confirm from the diagnostic; behind a firewall that drops rather than refuses connections, it cannot end with 0. One name is not one address, and one address is not one origin. Repeat steps 2 to 5 and 7 for every public address the name carries and in both families, since a host filtered on IPv4 while it answers on IPv6 passes all of them. A CDN or load balancer answering on 443 also says nothing about whether the backend has its own reachable address, so check the origin directly as well. And nothing here tests `id-admin.internal`, the database, or any authentik outpost's boundary, including the embedded outpost's routes on the core server ports; those surfaces need separate checks. The port list is the one this guide's own topology creates, not an inventory: scan the whole range if you want one.
+REASONED: preceding block; step 7's direct port probes, step 8's bootstrap-account lookup, the repeat coverage across addresses and families and the surfaces these blocks do not test, per the cited Keycloak and authentik documentation, pinned sources and curl exit-code documentation. No deployed provider, isolated network namespace for listeners, or public address is available in the authoring environment, so none of the steps ran against a provider. The marking-time bash -n and ShellCheck 0.11.0 passes covered the earlier single-block form; the current blocks are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the stub runs recorded at the top of this section. The pinned curl and Keycloak sources support the documented exit codes, timeout options, proxy controls and listener defaults; no deployed outcome was observed. The step 7 block takes your public host name on its `set --` line and refuses with status 2 if it is left unsubstituted or malformed, if it is example.com, example.net, example.org or one of their subdomains, or if a proxy variable cannot be cleared. It records a finding (1) for a port whose curl exit is 0, 52 or 56, and an inconclusive result (3) for exit 28 or any other exit except 7. It records exit 7 as 0 and prints that the connection failure is consistent with isolation but not proof, counting only once the diagnostic shows the target you meant; behind a firewall that drops rather than refuses connections, it cannot end with 0. One name is not one address, and one address is not one origin. Repeat steps 2 to 5 and 7 for every public address the name carries and in both families, since a host filtered on IPv4 while it answers on IPv6 passes all of them. A CDN or load balancer answering on 443 also says nothing about whether the backend has its own reachable address, so check the origin directly as well. And nothing here tests `id-admin.internal`, the database, or any authentik outpost's boundary, including the embedded outpost's routes on the core server ports; those surfaces need separate checks. The port list is the one this guide's own topology creates, not an inventory: scan the whole range if you want one.
 
 ## Sources (checked September 2026)
 
@@ -6882,6 +6887,8 @@ REASONED: preceding block; step 7's direct port probes, step 8's bootstrap-accou
 - Docker Engine rootless mode, daemon and containers without root privileges (checked October 2026): https://docs.docker.com/engine/security/rootless/
 - Docker daemon privileges, trusted control and host filesystem access, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112
 - Docker rootless non-root daemon and containers in a user namespace, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/rootless/_index.md#L8-L21
+- Docker Compose CLI reference for `docker compose version`, which shows the Docker Compose version information (checked October 2026): https://docs.docker.com/reference/cli/docker/compose/version/
+- Docker Compose CLI reference for `docker compose ps` and its `--format` option, which takes `table`, `table TEMPLATE`, `json` or a Go template (checked October 2026): https://docs.docker.com/reference/cli/docker/compose/ps/
 - curl `curl-8_23_0` exit-code list, defining exit 7 as a connection failure: https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/_EXITCODES.md#L23-L24
 - Keycloak `26.7.4` Admin CLI user filtering example and its non-exact matching note (no documented flag-order behaviour): https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/admin-cli.adoc#L1034-L1045
 - Keycloak server administration guide, brute force detection ("Brute force detection is disabled by default") and unspecific redirect URIs: https://www.keycloak.org/docs/latest/server_admin/index.html
@@ -7027,7 +7034,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "0ec03dbdbc565333df09f2f8047339b125e30fe31a82c3684ede76387fe27148",
+  "body_sha256": "7ec0645126cf0260fa5f538df533c2a55e29f22b92979fa529b05c4880625ad8",
   "components": {
     "keycloak-admin-cli": {
       "name": "Keycloak Admin CLI",
