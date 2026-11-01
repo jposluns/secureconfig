@@ -305,20 +305,45 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g --noproxy '*' -sI "http://$1/"         # expect 307 or 308 with a https:// Location
-  curl -q -g --noproxy '*' -sI "https://$1/"        # succeeds without -k; shows Strict-Transport-Security
-  curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"   # protected [ApiController] API using the cookie scheme: 401 without a cookie
-  ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is missing), which outranks 0
+  curl -q -g --noproxy '*' -sI "http://$1/" ||         # expect 307 or 308 with a https:// Location
+    { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  curl -q -g --noproxy '*' -sI "https://$1/" ||        # succeeds without -k; shows Strict-Transport-Security
+    { echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"                    # protected [ApiController] API using the cookie scheme: 401 without a cookie
+  case "$3:$4" in
+    0:401) echo "401 without a cookie: confirm that an authorized request reaches this API before you read the 401 as a pass" ;;
+    0:2??) echo "FINDING: /api answered $4 without a cookie"; set -- "$1" 1 ;;
+    0:*) echo "HTTP $4 from /api is neither the 401 pass nor a 2xx finding (a page redirect, an OIDC or customized challenge, or a missing route); inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the /api request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  if command -v ss >/dev/null; then
+    set -- "$1" "$2" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    printf '%s' "${3%$'\n'*}"   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
+    [ "${3##*$'\n'}" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+    set -- "$1" "$2" listed             # the 3rd value says whether ss ran, so the last line names the listener list only when it did
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$2" in 0) set -- "$1" 2 ;; esac
+    set -- "$1" "$2" unlisted
+  fi
+  case "$3" in
+    listed) echo "block exit $2; the redirect and HTTPS headers, including Strict-Transport-Security, and the listener list are not classified, so judge them yourself" ;;
+    *) echo "block exit $2; the redirect and HTTPS headers, including Strict-Transport-Security, are not classified, so judge them yourself" ;;
+  esac
+  exit "$2"
 )
 ```
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added, so the guarded section 9 block needs a bash -n re-run before the guarded block's syntax counts as checked. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons. The bash -n run and the separate local guard record covered the five child-section blocks in an earlier form, whose guard refusals ended with status 0; neither was re-run on the current form, whose guard refusals exit with status 2 inside the subshell. Each block now ends with `) || echo "block exit $?"`, which keeps the reader's shell running and prints the subshell's non-zero status, such as `block exit 2` after a refusal; the block pasted whole still reports status 0 because the echo succeeds, and no recorded run covered that ending)
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response, and the bash -n run covered the section 9 block in its earlier form, before the section 9 host guard was added. A separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value. The valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing". The three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; the separate local guard record's results are shell-guard observations only, not URL validation or deployment comparisons. The bash -n run and the separate local guard record covered the five child-section blocks in an earlier form, whose guard refusals ended with status 0, and no recorded run covered the later form that ended each of them with `) || echo "block exit $?"`, which kept status 0 when the block was pasted whole. The current form of all six blocks, which reports each block's result in its exit status, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block, and the section 9 block's current form is also covered by the stub runs recorded below; no application response was observed)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
-Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. The final `|| echo "block exit $?"` keeps an enclosing shell running and prints the subshell's status when that status is non-zero: `block exit 2` after a guard refusal, or the last command's status when that command fails. No `block exit` line means the subshell ended with status 0. The block pasted whole still reports status 0 because the echo succeeds, and status 0 does not mean the check passed.
+REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. Every block in section 9, including the one above, records each classified result and each failed request as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed request or an inconclusive result, a finding outranking an inconclusive result. The first block in section 9 refuses only its listener inventory when `ss` is missing: it prints `ss is not installed here; not listing sockets` after its requests have run, then still ends with its `block exit` line, which names the listener list only when `ss` ran, and exits 2 only when none of the requests found something or was inconclusive. Stub runs (October 2026, Bash 5.3.9, scratch `ss` and `curl` stubs, no network, under an inherited `readonly` variable, `declare -i` variable and `set -e`) covered that block in an earlier form, whose `block exit` line named the listener list even when `ss` was missing. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs under the same conditions, which exited 0 with `ss` and the stubbed requests passing, 3 with `ss` failing, and 2 with `ss` missing; with `ss` missing, a stubbed `200` from `/api` gave 1, stubbed failed requests gave 3 and the last line did not name the listener list. Unless a guard ends the block early, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The cookie-continuity block also refuses with status 2, before any request, when `./dotnet-verify.cookies` is not readable in the current directory.
 
 #### Production error disclosure (REASONED: the following block tests error representations against the cited error-handling documentation; no .NET runtime or deployed test application, as recorded below.)
 
@@ -334,14 +359,33 @@ With the Developer Exception Page exposed, expect a `500` response containing di
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
-        -H 'Accept: text/plain' "$1"
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
-        -H 'Accept: text/html' "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -H 'Accept: text/plain' -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5:$4" in
+    0:*DOTNET_VERIFY_CANARY*) echo "FINDING: the text/plain response contains DOTNET_VERIFY_CANARY, so exception detail reaches the client"; set -- "$1" 1 ;;
+    0:500:*) ;;
+    0:*) echo "HTTP $5 for text/plain is not the expected 500, so the request may not have reached the throwing route; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the text/plain request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -H 'Accept: text/html' -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5:$4" in
+    0:*DOTNET_VERIFY_CANARY*) echo "FINDING: the text/html response contains DOTNET_VERIFY_CANARY, so exception detail reaches the client"; set -- "$1" 1 ;;
+    0:500:*) ;;
+    0:*) echo "HTTP $5 for text/html is not the expected 500, so the request may not have reached the throwing route; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the text/html request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; a 500 without the marker is not classified, so read both bodies for stack traces, source paths, cookies or configuration values and correlate the requests with server logs yourself"
+  exit "$2"
+)
 ```
 
 #### Oversized-request rejection (REASONED: the following block compares body sizes against the cited Kestrel limit; no .NET runtime or deployed body-reading endpoint, as recorded below.)
@@ -358,18 +402,35 @@ The fixed expectation is `204` at 1,048,576 bytes and `413` at 1,048,577 bytes. 
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      head -c 1048576 /dev/zero | curl -q -g --noproxy '*' -sS \
-        --http1.1 --connect-timeout 5 --max-time 30 \
-        -H 'Content-Type: application/octet-stream' -H 'Expect:' \
-        --data-binary @- -o /dev/null -w 'at-limit http=%{http_code}\n' "$1"
-      head -c 1048577 /dev/zero | curl -q -g --noproxy '*' -sS \
-        --http1.1 --connect-timeout 5 --max-time 30 \
-        -H 'Content-Type: application/octet-stream' -H 'Expect:' \
-        --data-binary @- -o /dev/null -w 'over-limit http=%{http_code}\n' "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  set +o pipefail                       # pipefail off here, so each status below is curl's, not that of a head cut short when the server answers early
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$(if head -c 1048576 /dev/zero | curl -q -g --noproxy '*' -sS \
+        --http1.1 --connect-timeout 5 --max-time 30 \
+        -H 'Content-Type: application/octet-stream' -H 'Expect:' \
+        --data-binary @- -o /dev/null -w 'at-limit http=%{http_code}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its at-limit line
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "0:at-limit http=204") ;;
+    0:*) echo "HTTP ${4#at-limit http=} at 1,048,576 bytes is not the expected 204, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the at-limit request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if head -c 1048577 /dev/zero | curl -q -g --noproxy '*' -sS \
+        --http1.1 --connect-timeout 5 --max-time 30 \
+        -H 'Content-Type: application/octet-stream' -H 'Expect:' \
+        --data-binary @- -o /dev/null -w 'over-limit http=%{http_code}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then its over-limit line
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "0:over-limit http=413") ;;
+    "0:over-limit http=204") echo "FINDING: 1,048,577 bytes were accepted with 204, so no body limit rejected them"; set -- "$1" 1 ;;
+    0:*) echo "HTTP ${4#over-limit http=} at 1,048,577 bytes is neither the 413 pass nor the 204 finding; an authentication denial, parser error or 500 is inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the over-limit request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; which layer returned a 413 is not classified, so keep other limits above the tested threshold before you attribute the rejection to Kestrel"
+  exit "$2"
+)
 ```
 
 #### Diagnostic, OpenAPI, and health access (REASONED: the following block checks endpoint exposure against the cited OpenAPI and health documentation; no deployed endpoints or external test vantage, as recorded below.)
@@ -388,11 +449,13 @@ For retained routes, pair the anonymous request with an authorized request throu
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status: 3 (the request failed) or 0
+  printf '%s\n' "${3%$'\n'*}"
+  [ "${3##*$'\n'}" = 0 ] || { echo "curl exit ${3##*$'\n'}: the request failed; inconclusive"; set -- "$1" 3; }
+  echo "block exit $2; the response status and content are not classified, so judge them against the exposed and corrected states above"
+  exit "$2"
+)
 ```
 
 #### Public response headers (REASONED: the following block checks header removal against the cited Kestrel and IIS controls; no deployed Kestrel, IIS or proxy response, as recorded below.)
@@ -407,12 +470,14 @@ For retained routes, pair the anonymous request with an authorized request throu
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -D - -o /dev/null \
-        --connect-timeout 5 --max-time 20 "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  set -- "$1" 0 "$(if curl -q -g --noproxy '*' -sS -D - -o /dev/null \
+        --connect-timeout 5 --max-time 20 "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the 2nd value is the block's status: 3 (the request failed) or 0
+  printf '%s' "${3%$'\n'*}"
+  [ "${3##*$'\n'}" = 0 ] || { echo "curl exit ${3##*$'\n'}: the request failed; inconclusive"; set -- "$1" 3; }
+  echo "block exit $2; the returned headers, including any Server or X-Powered-By header, are not classified, so judge them yourself"
+  exit "$2"
+)
 ```
 
 #### Cookie continuity across restart and replicas (REASONED: the following block checks continuity against the cited key-lifetime and cookie-sharing documentation; no running cookie-authenticated application or replicas, as recorded below.)
@@ -431,13 +496,32 @@ The anonymous control should return `401`. The request using the original cookie
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the value inside the single quotes; not probing"; exit 2 ;;
-    *)
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 "$1"
-      curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
-        -b ./dotnet-verify.cookies "$1"
-      ;;
   esac
-) || echo "block exit $?"
+  [ -r ./dotnet-verify.cookies ] || { echo "no readable ./dotnet-verify.cookies in this directory: save the test account's cookies there as described above; not probing"; exit 2; }
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5" in
+    0:401) ;;
+    0:*) echo "HTTP $5 without the cookie is not the 401 the anonymous control expects; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $3: the request without the cookie failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -i --connect-timeout 5 --max-time 20 \
+    -b ./dotnet-verify.cookies -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"        # curl's exit status, then the response and its HTTP code
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$4"
+  case "$3:$5" in
+    0:200) ;;
+    0:*) echo "HTTP $5 with the original cookie is not the expected 200: key loss is one cause, and cookie renewal, expiry, session-store loss or identity validation are others, so correlate it with application logs; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $3: the request with the cookie failed; inconclusive"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the identity in the response with the cookie, and which replica answered, are not classified, so judge them yourself"
+  exit "$2"
+)
 ```
 
 Also retain an antiforgery token and its accompanying cookie across a restart, then submit the application's normal protected form. Confirm success without fetching a replacement token first. A lost key ring can invalidate antiforgery tokens independently of whether another authentication mechanism signs the user back in.
@@ -593,7 +677,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7d4872a1a249f9db7258a36d7fdf3de02e3e16ce4db2211fbddbb9ac85096ec4",
+  "body_sha256": "4668d750ddccad76294c748f8a1623015ddf3dbb511ff2946fe8dc54d0051f07",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",

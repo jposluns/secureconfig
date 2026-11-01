@@ -109,76 +109,175 @@ from being attempted, they make the attempt fail.
 
 ## Verify
 
+REASONED: exit statuses and run locations, from the blocks below as written; no exposed/fixed run is recorded in this guide. Each block below is pasted whole and runs in one subshell, so one exit status covers every check in it: 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 when a guard refuses the block's input; and 3 for a failed or inconclusive check, a finding outranking an inconclusive result. Run the metadata blocks for your own cloud on the workload, the egress controls on the same workload, and the metadata-options check wherever your AWS CLI has credentials.
+
 REASONED: metadata headers, token flow, network blocks, egress controls and applied options; no exposed/fixed run is recorded in this guide. Expectations follow the cited cloud, NetworkPolicy and curl sources; the authoring environment has no authorized cloud VM or workload enforcement point.
 
 ```bash
 # --noproxy so an ambient http(s)_proxy/ALL_PROXY cannot answer in place of the metadata service (Azure
 # documents that IMDS queries must bypass proxies); timeouts so a blocked address does not hang.
-# Read this block manually and run it WITHOUT set -e: several probes below intentionally exit non-zero
-# when a block is in place (a refused or timed-out connection), and set -e would stop the block on the first.
-# AWS, no token supplied: with --http-tokens required this returns 401
-curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{http_code}\n' http://169.254.169.254/latest/meta-data/
-# GCP, no Metadata-Flavor header: must fail, must not return metadata
-curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{http_code}\n' http://169.254.169.254/computeMetadata/v1/instance/
-# Azure, no Metadata: true header: must fail, must not return metadata
-curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{http_code}\n' 'http://169.254.169.254/metadata/instance?api-version=2025-04-07'
-# the three checks above test the header requirement, which is not the control this guide
-# recommends. Test the network block itself, WITH the header the service requires, from a
-# workload that has no legitimate reason to reach metadata:
-# GCP (send the required header). For AWS, do the real IMDSv2 two-step - PUT a token then GET WITH it -
-# because a tokenless 401 proves the header requirement, not a network block; for Azure send Metadata: true:
-#   Assumes a clean Bash shell with trusted startup files. Uncomment each WHOLE subshell to run.
+# AWS, on the workload. This tests the header requirement, which is not the control this guide
+# recommends; the next block tests the network block itself.
+(                                       # a subshell, so the exits below end only this check
+  set +e                                # errexit off here, so a request that fails is classified below instead of ending the block
+  # AWS, no token supplied: with --http-tokens required this returns 401
+  set -- "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{http_code}\n' http://169.254.169.254/latest/meta-data/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1##*$'\n'}" "${1%%$'\n'*}"  # curl's exit status, then the HTTP code
+  printf '%s\n' "$2"
+  case "$1:$2" in
+    0:401) echo "block exit 0; the tokenless request got 401, so tokens are required"; exit 0 ;;
+    0:2??) echo "FINDING: the tokenless request got $2, so the instance answers without an IMDSv2 token"; exit 1 ;;
+    0:*) echo "HTTP $2 is neither the 401 pass nor a 2xx finding; inconclusive"; exit 3 ;;
+    7:*|28:*) echo "block exit 0; curl exit $1, no answer, so the header requirement was not tested from here: the next block classifies reachability"; exit 0 ;;
+    *) echo "curl exit $1: the tokenless request failed; inconclusive"; exit 3 ;;
+  esac
+)
+```
+
+REASONED: following block; metadata reachability and what each provider's probed path returns, per the cited AWS instance metadata, GCP metadata and Azure Instance Metadata Service documentation; no exposed/fixed run is recorded. In the network blocks below, a 200, or any HTTP response including a 401, means the metadata endpoint is reachable from the workload, whatever the header checks returned. Reachability is the finding. GCP's probed path returns a live access token (credential issuance). AWS's `/latest/meta-data/iam/security-credentials/` lists the attached role NAMES (append a role name to fetch the actual credentials), and the token PUT issues an IMDS session token, not IAM credentials, so treat the AWS checks as metadata reachability, not credential issuance. Azure's `/metadata/instance` likewise proves reachability only, its managed-identity token being a separate `/metadata/identity/oauth2/token` request.
+
+REASONED: following block; reading a failed probe and running the positive control, per the cited curl manual and AWS VPC Flow Logs limitations page; no exposed/fixed run is recorded. `http=000` on its own is not proof of a block: an endpoint that accepts the connection and then stalls produces it too. Read `time_connect`, which stays 0.000000 only when no connection completed, and corroborate with an enforcement-point deny record for THIS flow: a CNI NetworkPolicy drop counter or log, a host iptables or nftables DROP counter, or a packet capture. AWS VPC Flow Logs EXCLUDE traffic to and from 169.254.169.254, so they cannot corroborate a metadata block (they are fine for the other egress destinations in the negative control below). Run the network blocks BEFORE applying the block too (the positive control): they should reach metadata then, so a later refusal is the block working, not the endpoint being down.
+
+```bash
+# REASONED: the AWS IMDSv2 token flow and metadata reachability, per the cited AWS instance metadata
+# documentation and curl manual; no exposed/fixed run is recorded.
+# AWS, on a workload that has no legitimate reason to reach metadata. A tokenless 401 proves the
+# header requirement, not a network block, so this does the real IMDSv2 two-step: PUT a token, then
+# GET WITH it.
+#   Assumes a clean Bash shell with trusted startup files.
 #   Tokens stay in positional parameters and curl's stdin, not named variables, environment or argv.
 #   The same account and root can still read process memory; this does not erase earlier exports.
 #   Stdin closes the argv channel only. No token is typed, and each subshell turns set -x tracing off
 #   before it fetches a token, so shell history and set -x tracing do not record it.
-#   (
-#     trap - DEBUG RETURN ERR
-#     set +x +a +e
-#     # Append curl's status after a newline, then split it from the response without a named variable.
-#     set -- "$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token; printf '\n%s' "$?")"
-#     set -- "${1%$'\n'*}" "${1##*$'\n'}"
-#     printf 'PUT exit: %s\n' "$2"
-#     [ "$2" = 0 ] || { echo 'no usable token: PUT failed; inconclusive without an enforcement-point deny record'; exit 2; }
-#     case "$1" in ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty or malformed token; inconclusive'; exit 2 ;; esac
-#     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/
-#   )
-#   Where IPv6 IMDS is enabled, repeat the WHOLE probe over IPv6 (do not reuse the IPv4 token - acquire
-#   one over IPv6 too, since IPv4 may be blocked while IPv6 is not). Quote the bracketed literal, -q first
-#   then -g. AWS, with the same clean-shell assumption:
-#   (
-#     trap - DEBUG RETURN ERR
-#     set +x +a +e
-#     set -- "$(curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'; printf '\n%s' "$?")"
-#     set -- "${1%$'\n'*}" "${1##*$'\n'}"
-#     printf 'PUT6 exit: %s\n' "$2"
-#     [ "$2" = 0 ] || { echo 'no usable IPv6 token: PUT failed; inconclusive without an enforcement-point deny record'; exit 2; }
-#     case "$1" in ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty or malformed IPv6 token; inconclusive'; exit 2 ;; esac
-#     printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'
-#   )
-#   GCP: curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'gcp6=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' 'http://[fd20:ce::254]/computeMetadata/v1/instance/'
-#   Any HTTP response (including 401) means the IPv6 endpoint is reachable; read time_connect as below.
-# Run these BEFORE applying the block too (the positive control): they should reach metadata then, so a
-# later refusal is the block working, not the endpoint being down.
-curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-  -w 'gcp=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' \
-  http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
-curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-  -w 'azure=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata: true' \
-  'http://169.254.169.254/metadata/instance?api-version=2025-04-07'
-# a 200 (or any HTTP response, including a 401) here means the metadata endpoint is reachable from the
-# workload, whatever the header checks above returned. Reachability is the finding: GCP's probed path
-# returns a live access token (credential issuance), while AWS's /latest/meta-data/iam/security-credentials/
-# lists the attached role NAMES (append a role name to fetch the actual credentials) and the token PUT
-# issues an IMDS session token, not IAM credentials, so treat the AWS checks as metadata reachability, not
-# credential issuance; Azure's /metadata/instance likewise proves reachability only, its managed-identity
-# token being a separate /metadata/identity/oauth2/token request. http=000 on its own is not proof of a
-# block: an endpoint that accepts the
-# connection and then stalls produces it too. Read time_connect, which stays 0.000000 only when no
-# connection completed, and corroborate with an enforcement-point deny record for THIS flow: a CNI
-# NetworkPolicy drop counter/log, a host iptables/nftables DROP counter, or a packet capture. Note AWS
-# VPC Flow Logs EXCLUDE traffic to and from 169.254.169.254, so they cannot corroborate a metadata block
-# (they are fine for the other egress destinations in the negative control below).
+# This block cannot exit 0. A token issued over either address family is the finding (1). A failed
+# PUT, which is what a working block produces, is inconclusive (3) until an enforcement-point deny
+# record for this flow corroborates it. An HTTP error answer to the PUT (curl exit 22) also records
+# 3, but something answered it, so no network block is on that path.
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  (
+    trap - DEBUG RETURN ERR
+    set +x +a +e
+    # Append curl's status after a newline, then split it from the response without a named variable.
+    set -- "$(if curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "${1%$'\n'*}" "${1##*$'\n'}"
+    printf 'PUT exit: %s\n' "$2"
+    case "$2" in
+      0) ;;
+      22) echo 'the token PUT got an HTTP error answer (curl exit 22), so the endpoint answered and no network block is on this path; inconclusive'; exit 3 ;;
+      *) echo 'no usable token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3 ;;
+    esac
+    case "$1" in ''|*[[:cntrl:]]*) echo 'empty or malformed token; inconclusive'; exit 3 ;; esac
+    printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws=%{http_code} time_connect=%{time_connect}\n' -H @- http://169.254.169.254/latest/meta-data/iam/security-credentials/
+    echo "FINDING: the metadata service issued a session token to this workload over IPv4, so it is reachable from here"
+    exit 1
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; *:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # Where IPv6 IMDS is enabled, the WHOLE probe is repeated over IPv6 (do not reuse the IPv4 token:
+  # acquire one over IPv6 too, since IPv4 may be blocked while IPv6 is not). Where it is disabled,
+  # this PUT fails and reports inconclusive. The bracketed literal is quoted, -q first then -g.
+  (
+    trap - DEBUG RETURN ERR
+    set +x +a +e
+    set -- "$(if curl -q -g -sf --noproxy '*' --connect-timeout 5 --max-time 5 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 'http://[fd00:ec2::254]/latest/api/token'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "${1%$'\n'*}" "${1##*$'\n'}"
+    printf 'PUT6 exit: %s\n' "$2"
+    case "$2" in
+      0) ;;
+      22) echo 'the IPv6 token PUT got an HTTP error answer (curl exit 22), so the endpoint answered and no network block is on this path; inconclusive'; exit 3 ;;
+      *) echo 'no usable IPv6 token: PUT failed; inconclusive without an enforcement-point deny record'; exit 3 ;;
+    esac
+    case "$1" in ''|*[[:cntrl:]]*) echo 'empty or malformed IPv6 token; inconclusive'; exit 3 ;; esac
+    printf 'X-aws-ec2-metadata-token: %s\n' "$1" | curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'aws6=%{http_code} time_connect=%{time_connect}\n' -H @- 'http://[fd00:ec2::254]/latest/meta-data/'
+    echo "FINDING: the metadata service issued a session token to this workload over IPv6, so it is reachable from here"
+    exit 1
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; *:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the GET lines above are printed for reading, and a 3 needs the deny record before you read it as a block"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: the GCP header requirement and metadata reachability, per the cited GCP metadata
+# documentation and curl manual; no exposed/fixed run is recorded.
+# GCP, on a workload that has no legitimate reason to reach metadata.
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a request that fails is classified below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  # GCP, no Metadata-Flavor header: must fail, must not return metadata. This tests the header
+  # requirement, which is not the control this guide recommends.
+  set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{http_code}\n' http://169.254.169.254/computeMetadata/v1/instance/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # status, curl's exit status, then the HTTP code
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    0:2??) echo "FINDING: the request without the header got $3, so it returned metadata"; set -- 1 ;;
+    0:*|7:*|28:*) ;;                    # refused or unanswered: the request failed, as it must
+    *) echo "curl exit $2: the request without the header failed for another reason; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  # The network block itself, WITH the header the service requires (send the required header).
+  set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+    -w 'gcp=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' \
+    http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # status, curl's exit status, then the gcp= line
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    0:*) echo "FINDING: the metadata endpoint answered the request with the header, so it is reachable from this workload"; set -- 1 ;;
+    7:*time_connect=0.000000|28:*time_connect=0.000000) echo "curl exit $2 and no connection completed: consistent with a block; confirm it with an enforcement-point deny record for this flow" ;;
+    *) echo "curl exit $2 is not proof of a block, because a connection completed or the request failed for another reason; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  # IPv6-only GCP instances also answer at [fd20:ce::254]; elsewhere this request finds no route,
+  # which reads the same as a block. The bracketed literal is quoted, -q first then -g.
+  set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w 'gcp6=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata-Flavor: Google' 'http://[fd20:ce::254]/computeMetadata/v1/instance/'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # status, curl's exit status, then the gcp6= line
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    0:*) echo "FINDING: the IPv6 metadata endpoint answered the request with the header, so it is reachable from this workload"; set -- 1 ;;
+    7:*time_connect=0.000000|28:*time_connect=0.000000) echo "curl exit $2 and no connection completed over IPv6: consistent with a block or with no IPv6 metadata address; confirm which" ;;
+    *) echo "curl exit $2 over IPv6 is not proof of a block, because a connection completed or the request failed for another reason; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  echo "block exit $1; a 0 still needs the enforcement-point deny record described above before you read it as a block"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: the Azure header requirement and metadata reachability, per the cited Azure Instance
+# Metadata Service documentation and curl manual; no exposed/fixed run is recorded.
+# Azure, on a workload that has no legitimate reason to reach metadata.
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a request that fails is classified below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  # Azure, no Metadata: true header: must fail, must not return metadata. This tests the header
+  # requirement, which is not the control this guide recommends.
+  set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{http_code}\n' 'http://169.254.169.254/metadata/instance?api-version=2025-04-07'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # status, curl's exit status, then the HTTP code
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    0:2??) echo "FINDING: the request without the header got $3, so it returned metadata"; set -- 1 ;;
+    0:*|7:*|28:*) ;;                    # refused or unanswered: the request failed, as it must
+    *) echo "curl exit $2: the request without the header failed for another reason; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  # The network block itself, WITH the header the service requires (send Metadata: true).
+  set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+    -w 'azure=%{http_code} time_connect=%{time_connect}\n' -H 'Metadata: true' \
+    'http://169.254.169.254/metadata/instance?api-version=2025-04-07'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # status, curl's exit status, then the azure= line
+  printf '%s\n' "$3"
+  case "$2:$3" in
+    0:*) echo "FINDING: the metadata endpoint answered the request with the header, so it is reachable from this workload"; set -- 1 ;;
+    7:*time_connect=0.000000|28:*time_connect=0.000000) echo "curl exit $2 and no connection completed: consistent with a block; confirm it with an enforcement-point deny record for this flow" ;;
+    *) echo "curl exit $2 is not proof of a block, because a connection completed or the request failed for another reason; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  echo "block exit $1; a 0 still needs the enforcement-point deny record described above before you read it as a block"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: the egress allow and deny controls, per the cited curl manual and AWS STS pages; no
+# exposed/fixed run is recorded.
 # positive control: use any host on this workload's egress allow list; the AWS STS global endpoint
 # is one example when allowed. If it is not allowed, substitute an allowed URL, such as a Regional
 # STS endpoint, inside the single quotes on the set -- line.
@@ -187,47 +286,101 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
 # expectation; the exact status and body of the bare unauthenticated GET are unknown. A 000 response
 # fails this control. --noproxy '*' on these two controls tests DIRECT egress (a network rule),
 # not a forward proxy's allow list; where a proxy is the egress control, test through it separately.
-(
-  set -- SECURECONFIG_EGRESS_ALLOW_URL 'https://sts.amazonaws.com/'
-  [ "${1-}" = SECURECONFIG_EGRESS_ALLOW_URL ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 URL; not probing"; exit 2; }
-  [ -n "${1-}" ] || { echo "substitute a URL on this workload's egress allow list; not probing"; exit 2; }
-  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' --max-time 5 "$1"
-)
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (
+    set -- SECURECONFIG_EGRESS_ALLOW_URL 'https://sts.amazonaws.com/'
+    [ "${1-}" = SECURECONFIG_EGRESS_ALLOW_URL ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 URL; not probing"; exit 2; }
+    [ -n "${1-}" ] || { echo "substitute a URL on this workload's egress allow list; not probing"; exit 2; }
+    set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' --max-time 5 "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # the URL, curl's exit status, then the HTTP code
+    printf '%s\n' "$3"
+    case "$2:$3" in
+      0:000) echo "no HTTP response from the allowed URL, so this positive control failed and the negative control below proves nothing; inconclusive"; exit 3 ;;
+      0:*) exit 0 ;;                    # an HTTP response, whatever its code: the control passed
+      *) echo "curl exit $2: no HTTP response from the allowed URL, so this positive control failed and the negative control below proves nothing; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
 
-# negative control: a known-live host outside the egress allow list, judged by curl's exit status,
-# not by matching text in its output, since a successful connection also lacks the string
-# "Could not resolve host" and so would otherwise be misreported as blocked
-# status: 1 when the connection succeeded, 3 for curl exit 6 or an unexpected code, and 0 for exit 7
-# or 28, which still needs the time_connect and deny-record evidence it prints
-(                                                   # a subshell, so the exit below ends only this check
-  # guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
-  if curl -q -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then rc=0; else rc=$?; fi
-  if [ "$rc" -eq 0 ]; then
-    echo "FAIL: connected to a host outside the allow list, egress is not enforced"
-    exit 1
-  elif [ "$rc" -eq 6 ]; then
-    echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
-    exit 3
-  elif [ "$rc" -eq 7 ] || [ "$rc" -eq 28 ]; then
-    echo "request failed or timed out (curl exit $rc): inconclusive on its own. curl cannot say why it"
-    echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
-    echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
-    echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
-    echo "or the CNI's NetworkPolicy drop log or counter"
-  else
-    echo "unexpected curl exit code $rc, investigate before treating this as a pass"
-    exit 3
-  fi
+  # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
+  # not by matching text in its output, since a successful connection also lacks the string
+  # "Could not resolve host" and so would otherwise be misreported as blocked.
+  # Status: 1 when the connection succeeded, 0 for exit 7 or 28 with time_connect 0.000000, which
+  # still needs the deny-record evidence it prints, and 3 for exit 7 or 28 after a connection
+  # completed, for curl exit 6 or for an unexpected code
+  (                                                 # a subshell, so the exit below ends only this check
+    # guard-conventions: allow C4-EXAMPLE-HOST egress negative control: example.com, served by IANA, is a known-live host outside the egress allow list, and this probe must fail when egress is enforced
+    set -- "$(if curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'time_connect=%{time_connect}\n' https://example.com/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "${1##*$'\n'}" "${1%%$'\n'*}"            # curl's exit status, then the time_connect= line
+    printf '%s\n' "$2"
+    case "$1:$2" in
+      0:*)
+        echo "FAIL: connected to a host outside the allow list, egress is not enforced"
+        exit 1 ;;
+      6:*)
+        echo "inconclusive: DNS resolution failed (curl exit 6), confirm this host still resolves before retrying"
+        exit 3 ;;
+      7:time_connect=0.000000|28:time_connect=0.000000)
+        echo "request failed or timed out (curl exit $1): inconclusive on its own. curl cannot say why it"
+        echo "failed, and --max-time can expire after the connection already succeeded, in which case the"
+        echo "time_connect printed above is non-zero. Treat this as blocked only when time_connect stayed"
+        echo "0.000000 AND the enforcement point recorded the deny: a VPC Flow Logs REJECT for this flow,"
+        echo "or the CNI's NetworkPolicy drop log or counter"
+        exit 0 ;;
+      7:*|28:*)
+        echo "curl exit $1 after a connection completed (time_connect above is not 0.000000), so this is not evidence of a block; inconclusive"
+        exit 3 ;;
+      *)
+        echo "unexpected curl exit code $1, investigate before treating this as a pass"
+        exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the positive control's HTTP code is not classified further, and a negative-control 0 for curl exit 7 or 28 with time_connect 0.000000 still needs the enforcement-point deny record, so read them as above"
+  exit "$1"
 )
-# confirm the metadata options actually took effect
-aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
-  --query 'Reservations[].Instances[].MetadataOptions'
-# expect HttpTokens: required, HttpPutResponseHopLimit: 1, HttpProtocolIpv6: disabled (the safe stance;
-# if you deliberately enabled IPv6 IMDS it reads enabled, and you must then block and probe
-# [fd00:ec2::254] as well), and State: applied (State: pending means the change is not yet in effect);
-# then re-run the workload-side probes above to confirm the live behaviour.
+```
+
+```bash
+# REASONED: the applied metadata options, per the cited AWS instance metadata options and
+# modify-instance-metadata-options pages; no exposed/fixed run is recorded.
+# confirm the metadata options actually took effect: run this wherever your AWS CLI has credentials
+# for the account, not on the workload. It prints HttpTokens, HttpPutResponseHopLimit,
+# HttpProtocolIpv6 and State, in that order, separated by tabs.
+(                                       # a subshell, so your own script arguments are untouched
+  set +e                                # errexit off here, so a command that fails is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_INSTANCE_ID'   # the instance ID, such as i-0123456789abcdef0: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|-*|*[[:space:][:cntrl:]]*) echo "substitute your instance ID inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$(if aws ec2 describe-instances --instance-ids "$1" \
+    --query 'Reservations[].Instances[].MetadataOptions.[HttpTokens,HttpPutResponseHopLimit,HttpProtocolIpv6,State]' \
+    --output text; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1##*$'\n'}" "${1%$'\n'*}"   # the CLI's exit status, then its output
+  set -- "$1" "${2%$'\n'}"              # the exit status, then the four values without the output's final newline
+  printf '%s\n' "$2"
+  # expect HttpTokens: required, HttpPutResponseHopLimit: 1, HttpProtocolIpv6: disabled (the safe stance;
+  # if you deliberately enabled IPv6 IMDS it reads enabled, and you must then block and probe
+  # [fd00:ec2::254] as well), and State: applied (State: pending means the change is not yet in effect);
+  # then re-run the workload-side probes above to confirm the live behaviour.
+  case "$1:$2" in
+    0:optional$'\t'*) echo "FINDING: HttpTokens is optional, so the instance answers metadata requests without an IMDSv2 token"; set -- 1 ;;
+    0:required$'\t'1$'\t'*$'\t'applied) set -- 0 ;;
+    0:required$'\t'1$'\t'*) echo "State is not applied (pending means the change is not yet in effect); inconclusive"; set -- 3 ;;
+    0:required$'\t'[0123456789]*) echo "FINDING: HttpPutResponseHopLimit is above 1, so a token response can reach a container an extra hop away"; set -- 1 ;;
+    0:*) echo "the metadata options above are not one instance's four values in the expected form; inconclusive"; set -- 3 ;;
+    *) echo "aws ec2 describe-instances exit $1: could not read the metadata options; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; HttpProtocolIpv6 is not classified, so read it as above"
+  exit "$1"
+)
 ```
 
 ## Sources (checked September 2026)
@@ -317,7 +470,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "6a92c8582d1c3c29025f1367d131fff09377b51ed5c1b56d7d7a6125544be942",
+  "body_sha256": "a57fad00a152a13dc92f3ae4b35ab36434878f88ea76a082bf8dcd3426d10cf7",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -425,13 +578,13 @@ Claims (full source mapping in the JSON block below):
     "docker-internal": {"text": "An internal Docker network has no default route out and firewall rules drop external traffic while peer containers communicate.", "components": ["docker"], "sources": ["docker:sc308b8f1039c"], "status": "REASONED"},
     "host-owner": {"text": "Hop limit 1 still permits host processes; this guide recommends OUTPUT owner filtering and matching IPv6 rules. The owner match applies to locally generated packets, not forwarded containers; an nftables equivalent must be in a base chain hooked at the output path, or in a regular chain reached from that base chain by a jump.", "components": ["aws", "iptables", "nftables"], "sources": ["aws:s82aca706445c", "iptables:s35430e42cc22", "iptables:s8033be9cc6c1", "nftables:se1acebec90fb", "nftables:s85ee6e57ed0c", "nftables:s60417f1df3e4"], "status": "REASONED"},
     "proxy-bypass": {"text": "A destination-allowlist proxy controls only traversing traffic; pair it with a direct metadata block and test its path separately.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"},
-    "verify-headers": {"text": "Tokenless AWS must return 401; headerless GCP/Azure must not return metadata. These header checks alone do not demonstrate network isolation.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s82aca706445c", "gcp:sdb98c49a5970", "azure:s5301638a3c81"], "status": "REASONED", "verify": [1]},
-    "verify-token": {"text": "AWS network checks acquire a token then GET with it, separately over IPv4/IPv6; failed PUT needs enforcement evidence. Token/session reachability is not IAM credential issuance.", "components": ["aws", "curl"], "sources": ["aws:s82aca706445c", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-provider-paths": {"text": "Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens.", "components": ["gcp", "azure"], "sources": ["gcp:sdb98c49a5970", "azure:s5301638a3c81"], "status": "REASONED", "verify": [1]},
-    "verify-deny": {"text": "Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s5de42a587ed0"], "status": "REASONED", "verify": [1]},
-    "verify-allow": {"text": "A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s9e5244cd7271", "aws:sb525b61fd496"], "status": "REASONED", "verify": [1]},
-    "verify-negative": {"text": "Known-live disallowed egress must fail: curl success is a finding (block status 1), exit 6 is DNS-inconclusive (block status 3), and 7/28 need zero time_connect plus correlated deny evidence.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-options": {"text": "Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes.", "components": ["aws"], "sources": ["aws:s8e0b69b2747a", "aws:sb843930c4944"], "status": "REASONED", "verify": [1]}
+    "verify-headers": {"text": "Tokenless AWS must return 401; headerless GCP/Azure must not return metadata. These header checks alone do not demonstrate network isolation.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s82aca706445c", "gcp:sdb98c49a5970", "azure:s5301638a3c81"], "status": "REASONED", "verify": [1, 3, 4]},
+    "verify-token": {"text": "AWS network checks acquire a token then GET with it, separately over IPv4/IPv6; failed PUT needs enforcement evidence. Token/session reachability is not IAM credential issuance.", "components": ["aws", "curl"], "sources": ["aws:s82aca706445c", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-provider-paths": {"text": "Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens.", "components": ["gcp", "azure"], "sources": ["gcp:sdb98c49a5970", "azure:s5301638a3c81"], "status": "REASONED", "verify": [3, 4]},
+    "verify-deny": {"text": "Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s5de42a587ed0"], "status": "REASONED", "verify": [2, 3, 4]},
+    "verify-allow": {"text": "A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s9e5244cd7271", "aws:sb525b61fd496"], "status": "REASONED", "verify": [5]},
+    "verify-negative": {"text": "Known-live disallowed egress must fail: curl success is a finding (block status 1), exit 6 is DNS-inconclusive (block status 3), and 7/28 need zero time_connect plus correlated deny evidence.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [5]},
+    "verify-options": {"text": "Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes.", "components": ["aws"], "sources": ["aws:s8e0b69b2747a", "aws:sb843930c4944"], "status": "REASONED", "verify": [6]}
   }
 }
 ````
