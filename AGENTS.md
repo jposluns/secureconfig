@@ -88,7 +88,13 @@ pinned version and asserts it before the suite runs, so a local green predicts C
 shell-block gate's pass line names that version. The suite also compares local Python with CI's
 pinned `PYTHON_VERSION`: a mismatch or unavailable comparison prints an advisory SKIP,
 never a failure, because `html.parser` behaviour can differ between releases.
-A matching release prints an ok line.
+A matching release prints an ok line. Before any other gate, the suite checks that its `python3`,
+run as `python3 -I -B`, imports the markdown-it-py version that `tools/requirements-gates.txt`
+pins, and a match prints an ok line. A mismatch, a missing or broken package, or an unreadable
+or unparsable pin prints one FAIL line naming the interpreter, what it found and the pin, and the
+suite stops with status 2 before any other gate runs. A missing or mismatched parser is a host
+problem, not a code finding: install `tools/requirements-gates.txt` into a venv and put that
+venv's `bin` directory first on PATH.
 
 The weekly lychee workflow sweeps external links and stays advisory, because a third-party site
 that is down or refuses automated clients must never block a merge.
