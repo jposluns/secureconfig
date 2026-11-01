@@ -26167,10 +26167,24 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 ## 7. Verify (REASONED: expected pooler outcomes follow the cited documentation and pinned sources; no running pooler/PostgreSQL deployment is available in the authoring environment)
 
 ```bash
-ss -tlnp   # read every listener; 6432/9999/9898
+(                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null 2>&1 || { echo 'ss is not installed here; not listing sockets'; exit 2; }
+  set -- "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the listener table, then ss's exit status
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"
+  printf '%s' "$1"   # read every listener; 6432/9999/9898
+  [ "$2" = 0 ] || { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  if printf '%s' "$1" | awk 'NR > 1 && $4 ~ /:9898$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 9898, the PCP control port, is bound to a non-loopback address"; exit 1
+  else
+    case "$?" in
+      1) echo "no port 9898 listener outside loopback; unclassified observation: read the 6432 and 9999 listeners and every other listener above"; exit 0 ;;
+      *) echo "awk could not read the listener list; inconclusive"; exit 3 ;;
+    esac
+  fi
+)
 ```
 
-Read that as an inventory rather than a pass. The application ports (`6432`, `9999`) must each be on `127.0.0.1` or a private address; the PCP control port (`9898`) must be loopback-only, IPv6 included, because section 1 keeps `pcp_listen_addresses` on `localhost`. An entry showing `0.0.0.0:9898`, `[::]:9898`, or `9898` on a private address is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding.
+Read that as an inventory rather than a pass. The application ports (`6432`, `9999`) must each be on `127.0.0.1` or a private address; the PCP control port (`9898`) must be loopback-only, IPv6 included, because section 1 keeps `pcp_listen_addresses` on `localhost`. An entry showing `0.0.0.0:9898`, `[::]:9898`, or `9898` on a private address is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding. The inventory runs on the pooler host, and with no running pooler in the authoring environment its expected listeners rest on section 1's settings and the cited PgBouncer configuration and Pgpool-II connection settings entries. The block refuses with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, exits 3 when `ss` or the awk read fails, 1 for a port 9898 listener outside loopback and otherwise 0 with an unclassified-observation line. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs with `ss` replaced by a stub, in which a missing `ss` exited 2, a failing `ss` 3, a `0.0.0.0:9898` listener 1 and loopback-only listeners 0.
 
 The client hop takes three commands, not one. A single failing connection proves nothing, because a wrong password fails the same way as a refused plaintext connection; and a passing pair proves less than it looks, because a `trust` method in the HBA file lets any password through. Put the real password in `~/.pgpass` at mode `600` rather than the environment, which PostgreSQL says is "not recommended for security reasons" because some systems expose a process's environment to other users.
 
@@ -26186,47 +26200,125 @@ The client hop takes three commands, not one. A single failing connection proves
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  { unset -n PGPASSWORD && unset -v PGPASSWORD; } 2>/dev/null || { echo 'cannot clear PGPASSWORD in this shell; not probing'; exit 2; }
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # 1. Must FAIL, and the error must name TLS rather than authentication.
-  psql -X "host=$1 port=6432 dbname=app user=app sslmode=disable" -c 'SELECT 1;'
+  set -- "$1" "$2" "$(if psql -X "host=$1 port=6432 dbname=app user=app sslmode=disable" -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$3" in
+    0:*) echo "FINDING: the plaintext connection succeeded"; set -- "$1" 1 ;;
+    *SSL*|*TLS*|*encryption*) echo "psql exit $4: the plaintext connection failed; read its error above, which must name TLS rather than authentication" ;;
+    *) echo "psql exit $4: the plaintext connection failed without naming SSL, TLS or encryption, so it is not the expected refusal; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2"                      # the host and the status so far
   # 2. Must SUCCEED. The control: the credential is good, so the failure above was the TLS requirement,
   #    not a bad password.
-  psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'
+  if psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'; then :; else
+    echo "psql exit $?: the verified TLS control failed, so the failures in this block prove nothing; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+  fi
   # 3. Must FAIL on authentication. Without this, a `trust` method in auth_hba_file passes both above while
   #    checking no password at all. The wrong password is a literal here, not a real secret.
-  PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'
+  set -- "$1" "$2" "$(if PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the wrong password was accepted"; set -- "$1" 1 ;;
+    *authentication*) echo "psql exit $4: the wrong password was refused; read its error above, which must name authentication" ;;
+    *) echo "psql exit $4: the wrong-password connection failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the error texts of the first and third connections are checked only for a TLS or authentication word, so judge them yourself"
+  exit "$2"
 )
 ```
 
 Run the same three against pgpool-II on port 9999 where that is the pooler in front, because nothing above tests its listener. pgpool-II also needs its own effective-policy and admin-channel checks, because the client probes exercise one path and the console inspection below is PgBouncer-specific:
 
 ```bash
-# REASONED: pgpool-II policy and PCP checks follow the cited pgpool-II documentation;
-# no running pgpool-II/PCP deployment is available in the authoring environment.
+# The pgpool-II policy check follows the cited pgpool-II documentation;
+# no running pgpool-II deployment is available in the authoring environment.
 # Effective pgpool-II policy (through the pooler on 9999):
-psql -X "host=pooler.internal port=9999 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" \
-  -c 'PGPOOL SHOW enable_pool_hba;' -c 'PGPOOL SHOW ssl;'
-grep -vE '^\s*(#|$)' /etc/pgpool-II/pool_hba.conf   # active rules, in order; first match wins
-# Not demonstrated: no running pgpool-II/PCP deployment in the authoring environment.
-# Correct credentials must succeed; a wrong password must be refused on
-# authentication, and any other error leaves verification incomplete.
-# PCP admin channel on loopback: an authenticated read must succeed, a wrong password must be refused.
-pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W   # enter the correct PCP password: succeeds
-pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W   # enter a wrong password: must be refused on authentication
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_POOLER_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  set -- 0 "$(if psql -X -A -t "host=$1 port=9999 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" \
+    -c 'PGPOOL SHOW enable_pool_hba;' -c 'PGPOOL SHOW ssl;'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the two values
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # status, enable_pool_hba then ssl, then psql's exit status
+  printf '%s' "$2"
+  case "$3:$2" in
+    0:"on"$'\n'"on"$'\n') echo "enable_pool_hba and ssl both read on" ;;
+    0:*off*) echo "FINDING: enable_pool_hba or ssl reads off, so the rules in pool_hba.conf are not the policy being applied"; set -- 1 "$2" "$3" ;;
+    0:*) echo "psql did not print on or off for both settings; inconclusive"; set -- 3 "$2" "$3" ;;
+    *) echo "psql exit $3: PGPOOL SHOW failed; inconclusive"; set -- 3 "$2" "$3" ;;
+  esac
+  if grep -vE '^\s*(#|$)' /etc/pgpool-II/pool_hba.conf; then :; else   # active rules, in order; first match wins
+    case "$?" in
+      1) echo "no active rules in /etc/pgpool-II/pool_hba.conf" ;;
+      *) echo "grep could not read /etc/pgpool-II/pool_hba.conf; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;;
+    esac
+  fi
+  echo "block exit $1; the pool_hba.conf rules are not classified, so judge them yourself"
+  exit "$1"
+)
 ```
 
 `enable_pool_hba` must read `on` and `ssl` must read `on`, or the rules in `pool_hba.conf` are not the policy being applied; inspect the reload logs for parse or file-access errors, confirm remote sources cannot reach 9898 at all, and test the Unix-socket route with valid and invalid credentials. Restart pgpool-II after changing any setting documented as startup-only.
+
+```bash
+# The PCP admin-channel checks follow the cited pgpool-II documentation;
+# no running pgpool-II/PCP deployment is available in the authoring environment.
+# Correct credentials must succeed; a wrong password must be refused on
+# authentication, and any other error leaves verification incomplete.
+# PCP admin channel on loopback: an authenticated read must succeed, a wrong password must be refused.
+(                                       # a subshell, so the exit below ends only the subshell
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  if pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W; then :; else   # enter the correct PCP password: succeeds
+    echo "pcp_node_count exit $?: the correct-password control failed; inconclusive"; set -- 3
+  fi
+  set -- "$1" "$(if pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # enter a wrong password: must be refused on authentication
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status so far, the command's output and errors, then its exit status
+  printf '%s' "$2"
+  case "$3:$(printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the wrong PCP password was accepted"; set -- 1 ;;
+    *authentication*) echo "pcp_node_count exit $3: the wrong password was refused; read its error above, which must name authentication" ;;
+    *) echo "pcp_node_count exit $3: the wrong-password command failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  echo "block exit $1; the second command's error text is checked only for the word authentication, so judge it yourself"
+  exit "$1"
+)
+```
 
 Three commands from one address prove one path. They say nothing about a second `hostssl` line further down the file that ends in `trust`, and nothing at all if `auth_type` is not `hba`, because `auth_hba_file` is then never read and the client-range restriction you wrote is inert while still sitting in the repository looking applied. So read the effective configuration as well as probing it:
 
 ```bash
 # A failed RELOAD must stop the block, not be masked by a following grep's exit status.
 (
-  psql -X -w -v ON_ERROR_STOP=1 \
+  set -- 0 "$(if psql -X -w -v ON_ERROR_STOP=1 \
     "host=/var/run/postgresql port=6432 dbname=pgbouncer user=pgbadmin" \
-    -c 'RELOAD;' -c 'SHOW CONFIG;' || exit 1
+    -c 'RELOAD;' -c 'SHOW CONFIG;'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then psql's output
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # status, psql's output, then its exit status
+  printf '%s' "$2"
+  [ "$3" = 0 ] || { echo "psql exit $3: RELOAD or SHOW CONFIG failed, so the HBA file is not read; inconclusive"; exit 3; }
   # Inspect auth_type, auth_hba_file, client_tls_sslmode and server_tls_sslmode above.
+  set -- "$1" "$2" "$(if printf '%s' "$2" | awk -F'|' '{ k = $1; v = $2; gsub(/^ +| +$/, "", k); gsub(/^ +| +$/, "", v) } k == "auth_type" { print v; n++ } END { exit n != 1 }'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%%$'\n'*}" "${3##*$'\n'}"   # status, psql's output, the auth_type value, then awk's exit status
+  case "$4:$3" in
+    0:hba) echo "auth_type reads hba" ;;
+    0:*) echo "FINDING: auth_type reads $3, so auth_hba_file is not consulted"; set -- 1 "$2" "$3" "$4" ;;
+    *) echo "SHOW CONFIG printed no single auth_type row; inconclusive"; set -- 3 "$2" "$3" "$4" ;;
+  esac
   # Then read the effective HBA file (only reached if the reload succeeded):
-  grep -vE '^\s*(#|$)' /etc/pgbouncer/pg_hba.conf
+  if grep -vE '^\s*(#|$)' /etc/pgbouncer/pg_hba.conf; then :; else
+    case "$?" in
+      1) echo "no active rules in /etc/pgbouncer/pg_hba.conf" ;;
+      *) echo "grep could not read /etc/pgbouncer/pg_hba.conf; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+    esac
+  fi
+  echo "block exit $1; auth_hba_file, the two TLS modes and the HBA rules are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -26237,7 +26329,18 @@ The `RELOAD` is not decoration. `SHOW CONFIG` reports the running settings and t
 For the database hop, know what the probe can and cannot tell you:
 
 ```bash
-psql -X "host=pooler.internal port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c "SELECT current_user, inet_client_addr(), ssl FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) WHERE pid = pg_backend_pid();"
+(                                       # a subshell, so the exits below end only the subshell
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_POOLER_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  if psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c "SELECT current_user, inet_client_addr(), ssl FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) WHERE pid = pg_backend_pid();"; then
+    echo "unclassified observation: read current_user, inet_client_addr and ssl above; ssl does not show whether the pooler validated the certificate"
+  else
+    echo "psql exit $?: the query failed; inconclusive"; exit 3
+  fi
+)
 ```
 
 `ssl` reports whether the pooler-to-PostgreSQL connection uses SSL. It does not report whether the pooler validated the certificate, so a `t` here is consistent with `server_tls_sslmode = require`, which validates nothing. Certificate validation cannot be observed from the client at all: for PgBouncer configured with `server_tls_sslmode = verify-full`, test enforcement by presenting the pooler with a certificate that should fail, one signed by an untrusted CA and one valid but issued for a different host name, and confirm that it refuses both. It has to be a fresh BACKEND connection rather than a fresh client one: a new client is routinely handed a server connection that was opened earlier, under the old certificate. `inet_client_addr()` is the address section 5 tells you to write into `pg_hba.conf`.
@@ -26245,7 +26348,7 @@ psql -X "host=pooler.internal port=6432 dbname=app user=app sslmode=verify-full 
 These direct-database checks are REASONED from the cited PostgreSQL HBA documentation, not demonstrated: the authoring environment lacks a running pooler/PostgreSQL deployment with distinct application and pooler source addresses. The outcomes of these direct-database checks are likewise REASONED from that documentation, not demonstrated: an exposed database admits the direct application connection while the intended HBA policy rejects it and the permitted controls succeed, and a password, certificate, DNS, or connection failure is inconclusive. Test the bypass the pooler cannot prevent. From an application source that is supposed to go through the pooler, connect to the DATABASE directly with the same credentials and require a rejection, then confirm the permitted pooler egress still connects and the application still connects through the pooler. Give the real destination as `hostaddr` while keeping the certificate host name in `host`, and guard the substituted values:
 
 ```bash
-# REASONED: direct-database isolation follows the cited PostgreSQL HBA documentation;
+# Direct-database isolation follows the cited PostgreSQL HBA documentation;
 # no running pooler/PostgreSQL deployment with distinct application and pooler source addresses is available.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DB_HOSTNAME' 'REPLACE_WITH_DB_IP'
@@ -26257,7 +26360,14 @@ These direct-database checks are REASONED from the cited PostgreSQL HBA document
   # From a client that must NOT bypass the pooler: a direct database connection must be REFUSED by pg_hba.
   # gssencmode=disable so libpq cannot prefer GSS and take an HBA rejection on that path for proof while a
   # hostssl path stays open.
-  psql -X "host=$1 hostaddr=$2 port=5432 dbname=app user=app gssencmode=disable sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'
+  set -- "$1" "$2" "$(if psql -X "host=$1 hostaddr=$2 port=5432 dbname=app user=app gssencmode=disable sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # host name, address, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$3" in
+    0:*) echo "FINDING: the direct database connection was admitted"; exit 1 ;;
+    *pg_hba.conf*) echo "the database refused the direct connection by its HBA rules; confirm yourself that the permitted pooler egress and the application path through the pooler still connect"; exit 0 ;;
+    *) echo "psql exit $4 without an HBA refusal: a password, certificate, DNS or connection failure is inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
@@ -26266,7 +26376,13 @@ These backend tests are REASONED from the cited PgBouncer and Pgpool-II TLS docu
 Ask the pooler what it negotiated, and what identity it forces:
 
 ```bash
-psql -X "host=/var/run/postgresql port=6432 dbname=pgbouncer user=pgbadmin" -c 'SHOW SERVERS;' -c 'SHOW DATABASES;'
+(                                       # a subshell, so the exit below ends only the subshell
+  if psql -X "host=/var/run/postgresql port=6432 dbname=pgbouncer user=pgbadmin" -c 'SHOW SERVERS;' -c 'SHOW DATABASES;'; then
+    echo "unclassified observation: read the tls column of each server row and the force_user column above"
+  else
+    echo "psql exit $?: SHOW SERVERS or SHOW DATABASES failed; inconclusive"; exit 3
+  fi
+)
 ```
 
 The `tls` column is "A string with TLS connection information, or empty if not using TLS". An empty `tls` on a server row is a plaintext database hop happening right now, which is section 3 caught in the act; it does not by itself distinguish the `prefer` fallback from TLS being disabled outright or from a Unix-socket backend. A non-empty one is weaker still: it says this connection negotiated TLS, not that a plaintext one would have been refused. These are snapshots of established connections, and enforcement is what the configuration file says.
@@ -26276,7 +26392,21 @@ The `tls` column is "A string with TLS connection information, or empty if not u
 Finally, the console must reject a user on neither list, and it must reject it at login:
 
 ```bash
-psql -X "host=pooler.internal port=6432 dbname=pgbouncer user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'
+(                                       # a subshell, so the exits below end only the subshell
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_POOLER_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  set -- "$1" "$(if psql -X "host=$1 port=6432 dbname=pgbouncer user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the host, psql's output and errors, then its exit status
+  printf '%s' "$2"
+  case "$3:$2" in
+    0:*) echo "FINDING: the console admitted a user on neither list and printed a version; check auth_type first"; exit 1 ;;
+    *'not allowed'*) echo "the console refused the unlisted user at login with not allowed; nothing here is left to judge"; exit 0 ;;
+    *) echo "psql exit $3 without not allowed: a DNS, TLS or connection failure is inconclusive"; exit 3 ;;
+  esac
+)
 ```
 
 That has to fail while connecting, with `not allowed`. `SHOW VERSION` is chosen because it has no administrator gate of its own, so it cannot fail for the wrong reason: if the connection is accepted, the command succeeds and prints a version, which is exactly what `auth_type = any` produces. Read the outcome in three ways rather than two. A refusal at login is the pass. A version printed is a failure, and `auth_type` is the first thing to check. Anything else, a DNS failure, a TLS failure, a refused connection, is inconclusive and has to be resolved before the probe means anything.
@@ -26284,8 +26414,28 @@ That has to fail while connecting, with `not allowed`. `SHOW VERSION` is chosen 
 None of this tests the privileged name, and testing an unlisted one only proves the list is consulted. `admin_users` is an allowlist of names and says nothing about whether those names have to prove anything, so run the pair against the console itself rather than reusing the application query:
 
 ```bash
-psql -X "host=pooler.internal port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'
-PGPASSWORD=definitely-not-the-password psql -X "host=pooler.internal port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'
+(                                       # a subshell, so the exit below ends only the subshell
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_POOLER_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  { unset -n PGPASSWORD && unset -v PGPASSWORD; } 2>/dev/null || { echo 'cannot clear PGPASSWORD in this shell; not probing'; exit 2; }
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  if psql -X "host=$1 port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'; then :; else
+    echo "psql exit $?: the pgbadmin login with the correct password failed; inconclusive"; set -- "$1" 3
+  fi
+  set -- "$1" "$2" "$(if PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the console admitted pgbadmin with a wrong password"; set -- "$1" 1 ;;
+    *authentication*) echo "psql exit $4: the wrong password was refused; read its error above, which must be a refusal at login" ;;
+    *) echo "psql exit $4: the wrong-password login failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the second command's error text is checked only for the word authentication, so judge it yourself"
+  exit "$2"
+)
 ```
 
 The first must succeed and the second must be refused at login. Both have to name `dbname=pgbouncer`: changing only the user name on the application probe leaves it asking the `app` database for `SELECT 1`, which tests nothing about the console.
@@ -26426,7 +26576,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3c39ae12564e8c069f96e153f2c16baa1d27bde9b9ae2e2e00b7ee94b5ff03d9",
+  "body_sha256": "d8331d53ffa0efedcdc7f3e28b77816137fcb59d5c4a6257408e19213547adb7",
   "components": {
     "pgb-bind": {
       "name": "PgBouncer listener source",
@@ -26548,16 +26698,16 @@ Claims (full source mapping in the JSON block below):
     "verify-client": {"text": "Plaintext must fail for TLS, verified TLS with the correct password must succeed, and a wrong password must fail authentication; repeat for pgpool-II 9999.", "components": ["pgb", "pgpool", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "postgres:s198d4780d9a4", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [2]},
     "password-delivery": {"text": "Use mode-600 .pgpass for real passwords; PGPASSWORD can expose credentials through process environments.", "components": ["postgres"], "sources": ["postgres:s97264da004c0", "postgres:s198d4780d9a4"], "status": "REASONED"},
     "verify-pgpool": {"text": "PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "pgpool:sd1c787b7784e"], "status": "REASONED", "verify": [3]},
-    "verify-pcp": {"text": "PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:sdc3d487af0ae", "pgpool:s13f19539cfbf"], "status": "REASONED", "verify": [3]},
-    "verify-pgb-policy": {"text": "RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests.", "components": ["pgb", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae", "postgres:sf8b93623c032"], "status": "REASONED", "verify": [4]},
-    "hba-parser": {"text": "PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete.", "components": ["pgb-source"], "sources": ["pgb-source:sd1ad8c2587a4"], "status": "REASONED", "verify": [4]},
-    "verify-backend-observation": {"text": "pg_stat_ssl reports negotiated encryption, not certificate enforcement; current_user and inet_client_addr identify backend role and source.", "components": ["postgres"], "sources": ["postgres:sc39eceeac711", "postgres:seed379369be7"], "status": "REASONED", "verify": [5]},
-    "verify-direct": {"text": "Direct application-to-database access must fail HBA while permitted pooler egress and application-through-pooler controls succeed; disable GSS precedence and guard host/hostaddr.", "components": ["postgres"], "sources": ["postgres:sbb484e8233fe", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [6]},
-    "verify-backend-enforcement": {"text": "Use fresh backend connections and restored positive controls: PgBouncer verify-full rejects untrusted CA, wrong hostname and TLS refusal; Pgpool-II only establishes CA rejection.", "components": ["pgb", "pgpool", "pgpool-source"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool-source:saf1078d5bb5c"], "status": "REASONED", "verify": [5]},
-    "verify-server-tls": {"text": "SHOW SERVERS tls reports existing TLS or an empty plaintext connection, not whether plaintext would have been refused.", "components": ["pgb"], "sources": ["pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [7]},
-    "verify-force-user": {"text": "SHOW DATABASES force_user reveals forced identity; pool counts do not establish role preservation.", "components": ["pgb"], "sources": ["pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [7]},
-    "verify-console-unlisted": {"text": "An unlisted console user must fail at login with not allowed; SHOW VERSION success is exposure and transport/DNS/TLS failures are inconclusive.", "components": ["pgb", "pgb-source"], "sources": ["pgb:s91d48cfb22ae", "pgb-source:sd8ac14670f91"], "status": "REASONED", "verify": [8]},
-    "verify-console-password": {"text": "The pgbadmin SHOW VERSION pair must succeed with the correct password and fail at login with the wrong one, both against dbname=pgbouncer.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [9]},
+    "verify-pcp": {"text": "PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:sdc3d487af0ae", "pgpool:s13f19539cfbf"], "status": "REASONED", "verify": [4]},
+    "verify-pgb-policy": {"text": "RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests.", "components": ["pgb", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae", "postgres:sf8b93623c032"], "status": "REASONED", "verify": [5]},
+    "hba-parser": {"text": "PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete.", "components": ["pgb-source"], "sources": ["pgb-source:sd1ad8c2587a4"], "status": "REASONED", "verify": [5]},
+    "verify-backend-observation": {"text": "pg_stat_ssl reports negotiated encryption, not certificate enforcement; current_user and inet_client_addr identify backend role and source.", "components": ["postgres"], "sources": ["postgres:sc39eceeac711", "postgres:seed379369be7"], "status": "REASONED", "verify": [6]},
+    "verify-direct": {"text": "Direct application-to-database access must fail HBA while permitted pooler egress and application-through-pooler controls succeed; disable GSS precedence and guard host/hostaddr.", "components": ["postgres"], "sources": ["postgres:sbb484e8233fe", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [7]},
+    "verify-backend-enforcement": {"text": "Use fresh backend connections and restored positive controls: PgBouncer verify-full rejects untrusted CA, wrong hostname and TLS refusal; Pgpool-II only establishes CA rejection.", "components": ["pgb", "pgpool", "pgpool-source"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool-source:saf1078d5bb5c"], "status": "REASONED", "verify": [6]},
+    "verify-server-tls": {"text": "SHOW SERVERS tls reports existing TLS or an empty plaintext connection, not whether plaintext would have been refused.", "components": ["pgb"], "sources": ["pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [8]},
+    "verify-force-user": {"text": "SHOW DATABASES force_user reveals forced identity; pool counts do not establish role preservation.", "components": ["pgb"], "sources": ["pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [8]},
+    "verify-console-unlisted": {"text": "An unlisted console user must fail at login with not allowed; SHOW VERSION success is exposure and transport/DNS/TLS failures are inconclusive.", "components": ["pgb", "pgb-source"], "sources": ["pgb:s91d48cfb22ae", "pgb-source:sd8ac14670f91"], "status": "REASONED", "verify": [9]},
+    "verify-console-password": {"text": "The pgbadmin SHOW VERSION pair must succeed with the correct password and fail at login with the wrong one, both against dbname=pgbouncer.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [10]},
     "mfa": {"text": "Neither pooler provides native MFA or a PostgreSQL-wire TOTP dialogue; protect human host access separately.", "components": ["pgb", "pgpool"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s7847f7feb03b"], "status": "REASONED"},
     "ldap-pam": {"text": "LDAP arrived in 1.25.0 and can appear in HBA; PAM is global and disables HBA selection, forwarding the supplied password instead of conducting an OTP challenge.", "components": ["pgb", "ldap-min", "pgb-source"], "sources": ["pgb:sa5cdd62a9242", "ldap-min:s2a1788c4296b", "pgb-source:sb9455e4f6c90"], "status": "REASONED"},
     "mtls-hba": {"text": "Client verify-full and verify-ca are equivalent for certificates and can retain HBA/SCRAM; auth_type=cert takes the certificate username and replaces HBA selection.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242"], "status": "REASONED"}
@@ -34044,41 +34194,37 @@ Mosquitto 2.0 drops privileges immediately after reading configuration, earlier 
 
 ## 8. Verify
 
-**REASONED:** whole Verify section; every service comparison below rests on the Sources entries cited at that comparison, and no exposed or fixed broker behaviour has been observed. The October 2026 marking pass also had no Mosquitto broker or client binaries, no container runtime and no network access; it ran only the shell, guard, stub, Python file-mode and shlex, and OpenSSL fixture checks recorded at the units below that record them, and none of them exercised Mosquitto. Those checks ran the section 1 credential-removal block and the connection, observer and publisher blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The section 8 listener-exposure block's recorded runs also used an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. This guide's service checks are **REASONED, not demonstrated**. The authoring environment has no Mosquitto broker or client binaries, container runtime, deployment credentials, or external test hosts. Filesystem and network restrictions prevent provisioning a live comparison here. Exposed/fixed behaviour is REASONED from the cited documentation and pinned sources; broker configuration acceptance remains unconfirmed.
+**REASONED:** whole Verify section; every service comparison below rests on the Sources entries cited at that comparison, and no exposed or fixed broker behaviour has been observed. The October 2026 marking pass also had no Mosquitto broker or client binaries, no container runtime and no network access; it ran only the shell, guard, stub, Python file-mode and shlex, and OpenSSL fixture checks recorded at the units below that record them, and none of them exercised Mosquitto. Those checks ran the section 1 credential-removal block in an earlier form, whose guard refusals exited with status 1; none was re-run on that block's current form, whose guard refusals exit with status 2. They also ran the connection, observer and publisher blocks in an earlier form, whose guard refusals exited with status 1, and the section 8 listener checks, then one block, in an earlier form whose guard refusals left the subshell with status 0. The current forms of those checks, now five blocks, exit 2 on a guard refusal and otherwise with one status for each block; they are covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes, and no stub run of them is recorded here. This guide's service checks are **REASONED, not demonstrated**. The authoring environment has no Mosquitto broker or client binaries, container runtime, deployment credentials, or external test hosts. Filesystem and network restrictions prevent provisioning a live comparison here. Exposed/fixed behaviour is REASONED from the cited documentation and pinned sources; broker configuration acceptance remains unconfirmed.
 
-**REASONED:** run provenance for this section's local checks, none of which exercised Mosquitto. The last four sentences of this paragraph record the original authoring pass, whose counts this marking pass did not rerun. Separately, in the October 2026 marking pass, with no Mosquitto broker or client binaries in the authoring environment, `bash -n` and ShellCheck 0.11.0 printed nothing for each of this section's four bash blocks, and under Bash 5.3.9 each block ran against stub `mosquitto_sub`, `mosquitto_pub`, `nc` and `ss` commands that print their arguments. The output of each October 2026 marking-pass run is recorded at the unit covering the block that the run exercised. For the listener-exposure block, the runs recorded in this paragraph, in the marking pass and in the original authoring pass, used an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. For the section 1 credential-removal block and the connection, observer and publisher blocks, the runs recorded in this paragraph used an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Local validation covered all seven fenced shell blocks with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 90 invalid positional inputs; five substituted controls reached local markers. These checks exercised shell behaviour, not Mosquitto. No repository files were changed and the whole-corpus gate suite was not run.
+**REASONED:** run provenance for this section's local checks, none of which exercised Mosquitto. The last four sentences of this paragraph record the original authoring pass, whose counts this marking pass did not rerun. Separately, in the October 2026 marking pass, with no Mosquitto broker or client binaries in the authoring environment, `bash -n` and ShellCheck 0.11.0 printed nothing for each of the four bash blocks this section then had, and under Bash 5.3.9 each block ran against stub `mosquitto_sub`, `mosquitto_pub`, `nc` and `ss` commands that print their arguments. The output of each October 2026 marking-pass run is recorded at the unit covering the block that the run exercised. For the listener checks, then one block, the runs recorded in this paragraph, in the marking pass and in the original authoring pass, used an earlier form, whose guard refusals left the subshell with status 0. For the section 1 credential-removal block, the runs recorded in this paragraph used an earlier form, whose guard refusals exited with status 1; none was re-run on that block's current form, whose guard refusals exit with status 2. For the connection, observer and publisher blocks, they used an earlier form, whose guard refusals exited with status 1. The current forms of the connection, listener-inventory, listener-probe, observer and publisher blocks are covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Local validation covered all seven fenced shell blocks with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 90 invalid positional inputs; five substituted controls reached local markers. These checks exercised shell behaviour, not Mosquitto. No repository files were changed and the whole-corpus gate suite was not run.
 
-**REASONED:** client-version guidance for every client command below; no Mosquitto 2.0 or 2.1 client binaries in the authoring environment, so how a client treats `-o` and its default configuration was not observed, per the guide's cited mosquitto_sub manual and Mosquitto publisher manual (protected configuration files) entries. Locally, each of the 16 stubbed `mosquitto_sub` and `mosquitto_pub` calls made in this marking pass received `-o` followed by the protected configuration path. Those calls came from runs of the connection, observer and publisher blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected, from this paragraph and the connection block's comments: a 2.1 client given `-o` skips the default client configuration, so a default file carrying credentials, a SOCKS proxy or `--insecure` cannot change the result; a 2.0 client has no `-o`, so there an unchecked default file can. Use Mosquitto 2.1 client tools for the commands below, including when testing a 2.0 broker. Their `-o` option selects an explicit configuration file and skips the default client configuration. On 2.0 clients, use protected default configuration files in isolated test accounts instead; `-o` is unavailable. See [client configuration files](https://mosquitto.org/man/mosquitto_sub-1.html).
+**REASONED:** client-version guidance for every client command below; no Mosquitto 2.0 or 2.1 client binaries in the authoring environment, so how a client treats `-o` and its default configuration was not observed, per the guide's cited mosquitto_sub manual and Mosquitto publisher manual (protected configuration files) entries. Locally, each of the 16 stubbed `mosquitto_sub` and `mosquitto_pub` calls made in this marking pass received `-o` followed by the protected configuration path. Those calls came from runs of the connection, observer and publisher blocks in an earlier form, whose guard refusals exited with status 1; their current forms, which still pass `-o` with the protected configuration path, are covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Expected, from this paragraph and the connection block's comments: a 2.1 client given `-o` skips the default client configuration, so a default file carrying credentials, a SOCKS proxy or `--insecure` cannot change the result; a 2.0 client has no `-o`, so there an unchecked default file can. Use Mosquitto 2.1 client tools for the commands below, including when testing a 2.0 broker. Their `-o` option selects an explicit configuration file and skips the default client configuration. On 2.0 clients, use protected default configuration files in isolated test accounts instead; `-o` is unavailable. See [client configuration files](https://mosquitto.org/man/mosquitto_sub-1.html).
 
-**REASONED:** preparation of the protected client configuration files; no Mosquitto client binaries in the authoring environment, so no client read these files, per the guide's cited mosquitto_sub manual and Mosquitto publisher manual (protected configuration files) entries. Locally, Python created a mode 0700 directory holding `device-01.conf`, `device-02.conf` and `controller.conf`, each written with mode 0600 from the two lines below with its identity substituted and the password placeholder left in place, and an empty mode 0600 `anonymous.conf`; `os.stat` reported those modes. Expected, from this paragraph: each identity's password stays in its owner-readable file and off every command line; a file other accounts can read would expose it. Prepare an owner-readable file, mode 0600 inside a private directory, for each test identity. For example, `device-01.conf` contains:
+**REASONED:** paste, quoting and credential handling for every block below; no Mosquitto client binaries in the authoring environment, per the guide's cited mosquitto_sub manual and Mosquitto publisher manual (protected configuration files) entries. Locally, none of the 16 stubbed `mosquitto_sub` and `mosquitto_pub` calls received `-P` or the password placeholder, since each took its identity from a protected file through `-o`, and every block refused a paste without its `set --` line even with caller arguments present, as recorded at each block. For the listener checks, then one block, the recorded refusal runs used an earlier form, whose guard refusals left the subshell with status 0. For the connection, observer and publisher blocks, the runs recorded here used an earlier form, whose guard refusals exited with status 1. The current forms of those blocks, in which every guard refusal exits with status 2, are covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. In the observer block, a configuration path with its apostrophe escaped as `'\''` inside the quotes reached the stub as one argument ending `it's.conf`, while the same apostrophe left raw made bash print an "unexpected EOF while looking for matching" error and exit 2 without calling the stub. Expected, from this paragraph: credentials stay in the protected files and out of command arguments, shell history and recordings; a password passed as a command argument is the case this paragraph rules out. Paste whole blocks and substitute inside the single quotes. A literal apostrophe needs proper shell escaping. Keep credentials out of command arguments, shell history, recordings, and debug-log sharing. The `-P` line in the example below belongs in the protected file, not the shell.
 
-REASONED: protected client credential configuration; no broker/client binaries or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
+**REASONED:** preparation of the protected client configuration files; no Mosquitto client binaries in the authoring environment, so no client read these files, per the guide's cited mosquitto_sub manual and Mosquitto publisher manual (protected configuration files) entries. Locally, Python created a mode 0700 directory holding `device-01.conf`, `device-02.conf` and `controller.conf`, each written with mode 0600 from the two lines below with its identity substituted and the password placeholder left in place, and an empty mode 0600 `anonymous.conf`; `os.stat` reported those modes. Expected, from this paragraph: each identity's password stays in its owner-readable file and off every command line; a file other accounts can read would expose it. Prepare an owner-readable file, mode 0600 inside a private directory, for each test identity; the two-line block after the next paragraph is `device-01.conf`.
+
+**REASONED:** following block; covers its two protected client credential configuration lines and the further test configurations this paragraph describes. No Mosquitto client binaries, broker, client-certificate deployment or other deployment fixtures in the authoring environment, so no client parsed these files, per the guide's cited mosquitto_sub manual (`-u`/`-P`, `--cert`/`--key`) and mosquitto.conf manual (require_certificate) entries. Locally, Python's `shlex`, which is not the client's parser, split each of the block's two lines into one option and one value. The local test files were created as the preparation paragraph above records. The local mode 0600 `device-01-mtls.conf` and `anonymous-mtls.conf` variants added `--cert` and `--key` lines naming a throwaway client certificate made with OpenSSL 3.5.5. A local `openssl verify` against the throwaway CA printed `client.pem: OK` for that throwaway client certificate, and the certificate's public key matched its key file. A local `openssl verify` against the throwaway CA printed `error 18 at 0 depth lookup: self-signed certificate` for a self-signed certificate outside that CA. Expected: the anonymous configuration, carrying no username or password, is refused at CONNECT (fixed) or accepted (exposed) while the authenticated one connects; with mutual TLS, the configuration without a client certificate fails during TLS (fixed) or connects (exposed). Prepare corresponding files for `device-02` and `controller`, with their distinct passwords. Create a separate empty `anonymous.conf`. Inspect these files: use only the intended authentication options, with no proxy, insecure TLS, extra subscriptions, fixed client id, or persistent-session options. If mutual TLS is required, add the valid client certificate and key paths to both the authenticated and anonymous test configurations; the latter then tests absence of MQTT username/password. Use a separate configuration without the client certificate for the missing-certificate check.
 
 ```
 -u device-01
 -P REPLACE_WITH_DEVICE_PASSWORD
 ```
 
-**REASONED:** preceding block; covers its two configuration lines and the further test configurations this paragraph describes. No Mosquitto client binaries, broker or client-certificate deployment in the authoring environment, so no client parsed these files, per the guide's cited mosquitto_sub manual (`-u`/`-P`, `--cert`/`--key`) and mosquitto.conf manual (require_certificate) entries. Locally, Python's `shlex`, which is not the client's parser, split each of the block's two lines into one option and one value. The local test files were created as the preparation paragraph above records. The local mode 0600 `device-01-mtls.conf` and `anonymous-mtls.conf` variants added `--cert` and `--key` lines naming a throwaway client certificate made with OpenSSL 3.5.5. A local `openssl verify` against the throwaway CA printed `client.pem: OK` for that throwaway client certificate, and the certificate's public key matched its key file. A local `openssl verify` against the throwaway CA printed `error 18 at 0 depth lookup: self-signed certificate` for a self-signed certificate outside that CA. Expected: the anonymous configuration, carrying no username or password, is refused at CONNECT (fixed) or accepted (exposed) while the authenticated one connects; with mutual TLS, the configuration without a client certificate fails during TLS (fixed) or connects (exposed). Prepare corresponding files for `device-02` and `controller`, with their distinct passwords. Create a separate empty `anonymous.conf`. Inspect these files: use only the intended authentication options, with no proxy, insecure TLS, extra subscriptions, fixed client id, or persistent-session options. If mutual TLS is required, add the valid client certificate and key paths to both the authenticated and anonymous test configurations; the latter then tests absence of MQTT username/password. Use a separate configuration without the client certificate for the missing-certificate check.
-
-**REASONED:** paste, quoting and credential handling for every block below; no Mosquitto client binaries in the authoring environment, per the guide's cited mosquitto_sub manual and Mosquitto publisher manual (protected configuration files) entries. Locally, none of the 16 stubbed `mosquitto_sub` and `mosquitto_pub` calls received `-P` or the password placeholder, since each took its identity from a protected file through `-o`, and every block refused a paste without its `set --` line even with caller arguments present, as recorded at each block. For the listener-exposure block, the recorded refusal runs used an earlier form, whose guard refusals left the subshell with status 0; the current form, whose guard refusals leave the subshell with status 2, has not been run. For the connection, observer and publisher blocks, the runs recorded here used an earlier form, whose guard refusals exited with status 1; the current form, whose guard refusals exit with status 2, has not been run. In the observer block, a configuration path with its apostrophe escaped as `'\''` inside the quotes reached the stub as one argument ending `it's.conf`, while the same apostrophe left raw made bash print an "unexpected EOF while looking for matching" error and exit 2 without calling the stub. Expected, from this paragraph: credentials stay in the protected files and out of command arguments, shell history and recordings; a password passed as a command argument is the case this paragraph rules out. Paste whole blocks and substitute inside the single quotes. A literal apostrophe needs proper shell escaping. Keep credentials out of command arguments, shell history, recordings, and debug-log sharing. The `-P` line above belongs in the protected file, not the shell.
-
 ### Connection authentication and TLS
 
-**REASONED:** No live TLS broker, device credentials, or client certificates are available here. Run both controls against the intended exposed endpoint. The authenticated control must produce successful CONNACK; the anonymous control must be refused at CONNECT. Anonymous CONNACK success is the exposed outcome even if no messages arrive. DNS, TCP, TLS, and local-file failures are inconclusive authentication results. The discriminators come from [authentication configuration](https://mosquitto.org/documentation/authentication-methods/) and [client CONNACK reporting](https://mosquitto.org/man/mosquitto_sub-1.html).
-
 ```bash
-# These are MANUAL checks: read the -d CONNACK output, not the exit status. mosquitto_sub exits 27 on a
+# The block reads the -d CONNACK output, not the exit status: mosquitto_sub exits 27 on a
 # -W timeout even after a successful connect, and nonzero on a refusal, so each is wrapped to capture its
 # status without aborting under set -e. Keep the client config clean: a default mosquitto client config
-# (e.g. ~/.config/mosquitto_sub) can carry credentials, a SOCKS proxy, or an --insecure setting, so run
+# (e.g. ~/.config/mosquitto_sub) can carry credentials, a SOCKS proxy, or an insecure-TLS setting, so run
 # these where there is none, or inspect it first. If require_certificate true is set, TLS rejects before
 # the password check, so add --cert 'client.pem' --key 'client.key' (your paths, inside the quotes) to BOTH controls below and test a
-# missing-client-certificate connection separately. -x sets MQTT session expiry (NOT a TLS bypass) and
-# --insecure disables hostname verification; use neither here.
-# With 2.1 clients, --insecure disables all server-certificate verification.
-# Positive control: a valid device connects. Expect "received CONNACK (0)" in the output; establish
-# acceptance from that CONNACK separately. Exit 27 is only a timeout, even if messages arrived first.
+# missing-client-certificate connection separately. -x sets MQTT session expiry (NOT a TLS bypass), and
+# the clients' insecure-TLS option disables hostname verification; use neither here.
+# With 2.1 clients, that option disables all server-certificate verification.
+# Positive control: a valid device connects. Expect "received CONNACK (0)" in the output; the block takes
+# acceptance from that CONNACK alone. Exit 27 is only a timeout, even if messages arrived first.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_BROKER_PUBLIC_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_DEVICE_01_CONFIG' 'REPLACE_WITH_ANONYMOUS_CONFIG'
@@ -34096,41 +34242,68 @@ REASONED: protected client credential configuration; no broker/client binaries o
   esac
   case "$4" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute the anonymous config path"; exit 2 ;;
-    *)
-      if mosquitto_sub -o "$3" -d -W 2 -h "$1" -p 8883 --cafile "$2" -t 'test' -u device-01
-      then echo "exit 0; confirm CONNACK (0) above"
-      else echo "exit $?; confirm CONNACK separately; 27 means timeout"
-      fi
-      # Negative control: NO credentials must be refused AT CONNECT, not merely denied the subscription.
-      # Expect "received CONNACK (5)" (MQTT 3.1.1 not authorized) or "(135)" (MQTT 5). An anonymous CONNECT
-      # that succeeds (CONNACK (0)) and only fails the SUBSCRIBE (e.g. under an acl_file) means the broker
-      # still accepts anonymous clients: that is a finding.
-      if mosquitto_sub -o "$4" -d -W 2 -h "$1" -p 8883 --cafile "$2" -t 'test'
-      then echo "exit 0; FINDING if anonymous CONNACK (0) appears"
-      else echo "exit $? (expected: CONNACK 5/135 refusal - confirm above, NOT a SUBACK denial)"
-      fi
-      ;;
   esac
+  set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$@" "$(if mosquitto_sub -o "$3" -d -W 2 -h "$1" -p 8883 --cafile "$2" -t 'test' -u device-01 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"   # the four values, the status, the client's output, then its exit status
+  printf '%s' "$6"
+  case "$7" in
+    0) echo "exit 0; confirm CONNACK (0) above" ;;
+    *) echo "exit $7; confirm CONNACK separately; 27 means timeout" ;;
+  esac
+  case "$6" in
+    *'received CONNACK (0)'*) ;;
+    *) echo "no CONNACK (0) for device-01, so the positive control failed; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
+  # Negative control: NO credentials must be refused AT CONNECT, not merely denied the subscription.
+  # Expect "received CONNACK (5)" (MQTT 3.1.1 not authorized) or "(135)" (MQTT 5). An anonymous CONNECT
+  # that succeeds (CONNACK (0)) and only fails the SUBSCRIBE (e.g. under an acl_file) means the broker
+  # still accepts anonymous clients: that is a finding.
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if mosquitto_sub -o "$4" -d -W 2 -h "$1" -p 8883 --cafile "$2" -t 'test' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"
+  printf '%s' "$6"
+  case "$7" in
+    0) echo "exit 0; FINDING if anonymous CONNACK (0) appears" ;;
+    *) echo "exit $7 (expected: CONNACK 5/135 refusal - confirm above, NOT a SUBACK denial)" ;;
+  esac
+  case "$6" in
+    *'received CONNACK (0)'*) echo "FINDING: the anonymous client received CONNACK (0), so the broker accepts anonymous clients"; set -- "$1" "$2" "$3" "$4" 1 ;;
+    *'received CONNACK (5)'*|*'received CONNACK (135)'*) echo "the anonymous client was refused at CONNECT" ;;
+    *) echo "no CONNACK (0), (5) or (135) for the anonymous client: a DNS, TCP, TLS or local-file failure, or another CONNACK code, is inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
+  echo "block exit $5; the rest of the -d output above is not classified, so judge it yourself"
+  exit "$5"
 )
 ```
 
-**REASONED:** preceding block; covers every check in it: the guard, the authenticated positive control and the anonymous negative control, each read from the `-d` CONNACK output rather than the exit status. No Mosquitto broker, client binaries, TLS fixture or device credentials in the authoring environment; the CONNECT outcomes rest on the guide's cited Authentication methods, mosquitto.conf manual and mosquitto_sub manual entries, and the accepted SUBACK on its cited Mosquitto 2.0.22 built-in security implementation and Mosquitto 2.1.2 ACL-file plugin implementation entries. Run locally against a stub `mosquitto_sub`: `bash -n` and ShellCheck 0.11.0 printed nothing; the block as written, an angle-bracket host and a host under example.com printed "substitute the broker host", an unsubstituted CA path printed "substitute the CA path", and an empty anonymous path printed "substitute the anonymous config path", each exiting 1 without calling the stub. Five values passed to the block locally printed "provide exactly 4 values; not probing", and a paste without the `set --` lines printed "paste the whole block; not probing" despite four caller arguments, each also exiting 1 without calling the stub. Substituted values reached the stub as two calls carrying `-o`, `-d`, `-W 2`, port 8883 and `--cafile`, the first also passing the username device-01. The block printed "exit 0; confirm CONNACK (0) above" and "exit 0; FINDING if anonymous CONNACK (0) appears" for stub status 0 and "exit 27; confirm CONNACK separately; 27 means timeout" for 27, and under `bash -e -u` with stub status 5 both controls still ran. The bash -n, ShellCheck and stub runs recorded here covered the connection block in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected: the device control shows CONNACK (0) in both states; the anonymous control shows CONNACK (0) when anonymous clients are accepted (exposed) and CONNACK (5) or (135) when they are refused at CONNECT (fixed); with file ACLs the subscription is accepted and only message access is filtered. The SUBACK warning above concerns the distinction between authentication and authorization. With file ACLs specifically, expect the subscription itself to be accepted and unauthorized message access to be filtered, as section 3 explains. The `test` topic is deliberately ungranted; this first pair establishes CONNECT behaviour only.
+**REASONED:** preceding block; covers every check in it: the guard, the authenticated positive control and the anonymous negative control, each read from the `-d` CONNACK output rather than the exit status. No Mosquitto broker, client binaries, TLS fixture, device credentials or client certificates in the authoring environment; the CONNECT outcomes rest on the guide's cited Authentication methods, mosquitto.conf manual and mosquitto_sub manual entries, and the accepted SUBACK on its cited Mosquitto 2.0.22 built-in security implementation and Mosquitto 2.1.2 ACL-file plugin implementation entries. Run locally against a stub `mosquitto_sub`: `bash -n` and ShellCheck 0.11.0 printed nothing; the block as written, an angle-bracket host and a host under example.com printed "substitute the broker host", an unsubstituted CA path printed "substitute the CA path", and an empty anonymous path printed "substitute the anonymous config path", each exiting 1 without calling the stub. Five values passed to the block locally printed "provide exactly 4 values; not probing", and a paste without the `set --` lines printed "paste the whole block; not probing" despite four caller arguments, each also exiting 1 without calling the stub. Substituted values reached the stub as two calls carrying `-o`, `-d`, `-W 2`, port 8883 and `--cafile`, the first also passing the username device-01. The block printed "exit 0; confirm CONNACK (0) above" and "exit 0; FINDING if anonymous CONNACK (0) appears" for stub status 0 and "exit 27; confirm CONNACK separately; 27 means timeout" for 27, and under `bash -e -u` with stub status 5 both controls still ran. The bash -n, ShellCheck and stub runs recorded here covered the connection block in an earlier form, whose guard refusals exited with status 1. The current form exits 2 on a guard refusal and otherwise once: 1 when the anonymous client receives CONNACK (0), 3 when the device control shows no CONNACK (0) or the anonymous client shows none of CONNACK (0), (5) and (135), and 0 otherwise. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Expected: the device control shows CONNACK (0) in both states; the anonymous control shows CONNACK (0) when anonymous clients are accepted (exposed) and CONNACK (5) or (135) when they are refused at CONNECT (fixed); with file ACLs the subscription is accepted and only message access is filtered. The SUBACK warning above concerns the distinction between authentication and authorization. With file ACLs specifically, expect the subscription itself to be accepted and unauthorized message access to be filtered, as section 3 explains. The `test` topic is deliberately ungranted; this first pair establishes CONNECT behaviour only. Run both controls against the intended exposed endpoint. The authenticated control must produce successful CONNACK; the anonymous control must be refused at CONNECT. Anonymous CONNACK success is the exposed outcome even if no messages arrive. DNS, TCP, TLS, and local-file failures are inconclusive authentication results. The discriminators come from [authentication configuration](https://mosquitto.org/documentation/authentication-methods/) and [client CONNACK reporting](https://mosquitto.org/man/mosquitto_sub-1.html).
 
-**REASONED:** exit-status interpretation for the connection and observer blocks; no Mosquitto client binaries in the authoring environment, per the guide's cited Mosquitto 2.1.2 subscriber implementation (timeout result independent of message receipt) and Mosquitto 2.1 release notes entries. Locally, with a stub `mosquitto_sub` exiting 27, the connection block printed "exit 27; confirm CONNACK separately; 27 means timeout" and the observer block printed "exit 27; inspect CONNACK and deliveries; timeout alone proves no ACL result"; the stub's status is not the client's, so this shows only how the blocks report 27. Those stub runs covered the connection and observer blocks in an earlier form, whose guard refusals exited with status 1; neither was re-run on the current form, whose guard refusals exit with status 2. No `--insecure` run was made. Expected: a 2.1 client exits 27 on a `-W` timeout whether or not it was accepted or received messages, so that status separates neither state; with 2.1 clients `--insecure` disables all server-certificate verification, so a run using it could connect to an untrusted broker. Exit 27 is a timeout, including after received messages; it is never shorthand for accepted authentication. See the [client timeout implementation](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/client/sub_client.c). The [2.1 release notes](https://mosquitto.org/blog/2026/01/version-2-1-0-released/) also document the broader effect of `--insecure`.
+**REASONED:** exit-status interpretation for the connection and observer blocks; no Mosquitto client binaries in the authoring environment, per the guide's cited Mosquitto 2.1.2 subscriber implementation (timeout result independent of message receipt) and Mosquitto 2.1 release notes entries. Locally, with a stub `mosquitto_sub` exiting 27, the connection block printed "exit 27; confirm CONNACK separately; 27 means timeout" and the observer block printed "exit 27; inspect CONNACK and deliveries; timeout alone proves no ACL result"; the stub's status is not the client's, so this shows only how the blocks report 27. Those stub runs covered the connection and observer blocks in an earlier form, whose guard refusals exited with status 1; their current forms, which still print those lines for exit 27, are covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. No `--insecure` run was made. Expected: a 2.1 client exits 27 on a `-W` timeout whether or not it was accepted or received messages, so that status separates neither state; with 2.1 clients `--insecure` disables all server-certificate verification, so a run using it could connect to an untrusted broker. Exit 27 is a timeout, including after received messages; it is never shorthand for accepted authentication. See the [client timeout implementation](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/client/sub_client.c). The [2.1 release notes](https://mosquitto.org/blog/2026/01/version-2-1-0-released/) also document the broader effect of `--insecure`.
 
 **REASONED:** Where `require_certificate true` is enabled, repeat the authenticated request with the no-client-certificate configuration. The fixed outcome is TLS rejection before CONNACK, paired with successful connection using the trusted certificate. Acceptance without a certificate is the exposed outcome. This comparison is unavailable here because there is no broker or deployed client-certificate fixture. See [`require_certificate`](https://mosquitto.org/man/mosquitto-conf-5.html).
 
 ### Listener exposure
 
-**REASONED:** No deployed broker namespace or external probe host is available here. Run the inventory on the broker host and the network probe from another host. Check every actual public IPv4 and IPv6 address, including NAT paths.
+**REASONED:** following block; covers the `ss` listener inventory on the broker host. No deployed broker namespace, Mosquitto broker, deployed listener or external probe host is available in the authoring environment, per the guide's cited Migrating to 2.0 (anonymous loopback mode, explicit-listener exposure and authentication) and Mosquitto 2.1.2 MQTT listener with no address entries. Run the inventory on the broker host and the network probe from another host. Check every actual public IPv4 and IPv6 address, including NAT paths. The inventory's earlier stub runs, from the form in which the inventory and the probe were one block, are recorded after the probe block below. Its current form refuses with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, exits 3 if `ss` fails and otherwise exits 0 with an unclassified-observation line, because `ss` shows a bind, not a firewall. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs with `ss` replaced by a stub, in which a missing `ss` exited 2, a failing `ss` 3 and a working one 0. Expected: a 1883 listener on a non-loopback address that is not firewalled to localhost (exposed) or none (fixed).
 
 ```bash
-ss -tlnp   # inventory the listeners (needs sudo for the process column); ss shows a local BIND, not a
-           # firewall or external reachability. There must be no 1883 listener on ANY non-loopback
-           # address - 0.0.0.0, ::, or a specific external IP, IPv4 or IPv6 - unless it is firewalled to
-           # localhost. The plaintext 1883 listener is the main exposure (section 2), so also probe each
-           # public address from ANOTHER host, using the corpus guard so an unsubstituted target cannot
-           # masquerade as a pass:
+(                              # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null 2>&1 || { echo 'ss is not installed here; not listing sockets'; exit 2; }
+  if ss -tlnp; then   # inventory the listeners (needs sudo for the process column); ss shows a local BIND, not a
+                      # firewall or external reachability. There must be no 1883 listener on ANY non-loopback
+                      # address - 0.0.0.0, ::, or a specific external IP, IPv4 or IPv6 - unless it is firewalled to
+                      # localhost. The plaintext 1883 listener is the main exposure (section 2), so also probe each
+                      # public address from ANOTHER host with the block below
+    echo "unclassified observation: a 1883 listener on a non-loopback address is the exposure unless a firewall limits it to localhost, which ss cannot show; probe from another host with the block below"
+  else
+    echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; exit 3
+  fi
+)
+```
+
+```bash
+# Probe each public address from ANOTHER host, using the corpus guard so an unsubstituted target cannot
+# masquerade as a pass:
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_BROKER_PUBLIC_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -34138,12 +34311,20 @@ ss -tlnp   # inventory the listeners (needs sudo for the process column); ss sho
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute the broker's public host on the set -- line above; not probing"; exit 2 ;;
-    *) nc -vz -w 5 "$1" 1883 || true ;;   # refused/timeout = TCP 1883 unreachable from here (the pass); a completed connect means TCP 1883 is reachable off-host. nc sends no MQTT, so this shows reachability, not the service or its encryption; the positive control against the intended endpoint must have succeeded first
+  esac
+  set -- "$1" "$(if nc -vz -w 5 "$1" 1883 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # refused/timeout = TCP 1883 unreachable from here (the pass); a completed connect means TCP 1883 is reachable off-host. nc sends no MQTT, so this shows reachability, not the service or its encryption; the positive control against the intended endpoint must have succeeded first
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the host, nc's report, then its exit status
+  printf '%s' "$2"
+  # This block expects OpenBSD netcat, whose refusal and timeout wording the pass arm below matches; another netcat may word them differently, and then a refusal or timeout exits 3, so read its diagnostic above yourself
+  case "$3:$2" in
+    0:*) echo "FINDING: TCP 1883 is reachable off-host"; exit 1 ;;
+    *'Connection refused'*|*'timed out'*) echo "TCP 1883 is unreachable from here; this is the pass only after the positive control against the intended endpoint succeeded"; exit 0 ;;
+    *) echo "nc exit $3 without a refusal or timeout: a DNS failure, wrong destination or local socket error is inconclusive"; exit 3 ;;
   esac
 )
 ```
 
-**REASONED:** preceding block; covers every check in it: the `ss` listener inventory, the guard and the off-host `nc` reachability probe. No Mosquitto broker, deployed listener, second host or network access in the authoring environment, per the guide's cited Migrating to 2.0 (anonymous loopback mode, explicit-listener exposure and authentication) and Mosquitto 2.1.2 MQTT listener with no address entries. Run locally against stub `ss` and `nc` commands: `bash -n` and ShellCheck 0.11.0 printed nothing; the stub `ss` received `-tlnp` first in every run, because the inventory precedes the guard. The block as written, an angle-bracket host and an empty host printed "substitute the broker's public host on the set -- line above; not probing" in the local stub runs, each without calling `nc` and each exiting 0. Two values passed to the block locally printed "the set -- line needs exactly 1 value; not probing", and a paste without the `set --` line printed "paste the whole block, including its set -- line; not probing" despite a caller argument, each also without calling `nc` and each exiting 0. A substituted `broker.internal` reached the stub `nc` with `-vz -w 5` and port 1883, and the block exited 0 whether the stub `nc` exited 0 or 1, also under `bash -e -u`. The bash -n, ShellCheck and stub runs recorded here covered the listener-exposure block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. Expected: on the broker host, a 1883 listener on a non-loopback address that is not firewalled to localhost (exposed) or none (fixed); from another host, a completed connection to 1883 (exposed) or a refusal or timeout after the positive control succeeded (fixed). A DNS failure, wrong destination, or local socket error is not a pass. Confirm the address belongs to this broker and inspect the actual diagnostic. The `|| true` preserves the manual workflow; its resulting shell status certifies nothing. Repeat for port 9001 if using the local-only WebSockets example. The fixed state has no externally reachable plaintext endpoint; a completed external connection is the exposure. See [listener binding behaviour](https://mosquitto.org/documentation/migrating-to-2-0/).
+**REASONED:** preceding block; covers every check in it: the guard and the off-host `nc` reachability probe. No Mosquitto broker, deployed listener, second host or network access in the authoring environment, per the guide's cited Migrating to 2.0 (anonymous loopback mode, explicit-listener exposure and authentication) and Mosquitto 2.1.2 MQTT listener with no address entries. Run locally against stub `ss` and `nc` commands, in an earlier form in which the inventory above and this probe were one block: `bash -n` and ShellCheck 0.11.0 printed nothing; the stub `ss` received `-tlnp` first in every run, because the inventory preceded the guard. The block as written, an angle-bracket host and an empty host printed "substitute the broker's public host on the set -- line above; not probing" in the local stub runs, each without calling `nc` and each exiting 0. Two values passed to the block locally printed "the set -- line needs exactly 1 value; not probing", and a paste without the `set --` line printed "paste the whole block, including its set -- line; not probing" despite a caller argument, each also without calling `nc` and each exiting 0. A substituted `broker.internal` reached the stub `nc` with `-vz -w 5` and port 1883, and the block exited 0 whether the stub `nc` exited 0 or 1, also under `bash -e -u`. The bash -n, ShellCheck and stub runs recorded here covered that earlier single block, whose guard refusals left the subshell with status 0. The current probe block exits 2 on a guard refusal, 1 when `nc` connects, 0 when `nc` reports a refusal or a timeout in the OpenBSD netcat wording its comment says it expects, and 3 otherwise, so a refusal or timeout that another netcat words otherwise exits 3. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs with `nc` replaced by a stub, in which a completed connect exited 1, a line containing `Connection refused` or `timed out` exited 0, and other text exited 3. Expected: from another host, a completed connection to 1883 (exposed) or a refusal or timeout after the positive control succeeded (fixed). A DNS failure, wrong destination, or local socket error is not a pass. Confirm the address belongs to this broker and inspect the actual diagnostic. A refusal or timeout exits 0 because it is the fixed outcome, and it is a pass only after the connection block's device control succeeded against the intended endpoint. Repeat for port 9001 if using the local-only WebSockets example. The fixed state has no externally reachable plaintext endpoint; a completed external connection is the exposure. See [listener binding behaviour](https://mosquitto.org/documentation/migrating-to-2-0/).
 
 ### Actual topic access
 
@@ -34151,10 +34332,9 @@ ss -tlnp   # inventory the listeners (needs sudo for the process column); ss sho
 
 **REASONED:** the `use_username_as_clientid true` variant; no Mosquitto broker, client binaries or long-lived test clients in the authoring environment, and the separate-client blocks below cannot show it, so nothing in this variant ran locally, per the guide's cited Mosquitto authenticated duplicate client-ID displacement (pinned tag v2.0.22) entry. Expected: under this policy a separate publisher using an observer's username displaces that observer, so separate clients lose delivery for a reason unrelated to the ACL; with one long-lived client per identity, the table's cross-identity deliveries occur without the ACL (exposed) and are absent while authorized deliveries arrive with it (fixed). With `use_username_as_clientid true`, a separate publisher using an observer's username disconnects that observer. For this policy, reproduce the table below using one long-lived client per identity that both subscribes and publishes, retaining the before-and-after delivery controls. This variant is REASONED from the pinned session-takeover source; the separate-client commands below cannot demonstrate it. See [session takeover](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/handle_connect.c).
 
-**REASONED:** following block; covers every check in it: the guard and one observer subscribed to `#` and `$SYS/#` at QoS 1 for 60 seconds. No Mosquitto broker, client binaries or scoped test identities in the authoring environment, per the guide's cited ACL-file plugin, Mosquitto 2.1.2 ACL-file plugin implementation and Mosquitto broker manual entries. Run locally against a stub `mosquitto_sub`: `bash -n` and ShellCheck 0.11.0 printed nothing. The block as written printed "substitute the broker host", an unsubstituted observer path printed "substitute the observer config path", four values printed "provide exactly 3 values; not probing", and a paste without the `set --` lines printed "paste the whole block; not probing" despite three caller arguments, each exiting 1 without calling the stub. With `device-01.conf` and then `device-02.conf` substituted, the stub received `-o` with that path, `-d -v -q 1 -W 60` and the topic filters `#` and `$SYS/#`, and the block printed "exit 0; inspect received topics and this run's markers" for stub status 0 and "exit 27; inspect CONNACK and deliveries; timeout alone proves no ACL result" for 27, also under `bash -e -u`. The bash -n, ShellCheck and stub runs recorded here covered the observer block in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected: each observer receives its own identity's markers in both states; without the ACL it also receives the other device's telemetry and, when broker telemetry publication is enabled, `$SYS` topics (exposed), and with it neither (fixed). Otherwise, run this observer block in separate terminals once with `device-01.conf` and once with `device-02.conf`. Where client-ID authorization is enforced, give each observer and publisher a distinct authorized ID in its protected test configuration, as an explicit exception to the preparation rule against fixed IDs. Wait for successful CONNACK and SUBACK in both observers before publishing. Keep both running throughout each comparison; repeat the window if either exits.
+**REASONED:** following block; covers every check in it: the guard and one observer subscribed to `#` and `$SYS/#` at QoS 1 for 60 seconds. No Mosquitto broker, client binaries or scoped test identities in the authoring environment, per the guide's cited ACL-file plugin, Mosquitto 2.1.2 ACL-file plugin implementation and Mosquitto broker manual entries. Run locally against a stub `mosquitto_sub`: `bash -n` and ShellCheck 0.11.0 printed nothing. The block as written printed "substitute the broker host", an unsubstituted observer path printed "substitute the observer config path", four values printed "provide exactly 3 values; not probing", and a paste without the `set --` lines printed "paste the whole block; not probing" despite three caller arguments, each exiting 1 without calling the stub. With `device-01.conf` and then `device-02.conf` substituted, the stub received `-o` with that path, `-d -v -q 1 -W 60` and the topic filters `#` and `$SYS/#`, and the block printed "exit 0; inspect received topics and this run's markers" for stub status 0 and "exit 27; inspect CONNACK and deliveries; timeout alone proves no ACL result" for 27, also under `bash -e -u`. The bash -n, ShellCheck and stub runs recorded here covered the observer block in an earlier form, whose guard refusals exited with status 1. The current form exits 2 on a guard refusal, 0 when the client exits 0 or with the `-W` timeout's 27, and 3 for any other client status; the deliveries it prints stay for you to judge. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Expected: each observer receives its own identity's markers in both states; without the ACL it also receives the other device's telemetry and, when broker telemetry publication is enabled, `$SYS` topics (exposed), and with it neither (fixed). Otherwise, run this observer block in separate terminals once with `device-01.conf` and once with `device-02.conf`. Where client-ID authorization is enforced, give each observer and publisher a distinct authorized ID in its protected test configuration, as an explicit exception to the preparation rule against fixed IDs. Wait for successful CONNACK and SUBACK in both observers before publishing. Keep both running throughout each comparison; repeat the window if either exits.
 
 ```bash
-# REASONED: topic-delivery observer; no broker/client binaries or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_BROKER_PUBLIC_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_OBSERVER_CONFIG'
@@ -34169,28 +34349,34 @@ ss -tlnp   # inventory the listeners (needs sudo for the process column); ss sho
   esac
   case "$3" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute the observer config path"; exit 2 ;;
-    *)
-      if mosquitto_sub -o "$3" -h "$1" -p 8883 --cafile "$2" \
-        -d -v -q 1 -W 60 -t '#' -t "\$SYS/#"
-      then echo "exit 0; inspect received topics and this run's markers"
-      else echo "exit $?; inspect CONNACK and deliveries; timeout alone proves no ACL result"
-      fi
-      ;;
   esac
+  if mosquitto_sub -o "$3" -h "$1" -p 8883 --cafile "$2" \
+    -d -v -q 1 -W 60 -t '#' -t "\$SYS/#"
+  then echo "exit 0; inspect received topics and this run's markers"
+  else
+    set -- "$?"
+    echo "exit $1; inspect CONNACK and deliveries; timeout alone proves no ACL result"
+    case "$1" in
+      27) ;;
+      *) echo "exit $1 is neither 0 nor the -W timeout's 27, so this observer may not have watched its whole window; inconclusive"; exit 3 ;;
+    esac
+  fi
+  echo "unclassified observation: the deliveries above are not classified, so judge them against the table below"
+  exit 0
 )
 ```
 
-**REASONED:** instructions for the publisher block below, which carries its own declaration. No Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited Mosquitto publisher manual (protected configuration files, QoS, protocol selection, message publishing) and Mosquitto 2.0.22 PUBLISH handler (payload-size checks, denied writes, QoS responses) entries. Run locally against a stub `mosquitto_pub`: `bash -n` and ShellCheck 0.11.0 printed nothing for that block. The block as written printed "substitute the broker host", an unsubstituted marker printed "substitute the non-secret marker", six values printed "provide exactly 5 values; not probing", and a paste without the `set --` lines printed "paste the whole block; not probing" despite five caller arguments, each exiting 1 without calling the stub. Each table row's identity file, topic and a distinct marker reached the stub with `-o`, `-d -V mqttv5 -q 1`, `-t` and `-m` and no retain option, and the block printed "publisher exited 0; check PUBACK reason and actual observer delivery" for stub status 0 and "publisher exit 5; inspect the broker response, not just this status" for 5 under `bash -e -u`. The bash -n, ShellCheck and stub runs recorded here covered the publisher block in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected: authorized rows deliver their markers in both states; device-01's write to device-02's command topic reaches device-02 without the ACL (exposed) and is denied with it (fixed). Run this publisher block for each row below, substituting the selected credential-file path, topic, and a distinct non-secret marker for this run. It does not retain messages.
+**REASONED:** following block; the publisher block and the instructions for it. No Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited Mosquitto publisher manual (protected configuration files, QoS, protocol selection, message publishing) and Mosquitto 2.0.22 PUBLISH handler (payload-size checks, denied writes, QoS responses) entries. Run locally against a stub `mosquitto_pub`: `bash -n` and ShellCheck 0.11.0 printed nothing for that block. The block as written printed "substitute the broker host", an unsubstituted marker printed "substitute the non-secret marker", six values printed "provide exactly 5 values; not probing", and a paste without the `set --` lines printed "paste the whole block; not probing" despite five caller arguments, each exiting 1 without calling the stub. Each table row's identity file, topic and a distinct marker reached the stub with `-o`, `-d -V mqttv5 -q 1`, `-t` and `-m` and no retain option, and the block printed "publisher exited 0; check PUBACK reason and actual observer delivery" for stub status 0 and "publisher exit 5; inspect the broker response, not just this status" for 5 under `bash -e -u`. The bash -n, ShellCheck and stub runs recorded here covered the publisher block in an earlier form, whose guard refusals exited with status 1 and which took five values. The current form takes a sixth value, `allowed` or `denied`, exits 2 on a guard refusal and exits 3 when the publisher shows no CONNACK (0). With `allowed` it then exits 3 if the publisher fails and 0 otherwise; with `denied` it exits 0 when the publisher's output shows a PUBACK, leaving the broker's response for you to judge with the observers' deliveries, and 3 when it shows none, because the publish then failed before its result. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs with `mosquitto_pub` replaced by a stub, in which the denied row exited 0 with a `received PUBACK` line and 3 without one, and the allowed row exited 0 on success and 3 on failure. Expected: authorized rows deliver their markers in both states; device-01's write to device-02's command topic reaches device-02 without the ACL (exposed) and is denied with it (fixed). Run this publisher block for each row below, substituting the selected credential-file path, topic, and a distinct non-secret marker for this run, with `denied` for the row in which device-01 writes to device-02's command topic and `allowed` for every other row. It does not retain messages.
 
 ```bash
-# REASONED: topic-delivery publisher; no broker/client binaries or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_BROKER_PUBLIC_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_PUBLISHER_CONFIG' \
-    'REPLACE_WITH_TEST_TOPIC' 'REPLACE_WITH_NONSECRET_UNIQUE_MARKER'
+    'REPLACE_WITH_TEST_TOPIC' 'REPLACE_WITH_NONSECRET_UNIQUE_MARKER' \
+    'REPLACE_WITH_allowed_OR_denied'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 5 ] || { echo "provide exactly 5 values; not probing"; exit 2; }
+  [ "$#" -eq 6 ] || { echo "provide exactly 6 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute the broker host"; exit 2 ;;
   esac
@@ -34205,24 +34391,41 @@ ss -tlnp   # inventory the listeners (needs sudo for the process column); ss sho
   esac
   case "$5" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute the non-secret marker"; exit 2 ;;
-    *)
-      if mosquitto_pub -o "$3" -h "$1" -p 8883 --cafile "$2" \
-        -d -V mqttv5 -q 1 -t "$4" -m "$5"
-      then echo "publisher exited 0; check PUBACK reason and actual observer delivery"
-      else echo "publisher exit $?; inspect the broker response, not just this status"
-      fi
-      ;;
+  esac
+  case "$6" in
+    allowed|denied) ;;
+    *) echo "substitute allowed, or denied for the row whose write the fixed state denies; not probing"; exit 2 ;;
+  esac
+  set -- "$@" "$(if mosquitto_pub -o "$3" -h "$1" -p 8883 --cafile "$2" \
+    -d -V mqttv5 -q 1 -t "$4" -m "$5" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7%$'\n'*}" "${7##*$'\n'}"   # the six values, the publisher's output, then its exit status
+  printf '%s' "$7"
+  case "$8" in
+    0) echo "publisher exited 0; check PUBACK reason and actual observer delivery" ;;
+    *) echo "publisher exit $8; inspect the broker response, not just this status" ;;
+  esac
+  case "$7" in
+    *'received CONNACK (0)'*) ;;
+    *) echo "no CONNACK (0) for the publisher, so it did not connect and this row shows nothing; inconclusive"; exit 3 ;;
+  esac
+  case "$6:$8" in
+    allowed:0) echo "unclassified observation: the authorized write was sent; judge the observers' deliveries against the table below"; exit 0 ;;
+    allowed:*) echo "the authorized write failed after CONNACK (0), so this row's positive control failed; inconclusive"; exit 3 ;;
+  esac
+  case "$7" in   # the denied row: a publish that completed shows the broker's PUBACK, whatever its reason
+    *'received PUBACK'*) echo "unclassified observation: read the PUBACK reason above and the observers' deliveries; this row's fixed outcome is a denied write that device-02 never receives"; exit 0 ;;
+    *) echo "no PUBACK for the denied row's publish, so it failed before the broker answered and this row shows nothing; inconclusive"; exit 3 ;;
   esac
 )
 ```
 
 | Publisher identity | Topic | Fixed outcome |
 | --- | --- | --- |
-| `device-01` | `fleet/device-01/telemetry/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.1.2 ACL-file plugin implementation entries. Locally, the publisher block with `device-01.conf`, this topic and a distinct marker reached only a stub `mosquitto_pub`, with those values. The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected: without the ACL both observers receive the marker (exposed); with it device-01 receives it and device-02 does not (fixed). Device-01 receives its marker; device-02 does not |
-| `device-02` | `fleet/device-02/telemetry/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.1.2 ACL-file plugin implementation entries. Locally, the publisher block with `device-02.conf`, this topic and a distinct marker reached only a stub `mosquitto_pub`, with those values. The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected: without the ACL both observers receive the marker (exposed); with it device-02 receives it and device-01 does not (fixed). Device-02 receives its marker; device-01 does not |
-| `controller` | `fleet/device-02/commands/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.1.2 ACL-file plugin implementation entries. Locally, the publisher block with `controller.conf`, this topic and a distinct marker reached only a stub `mosquitto_pub`, with those values. The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected: device-02 receives the marker in both states, the authorized positive control; without the ACL device-01 also receives it (exposed), and with it device-01 does not (fixed). Device-02 receives the authorized command marker |
-| `device-01` | `fleet/device-02/commands/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.0.22 PUBLISH handler (payload-size checks, denied writes, QoS responses) entries. Locally, the publisher block with `device-01.conf`, this topic and a distinct marker reached only a stub `mosquitto_pub`, with those values; with the stub exiting 5 under `bash -e -u` it printed "publisher exit 5; inspect the broker response, not just this status". The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected: without the ACL device-02 receives the injected marker (exposed); with it the MQTT 5 QoS 1 write is denied with a PUBACK reason and device-02 receives nothing (fixed). Write is denied; device-02 receives no injected marker |
-| `controller` | `fleet/device-02/commands/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.1.2 ACL-file plugin implementation entries. Locally, the publisher block with `controller.conf`, this topic and a fresh distinct marker reached only a stub `mosquitto_pub`, with those values. The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected: device-02 receives this marker in both states; after the denied attempt (fixed) its arrival shows the observer still works, so the missing injected marker was a denial. Device-02 receives a fresh authorized marker after the denied attempt |
+| `device-01` | `fleet/device-01/telemetry/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.1.2 ACL-file plugin implementation entries. Locally, the publisher block with `device-01.conf`, this topic and a distinct marker reached only a stub `mosquitto_pub`, with those values. The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; the current form, which takes `allowed` for this row, is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Expected: without the ACL both observers receive the marker (exposed); with it device-01 receives it and device-02 does not (fixed). Device-01 receives its marker; device-02 does not |
+| `device-02` | `fleet/device-02/telemetry/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.1.2 ACL-file plugin implementation entries. Locally, the publisher block with `device-02.conf`, this topic and a distinct marker reached only a stub `mosquitto_pub`, with those values. The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; the current form, which takes `allowed` for this row, is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Expected: without the ACL both observers receive the marker (exposed); with it device-02 receives it and device-01 does not (fixed). Device-02 receives its marker; device-01 does not |
+| `controller` | `fleet/device-02/commands/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.1.2 ACL-file plugin implementation entries. Locally, the publisher block with `controller.conf`, this topic and a distinct marker reached only a stub `mosquitto_pub`, with those values. The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; the current form, which takes `allowed` for this row, is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Expected: device-02 receives the marker in both states, the authorized positive control; without the ACL device-01 also receives it (exposed), and with it device-01 does not (fixed). Device-02 receives the authorized command marker |
+| `device-01` | `fleet/device-02/commands/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.0.22 PUBLISH handler (payload-size checks, denied writes, QoS responses) entries. Locally, the publisher block with `device-01.conf`, this topic and a distinct marker reached only a stub `mosquitto_pub`, with those values; with the stub exiting 5 under `bash -e -u` it printed "publisher exit 5; inspect the broker response, not just this status". The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; the current form, which takes `denied` for this row, is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Expected: without the ACL device-02 receives the injected marker (exposed); with it the MQTT 5 QoS 1 write is denied with a PUBACK reason and device-02 receives nothing (fixed). Write is denied; device-02 receives no injected marker |
+| `controller` | `fleet/device-02/commands/check` | **REASONED:** whole row; no Mosquitto broker, client binaries or test identities in the authoring environment, per the guide's cited ACL-file plugin and Mosquitto 2.1.2 ACL-file plugin implementation entries. Locally, the publisher block with `controller.conf`, this topic and a fresh distinct marker reached only a stub `mosquitto_pub`, with those values. The stub runs recorded in this row covered the publisher block in an earlier form, whose guard refusals exited with status 1; the current form, which takes `allowed` for this row, is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes. Expected: device-02 receives this marker in both states; after the denied attempt (fixed) its arrival shows the observer still works, so the missing injected marker was a denial. Device-02 receives a fresh authorized marker after the denied attempt |
 
 Without ACLs, the authenticated observers can receive each other's telemetry and device-01 can inject the command. With the ACL, require both isolation and successful authorized deliveries. The controller's before-and-after messages distinguish write denial from a broken observer. MQTT 5 QoS 1 supplies a PUBACK reason for denied writes; actual delivery remains part of the decision. See the [ACL check](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/plugins/acl-file/acl_check.c), [PUBLISH denial handling](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/handle_publish.c), and [publisher options](https://mosquitto.org/man/mosquitto_pub-1.html).
 
@@ -34232,7 +34435,7 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 
 | Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| Service behaviour | **REASONED:** every comparison listed in this row; none ran, because the authoring environment has no Mosquitto broker or client binaries, container runtime or network access and none of the listed fixtures. It rests on the Sources entries cited at each Verify comparison above and on the guide's cited entries for the other behaviours named here. The other behaviours named here have cited entries in the guide, including the Mosquitto 2.0.22 packet reader, Mosquitto libwebsockets connection-cap implementation, Mosquitto disconnected-session expiry scheduling and timed cleanup, Mosquitto authenticated duplicate client-ID displacement and Mosquitto local bridge contexts bypassing ACL checks entries. Only the shell, guard, stub, Python file-mode and shlex, and OpenSSL fixture checks recorded at the units above ran locally, and none exercised Mosquitto. Those checks ran the section 1 credential-removal block and the connection, observer and publisher blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The section 8 listener-exposure block's recorded runs also used an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. Expected, as the next cell states item by item: the exposed state accepts the excess, foreign or unauthorized input, for example device-01 credentials with device-02's active ID disconnecting device-02, and the fixed state refuses or neutralizes it while a matched positive control succeeds. REASONED from the cited 2.0.22 and 2.1.2 sources and vendor documentation; broker configuration acceptance and service behaviour not demonstrated | On pinned 2.0.22 and 2.1.2 deployments, load the applicable configurations and reproduce exposed/fixed authentication, TLS/client-certificate, listener, WebSockets, and actual-message ACL comparisons above. Confirm credential reload and termination of revoked connections. Exercise packet and payload limits separately on TCP and each deployed WebSockets implementation, including declared-length probes without the body; instrument allocation to distinguish rejection before allocation from rejection after receipt. Demonstrate the section 4 WebSockets gap and the chosen boundary or replacement implementation's rejection before oversized allocation, with an accepted packet below the limit. Exercise queue loss and inflight bounds with slow clients, keepalive negotiation/refusal, per-listener connection caps, and 2.1 global connection/session caps. For each listener cap N, hold N connections with distinct authorized identities/IDs and attempt N+1; demonstrate the 2.0.22 WebSockets failure without an independent cap and refusal with the chosen enforcement. Release a slot, confirm a replacement connects, refill to N, and repeat the excess attempt across multiple disconnect/reconnect cycles; distinguish cap refusal from authentication or transport failure. Test device-01 credentials with device-02's active ID: the exposed state disconnects device-02; the fixed state rejects or rewrites the claimant's ID and preserves device-02's connection and delivery. Repeat across listeners, and confirm the documented same-identity takeover when username binding is enabled. Run message ACL comparisons with one publishing/subscribing client per identity under that policy. On 2.0, demonstrate persistent-session growth with varying IDs, the chosen ID restriction, and expiration after the configured disconnected interval; do not treat expiration as a population cap. Where bridges exist, demonstrate trusted TLS and hostname rejection, optional client certificates, scoped inbound/outbound delivery, remote ACL denial, and reconnect backoff. Separately use a controlled upstream that sends outside the configured inbound topics despite its account ACL; demonstrate the direct bridge's missing ingress containment and, where required, denial at the independent boundary with matched allowed delivery. Confirm runtime ownership, readable security files, writable protected state/log paths, and persistence only when enabled. Record versions, WebSockets implementations, commands, diagnostics, matched positive controls, and cleanup without credentials. Configuration inspection alone does not demonstrate service behaviour. |
+| Service behaviour | **REASONED:** every comparison listed in this row; none ran, because the authoring environment has no Mosquitto broker or client binaries, container runtime or network access and none of the listed fixtures. It rests on the Sources entries cited at each Verify comparison above and on the guide's cited entries for the other behaviours named here. The other behaviours named here have cited entries in the guide, including the Mosquitto 2.0.22 packet reader, Mosquitto libwebsockets connection-cap implementation, Mosquitto disconnected-session expiry scheduling and timed cleanup, Mosquitto authenticated duplicate client-ID displacement and Mosquitto local bridge contexts bypassing ACL checks entries. Only the shell, guard, stub, Python file-mode and shlex, and OpenSSL fixture checks recorded at the units above ran locally, and none exercised Mosquitto. Those checks ran the section 1 credential-removal block in an earlier form, whose guard refusals exited with status 1; none was re-run on that block's current form, whose guard refusals exit with status 2. They also ran the connection, observer and publisher blocks in an earlier form, whose guard refusals exited with status 1, and the section 8 listener checks, then one block, in an earlier form whose guard refusals left the subshell with status 0. The current forms of those checks, now five blocks, exit 2 on a guard refusal and otherwise with one status for each block; they are covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes, and no stub run of them is recorded here. Expected, as the next cell states item by item: the exposed state accepts the excess, foreign or unauthorized input, for example device-01 credentials with device-02's active ID disconnecting device-02, and the fixed state refuses or neutralizes it while a matched positive control succeeds. REASONED from the cited 2.0.22 and 2.1.2 sources and vendor documentation; broker configuration acceptance and service behaviour not demonstrated | On pinned 2.0.22 and 2.1.2 deployments, load the applicable configurations and reproduce exposed/fixed authentication, TLS/client-certificate, listener, WebSockets, and actual-message ACL comparisons above. Confirm credential reload and termination of revoked connections. Exercise packet and payload limits separately on TCP and each deployed WebSockets implementation, including declared-length probes without the body; instrument allocation to distinguish rejection before allocation from rejection after receipt. Demonstrate the section 4 WebSockets gap and the chosen boundary or replacement implementation's rejection before oversized allocation, with an accepted packet below the limit. Exercise queue loss and inflight bounds with slow clients, keepalive negotiation/refusal, per-listener connection caps, and 2.1 global connection/session caps. For each listener cap N, hold N connections with distinct authorized identities/IDs and attempt N+1; demonstrate the 2.0.22 WebSockets failure without an independent cap and refusal with the chosen enforcement. Release a slot, confirm a replacement connects, refill to N, and repeat the excess attempt across multiple disconnect/reconnect cycles; distinguish cap refusal from authentication or transport failure. Test device-01 credentials with device-02's active ID: the exposed state disconnects device-02; the fixed state rejects or rewrites the claimant's ID and preserves device-02's connection and delivery. Repeat across listeners, and confirm the documented same-identity takeover when username binding is enabled. Run message ACL comparisons with one publishing/subscribing client per identity under that policy. On 2.0, demonstrate persistent-session growth with varying IDs, the chosen ID restriction, and expiration after the configured disconnected interval; do not treat expiration as a population cap. Where bridges exist, demonstrate trusted TLS and hostname rejection, optional client certificates, scoped inbound/outbound delivery, remote ACL denial, and reconnect backoff. Separately use a controlled upstream that sends outside the configured inbound topics despite its account ACL; demonstrate the direct bridge's missing ingress containment and, where required, denial at the independent boundary with matched allowed delivery. Confirm runtime ownership, readable security files, writable protected state/log paths, and persistence only when enabled. Record versions, WebSockets implementations, commands, diagnostics, matched positive controls, and cleanup without credentials. Configuration inspection alone does not demonstrate service behaviour. |
 
 ## Sources (checked October 2026)
 
@@ -34341,7 +34544,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "9edea05493d71c3f8750635c5783f0e11503f5acbc1dd21c504210d929ddbb4a",
+  "body_sha256": "1a338374bc949536319551bfd205fe9cee9b44986c2d2bb5521ddf90c2955941",
   "components": {
     "v20": {
       "name": "Mosquitto",
@@ -34480,9 +34683,9 @@ Claims (full source mapping in the JSON block below):
     "client-config": {"text": "Verify uses protected 2.1 client -o files; 2.0 lacks -o and needs isolated default configurations.", "components": ["docs"], "sources": ["docs:s6711164e3e5f", "docs:s1476cea737a4"], "status": "REASONED"},
     "verify-auth": {"text": "Authenticated CONNACK succeeds and anonymous CONNECT rejects; timeout exit 27, SUBACK and transport failures prove no authentication.", "components": ["docs", "v21"], "sources": ["docs:s6711164e3e5f", "docs:s9aa3260c5b79", "v21:s2ad092f62c47"], "status": "REASONED", "verify": [1]},
     "verify-mtls": {"text": "Missing certificate must fail at TLS while trusted certificate succeeds; then separately test MQTT credentials.", "components": ["docs"], "sources": ["docs:s1791866ca31b", "docs:s6711164e3e5f"], "status": "REASONED", "verify": [1]},
-    "verify-network": {"text": "Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer.", "components": ["docs", "v20"], "sources": ["docs:s4d96861c4f39", "v20:se7823193963b"], "status": "REASONED", "verify": [2]},
-    "verify-delivery": {"text": "Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery.", "components": ["docs", "v20", "v21"], "sources": ["docs:s280527f289d0", "docs:s1476cea737a4", "v20:s06316e74cf90", "v21:sfe6c64ab8f91", "v20:sa4ab07ef74c3"], "status": "REASONED", "verify": [3, 4]},
-    "verify-sys": {"text": "Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages.", "components": ["docs"], "sources": ["docs:sd34bd50f5f0f"], "status": "REASONED", "verify": [3]},
+    "verify-network": {"text": "Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer.", "components": ["docs", "v20"], "sources": ["docs:s4d96861c4f39", "v20:se7823193963b"], "status": "REASONED", "verify": [2, 3]},
+    "verify-delivery": {"text": "Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery.", "components": ["docs", "v20", "v21"], "sources": ["docs:s280527f289d0", "docs:s1476cea737a4", "v20:s06316e74cf90", "v21:sfe6c64ab8f91", "v20:sa4ab07ef74c3"], "status": "REASONED", "verify": [4, 5]},
+    "verify-sys": {"text": "Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages.", "components": ["docs"], "sources": ["docs:sd34bd50f5f0f"], "status": "REASONED", "verify": [4]},
     "verify-resources": {"text": "Separate packet allocation, payload, queue, inflight, keepalive, connection and session tests need matched healthy controls.", "components": ["v20", "v21"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "v20:se7823193963b", "v20:se4dab27858b2", "v20:sa4ab07ef74c3"], "status": "REASONED"},
     "verify-bridges": {"text": "Test scoped delivery, TLS identity, remote ACLs and malicious-upstream containment independently; inspect runtime permissions and persistence.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:s06316e74cf90"], "status": "REASONED"}
   }
@@ -53506,24 +53709,37 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 
 ## Verify
 
-REASONED: following block; the complete listener inventory, all external/agent-port probes, successful token-authenticated job, rejected anonymous job and correct/mismatched-CA gRPC health checks follow the cited Ray sources; no isolated cluster, second host or deployed TLS fixture. Bash 5.3.9 bash -n accepted both Verify fences. Extracted address subshells with curl replaced by printf LOCAL_CURL accepted 192.168.50.7 and bad value; empty input, original placeholders and set -- without arguments skipped. All exited 0; skips are not reachability results. The bash -n run and the address-subshell runs recorded here covered an earlier form of both fences, whose guard refusals in the address, agent-port and direct-agent subshells ended with status 0; none was re-run on the current form, whose refusals in those subshells exit with status 2. The token-file subshell already refused with status 2 and is unchanged. In the token-file subshell, replacing only the home token path with a disposable path and ray with printf LOCAL_RAY rejected absent, empty, directory and symlink fixtures with exit 2; a regular file containing DUMMY_NOT_A_SECRET plus LF reached the marker, exited 0 and changed mode 0644 to 0600. This demonstrates local preparation only, not either job outcome or TLS. **Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
+REASONED: mixed historical listener observations and unrun service comparisons from the cited Ray 2.58.0 sources; the four watcher-stopped attempts and local ss observations below are historical, were not repeated here and did not establish exposed/fixed behavior; no isolated cluster is available for the service comparisons. Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, with expected exposed and fixed outcomes derived from the cited Ray 2.58.0 sources and vendor documentation.
+
+REASONED: following block; the per-node listener inventory, and in the four blocks after it the external and agent-port probes, the successful token-authenticated job, the rejected token-free job and the correct/mismatched-CA gRPC health checks, follow the cited Ray sources; no isolated cluster, second host or deployed TLS fixture. In an earlier form those five blocks were one fence, and Bash 5.3.9 bash -n accepted both Verify fences of that form. Extracted address subshells with curl replaced by printf LOCAL_CURL accepted 192.168.50.7 and bad value; empty input, original placeholders and set -- without arguments skipped. All exited 0; skips are not reachability results. The bash -n run and the address-subshell runs recorded here covered that earlier form of both fences, whose guard refusals in the address, agent-port and direct-agent subshells ended with status 0. In the token-file subshell, replacing only the home token path with a disposable path and ray with printf LOCAL_RAY rejected absent, empty, directory and symlink fixtures with exit 2; a regular file containing DUMMY_NOT_A_SECRET plus LF reached the marker, exited 0 and changed mode 0644 to 0600. That run covered an earlier form of the token-file subshell, which also exited 2 when chmod failed. This demonstrates local preparation only, not either job outcome or TLS. The current forms of the five blocks exit 2 on a guard refusal and otherwise with one status for each block, 1 for a finding, 3 for a failed or inconclusive check and 0 for a pass or an unclassified observation, and are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes and by the stub runs recorded next. The listener inventory refuses with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, and exits 3 when `ss` fails. The port probes read curl's `time_connect` first and record 3 when it is missing or malformed. With no TCP connection, a curl exit 7 or connect timeout records 0 whatever its `err` text, with a message that from another host this is consistent with isolation but not proof and should be corroborated, and any other curl error records 3. In stub runs of the five current blocks, with ss, curl and ray replaced by stubs, the inventory exited 2 without `ss`, 3 when `ss` failed and 0 otherwise. Each port probe exited 3 for a failure with no write-out line and for a name-resolution failure, 1 for an HTTP response with a non-zero `time_connect`, and 0 for a refusal, a connect timeout and an exit 7 with the generic `Could not connect to server` text, each with zero timing, and the port loop kept 1 when a later port was inconclusive or formed no connection. The token-authenticated submit exited 0 when the stub submit succeeded, 3 when it failed and 2 without a token file, and the token-free submit exited 0 on an Unauthorized rejection, 1 when accepted, 3 on a connection error and 2 on a client holding a token. **Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
 
 ```bash
-# REASONED: Ray listener, job and TLS checks follow the cited 2.58.0 sources; no isolated cluster is available. Earlier ss observations are recorded below.
-ss -tlnp   # 8265: 127.0.0.1 (or the tailnet IP), never wildcard; agent gRPC and metrics can show wildcard binds (step 2)
-ss -tlnp   # read every listener; per the source, 10001 shows the node IP address (private in step 2's layout) plus a loopback listener, but 6379 can show every
-           # interface (see step 2), so only the network boundary keeps it private
-ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
+(                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null 2>&1 || { echo 'ss is not installed here; not listing sockets'; exit 2; }
+  if ss -tlnp; then   # 8265: 127.0.0.1 (or the tailnet IP), never wildcard; agent gRPC and metrics can show wildcard binds (step 2)
+                      # read every listener; per the source, 10001 shows the node IP address (private in step 2's layout) plus a loopback listener, but 6379 can show every
+                      # interface (see step 2), so only the network boundary keeps it private
+                      # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 (gRPC) when configured
+    echo "unclassified observation: read every listener above against step 2, and record the agent ports for the agent-port block below"
+  else
+    echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; exit 3
+  fi
+)
+```
+
+```bash
 # REASONED: no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources.
 # From another network, repeat against every public IPv4 and IPv6 address of every head and worker
 # (enclose an IPv6 literal in square brackets). Check 8265 dashboard, 6379 head, 10001 Client and
 # 8000 if Ray Serve is deployed. The separate block below adds all four agent listeners.
 # Keep all these origins off untrusted networks, including when token authentication is enabled;
-# it does not cover Serve or metrics. The pass is that
-# no TCP connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused,
-# no route, or a filtered-port connect timeout). A non-zero time_connect (even if the port then speaks gRPC
+# it does not cover Serve or metrics. A port records 0 when
+# no TCP connection formed: curl exits 7 or hits the connect timeout (28) and time_connect stays 0.000000.
+# From another host that is consistent with isolation but not proof, because curl also exits 7 for a local
+# socket error, so corroborate each such port, for example with a deny record at the enforcement point
+# or the err text. A non-zero time_connect (even if the port then speaks gRPC
 # not HTTP, so http is 000, or HTTP returns 401 or 403) means exposure, regardless of authentication. A
-# name-resolution or local socket error is inconclusive.
+# name-resolution or other curl error with no TCP connection, or a missing time_connect, is inconclusive.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -53531,22 +53747,45 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'port=8265 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8265/" || true
-       curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'port=6379 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6379/" || true
-       curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'port=10001 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:10001/" || true
-       curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'port=8000 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:8000/" || true ;;   # Ray Serve, if deployed; 9000 too when its gRPC proxy is configured
   esac
+  set -- "$1" 0 8265 6379 10001 8000   # the address, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports; 8000 is Ray Serve, if deployed; 9000 too when its gRPC proxy is configured
+  while [ "$#" -gt 2 ]; do
+    set -- "$(if curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+      -w "port=$3 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$3/"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    set -- "${1%%$'\n'*}" "${1##*$'\n'}" "${@:2}"   # curl's line, its exit status, the address, the status so far, then the ports left
+    printf '%s\n' "$1"
+    case "$1" in
+      *' time_connect='*) set -- "$1" "$2" "${1#* time_connect=}" "${@:3}" ;;
+      *) set -- "$1" "$2" '' "${@:3}" ;;
+    esac
+    set -- "$1" "$2" "${3%% *}" "${@:4}"   # curl's line, its exit status, its time_connect value (empty if curl wrote none), the address, the status so far, then the ports left
+    case "$3" in
+      *[!0123456789.]*|*.*.*) set -- "$1" "$2" '' "${@:4}" ;;   # anything but digits around one dot is not a timing value
+    esac
+    case "$3" in
+      0.000000)
+        case "$2" in
+          7|28) echo "curl exit $2 on port $6: no TCP connection from this vantage, consistent with isolation but not proof; corroborate it, for example with a deny record at the enforcement point or the err text above" ;;
+          *) echo "curl exit $2 on port $6 with no TCP connection: a name-resolution or local socket error is inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}" ;;
+        esac ;;
+      [0123456789]*.*[0123456789]) echo "FINDING: port $6 completed a TCP connection, which means exposure regardless of authentication"; set -- "$1" "$2" "$3" "$4" 1 "${@:6}" ;;
+      *) echo "curl wrote no valid time_connect for port $6, so whether a TCP connection formed is unknown; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 "${@:6}" ;;
+    esac
+    set -- "$4" "$5" "${@:7}"           # the address, the status so far, then the ports not yet probed
+  done
+  echo "block exit $2; corroborate each port that formed no TCP connection, as its line above says; this covers 8265, 6379, 10001 and 8000 at this address only, so repeat it for every other public address"
+  exit "$2"
 )
+```
+
+```bash
 # REASONED: no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources.
 # On EVERY head and worker, probe the default 52365 or its configured replacement first. Then run
 # this whole block again for EACH of the three actual agent ports recorded from ss above, where
 # present. Also repeat it for other inventoried listeners, including worker and Serve replica ports.
 # Use every externally routed node/container address, IPv4 and IPv6. Apply the reading rules above:
-# exposed means a completed TCP connection (even 401/403); fixed means no TCP connection formed.
+# exposed means a completed TCP connection (even 401/403); fixed means no TCP connection formed, which
+# from another host is consistent with isolation but not proof, so corroborate it as the block's message says.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_NODE_PUBLIC_IP' '52365'   # replace inside the quotes
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -53554,17 +53793,39 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the node's public address; not probing"; exit 2 ;;
-    *) case "$2" in
-         *REPLACE_WITH_*|""|*[!0123456789]*) echo "supply the actual numeric listener port; not probing"; exit 2 ;;
-         *) if [ "${#2}" -gt 5 ] || [ "$2" -lt 1 ] || [ "$2" -gt 65535 ]; then
-              echo "port must be 1 to 65535; not probing"; exit 2
-            else
-              curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-                -w "port=$2 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$2/" || true
-            fi ;;
-       esac ;;
+  esac
+  case "$2" in
+    *REPLACE_WITH_*|""|*[!0123456789]*) echo "supply the actual numeric listener port; not probing"; exit 2 ;;
+  esac
+  if [ "${#2}" -gt 5 ] || [ "$2" -lt 1 ] || [ "$2" -gt 65535 ]; then
+    echo "port must be 1 to 65535; not probing"; exit 2
+  fi
+  set -- "$1" "$2" "$(if curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+    -w "port=$2 http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$2/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%%$'\n'*}" "${3##*$'\n'}"   # the address, the port, curl's line, then its exit status
+  printf '%s\n' "$3"
+  case "$3" in
+    *' time_connect='*) set -- "$1" "$2" "$3" "$4" "${3#* time_connect=}" ;;
+    *) set -- "$1" "$2" "$3" "$4" '' ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "${5%% *}"   # the address, the port, curl's line, its exit status, then its time_connect value (empty if curl wrote none)
+  case "$5" in
+    *[!0123456789.]*|*.*.*) set -- "$1" "$2" "$3" "$4" '' ;;   # anything but digits around one dot is not a timing value
+  esac
+  case "$5" in
+    0.000000) ;;
+    [0123456789]*.*[0123456789]) echo "FINDING: port $2 completed a TCP connection, which means exposure regardless of authentication"; exit 1 ;;
+    *) echo "curl wrote no valid time_connect for port $2, so whether a TCP connection formed is unknown; inconclusive"; exit 3 ;;
+  esac
+  case "$4" in
+    7|28) echo "curl exit $4 on port $2: no TCP connection from this vantage, consistent with isolation but not proof; corroborate it, for example with a deny record at the enforcement point or the err text above, then repeat for every other agent port and address"; exit 0 ;;
+    *) echo "curl exit $4 on port $2 with no TCP connection: a name-resolution or local socket error is inconclusive"; exit 3 ;;
   esac
 )
+```
+
+```bash
+# REASONED: the token-authenticated job submission follows the cited Ray 2.58.0 sources; no isolated cluster or cluster token is available.
 # Through the SSH tunnel of step 1, with RAY_AUTH_MODE=token on the cluster.
 # POSITIVE control first: WITH the token the submit succeeds, proving the endpoint is live and reachable:
 # Assumes a clean Bash shell with trusted startup files, and a token file owned by this account
@@ -53580,30 +53841,54 @@ ss -tlnp   # if you run Ray Serve, keep 8000 (HTTP proxy) private too, and 9000 
     echo 'need a readable, non-empty regular token file, not a symlink; not submitting'; exit 2
   fi
   chmod 600 -- "$HOME/.ray/auth_token" ||
-    { echo 'cannot protect the token file; not submitting'; exit 2; }
-  RAY_AUTH_MODE=token RAY_AUTH_TOKEN_PATH="$HOME/.ray/auth_token" \
-    ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"
+    { echo 'cannot protect the token file; not submitting'; exit 3; }
+  if RAY_AUTH_MODE=token RAY_AUTH_TOKEN_PATH="$HOME/.ray/auth_token" \
+    ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"; then
+    echo "the token-authenticated submit succeeded, so the endpoint is live and nothing here is left to judge; run the token-free block below from a client with no token"
+  else
+    echo "ray job submit exit $?: the token-authenticated positive control failed, so a token-free refusal would prove nothing; inconclusive"; exit 3
+  fi
 )
 # Only the path is in the environment; the token stays in the file and Ray's memory, readable by
 # this account and root. Clearing variables does not erase a token previously exported or logged.
+```
+
+```bash
+# REASONED: the token-free job submission and the gRPC TLS checks follow the cited Ray 2.58.0 sources; no isolated cluster is available.
 # NEGATIVE: from a client with NO token available (no RAY_AUTH_TOKEN or RAY_AUTH_TOKEN_PATH set and no
 # ~/.ray/auth_token file), the same submit must be refused for AUTHENTICATION (HTTP 401); a connection
 # error (tunnel down, wrong address) is INCONCLUSIVE, not a pass:
-ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must fail with an auth rejection, e.g. "Unauthorized: Missing authentication token" (key on the auth reason, not a literal string)
+(                                       # a subshell, so the exits below end only the subshell
+  if [ -n "${RAY_AUTH_TOKEN+set}" ] || [ -n "${RAY_AUTH_TOKEN_PATH+set}" ] ||
+     [ -e "${HOME-}/.ray/auth_token" ] || [ -L "${HOME-}/.ray/auth_token" ]; then
+    echo 'this client has a token (RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH or ~/.ray/auth_token); run this from a client with none; not submitting'; exit 2
+  fi
+  set -- "$(if ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # must fail with an auth rejection, e.g. "Unauthorized: Missing authentication token" (the block matches the word unauthorized in any letter case)
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"   # ray's output and errors, then its exit status
+  printf '%s' "$1"
+  case "$2" in
+    0) echo "FINDING: the token-free submit was accepted"; exit 1 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    *unauthorized*) echo "ray job submit exit $2 with an Unauthorized rejection: refused for authentication; nothing in this submit is left to judge, but if you set RAY_USE_TLS=1, run the gRPC TLS health-check pair below by hand"; exit 0 ;;
+    *) echo "ray job submit exit $2 without an Unauthorized rejection: a connection or other error is inconclusive; read it above"; exit 3 ;;
+  esac
+)
 # gRPC TLS (only if you set RAY_USE_TLS=1 in step 4): the socket checks above do not prove the gRPC layer is
 # encrypted. Confirm it the way Ray's docs show, running `ray health-check` once with the correct
 # RAY_TLS_CA_CERT (succeeds) and once with a MISMATCHED CA or server name (Ray demonstrates a
 # certificate-name mismatch), which must fail verification; a local configuration error is inconclusive.
 ```
 
+### Direct agent token control
+
 REASONED: direct-agent target selection from the cited static-route and token middleware sources; no live head/worker agents or trusted forwarding path. **Direct agent token control, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. On every non-minimal head and worker, use a trusted path directly to that node's agent HTTP port, not the head dashboard or its proxy. Run on the node against its resolved localhost, or use a dedicated SSH forward to that agent; the step 1 forward for 8265 does not forward 52365. Substitute an origin such as `http://127.0.0.1:52365` (or its actual address and configured port), without a trailing slash. Send a token only over the trusted path.
 
 REASONED: paired exposed anonymous, fixed authenticated and fixed anonymous expectations from the cited static-route and token middleware sources; no live agent or cluster token. In an isolated exposed state with token mode off, select `anonymous`: a non-browser GET to `/logs/` should return 200 and the log directory index. With token mode on, first select `token` and supply the valid cluster token: expect the same access. Then select `anonymous` against that same live agent: expect 401. A connection error, 404, redirect, unexpected body or failed positive control is inconclusive; 403 is not the expected missing-token result. `/api/healthz` and `/api/local_raylet_healthz` are exempt and cannot discriminate token enforcement. These expectations follow the pinned static route and app-wide token middleware cited in Sources.
 
-REASONED: following block; direct-agent anonymous/token request preparation and the paired /logs/ controls follow the cited Ray sources; no live agent or cluster token. Bash 5.3.9 ran the complete subshell with curl replaced by printf LOCAL_CURL. With origin http://127.0.0.1:52365 and token mode, stdin containing an empty line, REPLACE_WITH_TOKEN or bad plus byte 0x01 plus value printed the token diagnostic without a marker; DUMMY_NOT_A_SECRET plus LF reached one marker. All exited 0. The anonymous branch accepted both that substituted origin and bad value; empty/original-placeholder origins and set -- without arguments skipped. These are local guard observations, not URL validation, HTTP status or authorization evidence. The Bash runs recorded here covered the direct-agent block in an earlier form, in which every guard refusal apart from the three token-preparation refusals ended with status 0; none was re-run on the current form, whose guard refusals all exit with status 2. This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history, and the block's `set +x` keeps it out of `set -x` tracing; none of these hides it from the account owner or root. Do not put the token in the pasted text. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+REASONED: following block; direct-agent anonymous/token request preparation and the paired /logs/ controls follow the cited Ray sources; no live agent or cluster token. Bash 5.3.9 ran the complete subshell with curl replaced by printf LOCAL_CURL. With origin http://127.0.0.1:52365 and token mode, stdin containing an empty line, REPLACE_WITH_TOKEN or bad plus byte 0x01 plus value printed the token diagnostic without a marker; DUMMY_NOT_A_SECRET plus LF reached one marker. All exited 0. The anonymous branch accepted both that substituted origin and bad value; empty/original-placeholder origins and set -- without arguments skipped. These are local guard observations, not URL validation, HTTP status or authorization evidence. The Bash runs recorded here covered the direct-agent block in an earlier form, in which every guard refusal apart from the three token-preparation refusals ended with status 0. The current form exits 2 on a guard refusal and 3 when the token read or the request fails; with `anonymous` it exits 0 on 401, in either mode it exits 0 on 200 with an unclassified-observation line, and any other response exits 3. The block does not match a 200's body, because the form of the log directory index that the pinned static route returns was not read from that source for this check, so read the body yourself: for `anonymous` the index is the exposure, for `token` it is the expected access, and any other body makes the result inconclusive. The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with curl replaced by a stub, in which an anonymous 401 and a 200 in either mode exited 0, an anonymous 403, a 404 and a failed request exited 3, and an empty token exited 2. This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history, and the block's `set +x` keeps it out of `set -x` tracing; none of these hides it from the account owner or root. Do not put the token in the pasted text. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
-# REASONED: direct agent token controls follow the cited Ray 2.58.0 sources; no isolated multi-node cluster is available.
 (
   trap - DEBUG RETURN ERR
   set +x +a +e
@@ -53613,28 +53898,38 @@ REASONED: following block; direct-agent anonymous/token request preparation and 
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the trusted agent origin; not probing"; exit 2 ;;
-    *) case "$2" in
-         anonymous)
-           curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 \
-             -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/logs/" || true ;;
-         token)
-           { unset -n RAY_AGENT_PROBE_TOKEN && unset -v RAY_AGENT_PROBE_TOKEN; } 2>/dev/null || { echo 'cannot clear token variable; not probing'; exit 2; }
-           { unset -n IFS; } 2>/dev/null || { echo 'cannot clear IFS attributes; not probing'; exit 2; }
-           IFS= read -r -s -p 'Cluster token: ' RAY_AGENT_PROBE_TOKEN || { echo 'token read failed; not probing'; exit 2; }
-           printf '\n'
-           case "$RAY_AGENT_PROBE_TOKEN" in
-             *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo 'empty, placeholder or control character in token; not probing'; exit 2 ;;
-             *) printf 'Authorization: Bearer %s\n' "$RAY_AGENT_PROBE_TOKEN" |
-                  curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 --header @- \
-                    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/logs/" || true ;;
-           esac ;;
-         *) echo 'mode must be anonymous or token; not probing'; exit 2 ;;
-       esac ;;
+  esac
+  case "$2" in
+    anonymous)
+      set -- "$1" "$2" "$(if curl -q -g -s --noproxy '*' --connect-timeout 5 --max-time 10 \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/logs/"; then printf '\n0'; else printf '\n%s' "$?"; fi)" ;;
+    token)
+      { unset -n RAY_AGENT_PROBE_TOKEN && unset -v RAY_AGENT_PROBE_TOKEN; } 2>/dev/null || { echo 'cannot clear token variable; not probing'; exit 2; }
+      { unset -n IFS; } 2>/dev/null || { echo 'cannot clear IFS attributes; not probing'; exit 2; }
+      IFS= read -r -s -p 'Cluster token: ' RAY_AGENT_PROBE_TOKEN || { echo 'token read failed; not probing'; exit 3; }
+      printf '\n'
+      case "$RAY_AGENT_PROBE_TOKEN" in
+        *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo 'empty, placeholder or control character in token; not probing'; exit 2 ;;
+      esac
+      set -- "$1" "$2" "$(if printf 'Authorization: Bearer %s\n' "$RAY_AGENT_PROBE_TOKEN" | curl -q -g -s --noproxy '*' \
+        --connect-timeout 5 --max-time 10 --header @- \
+        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1/logs/"; then printf '\n0'; else printf '\n%s' "$?"; fi)" ;;
+    *) echo 'mode must be anonymous or token; not probing'; exit 2 ;;
+  esac
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the origin, the mode, the response and curl's line, then curl's exit status
+  printf '%s' "$3"
+  set -- "$1" "$2" "$3" "$4" "${3%$'\n'}"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}"        # curl's write-out line alone
+  [ "$4" = 0 ] || { echo "curl exit $4: the request failed; inconclusive"; exit 3; }
+  case "$2:$5" in
+    'anonymous:http=401 '*) echo "the anonymous request was refused with 401; this is the pass only after the token run against this same agent answered 200"; exit 0 ;;
+    'anonymous:http=200 '*) echo "unclassified observation: the anonymous request answered 200, and this block does not match the body, because the form of the log directory index was not read from the pinned Ray source; read the body above: a log directory index is the exposure, and any other body makes this inconclusive"; exit 0 ;;
+    'token:http=200 '*) echo "unclassified observation: the token request answered 200, and this block does not match the body, because the form of the log directory index was not read from the pinned Ray source; read the body above, which must be the log directory index, then run anonymous against this same agent"; exit 0 ;;
+    'anonymous:http=403 '*) echo "HTTP 403 is not the expected missing-token result; inconclusive"; exit 3 ;;
+    *) echo "this response is not a result this check classifies for $2: a 404, redirect, other status or failed positive control is inconclusive"; exit 3 ;;
   esac
 )
 ```
-
-REASONED: mixed historical listener observations and unrun service comparisons from the cited Ray 2.58.0 sources; the four watcher-stopped attempts and local ss observations below are historical, were not repeated here and did not establish exposed/fixed behavior; no isolated cluster is available for the service comparisons. Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, with expected exposed and fixed outcomes derived from the cited Ray 2.58.0 sources and vendor documentation.
 
 ## Common mistakes
 
@@ -53779,7 +54074,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "01acc4bc09bf4a311a6603bd55081476548a46ab60f0d4755657d73843e80af9",
+  "body_sha256": "20627523910cb5b9e66607932b0490ab17d6041e9c4ad3639fb8e919c294110b",
   "components": {
     "ray": {
       "name": "Ray pinned source",
@@ -53996,11 +54291,11 @@ Claims (full source mapping in the JSON block below):
     "image-privilege": {"text": "Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation.", "components": ["ray"], "sources": ["ray:s08d31327265a"], "status": "REASONED"},
     "pod-security": {"text": "KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.", "components": ["kuberay", "kubernetes"], "sources": ["kuberay:s0a2d3e6aaea9", "kubernetes:sb78ea91d0308"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available.", "components": ["ray"], "sources": ["ray:s9a060fe08a53", "ray:s6f5310eb313d", "ray:s532a98227d6d", "ray:s7f27125f73b7", "ray:s434c7b4364dc"], "status": "REASONED", "verify": [1]},
-    "verify-external": {"text": "Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive.", "components": ["docs", "curl"], "sources": ["docs:sa5e2c2d58c12", "docs:s261570b2672b", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-jobs": {"text": "Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error.", "components": ["ray", "kuberay-auth"], "sources": ["ray:sed3f197cc1ef", "kuberay-auth:saf5247262bc7"], "status": "REASONED", "verify": [1]},
-    "verify-grpc-tls": {"text": "ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive.", "components": ["docs"], "sources": ["docs:s261570b2672b"], "status": "REASONED", "verify": [1]},
-    "verify-agent": {"text": "Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate.", "components": ["ray"], "sources": ["ray:s9976ecf5b1f1", "ray:s17bc66b5543e", "ray:sbca5ef4de0bb", "ray:sefae1a66c0dd"], "status": "REASONED", "verify": [2]},
-    "verify-token-secret": {"text": "Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory.", "components": ["ray", "curl"], "sources": ["ray:sed3f197cc1ef", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]}
+    "verify-external": {"text": "Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive.", "components": ["docs", "curl"], "sources": ["docs:sa5e2c2d58c12", "docs:s261570b2672b", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2, 3]},
+    "verify-jobs": {"text": "Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error.", "components": ["ray", "kuberay-auth"], "sources": ["ray:sed3f197cc1ef", "kuberay-auth:saf5247262bc7"], "status": "REASONED", "verify": [4, 5]},
+    "verify-grpc-tls": {"text": "ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive.", "components": ["docs"], "sources": ["docs:s261570b2672b"], "status": "REASONED", "verify": [5]},
+    "verify-agent": {"text": "Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate.", "components": ["ray"], "sources": ["ray:s9976ecf5b1f1", "ray:s17bc66b5543e", "ray:sbca5ef4de0bb", "ray:sefae1a66c0dd"], "status": "REASONED", "verify": [6]},
+    "verify-token-secret": {"text": "Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory.", "components": ["ray", "curl"], "sources": ["ray:sed3f197cc1ef", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [6]}
   }
 }
 ````
