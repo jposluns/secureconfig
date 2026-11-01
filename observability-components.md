@@ -699,8 +699,8 @@ There are two fixes, and you can use both:
 
 ## Verify
 
-REASONED: following block; this introduction and the TCP and UDP listener inventory below for every port it names, per the guide's cited node_exporter v1.12.1 source, Alertmanager v0.34.1 README, Pushgateway v1.11.3 README, Jaeger v2.21.0 ports and dskit pinned wildcard listener construction entries. No second host and no isolated network namespace were available, so no wildcard bind was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9, and its two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Exposed, a listed port shows a wildcard bind; fixed, loopback or a private address. The non-Loki loopback HTTP runs on 127.0.0.1 against the versions named at the top
-are declared DEMONSTRATED at the credential block below and were not repeated in this marking review. Those loopback runs used an earlier form of the credential block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run. All Loki checks are REASONED: the authoring host
+REASONED: following block; this introduction and the TCP and UDP listener inventory below for every port it names, per the guide's cited node_exporter v1.12.1 source, Alertmanager v0.34.1 README, Pushgateway v1.11.3 README, Jaeger v2.21.0 ports and dskit pinned wildcard listener construction entries. No second host and no isolated network namespace were available, so no wildcard bind was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9, and its two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. That review covered an earlier form of the block, two top-level commands with no exit status of their own; the current form, which runs both in a subshell that exits 1 for a named port on a wildcard address and 3 when either inventory fails, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes. Exposed, a listed port shows a wildcard bind; fixed, loopback or a private address. The non-Loki loopback HTTP runs on 127.0.0.1 against the versions named at the top
+are declared DEMONSTRATED at the credential block below and were not repeated in this marking review. Those loopback runs used an earlier form of the credential block, whose guard refusals ended with status 0 and whose results set no exit status; the current form, whose guard refusals exit with status 2 and which exits 1, 3 or 0 on its two results, has not been run against a service, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. All Loki checks are REASONED: the authoring host
 forbids opening listeners without an isolated network namespace, and has none. The default
 all-interfaces binds were not observed, so they are
 reasoned: the authoring host forbids binding every interface, so each run overrode the address to
@@ -712,12 +712,33 @@ observed. On the host:
 
 ```bash
 # REASONED: listener inventory expectations follow the cited sources and recorded loopback runs; wildcard binds and Loki listeners were not observed.
-sudo ss -tlnp   # loopback or a private address only: 9100 9093 9094 9091 3100 9095 7946, and
-                # Jaeger's 16686 16685 4317 4318 14250 14268 9411 5778 5779 13133 27777 27778 8888
-sudo ss -ulnp   # Alertmanager gossip also uses UDP 9094; Jaeger's Thrift receivers UDP 6831 and 6832
+(                 # a subshell, so the exit below ends only the subshell
+  set +e          # errexit off here, so each result below is recorded instead of ending the block
+  set -- 0 "$(if sudo ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), the TCP table, then its exit status
+  printf '%s' "$2"   # loopback or a private address only: 9100 9093 9094 9091 3100 9095 7946, and
+                     # Jaeger's 16686 16685 4317 4318 14250 14268 9411 5778 5779 13133 27777 27778 8888
+  [ "$3" = 0 ] || { echo "sudo ss -tlnp exit $3: the TCP inventory failed; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk -v ports=' 9100 9093 9094 9091 3100 9095 7946 16686 16685 4317 4318 14250 14268 9411 5778 5779 13133 27777 27778 8888 ' 'NR > 1 { p = $4; sub(/.*:/, "", p); h = substr($4, 1, length($4) - length(p) - 1); if ((h == "*" || h == "0.0.0.0" || h == "[::]") && index(ports, " " p " ")) found = 1 } END { exit !found }'; then
+    echo "FINDING: a TCP port named above is bound to a wildcard address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the TCP table; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  set -- "$1" "$(if sudo ss -ulnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status so far, the UDP table, then its exit status
+  printf '%s' "$2"   # Alertmanager gossip also uses UDP 9094; Jaeger's Thrift receivers UDP 6831 and 6832
+  [ "$3" = 0 ] || { echo "sudo ss -ulnp exit $3: the UDP inventory failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk -v ports=' 9094 6831 6832 ' 'NR > 1 { p = $4; sub(/.*:/, "", p); h = substr($4, 1, length($4) - length(p) - 1); if ((h == "*" || h == "0.0.0.0" || h == "[::]") && index(ports, " " p " ")) found = 1 } END { exit !found }'; then
+    echo "FINDING: a UDP port named above is bound to a wildcard address"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the UDP table; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  echo "block exit $1; whether a specific address is private, and every port not named above, are not classified, so judge them yourself"
+  exit "$1"
+)
 ```
 
-REASONED: preceding block; the expected inventory results for every TCP and UDP port the block names, per the same cited listener sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. That stub run used an earlier form of the following block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
+REASONED: preceding block; the expected inventory results for every TCP and UDP port the block names, per the same cited listener sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. That stub run used an earlier form of the following block, whose guard refusals ended with status 0, and was not repeated on the current form, whose guard refusals exit with status 2 and which exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
 and likewise for the others. Fixed means a loopback or private address. Then probe from a host that
 should not have access. The block refuses to run until you substitute the address.
 
@@ -731,27 +752,38 @@ REASONED: following block; external probes follow the cited listener and authent
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the service address on the set -- line above; not probing"; exit 2 ;;
-    *) for u in "http://$1:9100/metrics" "http://$1:9093/api/v2/status" "http://$1:9091/metrics" \
-                "http://$1:16686/api/v3/services" "http://$1:3100/config"; do
-         curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
-           -w "$u http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "$u"
-       done ;;
+    *) set +e                  # errexit off here, so each result below is recorded instead of ending the block
+       set -- 0 "http://$1:9100/metrics" "http://$1:9093/api/v2/status" "http://$1:9091/metrics" \
+                "http://$1:16686/api/v3/services" "http://$1:3100/config"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the URLs still to probe
+       while [ "$#" -gt 1 ]; do
+         set -- "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
+           -w "$2 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+         printf '%s' "${1%$'\n'*}"   # this URL's line; the capture is followed by the status so far and the URLs
+         case "${1##*$'\n'}:${1%$'\n'*}" in
+           *' http=200 '*) echo "FINDING: $3 answered an unauthenticated request with 200"; set -- "$1" 1 "${@:3}" ;;
+           0:*|7:*|28:*) ;;          # another status, or a refused or timed-out connection: judged below
+           *) echo "curl exit ${1##*$'\n'}: the request to $3 failed in some other way; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+         esac
+         set -- "$2" "${@:4}"
+       done
+       echo "block exit $1; every status other than 200, including 401 and a Loki 401 without a tenant header, and each refused or timed-out connection, whose err text must show it failed while connecting, are not classified, so judge them yourself"
+       exit "$1" ;;
   esac
 )
 ```
 
-REASONED: preceding block; the second-host probes of node_exporter, Alertmanager, Pushgateway, Jaeger and Loki and the Loki tenant-header repeat, per the guide's cited Prometheus security model, Exporter toolkit v0.17.1 web configuration, Jaeger 2.21 security and Loki v3.7.8 authentication entries. The authoring environment had no second host and no Loki listener. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: without its set -- line it printed the paste-the-whole-block refusal, and with 203.0.113.10 substituted the stub received the five URLs in order. The bash -n and stub runs recorded here covered the probe block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. The expected exposed and fixed results are those stated here. Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
+REASONED: preceding block; the second-host probes of node_exporter, Alertmanager, Pushgateway, Jaeger and Loki and the Loki tenant-header repeat, per the guide's cited Prometheus security model, Exporter toolkit v0.17.1 web configuration, Jaeger 2.21 security and Loki v3.7.8 authentication entries. The authoring environment had no second host and no Loki listener. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: without its set -- line it printed the paste-the-whole-block refusal, and with 203.0.113.10 substituted the stub received the five URLs in order. The bash -n and stub runs recorded here covered the probe block in an earlier form, whose guard refusals ended with status 0, and the stub runs were not repeated on the current form. The current form's guard refusals exit with status 2, it exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. The expected exposed and fixed results are those stated here. Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
 TLS, switch that URL to `https`. A `401` then means its authentication is on. From a host that should
 be blocked, a connection refusal or a connect timeout is consistent with isolation. Read the `err`
 text to confirm it happened while connecting, not in a local proxy or policy. The write-out fields need
 curl 7.75.0 or newer. For Loki, a `401` without a tenant header proves nothing. Repeat the Loki probe
 with `-H 'X-Scope-OrgID: anyone'` added, and treat a `200` as exposure.
 
-REASONED: the positive-control and stdin-password instructions for the following credential pair, per the guide's cited Exporter toolkit v0.17.1 web configuration entry. The pair itself is declared below from the guide's recorded loopback runs; this marking review did not repeat them. During marking review (October 2026) that block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-URL refusal; an http:// URL drew the use-an-https-URL refusal; a user containing a colon was refused; and with dummy values the password reached curl only on stdin as an escaped user line, never in argv. The bash -n and stub runs recorded here covered the credential block in an earlier form, whose guard refusals ended with status 0; none was re-run on the current form, whose guard refusals exit with status 2. Exposed, the request without credentials returns 200; fixed, 401 without and 200 with credentials. Run the positive control from a host that should have access, so a dead service is not read as fixed.
+REASONED: the positive-control and stdin-password instructions for the following credential pair, per the guide's cited Exporter toolkit v0.17.1 web configuration entry. The pair itself is declared below from the guide's recorded loopback runs; this marking review did not repeat them. During marking review (October 2026) that block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-URL refusal; an http:// URL drew the use-an-https-URL refusal; a user containing a colon was refused; and with dummy values the password reached curl only on stdin as an escaped user line, never in argv. The bash -n and stub runs recorded here covered the credential block in an earlier form, whose guard refusals ended with status 0, and the stub runs were not repeated on the current form, whose guard refusals exit with status 2 and which exits 1, 3 or 0 on its two results; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Exposed, the request without credentials returns 200; fixed, 401 without and 200 with credentials. Run the positive control from a host that should have access, so a dead service is not read as fixed.
 The password reaches curl on stdin, not argv. Substitute inside the quotes, and add
 `--cacert /path/to/ca.crt` if the certificate is private.
 
-DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporter, Pushgateway, Alertmanager and Jaeger returned 401 without credentials and 200 with them. The loopback runs used an earlier form of the block, whose guard refusals ended with status 0; the current form, whose guard refusals exit with status 2, has not been run.
+DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporter, Pushgateway, Alertmanager and Jaeger returned 401 without credentials and 200 with them. The loopback runs used an earlier form of the block, whose guard refusals ended with status 0 and whose two results set no exit status; the current form, whose guard refusals exit with status 2 and which exits 1, 3 or 0 on those two results, has not been run against a service, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it.
 
 ```bash
 (
@@ -767,15 +799,33 @@ DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporte
   case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*|*:*) echo "substitute the user (no colon) on the set -- line above; not probing"; exit 2 ;; esac
   case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the password on the set -- line above; not probing"; exit 2 ;; esac
   set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}"
-  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}"
-  curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -w 'no credentials: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
-  printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
-    -w 'with credentials: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --config - "$1"
+  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}" 0   # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set +e                   # errexit off here, so each result below is recorded instead of ending the block
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -w 'no credentials: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's exit status, then its output
+  printf '%s' "$6"
+  case "$5:$6" in
+    0:*'http=401 '*) ;;
+    0:*'http=200 '*) echo "FINDING: the request without credentials returned 200"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "the request without credentials returned neither 401 nor 200; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the request without credentials failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$(if printf 'user = "%s:%s"\n' "$2" "$3" | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 \
+    -w 'with credentials: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --config - "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"
+  printf '%s' "$6"
+  case "$5:$6" in
+    0:*'http=200 '*) ;;
+    0:*) echo "the request with credentials did not return 200, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the request with credentials failed, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  echo "block exit $4; whether this host should have access is not checked"
+  exit "$4"
 )
 ```
 
-Fixed, `no credentials` is `401` and `with credentials` is `200`. The loopback runs gave exactly that
+DEMONSTRATED: preceding block; the recorded loopback HTTPS GETs gave the pair stated here on an earlier form of that block, as the declaration before the block records, and the Loki mTLS sentence below is a reasoned equivalent that did not run. Fixed, `no credentials` is `401` and `with credentials` is `200`. The loopback runs gave exactly that
 pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager
 `/api/v2/status` and Jaeger `/api/v3/services`. For Loki under mTLS, the REASONED equivalent is `--cert` and `--key` on an authorized client
 (`200`) against the same request without them, which fails in the handshake. This closes the argv
@@ -1298,7 +1348,7 @@ Claims (full source mapping in the JSON block below):
 - verify-inventory (REASONED; node, alert, push, jaeger, dskit): Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.
 - verify-external (REASONED; security, toolkit, jaeger-docs): External 200 exposes unauthenticated HTTP; HTTPS 401 shows auth, not isolation. Confirm connection failures and a permitted positive control.
 - verify-loki (REASONED; loki, curl): A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs.
-- verify-basic (DEMONSTRATED; node, push, alert, jaeger, toolkit): Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200.
+- verify-basic (DEMONSTRATED; node, push, alert, jaeger, toolkit): Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. The runs covered an earlier form, whose guard refusals ended with status 0 and whose results set no exit status; gate bash -n and ShellCheck passes cover the current form.
 - verify-loki-mtls (REASONED; loki, dskit): Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred.
 - verify-secret (REASONED; toolkit, curl): Basic-auth stdin closes argv exposure only; shell history, tracing and your own account's view of the process can still leak the password.
 
@@ -1307,7 +1357,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "26d6ad553224bb1f6f25d0261c96e04ca40861183a0ca5e56b7b5e514eeb5b95",
+  "body_sha256": "c9958df1ec85d47979216de4cd201b1297cac02fa2e35698574f4846fc29f24c",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -1815,7 +1865,7 @@ Claims (full source mapping in the JSON block below):
     "verify-inventory": {"text": "Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.", "components": ["node", "alert", "push", "jaeger", "dskit"], "sources": ["node:s896899f5a500", "alert:s0fd66cba968e", "push:s5c9f9745f42d", "jaeger:s5619bba2be59", "dskit:sb19d54a19636", "dskit:s23d81aeedf07"], "status": "REASONED", "verify": [1]},
     "verify-external": {"text": "External 200 exposes unauthenticated HTTP; HTTPS 401 shows auth, not isolation. Confirm connection failures and a permitted positive control.", "components": ["security", "toolkit", "jaeger-docs"], "sources": ["security:s3ffe42e99660", "toolkit:sbb86207a38e5", "jaeger-docs:s4969c5ffaa59"], "status": "REASONED", "verify": [2]},
     "verify-loki": {"text": "A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs.", "components": ["loki", "curl"], "sources": ["loki:s70975c2655fa", "loki:s057e686b00bb", "curl:s3db522258e44"], "status": "REASONED", "verify": [2]},
-    "verify-basic": {"text": "Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200.", "components": ["node", "push", "alert", "jaeger", "toolkit"], "sources": ["node:s896899f5a500", "push:s5c9f9745f42d", "alert:s120d6ecf3fcd", "jaeger:sc6f47d82b947", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "The loopback runs gave exactly that pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager `/api/v2/status` and Jaeger `/api/v3/services`.", "verify": [3]},
+    "verify-basic": {"text": "Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. The runs covered an earlier form, whose guard refusals ended with status 0 and whose results set no exit status; gate bash -n and ShellCheck passes cover the current form.", "components": ["node", "push", "alert", "jaeger", "toolkit"], "sources": ["node:s896899f5a500", "push:s5c9f9745f42d", "alert:s120d6ecf3fcd", "jaeger:sc6f47d82b947", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "The loopback runs gave exactly that pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager `/api/v2/status` and Jaeger `/api/v3/services`.", "verify": [3]},
     "verify-loki-mtls": {"text": "Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred.", "components": ["loki", "dskit"], "sources": ["loki:s70975c2655fa", "dskit:sd35a28be4391"], "status": "REASONED"},
     "verify-secret": {"text": "Basic-auth stdin closes argv exposure only; shell history, tracing and your own account's view of the process can still leak the password.", "components": ["toolkit", "curl"], "sources": ["toolkit:sbb86207a38e5", "curl:s5e1383feef7d", "curl:s82a34ee18632"], "status": "REASONED"}
   }
