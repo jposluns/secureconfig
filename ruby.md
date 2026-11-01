@@ -113,12 +113,12 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 
 ## Verify
 
-REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guard but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; no form before that one has a recorded run. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and its host part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl and ss and no network, also ran no deployment. In bash, the host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in the host part with 2 and the bash message before its probes, and the block exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found ss missing), which outranks 0
   (                                     # a subshell, so your own script arguments are untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -127,15 +127,19 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$1" 0                                               # the 2nd value is this part's status so far, ranked as above
     curl -q -g -sI "http://$1/" ||                              # 301 to https:// (force_ssl)
       { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
     set -- "$1" "$2" "$(if curl -q -g -sI "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"               # curl's exit status, then the headers
-    printf '%s' "$4" | grep -iE 'strict-transport|set-cookie'   # HSTS; secure; httponly; samesite=lax
+    if printf '%s' "$4" | grep -iE 'strict-transport|set-cookie'; then :; else   # HSTS; secure; httponly; samesite=lax
+      case "$?" in 1) ;; *) echo "grep could not filter the HTTPS headers; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;; esac
+    fi
     [ "$3" = 0 ] || { echo "curl exit $3: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
     set -- "$1" "$2" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/dashboard"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"              # curl's exit status, then the HTTP code
@@ -167,14 +171,19 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
     exit "$2"
   )
   case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
-  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
-  printf '%s' "$2"   # read every listener; puma/ruby: 127.0.0.1:3000 only (the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address on 3000 as loopback)
-  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
-  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
-    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+  if command -v ss >/dev/null; then
+    set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+    set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+    printf '%s' "$2"   # read every listener; puma/ruby: 127.0.0.1:3000 only (the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address on 3000 as loopback)
+    [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+    if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+      echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    else
+      case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    fi
   else
-    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
   fi
   if [ -f config/application.rb ]; then
     set -- "$1" "$(if git ls-files config/master.key; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # git prints nothing
@@ -190,7 +199,7 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
     echo "no config/application.rb here: run this block from the Rails app's root directory, where git ls-files looks for config/master.key; not checking"
     case "$1" in 0) set -- 2 ;; esac
   fi
-  echo "block exit $1; the redirect and HTTPS headers, a /sidekiq answer other than 200, and listeners on ports other than 3000 are not classified, so judge them yourself"
+  echo "block exit $1; the redirect and HTTPS headers, a /sidekiq answer other than 200, and listeners on ports other than 3000 (every listener, if ss is missing) are not classified, so judge them yourself"
   exit "$1"
 )
 ```
@@ -275,7 +284,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "874129ff33ca9c02b34457c1707ead550f16bbad728d7c1464081e16a72d0765",
+  "body_sha256": "795b66580b81a21c15e6063b8267847e6e75b43902e4512104b1fceab8ede4b1",
   "components": {
     "rails": {
       "name": "Rails documentation",

@@ -127,7 +127,8 @@ REASONED: following block; listener check, per the panel, Docker daemon and GitL
 
 ```bash
 (                                                   # a subshell, so the exits below end only this check
-  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the listeners
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0; a missing ss has already exited 2 above), then the listeners
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
   printf '%s' "$2"   # read every listener; 9443/9000/8000/3000/81/3001/2375/2376: 127.0.0.1 or absent, never 0.0.0.0
   [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; set -- 3 "$2" "$3"; }
@@ -151,9 +152,11 @@ REASONED: following block; listener check, per the panel, Docker daemon and GitL
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"                    # the host, curl's exit status, then the HTTP code
   printf '%s\n' "$3"
@@ -249,7 +252,7 @@ REASONED: following block; listener check, per the panel, Docker daemon and GitL
 )
 ```
 
-REASONED: preceding block; the GitLab initial-password-file check follows the cited GitLab source, and the listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons in the blocks above follow the cited panel and Docker daemon sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding. Each of the four blocks exits 1 for a finding, 3 for a failed or inconclusive check and otherwise 0, and a guard refusal exits 2; the Docker block also reports 2 when its certificate files are missing and nothing else in it was found or inconclusive. The last line of the listener, panel-login and Docker blocks names what each leaves for you to judge.
+REASONED: preceding block; the GitLab initial-password-file check follows the cited GitLab source, and the listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons in the blocks above follow the cited panel and Docker daemon sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding. Each of the four blocks exits 1 for a finding, 3 for a failed or inconclusive check and otherwise 0, and a guard refusal exits 2, as the listener block does when ss is not installed; the Docker block also reports 2 when its certificate files are missing and nothing else in it was found or inconclusive. The last line of the listener, panel-login and Docker blocks names what each leaves for you to judge.
 
 ## Sources (checked September 2026)
 
@@ -383,7 +386,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "32a8f20c985adc31a08be4451c760edf40f0f61cdb97cada2fa4bb710640466c",
+  "body_sha256": "adf7ad8a80aa173d02cc81a02884dc892d6eb65d764ad6693bb516b5d863b4b8",
   "components": {
     "portainer": {
       "name": "Portainer",

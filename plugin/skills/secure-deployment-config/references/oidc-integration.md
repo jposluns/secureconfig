@@ -113,7 +113,7 @@ The description also documents an account-level field. Its [get-the-authenticate
 
 ## Verify
 
-REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID Connect sources below; the protected-endpoint check needs an application deployment, which was not supplied for this metadata review. The guide records no live outcome; expected anonymous rejection is stated in the block.
+REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID Connect sources below; the protected-endpoint check needs an application deployment, which was not supplied for this metadata review. The guide records no live outcome; expected anonymous rejection is stated in the block. Those probes, with the expected outcomes in the block's comment, rest on the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, and so does this paragraph's framing of the negative tests after the block, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time the block's two lines, in an earlier form whose anonymous-admin probe named app.example.com, passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. The anonymous-admin probe now takes the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and both probes now run in one subshell that classifies them and exits with one status. On the classifying form before this change, which lowercased the host with `tr` before refusing a reserved name, bash -n and ShellCheck 0.11.0 passed in the repository's shell-block gate (`tools/check_shell_blocks.py`), and no run of its guard or classification was recorded. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and its anonymous-admin part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs on 2026-11-01 with no network. In bash, that part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probe. Under dash, that part refused every host name with 2 and the bash message before its probe, and the whole block exited 3, because dash reads the discovery part's `$'\n'` differently and that part reported an inconclusive result. In the bash runs the discovery part printed issuer and jwks_uri from a fixture discovery document that the curl stub returned. Negative tests, listed after the block, matter more than the happy path.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -147,9 +147,11 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$(if curl -q -g -sS -D - -o /dev/null -w '\n%{http_code}' "https://$1/admin"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "${1##*$'\n'}" "${1%$'\n'*}"                 # curl's exit status, then the headers and the HTTP code
     set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"            # curl's exit status, the headers, then the HTTP code
@@ -167,8 +169,6 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
   exit "$1"
 )
 ```
-
-REASONED: preceding block; the discovery and anonymous-admin probes in the block above, per the guide's cited Google OpenID Connect entry and OpenID Connect Core 1.0 and Discovery 1.0 entry, with the expected outcomes in the block's comment, and this paragraph's framing of the negative tests below, which carry their own declarations. The authoring environment has no network access and no application deployment, so neither probe was sent. At marking time the block's two lines, in an earlier form whose anonymous-admin probe named app.example.com, passed bash -n and ShellCheck 0.11.0, and the jq filter printed issuer and jwks_uri from a fixture discovery document and printed nothing, with exit 0, for empty input, so empty output means a failed fetch, not a pass. The anonymous-admin probe now takes the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and both probes now run in one subshell that classifies them and exits with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. Negative tests matter more than the happy path:
 
 - REASONED: allowlist refusal per the guide's cited Google OpenID Connect, Microsoft identity platform ID token claims reference, GitHub REST organization and team members, and Okta groups claim entries, with the expected outcome stated in this item. No application deployment and no provider accounts outside an allowlist are available in the authoring environment, and this item names no command, so no part of it ran locally. Sign in with a valid account outside the allowlist (a personal Gmail, another Entra tenant, a GitHub user outside the org, an Okta user outside the group): the provider authenticates, your app refuses and logs the identity.
 - REASONED: exact redirect-URI matching per the guide's cited RFC 9700 and the cited Microsoft identity platform OpenID Connect and GitHub OAuth apps authorizing entries; no client registered at any provider is available in the authoring environment, so no authorization request was sent, and this item names no command. A redirect to the edited URI is the exposed state and the provider error the fixed one. Edit `redirect_uri` in the authorization URL (add a path segment or change the host): the provider shows an error and never redirects.
@@ -302,7 +302,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "fc047e089aa5d607723d5bb29210926602beeccd78b3fec8a7b60e6388da0e2f",
+  "body_sha256": "6333a88ccbfb517faafea9d5e52afb55889b80c72c36be40705e0e4a3cf17427",
   "components": {
     "core": {
       "name": "OpenID Connect Core",
