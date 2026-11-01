@@ -172,7 +172,7 @@ unpublished wherever these run.
 
 ## Verify
 
-REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. The bash -n run recorded here covered the guarded probe block in an earlier form, whose guard refusals left the subshell with status 0; bash -n was not re-run on the current form of that block, whose guard refusals leave the subshell with status 2. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
+REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. The bash -n and ss runs recorded here covered both blocks in earlier forms: the inventory then ran ss at top level with no status of its own, and the guarded probe block's guard refusals left the subshell with status 0. The current forms of both blocks pass bash -n and ShellCheck 0.11.0 in the repository's gate suite, which runs both over every block. Stub runs of the current inventory with no network, in a clean shell and under an inherited `set -e`, `readonly` and `declare -i`, exited 0 when the stub ss listed only loopback listeners, 1 when it listed a named port on a wildcard address, 3 when it failed and 2 when ss was missing. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. The inventory block exits 1 when a port it names is bound to a wildcard address, 3 when ss fails, 2 when ss is not installed, so nothing is listed, and otherwise 0, leaving every other address for you to judge. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
 without an isolated network namespace, and has none. No exposed or fixed service was run.
 Each names its expected exposed and fixed result so
 it discriminates when run against a live instance, based on the cited vendor documentation and pinned sources. Run each
@@ -184,48 +184,87 @@ local policy blocked the probe or a slow response outlasted `--max-time`. These 
 curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 
 ```bash
-# REASONED: listener inventory follows the cited vendor documentation and pinned sources;
+# Listener inventory, REASONED as the paragraph above records: it follows the cited vendor documentation and pinned sources;
 # the authoring host lacks an isolated network namespace for authorized live listeners.
 # On the host: these listeners should be bound to loopback or an internal interface, not a wildcard.
-# Add the distributed Grid ports (5553, 5556, 5557, 5559) and your Playwright port if you run them.
-ss -tlnp   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900: loopback or internal only
+# The block also checks the distributed Grid ports (5553, 5556, 5557, 5559); judge your Playwright port yourself if you run it.
+(                                   # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  set -- 0 "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0; a missing ss has already exited 2 above), then the listeners
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+  printf '%s' "$2"   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900/5553/5556/5557/5559: loopback or internal only
+  [ "$3" = 0 ] || { echo "ss -tlnp exit $3: the listener inventory failed; inconclusive"; set -- 3 "$2" "$3"; }
+  if printf '%s' "$2" | awk '$4 ~ /:(9222|4442|4443|4444|5555|3000|5900|7900|5553|5556|5557|5559)$/ && ($4 ~ /^0\.0\.0\.0:/ || index($4, "*:") == 1 || index($4, "[::]:") == 1 || index($4, ":::") == 1) { print; found = 1 } END { exit !found }'; then
+    echo "FINDING: the rows just above bind a port this block names to a wildcard address, the exposed state"; set -- 1 "$2" "$3"
+  else
+    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+  fi
+  echo "block exit $1; every address that is not a wildcard, and your Playwright port, is left for you to judge"
+  exit "$1"
+)
 ```
 
-REASONED: preceding block; the listener inventory above for every port it names, and this DevTools TCP listener check, per the guide's cited Chromium 154.0.8037.57 entries for the browser loopback factories, the headless-shell loopback factory and the actual bound address and DevToolsActivePort output. The same REASONED marking also rests on the guide's cited Selenium Grid getting started, Selenium Docker images env vars and browserless Docker configuration entries for the other ports. A google-chrome binary of unchecked version is present in the authoring environment, but no isolated network namespace was available (creating one was refused), so no DevTools listener or forwarder was started and neither state was observed; the expected exposed and fixed results are those stated here. **REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
+### DevTools listener and service probes
+
+REASONED: the listener inventory above for every port it names, and this DevTools TCP listener check, per the guide's cited Chromium 154.0.8037.57 entries for the browser loopback factories, the headless-shell loopback factory and the actual bound address and DevToolsActivePort output. The same REASONED marking also rests on the guide's cited Selenium Grid getting started, Selenium Docker images env vars and browserless Docker configuration entries for the other ports. A google-chrome binary of unchecked version is present in the authoring environment, but no isolated network namespace was available (creating one was refused), so no DevTools listener or forwarder was started and neither state was observed; the expected exposed and fixed results are those stated here. **REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
 `127.0.0.1` or `::1` for the DevTools TCP listener. Inspect both address families and every actual
 port, including ephemeral ports, plus forwarders in the host and container network namespaces.
 Exposed, a forwarder supplies a reachable non-loopback listener; fixed, no unauthenticated external
 path remains while the local browser endpoint still answers. The pinned socket factories and HTTP
 handler below establish these expected results.
 
-REASONED: the guard and substitution instructions for the DevTools, Grid, browserless and Playwright probes, per the guide's cited curl diagnostic variables entry (pinned tag curl-8_14_1) and Chromium 154.0.8037.57 host check entry. During marking review (October 2026) the guarded block ran in bash 5.3.9 with a stub curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with two values, the exactly-1-value refusal. The guarded block's marking-review testing (October 2026, bash 5.3.9, stub curl, no network) also showed that, with 203.0.113.10 substituted, the stub received http://203.0.113.10:9222/json/version, and the 4444/status and 3000/pressure edits reached the stub as written. The stub runs recorded here covered the guarded block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No endpoint was probed, so the exposed and fixed results below remain unobserved. For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
+REASONED: the guard and substitution instructions for the DevTools, Grid, browserless and Playwright probes, per the guide's cited curl diagnostic variables entry (pinned tag curl-8_14_1) and Chromium 154.0.8037.57 host check entry. During marking review (October 2026) the guarded block ran in bash 5.3.9 with a stub curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with two values, the exactly-1-value refusal. The guarded block's marking-review testing (October 2026, bash 5.3.9, stub curl, no network) also showed that, with 203.0.113.10 substituted, the stub received http://203.0.113.10:9222/json/version, and the 4444/status and 3000/pressure edits reached the stub as written. The stub runs recorded here covered the guarded block in an earlier form, which took one value, ended with curl's own status and whose guard refusals left the subshell with status 0; none was re-run on the current form, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. No endpoint was probed, so the exposed and fixed results below remain unobserved. For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
 forces a real substitution, and read the write-out. Replace `9222` in the curl URL with the actual
-externally forwarded port if different. For the local positive control, run the same guarded block
-inside the browser's network namespace with its actual loopback address and DevTools port.
-Substitute an IP literal, not a name, for the DevTools probe, because the endpoint rejects a forwarded
-`Host` that is not an address or localhost.
+externally forwarded port if different. Substitute `external` as the block's second value for the
+probe from another host. For the local positive control, run the same guarded block inside the
+browser's network namespace with its actual loopback address and DevTools port, and `control` as its
+second value. Substitute an IP literal, not a name, for the DevTools probe, because the endpoint
+rejects a forwarded `Host` that is not an address or localhost.
 
 REASONED: following block; external discovery/authentication probes and local positive controls follow the cited vendor documentation and pinned sources; the authoring host has no isolated network namespace for authorized live listeners.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP' 'REPLACE_WITH_external_OR_control'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$2" in
+    external|control) : ;;
+    *) echo "substitute external (the probe from another host) or control (the local positive control) as the second value on the set -- line above; not probing"; exit 2 ;;
+  esac
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:9222/json/version" ;;
+    *) set -- "$1" "$2" "$(if curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
+         -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:9222/json/version"; then printf '\n0'; else printf '\n%s' "$?"; fi)" ;;
   esac
+  set -- "$2" "${3##*$'\n'}" "${3%$'\n'*}"       # external or control, then curl's exit status and its output
+  printf '%s' "$3"
+  set -- "$1" "$2" "${3%$'\n'}"
+  set -- "$1" "$2" "${3##*$'\n'}"                # external or control, curl's exit status, then its http= exit= err= line
+  case "$1:$2:$3" in
+    external:0:"http=404 "*) echo "HTTP 404: approval mode's 404 is not a pass, and this block cannot tell it from another 404; inconclusive"; set -- 3 ;;
+    external:0:*) echo "FINDING: an HTTP answer from this vantage, so the endpoint is reachable, which is not the fixed state"; set -- 1 ;;
+    external:7:*) echo "curl exit 7: no connection from this vantage, consistent with isolation but not proof of the configuration; read err to confirm the target refused it, and run the local positive control"; set -- 0 ;;
+    control:0:"http=2"??" "*) echo "the positive control answered; read its body (for DevTools, JSON containing webSocketDebuggerUrl)"; set -- 0 ;;
+    control:0:*) echo "the positive control did not answer with a 2xx, so it failed; inconclusive"; set -- 3 ;;
+    *) echo "curl exit $2: a transport failure is inconclusive on its own, and a timeout may have come after the connect; read err"; set -- 3 ;;
+  esac
+  echo "block exit $1; the headers and body above are left for you to judge against the expectations for the port you probed"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries. The same REASONED marking also rests on the guide's cited browserless pressure API entry, Playwright Docker entry, Playwright BrowserType.launchServer and connect entry, Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The guard-branch stub runs covered the guarded block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
+REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries. The same REASONED marking also rests on the guide's cited browserless pressure API entry, Playwright Docker entry, Playwright BrowserType.launchServer and connect entry, Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The guard-branch stub runs covered the guarded block in an earlier form, which took one value, ended with curl's own status and whose guard refusals left the subshell with status 0; none was re-run on the current form, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
 a `200` JSON body containing `webSocketDebuggerUrl`. Fixed, the external request cannot reach that
 endpoint while the local positive control still returns it. A `404` from approval mode is not a pass.
 A connection refused or a timeout that happened during the connect is consistent with
-isolation from that vantage, not proof of the configuration. To check the other services, change the
+isolation from that vantage, not proof of the configuration. With `external`, the block exits 1
+for any HTTP answer except a `404`; 3 for a `404`, which it cannot tell from approval mode's, and
+for any failure other than curl exit 7, including a timeout it cannot place before or after the
+connect; and 0 for curl exit 7, which it reports as consistent with isolation but not proof. A
+`404` from a Playwright port, which is already the finding, therefore also exits 3. With
+`control`, it exits 0 for a `2xx` answer and 3 otherwise. To check the other services, change the
 URL in the block's `curl` line, leaving the guard lines intact, to each port in turn:
 `http://$1:4444/status` for a Selenium Grid Router, Hub or Standalone, `http://$1:5555/status`
 for a Node, `http://$1:3000/pressure` for open-source browserless `2.56.7`. The Selenium Grid
@@ -374,7 +413,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "c308bf3c69ad03d227fe1a8eb27eb04d1d2b20999e0e6030393a9db716ec3fe7",
+  "body_sha256": "c495bd437a18c4742276a20cc1088a8a65f8024e968e1f0c5649a1bc160c292d",
   "components": {
     "chromium": {
       "name": "Chromium",

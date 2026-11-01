@@ -133,34 +133,112 @@ probes. Every check that needs a live registered runner or worker is reasoned, n
 environment has no container runtime, registered test runner, or cloud test infrastructure, so those outcomes
 are derived from the cited vendor pages rather than observed. Offline outcomes are recorded below: `tomllib` fixtures,
 jq filters on synthetic REST-shaped JSON, a PyYAML parse of the probe workflow, a stub `glab` run, the canary commands, plain ss -tln without sudo listing this host's listeners, the guarded listener block with stub `sudo` and `curl`, and bash -n and ShellCheck syntax checks.
+Those records say which form each run covered; the current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October 2026 stub runs recorded at each block.
 Require successful, complete listings; authentication errors, unavailable endpoints, and incomplete pagination
 are inconclusive. Run the REST and config checks from an administrator workstation using stored CLI credentials.
 
 REASONED: eligibility semantics per the guide's cited GitHub self-hosted runner groups REST API and runner groups and access entries; no GitHub organization or registered test runner is available in the authoring environment, so no listing was read. At marking time the three jq filters in the block below, run with jq 1.8.1 on synthetic REST-shaped JSON, printed the named fields, including allows_public_repositories true for an exposed group and false for a fixed one; the gh client's own --jq handling was not exercised. GitHub eligibility: `visibility: all` does not by itself mean public access, and `allows_public_repositories`
 is a separate control, so list every runner group, then each selected group's repositories, then every public
-repository's own runners (a repository-level runner belongs to no group).
+repository's own runners (a repository-level runner belongs to no group). Those filter runs predate the
+block's guarded values and exit status, though its three filters are unchanged.
 
-REASONED: following block; GitHub eligibility audit follows the cited runner-group and runner REST documentation; no registered test runner or cloud test infrastructure was available.
+REASONED: following block; GitHub eligibility audit follows the cited runner-group and runner REST documentation; no registered test runner or cloud test infrastructure was available. The block takes your organization's login, a runner group ID and a public repository's owner and name on a guarded `set --` line. It records a finding (1) when any runner group shows `allows_public_repositories` true, the exposed reading above, and 3 when a listing fails or the group listing shows no such value; the groups' other fields, the group's repositories and the repository's own runners are left for you to judge. This form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs with gh stubbed: a group listing showing only false exited 0, one group showing true exited 1 (also when a later listing failed), a failed listing or a listing without the field exited 3, and each `set --` refusal exited 2 before any gh call.
 
 ```bash
-gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WITH_ORG/actions/runner-groups --jq '.runner_groups[] | {id, name, visibility, allows_public_repositories, inherited, restricted_to_workflows, selected_workflows}'
-gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WITH_ORG/actions/runner-groups/REPLACE_WITH_GROUP_ID/repositories --jq '.repositories[] | {id, full_name, visibility}'
-gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/runners --jq '.runners[] | {id, name, status}'
+(                                       # the whole block in one subshell, so one exit status covers all three listings
+  set +e                                # errexit off here, so a listing that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORG' 'REPLACE_WITH_GROUP_ID' 'REPLACE_WITH_OWNER' 'REPLACE_WITH_REPO'   # your organization's login, a runner group ID (the first listing prints them), then the owner and name of a public repository: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-]*) echo "substitute your organization's login (letters, digits and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|*[!0123456789]*) echo "substitute a runner group ID (digits) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-]*) echo "substitute the repository owner's login (letters, digits and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$4" in
+    ""|.|..|*REPLACE_WITH_*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo "substitute the repository name (letters, digits, dots, underscores and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' "/orgs/$1/actions/runner-groups" --jq '.runner_groups[] | {id, name, visibility, allows_public_repositories, inherited, restricted_to_workflows, selected_workflows}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # gh's exit status, then the group listing
+  printf '%s\n' "$7"
+  case "$6:$7" in
+    0:*'"allows_public_repositories":true'*|0:*'"allows_public_repositories": true'*) echo "FINDING: a runner group allows public repositories"; set -- "$1" "$2" "$3" "$4" 1 ;;
+    0:*'"allows_public_repositories":false'*|0:*'"allows_public_repositories": false'*) ;;
+    0:*) echo "the group listing showed no allows_public_repositories value; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+    *) echo "gh exit $6: the runner-group listing failed; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
+  gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' "/orgs/$1/actions/runner-groups/$2/repositories" --jq '.repositories[] | {id, full_name, visibility}' ||
+    { echo "gh exit $?: the group's repository listing failed; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3; }
+  gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' "/repos/$3/$4/actions/runners" --jq '.runners[] | {id, name, status}' ||
+    { echo "gh exit $?: the repository's runner listing failed; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3; }
+  echo "block exit $5; each group's other fields, the group's repositories and the repository's own runners are not classified, so judge them yourself"
+  exit "$5"
+)
 ```
 
-REASONED: following block; the repository review in this paragraph and the organization and repository workflow-permission reads in the block below, per the guide's cited GitHub GITHUB_TOKEN permissions and GitHub self-hosted runner groups and access entries; no GitHub organization or repository is available in the authoring environment, so no setting was read. At marking time the block passed bash -n and ShellCheck 0.11.0, and its jq filter on synthetic JSON printed write and true for an exposed posture and read and false for a fixed one. Check every selected repository's visibility and trust level, including inherited groups: a public repository
+REASONED: following block; the repository review in this paragraph and the organization and repository workflow-permission reads in the block below, per the guide's cited GitHub GITHUB_TOKEN permissions and GitHub self-hosted runner groups and access entries; no GitHub organization or repository is available in the authoring environment, so no setting was read. At marking time the block passed bash -n and ShellCheck 0.11.0, and its jq filter on synthetic JSON printed write and true for an exposed posture and read and false for a fixed one. Those runs covered the block's earlier form. The current form takes your organization's login and a repository's owner and name on a guarded `set --` line, records a finding (1) when either read shows write or true and 3 when a read fails or shows neither value, and exits 0 for read and false in both. It reports `can_approve_pull_request_reviews` true as a finding (a finding unless your workflows require it), so where they do, the block exits 1 and that FINDING line is the expected setting for you to judge. It is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs with gh stubbed: read and false in both exited 0, write or true in either exited 1, a failed read or unrecognized output exited 3, and each `set --` refusal exited 2. Check every selected repository's visibility and trust level, including inherited groups: a public repository
 must have neither a repository-level self-hosted runner nor access through a group, and private or internal
 repositories still need review of who can submit executable workflow code. Then confirm the default token
 posture and that workflow approval of pull requests is off unless required (a workflow can still raise its own
 permissions with an explicit `permissions:` key, and OIDC `id-token` is separate):
 
 ```bash
-# REASONED: GitHub configuration audit follows the cited vendor pages; no registered test runner or cloud test infrastructure is available.
-gh api -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WITH_ORG/actions/permissions/workflow --jq '{default_workflow_permissions, can_approve_pull_request_reviews}'
-gh api -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/permissions/workflow --jq '{default_workflow_permissions, can_approve_pull_request_reviews}'
+(                                       # the whole block in one subshell, so one exit status covers both reads
+  set +e                                # errexit off here, so a read that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORG' 'REPLACE_WITH_OWNER' 'REPLACE_WITH_REPO'   # your organization's login, then the owner and name of a repository: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-]*) echo "substitute your organization's login (letters, digits and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-]*) echo "substitute the repository owner's login (letters, digits and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|.|..|*REPLACE_WITH_*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo "substitute the repository name (letters, digits, dots, underscores and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" "$4" "$(if gh api -H 'X-GitHub-Api-Version: 2026-03-10' "/orgs/$1/actions/permissions/workflow" --jq '{default_workflow_permissions, can_approve_pull_request_reviews}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # gh's exit status, then the organization's settings
+  printf '%s\n' "$6"
+  case "$5:$6" in
+    0:*'"default_workflow_permissions":"write"'*|0:*'"default_workflow_permissions": "write"'*|0:*'"can_approve_pull_request_reviews":true'*|0:*'"can_approve_pull_request_reviews": true'*)
+      echo "FINDING: the organization's default token can write or workflows can approve pull requests"; set -- "$1" "$2" "$3" 1 ;;
+    0:*'"default_workflow_permissions":"read"'*|0:*'"default_workflow_permissions": "read"'*)
+      case "$6" in
+        *'"can_approve_pull_request_reviews":false'*|*'"can_approve_pull_request_reviews": false'*) ;;
+        *) echo "the organization's settings showed no can_approve_pull_request_reviews value; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+      esac ;;
+    0:*) echo "the organization's settings showed no default_workflow_permissions value; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "gh exit $5: the organization's workflow-permission read failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$(if gh api -H 'X-GitHub-Api-Version: 2026-03-10' "/repos/$2/$3/actions/permissions/workflow" --jq '{default_workflow_permissions, can_approve_pull_request_reviews}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # gh's exit status, then the repository's settings
+  printf '%s\n' "$6"
+  case "$5:$6" in
+    0:*'"default_workflow_permissions":"write"'*|0:*'"default_workflow_permissions": "write"'*|0:*'"can_approve_pull_request_reviews":true'*|0:*'"can_approve_pull_request_reviews": true'*)
+      echo "FINDING: the repository's default token can write or workflows can approve pull requests"; set -- "$1" "$2" "$3" 1 ;;
+    0:*'"default_workflow_permissions":"read"'*|0:*'"default_workflow_permissions": "read"'*)
+      case "$6" in
+        *'"can_approve_pull_request_reviews":false'*|*'"can_approve_pull_request_reviews": false'*) ;;
+        *) echo "the repository's settings showed no can_approve_pull_request_reviews value; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      esac ;;
+    0:*) echo "the repository's settings showed no default_workflow_permissions value; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "gh exit $5: the repository's workflow-permission read failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  echo "block exit $4; each workflow's own permissions: key and its id-token grant are not shown here, so review them yourself"
+  exit "$4"
+)
 ```
 
-REASONED: following block; the eligibility workflow's expected behavior follows the cited vendor pages and is not demonstrated. The eligibility listing shows configuration; in an isolated test organization use a disposable runner with no sensitive credentials or internal
+REASONED: the eligibility workflow's expected behavior follows the cited vendor pages and is not demonstrated; the paragraph after the workflow below declares the workflow. The eligibility listing shows configuration; in an isolated test organization use a disposable runner with no sensitive credentials or internal
 network access, install this workflow in a public test repository, and open a controlled fork pull request.
 
 ```yaml
@@ -174,18 +252,33 @@ jobs:
       - run: printf '%s\n' eligibility-probe
 ```
 
-REASONED: preceding block; the eligibility-probe workflow above and the assignment comparison in this paragraph, per the guide's cited GitHub self-hosted runner groups and access, workflow-jobs REST API and events that trigger workflows entries. No isolated test organization, public test repository or disposable runner is available in the authoring environment, so no fork run was assigned or refused. At marking time PyYAML 6.0.3 parsed the workflow with empty permissions and the self-hosted and ci-audit-probe labels, reading its on key as boolean true under YAML 1.1, so this checked structure only, and the job-listing jq filter below printed a runner_id for an assigned synthetic job and null for an unassigned one. Assign `ci-audit-probe` to the test runner. With eligibility deliberately exposed the approved run must execute
+REASONED: preceding block; the eligibility-probe workflow above and the assignment comparison in this paragraph, per the guide's cited GitHub self-hosted runner groups and access, workflow-jobs REST API and events that trigger workflows entries. No isolated test organization, public test repository or disposable runner is available in the authoring environment, so no fork run was assigned or refused. At marking time PyYAML 6.0.3 parsed the workflow with empty permissions and the self-hosted and ci-audit-probe labels, reading its on key as boolean true under YAML 1.1, so this checked structure only, and the job-listing jq filter below printed a runner_id for an assigned synthetic job and null for an unassigned one. That filter run predates the listing block's guarded owner, repository and run ID values; that block now exits 3 when the listing fails and otherwise 0 with every job left for you to read, and it is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by October 2026 stub runs (a listing exited 0, a failed listing 3, each refusal 2). Assign `ci-audit-probe` to the test runner. With eligibility deliberately exposed the approved run must execute
 on it; after applying the private-repository restriction an equivalent fork run must not be assigned to it, and
 the same harmless job from an allowed private repository confirms the runner is still available. Inspect the
 assignment, and treat a skipped workflow, pending approval, offline runner, or queue timeout as inconclusive:
 
-REASONED: following block; assignment discrimination follows the cited workflow-jobs API and runner-group documentation; no registered test runner or cloud test infrastructure was available.
-
 ```bash
-gh api --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/runs/REPLACE_WITH_RUN_ID/jobs --jq '.jobs[] | {id, status, conclusion, runner_id, runner_group_id}'
+(                                       # a subshell, so the exits below end only the subshell
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_OWNER' 'REPLACE_WITH_REPO' 'REPLACE_WITH_RUN_ID'   # the owner and name of the repository the probe ran in, then the run's numeric ID: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-]*) echo "substitute the repository owner's login (letters, digits and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|.|..|*REPLACE_WITH_*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo "substitute the repository name (letters, digits, dots, underscores and hyphens) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|*[!0123456789]*) echo "substitute the run's numeric ID inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  gh api --paginate -H 'X-GitHub-Api-Version: 2026-03-10' "/repos/$1/$2/actions/runs/$3/jobs" --jq '.jobs[] | {id, status, conclusion, runner_id, runner_group_id}' ||
+    { echo "gh exit $?: the job listing failed; inconclusive"; exit 3; }
+  echo "block exit 0; each job's status, conclusion and runner assignment are not classified, so judge them yourself"
+)
 ```
 
-REASONED: following the cited GitLab and Docker documentation, inspect the configuration each runner service actually loads (custom paths and
+REASONED: preceding block; assignment discrimination in the job listing above follows the cited workflow-jobs API and runner-group documentation, and no registered test runner or cloud test infrastructure was available. Following the cited GitLab and Docker documentation, inspect the configuration each runner service actually loads (custom paths and
 deployment-generated config included); no live runner or daemon was tested. The inspection omits the runner `token` key, but reported fields are not redacted.
 `null` means absent from the inspected table only, not a secure default. Unexpected types are inconclusive until corrected, except for the two autoscaler keys, where anything other than integer `1` is flagged. Empty output, read/parse/structure errors and partial output before an error are inconclusive; exit 0 alone is not a safety verdict.
 `privileged = true`, `services_privileged = true`, or a host Docker socket mounted into a job is a finding. Unset `services_privileged` inherits `privileged`, so its `null` does not mean unprivileged services. The
@@ -197,36 +290,113 @@ Docker Autoscaler executor, flag either `capacity_per_instance` or `max_use_coun
 `1`; require both explicitly set to integer `1`, not a boolean, float or string.
 For Kubernetes, flag `privileged = true`; require `allow_privilege_escalation`, and where jobs do not need tokens `automount_service_account_token`, explicitly set to boolean `false` (a printed `null` means the key is unset, so the requirement is not met); check the `service_account` name against the intended RBAC restrictions.
 
-DEMONSTRATED: following block; the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only.
+DEMONSTRATED: following block; the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only. Those runs covered the block's earlier form, whose program printed these lines, ended with a traceback on any read, parse or structure error, and left the block's status to Python. The current program prints the same lines, then a FINDING line for each docker privileged or services_privileged true, docker.sock volume, Kubernetes runner with privileged true or without allow_privilege_escalation false, and Instance or Docker Autoscaler limit other than integer 1. It prints an inconclusive line for a wrong type in a classified Docker or Kubernetes key, an error or an empty runner list; the block exits 1 for any finding, otherwise 3 for any inconclusive line or when sudo or python3 does not run the program, otherwise 0. In October 2026 the current program ran without sudo on 21 synthetic config.toml cases using Python 3.14.4. The Docker privileged and socket-mount cases, the Kubernetes privileged and unset-escalation cases, the autoscaler null, 1/2, true and 1.0 cases, and a privileged runner followed by a structure error printed FINDING lines and exited 10. The fixed Docker, Kubernetes and autoscaler 1/1 cases, two fixed runners and a misplaced privileged key exited 0. Wrong-type strings, empty and runner-less files, a missing file, malformed TOML and a wrong section type printed inconclusive lines and exited 13, and no case printed the runner token. With sudo and python3 stubbed, the whole block turned 10, 13 and 0 into 1, 3 and 0, and exited 3 when sudo or python3 failed. The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by these October 2026 fixture and stub runs, which, like the earlier runs, demonstrate synthetic file inspection only.
 
 ```bash
-sudo python3 - /etc/gitlab-runner/config.toml <<'PYTOML'
+(                                       # a subshell, so the exits below end only the subshell
+  if sudo python3 - /etc/gitlab-runner/config.toml <<'PYTOML'
 import json, sys, tomllib
-with open(sys.argv[1], "rb") as source:
-    config = tomllib.load(source)
-for index, runner in enumerate(config.get("runners", [])):
-    fields = {
-        "docker": ("privileged", "services_privileged", "host", "volumes", "volumes_from", "devices", "cap_add", "security_opt", "pid_mode", "network_mode"),
-        "kubernetes": ("privileged", "allow_privilege_escalation", "automount_service_account_token", "service_account"),
-        "autoscaler": ("capacity_per_instance", "max_use_count"),
-    }
-    report = {"runner_index": index, "executor": runner.get("executor")}
-    for section, keys in fields.items():
-        report[section] = {key: runner.get(section, {}).get(key) for key in keys}
-    print(json.dumps(report))
+findings, doubts, count = list(), list(), 0
+try:
+    with open(sys.argv[1], "rb") as source:
+        config = tomllib.load(source)
+    for index, runner in enumerate(config.get("runners", [])):
+        fields = {
+            "docker": ("privileged", "services_privileged", "host", "volumes", "volumes_from", "devices", "cap_add", "security_opt", "pid_mode", "network_mode"),
+            "kubernetes": ("privileged", "allow_privilege_escalation", "automount_service_account_token", "service_account"),
+            "autoscaler": ("capacity_per_instance", "max_use_count"),
+        }
+        report = {"runner_index": index, "executor": runner.get("executor")}
+        for section, keys in fields.items():
+            report[section] = {key: runner.get(section, {}).get(key) for key in keys}
+        print(json.dumps(report))
+        count += 1
+        docker, kubernetes, autoscaler = report.get("docker"), report.get("kubernetes"), report.get("autoscaler")
+        for key in ("privileged", "services_privileged"):
+            if docker.get(key) is True:
+                findings.append(f"runner {index}: docker.{key} is true")
+            elif docker.get(key) is not None and docker.get(key) is not False:
+                doubts.append(f"runner {index}: docker.{key} is not a boolean")
+        volumes = docker.get("volumes")
+        if volumes is not None and not (isinstance(volumes, list) and all(isinstance(volume, str) for volume in volumes)):
+            doubts.append(f"runner {index}: docker.volumes is not a list of strings")
+        elif any("docker.sock" in volume for volume in volumes or ()):
+            findings.append(f"runner {index}: a docker.volumes entry mounts docker.sock")
+        if report.get("executor") == "kubernetes":
+            if kubernetes.get("privileged") is True:
+                findings.append(f"runner {index}: kubernetes.privileged is true")
+            elif kubernetes.get("privileged") is not None and kubernetes.get("privileged") is not False:
+                doubts.append(f"runner {index}: kubernetes.privileged is not a boolean")
+            if kubernetes.get("allow_privilege_escalation") is None or kubernetes.get("allow_privilege_escalation") is True:
+                findings.append(f"runner {index}: kubernetes.allow_privilege_escalation is not explicitly false")
+            elif kubernetes.get("allow_privilege_escalation") is not False:
+                doubts.append(f"runner {index}: kubernetes.allow_privilege_escalation is not a boolean")
+        if report.get("executor") in ("instance", "docker-autoscaler"):
+            for key in ("capacity_per_instance", "max_use_count"):
+                if type(autoscaler.get(key)) is not int or autoscaler.get(key) != 1:
+                    findings.append(f"runner {index}: autoscaler.{key} is {json.dumps(autoscaler.get(key))}, not integer 1")
+except Exception as error:
+    doubts.append(f"read, parse or structure error: {type(error).__name__}: {error}")
+if count == 0 and not doubts:
+    doubts.append("no [[runners]] entry was read")
+for line in findings:
+    print("FINDING: " + line)
+for line in doubts:
+    print("inconclusive: " + line)
+sys.exit(10 if findings else 13 if doubts else 0)
 PYTOML
+  then set -- 0; else set -- "$?"; fi    # Python exits 10 for a finding and 13 for an inconclusive result; any other nonzero status means sudo or python3 did not run the program
+  case "$1" in
+    0) echo "block exit 0; no classified finding, and the host, volumes_from, devices, cap_add, security_opt, pid_mode, network_mode, automount_service_account_token and service_account values are not classified, so judge them yourself"; exit 0 ;;
+    10) echo "block exit 1; the values this check does not classify are left for you to judge as well"; exit 1 ;;
+    13) echo "block exit 3; inconclusive, and the values this check does not classify are left for you to judge"; exit 3 ;;
+    *) echo "sudo python3 exit $1: the configuration was not inspected; inconclusive"; exit 3 ;;
+  esac
+)
 ```
 
-REASONED: following block; the ref_protected requirement in this paragraph and the job-token scope, allowlist and runner reads in the block below, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries; no GitLab instance, project or registered runner is available in the authoring environment, so nothing was read. At marking time the block passed bash -n and ShellCheck 0.11.0 and, against a stub glab, made four calls with its placeholders passed through unchanged, as it has no guard. A release runner at not_protected is the exposed state and ref_protected the fixed one. Read the GitLab job-token allowlist and runner scope from the API and require a release runner's `access_level`
+REASONED: the ref_protected requirement in this paragraph and the run records of the job-token scope, allowlist and runner reads in the block below, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries; no GitLab instance, project or registered runner is available in the authoring environment, so nothing was read. The paragraph after that block declares the block. At marking time the block's earlier form, which had no guard, passed bash -n and ShellCheck 0.11.0 and, against a stub glab, made four calls with its placeholders passed through unchanged. The current form takes the GitLab host, the project ID and a release runner's ID on a guarded `set --` line, records a finding (1) when the runner read shows not_protected and 3 when a read fails or the runner read shows neither value, and leaves the job-token scope and allowlists for you to judge. It is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs with glab stubbed: ref_protected exited 0, not_protected exited 1 (also when an earlier read failed), a failed read or a runner without access_level exited 3, and each `set --` refusal exited 2 before any glab call. A release runner at not_protected is the exposed state and ref_protected the fixed one. Read the GitLab job-token allowlist and runner scope from the API and require a release runner's `access_level`
 to be `ref_protected`, comparing against an isolated control with unrestricted inbound access or `not_protected`;
 `gitlab-runner verify` only confirms authentication, nothing about isolation.
 
 ```bash
-# REASONED: GitLab configuration audit follows the cited vendor pages; no registered test runner or cloud test infrastructure is available.
-glab api --hostname REPLACE_WITH_GITLAB_HOST projects/REPLACE_WITH_PROJECT_ID/job_token_scope
-glab api --hostname REPLACE_WITH_GITLAB_HOST --paginate projects/REPLACE_WITH_PROJECT_ID/job_token_scope/allowlist
-glab api --hostname REPLACE_WITH_GITLAB_HOST --paginate projects/REPLACE_WITH_PROJECT_ID/job_token_scope/groups_allowlist
-glab api --hostname REPLACE_WITH_GITLAB_HOST runners/REPLACE_WITH_RUNNER_ID
+(                                       # the whole block in one subshell, so one exit status covers all four reads
+  set +e                                # errexit off here, so a read that ends nonzero is folded into the status below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_GITLAB_HOST' 'REPLACE_WITH_PROJECT_ID' 'REPLACE_WITH_RUNNER_ID'   # your GitLab host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then the numeric project ID, then a release runner's numeric ID: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your GitLab host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*REPLACE_WITH_*|*[!0123456789]*) echo "substitute the numeric project ID inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|*[!0123456789]*) echo "substitute the release runner's numeric ID inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  glab api --hostname "$1" "projects/$2/job_token_scope" ||
+    { echo "glab exit $?: the job-token scope read failed; inconclusive"; set -- "$1" "$2" "$3" 3; }
+  glab api --hostname "$1" --paginate "projects/$2/job_token_scope/allowlist" ||
+    { echo "glab exit $?: the project allowlist read failed; inconclusive"; set -- "$1" "$2" "$3" 3; }
+  glab api --hostname "$1" --paginate "projects/$2/job_token_scope/groups_allowlist" ||
+    { echo "glab exit $?: the group allowlist read failed; inconclusive"; set -- "$1" "$2" "$3" 3; }
+  set -- "$1" "$2" "$3" "$4" "$(if glab api --hostname "$1" "runners/$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # glab's exit status, then the runner
+  printf '%s\n' "$6"
+  case "$5:$6" in
+    0:*'"access_level":"not_protected"'*|0:*'"access_level": "not_protected"'*) echo "FINDING: the release runner's access_level is not_protected"; set -- "$1" "$2" "$3" 1 ;;
+    0:*'"access_level":"ref_protected"'*|0:*'"access_level": "ref_protected"'*) ;;
+    0:*) echo "the runner read showed neither ref_protected nor not_protected; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "glab exit $5: the runner read failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
+  echo "block exit $4; the job-token scope and both allowlists are not classified, so judge them yourself"
+  exit "$4"
+)
 ```
 
 REASONED: preceding block; the GitLab reads in the block above, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries, and the lifecycle and contamination checks in this paragraph, per the cited GitHub self-hosted runners REST API, GitLab Instance and Docker Autoscaler executors, and GitHub Actions security hardening entries. No registered runner, worker infrastructure or GitLab instance is available in the authoring environment. At marking time both canary commands passed bash -n and ShellCheck 0.11.0, and with job A and job B sharing one home directory job B printed its FAIL line and exited 1, while in a fresh home directory it printed the canary-absent line and exited 0; this exercises the marker logic only, not worker reuse or destruction. Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
@@ -238,25 +408,35 @@ B runs `if test -e "$HOME/.ci-isolation-canary"; then echo 'FAIL: previous job s
 the hardened case uses a newly provisioned worker with disposal records and no marker. Marker absence alone is
 insufficient, and worker destruction does not remove shared caches or artifacts, so review those separately.
 
-REASONED: listener inventory and reachability comparison per the guide's cited GitLab Runner monitoring and advanced configuration entries; no deployed metrics or session-server endpoint and no external vantage are available in the authoring environment, so no probe was sent. At marking time plain ss -tln without sudo listed this host's listeners, and the guarded block below passed bash -n and ShellCheck 0.11.0 and, run with stub sudo and curl under bash and bash -u, refused the unsubstituted, empty, embedded-placeholder, ftp, two-value and missing set -- line cases with its not-probing messages and exit 2, and passed http and https URLs to the stub curl. Finally, `ss` is an inventory only; inspect the relevant container and pod namespaces and published ports too.
+REASONED: listener inventory and reachability comparison per the guide's cited GitLab Runner monitoring and advanced configuration entries; no deployed metrics or session-server endpoint and no external vantage are available in the authoring environment, so no probe was sent. At marking time plain ss -tln without sudo listed this host's listeners, and the guarded probe's earlier form passed bash -n and ShellCheck 0.11.0 and, run with stub sudo and curl under bash and bash -u, refused the unsubstituted, empty, embedded-placeholder, ftp, two-value and missing set -- line cases with its not-probing messages and exit 2, and passed http and https URLs to the stub curl. In that form the inventory and the probe shared one block and the probe took no network value; they are now two blocks, each covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October 2026 stub runs recorded with it. Finally, `ss` is an inventory only; inspect the relevant container and pod namespaces and published ports too.
 If a metrics or session-server listener is enabled, run the guarded block against the exact configured URL from
 its permitted client network: monitoring for metrics, GitLab for the session server. Configure trusted
 certificate verification for HTTPS, including the runner-generated session-server certificate. Require the
 expected positive-control response, then repeat from a disallowed
 network; any HTTP response from the disallowed network proves reachability, while a timeout, DNS error, or
 connection failure is inconclusive without a matching firewall deny record. This reachability comparison is
-reasoned, since no deployed endpoint or external vantage was available. Substitute the URL inside the single
-quotes and paste the whole block; do not bypass TLS certificate verification.
+reasoned, since no deployed endpoint or external vantage was available. Substitute the URL, and permitted
+or disallowed for the network you run it from, inside the single quotes and paste the whole block; do not
+bypass TLS certificate verification.
 
-REASONED: following block; listener isolation follows the cited GitLab monitoring and session-server documentation; no deployed endpoint or external vantage was available.
+REASONED: following block; the listener inventory follows the cited GitLab monitoring and session-server documentation; no deployed endpoint was available. Run it on the runner host: it refuses with status 2 when `ss` is missing, exits 3 when `sudo ss -tlnp` fails, and otherwise exits 0 with the whole table left for you to read. October 2026 stub runs with sudo and ss stubbed gave those three statuses.
 
 ```bash
-sudo ss -tlnp
-(
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_METRICS_URL'
+(                                       # a subshell, so the exits below end only the subshell
+  command -v ss > /dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  sudo ss -tlnp || { echo "sudo ss -tlnp exit $?: the listener inventory failed; inconclusive"; exit 3; }
+  echo "block exit 0; the listener table is not classified, so judge it yourself"
+)
+```
+
+REASONED: following block; the reachability comparison follows the cited GitLab monitoring and session-server documentation; no deployed endpoint or external vantage was available. From the permitted network it exits 0 for any HTTP response, whose code you compare with the expected one, and 3 for none. From a disallowed network it exits 1 for any HTTP response and 3 for none, never 0 there, because a failure is inconclusive without a matching firewall deny record. October 2026 stub runs with curl stubbed gave each of those four outcomes, and each `set --` refusal exited 2 before any curl call.
+
+```bash
+(                                       # a subshell, so the exits below end only the subshell
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_METRICS_URL' 'REPLACE_WITH_permitted_OR_disallowed'   # the exact configured URL, then permitted or disallowed for the network you run this from: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo 'exactly one URL required; not probing'; exit 2; }
+  [ "$#" -eq 2 ] || { echo 'exactly one URL and one network required; not probing'; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|'') echo 'substitute the URL inside the quotes; not probing'; exit 2 ;;
   esac
@@ -264,8 +444,22 @@ sudo ss -tlnp
     http://*|https://*) ;;
     *) echo 'HTTP or HTTPS URL required; not probing'; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+  case "$2" in
+    permitted|disallowed) ;;
+    *) echo 'substitute permitted or disallowed inside the quotes; not probing'; exit 2 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -o /dev/null -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its http= line
+  printf '%s' "$4"
+  case "$2:$3" in
+    permitted:0) echo "the permitted network received an HTTP response; compare it with the expected positive-control response"; set -- 0 ;;
+    permitted:*) echo "curl exit $3: the permitted network received no HTTP response, so the positive control failed; inconclusive"; set -- 3 ;;
+    disallowed:0) echo "FINDING: the disallowed network received an HTTP response, so the listener is reachable from it"; set -- 1 ;;
+    *) echo "curl exit $3: no HTTP response from the disallowed network, which is inconclusive without a matching firewall deny record, so this network never exits 0 here"; set -- 3 ;;
+  esac
+  echo "block exit $1; the HTTP code against the expected response and any firewall deny record are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -352,7 +546,7 @@ Claims (full source mapping in the JSON block below):
 - verify-eligibility (REASONED; github-api): Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.
 - verify-permissions (REASONED; github): Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.
 - verify-assignment (REASONED; github-api, github): A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.
-- verify-config (DEMONSTRATED; python, gitlab, gitlab-runner): Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.
+- verify-config (DEMONSTRATED; python, gitlab, gitlab-runner): Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status. Those runs covered an earlier form; the current form's findings and exit statuses were also run on synthetic fixtures.
 - verify-daemon (REASONED; gitlab, docker): Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.
 - verify-autoscaler (REASONED; gitlab): For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.
 - verify-gitlab-api (REASONED; gitlab): Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.
@@ -364,7 +558,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "e9168b4d734fbf19f0073e9c0a1efc264463a6b321f4f7e1a973870a1ace20e7",
+  "body_sha256": "2cc98970efba9b419c804f38bf722b88e7fb41263ab7677c3c260e6734512247",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
@@ -463,12 +657,12 @@ Claims (full source mapping in the JSON block below):
     "verify-eligibility": {"text": "Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.", "components": ["github-api"], "sources": ["github-api:sd36db9ea1031", "github-api:s8217448953a4"], "status": "REASONED", "verify": [1]},
     "verify-permissions": {"text": "Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.", "components": ["github"], "sources": ["github:s4561d20e7042", "github:s80fe11d8c90d"], "status": "REASONED", "verify": [2]},
     "verify-assignment": {"text": "A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.", "components": ["github-api", "github"], "sources": ["github-api:sbeee4a47110c", "github:s92e8e4820392"], "status": "REASONED", "verify": [3]},
-    "verify-config": {"text": "Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.", "components": ["python", "gitlab", "gitlab-runner"], "sources": ["python:s37be9e98ea29", "gitlab:s47b236d63dc4", "gitlab:s1579c499c75b", "gitlab-runner:s46d58158c809"], "status": "DEMONSTRATED", "verify": [4], "evidence": "the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only."},
+    "verify-config": {"text": "Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status. Those runs covered an earlier form; the current form's findings and exit statuses were also run on synthetic fixtures.", "components": ["python", "gitlab", "gitlab-runner"], "sources": ["python:s37be9e98ea29", "gitlab:s47b236d63dc4", "gitlab:s1579c499c75b", "gitlab-runner:s46d58158c809"], "status": "DEMONSTRATED", "verify": [4], "evidence": "the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only. Those runs covered the block's earlier form, whose program printed these lines, ended with a traceback on any read, parse or structure error, and left the block's status to Python. The current program prints the same lines, then a FINDING line for each docker privileged or services_privileged true, docker.sock volume, Kubernetes runner with privileged true or without allow_privilege_escalation false, and Instance or Docker Autoscaler limit other than integer 1. It prints an inconclusive line for a wrong type in a classified Docker or Kubernetes key, an error or an empty runner list; the block exits 1 for any finding, otherwise 3 for any inconclusive line or when sudo or python3 does not run the program, otherwise 0. In October 2026 the current program ran without sudo on 21 synthetic config.toml cases using Python 3.14.4. The Docker privileged and socket-mount cases, the Kubernetes privileged and unset-escalation cases, the autoscaler null, 1/2, true and 1.0 cases, and a privileged runner followed by a structure error printed FINDING lines and exited 10. The fixed Docker, Kubernetes and autoscaler 1/1 cases, two fixed runners and a misplaced privileged key exited 0. Wrong-type strings, empty and runner-less files, a missing file, malformed TOML and a wrong section type printed inconclusive lines and exited 13, and no case printed the runner token. With sudo and python3 stubbed, the whole block turned 10, 13 and 0 into 1, 3 and 0, and exited 3 when sudo or python3 failed. The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by these October 2026 fixture and stub runs, which, like the earlier runs, demonstrate synthetic file inspection only."},
     "verify-daemon": {"text": "Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "docker:s18f59818e451"], "status": "REASONED"},
     "verify-autoscaler": {"text": "For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e"], "status": "REASONED"},
     "verify-gitlab-api": {"text": "Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.", "components": ["gitlab"], "sources": ["gitlab:s699c1c198119", "gitlab:seb30e3937183"], "status": "REASONED", "verify": [5]},
     "verify-lifecycle": {"text": "Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches.", "components": ["github-api", "gitlab", "github"], "sources": ["github-api:s8217448953a4", "gitlab:sde661ff4762e", "github:s215dc07e3642"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial.", "components": ["gitlab"], "sources": ["gitlab:sbc009ff2866a", "gitlab:s47b236d63dc4"], "status": "REASONED", "verify": [6]}
+    "verify-listeners": {"text": "Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial.", "components": ["gitlab"], "sources": ["gitlab:sbc009ff2866a", "gitlab:s47b236d63dc4"], "status": "REASONED", "verify": [6, 7]}
   }
 }
 ````
