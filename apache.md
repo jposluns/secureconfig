@@ -116,11 +116,10 @@ malformed, or if the unconfigured name is your own host name in any letter case.
 comparison cannot see your other ServerName and ServerAlias values, so check the name against
 them yourself. The comparison runs in the C locale, so the letters A to Z match in either case
 in every locale, Turkish included, and every other letter matches only itself; the block refuses
-with status 2 if LC_ALL is read-only in your shell. From that comparison on, the block's own
-matches use the C locale, and the commands it runs get no LC_ALL from it, so they follow your
-LANG and other LC_ settings (or LC_ALL=C under `set -a`), which changes at most the language of
-their messages. The block also needs bash: in a shell without bash's `shopt`, such as dash, it
-refuses with status 2 before probing. The block then runs the
+with status 2 if LC_ALL is read-only in your shell. Only that comparison runs in the C locale,
+in a nested subshell of its own, so the rest of the block, including the commands it runs, keeps
+your locale settings. The block also needs bash: in a shell without bash's `shopt`, such as
+dash, it refuses with status 2 before probing. The block then runs the
 configuration test and reload, classifies its requests to the site root and to the
 unconfigured name, records each outcome as it runs, and exits once at the end. It exits 1 if
 either request answers 200, otherwise 3 if either answers anything but 401 or the configuration
@@ -149,13 +148,22 @@ vhost list it prints.
   case "$3" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  { unset -v LC_ALL; } 2>/dev/null || { echo "LC_ALL is read-only in this shell, so the host name comparison cannot run; not probing"; exit 2; }
-  LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as host names need
-  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
-  case "$2" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
-    "$1") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
-  esac
-  shopt -u nocasematch   # every match below compares letter case exactly again
+  if (                                  # a nested subshell, so only this comparison runs in the C locale and the rest of the block keeps yours
+    { unset -v LC_ALL; } 2>/dev/null || exit 4
+    LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as host names need
+    shopt -s nocasematch || exit 5   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$2" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
+      "$1") exit 6 ;;
+    esac
+  ); then :; else
+    case "$?" in
+      4) echo "LC_ALL is read-only in this shell, so the host name comparison cannot run; not probing" ;;
+      5) echo "this block needs bash; run it in bash; not probing" ;;
+      6) echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing" ;;
+      *) echo "the host name comparison did not finish; not probing" ;;
+    esac
+    exit 2
+  fi
   set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   if sudo apachectl configtest && sudo systemctl reload apache2; then :; else   # httpd on RHEL
     echo "configuration test or reload exit $?: the requests below may test the configuration Apache was already running; inconclusive"; set -- "$1" "$2" "$3" 3
@@ -319,7 +327,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "b4ed49d16ce0275c82e5075632f9a27720336bbb5c56394e3f7c9d2e50de7d26",
+  "body_sha256": "8e82e946b9c7b1a2da15f8274e145b377850139923258585384d94a8c536aed3",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
