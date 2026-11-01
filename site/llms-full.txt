@@ -573,7 +573,7 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ## Verify
 
-REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks.
+REASONED: certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, no live result is recorded, and this guide records no run. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](https://github.com/jposluns/secureconfig/blob/main/authentication.md).
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -585,9 +585,11 @@ REASONED: certificate inventory and HTTPS/certificate inspection follow the cite
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (inconclusive) outranks 0
   sudo certbot certificates ||          # what is issued and when it expires
     { echo "certbot certificates exit $?: the certificate list could not be read; inconclusive"; set -- "$1" 3; }
@@ -607,8 +609,6 @@ REASONED: certificate inventory and HTTPS/certificate inspection follow the cite
   exit "$2"
 )
 ```
-
-REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation; no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](https://github.com/jposluns/secureconfig/blob/main/authentication.md).
 
 ## Sources (checked September 2026)
 
@@ -722,7 +722,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ebba1404b6534e017c86c9cc8137e110cab3df32769afabfa1e0252ab4b3e5a4",
+  "body_sha256": "bed8dac4fafafa6320e064ee47b8b4c3f811b3643b7ebf7ee12af64394603624",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -17401,9 +17401,11 @@ REASONED: following block; private-route denial and Host handling, with the prox
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set +e                                # errexit off here, so a request that fails is recorded below instead of ending the block
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   set -- "$1" "$2" "$(if curl -q -g -si -w '\n%{http_code}' "https://$1/api/private"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -17615,7 +17617,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "261429b3cae24b146ce5203050d683d7c10bac8c76b372fb74a346e281d99a44",
+  "body_sha256": "796c9b7dff8bcb7e4bc3e49e9e9d5cc60ef6d44329bae0b6044fe2a413807ad5",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -55758,7 +55760,7 @@ authority and contain it at the infrastructure layer, not with login alone:
 
 ## Verify
 
-REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; no live builder has answered it. The checks are now four fences, each ending with its own exit status: the host inventory (which refuses with status 2 when `ss` is not installed), the outside TCP check of port 5003 with a positive control on a port you name, the builder transport note and the Dify key pair. The gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2.
+REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well. The builder transport-reachability curl takes the builder's host name on a guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; no live builder has answered it. The checks are now four fences, each ending with its own exit status: the host inventory (which refuses with status 2 when `ss` is not installed), the outside TCP check of port 5003 with a positive control on a port you name, the builder transport note and the Dify key pair. The gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2, except that for the builder transport note those runs covered its earlier form, which lowercased the host with `tr` before refusing reserved names. The transport note's current form, which matches reserved names in any letter case through bash's `nocasematch` option instead of `tr`, is covered by stub runs on 2026-10-31 with curl stubs and no network. Those runs refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case, each with no curl call, also with `tr` absent from PATH and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and did not refuse a host name outside those domains. Run under dash, which lacks bash's `shopt`, the transport note's current form refused reserved and other host names alike with status 2 and its message that the block needs bash, with no curl call.
 
 ```bash
 (                                               # the whole block in one subshell, so one exit status covers every part of it
@@ -55854,9 +55856,11 @@ REASONED: following block; listener inventory, Dify publication and TCP reachabi
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
     -o /dev/null -w 'builder final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"; then
     echo "block exit 0; unclassified observation: the final code and URL are a transport note only, so judge the editor and /install in a fresh, unauthenticated browser session yourself"
@@ -56149,7 +56153,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "56ba6f046e81e45af7d708dfeff1103d93155a6eab9855ee7834f9e31d6dea6a",
+  "body_sha256": "c782086dc998332bc95e51b1cdcd472a5bc4c96c202b81d47864a89aad4f4f3d",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
@@ -61468,7 +61472,7 @@ RedisInsight 3.8.0's default server configuration uses `RI_APP_HOST` with a fall
 
 REASONED: the panel sources below support the host-side listener inventory in this paragraph, and Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. This host-side inventory is prose rather than part of the block below, because it runs on the panel's host and the block runs from outside your network. On the panel's host, run `ss -tlnp` and read every panel listener: each should be loopback (127.0.0.1) or a deliberately chosen private address. Also inspect the actual published addresses and ports (`docker ps` and the port mappings), and from outside your network probe any public backend mapping too: a protected frontend does not prove a separately published backend port is closed. No panel deployment or external test network is available here, so no listing is recorded.
 
-REASONED: following block; panel sources below support the anonymous front-page/data-route checks and the authenticated data-route positive control. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes. The two `curl` checks take one panel's host name and protected path on a guarded `set --` line and refuse example.com, example.net, example.org and their subdomains. The block records each outcome and exits once: 2 if its guard refuses, 3 if a request fails or the protected route answers 404 or a server error, and otherwise 0. A 401 or 403 is the pass; any other answer is printed for you to judge, because only its body or Location shows a dashboard or a login, so the block reports no finding itself and its last line says so. No run of an earlier form of the block is recorded. This form was checked on 2026-10-31 with bash -n and with curl stubs and no network, covering each status, a failed or inconclusive first request followed by a passing second one, and an inherited `readonly`, `declare -i` or `set -e`. The stub runs covered the refusals of a missing marker, too few or too many values, a host name that is empty or a placeholder or has a scheme, port, trailing dot, `@`, `?`, `%`, `#` or space, an example.com, example.net or example.org host including `App.Example.COM`, and a path that is empty or a placeholder or has a leading slash or space, each with no curl call. ShellCheck 0.11.0 passed on this form in the repository's gate suite.
+REASONED: following block; panel sources below support the anonymous front-page/data-route checks and the authenticated data-route positive control, with the listener inventory and published-backend inspection in the section's first paragraph; that inspection follows the pinned Docker sources and this guide's assessment that a protected frontend or absent socket does not prove backend isolation. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes. The two `curl` checks take one panel's host name and protected path on a guarded `set --` line and refuse example.com, example.net, example.org and their subdomains. The block records each outcome and exits once: 2 if its guard refuses, 3 if a request fails or the protected route answers 404 or a server error, and otherwise 0. A 401 or 403 is the pass; any other answer is printed for you to judge, because only its body or Location shows a dashboard or a login, so the block reports no finding itself and its last line says so. Run the `ss` listener inventory and the published address and port inspection (`docker ps` and the port mappings) on the panel's host. Run the two `curl` checks, their authenticated positive control and any probe of a published backend port from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass. The block's earlier form, which lowercased the host with `tr` before refusing reserved names, was checked on 2026-10-31 with bash -n and with curl stubs and no network, covering each status, a failed or inconclusive first request followed by a passing second one, and an inherited `readonly`, `declare -i` or `set -e`. Those stub runs covered the refusals of a missing marker, too few or too many values, a host name that is empty or a placeholder or has a scheme, port, trailing dot, `@`, `?`, `%`, `#` or space, an example.com, example.net or example.org host including `App.Example.COM`, and a path that is empty or a placeholder or has a leading slash or space, each with no curl call. ShellCheck 0.11.0 passed on that earlier form in the repository's gate suite, and no run of a form before it is recorded. The current form, which matches reserved names in any letter case through bash's `nocasematch` option instead of `tr`, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs on 2026-10-31 with curl stubs and no network. Those runs refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case, including `App.Example.COM`, each with no curl call, also with `tr` absent from PATH and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and did not refuse a host name outside those domains. Run under dash, which lacks bash's `shopt`, the current form refused reserved and other host names alike with status 2 and its message that the block needs bash, with no curl call.
 
 ```bash
 # From OUTSIDE your network, with client proxies disabled so a proxy cannot answer for the panel. Read the
@@ -61482,9 +61486,11 @@ REASONED: following block; panel sources below support the anonymous front-page/
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -61520,8 +61526,6 @@ REASONED: following block; panel sources below support the anonymous front-page/
   exit "$3"
 )
 ```
-
-REASONED: preceding block; anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources, with the listener inventory and published-backend inspection in the section's first paragraph; that inspection follows the pinned Docker sources and this guide's assessment that a protected frontend or absent socket does not prove backend isolation. No panel deployment or second test network is available. Run the `ss` listener inventory and the published address and port inspection (`docker ps` and the port mappings) on the panel's host. Run the two `curl` checks, their authenticated positive control and any probe of a published backend port from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
 
 ## Sources (checked September 2026)
 
@@ -61609,7 +61613,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "454993dabec13691c63afd5342bcb1c750a1e2b9402755d8b886e85d7fde51d2",
+  "body_sha256": "df69675c0b6c4122865c2574b81d07366d20d9c4c304bc39329158825b5ce742",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",
@@ -64550,8 +64554,6 @@ On logout, clear what the browser already holds. `Cache-Control: no-cache` does 
 
 ## Verify
 
-REASONED: final-response header inspection follows the cited MDN header documentation; curl 8.23.0 documents the command options and write-out fields, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment. No deployment URL was supplied for live checks, and this guide records no run; the following block states the expected values and treats failed fetches as inconclusive.
-
 ```bash
 # -q (first) skips curlrc, -g disables URL globbing, and -sS hides progress but shows errors.
 # Fetch the FINAL page and read its response headers by eye. -L follows redirects (--proto-redir
@@ -64567,9 +64569,11 @@ REASONED: final-response header inspection follows the cited MDN header document
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set +e                                # errexit off here, so a check that ends nonzero is classified below instead of ending the block
   set -- "$(if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'final: %{http_code} %{url_effective}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "${1##*$'\n'}" "${1%$'\n'*}"   # curl's exit status, then every response's headers and the final: line
@@ -64599,7 +64603,7 @@ REASONED: final-response header inspection follows the cited MDN header document
 )
 ```
 
-REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and before the block classified the final response's headers and exited with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
+REASONED: preceding block; final-response header inspection follows the cited MDN header documentation, and final-response header values, external scanning and CSP discrimination follow the guide's cited MDN HTTP headers reference and Security header scanner. The command options and write-out fields are documented by curl 8.23.0, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment. No deployment URL was supplied for live checks, no deployed application or controlled browser application session is available, and network access is unavailable. The block states the expected values and treats failed fetches as inconclusive. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and before the block classified the final response's headers and exited with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
 
 REASONED: shared-cache caller separation, per the guide's cited MDN Cache-Control. No deployed shared cache or authenticated A/B accounts are available; this prose supplies no local command or configuration to execute. No response sequence was observed. Exposed caching replays a previous caller's private content; fixed responses after warming the same URL belong only to their current authenticated or anonymous caller. For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
@@ -64701,7 +64705,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "a349943ef4844d606d158bcb8e42d64b131a5e74fa785391ac55b7d929cb9275",
+  "body_sha256": "39ca21a6acd6f5e964df85181ee154aa3168d8cb4fc6335f88a465ae8739629b",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
