@@ -279,7 +279,7 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure and Gateway TLS/authentication, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, and Kubernetes ports and protocols. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of this block, which also held the API reachability check and the node scans, before its app checks took the host on a guarded `set --` line. The form before this change runs every part in one subshell and classifies the redirect, the request without credentials and the credentialed positive control, and it lowercased the app host and the redirect line with `tr` before refusing a reserved name and comparing the redirect. On that form, bash -n exited 0 and stub runs with kubectl and curl stubbed gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block, and no live demonstration was re-run. The current form refuses a reserved name, and compares the redirect's Location with the host, under bash's `nocasematch` option instead of through `tr`, and its app-check part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by kubectl and curl stub runs on 2026-11-01 with no network. In bash, that part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. In those runs a 301 to the host in another letter case, with or without `:443`, passed the redirect check, also with `tr` absent or failing, and a 301 to another host was inconclusive. Under dash, that part refused every host name with 2 and the bash message before its probes, and the whole block exited 3, because dash reads the first part's `$'\n'` differently and that part reported an inconclusive result. Five YAML blocks parsed. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure and Gateway TLS/authentication, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, and Kubernetes ports and protocols. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of this block, which also held the API reachability check and the node scans, before its app checks took the host on a guarded `set --` line. The form before this change runs every part in one subshell and classifies the redirect, the request without credentials and the credentialed positive control, and it lowercased the app host and the redirect line with `tr` before refusing a reserved name and comparing the redirect. On that form, bash -n exited 0 and stub runs with kubectl and curl stubbed gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block, and no live demonstration was re-run. The current form refuses a reserved name, and compares the redirect's Location with the host, under bash's `nocasematch` option instead of through `tr`, and its app-check part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by kubectl and curl stub runs on 2026-11-01 with no network. In bash, that part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. In those runs a 301 to the host in another letter case, with or without `:443`, passed the redirect check, also with `tr` absent or failing, and a 301 to another host was inconclusive. That part compares the redirect's Location with the host in a nested subshell that unsets LC_ALL and sets LC_ALL=C, because `nocasematch` folds case through the locale and a Turkish or Azerbaijani locale does not fold `I` to `i`; the C locale folds A to Z only, so the Location matches the host in any letter case in every locale, and a non-ASCII letter must match exactly. Its `grep -i` for the basic-auth challenge runs as `LC_ALL=C grep -i` for the same reason, so it does not miss an all-capital `WWW-AUTHENTICATE` header in a Turkish locale. Its requests, listing and other matches keep your locale, which curl uses to convert a non-ASCII host name. If LC_ALL is read-only, that part says so and exits 2 before any request, after trying `unset` in a subshell of its own. In stub runs on 2026-11-01 without the LC_ALL lines, LC_ALL=tr_TR.UTF-8 or LANG=tr_TR.UTF-8 made a 301 from `WIKI.ACME.TEST` to `https://wiki.acme.test/`, or from `wiki.acme.test` to `https://WIKI.ACME.TEST:443/`, inconclusive with 3, and let a credentialed answer carrying `WWW-AUTHENTICATE: Basic` pass the positive control. With them, both 301s passed and that answer was inconclusive under C, C.UTF-8 and both Turkish settings, also under an inherited `nocasematch`, `set -a` or `set -e`, a 301 to another host stayed inconclusive, and a read-only LC_ALL gave 2 and its message with no curl call. With real curl pointed at a missing Unix socket, so that nothing was looked up or connected, a non-ASCII host name reached curl's connect step with a UTF-8 locale set in LC_ALL, in LANG or in both, also under `set -a`, as before this change. Under dash, that part refused every host name with 2 and the bash message before its probes, and the whole block exited 3, because dash reads the first part's `$'\n'` differently and that part reported an inconclusive result. Five YAML blocks parsed. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
@@ -322,19 +322,31 @@ expectations, with their sources, are stated after the node-scan block, in the m
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     shopt -u nocasematch   # every match below compares letter case exactly again
+    ( unset -v LC_ALL ) 2>/dev/null || { echo "LC_ALL is read-only in this shell, so the redirect's Location cannot be compared with your host name; not probing"; exit 2; }   # unset only in a subshell of its own, so every command in this part keeps your locale
     set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
     set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sI -w 'http=%{http_code} location=%{redirect_url}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the headers and the http= line
     printf '%s' "$4"                    # 301 with Location: https:// and your host name
     set -- "$1" "$2" "$3" "${4%$'\n'}"
     set -- "$1" "$2" "$3" "${4##*$'\n'}"
-    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # the Location's scheme and host name ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
-    case "$3:$4" in
-      "0:http=301 location=https://$1/"*|"0:http=301 location=https://$1:443/"*) ;;
-      0:*) echo "the plain HTTP request did not get a 301 to https://$1/; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-      *) echo "curl exit $3: the plain HTTP request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    (                                   # a nested subshell, so only this comparison runs in the C locale and every other command keeps your locale
+      { unset -v LC_ALL; } 2>/dev/null || exit 4
+      LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as host names need
+      shopt -s nocasematch || exit 5   # the Location's scheme and host name ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+      case "$3:$4" in
+        "0:http=301 location=https://$1/"*|"0:http=301 location=https://$1:443/"*) exit 0 ;;
+        0:*) exit 6 ;;
+      esac
+      exit 7
+    )
+    case "$?" in                        # the comparison's result; the messages are printed out here, in your locale
+      0) ;;
+      4) echo "LC_ALL is read-only in this shell, so the redirect's Location cannot be compared with your host name; not probing"; exit 2 ;;
+      5) echo "this block needs bash; run it in bash; not probing"; exit 2 ;;
+      6) echo "the plain HTTP request did not get a 301 to https://$1/; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      7) echo "curl exit $3: the plain HTTP request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "the redirect comparison did not finish; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     esac
-    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"  # curl's exit status, then the http= line
     printf '%s\n' "$4"                  # no credentials: 401 where basic auth is set
@@ -356,7 +368,7 @@ expectations, with their sources, are stated after the node-scan block, in the m
       printf '%s\n' "$4"
       if [ "$3" != 0 ]; then
         echo "curl exit $3: the credentialed request failed, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
-      elif printf '%s\n' "$4" | grep -i '^www-authenticate: *basic' > /dev/null; then
+      elif printf '%s\n' "$4" | LC_ALL=C grep -i '^www-authenticate: *basic' > /dev/null; then   # LC_ALL=C for grep alone, so -i folds A to Z only, in every locale
         echo "the gateway's basic-auth challenge answered the credentialed request, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
       else
         case "$?" in 1) ;; *) echo "grep could not read the response headers; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;; esac
@@ -701,7 +713,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "c0ecee44b6be9528b198547a86359adf541622ae0d398e35ad5ab6ce639f2cd6",
+  "body_sha256": "08dbbdd50a94f03ed62e67c53f597cce1df7cbf385c8ff1c300c0dc0d0f2d215",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
