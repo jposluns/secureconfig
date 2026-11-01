@@ -439,7 +439,11 @@ completion of major milestones or on demand", on no fixed schedule, under the ma
 rulings of 2026-11-01 in `DECISIONS.md`. A release changes nothing on `main`, and its tag is
 never moved or removed once published. Those rulings call for a `v*` tag ruleset that blocks
 update and deletion, with creation open to write access, and for immutable releases if GitHub
-offers them; both are repository settings the maintainer applies. A release's assets are
+offers them; both are repository settings. When the orchestrator read them from the GitHub API
+on 2026-11-01, immutable releases were already enabled, and the existing "All Tags" tag ruleset
+already blocked tag update, deletion and non-fast-forward, and also creation except for its
+bypass role, so no new ruleset was created; `DECISIONS.md` records that observation. A
+release's assets are
 `site/llms-full.txt` as committed, the plugin tarball, the full release notes and
 `SHA256SUMS`; its body is short and generated, with the list of pull requests and a link to
 `CHANGELOG.md` at the tag.
@@ -481,10 +485,16 @@ offers them; both are repository settings the maintainer applies. A release's as
    the release, and the draft is fixed or discarded before anything is published.
 8. Only then publish the draft with `gh release edit v1.0.<N> --draft=false`, and confirm with
    `git ls-remote origin refs/tags/v1.0.<N>` that the tag names the target. Immutable releases
-   are enabled on this repository, so a published release cannot be corrected, which is why
-   its assets are verified while it is a draft. Whether a draft creates the tag before it is
-   published was not verified offline; the tag is created through the API either way, and
-   `git ls-remote` after publishing is what shows it names the target.
+   were enabled on this repository when this procedure was written (read from the GitHub API on
+   2026-11-01), so once a release is published its assets and tag cannot be changed, which is
+   why its assets are verified while it is a draft. Five online behaviours of steps 6 to 8 were
+   not verified offline, and the first release will confirm them. They are whether a draft
+   creates the tag before it is published; whether `gh release download v1.0.<N>` finds a draft
+   by its tag; whether `gh release edit --draft=false` creates the tag at the draft's
+   `--target`; whether the download holds exactly the four uploaded assets, as step 7's
+   `diff -r` assumes; and whether the "All Tags" ruleset's bypass role lets the publisher create
+   the tag. Step 7's checks, the publish command's exit status and the `git ls-remote` check
+   are what would show one of them failing.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers. The next release
    passes this tag as `--previous`.

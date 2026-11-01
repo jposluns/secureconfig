@@ -31,8 +31,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - Body. The release body is short and generated, with the list of pull requests and a link to `CHANGELOG.md` at
     the tag; the full notes are an asset.
   - Tag protection. A `v*` tag ruleset blocks update and deletion, and creation stays open to write access.
-    Immutable releases are enabled if GitHub offers them for this repository. Both are repository settings, and
-    this entry does not record either as applied.
+    Immutable releases are enabled if GitHub offers them for this repository. Both are repository settings. The
+    orchestrator observed through the GitHub API on 2026-11-01 that immutable releases were already enabled on
+    this repository; they were not newly applied. The existing "All Tags" tag ruleset already blocks tag update,
+    deletion and non-fast-forward, and also creation except for its bypass role, so no new ruleset was created;
+    the orchestrator's token could not create one (HTTP 403).
   - Release record. A records pull request after each release adds one `CHANGELOG.md` bullet naming the tag, its
     target commit and the dates it covers.
   - First release. The first release targets the last merge of the UTC day before the cut. Its notes say "first

@@ -50,11 +50,11 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    so every checkout prints it. The second is the suite's advisory line saying the local
    python3 differs from CI's pinned PYTHON_VERSION: CI's pinned Python is then covered by the
    online `gates` check on the target, which the procedure records, and the pass line says
-   so. Every other SKIP, including a Python comparison that could not run, is refused. The pass line names the shellcheck version the
-   shell-block gate reported, which this check does not compare with CI's pinned
-   SHELLCHECK_VERSION, so CI's pinned shellcheck, like its Python, is covered by the online
-   `gates` check on the target. This whole-corpus run is the release's explicit need and is
-   not repeated per review round.
+   so. Every other SKIP, including a Python comparison that could not run, is refused. The pass
+   line names the shellcheck version the shell-block gate reported, which this check does not
+   compare with CI's pinned SHELLCHECK_VERSION, so CI's pinned shellcheck, like its Python, is
+   covered by the online `gates` check on the target. This whole-corpus run is the release's
+   explicit need and is not repeated per review round.
 
 WHAT IT CANNOT CHECK: whether `gates` passed on GitHub for the target's push to `main`. That is
 an online step of the procedure; --gates-check-run takes the id it found only to print it in
@@ -460,6 +460,8 @@ def suite(root, target):
     else:
         return [], python, shell.group(1)
     return [finding], None, None
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parent.parent)
