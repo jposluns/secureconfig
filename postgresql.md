@@ -237,7 +237,7 @@ At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-
 
 REASONED: service-check scope from the authoring limitations recorded in this paragraph and the PostgreSQL and pgAudit documentation cited at each check below. This revision's service checks are **REASONED, not demonstrated**. The authoring environment has psql 18.6 and PostgreSQL server binaries, but is read-only and has no authorized writable test deployment. Neither Docker nor Podman was found on `PATH`. Missing binaries are not the reason for the service-test limitation. Earlier execution evidence is not recorded in this file; this does not establish whether a previous author ran the earlier probes.
 
-REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy). The PostgreSQL configuration parse was re-run at marking time with the PostgreSQL 18.6 server binary installed outside PATH at /usr/lib/postgresql/18/bin: postgres -C returned all 14 values from the combined TLS, logging and preload fragments with exit 0, and an ssl=not_a_boolean control was rejected with exit 1 (parameter "ssl" requires a Boolean value); no server was started. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. The bash -n, ShellCheck, guard and argument runs recorded in this paragraph covered an earlier form of both blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
+REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy). The PostgreSQL configuration parse was re-run at marking time with the PostgreSQL 18.6 server binary installed outside PATH at /usr/lib/postgresql/18/bin: postgres -C returned all 14 values from the combined TLS, logging and preload fragments with exit 0, and an ssl=not_a_boolean control was rejected with exit 1 (parameter "ssl" requires a Boolean value); no server was started. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. The bash -n, ShellCheck, guard and argument runs recorded in this paragraph covered an earlier form of both blocks, whose refusals exited with status 1; on the current form, whose refusals exit with status 2 and whose classified results exit 0, 1 or 3, the repository gate suite's bash -n and ShellCheck 0.11.0 checks pass, and the guard and argument cases recorded above were not repeated. The current form's refusals include the listener block's refusal when `ss` is missing, and stub runs of that block, with a stand-in `ss` present and passing, present and failing, and absent, exited 0, 3 and 2 under an inherited `readonly`, `declare -i` and `set -e`; no PostgreSQL server or real `ss` was involved. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
 
 REASONED: deployment-demonstration procedure per the cited PostgreSQL documentation; no isolated disposable deployment is available in the authoring environment, so this remains the required procedure rather than a recorded run. Demonstrate exposed configurations only in an isolated disposable deployment. Record the server/client versions, fixture, commands, output, and relevant server logs for both states. A DNS error, timeout, missing CA file, or unrelated authentication failure does not prove enforcement.
 
@@ -273,28 +273,52 @@ The fourth value selects `tls`, `wrong`, `scram`, `plaintext`, or an interactive
       esac
       [ -f "$2" ] || { echo "CA file is missing; not probing"; exit 2; }
       [ -r "$2" ] || { echo "CA file is unreadable; not probing"; exit 2; }
-      case "$4" in
+      case "$4" in                      # one psql per run; except in sql mode, the 5th value holds what it printed, then its exit status
         tls|wrong)
-          psql -X -W -v ON_ERROR_STOP=1 \
+          set -- "$1" "$2" "$3" "$4" "$(if psql -X -W -v ON_ERROR_STOP=1 \
             "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5" \
-            -c 'SELECT version();'
+            -c 'SELECT version();' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
           ;;
         scram)
-          psql -X -W -v ON_ERROR_STOP=1 \
+          set -- "$1" "$2" "$3" "$4" "$(if psql -X -W -v ON_ERROR_STOP=1 \
             "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5 require_auth=scram-sha-256" \
-            -c 'SELECT 1;'
+            -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
           ;;
         plaintext)
-          psql -X -W -v ON_ERROR_STOP=1 \
+          set -- "$1" "$2" "$3" "$4" "$(if psql -X -W -v ON_ERROR_STOP=1 \
             "host=$1 port=5432 dbname=app user=$3 sslmode=disable gssencmode=disable connect_timeout=5" \
-            -c 'SELECT 1;'
+            -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
           ;;
         sql)
-          psql -X -W -v ON_ERROR_STOP=1 \
-            "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5"
-          ;;
+          if psql -X -W -v ON_ERROR_STOP=1 \
+            "host=$1 port=5432 dbname=app user=$3 sslmode=verify-full sslrootcert=$2 gssencmode=disable connect_timeout=5"; then
+            echo "block exit 0; the sql session is not classified, so judge what it showed yourself"; exit 0
+          else
+            echo "psql exit $?: the sql session did not connect or ended with an error; block exit 3, inconclusive"; exit 3
+          fi ;;
         *) echo "choose tls, wrong, scram, plaintext or sql; not probing"; exit 2 ;;
       esac
+      set -- "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # the mode, psql's exit status, then what psql printed
+      printf '%s' "$3"
+      case "$1:$2" in
+        tls:0|scram:0) echo "pass: the $1 login connected and ran its query, the positive control"; set -- 0 "$1" ;;
+        wrong:0) echo "FINDING: the deliberately wrong password connected, as an earlier matching trust rule allows"; set -- 1 "$1" ;;
+        plaintext:0) echo "FINDING: the plaintext login connected without TLS, as a plaintext-permitting host rule allows"; set -- 1 "$1" ;;
+        wrong:*)
+          case "$3" in
+            *'password authentication failed'*) echo "pass: the wrong password failed with password authentication failure, the fixed result while the tls login succeeds"; set -- 0 "$1" ;;
+            *) echo "psql exit $2 without a password authentication failure; inconclusive"; set -- 3 "$1" ;;
+          esac ;;
+        plaintext:*)
+          case "$3" in
+            *'no pg_hba.conf entry'*'no encryption'*) echo "pass: the plaintext login received an HBA refusal naming no matching entry and no encryption, the fixed result while the tls login succeeds"; set -- 0 "$1" ;;
+            *) echo "psql exit $2 without an HBA refusal naming no matching entry and no encryption; inconclusive"; set -- 3 "$1" ;;
+          esac ;;
+        tls:*) echo "psql exit $2: the tls login did not connect; inconclusive (the hostname-verification and client-certificate comparisons expect a rejection here, which this block cannot tell from any other failure)"; set -- 3 "$1" ;;
+        *) echo "psql exit $2: the scram login did not connect; inconclusive (a rejected non-SCRAM exchange is the exposed state, which this block cannot tell from any other failure)"; set -- 3 "$1" ;;
+      esac
+      echo "block exit $1; only this $2 run is classified, so pairing it with its matched run in the table below the block, and reading any error above, is left to you"
+      exit "$1"
       ;;
   esac
 )
@@ -328,8 +352,30 @@ Run on the database host, substituting the intended bind address. Inspect every 
   case "$1" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*|"") echo "substitute every placeholder; not probing"; exit 2 ;;
     *)
+      command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
       printf 'Expected listener address: %s; inspect every returned row.\n' "$1"
-      ss -tlnp 'sport = :5432'
+      set -- "$(if ss -tlnp 'sport = :5432'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "${1%$'\n'*}" "${1##*$'\n'}"   # the listener table, then ss's exit status
+      printf '%s' "$1"
+      if [ "$2" != 0 ]; then
+        echo "ss exit $2: the listener inventory failed; inconclusive unless a row above is a wildcard"
+      fi
+      if printf '%s' "$1" | awk 'NR > 1 && ($4 == "0.0.0.0:5432" || $4 == "[::]:5432" || $4 == "*:5432") { found = 1 } END { exit !found }'; then
+        echo "FINDING: a wildcard listener on port 5432, which listen_addresses = '*' produces"; exit 1
+      else
+        case "$?" in 1) ;; *) echo "awk could not read the listener table; inconclusive"; exit 3 ;; esac
+      fi
+      if [ "$2" != 0 ]; then
+        exit 3
+      fi
+      if printf '%s' "$1" | awk 'NR > 1 { found = 1 } END { exit !found }'; then
+        echo "no wildcard listener on port 5432; unclassified observation: compare every row above with your intended addresses, and pair it with a successful tls connection through an intended interface"; exit 0
+      else
+        case "$?" in
+          1) echo "no listener on port 5432, which is not a passing result; inconclusive"; exit 3 ;;
+          *) echo "awk could not read the listener table; inconclusive"; exit 3 ;;
+        esac
+      fi
       ;;
   esac
 )
@@ -738,7 +784,7 @@ Claims (full source mapping in the JSON block below):
 - verify-logs (REASONED; docs): Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.
 - verify-audit (REASONED; audit): Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.
 - diagnostics (REASONED; docs): pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.
-- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact. Those checks covered an earlier form of both blocks, whose refusals exited with status 1; the current form was not re-run.
+- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact. They covered an earlier form of both blocks, whose refusals exited with status 1, and their guard and argument cases were not repeated; the current form is covered by gate-suite bash -n and ShellCheck 0.11.0 passes and by listener-block stub runs with ss passing, failing and missing.
 - local-parsing (DEMONSTRATED; docs): Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.
 - verify-default-grants (REASONED; docs): Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.
 
@@ -747,7 +793,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8018336c8f86ebc4dc36cad369e52769012d7902b3145554c8b191d3b2468ff0",
+  "body_sha256": "8dfdaa5890bde912d02bc09c4b2deb85d5a5f6b4cd58956274ad0ea39a47a7a9",
   "components": {
     "init": {
       "name": "PostgreSQL initdb source",
@@ -897,7 +943,7 @@ Claims (full source mapping in the JSON block below):
     "verify-logs": {"text": "Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.", "components": ["docs"], "sources": ["docs:sf1b3da55ebd5"], "status": "REASONED"},
     "verify-audit": {"text": "Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.", "components": ["audit"], "sources": ["audit:s1825bbe4f88c"], "status": "REASONED"},
     "diagnostics": {"text": "pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.", "components": ["docs"], "sources": ["docs:seed379369be7", "docs:s8754b96a6114", "docs:s3b6607ed7b1a", "docs:s2ab6c4aebc59"], "status": "REASONED"},
-    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact. Those checks covered an earlier form of both blocks, whose refusals exited with status 1; the current form was not re-run.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
+    "local-guards": {"text": "Historical shell and argument checks exercised local guards only, without service contact. They covered an earlier form of both blocks, whose refusals exited with status 1, and their guard and argument cases were not repeated; the current form is covered by gate-suite bash -n and ShellCheck 0.11.0 passes and by listener-block stub runs with ss passing, failing and missing.", "components": ["docs"], "sources": ["docs:sf8b93623c032", "docs:s1b4e67e38127"], "status": "DEMONSTRATED", "evidence": "Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service."},
     "local-parsing": {"text": "Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.", "components": ["docs"], "sources": ["docs:s55cbaf1aa910"], "status": "DEMONSTRATED", "evidence": "PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected."},
     "verify-default-grants": {"text": "Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.", "components": ["docs"], "sources": ["docs:s04e81888353f"], "status": "REASONED"}
   }

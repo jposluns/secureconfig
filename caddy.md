@@ -133,12 +133,12 @@ RuntimeDirectory=caddy
 
 The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660) says `RuntimeDirectory=caddy` creates `/run/caddy` when the unit starts, owns it according to `User=`/`Group=`, and removes it when the unit stops unless preservation is configured. The switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: this is the guide's reasoning that a restart creates the runtime directory and binds the socket in one step. After that, `caddy reload`, and the [dist unit's `ExecReload` at 33ae08ff](https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32), apply config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy`. A manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`. A change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took.
 
-## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run.)
+## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. No earlier form of this block has a recorded run; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with the network and host commands replaced, which ran its guards but no deployment. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive. With no `/run/caddy/admin.sock` as well, it records 3, because without the listener table it cannot tell an admin API on TCP or turned off from a failed `ls`.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found ss missing), which outranks 0
   caddy validate --config /etc/caddy/Caddyfile ||
     { echo "caddy validate exit $?: the configuration did not validate; inconclusive"; set -- 3; }
   (                                     # a subshell, so your own script arguments are untouched
@@ -149,7 +149,12 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    case "${3##*$'\n'}:${3%$'\n'*}" in  # tr's exit status, then the host name in lower case
+      0:?*) ;;
+      *) echo "tr exit ${3##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
+    esac
+    case "${3%$'\n'*}" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     case "$2" in
@@ -207,7 +212,12 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    case "${3##*$'\n'}:${3%$'\n'*}" in  # tr's exit status, then the host name in lower case
+      0:?*) ;;
+      *) echo "tr exit ${3##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
+    esac
+    case "${3%$'\n'*}" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
@@ -242,39 +252,48 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
     else
       echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; set -- "$1" "$2" 3
     fi
-    rm -f /tmp/under.bin /tmp/over.bin
+    rm -f /tmp/under.bin /tmp/over.bin ||
+      { echo "rm exit $?: the cleanup failed, so /tmp/under.bin or /tmp/over.bin may remain; delete them yourself"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
     exit "$3"
   )
   case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
-  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
-  printf '%s' "$2"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. Every check above
+  if command -v ss >/dev/null; then
+    set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the listeners
+    set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"                                    # status, the listener table, then ss's exit status
+    printf '%s' "$2"   # read every listener; 3000: the app itself: loopback only (bind 127.0.0.1; the check also counts any 127.x.x.x, [::1] or [::ffff:127.x.x.x] address as loopback), never 0.0.0.0. Every check above
                                        # passes while the app also answers directly on port 3000, which
                                        # bypasses Caddy's TLS and its authentication. The admin API on TCP: only a loopback
                                        # address, such as 127.0.0.1:2019 or [::1]:2019, never a
                                        # public address. A missing 2019 line is not a pass on its own: it also
                                        # means you moved it to a unix socket or set admin off, so confirm which
-  [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
-  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
-    echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    [ "$3" = 0 ] || { echo "ss -tlnp failed; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"; }
+    if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:3000$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+      echo "FINDING: a listener on port 3000 is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    else
+      case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    fi
+    if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+      echo "FINDING: a listener on port 2019, the admin API's default, is bound to a non-loopback address"; set -- 1 "$2" "$3"
+    else
+      case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    fi
   else
-    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
-  fi
-  if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
-    echo "FINDING: a listener on port 2019, the admin API's default, is bound to a non-loopback address"; set -- 1 "$2" "$3"
-  else
-    case "$?" in 1) ;; *) echo "awk could not read the listener list; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;; esac
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 "" missing ;; *) set -- "$1" "" missing ;; esac   # an empty listener table, so the checks below read no listeners, and missing in place of ss's exit status for the admin-socket check
   fi
   if ls -l /run/caddy/admin.sock; then  # if you bound it to a unix socket: it exists and is owner-restricted
                                        # (a stream socket, so it does not show in ss -tlnp; use ss -xlp to list it)
     echo "unclassified observation: read the socket's mode and owner above; the pass is a socket that is owner-restricted"
   elif printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:2019$/ { found = 1 } END { exit !found }'; then
     echo "no /run/caddy/admin.sock, and the admin API is on TCP: the port 2019 check above classified it"
+  elif [ "$3" = missing ]; then
+    echo "ls could not list /run/caddy/admin.sock, and with ss missing this block cannot tell an admin API on TCP or turned off from a failed ls; inconclusive"
+    [ "$1" = 1 ] || set -- 3 "$2" "$3"
   else
     echo "ls could not list /run/caddy/admin.sock; inconclusive (if the admin API is on TCP or off, the ss -tlnp lines above are the check)"
     [ "$1" = 1 ] || set -- 3 "$2" "$3"
   fi
-  echo "block exit $1; the redirect and HTTPS headers and listeners on ports other than 3000 and 2019 are not classified, so judge them yourself"
+  echo "block exit $1; the redirect and HTTPS headers, the admin socket's mode and owner, and listeners on ports other than 3000 and 2019 (every listener, if ss is missing) are not classified, so judge them yourself"
   exit "$1"
 )
 ```
@@ -377,7 +396,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "83a3ee34d1989cb9762c885217ee3d5ab3fe88d7d318dc876be25e75ead5d84e",
+  "body_sha256": "3883dccc93d4c205522f54bb6ca6de83e088bd520a4aa65ca73ec7275d24942c",
   "components": {
     "admin": {
       "name": "Caddy admin source",
