@@ -89,19 +89,18 @@ only to host loopback.
 
 ## Verify
 
-REASONED: authorized-data positive control and anonymous comparison, per the guide's cited Metabase data permissions and Superset security. No BI deployment, authorized account or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while substituted URLs reached two curl stubs. The bash -n, ShellCheck and stub runs recorded here covered the listener and data-route probe block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. Live outcomes remain unobserved: exposed access returns dashboard data anonymously; fixed access denies or challenges it while the authorized request still returns actual data. First, with valid authorization, confirm your chosen protected route returns actual dashboard DATA (a
+REASONED: the Metabase, Superset, Redash and Docker port-publishing sources below support this host-side inventory, which is prose rather than part of the block below, because it runs on each tool's host and the block runs from outside your network. On that host, run `ss -tlnp` and read every application AND proxy listener; Metabase/Superset/Redash default to 3000/8088/5000 (ports vary by install). `ss` shows host listeners, not Docker's NAT: for a container also inspect the published address/port and the forwarding rules, and probe each direct origin and backend port from another host (IPv4, IPv6, LAN/VPC); absence from `ss` is not proof of isolation. No BI deployment or external test network is available here, so no listing is recorded.
+
+REASONED: authorized-data positive control and anonymous comparison, per the guide's cited Metabase data permissions and Superset security. No BI deployment, authorized account or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while substituted URLs reached two curl stubs. The bash -n, ShellCheck and stub runs recorded here covered the listener and data-route probe block in an earlier form, whose guard refusals left the subshell with status 0; none covered the later form, whose guard refusals left the subshell with status 2, or the current form, whose checks are recorded after the block. Live outcomes remain unobserved: exposed access returns dashboard data anonymously; fixed access denies or challenges it while the authorized request still returns actual data. First, with valid authorization, confirm your chosen protected route returns actual dashboard DATA (a
 real data or API route, not the SPA HTML shell or a health endpoint): that is the positive control.
 Then, from OUTSIDE your network with no cookies, tokens, or Access credentials, run the whole block
 (substitute inside the quotes):
 
-REASONED: following block; Metabase, Superset, Redash and Docker sources below support socket/publication and anonymous data-route checks. No BI deployment or external test network is available here; no live run is recorded. Expected exposed, denied and inconclusive outcomes surround the block.
+REASONED: following block; Metabase, Superset and Redash sources below support the anonymous front-page and data-route checks. No BI deployment or external test network is available here; no live run is recorded. Expected exposed, denied and inconclusive outcomes surround the block. The block records each outcome and exits once: 2 if its guard refuses, 3 if a request fails or the protected route answers 404 or a server error, and otherwise 0. A 401 or 403 is the pass; any other answer is printed for you to judge, because only its body shows dashboard data or a login page, so the block reports no finding itself and its last line says so.
 
 ```bash
-ss -tlnp   # every application AND proxy listener; Metabase/Superset/Redash default to 3000/8088/5000 (ports
-           # vary by install). ss shows host listeners, not Docker's NAT: for a container also inspect the
-           # published address/port and the forwarding rules, and probe each direct origin and backend port
-           # from another host (IPv4, IPv6, LAN/VPC); absence from ss is not proof of isolation.
-(
+(                                       # a subshell, so your own script arguments are untouched and one exit status covers the whole block
+  set +e                                # errexit off, so a request that fails is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK \
     'https://REPLACE_WITH_BI_HOST/' \
     'https://REPLACE_WITH_BI_HOST/REPLACE_WITH_KNOWN_PROTECTED_ROUTE'
@@ -112,12 +111,32 @@ ss -tlnp   # every application AND proxy listener; Metabase/Superset/Redash defa
   case "$1$2" in
     *REPLACE_WITH_*|*example.com*) echo "substitute your own URLs on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -i "$1"   # the tool's front page
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -i "$2"   # a known protected route
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 3 (inconclusive) outranks 0; the block classifies no finding (see its last line)
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -i -w '\n%{http_code}' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the tool's front page
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"        # curl's exit status, then the response with the HTTP code on its last line
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$5"
+  case "$4:$6" in
+    0:401|0:403) ;;
+    0:*) echo "unclassified: HTTP $6 from the front page is not a 401 or 403 denial, so read its body against the paragraph after this block" ;;
+    *) echo "curl exit $4: the front-page request failed; inconclusive"; set -- "$1" "$2" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -i -w '\n%{http_code}' "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # a known protected route
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"        # curl's exit status, then the response with the HTTP code on its last line
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # curl's exit status, the response, then the HTTP code
+  printf '%s\n' "$5"
+  case "$4:$6" in
+    0:401|0:403) ;;
+    0:404|0:5??) echo "HTTP $6 from the protected route is a 404 or a server error; inconclusive"; set -- "$1" "$2" 3 ;;
+    0:*) echo "unclassified: HTTP $6 from the protected route is not a 401 or 403 denial, so read its body against the paragraph after this block" ;;
+    *) echo "curl exit $4: the protected-route request failed; inconclusive"; set -- "$1" "$2" 3 ;;
+  esac
+  echo "block exit $3; a front-page answer other than 401 or 403, and a protected-route answer other than 401, 403, 404 or a server error, are not classified, so judge them yourself: the protected route returning dashboard data with no authorization is a fail, a 200 login page or SPA shell proves nothing, and only a verified redirect into your login layer passes"
+  exit "$3"
 )
 ```
 
-REASONED: preceding block; listener and Docker-publication inventory, origin isolation and paired data-route authorization, per the guide's cited Docker port publishing, Metabase data permissions and Superset security. No BI deployment or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub and substituted URLs reached two. The bash -n, ShellCheck and stub runs recorded here covered the listener and data-route probe block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. No live outcome is observed: exposed origins answer or anonymous requests disclose dashboard data; fixed origins are isolated and protected data requires authorization, with an authorized data response as the control. Accept an access denial from WHATEVER protects the route (the tool's or the reverse proxy's 401/403,
+REASONED: preceding block; paired data-route authorization, with the listener and Docker-publication inventory and origin isolation in the section's first paragraph, per the guide's cited Docker port publishing, Metabase data permissions and Superset security. No BI deployment or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub and substituted URLs reached two. The bash -n, ShellCheck and stub runs recorded here covered the listener and data-route probe block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the later form, whose guard refusals left the subshell with status 2. The current form leaves the listener inventory to the section's first paragraph and gives the whole block one exit status. It was checked on 2026-10-31 with bash -n and with curl stubs and no network, covering each status, a failed or inconclusive first request followed by a passing second one, and an inherited `readonly`, `declare -i` or `set -e`. The stub runs covered the refusals of a missing marker, too few or too many values, an empty first or second URL, a placeholder left in either URL and an example.com URL, each with no curl call. ShellCheck 0.11.0 passed on the current form in the repository's gate suite. No live outcome is observed: exposed origins answer or anonymous requests disclose dashboard data; fixed origins are isolated and protected data requires authorization, with an authorized data response as the control. Accept an access denial from WHATEVER protects the route (the tool's or the reverse proxy's 401/403,
 a Cloudflare Access challenge, or a verified redirect into that login layer), not only the tool's own
 denial. Read the body, not just the status: a 200 login page or SPA shell proves nothing, and an
 arbitrary redirect is inconclusive; the protected route returning dashboard data with no
@@ -206,7 +225,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "10a3df1a6396fb40e7e7f6c40d2ee432569ac389bec5bb767a81a092d90882f4",
+  "body_sha256": "34ecb8a2d2d00de254b9a16c27dd7e70da88e0f5cdcb7d4418104cb146c4c366",
   "components": {
     "metabase": {
       "name": "Metabase",
@@ -314,8 +333,8 @@ Claims (full source mapping in the JSON block below):
     "redash-bind": {"text": "Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately.", "components": ["redash"], "sources": ["redash:se93d7c47b037", "redash:s9f1ef7237804"], "status": "REASONED"},
     "verify-credentials": {"text": "Confirm no default admin/admin or example credentials work.", "components": ["metabase-docs", "superset-compose", "redash-docs"], "sources": ["metabase-docs:s5e2251b3184d", "superset-compose:s0ceca7af7f79", "redash-docs:s4c72252b5447"], "status": "REASONED"},
     "verify-db": {"text": "Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately.", "components": ["metabase-docs"], "sources": ["metabase-docs:s434abdb1aaef"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.", "components": ["metabase", "superset-compose", "redash", "docker"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
-    "verify-ports": {"text": "Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.", "components": ["metabase", "superset-compose", "redash"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.", "components": ["metabase", "superset-compose", "redash", "docker"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037", "docker:s1e53417c513d"], "status": "REASONED"},
+    "verify-ports": {"text": "Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.", "components": ["metabase", "superset-compose", "redash"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037"], "status": "REASONED"},
     "verify-data": {"text": "Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive.", "components": ["metabase-docs", "superset", "redash-docs"], "sources": ["metabase-docs:s521b3063e9f0", "superset:se97be7353585", "redash-docs:s4c72252b5447"], "status": "REASONED", "verify": [1]},
     "verify-private": {"text": "For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path.", "components": ["redash-docs", "docker"], "sources": ["redash-docs:s4c72252b5447", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]}
   }

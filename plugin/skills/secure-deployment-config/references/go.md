@@ -181,6 +181,7 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
+  set +e                                # errexit off here, so a check that ends nonzero is recorded below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST'   # the deployment's public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -191,26 +192,71 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
   case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   curl -q -g -sI "http://$1/"         # expect 301 with a https:// Location
+  set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
+  [ "$3" = 0 ] || { echo "curl exit $3: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
   curl -q -g -sI "https://$1/"        # succeeds without -k
-  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"   # 401 or 403 without credentials
+  set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
+  [ "$3" = 0 ] || { echo "curl exit $3: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"                    # 401 or 403 without credentials
+  case "$3:$4" in
+    0:401|0:403) ;;
+    0:2??) echo "FINDING: /api answered $4 without credentials"; set -- "$1" 1 ;;
+    0:*) echo "HTTP $4 from /api is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the /api request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
   ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
-  curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/   # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
-  curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"   # diagnostics must never be routed on your PUBLIC app: expect 404, never 200
+  set -- "$1" "$2" "$?"                 # the 3rd value is ss's exit status
+  [ "$3" = 0 ] || { echo "ss -tlnp exit $3: the listener list failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"                    # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
+  case "$3" in
+    0) ;;
+    7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above shows any 6060 listener on another address" ;;
+    *) echo "curl exit $3: the local diagnostic request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$4"                    # diagnostics must never be routed on your PUBLIC app: expect 404, never 200
+  case "$3:$4" in
+    0:404) ;;
+    0:200) echo "FINDING: /debug/pprof/ answered 200 on your public app"; set -- "$1" 1 ;;
+    0:*) echo "HTTP $4 from /debug/pprof/ is neither the 404 pass nor the 200 finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $3: the /debug/pprof/ request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the redirect and HTTPS headers, the listener list and the local diagnostic answer are not classified, so judge them yourself"
+  exit "$2"
 )
 ```
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
+  set +e                                # errexit off here, so the probe's status is classified below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/" || true ;;   # run from a machine OUTSIDE the server's network: the diagnostic listener (section 5) must be UNREACHABLE (a refusal or timeout, never a 200)
   esac
+  set -- "$1" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+       -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # run from a machine OUTSIDE the server's network: the diagnostic listener (section 5) must be UNREACHABLE (a refusal or timeout, never a 200)
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # curl's exit status, then its diag_6060 line
+  printf '%s\n' "$3"
+  case "$3" in
+    'diag_6060 http=000 '*)
+      case "$2" in
+        7|28) set -- "$1" 0 ;;          # a refusal or a timeout: the pass
+        *) echo "curl exit $2 is neither a refusal nor a timeout; inconclusive"; set -- "$1" 3 ;;
+      esac ;;
+    *) echo "FINDING: the diagnostic listener answered HTTP from outside, so it is reachable"; set -- "$1" 1 ;;
+  esac
+  echo "block exit $2; the err text is not classified: a refusal or timeout passes only if err names the server's address, not a local socket or resolver error, so judge it yourself"
+  exit "$2"
 )
 ```
 
@@ -314,7 +360,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "100efc49fa547c357a9e4c5f9709f433d71a5c80e6d0e1692c036cc68be0314f",
+  "body_sha256": "c952a51b8e8b30de35f34e8c88a23c6fdf31aab2c7baf8059b5458a2fbc8063a",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
