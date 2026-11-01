@@ -32,23 +32,29 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    first release) to the target is referenced, with no newest-PR exemption, so a target whose
    own entry is missing is refused.
 6. With --previous, each pull request merged in the range is referenced under the dated
-   heading equal to its merge commit's UTC committer date. A first release extracts no
-   sections, so this is not applied to it.
+   heading equal to its merge commit's UTC committer date, and that date is after the
+   previous release's UTC date and on or before the target's, so the notes, which take only
+   those dates, leave none of them out. A first release extracts no sections, so this is not
+   applied to it.
 7. The notes asset and `body.md` equal, byte for byte, the ones regenerated from the target;
    the body holds the range's merged pull requests, so its list cannot drift from the range.
 8. `llms-full.txt` equals `site/llms-full.txt` at the target, the tarball equals a rebuild from
    `git archive` of the target's `plugin/` (built twice, and the two must agree), `SHA256SUMS`
    equals its rebuild and verifies every asset, and `assets/` holds nothing else.
 9. Only when 1 to 8 pass: tools/run_all_checks.sh, run in a `git worktree` of the target,
-   exits 0, ends with "All gates passed." and prints no FAIL line and no SKIP line but two. A
-   SKIP means a lint or comparison did not run as CI runs it, such as a missing shellcheck, so
-   it is refused here. The first accepted is tools/gen_aiqt_settings.py's line for an absent
-   .claude/settings.json, which is untracked, so every checkout prints it. The second is the
-   suite's advisory line saying the local python3 differs from CI's pinned PYTHON_VERSION:
-   CI's pinned Python is then covered by the online `gates` check on the target, which the
-   procedure records, and the pass line says so. Every other SKIP, including a Python
-   comparison that could not run, is refused. This whole-corpus run is the release's explicit
-   need and is not repeated per review round.
+   exits 0, ends with "All gates passed.", prints the shell-block gate's pass line, and prints
+   no line beginning `  FAIL  ` and no line beginning `  SKIP  ` but two. A line is read as a
+   FAIL or a SKIP only by that prefix. A SKIP means a lint or comparison did not run as CI
+   runs it, such as a missing shellcheck, so it is refused here. The first accepted is
+   tools/gen_aiqt_settings.py's line for an absent .claude/settings.json, which is untracked,
+   so every checkout prints it. The second is the suite's advisory line saying the local
+   python3 differs from CI's pinned PYTHON_VERSION: CI's pinned Python is then covered by the
+   online `gates` check on the target, which the procedure records, and the pass line says
+   so. Every other SKIP, including a Python comparison that could not run, is refused. The pass line names the shellcheck version the
+   shell-block gate reported, which this check does not compare with CI's pinned
+   SHELLCHECK_VERSION, so CI's pinned shellcheck, like its Python, is covered by the online
+   `gates` check on the target. This whole-corpus run is the release's explicit need and is
+   not repeated per review round.
 
 WHAT IT CANNOT CHECK: whether `gates` passed on GitHub for the target's push to `main`. That is
 an online step of the procedure; --gates-check-run takes the id it found only to print it in
@@ -96,6 +102,10 @@ ALLOWED_SKIPS = ("  SKIP  .claude/settings.json absent; AIQT hooks are not activ
 PYTHON_SKIP = re.compile(r"  SKIP  python3 ([0-9]+\.[0-9]+\.[0-9]+) differs from CI's pinned "
                          r"PYTHON_VERSION ([0-9]+\.[0-9]+\.[0-9]+); html\.parser behaviour may "
                          r"differ, so a local green predicts CI less well")
+# tools/check_shell_blocks.py's pass line, which names the shellcheck version that ran. A
+# passing suite always prints it, since a missing shellcheck prints a SKIP instead.
+SHELL_PASS = re.compile(r"  ok    [0-9]+ bash blocks in [0-9]+ guides parse and pass "
+                        r"shellcheck (\S+) at \S.*")
 VERSION_SHAPE = re.compile(r"1\.0\.([0-9]+)")
 TAG_SHAPE = re.compile(r"v1\.0\.([0-9]+)")
 FULL_ID = re.compile(r"[0-9a-f]{40}")
@@ -315,6 +325,10 @@ def examine(root, main_ref, target, tag, previous, gates_run):
         elif previous is not None and pr not in referenced("\n".join(sections.get(date, []))):
             findings.append(f"#{pr} ({commit[:12]}) merged on {date} UTC but is not referenced "
                             f"under `## {date}`; move its entry in a records pull request first")
+        if previous_date is not None and not previous_date < date <= target_date:
+            findings.append(f"#{pr} ({commit[:12]}) merged on {date} UTC, which is not after the "
+                            f"previous release's {previous_date} and on or before the target's "
+                            f"{target_date}, so the notes would leave it out")
 
     if findings:
         return findings, None
@@ -349,9 +363,9 @@ def examine(root, main_ref, target, tag, previous, gates_run):
             f"of {own}.\n\n"
             f"- Tag `{tag}`. `VERSION` and the plugin version at the target are both "
             f"`{version}`.\n"
-            f"- The `gates` check of the target's push to `main` was confirmed on GitHub "
-            f"before publishing as check run {gates_run}. The offline release check records "
-            f"that id and does not verify it.\n"
+            f"- The `gates` check of the target's push to `main`, check run {gates_run}, was "
+            f"confirmed online by the publisher. The offline release check records that id and "
+            f"does not verify it.\n"
             + scope +
             f"- Pull requests merged in that range ({len(numbers)}): {pr_list}.\n"
             f"- The full notes are the `{notes_name}` asset, and the history is in "
@@ -411,7 +425,7 @@ def compare(directory, release):
 
 
 def suite(root, target):
-    """Findings for check 9, and the accepted Python SKIP's match if the suite printed one."""
+    """Findings for check 9, the accepted Python SKIP's match, and the reported shellcheck."""
     with tempfile.TemporaryDirectory(prefix="release-check.") as directory:
         tree = Path(directory) / "tree"
         git(root, "worktree", "add", "--detach", "--quiet", str(tree), target)
@@ -421,7 +435,7 @@ def suite(root, target):
                                   stderr=subprocess.STDOUT, text=True, errors="replace",
                                   timeout=7200)
         except (OSError, subprocess.SubprocessError) as exc:
-            return [f"{SUITE} could not run in a worktree of the target: {exc}"], None
+            return [f"{SUITE} could not run in a worktree of the target: {exc}"], None, None
         finally:
             git(root, "worktree", "remove", "--force", str(tree))
             git(root, "worktree", "prune")
@@ -433,13 +447,19 @@ def suite(root, target):
            or (line.startswith("  SKIP  ") and line.rstrip() not in ALLOWED_SKIPS
                and not PYTHON_SKIP.fullmatch(line.rstrip()))]
     last = next((line for line in reversed(lines) if line.strip()), "")
+    shell = next((m for m in (SHELL_PASS.fullmatch(line.rstrip()) for line in lines) if m),
+                 None)
     if done.returncode or last != SUITE_PASS or bad:
         detail = "; ".join(bad[:5]) or (last[:200] or "no output")
-        return [f"{SUITE} in a worktree of the target exited {done.returncode} with "
-                f"{len(bad)} FAIL or SKIP lines, last line {last[:80]!r}: {detail}"], None
-    return [], python
-
-
+        finding = (f"{SUITE} in a worktree of the target exited {done.returncode} with "
+                   f"{len(bad)} FAIL or SKIP lines, last line {last[:80]!r}: {detail}")
+    elif not shell:
+        finding = (f"{SUITE} in a worktree of the target printed no shell-block pass line "
+                   "naming a shellcheck version, so its bash blocks are not shown to have been "
+                   "linted")
+    else:
+        return [], python, shell.group(1)
+    return [finding], None, None
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parent.parent)
@@ -474,9 +494,9 @@ def main(argv=None):
         if not findings:
             findings = compare(args.dir, release)
         suite_ran = False
-        python = None
+        python = shellcheck = None
         if not findings and not args.build:
-            findings, python = suite(root, args.target)
+            findings, python, shellcheck = suite(root, args.target)
             suite_ran = True
     except (CannotCheck, OSError, UnicodeError) as exc:
         print(f"  FAIL  cannot check the release candidate: {exc}")
@@ -495,6 +515,9 @@ def main(argv=None):
         runtime = (f" Local python3 {python.group(1)} differed from CI's pinned PYTHON_VERSION "
                    f"{python.group(2)}, so CI's pinned Python is covered by the online gates "
                    "check on the target, which the procedure records.")
+    runtime += (f" Its shell-block gate reported shellcheck {shellcheck}, which this check does "
+                "not compare with CI's pinned SHELLCHECK_VERSION; CI's pinned shellcheck is "
+                "covered by the online gates check on the target.")
     print(f"  ok    {args.tag} at {args.target[:12]}: {len(release['prs'])} pull requests "
           f"merged {release['covered']} UTC, all in {CHANGELOG}, {dated}; notes, body and "
           f"assets match a rebuild of the target and {SUITE} passed in its worktree.{runtime} "

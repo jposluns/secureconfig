@@ -24,11 +24,16 @@ OK = "  ok    "
 RECORDED = "is recorded, not verified"
 RUN = "4242"
 
-# The passing stub prints the one accepted SKIP, and a line on stderr before its pass line, so a
-# check that read stderr after stdout would see the wrong last line.
-PASSING_SUITE = ('#!/usr/bin/env bash\necho "  ok    fixture"\n'
-                 'echo "  SKIP  .claude/settings.json absent; AIQT hooks are not activated"\n'
+# The shell-block gate's pass line, which names the shellcheck version that ran.
+SHELL_OK = 'echo "  ok    3 bash blocks in 2 guides parse and pass shellcheck {} at /bin/sc"\n'
+# The passing stub prints the shell-block pass line and the one accepted SKIP, and a line on
+# stderr before its pass line, so a check that read stderr after stdout would see the wrong last
+# line. The other-shellcheck stub differs from it only in the version, which is not compared.
+PASSING_LINES = ('echo "  SKIP  .claude/settings.json absent; AIQT hooks are not activated"\n'
                  'echo "a note on stderr" >&2\necho\necho "All gates passed."\n')
+PASSING_SUITE = '#!/usr/bin/env bash\n' + SHELL_OK.format("0.11.0") + PASSING_LINES
+OTHER_SHELLCHECK_SUITE = '#!/usr/bin/env bash\n' + SHELL_OK.format("0.10.0") + PASSING_LINES
+UNLINTED_SUITE = '#!/usr/bin/env bash\necho "  ok    fixture"\n' + PASSING_LINES
 FAILING_SUITE = ('#!/usr/bin/env bash\necho "  FAIL  fixture"\necho\n'
                  'echo "One or more gates failed."\nexit 1\n')
 SKIPPING_SUITE = ('#!/usr/bin/env bash\necho "  SKIP  shellcheck is not installed"\necho\n'
@@ -40,7 +45,7 @@ STDERR_FAIL_SUITE = ('#!/usr/bin/env bash\necho "  FAIL  on stderr" >&2\necho\n'
 # settings one; the near miss drops its tail, and the unavailable line is a different SKIP.
 PYTHON_SKIP = ("  SKIP  python3 3.14.4 differs from CI's pinned PYTHON_VERSION 3.14.7; "
                "html.parser behaviour may differ, so a local green predicts CI less well")
-PYTHON_LINES = ('#!/usr/bin/env bash\necho "  ok    fixture"\n'
+PYTHON_LINES = ('#!/usr/bin/env bash\n' + SHELL_OK.format("0.11.0") +
                 'echo "  SKIP  .claude/settings.json absent; AIQT hooks are not activated"\n'
                 f'echo "{PYTHON_SKIP}"\n')
 PYTHON_SUITE = PYTHON_LINES + 'echo\necho "All gates passed."\n'
@@ -176,13 +181,16 @@ def cases(tmp):
     first = tmp / "first"
     expect("a first release of the last merge of a UTC day passes",
            release(repo, c[11], "v1.0.11", None, first), 0, OK, RECORDED, "check run 4242",
-           "dating not checked for a first release", absent=("differed from CI's pinned",))
+           "dating not checked for a first release",
+           "Its shell-block gate reported shellcheck 0.11.0, which this check does not compare",
+           absent=("differed from CI's pinned",))
     body = (first / "body.md").read_text(encoding="utf-8")
     notes = (first / "assets" / "RELEASE-NOTES-v1.0.11.md").read_text(encoding="utf-8")
     expect("the first release's body lists every pull request up to the target",
            (0, body), 0, "Pull requests merged in that range (3): #9, #10, #11.",
            "This is the first tagged release.", "/blob/v1.0.11/CHANGELOG.md",
-           "follow the moving branch", absent=("#12",))
+           "follow the moving branch",
+           "check run 4242, was confirmed online by the publisher", absent=("#12",))
     expect("the first release's notes extract no sections and point to CHANGELOG.md at the tag",
            (0, notes), 0, "first tagged release", "/blob/v1.0.11/CHANGELOG.md",
            absent=("## 2026-",))
@@ -220,6 +228,9 @@ def cases(tmp):
          ["is not a release asset"]),
         ("edited notes are refused", "assets/RELEASE-NOTES-v1.0.13.md", b"# notes\n",
          ["RELEASE-NOTES-v1.0.13.md differs"]),
+        ("a SHA256SUMS changed after the build, with the assets unchanged, is refused",
+         "assets/SHA256SUMS", b"0" * 64 + b"  llms-full.txt\n",
+         ["SHA256SUMS differs from its rebuild", "SHA256SUMS does not verify llms-full.txt"]),
     ]
     for name, relative, data, needles in mutations:
         copy = tmp / f"mutated{COUNT[0]}"
@@ -227,6 +238,23 @@ def cases(tmp):
         (copy / relative).write_bytes(data)
         expect(name, gate(repo, c[13], "v1.0.13", "v1.0.11", copy), 1, *needles,
                "was not run because an earlier check failed")
+    copy = tmp / "unlinked"
+    gate(repo, c[13], "v1.0.13", "v1.0.11", copy, "--build")
+    (copy / "assets" / "RELEASE-NOTES-v1.0.13.md").unlink()
+    expect("a missing asset is refused", gate(repo, c[13], "v1.0.13", "v1.0.11", copy), 1,
+           "RELEASE-NOTES-v1.0.13.md is missing or not a regular file",
+           "was not run because an earlier check failed")
+    # A symlink to a file holding the right bytes: the asset must be the regular file itself.
+    copy = tmp / "symlinked"
+    gate(repo, c[13], "v1.0.13", "v1.0.11", copy, "--build")
+    outside = tmp / "outside-llms-full.txt"
+    outside.write_bytes((copy / "assets" / "llms-full.txt").read_bytes())
+    (copy / "assets" / "llms-full.txt").unlink()
+    (copy / "assets" / "llms-full.txt").symlink_to(outside)
+    expect("a symlinked asset with the right bytes is refused",
+           gate(repo, c[13], "v1.0.13", "v1.0.11", copy), 1,
+           "llms-full.txt is missing or not a regular file",
+           "was not run because an earlier check failed")
 
     # Check 1: the target.
     expect("a target that is not the last merge of its UTC day is refused",
@@ -257,14 +285,20 @@ def cases(tmp):
     expect("a tag that already exists locally is refused",
            release(repo, c[11], "v1.0.11", None, tmp / "exists"), 1,
            "already exists locally", "--first was given")
+    expect("a previous tag that does not exist locally cannot be checked",
+           release(repo, c[13], "v1.0.13", "v1.0.12", tmp / "absent"), 2,
+           "the previous tag 'v1.0.12' is not a local v1.0.<digits> tag")
     git(repo, "tag", "v1.0.10", c[10])
     expect("a previous tag that is not the highest local release tag is refused",
            release(repo, c[13], "v1.0.13", "v1.0.10", tmp / "nothighest"), 1,
            "is not the highest-numbered local release tag; v1.0.11 is")
+    # With no ancestor to start from, the range is empty, so that finding comes too; a valid
+    # range always holds the target's own merge, so it cannot arise alone.
     git(repo, "tag", "v1.0.20", side)
     expect("a previous tag that is not an ancestor of the target is refused",
            release(repo, c[13], "v1.0.13", "v1.0.20", tmp / "notancestor"), 1,
-           "is not an ancestor of the target", "not numbered strictly above")
+           "is not an ancestor of the target", "not numbered strictly above",
+           "no merged pull request was found in the release's range")
 
     # Checks 5 and 6: CHANGELOG.md at the target, in fixtures that differ by one entry.
     repo = tmp / "missing"
@@ -286,6 +320,20 @@ def cases(tmp):
     expect("a CHANGELOG.md at the target that fails the format rules is refused",
            release(repo, c[13], "v1.0.13", "v1.0.11", tmp / "f"), 1,
            "at the target: `## 2026-10-03` is not followed by a blank line")
+    # A previous release that was not the last merge of its UTC day: #12 merged after it on
+    # 2026-10-02 and sits under that date, which the later notes, taking only the dates after
+    # the previous release's, would leave out.
+    repo = tmp / "sameday"
+    c = build(repo, history=[HISTORY[0], HISTORY[1], (12, "2026-10-02T10:00:00Z", "2026-10-02"),
+                             HISTORY[3], HISTORY[4]])
+    git(repo, "tag", "v1.0.11", c[11])
+    expect("a range pull request merged on the previous release's UTC date is refused",
+           release(repo, c[13], "v1.0.13", "v1.0.11", tmp / "sd"), 1,
+           "#12 (", "merged on 2026-10-02 UTC, which is not after the previous release's "
+           "2026-10-02 and on or before the target's 2026-10-03", absent=("#13 (",))
+    expect("a target whose UTC date is not after the previous release's is refused",
+           release(repo, c[12], "v1.0.12", "v1.0.11", tmp / "sd12"), 1,
+           "the target's UTC date 2026-10-02 is not after the previous release's 2026-10-02")
 
     # Checks 2 and 3 again: out-of-order merges that share one VERSION, and a lagging manifest.
     repo = tmp / "outoforder"
@@ -329,6 +377,8 @@ def cases(tmp):
          "SKIP  python3 3.14.4 differs from CI's pinned PYTHON_VERSION 3.14.7"),
         ("a Python comparison that could not run refuses the release", UNAVAILABLE_SUITE,
          "SKIP  Python version comparison unavailable"),
+        ("a suite with no shell-block pass line refuses the release", UNLINTED_SUITE,
+         "printed no shell-block pass line naming a shellcheck version"),
     ]:
         repo = tmp / f"suite{COUNT[0]}"
         c = build(repo, suite=suite)
@@ -339,6 +389,12 @@ def cases(tmp):
     expect("the suite's advisory Python SKIP passes, and the pass line says CI's Python is "
            "covered online", release(repo, c[11], "v1.0.11", None, tmp / "python-out"), 0, OK,
            PYTHON_NOTE, RECORDED, absent=("FAIL",))
+    repo = tmp / "othershellcheck"
+    c = build(repo, suite=OTHER_SHELLCHECK_SUITE)
+    expect("a shellcheck other than CI's pin passes, and the pass line names it uncompared",
+           release(repo, c[11], "v1.0.11", None, tmp / "othershellcheck-out"), 0, OK,
+           "reported shellcheck 0.10.0, which this check does not compare with CI's pinned "
+           "SHELLCHECK_VERSION", RECORDED)
 
     # A shallow clone cannot show the history, so it fails closed rather than passing.
     shallow = tmp / "shallow"

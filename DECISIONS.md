@@ -23,7 +23,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   we're fully recovered from the crash first". This entry does not record that recovery as confirmed, and the first
   release waits for that confirmation.
   - Tags. A release's tag is `v` plus `VERSION` at its target commit, for example `v1.0.1153`.
-  - Cadence. Releases are cut when a major milestone completes or on demand; there is no fixed schedule.
+  - Cadence. Releases are cut "on completion of major milestones or on demand"; there is no fixed schedule.
   - Assets. A release carries `site/llms-full.txt`, the plugin tarball, the full release notes file, and
     `SHA256SUMS` covering them.
   - Publishing. The orchestrator publishes whenever the offline release check and the online `gates` check pass,

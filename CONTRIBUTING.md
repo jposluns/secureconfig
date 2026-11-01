@@ -434,8 +434,8 @@ no-dashes gate's optional `NOTICE` and `.aiqt/attribution.toml`.
 ## Releasing
 
 A release is a GitHub release on a tag `v1.0.<N>` that names one merge commit on `main`, where
-`1.0.<N>` is `VERSION` at that commit, for example `v1.0.1153`. Releases are cut when a major
-milestone completes or when the maintainer asks, on no fixed schedule, under the maintainer's
+`1.0.<N>` is `VERSION` at that commit, for example `v1.0.1153`. Releases are cut "on
+completion of major milestones or on demand", on no fixed schedule, under the maintainer's
 rulings of 2026-11-01 in `DECISIONS.md`. A release changes nothing on `main`, and its tag is
 never moved or removed once published. Those rulings call for a `v*` tag ruleset that blocks
 update and deletion, with creation open to write access, and for immutable releases if GitHub
@@ -463,22 +463,29 @@ offers them; both are repository settings the maintainer applies. A release's as
    `--previous <tag>`.
 5. Check the release with the same command without `--build`, on one of the two directories.
    The docstring of `tools/check_release.py` lists what it refuses. It runs
-   `tools/run_all_checks.sh` in a worktree of the target and refuses a FAIL line and any SKIP
-   line but two: the one for the untracked `.claude/settings.json`, and the suite's advisory
-   line saying the local `python3` differs from CI's pinned `PYTHON_VERSION`. So it needs the
-   pinned shellcheck, as the shell-block line shows, but not CI's Python release, which the
-   online `gates` check of step 3 covers on the target. When that Python line was printed,
-   the pass line says so, and it always says the online `gates` result is recorded, not
-   verified.
-6. Publish once both checks pass. Under the maintainer's standing grant of 2026-11-01 the
-   orchestrator publishes with
-   `gh release create v1.0.<N> --target <sha> --title "secureconfig v1.0.<N>" --notes-file <dir>/body.md <dir>/assets/*`,
-   which creates the tag through the API. Never run `git push --tags`, which would publish
-   the local `qa/` tags.
-7. Confirm with `git ls-remote origin refs/tags/v1.0.<N>` that the tag names the target, then
-   download the assets into a new directory with `gh release download v1.0.<N> --dir <new>`
-   and run `sha256sum -c SHA256SUMS` there.
-8. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
+   `tools/run_all_checks.sh` in a worktree of the target and refuses any line beginning
+   `  FAIL  ` and any line beginning `  SKIP  ` but two: the one for the untracked
+   `.claude/settings.json`, and the suite's advisory line saying the local `python3` differs
+   from CI's pinned `PYTHON_VERSION`. So it needs shellcheck installed, though not CI's pinned
+   release, and not CI's Python release: CI's pinned shellcheck, like its Python, is covered by
+   the online `gates` check of step 3 on the target. The pass line names the shellcheck version
+   the suite reported, says so when that Python line was printed, and always says the online
+   `gates` result is recorded, not verified.
+6. Create the release as a draft once the offline release check and the online `gates` check
+   pass. Under the maintainer's standing grant of 2026-11-01 the orchestrator creates it with
+   `gh release create v1.0.<N> --draft --target <sha> --title "secureconfig v1.0.<N>" --notes-file <dir>/body.md <dir>/assets/*`.
+   Never run `git push --tags`, which would publish the local `qa/` tags.
+7. Download the draft's assets into a new directory with
+   `gh release download v1.0.<N> --dir <new>`, run `sha256sum -c SHA256SUMS` there, and
+   compare that directory with `<dir>/assets` using `diff -r`. Any failure or difference stops
+   the release, and the draft is fixed or discarded before anything is published.
+8. Only then publish the draft with `gh release edit v1.0.<N> --draft=false`, and confirm with
+   `git ls-remote origin refs/tags/v1.0.<N>` that the tag names the target. Immutable releases
+   are enabled on this repository, so a published release cannot be corrected, which is why
+   its assets are verified while it is a draft. Whether a draft creates the tag before it is
+   published was not verified offline; the tag is created through the API either way, and
+   `git ls-remote` after publishing is what shows it names the target.
+9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers. The next release
    passes this tag as `--previous`.
 
