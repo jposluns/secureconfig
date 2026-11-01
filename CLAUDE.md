@@ -90,7 +90,8 @@ pinned `PYTHON_VERSION`: a mismatch or unavailable comparison prints an advisory
 never a failure, because `html.parser` behaviour can differ between releases.
 A matching release prints an ok line. Before any other gate, the suite checks that its `python3`,
 run as `python3 -I -B`, imports the markdown-it-py version that `tools/requirements-gates.txt`
-pins, and a match prints an ok line. A mismatch, a missing or broken package, or an unreadable
+pins and has the installed version that lock pins for every package in it, markdown-it-py and
+mdurl, and a match prints an ok line. A mismatch, a missing or broken package, or an unreadable
 or unparsable pin prints one FAIL line naming the interpreter, what it found and the pin, and the
 suite stops with status 2 before any other gate runs. A missing or mismatched parser is a host
 problem, not a code finding: install `tools/requirements-gates.txt` into a venv and put that

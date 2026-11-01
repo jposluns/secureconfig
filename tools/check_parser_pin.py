@@ -10,26 +10,28 @@ before the suite runs and is not affected. This check runs first, under the same
 `python3 -I -B` form that the parser gates and CI's parser assertion use, and turns that
 host state into one line and exit status 2, before any other gate runs.
 
-WHAT IT CHECKS: it reads the markdown-it-py pin from tools/requirements-gates.txt, never
-from this file, imports `markdown_it` and compares `markdown_it.__version__` with the pin.
-A match prints one `ok` line and exits 0. A mismatch, a missing package or a failed import
-prints one FAIL line naming the interpreter, what it found and the pin, says that it is a
-host problem, not a code finding, names the fix and exits 2. An unreadable or unparsable
-lock also exits 2 with one FAIL line, which says so instead, because the lock is a file in
-this checkout and the host fix would not repair it.
+WHAT IT CHECKS: it reads every pin from tools/requirements-gates.txt, never from this
+file, imports `markdown_it` and compares `markdown_it.__version__` with the markdown-it-py
+pin. After that import succeeds, it compares the installed version of every package the
+lock pins, markdown-it-py and mdurl, through `importlib.metadata.version`, as
+`gate_parser()` in tools/check_verify_marking.py does. A match prints one `ok` line and
+exits 0. A mismatch, a missing package or a failed import or metadata lookup prints one
+FAIL line naming the interpreter, the package and version it found and the pin, says that
+it is a host problem, not a code finding, names the fix and exits 2. An unreadable or
+unparsable lock also exits 2 with one FAIL line, which says so instead, because the lock is
+a file in this checkout and the host fix would not repair it.
 
-WHAT IT DOES NOT CHECK: mdurl, the parser's runtime dependency, is pinned in the same lock
-and checked by the gates themselves, not here, so a mismatched mdurl still reaches them.
-It compares the module's `__version__`, not the distribution metadata that
-`gate_parser()` in tools/check_verify_marking.py reads; the two agree for an ordinary
-install. Under `-I`, PYTHONPATH and the user site directory are ignored, so a parser
-reachable only through either is reported as missing even where a gate run without `-I`
-would find it.
+WHAT IT DOES NOT CHECK: it compares versions only, so an install whose version strings
+match the pin but whose files are damaged passes here and fails in the gates. Under `-I`,
+PYTHONPATH and the user site directory are ignored, so a parser reachable only through
+either is reported as missing even where a gate run without `-I` would find it.
 
-Deterministic and offline: it reads one file and imports one module.
+Deterministic and offline: it reads one file, imports one module and reads installed
+distribution metadata.
 """
 import re
 import sys
+from importlib.metadata import PackageNotFoundError, version as distribution_version
 from pathlib import Path
 
 LOCK = Path(__file__).resolve().with_name("requirements-gates.txt")
@@ -46,28 +48,34 @@ LOCK_FIX = (f"{LOCK_NAME} is part of this checkout, so restore it from main or m
 
 
 class PinError(ValueError):
-    """The lock cannot be read, or does not pin markdown-it-py exactly once."""
+    """The lock cannot be read, or does not pin each package, markdown-it-py included, once."""
 
 
-def pinned_version(lock=LOCK):
-    """Return the markdown-it-py version the lock pins, or raise PinError."""
+def pinned_versions(lock=LOCK):
+    """Return {package: version} for every pin in the lock, in lock order, or raise PinError."""
     try:
         text = Path(lock).read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         raise PinError(f"cannot read {LOCK_NAME}: {exc}") from exc
-    found = []
+    found = {}
     for number, line in enumerate(text.splitlines(), 1):
         if not line or line.startswith("#"):
             continue
         match = PIN_RE.fullmatch(line)
         if match is None:
             raise PinError(f"cannot parse {LOCK_NAME} line {number}: {line!r}")
-        if match[1] == PACKAGE:
-            found.append(match[2])
-    if len(found) != 1:
-        raise PinError(f"cannot parse {LOCK_NAME}: expected one {PACKAGE} pin, "
-                       f"found {len(found)}")
-    return found[0]
+        found.setdefault(match[1], []).append(match[2])
+    for package in (PACKAGE, *found):
+        count = len(found.get(package, ()))
+        if count != 1:
+            raise PinError(f"cannot parse {LOCK_NAME}: expected one {package} pin, "
+                           f"found {count}")
+    return {package: versions[0] for package, versions in found.items()}
+
+
+def pinned_version(lock=LOCK):
+    """Return the markdown-it-py version the lock pins, or raise PinError."""
+    return pinned_versions(lock)[PACKAGE]
 
 
 def installed_version():
@@ -91,18 +99,44 @@ def found_text(version_source):
     return found, f"{PACKAGE} {found}"
 
 
-def preflight(lock=LOCK, version_source=installed_version, interpreter=None):
+def metadata_text(package, metadata_source):
+    """Return (installed version or None, what was found, as the line reports it)."""
+    try:
+        found = metadata_source(package)
+    except PackageNotFoundError:
+        return None, f"no {package} distribution metadata"
+    except Exception as exc:  # A damaged dist-info can raise anything.
+        return None, f"a failed metadata lookup for {package} ({type(exc).__name__}: {exc})"
+    if not isinstance(found, str):
+        return None, f"a failed metadata lookup for {package} (version is {found!r})"
+    if package == PACKAGE:
+        return found, f"{PACKAGE} distribution metadata {found}"
+    return found, f"{package} {found}"
+
+
+def preflight(lock=LOCK, version_source=installed_version, interpreter=None,
+              metadata_source=distribution_version):
     """Return (exit status, the one line to print)."""
     where = f"python3 at {interpreter or sys.executable or 'an unknown path'}"
     found, found_line = found_text(version_source)
     try:
-        wanted = pinned_version(lock)
+        pins = pinned_versions(lock)
     except PinError as exc:
         return 2, (f"  FAIL  {PREFIX}{where} has {found_line}, but the pinned version is "
                    f"unknown: {exc}; {LOCK_FIX}")
-    if found == wanted:
-        return 0, f"  ok    {PREFIX}{where} has {found_line}, as {LOCK_NAME} pins"
-    return 2, f"  FAIL  {PREFIX}{where} has {found_line}, but {LOCK_NAME} pins {wanted}; {FIX}"
+    wanted = pins[PACKAGE]
+    if found != wanted:
+        return 2, (f"  FAIL  {PREFIX}{where} has {found_line}, but {LOCK_NAME} pins "
+                   f"{wanted}; {FIX}")
+    matched = [found_line]
+    for package, pinned in pins.items():
+        installed, text = metadata_text(package, metadata_source)
+        if installed != pinned:
+            return 2, (f"  FAIL  {PREFIX}{where} has {text}, but {LOCK_NAME} pins "
+                       f"{pinned}; {FIX}")
+        if package != PACKAGE:
+            matched.append(text)
+    return 0, f"  ok    {PREFIX}{where} has {' and '.join(matched)}, as {LOCK_NAME} pins"
 
 
 def main():

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Recorded cases for tools/check_parser_pin.py and the suite block that runs it.
 
-The version source is injected, so no case needs the network, a second venv or any
-particular markdown-it-py on this host. The suite cases run the real preflight block
+The version and metadata sources are injected, so no case needs the network, a second venv
+or any particular markdown-it-py on this host. The suite cases run the real preflight block
 from tools/run_all_checks.sh with a stub python3, as test_python_version_notice.py does
 for its block.
 """
@@ -20,6 +20,7 @@ import check_parser_pin as pin  # noqa: E402
 
 HASH = " --hash=sha256:" + "a" * 64
 LOCK = f"# comment\nmarkdown-it-py==4.2.0{HASH}\nmdurl==0.1.2{HASH}\n"
+PINNED = {"markdown-it-py": "4.2.0", "mdurl": "0.1.2"}
 INTERPRETER = "/opt/example/bin/python3"
 HOST = "this is a host problem, not a code finding"
 START = 'echo "== gate parser preflight: this python3 has the pinned markdown-it-py =="'
@@ -36,15 +37,31 @@ def raises(exc):
     return source
 
 
+def metadata(**changes):
+    """A distribution-metadata source: the shipped pins, with keyword changes applied."""
+    table = dict(PINNED, **{name.replace("_", "-"): value for name, value in changes.items()})
+
+    def source(package):
+        if package not in table:
+            raise pin.PackageNotFoundError(package)
+        value = table[package]
+        if isinstance(value, BaseException):
+            raise value
+        return value
+    return source
+
+
 class Preflight(unittest.TestCase):
-    def run_case(self, source, lock_text=LOCK, lock_bytes=None, missing=False):
+    def run_case(self, source, lock_text=LOCK, lock_bytes=None, missing=False,
+                 installed=None):
         with tempfile.TemporaryDirectory() as directory:
             lock = Path(directory) / "requirements-gates.txt"
             if lock_bytes is not None:
                 lock.write_bytes(lock_bytes)
             elif not missing:
                 lock.write_text(lock_text, encoding="utf-8")
-            return pin.preflight(lock, source, INTERPRETER)
+            return pin.preflight(lock, source, INTERPRETER,
+                                 metadata() if installed is None else installed)
 
     def assert_refusal(self, result, *fragments):
         status, line = result
@@ -95,6 +112,8 @@ class Preflight(unittest.TestCase):
                 ("no pin", f"mdurl==0.1.2{HASH}\n", "expected one markdown-it-py pin, found 0"),
                 ("two pins", LOCK + f"markdown-it-py==4.2.0{HASH}\n",
                  "expected one markdown-it-py pin, found 2"),
+                ("two mdurl pins", LOCK + f"mdurl==0.1.2{HASH}\n",
+                 "expected one mdurl pin, found 2"),
                 ("range, not a pin", f"markdown-it-py>=4.2.0{HASH}\n", "line 1"),
                 ("no hash", "markdown-it-py==4.2.0\n", "line 1"),
                 ("leading space", f" markdown-it-py==4.2.0{HASH}\n", "line 1")):
@@ -104,15 +123,48 @@ class Preflight(unittest.TestCase):
                                     fragment)
                 self.assertNotIn(HOST, result[1])
 
+    def test_mdurl_mismatch(self):
+        result = self.run_case(version("4.2.0"), installed=metadata(mdurl="0.1.1"))
+        self.assert_refusal(result, "has mdurl 0.1.1, but tools/requirements-gates.txt pins "
+                            "0.1.2;", HOST, "put DIR/bin first on PATH",
+                            "-r tools/requirements-gates.txt")
+
+    def test_missing_or_broken_dependency_metadata(self):
+        for label, value, fragment in (
+                ("absent", pin.PackageNotFoundError("mdurl"),
+                 "has no mdurl distribution metadata"),
+                ("raises", OSError("damaged"),
+                 "has a failed metadata lookup for mdurl (OSError: damaged)"),
+                ("not a string", None, "a failed metadata lookup for mdurl (version is None)")):
+            with self.subTest(label=label):
+                result = self.run_case(version("4.2.0"), installed=metadata(mdurl=value))
+                self.assert_refusal(result, fragment, "pins 0.1.2;", HOST)
+
+    def test_parser_metadata_must_match_too(self):
+        result = self.run_case(version("4.2.0"), installed=metadata(markdown_it_py="4.1.0"))
+        self.assert_refusal(result, "has markdown-it-py distribution metadata 4.1.0, but "
+                            "tools/requirements-gates.txt pins 4.2.0;", HOST)
+
+    def test_every_lock_pin_is_compared(self):
+        lock = LOCK + f"zeta==1.0{HASH}\n"
+        self.assert_refusal(self.run_case(version("4.2.0"), lock_text=lock),
+                            "has no zeta distribution metadata, but "
+                            "tools/requirements-gates.txt pins 1.0;", HOST)
+        status, line = self.run_case(version("4.2.0"), lock_text=lock,
+                                     installed=metadata(zeta="1.0"))
+        self.assertEqual(status, 0, line)
+        self.assertIn("has markdown-it-py 4.2.0 and mdurl 0.1.2 and zeta 1.0, as ", line)
+
     def test_match(self):
         status, line = self.run_case(version("4.2.0"))
         self.assertEqual((status, line), (0, (
             f"  ok    gate parser preflight: python3 at {INTERPRETER} has markdown-it-py "
-            "4.2.0, as tools/requirements-gates.txt pins")))
+            "4.2.0 and mdurl 0.1.2, as tools/requirements-gates.txt pins")))
 
     def test_pin_is_read_from_the_lock(self):
         lock = LOCK.replace("4.2.0", "9.8.7")
-        self.assertEqual(self.run_case(version("9.8.7"), lock_text=lock)[0], 0)
+        moved = metadata(markdown_it_py="9.8.7")
+        self.assertEqual(self.run_case(version("9.8.7"), lock_text=lock, installed=moved)[0], 0)
         self.assert_refusal(self.run_case(version("4.2.0"), lock_text=lock), "pins 9.8.7")
 
     def test_shipped_lock_pins_one_version(self):

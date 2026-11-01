@@ -1114,8 +1114,9 @@ else
 fi
 echo "== Verify fences, list items, table rows and prose declare demonstration or reasoning =="
 # Keep retained exemptions visible; a baseline pass is not full corpus compliance.
-# Run on its own, an absent/mismatched parser emits one SKIP and fence checks still run;
-# in this suite, the parser preflight at the top stops before this gate is reached.
+# Run on its own, an absent/mismatched parser emits one SKIP and fence checks still run, but
+# each guide whose intro recognition needs the parser is then a finding, so it exits 1; in
+# this suite, the parser preflight at the top stops before this gate is reached.
 # CI requires the pin even when this suite is invoked outside the workflow.
 vm_args=(--strict)
 if [ -n "${CI:-}" ]; then vm_args+=(--require-parser); fi
