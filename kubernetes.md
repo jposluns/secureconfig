@@ -279,15 +279,13 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure and Gateway TLS/authentication, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, and Kubernetes ports and protocols. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of this block, which also held the API reachability check and the node scans, before its app checks took the host on a guarded `set --` line. On the current form, which runs every part in one subshell and classifies the redirect, the request without credentials and the credentialed positive control, bash -n exited 0 and stub runs with kubectl and curl stubbed gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block, and no live demonstration was re-run. Five YAML blocks parsed. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure and Gateway TLS/authentication, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, and Kubernetes ports and protocols. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of this block, which also held the API reachability check and the node scans, before its app checks took the host on a guarded `set --` line. The form before this change runs every part in one subshell and classifies the redirect, the request without credentials and the credentialed positive control, and it lowercased the app host and the redirect line with `tr` before refusing a reserved name and comparing the redirect. On that form, bash -n exited 0 and stub runs with kubectl and curl stubbed gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block, and no live demonstration was re-run. The current form refuses a reserved name, and compares the redirect's Location with the host, under bash's `nocasematch` option instead of through `tr`, and its app-check part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by kubectl and curl stub runs on 2026-11-01 with no network. In bash, that part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. In those runs a 301 to the host in another letter case, with or without `:443`, passed the redirect check, also with `tr` absent or failing, and a 301 to another host was inconclusive. Under dash, that part refused every host name with 2 and the bash message before its probes, and the whole block exited 3, because dash reads the first part's `$'\n'` differently and that part reported an inconclusive result. Five YAML blocks parsed. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
 expectations, with their sources, are stated after the node-scan block, in the marker for that block.
 
 ```bash
-# REASONED: workload exposure and Gateway checks follow the cited documentation;
-# no Kubernetes cluster or isolated network namespace is available.
 # Run this where kubectl reaches the cluster. Every part runs in one subshell and the block exits once:
 # 1 for a finding, 3 for a failed command or an inconclusive result, 2 if the app checks refused their
 # input, and 0 otherwise.
@@ -319,20 +317,24 @@ expectations, with their sources, are stated after the node-scan block, in the m
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
     set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sI -w 'http=%{http_code} location=%{redirect_url}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the headers and the http= line
     printf '%s' "$4"                    # 301 with Location: https:// and your host name
     set -- "$1" "$2" "$3" "${4%$'\n'}"
-    set -- "$1" "$2" "$3" "$(printf '%s' "${4##*$'\n'}" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}"
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # the Location's scheme and host name ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
     case "$3:$4" in
-      "0:http=301 location=https://$5/"*|"0:http=301 location=https://$5:443/"*) ;;
+      "0:http=301 location=https://$1/"*|"0:http=301 location=https://$1:443/"*) ;;
       0:*) echo "the plain HTTP request did not get a 301 to https://$1/; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
       *) echo "curl exit $3: the plain HTTP request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"  # curl's exit status, then the http= line
     printf '%s\n' "$4"                  # no credentials: 401 where basic auth is set
@@ -699,7 +701,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "af701b98e73bf16a019f0ba5e76d05b2fe4fe4d2ecfcfeddf96bbe3c704ea9c7",
+  "body_sha256": "c0ecee44b6be9528b198547a86359adf541622ae0d398e35ad5ab6ce639f2cd6",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
