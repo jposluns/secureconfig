@@ -155,7 +155,9 @@ vhost list it prints.
     case "$2" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
       "$1") exit 6 ;;
     esac
-  ); then :; else
+  )
+  then :
+  else
     case "$?" in
       4) echo "LC_ALL is read-only in this shell, so the host name comparison cannot run; not probing" ;;
       5) echo "this block needs bash; run it in bash; not probing" ;;
@@ -327,7 +329,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "8e82e946b9c7b1a2da15f8274e145b377850139923258585384d94a8c536aed3",
+  "body_sha256": "4fc847dae3fcde93596591c447ffe745048433b4cbf149aa2527c49ae90709a2",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
