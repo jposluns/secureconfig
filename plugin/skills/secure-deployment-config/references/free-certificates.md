@@ -108,7 +108,7 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ## Verify
 
-REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks.
+REASONED: certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, no live result is recorded, and this guide records no run. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -120,7 +120,7 @@ REASONED: certificate inventory and HTTPS/certificate inspection follow the cite
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
   case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -144,8 +144,6 @@ REASONED: certificate inventory and HTTPS/certificate inspection follow the cite
   exit "$2"
 )
 ```
-
-REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation; no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ## Sources (checked September 2026)
 
@@ -259,7 +257,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "9580dd0de05bd29756c589ffc21005372d46a35bba7e55fcf1247406aaa2f63b",
+  "body_sha256": "bed8dac4fafafa6320e064ee47b8b4c3f811b3643b7ebf7ee12af64394603624",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",

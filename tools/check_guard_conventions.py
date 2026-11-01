@@ -4360,7 +4360,7 @@ _C4_GUARDED = r"""(
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "host"; exit 2 ;;
   esac
-  shopt -s nocasematch
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }
   case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "reserved"; exit 2 ;;
   esac
