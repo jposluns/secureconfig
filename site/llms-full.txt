@@ -15706,7 +15706,7 @@ platform git sources that feed the privileged controllers.
 
 ## Verify
 
-REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October 2026 stub runs recorded at each block. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
+REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October and November 2026 stub runs recorded at each block. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
 also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
 so it discriminates against a live install, based on the cited vendor documentation and pinned source readings. A login page, a
@@ -15739,9 +15739,9 @@ request answers 2xx with such a list, and 3 when a request fails, the anonymous 
 nor such a list, the token-bearing answer is not a 200 with such a list, or python3 cannot parse a body,
 so HTML, invalid JSON and JSON that is not such a list are inconclusive. A refusal in its token part
 gives 2, and the block exits 0 only for an anonymous 401 beside that token-bearing 200.
-The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over
-every block, and by October 2026 stub runs under bash 5.3.9 with curl stubbed, the real python3 parsing
-and the token typed at a pseudo-terminal. In those runs an anonymous 401 beside a token-bearing 200 whose
+October 2026 stub runs under bash 5.3.9 with curl stubbed, the real python3 parsing and the token typed
+at a pseudo-terminal covered the guarded form while its reserved-name check lowercased the host with
+`tr`. In those runs an anonymous 401 beside a token-bearing 200 whose
 list held the application exited 0; an anonymous 200 whose list held it exited 1, also when the
 token-bearing request failed or answered 403 or the token was empty or readonly. A 200 at either request
 holding HTML, invalid JSON, `{"error":"demo"}` for an application named demo, a list naming only
@@ -15750,7 +15750,15 @@ top-level array exited 3.
 So did an anonymous login page, 302 or curl failure, a token-bearing 403 or failure, a failing python3
 and no readable /dev/tty. A missing python3, each `set --` refusal, and beside an anonymous 401 an empty
 or readonly token or a readonly IFS exited 2; an inherited `set -e`, `set -u` or `declare -i tok` left
-these results unchanged.
+these results unchanged. The current form instead matches reserved names in any letter case through
+bash's `nocasematch` option, and is covered by the repository gate suite's bash -n and ShellCheck 0.11.0
+passes over every block, and by November 2026 stub runs under bash 5.3.9 with curl stubbed and no
+network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains,
+each exited 2 with the reserved-name message before any request; two reserved names in upper or mixed
+case also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and
+`declare -i` variables, or `set -e`, and a host outside those names reached the anonymous request. Under
+dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names
+alike with status 2 and its message that the block needs bash, before any request.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
 also clears the `REDIS_PASSWORD` environment copy, and per-handler RBAC coverage in `argocd-server`.
@@ -15773,9 +15781,11 @@ every line after the first for your shell to run.
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the Argo CD server's host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the path of the CA file that issued the Argo CD server's certificate inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -15975,13 +15985,22 @@ before the secret prompt, that refuses an unsubstituted value and example.com, e
 and their subdomains. It records a finding (1) when the unsigned request is accepted with a 2xx, reads a
 4xx or 5xx answer to it as a rejection, and records 3 when a request fails, the unsigned answer is
 anything else, or the signed request is not accepted with a 2xx. A failed prompt read or signature now
-exits 3 rather than 2. The current form is covered by the repository gate suite's bash -n and
-ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs under bash 5.3.9 with curl
-stubbed, the real python3 signing and the secret typed at a pseudo-terminal. In those runs an unsigned
+exits 3 rather than 2. October 2026 stub runs under bash 5.3.9 with curl stubbed, the real python3
+signing and the secret typed at a pseudo-terminal covered that form while its reserved-name check
+lowercased the host with `tr`. In those runs an unsigned
 401 or 500 beside a signed 200 exited 0, and the stub received the body on stdin and the expected HMAC
 header. An unsigned 200 exited 1, also when the signed request failed; an unsigned 302 or curl failure,
 a signed 401, a failing or silent python3 and no readable /dev/tty exited 3; and an empty secret, a
-readonly hmac or IFS and each `set --` refusal exited 2.
+readonly hmac or IFS and each `set --` refusal exited 2. The current form instead matches reserved
+names in any letter case through bash's `nocasematch` option, and is covered by the repository gate
+suite's bash -n and ShellCheck 0.11.0 passes over every block, and by November 2026 stub runs under bash
+5.3.9 with curl stubbed and no network. In those runs eight reserved names in lower, upper and mixed
+case, bare and as subdomains, each exited 2 with the reserved-name message before the secret prompt;
+two reserved names in upper or mixed case also did with `tr` absent from PATH, and under an inherited
+`nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached
+the secret prompt. Under dash, which lacks bash's `shopt`, stub runs of the current form refused
+reserved and other host names alike with status 2 and its message that the block needs bash, before the
+secret prompt.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
@@ -16021,9 +16040,11 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the receiver's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*[?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the receiver's path after /hook/ (no slash, query, fragment or percent sign) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -16324,7 +16345,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "85369075c037b3f77df005afa2a71cc0a6f52d8b73e68e398b591a5cb3bee82b",
+  "body_sha256": "b93332fac2381126c55dd1cf869f3ff85ee57aa99959e15fc102c28f872a09af",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -24875,7 +24896,7 @@ Where a system cannot revoke immediately, such as a session cached until its own
 
 ## Verify
 
-REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. The four checks are separate blocks, each with its own exit status: the IPv4 scan, the IPv6 scan, the retired-name DNS check and the certificate check. The retired-name block cannot exit 0 by design, because it reads your configured resolver only: it exits 1 for any answer and 3 otherwise, and only the authoritative check in its comment can establish removal.
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no live run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. November 2026 stub runs of both blocks under bash 5.3.9, with curl, dig and openssl stubbed and no network, refused eight reserved names in lower, upper and mixed case, bare and as subdomains, each with status 2 and the reserved-name message before any curl, dig or openssl call, also with `tr` absent from PATH and under an inherited `nocasematch`, readonly and `declare -i` variables, or `set -e`. A host outside those names reached the stubbed calls, and under dash both blocks refused reserved and other host names alike with status 2 and the message that the block needs bash, before any call; no live DNS or certificate result is recorded. The four checks are separate blocks, each with its own exit status: the IPv4 scan, the IPv6 scan, the retired-name DNS check and the certificate check. The retired-name block cannot exit 0 by design, because it reads your configured resolver only: it exits 1 for any answer and 3 otherwise, and only the authoritative check in its comment can establish removal.
 
 ```bash
 # From a second network, not the host itself:
@@ -24924,7 +24945,7 @@ REASONED: following block; outside-network IPv6 scan, per the cited Nmap documen
 )
 ```
 
-REASONED: following block; retired-name DNS check, per the cited dig documentation and DNS RFCs, including RFC 2308 section 2; no retired host name or authoritative DNS zone was supplied, and no run is recorded. This block cannot exit 0 by design: it reads your configured resolver only, so it exits 1 when that resolver returns any A, AAAA or CNAME answer and 3 otherwise, including empty answers and a failed lookup or request. Removal is decided by the authoritative check in its comment, `dig @AUTH_NS name TYPE +norecurse` against each authoritative nameserver, which must give NXDOMAIN or NOERROR/NODATA with no CNAME.
+REASONED: following block; retired-name DNS check, per the cited dig documentation and DNS RFCs, including RFC 2308 section 2; no retired host name or authoritative DNS zone was supplied, and no live run is recorded. This block cannot exit 0 by design: it reads your configured resolver only, so it exits 1 when that resolver returns any A, AAAA or CNAME answer and 3 otherwise, including empty answers and a failed lookup or request. Removal is decided by the authoritative check in its comment, `dig @AUTH_NS name TYPE +norecurse` against each authoritative nameserver, which must give NXDOMAIN or NOERROR/NODATA with no CNAME.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -24935,9 +24956,11 @@ REASONED: following block; retired-name DNS check, per the cited dig documentati
   case "$1" in
     ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the retired host name (no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), and no lookup returns it to 0
   curl -q -g -sI "https://$1/" ||       # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
     { echo "curl exit $?: the request failed, which is not proof the record is gone; inconclusive"; set -- "$1" 3; }
@@ -24978,7 +25001,7 @@ REASONED: following block; retired-name DNS check, per the cited dig documentati
 )
 ```
 
-REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 documentation; no live app host name was supplied, and no run is recorded. Run it from outside on a schedule: it exits 0 when s_client verified the chain and the name and x509 printed the notAfter date, which it leaves for you to judge, and 3 when s_client or x509 failed, so an expired, untrusted or misnamed certificate gives 3.
+REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 documentation; no live app host name was supplied, and no live run is recorded. Run it from outside on a schedule: it exits 0 when s_client verified the chain and the name and x509 printed the notAfter date, which it leaves for you to judge, and 3 when s_client or x509 failed, so an expired, untrusted or misnamed certificate gives 3.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -24989,9 +25012,11 @@ REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 d
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" "$(if openssl s_client -connect "$1:443" -servername "$1" \
     -verify_hostname "$1" -verify_return_error </dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # s_client's own status, captured before x509 reads its output
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"         # the host, s_client's output, then its exit status
@@ -25127,7 +25152,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1c1822b2d79c736033e81216f612e68a4bee35538c34f0bd008855eb659149b1",
+  "body_sha256": "eabb2694f387dcd9a23efc4d2972fc9de007bcb44ee99aad46f873b59bc0ef96",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
@@ -58442,7 +58467,7 @@ Build the image from the pinned checkout and run that local build, not the GHCR 
 
 The image build excludes `auth.json`, so mount it read-only at `/content/app/auth.json`: `-v /srv/fooocus/auth.json:/content/app/auth.json:ro` with `docker run`, or `- /srv/fooocus/auth.json:/content/app/auth.json:ro` under the service's `volumes:` in `docker-compose.yml`. Fooocus runs in the image as its unprivileged `user` account, so the host file must be owned by that account's uid and readable by no other account. Read the uid from the image you built: on the `docker build . -t fooocus` path, `docker run --rm --entrypoint id fooocus -u user` prints it; on the Compose path, run `docker compose build` and then `docker run --rm --entrypoint id ghcr.io/lllyasviel/fooocus -u user`, which reads the local build Compose tagged with that name. Then `sudo chown` the file to that uid and `sudo chmod 0400` it. Read from the source and not observed on a running server (above), an unreadable file should stop Fooocus from starting, and a malformed file or an empty list should start it with no login, so check for the login prompt. Under rootless Docker or user-namespace remapping the host-side owner differs; this guide has not checked that case.
 
-## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence in an earlier form, before the proxy check took its host on a guarded set -- line. In the extracted port-loop subshell of an earlier form, with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so in that form neither exit status nor the guard validated an address or service exposure. The bash -n run recorded here covered the shell fence and the stub runs covered the extracted port-loop subshell, each in an earlier form, whose guard refusals left the subshell with status 0. The checks are now four fences, each ending with its own exit status; the gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2)
+## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence in an earlier form, before the proxy check took its host on a guarded set -- line. In the extracted port-loop subshell of an earlier form, with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so in that form neither exit status nor the guard validated an address or service exposure. The bash -n run recorded here covered the shell fence and the stub runs covered the extracted port-loop subshell, each in an earlier form, whose guard refusals left the subshell with status 0. The checks are now four fences, each ending with its own exit status; the gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2. For the proxy check, those runs covered the form that lowercased the host with tr, and the stub runs of its current form are recorded with that check below)
 
 None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. The checks remain REASONED from the cited vendor documentation and pinned sources, as detailed below.
 
@@ -58450,7 +58475,7 @@ The ComfyUI (8188), AUTOMATIC1111 (7860 with the explicit `--port 7860` above) a
 
 The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. The cited Multi-User Administrator Guide distinguishes the default single-user mode from `multiuser: true`, which requires a login. The [Multi-User API Guide](https://invoke.ai/features/multi-user-mode/api-guide/) documents the boards endpoint and missing-token `401`. The expected pair is an unauthenticated boards response in single-user mode (the cited guides give no status code for it; record the observed code) and `401` in multi-user mode.
 
-REASONED: the proxy check is not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](https://github.com/jposluns/secureconfig/blob/main/fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. The header request in the last fence below takes your configured host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; no proxy has answered it, and its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs in which each guard refusal exited 2. The header request checks the TLS connection and authentication response, and a browser check confirms the login gates the UI, so that fence exits 3 when curl fails and otherwise 0, leaving the response and the browser check to you.
+REASONED: the proxy check is not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](https://github.com/jposluns/secureconfig/blob/main/fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. The header request in the last fence below takes your configured host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; no proxy has answered it. Stub runs in which each guard refusal exited 2 covered an earlier form of that fence, which lowercased the host with `tr`. Its current form, which matches reserved names in any letter case through bash's `nocasematch` option, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by November 2026 stub runs under bash 5.3.9 with curl stubbed and no network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains, each exited 2 with the reserved-name message before any request; two reserved names in upper or mixed case also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached the header request. Under dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names alike with status 2 and its message that the block needs bash, before any request. The header request checks the TLS connection and authentication response, and a browser check confirms the login gates the UI, so that fence exits 3 when curl fails and otherwise 0, leaving the response and the browser check to you.
 
 REASONED: the listener inventory in the following fence, which refuses with status 2 when `ss` is not installed, and the Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code. The expectation drawn from the same v2.5.5 sources is that a Fooocus process started on the host as above should show `127.0.0.1:7865` in `ss`, and that the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](https://github.com/jposluns/secureconfig/blob/main/docker.md#4-verify)). A container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and a container published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the port-loop block's `set --` line. The port-loop block probes every port even when an earlier probe fails, and exits 1 if any port answers with an HTTP code, otherwise 3 if any curl fails other than by failing to connect (exit 7) or timing out (exit 28), and otherwise 0, so read each `port=` line: a refusal or timeout passes only when its `err` text shows that it reached your address. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
@@ -58537,7 +58562,7 @@ REASONED: the listener inventory in the following fence, which refuses with stat
 ```
 
 ```bash
-# REASONED: TLS and login follow the fronting-auth.md guidance above;
+# TLS and login follow the fronting-auth.md guidance above;
 # the authoring host forbids listeners without an isolated network namespace, and has none.
 # This block exits 3 if curl fails and otherwise 0, because you judge the response and the browser login.
 (                                                   # a subshell, so your own script arguments are untouched
@@ -58548,9 +58573,11 @@ REASONED: the listener inventory in the following fence, which refuses with stat
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   if curl -q -g -sI "https://$1/"; then               # via the proxy: TLS, and a login prompt
                                                          # or 401 without credentials, before the UI loads
     echo "block exit 0; unclassified observation: read the status line and headers above, and confirm in a fresh browser session that a login appears before the UI loads"
@@ -58690,7 +58717,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "8b04791ee760556b9ce08ae5df5766d859cad125f19f8096963a8202cc5a44ef",
+  "body_sha256": "e1ce0c6d73be665e814c3cf58402bbb69a7478db87a3b83a1fbd2e567fd5732e",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -64342,15 +64369,19 @@ Keep the origin list in configuration per environment rather than hardcoding loc
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your API's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your app's origin host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$2" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own origin host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   # Both probes request /data: change that path to a route your app's browser code calls.
   # The hostile origin https://evil.example is deliberately foreign; keep it as written.
   set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
@@ -64444,7 +64475,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f53deb10a490e75844e383cc38d6b01a593720324db19e58ef03f2ec2c68862b",
+  "body_sha256": "b8284c1d87025e9c06c9e53f1af87a70d9308e51e81e6cb92bfe5b94a276b46a",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",
@@ -66659,9 +66690,11 @@ REASONED: following block; planted-file denial, directory listing and ACME/looka
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|[!/]*|*[[:cntrl:]]*) echo "substitute this host's document root, an absolute path, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -66814,23 +66847,26 @@ REASONED: following block; planted-file denial, directory listing and ACME/looka
 # existed, so nothing was scanned, and 0 otherwise.
 ```
 
-REASONED: preceding block; client-bundle scan, per the guide's cited Next.js environment variables and GNU grep 3.12 exit status and error handling, with the dotfile/backup denial, listing and ACME/lookalike checks of the block above it, per the cited nginx core module, nginx access module, Apache core Options, Caddy matchers and RFC 8555 section 8.3 HTTP-01 validation. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the planted-file checks and the bundle scan as one block, before its host guard was added, and were not repeated on the guarded block. That earlier form ended its result arms with status 0. Those runs were not repeated on the next form either, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1. On the current form, in which the two checks are separate blocks, the planted-file block takes its document root on its `set --` line and exits 1 on a finding, and both keep their values in positional parameters, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses. `tools/run_all_checks.sh` ran ShellCheck 0.11.0 over that form with no findings; no server run is recorded, and no demonstration was re-run. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; client-bundle scan, per the guide's cited Next.js environment variables and GNU grep 3.12 exit status and error handling, with the dotfile/backup denial, listing and ACME/lookalike checks of the block above it, per the cited nginx core module, nginx access module, Apache core Options, Caddy matchers and RFC 8555 section 8.3 HTTP-01 validation. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Those runs covered the planted-file checks and the bundle scan as one block, before its host guard was added, and were not repeated on the guarded block. That earlier form ended its result arms with status 0. Those runs were not repeated on the next form either, in which an inconclusive step or a failed removal exits 3 after its cleanup is attempted and a bundle match exits 1. On the form in which the two checks became separate blocks, the planted-file block takes its document root on its `set --` line and exits 1 on a finding, and both keep their values in positional parameters, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses. `tools/run_all_checks.sh` ran ShellCheck 0.11.0 over that form with no findings; no server run is recorded, and no demonstration was re-run. For the planted-file block, those runs covered the form whose reserved-name check lowercased the host with `tr`. Its current form, which matches reserved names in any letter case through bash's `nocasematch` option, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by November 2026 stub runs under bash 5.3.9 with curl stubbed, sudo replaced by a pass-through, a scratch document root and no network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains, each exited 2 with the reserved-name message before any plant or request; two reserved names in upper or mixed case also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached the plants and requests. Under dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names alike with status 2 and its message that the block needs bash, before any plant or request. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
-REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0. Those runs were not repeated on the next form either, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed. On the current form, which also exits 1 when a probe returns PLANTED-SECRET, takes the document root on its `set --` line and keeps its values in positional parameters, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses. `tools/run_all_checks.sh` ran ShellCheck 0.11.0 over that form with no findings; no server run is recorded, and no demonstration was re-run. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Those runs covered the block before its host guard was added and were not repeated on the guarded block. That earlier form ended its inconclusive arms with status 0. Those runs were not repeated on the next form either, which exits 3 after attempting its cleanup when a plant or curl transfer was inconclusive or a removal failed. On the form after that, which also exits 1 when a probe returns PLANTED-SECRET, takes the document root on its `set --` line and keeps its values in positional parameters, bash -n in Bash 5.3.9 exited 0 and stub runs without network access checked its exit statuses. `tools/run_all_checks.sh` ran ShellCheck 0.11.0 over that form with no findings; no server run is recorded, and no demonstration was re-run. Those runs covered that form while its reserved-name check lowercased the host with `tr`. The current form, which matches reserved names in any letter case through bash's `nocasematch` option, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by November 2026 stub runs under bash 5.3.9 with curl stubbed, sudo replaced by a pass-through, a scratch document root and no network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains, each exited 2 with the reserved-name message before any plant or request; two reserved names in upper or mixed case also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached the plants and requests. Under dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names alike with status 2 and its message that the block needs bash, before any plant or request. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
 against real content. Use GNU `mktemp`, and put this host's served host name and its document root on
 the block's `set --` line. On an isolated test host, run before and after enabling the
 deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
 return 403 or 404 without that body. A failed plant or curl transfer is inconclusive, and so is a 200 without that body or any other code. The block attempts to remove every plant, and it exits 1 when a probe returned `PLANTED-SECRET`, otherwise 3 when a step was inconclusive or a removal failed, and otherwise 0.
 
 ```bash
-# REASONED: following probes were not run against a server: no Caddy, nginx, Apache, or container
+# The following probes were not run against a server: no Caddy, nginx, Apache, or container
 # runtime is available, and network restrictions prevent installing one. Expected exposed/fixed
 # outcomes follow the Caddy path/path_regexp, nginx location/deny, and Apache FilesMatch/Require
 # references in Sources. Local shell syntax and GNU mktemp suffix creation were checked only, on the
 # block before its host guard was added. That form's inconclusive arms ended with status 0; the later
 # forms, which exit 3 after attempting their cleanup when a step is inconclusive or a removal fails,
 # were not re-checked, except that bash -n, stub runs and the ShellCheck 0.11.0 run in
-# tools/run_all_checks.sh, which had no findings, checked this one, which also exits 1 on PLANTED-SECRET.
+# tools/run_all_checks.sh, which had no findings, checked the one that also exits 1 on PLANTED-SECRET
+# while its host check lowercased with tr. This one, matching reserved names through nocasematch and
+# refusing with status 2 outside bash, is covered by that suite's bash -n and ShellCheck 0.11.0 passes
+# and by later stub runs.
 (                                       # a subshell, so your own script arguments are untouched
   set +e                                # errexit off here, so a plant that ends nonzero is folded into the status below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_YOUR_DOCUMENT_ROOT'   # this host's served host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then its document root as an absolute path: replace inside the quotes, keeping them
@@ -66840,9 +66876,11 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|[!/]*|*[[:cntrl:]]*) echo "substitute this host's document root, an absolute path, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -66971,14 +67009,14 @@ Claims (full source mapping in the JSON block below):
 - verify-lookalike (REASONED; nginx, apache, caddy, caddy-rolling): Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.
 - verify-bundle (REASONED; next, vite, cra, grep): Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.
 - verify-backup (REASONED; nginx, apache, caddy, caddy-rolling): Known previously deployed backup URLs should return 403 or 404 without the file contents.
-- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Syntax and suffix creation were checked on an earlier form whose inconclusive arms exited 0; this form had bash -n, ShellCheck 0.11.0 and stub runs, none on a server.
+- verify-suffixes (REASONED; nginx, apache, caddy, coreutils, caddy-rolling): GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Syntax and suffixes were checked on a form exiting 0 when inconclusive; a tr-based form and this one had bash -n, ShellCheck 0.11.0 and stub runs, none on a server.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "69f07f2624e8f820c5719a4b899313cee3910b6542c084668d6b5c6d4d4da678",
+  "body_sha256": "3337d76db4d17e4c9879df36e58a4293e23fd16325ae0bc16bb123300da2be55",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -67125,7 +67163,7 @@ Claims (full source mapping in the JSON block below):
     "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
     "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [2]},
     "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
-    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Syntax and suffix creation were checked on an earlier form whose inconclusive arms exited 0; this form had bash -n, ShellCheck 0.11.0 and stub runs, none on a server.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [3]}
+    "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive (status 3). Syntax and suffixes were checked on a form exiting 0 when inconclusive; a tr-based form and this one had bash -n, ShellCheck 0.11.0 and stub runs, none on a server.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:s4166af5265e7"], "status": "REASONED", "verify": [3]}
   }
 }
 ````
