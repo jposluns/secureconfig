@@ -221,7 +221,7 @@ platform git sources that feed the privileged controllers.
 
 ## Verify
 
-REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October 2026 stub runs recorded at each block. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
+REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October and November 2026 stub runs recorded at each block. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
 also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
 so it discriminates against a live install, based on the cited vendor documentation and pinned source readings. A login page, a
@@ -267,11 +267,13 @@ and no readable /dev/tty. A missing python3, each `set --` refusal, and beside a
 or readonly token or a readonly IFS exited 2; an inherited `set -e`, `set -u` or `declare -i tok` left
 these results unchanged. The current form instead matches reserved names in any letter case through
 bash's `nocasematch` option, and is covered by the repository gate suite's bash -n and ShellCheck 0.11.0
-passes over every block, and by October 2026 stub runs under bash 5.3.9 with curl stubbed and no
+passes over every block, and by November 2026 stub runs under bash 5.3.9 with curl stubbed and no
 network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains,
 each exited 2 with the reserved-name message before any request; two of them in upper or mixed case
 also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and `declare -i`
 variables, or `set -e`, and a host outside those names reached the anonymous request.
+Under dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names
+alike with status 2 and its message that the block needs bash, before any request.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
 also clears the `REDIS_PASSWORD` environment copy, and per-handler RBAC coverage in `argocd-server`.
@@ -294,7 +296,7 @@ every line after the first for your shell to run.
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the Argo CD server's host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
   case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -506,12 +508,14 @@ header. An unsigned 200 exited 1, also when the signed request failed; an unsign
 a signed 401, a failing or silent python3 and no readable /dev/tty exited 3; and an empty secret, a
 readonly hmac or IFS and each `set --` refusal exited 2. The current form instead matches reserved
 names in any letter case through bash's `nocasematch` option, and is covered by the repository gate
-suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs under bash
+suite's bash -n and ShellCheck 0.11.0 passes over every block, and by November 2026 stub runs under bash
 5.3.9 with curl stubbed and no network. In those runs eight reserved names in lower, upper and mixed
 case, bare and as subdomains, each exited 2 with the reserved-name message before the secret prompt;
 two of them in upper or mixed case also did with `tr` absent from PATH, and under an inherited
 `nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached
-the secret prompt.
+the secret prompt. Under dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and
+other host names alike with status 2 and its message that the block needs bash, before the secret
+prompt.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
@@ -551,7 +555,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the receiver's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
   case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -856,7 +860,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "6b412f96623577d2c50f9de5a9a76fa751a6a0b9bd0e38315ce08eebaf20e6bd",
+  "body_sha256": "5b20bbdbdc03134868c38739d426c6859102561af563e38330fd42855d5ac001",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
