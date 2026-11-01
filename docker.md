@@ -104,16 +104,23 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 
 ## 4. Verify
 
-REASONED: publication, redirect, authentication and external isolation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker networking sources and linked proxy guides; the authoring environment has no authorized deployment or external probe hosts. For the unauthenticated API probe, expect 401 from Caddy or nginx basic auth; Caddy `forward_auth` admits auth-service 2xx, but its rejection status is not established by the fetched lines. Expect 401/403 from nginx `auth_request`; the cited Authelia nginx configuration converts its 401 to a 302 login redirect. Traefik `forwardAuth` passes through its auth service's non-2xx status, including a login redirect; Traefik `basicAuth` calls `RequireAuth`, whose response the fetched lines do not show, so 401 is this guide's expectation rather than a status established by the fetched middleware. For Cloudflare Access, this guide expects a 302 login redirect in the configuration described in [cloudflare.md](cloudflare.md); the fetched Cloudflare lines do not establish that status. A 3xx passes only when its printed location is the gate's own login portal (for Cloudflare Access, your team's `*.cloudflareaccess.com`), never the application's own login. The command fails on any 2xx; any status other than the gate's expected rejection or a 3xx to its portal is not a pass; and an authorized request must succeed separately. The redirect and unauthenticated API curls take the app's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; this guide records no run of the guard or the classification.
+REASONED: publication, redirect, authentication and external isolation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker networking sources and linked proxy guides; the authoring environment has no authorized deployment or external probe hosts. For the unauthenticated API probe, expect 401 from Caddy or nginx basic auth; Caddy `forward_auth` admits auth-service 2xx, but its rejection status is not established by the fetched lines. Expect 401/403 from nginx `auth_request`; the cited Authelia nginx configuration converts its 401 to a 302 login redirect. Traefik `forwardAuth` passes through its auth service's non-2xx status, including a login redirect; Traefik `basicAuth` calls `RequireAuth`, whose response the fetched lines do not show, so 401 is this guide's expectation rather than a status established by the fetched middleware. For Cloudflare Access, this guide expects a 302 login redirect in the configuration described in [cloudflare.md](cloudflare.md); the fetched Cloudflare lines do not establish that status. A 3xx passes only when its printed location is the gate's own login portal (for Cloudflare Access, your team's `*.cloudflareaccess.com`), never the application's own login. The command fails on any 2xx; any status other than the gate's expected rejection or a 3xx to its portal is not a pass; and an authorized request must succeed separately. The redirect and unauthenticated API curls take the app's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; this guide records no earlier run of the guard or the classification. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the block's current form, and so do stub runs with stub commands and no network, including `ss` passing, failing and missing, in a clean shell and under an inherited `readonly`, `declare -i` and `set -e`. The block exits with one status: 1 for a finding, 3 when a part fails or is inconclusive, 2 when its guard refuses the host name or `ss` is not installed and no other part found something or was inconclusive, and otherwise 0, leaving the lists, the redirect headers and any non-2xx `/api` answer for you to judge.
+
+### Exposure checks
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input, or ss is not installed), which outranks 0
   docker compose ps                     # project-scoped: only the proxy shows a published (0.0.0.0/[::] or a host IP) binding; review every container on the host, IPv6 included
   case "$?" in 0) ;; *) echo "docker compose ps failed; inconclusive"; set -- 3 ;; esac
-  ss -tulnp                             # host sockets (TCP and UDP); socket visibility varies by Docker version and config, so a socket listing alone does not prove reachability
-  case "$?" in 0) ;; *) echo "ss -tulnp failed; inconclusive"; set -- 3 ;; esac
+  if command -v ss >/dev/null; then     # a missing ss is a refusal, ranked as above
+    ss -tulnp                           # host sockets (TCP and UDP); socket visibility varies by Docker version and config, so a socket listing alone does not prove reachability
+    case "$?" in 0) ;; *) echo "ss -tulnp failed; inconclusive"; set -- 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
   (                                     # a subshell, so your own script arguments are untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your TLS proxy serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -299,7 +306,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "05584e952ee0f99af0fb3f81ad5a04e674de4a90371d811178cef526b43b3d64",
+  "body_sha256": "2a28a8f4831f5ae241e9906eea47b5f5306f7a5bbf6119a1f425403f148b5351",
   "components": {
     "boundary": {
       "name": "Docker Engine minimum boundary",
