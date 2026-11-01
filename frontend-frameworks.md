@@ -79,9 +79,11 @@ REASONED: following block; private-route denial and Host handling, with the prox
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set +e                                # errexit off here, so a request that fails is recorded below instead of ending the block
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   set -- "$1" "$2" "$(if curl -q -g -si -w '\n%{http_code}' "https://$1/api/private"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -293,7 +295,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "261429b3cae24b146ce5203050d683d7c10bac8c76b372fb74a346e281d99a44",
+  "body_sha256": "796c9b7dff8bcb7e4bc3e49e9e9d5cc60ef6d44329bae0b6044fe2a413807ad5",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",

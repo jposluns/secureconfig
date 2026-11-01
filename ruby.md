@@ -113,7 +113,7 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 
 ## Verify
 
-REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. No earlier form of this block has a recorded run; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with the network and host commands replaced, which ran its guard but no deployment. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.
+REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guard but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; no form before that one has a recorded run. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and its host part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl and ss and no network, also ran no deployment. In bash, the host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in the host part with 2 and the bash message before its probes, and the block exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -127,14 +127,11 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    set -- "$1" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    case "${2##*$'\n'}:${2%$'\n'*}" in  # tr's exit status, then the host name in lower case
-      0:?*) ;;
-      *) echo "tr exit ${2##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
-    esac
-    case "${2%$'\n'*}" in
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$1" 0                                               # the 2nd value is this part's status so far, ranked as above
     curl -q -g -sI "http://$1/" ||                              # 301 to https:// (force_ssl)
       { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
@@ -287,7 +284,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "000eb6d68d36ecaba8271e86c511dc656daa96d01f4f1365a9e5deea67461c68",
+  "body_sha256": "795b66580b81a21c15e6063b8267847e6e75b43902e4512104b1fceab8ede4b1",
   "components": {
     "rails": {
       "name": "Rails documentation",
