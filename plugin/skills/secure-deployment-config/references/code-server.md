@@ -50,15 +50,15 @@ code-server also proxies other local services through `/proxy/<port>/`, `/abspro
 
 ## 3. Verify
 
+REASONED: following block; listener inventory and direct-origin reachability, per the guide's cited code-server v4.137.0 deployment guide and HTTP controls; no isolated network namespace or external probe host is available, so neither check has run against a live listener. On the code-server host, `ss -tlnp` is a listener inventory in THIS namespace, not a firewall, publication, or authentication check: expect 8080 on loopback or a private address. Then run the following block from an untrusted external host. Any HTTP response there, even a 401, means the origin is reachable, which is a finding on its own, and no HTTP response is inconclusive, so the block cannot exit 0: confirm closure from the host and network firewall policy.
+
 ```bash
-# REASONED: editor, origin and proxy checks follow the cited code-server authentication and proxy
+# REASONED: origin checks follow the cited code-server authentication and proxy
 # documentation; no isolated network namespace is available for authorized live listeners.
-# Shell syntax and guard checks do not demonstrate authentication or origin isolation.
-# ss is a listener inventory in THIS namespace - not a firewall, publication, or authentication check.
-ss -tlnp   # expect 8080 on loopback or a private address; then probe the public origin directly (below):
-           # ANY HTTP response there (even a 401) means the origin is reachable, which is a finding on its own
+# Shell syntax and guard checks do not demonstrate origin isolation.
 # Direct-origin reachability: connect straight to the public IP and published port while keeping the URL
 # hostname for TLS. From an untrusted external host, repeat for every public IPv4/IPv6 address and port.
+# This block cannot exit 0: it exits 1 for any HTTP response and 3 for none.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORIGIN_URL' 'REPLACE_WITH_PUBLIC_IP' 'REPLACE_WITH_PUBLISHED_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -77,12 +77,34 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
   esac
   # bracket an IPv6 literal in REPLACE_WITH_PUBLIC_IP. Any HTTP response (incl 401/403) = a finding;
   # http=000 is not a pass (a certificate, timeout, or local error is inconclusive). Never add -k.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     --connect-to "::$2:$3" -o /dev/null \
-    -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
+    -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${4%%$'\n'*}" "${4##*$'\n'}"  # curl's write-out line, then its exit status
+  printf '%s\n' "$1"
+  case "$1" in
+    'origin http=000 '*) ;;             # no HTTP code, so curl's exit status below decides
+    'origin http='[0123456789][0123456789][0123456789]' '*) set -- "$1" 0 ;;   # an HTTP code is a response even if the transfer then failed
+  esac
+  if [ "$2" = 0 ]; then
+    echo "FINDING: the origin answered HTTP directly, so it is reachable"; set -- 1
+  else
+    echo "curl exit $2: no HTTP response, which is not a pass; inconclusive"; set -- 3
+  fi
+  echo "block exit $1; this block has no passing result, so confirm closure from the host and network firewall policy"
+  exit "$1"
 )
+```
+
+```bash
+# REASONED: editor and proxy checks follow the cited code-server authentication and proxy
+# documentation; no isolated network namespace is available for authorized live listeners.
+# Shell syntax and guard checks do not demonstrate authentication.
 # Auth discrimination against the SAME editor URL: a proxy 401 proves nothing, so pair an unauthenticated
 # request with an authenticated one and confirm the editor in a fresh browser session too.
+# Fixed: unauthenticated lands on login or challenge and authenticated reaches the editor. For MFA, confirm
+# password-only access cannot open the editor and completing the second factor can. A transport, certificate,
+# or unsuccessful positive control is inconclusive, not a pass.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -95,33 +117,47 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     https://*) ;;
     *) echo 'an HTTPS URL is required; not probing'; exit 2 ;;
   esac
-  # 1) Unauthenticated: follow redirects and inspect the FINAL body - login or challenge, never the editor.
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    --location --max-redirs 5 --proto-redir '=https' \
-    -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
   #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
   #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
+  #    The cookie is read before either request, so a refused cookie stops the block before any probe.
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
-  IFS= read -r -s -p 'Cookie value (name=value; name=value), then Enter: ' code_server_cookie < /dev/tty || exit 2
+  IFS= read -r -s -p 'Cookie value (name=value; name=value), then Enter: ' code_server_cookie < /dev/tty ||
+    { printf '\n'; echo 'cookie input failed; not probing'; exit 3; }
   printf '\n'
   case "$code_server_cookie" in
     ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'a valid session cookie is required; not probing'; exit 2 ;;
   esac
-  printf 'Cookie: %s\n' "$code_server_cookie" |
+  set -- "$1" 0                         # the 2nd value is this block's status so far: 3 (inconclusive) outranks 0
+  # 1) Unauthenticated: follow redirects and inspect the FINAL body - login or challenge, never the editor.
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --location --max-redirs 5 --proto-redir '=https' \
+    -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the response and its write-out line, then curl's exit status
+  printf '%s' "$3"
+  [ "$4" = 0 ] || { echo "curl exit $4: the unauthenticated request failed, which is inconclusive, not a pass"; set -- "$1" 3; }
+  # 2) The authenticated request, with the cookie read above.
+  set -- "$1" "$2" "$(if printf 'Cookie: %s\n' "$code_server_cookie" | \
     curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
       --location --max-redirs 5 --proto-redir '=https' --header @- \
-      -w '\nauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
+      -w '\nauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the response and its write-out line, then curl's exit status
+  printf '%s' "$3"
+  set -- "$1" "$2" "$3" "$4" "${3##*auth http=}"  # the final HTTP code and the rest of the write-out line
+  case "$4:${5%% *}" in
+    0:2??) ;;
+    0:*) echo "HTTP ${5%% *} with the cookie: the positive control did not succeed; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $4: the authenticated request failed, which is inconclusive, not a pass"; set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; both final bodies are not classified, so judge them yourself: login or challenge without the cookie, the editor with it"
+  exit "$2"
 )
-# Fixed: unauthenticated lands on login or challenge and authenticated reaches the editor. For MFA, confirm
-# password-only access cannot open the editor and completing the second factor can. A transport, certificate,
-# or unsuccessful positive control is inconclusive, not a pass.
 ```
 
-REASONED: preceding block; listener inventory, direct-origin isolation, paired editor access and MFA, per the guide's cited code-server v4.137.0 deployment guide and HTTP controls. No editor, proxy, IdP or external probe host is available; listeners are denied locally. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics and config YAML parsed. Placeholder, missing-assignment, short, empty and embedded-placeholder inputs printed refusal messages without reaching curl stubs; substituted inputs reached the stubs; under a pseudo-terminal, empty, placeholder and control-character cookies exited 2 before the authenticated request, and a fixture cookie exited 0 and reached curl only on stdin as a `Cookie:` header. Live outcomes remain unobserved: exposed access opens the editor anonymously or bypasses MFA; fixed access isolates the origin, challenges anonymous users and requires the second factor while admitting the authenticated control. An unauthenticated editor in a private browser window means whoever finds the URL owns the host. Paste the cookie value alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+REASONED: preceding block; paired editor access and MFA, with the listener inventory and direct-origin block above, per the guide's cited code-server v4.137.0 deployment guide and HTTP controls. No editor, proxy, IdP or external probe host is available; listeners are denied locally. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics and config YAML parsed. Placeholder, missing-assignment, short, empty and embedded-placeholder inputs printed refusal messages without reaching curl stubs; substituted inputs reached the stubs; under a pseudo-terminal, empty, placeholder and control-character cookies exited 2 before the authenticated request, and a fixture cookie exited 0 and reached curl only on stdin as a `Cookie:` header. Those checks and runs used an earlier form: one fence whose exit status was the authenticated request's, with the cookie prompt after the unauthenticated request and a bare exit 2 when the prompt failed. The current direct-origin block exits 1 for any HTTP response and 3 for none. The current editor block reads the cookie before either request and exits 3 if that read fails, if a request fails or if the authenticated request ends on a non-2xx status; it exits 2 on a refused input and otherwise 0, leaving both final bodies for you to judge. On 2026-10-31 both current blocks passed bash -n and ran whole against stubs with no network; ShellCheck 0.11.0 runs on them in the repository's gate suite, not in that review. Live outcomes remain unobserved: exposed access opens the editor anonymously or bypasses MFA; fixed access isolates the origin, challenges anonymous users and requires the second factor while admitting the authenticated control. An unauthenticated editor in a private browser window means whoever finds the URL owns the host. Paste the cookie value alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ## Sources (checked September 2026)
 
@@ -174,7 +210,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "a11ae45dfc6583675fcc54d151b414be991ecea21b31f49ad223f0712ab98af8",
+  "body_sha256": "e0d43f6557726ca6d38a8107a9fe375fc5cda077de8132d3223e5a431194ef5c",
   "components": {
     "server": {
       "name": "code-server",
@@ -206,8 +242,8 @@ Claims (full source mapping in the JSON block below):
     "disable-proxy": {"text": "--disable-proxy turns off unneeded port forwarding.", "components": ["server"], "sources": ["server:sbe2b1714f8d5", "server:s5c5105b71096"], "status": "REASONED"},
     "least-privilege": {"text": "Loopback limits inbound reach, not terminal/extension/proxied-service outbound access; minimize permissions and egress, including metadata/internal destinations.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED"},
     "verify-origin": {"text": "ss inventories only this namespace; probe each public IPv4/IPv6 and port directly with intended TLS hostname; any HTTP response is reachability, and http=000 is inconclusive.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED", "verify": [1]},
-    "verify-editor": {"text": "At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED", "verify": [1]},
-    "verify-mfa": {"text": "Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED", "verify": [1]}
+    "verify-editor": {"text": "At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED", "verify": [2]},
+    "verify-mfa": {"text": "Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED", "verify": [2]}
   }
 }
 ````
