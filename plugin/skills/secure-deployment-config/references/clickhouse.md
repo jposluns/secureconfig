@@ -365,7 +365,7 @@ Version note: log schemas can change during upgrades, causing older log tables t
 
 **REASONED: scope is every service-level check in this section; no ClickHouse server or client binary, no local ClickHouse SQL parser and no container runtime in the authoring environment, and no network access to obtain them, so each step below rests on the guide's cited Sources entries named at that step. The only parts that ran, therefore, are the local syntax, parsing, guard and stub checks, the curl version check and the refused loopback-listener attempt recorded at each step and in the closing paragraph.** Service-level checks below are **REASONED, not demonstrated**. The authoring environment has no ClickHouse server/client binary or container runtime, and no authorized live test deployment was supplied. SQL execution, configuration semantics, and exposed-versus-fixed behaviour remain unobserved. Run the exposed fixtures only in an isolated test deployment.
 
-**REASONED: guard behaviour of the three shell blocks in this section; the October 2026 checks ran under bash -u with stub ss, curl and clickhouse-client first on PATH. The 32 rejection cases in those checks (unsubstituted, embedded and empty placeholders, angle brackets, `example.com`, a missing marker, a wrong value count, a missing `set --` line, a missing header file and four bad usernames) each printed the guard message and exited 2 with no stub call, and a valid value in each block reached its stub. The command lines below each guard also ran separately on review, with stub ss, curl, clickhouse-client and sudo, a scratch HOME and a synthetic header file, in plain Bash and bash -u, with no positional arguments and with the block's placeholder argument (plus app_reader for the interactive connection). With no arguments, plain Bash printed the inventory label with an empty value and called stub ss. The authentication fragment, in plain Bash with no arguments, printed its six request labels, called stub curl with http://:8123/?query=SELECT%201 and three https://:8443/?query=SELECT%201 URLs, called stub clickhouse-client twice with an empty host and printed native_exit=0 twice. The interactive fragment, in plain Bash with no arguments, called stub clickhouse-client with empty host and user. With no arguments, bash -u stopped each fragment on an unbound $1 with exit 1 and no stub call; the authentication fragment first printed [plaintext HTTP 8123]. With placeholder arguments, both modes printed the placeholder inventory label and called stub ss, made the authentication fragment's four curl and two client calls with REPLACE_WITH_CLICKHOUSE_HOST and printed native_exit=0 twice, and called the interactive client stub with that host and app_reader. All stub-reaching fragments exited 0; those exits are stub results, not service results.** Paste each whole shell block into Bash, substituting values inside the quotes. The guards reject unresolved placeholders, angle brackets, `example.com`, and empty input. They do not protect a fragment pasted from below the guard.
+**REASONED: guard behaviour of the three shell blocks in this section; the October 2026 checks ran under bash -u with stub ss, curl and clickhouse-client first on PATH. The 32 rejection cases in those checks (unsubstituted, embedded and empty placeholders, angle brackets, `example.com`, a missing marker, a wrong value count, a missing `set --` line, a missing header file and four bad usernames) each printed the guard message and exited 2 with no stub call, and a valid value in each block reached its stub. The command lines below each guard also ran separately on review, with stub ss, curl, clickhouse-client and sudo, a scratch HOME and a synthetic header file, in plain Bash and bash -u, with no positional arguments and with the block's placeholder argument (plus app_reader for the interactive connection). With no arguments, plain Bash printed the inventory label with an empty value and called stub ss. The authentication fragment, in plain Bash with no arguments, printed its six request labels, called stub curl with http://:8123/?query=SELECT%201 and three https://:8443/?query=SELECT%201 URLs, called stub clickhouse-client twice with an empty host and printed native_exit=0 twice. The interactive fragment, in plain Bash with no arguments, called stub clickhouse-client with empty host and user. With no arguments, bash -u stopped each fragment on an unbound $1 with exit 1 and no stub call; the authentication fragment first printed [plaintext HTTP 8123]. With placeholder arguments, both modes printed the placeholder inventory label and called stub ss, made the authentication fragment's four curl and two client calls with REPLACE_WITH_CLICKHOUSE_HOST and printed native_exit=0 twice, and called the interactive client stub with that host and app_reader. All stub-reaching fragments exited 0; those exits are stub results, not service results. These runs covered the three blocks in an earlier form, which ended with its last command's status; the current forms, which set their exit status from their results, are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** Paste each whole shell block into Bash, substituting values inside the quotes. The guards reject unresolved placeholders, angle brackets, `example.com`, and empty input. They do not protect a fragment pasted from below the guard.
 
 **REASONED: listener inventory requires the missing ClickHouse deployment and access to its network namespace.** Run this block in the server's actual namespace; the label records your identification and does not switch namespaces:
 
@@ -383,20 +383,37 @@ Version note: log schemas can change during upgrades, causing older log tables t
       exit 2
       ;;
     *)
+      set +e                            # errexit off here, so each result below is recorded instead of ending the block
       printf 'Inventory of the current namespace, identified by you as %s:\n' "$1"
-      ss -tlnp
+      set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}" 0   # the label, the listener table, ss's exit status, then the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+      printf '%s' "$2"
+      [ "$3" = 0 ] || { echo "ss -tlnp exit $3: the inventory failed; inconclusive"; set -- "$1" "$2" "$3" 3; }
+      if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:(8123|9000|9009)$/ { found = 1 } END { exit !found }'; then
+        echo "FINDING: a listener on 8123, 9000 or 9009, a port this guide removes, is in the table above"; set -- "$1" "$2" "$3" 1
+      else
+        case "$?" in 1) ;; *) echo "awk could not read the listener table; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
+      fi
+      if printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:8443$/ { https = 1 } NR > 1 && $4 ~ /:9440$/ { native = 1 } END { exit !(https && native) }'; then :; else
+        case "$?" in
+          1) echo "no 8443 or no 9440 listener in the table above, so the TLS listeners this guide keeps were not seen; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+          *) echo "awk could not read the listener table; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+        esac
+      fi
+      echo "block exit $4; the listener addresses, 9010 and any other listener you retained are not classified, so judge them yourself, and repeat the inventory on every replica"
+      exit "$4"
       ;;
   esac
 )
 ```
 
-**REASONED: preceding block; covers that whole listener-inventory block, its guard and its listener listing, on every replica; no ClickHouse deployment, server binary or container runtime in the authoring environment, so neither fixture was inventoried. The exposed fixture lists the plaintext listeners and the fixed deployment lists 8443 and 9440 on the intended addresses with no 9009, per the guide's cited "Network ports and PostgreSQL TLS support", "Configuring TLS" and "Replication HTTPS port and advertised hostname" sources. The local checks showed that `bash -n` and ShellCheck 0.11.0 reported nothing on the block, and that under bash -u against a stub ss the block's guard refused all 9 bad-input cases with exit 2 and ran the stub once for a valid label.** The exposed fixture has the plaintext listeners enabled. The fixed deployment should show 8443 and 9440 on the intended addresses, no removed listeners (including plaintext replication 9009), and only other listeners deliberately retained, such as replication HTTPS 9010 on its explicit private address. A node without replication should expose neither 9009 nor 9010. Repeat the inventory on every replica; listener presence does not demonstrate replication authentication. Inspect host/container publication and firewalls separately. `ss` observes the current network namespace; it proves neither remote reachability nor authentication. [Listener configuration](https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls), [port inventory](https://clickhouse.com/docs/concepts/features/security/network-ports).
+**REASONED: preceding block; covers that whole listener-inventory block, its guard and its listener listing, on every replica; no ClickHouse deployment, server binary or container runtime in the authoring environment, so neither fixture was inventoried. The exposed fixture lists the plaintext listeners and the fixed deployment lists 8443 and 9440 on the intended addresses with no 9009, per the guide's cited "Network ports and PostgreSQL TLS support", "Configuring TLS" and "Replication HTTPS port and advertised hostname" sources. The local checks showed that `bash -n` and ShellCheck 0.11.0 reported nothing on the block, and that under bash -u against a stub ss the block's guard refused all 9 bad-input cases with exit 2 and ran the stub once for a valid label. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which sets its exit status from its classified results, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** The exposed fixture has the plaintext listeners enabled. The fixed deployment should show 8443 and 9440 on the intended addresses, no removed listeners (including plaintext replication 9009), and only other listeners deliberately retained, such as replication HTTPS 9010 on its explicit private address. A node without replication should expose neither 9009 nor 9010. Repeat the inventory on every replica; listener presence does not demonstrate replication authentication. Inspect host/container publication and firewalls separately. `ss` observes the current network namespace; it proves neither remote reachability nor authentication. [Listener configuration](https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls), [port inventory](https://clickhouse.com/docs/concepts/features/security/network-ports).
 
 **REASONED: transport and authentication require the missing server/client runtime and reachable TLS endpoints.** For the exposed authentication fixture, provision the same named account, `app_reader`, with `IDENTIFIED WITH no_password`, the same allowed client origin, and sufficient access to execute `SELECT 1`. This is an isolated alternative to the password-authenticated account in step 2. A stock passwordless `default` account does not establish anything about `app_reader`. Keep the host, certificate, interface, and request constant between fixture states. [Authentication methods](https://clickhouse.com/docs/reference/statements/create/user#identification).
 
-**REASONED: owner-only header file provisioning and the argv and tracing claims for the correct-password request; no ClickHouse server, client binary or reachable HTTPS endpoint in the authoring environment, so no server accepted these headers, per the guide's cited "HTTP interface and authentication" and "curl empty-valued headers and header input from stdin" sources. The local checks, with a synthetic owner-only header file under a scratch HOME and a stub curl, showed that the correct-password request delivered the fixture password only on curl's stdin and never in any stub argv, that a bash -x run of the whole block traced no password, and that without the file the block printed its provisioning message and exited 2 with no stub call. The owner and root readability statements were not tested.** For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history; no shell command or variable carries it, so `set -x` tracing does not record it either. Stdin closes the argv channel only: the account owner and root can still read the password in that file and in curl's memory. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
+**REASONED: owner-only header file provisioning and the argv and tracing claims for the correct-password request; no ClickHouse server, client binary or reachable HTTPS endpoint in the authoring environment, so no server accepted these headers, per the guide's cited "HTTP interface and authentication" and "curl empty-valued headers and header input from stdin" sources. The local checks, with a synthetic owner-only header file under a scratch HOME and a stub curl, showed that the correct-password request delivered the fixture password only on curl's stdin and never in any stub argv, that a bash -x run of the whole block traced no password, and that without the file the block printed its provisioning message and exited 2 with no stub call. The owner and root readability statements were not tested. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which sets its exit status from its classified results, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history; no shell command or variable carries it, so `set -x` tracing does not record it either. Stdin closes the argv channel only: the account owner and root can still read the password in that file and in curl's memory. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
 
-**REASONED: following block; covers that whole transport and authentication block: its plaintext 8123 probe, its empty, wrong and correct password HTTPS requests on 8443 and its wrong and correct native TLS logins on 9440; no ClickHouse server or client binary, container runtime or reachable TLS endpoint in the authoring environment, and no live authentication request ran. The review found that curl --version reported curl 8.18.0, meeting the stated 7.75.0 minimum, but that creating a loopback listener's socket raised PermissionError: [Errno 1] Operation not permitted in the execution sandbox. The authentication-disabled fixture returns 1 for every password over HTTPS. The fixed state over HTTPS rejects empty and wrong passwords and returns 1 for the correct one. The fixed state over native TLS rejects the wrong password with a nonzero exit and returns 1 for the correct one. The HTTPS and native TLS outcomes rest on the guide's cited "HTTP interface and authentication", "Native client options and configuration" and "CREATE USER and authentication methods" sources. The local checks showed that `bash -n` and ShellCheck 0.11.0 reported nothing on the block, and that under bash -u with stub curl and clickhouse-client the block's guard refused all 10 bad-input cases with exit 2 and no stub call, while a valid host made four curl calls and two clickhouse-client calls with the password on stdin only.** Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authentication and the `X-ClickHouse-User`/`X-ClickHouse-Key` headers; avoid `user` and `password` URL parameters because intermediaries can log them. The block requires curl 7.75.0 or later for its diagnostic write-out fields. [HTTP authentication](https://clickhouse.com/docs/concepts/features/interfaces/http), [native client](https://clickhouse.com/docs/concepts/features/interfaces/client).
+**REASONED: following block; covers that whole transport and authentication block: its plaintext 8123 probe, its empty, wrong and correct password HTTPS requests on 8443 and its wrong and correct native TLS logins on 9440; no ClickHouse server or client binary, container runtime or reachable TLS endpoint in the authoring environment, and no live authentication request ran. The review found that curl --version reported curl 8.18.0, meeting the stated 7.75.0 minimum, but that creating a loopback listener's socket raised PermissionError: [Errno 1] Operation not permitted in the execution sandbox. The authentication-disabled fixture returns 1 for every password over HTTPS. The fixed state over HTTPS rejects empty and wrong passwords and returns 1 for the correct one. The fixed state over native TLS rejects the wrong password with a nonzero exit and returns 1 for the correct one. The HTTPS and native TLS outcomes rest on the guide's cited "HTTP interface and authentication", "Native client options and configuration" and "CREATE USER and authentication methods" sources. The local checks showed that `bash -n` and ShellCheck 0.11.0 reported nothing on the block, and that under bash -u with stub curl and clickhouse-client the block's guard refused all 10 bad-input cases with exit 2 and no stub call, while a valid host made four curl calls and two clickhouse-client calls with the password on stdin only. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which sets its exit status from its classified results, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authentication and the `X-ClickHouse-User`/`X-ClickHouse-Key` headers; avoid `user` and `password` URL parameters because intermediaries can log them. The block requires curl 7.75.0 or later for its diagnostic write-out fields. [HTTP authentication](https://clickhouse.com/docs/concepts/features/interfaces/http), [native client](https://clickhouse.com/docs/concepts/features/interfaces/client).
 
 ```bash
 # REASONED: no ClickHouse server/client binary or container runtime is available here.
@@ -416,52 +433,98 @@ Version note: log schemas can change during upgrades, causing older log tables t
       [ -r "$HOME/.config/clickhouse/app-reader.headers" ] || {
         echo "provision the protected credential header file first"; exit 2;
       }
+      set -- "$1" 0                     # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
 
       echo '[plaintext HTTP 8123]'
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         -o /dev/null -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "http://$1:8123/?query=SELECT%201"
+        "http://$1:8123/?query=SELECT%201"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then its output
+      printf '%s' "$4"
+      case "$4" in
+        *'http=000 '*) ;;               # no HTTP answer: only the inventory and the TLS positive controls below can support the fixed state
+        *http=*) echo "FINDING: 8123 returned an HTTP status, so the plaintext port answered"; set -- "$1" 1 "$3" "$4" ;;
+        *) echo "curl exit $3 printed no status for 8123; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;;
+      esac
 
       echo '[HTTPS empty password]'
-      printf 'X-ClickHouse-User: app_reader\nX-ClickHouse-Key;\n' |
+      set -- "$1" "$2" "$(if printf 'X-ClickHouse-User: app_reader\nX-ClickHouse-Key;\n' |
         curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
           --cacert /etc/clickhouse-client/ca.crt --header @- \
           -w '\nhttp=%{http_code} exit=%{exitcode} remote=%{remote_ip} err=%{errormsg}\n' \
-          "https://$1:8443/?query=SELECT%201"
+          "https://$1:8443/?query=SELECT%201"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"
+      printf '%s' "$4"
+      case "$3:$4" in
+        0:*'http=200 '*) echo "FINDING: the empty password ran SELECT 1 over HTTPS"; set -- "$1" 1 "$3" "$4" ;;
+        0:*) ;;                         # refused: the error above must be a ClickHouse authentication error, which you judge
+        *) echo "curl exit $3: the empty-password request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;;
+      esac
 
       echo '[HTTPS deliberately wrong password]'
-      printf 'X-ClickHouse-User: app_reader\nX-ClickHouse-Key: definitely-not-the-password\n' |
+      set -- "$1" "$2" "$(if printf 'X-ClickHouse-User: app_reader\nX-ClickHouse-Key: definitely-not-the-password\n' |
         curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
           --cacert /etc/clickhouse-client/ca.crt --header @- \
           -w '\nhttp=%{http_code} exit=%{exitcode} remote=%{remote_ip} err=%{errormsg}\n' \
-          "https://$1:8443/?query=SELECT%201"
+          "https://$1:8443/?query=SELECT%201"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"
+      printf '%s' "$4"
+      case "$3:$4" in
+        0:*'http=200 '*) echo "FINDING: the wrong password ran SELECT 1 over HTTPS"; set -- "$1" 1 "$3" "$4" ;;
+        0:*) ;;                         # refused: the error above must be a ClickHouse authentication error, which you judge
+        *) echo "curl exit $3: the wrong-password request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;;
+      esac
 
       echo '[HTTPS correct password]'
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         --cacert /etc/clickhouse-client/ca.crt \
         --header @- \
         -w '\nhttp=%{http_code} exit=%{exitcode} remote=%{remote_ip} err=%{errormsg}\n' \
         "https://$1:8443/?query=SELECT%201" \
-        < "$HOME/.config/clickhouse/app-reader.headers"
+        < "$HOME/.config/clickhouse/app-reader.headers"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+      set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"
+      printf '%s' "$4"
+      case "$3:$4" in
+        0:$'1\n\nhttp=200 '*) ;;
+        0:*) echo "the correct password did not return 1 with HTTP 200, so the HTTPS positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;;
+        *) echo "curl exit $3: the correct-password request failed, so the HTTPS positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" "$4" ;;
+      esac
 
       # The password prompts keep the password out of the command; the account owner and root can still read it in the clickhouse-client process.
       echo '[native wrong password: enter a deliberately wrong password]'
-      clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
-        --host "$1" --port 9440 --secure --user app_reader --query 'SELECT 1' --password
-      printf 'native_exit=%s\n' "$?"
+      if clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
+        --host "$1" --port 9440 --secure --user app_reader --query 'SELECT 1' --password; then
+        set -- "$1" "$2" 0
+      else
+        set -- "$1" "$2" "$?"
+      fi
+      printf 'native_exit=%s\n' "$3"
+      case "$3" in
+        0) echo "FINDING: the native login with a deliberately wrong password succeeded"; set -- "$1" 1 "$3" ;;
+      esac
 
       echo '[native correct password: enter the configured password]'
-      clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
-        --host "$1" --port 9440 --secure --user app_reader --query 'SELECT 1' --password
-      printf 'native_exit=%s\n' "$?"
+      if clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
+        --host "$1" --port 9440 --secure --user app_reader --query 'SELECT 1' --password; then
+        set -- "$1" "$2" 0
+      else
+        set -- "$1" "$2" "$?"
+      fi
+      printf 'native_exit=%s\n' "$3"
+      case "$3" in
+        0) ;;
+        *) echo "the native login with the configured password failed, so the native positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "$3" ;;
+      esac
+      echo "block exit $2; the 8123 result counts only beside the listener inventory, and whether each refused request above shows a ClickHouse authentication error is not classified, so judge them yourself"
+      exit "$2"
       ;;
   esac
 )
 ```
 
-**REASONED: preceding block; covers that whole transport and authentication block, read here for its plaintext 8123 probe, with its HTTPS and native outcomes stated two paragraphs below; no ClickHouse server, container runtime or reachable endpoint in the authoring environment, so no 8123 status or `http=000` result was observed. Any HTTP status on 8123 shows the exposed state, and only `http=000` together with the inventory and successful TLS positive controls supports the fixed state, per the guide's cited "Network ports and PostgreSQL TLS support" and "HTTP interface and authentication" sources. The local checks showed that `bash -n` and ShellCheck 0.11.0 reported nothing on the block, and that under bash -u with stub curl and clickhouse-client the block's guard refused all 10 bad-input cases with exit 2 and no stub call.** Any received HTTP status on 8123, including an error status or a status followed by a transfer error, proves that the plaintext port answered. `http=000` is only a transport failure; combine it with the server inventory and successful TLS positive controls before concluding that the listener was removed.
+**REASONED: preceding block; covers that whole transport and authentication block, read here for its plaintext 8123 probe, with its HTTPS and native outcomes stated two paragraphs below; no ClickHouse server, container runtime or reachable endpoint in the authoring environment, so no 8123 status or `http=000` result was observed. Any HTTP status on 8123 shows the exposed state, and only `http=000` together with the inventory and successful TLS positive controls supports the fixed state, per the guide's cited "Network ports and PostgreSQL TLS support" and "HTTP interface and authentication" sources. The local checks showed that `bash -n` and ShellCheck 0.11.0 reported nothing on the block, and that under bash -u with stub curl and clickhouse-client the block's guard refused all 10 bad-input cases with exit 2 and no stub call. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which sets its exit status from its classified results, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** Any received HTTP status on 8123, including an error status or a status followed by a transfer error, proves that the plaintext port answered. `http=000` is only a transport failure; combine it with the server inventory and successful TLS positive controls before concluding that the listener was removed.
 
-**REASONED: the empty-valued header form in the HTTPS empty-password request; no ClickHouse endpoint is available; on review, curl --version reported curl 8.18.0, but the execution sandbox denied socket creation for a loopback listener with PermissionError: [Errno 1] Operation not permitted, so no loopback request ran and the transmitted header remains unobserved. The semicolon form sends the header with an empty value and a trailing colon omits it, per the guide's cited "curl empty-valued headers and header input from stdin" source. The local checks showed that a stub curl received the header line `X-ClickHouse-Key;` on stdin exactly as written.** The empty-password request uses curl's `X-ClickHouse-Key;` form to transmit an empty-valued header; a trailing colon without a value would omit the header. [curl header syntax](https://curl.se/docs/manpage.html#-H).
+**REASONED: the empty-valued header form in the HTTPS empty-password request; no ClickHouse endpoint is available; on review, curl --version reported curl 8.18.0, but the execution sandbox denied socket creation for a loopback listener with PermissionError: [Errno 1] Operation not permitted, so no loopback request ran and the transmitted header remains unobserved. The semicolon form sends the header with an empty value and a trailing colon omits it, per the guide's cited "curl empty-valued headers and header input from stdin" source. The local checks showed that a stub curl received the header line `X-ClickHouse-Key;` on stdin exactly as written. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which sets its exit status from its classified results, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** The empty-password request uses curl's `X-ClickHouse-Key;` form to transmit an empty-valued header; a trailing colon without a value would omit the header. [curl header syntax](https://curl.se/docs/manpage.html#-H).
 
 **REASONED: expected HTTPS and native TLS outcomes of the authentication block; no ClickHouse server or client binary, container runtime or test deployment in the authoring environment, so neither fixture state was observed, per the guide's cited "CREATE USER and authentication methods", "HTTP interface and authentication" and "Native client options and configuration" sources. The block's syntax, guard and stubbed command lines were the only parts checked locally, as recorded at the paragraph before the block.** In the deliberately authentication-disabled fixture, empty, wrong, and supplied passwords should all allow the HTTPS `SELECT 1` result. In the fixed state, empty and wrong passwords must produce ClickHouse authentication errors, while the correct password returns `1`. For native TLS, the fixed state must reject the wrong password with an authentication error and nonzero exit, then return `1` with exit zero for the correct password. A DNS, proxy, certificate, or connection error is inconclusive.
 
@@ -488,8 +551,12 @@ Version note: log schemas can change during upgrades, causing older log tables t
           ;;
         *)
           # The password prompt keeps the password out of the command; the account owner and root can still read it in the clickhouse-client process.
-          clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
-            --host "$1" --port 9440 --secure --user "$2" --password
+          if clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
+            --host "$1" --port 9440 --secure --user "$2" --password; then
+            echo "unclassified observation: the session ended with exit 0; judge each query you ran against the expected outcome stated for it in this section"
+          else
+            echo "clickhouse-client exit $?: the connection failed or the session ended on an error; inconclusive, so read the session above"; exit 3
+          fi
           ;;
       esac
       ;;
@@ -543,7 +610,7 @@ FOR INTERVAL 1 HOUR MAX queries = 2
 TO quota_reader;
 ```
 
-**REASONED: run order for the quota reads; no ClickHouse server or client binary, no container runtime and no fresh `quota_reader` account in the authoring environment, so the reads did not run; queries between them would count against the two-query quota, per the guide's cited "Quota accounting, exemptions, and resets" source. The local checks showed that the guarded connection's guard refused all 13 of its bad-input cases under bash -u with no call to a stub clickhouse-client.** Through the guarded connection as `quota_reader`, issue these individually without intervening application queries:
+**REASONED: run order for the quota reads; no ClickHouse server or client binary, no container runtime and no fresh `quota_reader` account in the authoring environment, so the reads did not run; queries between them would count against the two-query quota, per the guide's cited "Quota accounting, exemptions, and resets" source. The local checks showed that the guarded connection's guard refused all 13 of its bad-input cases under bash -u with no call to a stub clickhouse-client. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which exits 3 when clickhouse-client exits nonzero, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** Through the guarded connection as `quota_reader`, issue these individually without intervening application queries:
 
 ```sql
 -- REASONED: quota enforcement; no server/client runtime or deployment fixtures. Expected outcomes and vendor sources are recorded in this section.
@@ -602,7 +669,7 @@ SELECT * FROM system.query_log LIMIT 1;
 SELECT * FROM system.session_log LIMIT 1;
 ```
 
-**REASONED: preceding block; covers all four statements in that block, the wrong-password login and the administrator inspection described here; no ClickHouse server or client binary, no local ClickHouse SQL parser and no container runtime in the authoring environment, and no network access to obtain them, so no SQL ran or was parsed, and no log collector was available. The disabled-logging baseline adds no matching records, and the fixed state records the marker query and login failure, rejects the logging override and denies the reader the log tables, per the guide's cited "Query logging session settings", "Query-log schema", "Session-log schema", "SYSTEM FLUSH LOGS" and "Engine and system-table grant enforcement" sources. The local checks showed that the guarded authentication block's guard refused all 10 of its bad-input cases under bash -u with no stub call.** Also perform one deliberately wrong-password login using the guarded authentication block. As `sql_admin`, execute step 6's `SYSTEM FLUSH LOGS` and inspection queries.
+**REASONED: preceding block; covers all four statements in that block, the wrong-password login and the administrator inspection described here; no ClickHouse server or client binary, no local ClickHouse SQL parser and no container runtime in the authoring environment, and no network access to obtain them, so no SQL ran or was parsed, and no log collector was available. The disabled-logging baseline adds no matching records, and the fixed state records the marker query and login failure, rejects the logging override and denies the reader the log tables, per the guide's cited "Query logging session settings", "Query-log schema", "Session-log schema", "SYSTEM FLUSH LOGS" and "Engine and system-table grant enforcement" sources. The local checks showed that the guarded authentication block's guard refused all 10 of its bad-input cases under bash -u with no stub call. These checks covered an earlier form of the block, which ended with its last command's status; the current form, which sets its exit status from its classified results, is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** Also perform one deliberately wrong-password login using the guarded authentication block. As `sql_admin`, execute step 6's `SYSTEM FLUSH LOGS` and inspection queries.
 
 **REASONED: expected logging and log-protection outcomes; no ClickHouse server or client binary, container runtime, log collector or independent storage in the authoring environment, so no record was observed, per the guide's cited "Query logging session settings", "Query-log schema", "Session-log schema" and "Engine and system-table grant enforcement" sources.** The disabled-logging baseline lacks new matching records. The fixed state records the marker query and login failure, rejects the logging override, and denies the reader access to the log tables while the administrator can read them. Correlate query ID, node, account, client address, and test time; older rows are not evidence. Repeat authentication-event collection for every enabled interface. Check that the same records reach independently controlled storage. [Query logging settings](https://clickhouse.com/docs/reference/settings/session-settings/log-queries), [query log](https://clickhouse.com/docs/reference/system-tables/query_log), [session log](https://clickhouse.com/docs/reference/system-tables/session_log), [system-table authorization](https://clickhouse.com/docs/reference/settings/server-settings/settings/access-control#access_control_improvements).
 
@@ -624,7 +691,7 @@ SHOW CREATE TABLE system.session_log;
 |---|---|
 | Service-level checks | REASONED: check every service-level control above in isolated exposed and fixed ClickHouse deployments. Requires server/client binaries or a container runtime, allowed and disallowed client networks, TLS certificates, populated table and bounded resource fixtures, a fresh quota account, local-file and HTTPS fixtures, a scratch schema user, retained logs and an independent collector, and an enrolled XML TOTP account. Record matched positive controls, exact server/client versions, actual errors, merged configuration, default retirement on both interfaces, resource and quota enforcement, source and engine denials, and log collection/retention. Use a second test server for server-local quota accounting and replication HTTPS. Check replica credential enforcement with missing, wrong, and matching secrets, private binding, removal of 9009, and peer certificate verification. |
 
-**REASONED: authoring-time local validation record, partly rerun in October 2026 in a fresh clone: all 12 XML fences parsed as well-formed with Python's xml.dom.minidom, and `bash -n` and ShellCheck 0.11.0 reported nothing on the three shell blocks. The October 2026 rerun also showed that the guard-conventions scanner reported PASS with no findings in `tools/run_all_checks.sh`, and that 32 guard rejection cases under bash -u against stub ss, curl and clickhouse-client exited 2 with no stub call. The original thirty cases and the statements about what did not run during authoring are carried from the authoring record and were not re-observed.** Local validation completed during authoring: all 12 XML documents/fragments passed well-formedness parsing; all three shell blocks passed `bash -n` and ShellCheck; the guard-conventions scanner reported no findings. During authoring, thirty rejection cases passed under `bash -u`, covering unresolved and embedded placeholders, angle brackets, `example.com`, empty input, missing marker/arguments, and invalid usernames. These checks do not validate ClickHouse configuration semantics or SQL execution. During authoring, no service probes ran, no files were edited, and `run_all_checks.sh` was not run.
+**REASONED: authoring-time local validation record, partly rerun in October 2026 in a fresh clone: all 12 XML fences parsed as well-formed with Python's xml.dom.minidom, and `bash -n` and ShellCheck 0.11.0 reported nothing on the three shell blocks. The October 2026 rerun also showed that the guard-conventions scanner reported PASS with no findings in `tools/run_all_checks.sh`, and that 32 guard rejection cases under bash -u against stub ss, curl and clickhouse-client exited 2 with no stub call. The original thirty cases and the statements about what did not run during authoring are carried from the authoring record and were not re-observed. These runs covered the three blocks in an earlier form, which ended with its last command's status; the current forms, which set their exit status from their results, are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes.** Local validation completed during authoring: all 12 XML documents/fragments passed well-formedness parsing; all three shell blocks passed `bash -n` and ShellCheck; the guard-conventions scanner reported no findings. During authoring, thirty rejection cases passed under `bash -u`, covering unresolved and embedded placeholders, angle brackets, `example.com`, empty input, missing marker/arguments, and invalid usernames. These checks do not validate ClickHouse configuration semantics or SQL execution. During authoring, no service probes ran, no files were edited, and `run_all_checks.sh` was not run.
 
 ## Common mistakes
 
@@ -785,7 +852,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fcd4ccb03d04f2bd524eafe2a121c1972093b114da9c26e0cf7e367da545d9c7",
+  "body_sha256": "3ffa25d78f0f273f249f15a0b140dbc2c809addba98b212025d62297992ba4eb",
   "components": {
     "docs": {
       "name": "ClickHouse documentation",
