@@ -17,6 +17,33 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-11-01 on tagged releases (#1158).** The maintainer gave these rulings through
+  AskUserQuestion in an attended session on 2026-11-01. No reasoning was recorded beyond the terms below. The
+  maintainer's ruling of 2026-11-01 that started this work reads "we'll start doing that this week. lets ensure that
+  we're fully recovered from the crash first". This entry does not record that recovery as confirmed, and the first
+  release waits for that confirmation.
+  - Tags. A release's tag is `v` plus `VERSION` at its target commit, for example `v1.0.1153`.
+  - Cadence. Releases are cut when a major milestone completes or on demand; there is no fixed schedule.
+  - Assets. A release carries `site/llms-full.txt`, the plugin tarball, the full release notes file, and
+    `SHA256SUMS` covering them.
+  - Publishing. The orchestrator publishes whenever the offline release check and the online `gates` check pass,
+    under the maintainer's standing grant.
+  - Body. The release body is short and generated, with the list of pull requests and a link to `CHANGELOG.md` at
+    the tag; the full notes are an asset.
+  - Tag protection. A `v*` tag ruleset blocks update and deletion, and creation stays open to write access.
+    Immutable releases are enabled if GitHub offers them for this repository. Both are repository settings, and
+    this entry does not record either as applied.
+  - Release record. A records pull request after each release adds one `CHANGELOG.md` bullet naming the tag, its
+    target commit and the dates it covers.
+  - First release. The first release targets the last merge of the UTC day before the cut. Its notes say "first
+    tagged release" and point to `CHANGELOG.md` at the tag.
+  - `llms-full.txt`. The asset ships as committed, and the body says its repository links follow `main`, not the
+    tag.
+  - Integrity. Integrity comes from the API-created tag, `SHA256SUMS` and, where enabled, immutable releases.
+  - The updater. `plugin/skills/secure-deployment-config/scripts/update-guides.sh` keeps reading `main` for now.
+  - Effect, applied in the same change as this entry: `tools/check_release.py` is the offline release check, and
+    its self-test, `tools/test_release.py`, runs in `tools/run_all_checks.sh`. CONTRIBUTING.md gains a "Releasing"
+    section with the steps, and the `CHANGELOG.md` preamble no longer says there is no release artifact.
 - **Maintainer rulings of 2026-10-31 on the `ss` listener inventories, isolation probes run from another host, the
   #1106 proxy decisions and rule 6's `) || echo "block exit $?"` sentence (#1129).** The maintainer gave the first
   three rulings through AskUserQuestion in an attended session at about 12:50Z that day, and the fourth at about
