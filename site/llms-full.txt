@@ -36890,15 +36890,13 @@ Enable HTTP request logging only when an HTTP/HTTPS connector is in use. It does
 
 REASONED: every service comparison in this Verify section, per the guide's cited Configure network connectors (Neo4j 5), Cypher Shell prompts, environment credentials, history, parameters, and timeouts, OpenSSL 3 TLS probe options, TLS 1.3 client-certificate validation and alerts, Transactional HTTP API deprecation and Query API availability entries and the other entries listed under Sources. During marking review (October 2026) neo4j, cypher-shell, docker and podman were still absent from the authoring environment, with no network access to obtain them; the local checks that did run are recorded in the next paragraph. **Service verification status: REASONED, not demonstrated.** The authoring environment has no Neo4j server, Cypher Shell, Docker, or Podman available, and no authorized running deployment was supplied. All service comparisons below require capabilities missing here. Run exposed/fixed comparisons only in disposable test deployments. Record server, edition, client, and plugin versions alongside results.
 
-REASONED: local syntax, guard and fragment-parsing checks only, which observe no Neo4j service. During marking review (October 2026) they were repeated: bash -n under bash 5.3.9 and ShellCheck 0.11.0 passed all seven shell blocks. The guard checks during marking review (October 2026), with stub ss, openssl, curl and cypher-shell and no network, showed that each of the six guarded blocks refused unchanged, partial and miscounted input and example.com or angle-bracket hosts, and that each block that clears NEO4J_PASSWORD refused when it was readonly. The cluster block, during marking review (October 2026), also refused a malformed DNS name, port or URI, and with locally generated fixtures its three s_client calls reached the stub, while openssl verify accepted member.crt and rejected untrusted.crt (error 20) against ca.pem. The eight configuration fragments, during marking review (October 2026), showed no malformed lines or duplicate keys. Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run. The bash -n, ShellCheck, guard and stub runs recorded in this paragraph covered an earlier form of the section 1 block and the six guarded blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2.
+REASONED: local syntax, guard and fragment-parsing checks only, which observe no Neo4j service. During marking review (October 2026) they were repeated: bash -n under bash 5.3.9 and ShellCheck 0.11.0 passed all seven shell blocks. The guard checks during marking review (October 2026), with stub ss, openssl, curl and cypher-shell and no network, showed that each of the six guarded blocks refused unchanged, partial and miscounted input and example.com or angle-bracket hosts, and that each block that clears NEO4J_PASSWORD refused when it was readonly. The cluster block, during marking review (October 2026), also refused a malformed DNS name, port or URI, and with locally generated fixtures its three s_client calls reached the stub, while openssl verify accepted member.crt and rejected untrusted.crt (error 20) against ca.pem. The eight configuration fragments, during marking review (October 2026), showed no malformed lines or duplicate keys. Local validation of this revision: all seven shell blocks passed `bash -n` and ShellCheck 0.11.0. Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks. Eight configuration fragments passed basic key/value parsing and duplicate-key checks. These are local syntax checks, not Neo4j configuration validation or service verification. Both generated bundles were rebuilt and the whole-corpus gate suite passed with ShellCheck 0.11.0; no Neo4j service was run. The bash -n, ShellCheck, guard and stub runs recorded in this paragraph covered an earlier form of the section 1 block and the six guarded blocks, whose refusals exited with status 1. The six guarded Verify blocks now each end with one exit status covering every probe they classify and every command that fails: 1 for a finding, 3 for an inconclusive result, 2 for a guard refusal and 0 otherwise, and each block that runs its probes ends with a line naming what it leaves you to judge. The current forms are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and in October 2026, while this change was drafted, the six guarded Verify blocks also ran with stub ss, openssl, timeout, curl and cypher-shell and no network, the two HTTPS pairs parsing their stub responses with the local python3.
 
-REASONED: guard behaviour only, with stub commands and no Neo4j service. During marking review (October 2026) each guarded block, pasted whole with a hostname substituted inside the quotes, reached only its stub commands, and unchanged or without its set -- line it refused. A substituted value containing one literal apostrophe made the listener block a syntax error that ran nothing, and its ss line pasted alone ran unguarded. A shadowed builtin was not tested. Those stub runs covered an earlier form of each guarded block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
+REASONED: guard behaviour only, with stub commands and no Neo4j service. During marking review (October 2026) each guarded block, pasted whole with a hostname substituted inside the quotes, reached only its stub commands, and unchanged or without its set -- line it refused. A substituted value containing one literal apostrophe made the listener block a syntax error that ran nothing, and its ss line pasted alone ran unguarded. A shadowed builtin was not tested. Those stub runs covered an earlier form of each guarded block, whose refusals exited with status 1; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the drafting stub runs recorded in the preceding paragraph. For each guarded block, replace the hostname inside the single quotes and paste the whole block. The blocks assume ordinary shell builtins; do not insert a literal apostrophe into the quoted substitution. A fragment pasted below the guards is unguarded.
 
-REASONED: per the guide's cited SSL framework and certificate-verified connection schemes entry; no Cypher Shell or Neo4j TLS service is available in the authoring environment, so a +s connection failing on an untrusted certificate (fixed) and a +ssc connection succeeding regardless (exposed) were not observed. During marking review (October 2026), with stubs, the Verify blocks passed bolt+s:// URIs to cypher-shell everywhere except the deliberate plaintext bolt:// test. Those stub runs covered an earlier form of the guarded blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for a certificate-verified direct connection. The `+ssc` variants, including `neo4j+ssc://`, skip certificate verification and do not establish server identity; reserve them for development. The checks below use direct Bolt to avoid routing discovery obscuring the result. Install the signing CA in the Cypher Shell client's trust store when necessary; OpenSSL's `-CAfile` and curl's `--cacert` do not configure Cypher Shell's trust. See [TLS connection schemes](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
+REASONED: per the guide's cited SSL framework and certificate-verified connection schemes entry; no Cypher Shell or Neo4j TLS service is available in the authoring environment, so a +s connection failing on an untrusted certificate (fixed) and a +ssc connection succeeding regardless (exposed) were not observed. During marking review (October 2026), with stubs, the Verify blocks passed bolt+s:// URIs to cypher-shell everywhere except the deliberate plaintext bolt:// test. Those stub runs covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the drafting stub runs recorded with the local checks above. Use `neo4j+s://` for certificate-verified routing connections or `bolt+s://` for a certificate-verified direct connection. The `+ssc` variants, including `neo4j+ssc://`, skip certificate verification and do not establish server identity; reserve them for development. The checks below use direct Bolt to avoid routing discovery obscuring the result. Install the signing CA in the Cypher Shell client's trust store when necessary; OpenSSL's `-CAfile` and curl's `--cacert` do not configure Cypher Shell's trust. See [TLS connection schemes](https://neo4j.com/docs/operations-manual/current/security/ssl-framework/).
 
 ### Listener inventory
-
-**REASONED: requires the Neo4j service's network namespace and, for the Enterprise comparisons, a standalone Enterprise server and an Enterprise cluster, unavailable in the authoring environment.** Run this block inside that namespace. The substituted hostname identifies the deployment being inspected; it does not make `ss` inspect a remote machine.
 
 ```bash
 (
@@ -36911,16 +36909,37 @@ REASONED: per the guide's cited SSL framework and certificate-verified connectio
       echo "substitute the hostname inside the quotes; not probing"
       exit 2
       ;;
-    *)
-      # Run inside the Neo4j service's network namespace.
-      # The hostname is a confirmation only; ss does not connect to it.
-      ss -tlnp
-      ;;
   esac
+  # Run inside the Neo4j service's network namespace.
+  # The hostname is a confirmation only; ss does not connect to it.
+  command -v ss >/dev/null 2>&1 || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  set -- "$1" "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"     # the hostname, the listener table, then ss's exit status
+  printf '%s' "$2"
+  if [ "$3" != 0 ]; then
+    echo "ss -tlnp exit $3: the listener table could not be read; inconclusive"; set -- 3
+  elif printf '%s' "$2" | awk 'NR > 1 && $4 ~ /:7474$/ { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 7474, plaintext HTTP, which the fixed state leaves absent"; set -- 1
+  else
+    case "$?" in
+      1)
+        if printf '%s' "$2" | awk 'NR > 1 { found = 1 } END { exit !found }'; then
+          echo "no 7474 listener"; set -- 0
+        else
+          case "$?" in
+            1) echo "the listener table is empty, and an empty inventory is not a secure-service result; inconclusive"; set -- 3 ;;
+            *) echo "awk could not read the listener list; inconclusive"; set -- 3 ;;
+          esac
+        fi ;;
+      *) echo "awk could not read the listener list; inconclusive"; set -- 3 ;;
+    esac
+  fi
+  echo "block exit $1; listeners other than 7474 are not classified, so judge them yourself against the expectations below"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; the listener inventory block above and these port expectations, per the guide's cited Ports, Enterprise online backup and Configure network connectors (Neo4j 5) entries. During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. No Neo4j installation is available in the authoring environment, so neither an exposed 7474 listener nor the fixed inventory was observed. During marking review (October 2026) the block ran with a stub ss and no network: it refused unchanged, partial, miscounted, example.com and angle-bracket input, and reached ss -tlnp only with neo4j-1.internal substituted. Those stub runs covered an earlier form of the block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2. Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
+REASONED: preceding block; the listener inventory block above and these port expectations, per the guide's cited Ports, Enterprise online backup and Configure network connectors (Neo4j 5) entries. The block requires the Neo4j service's network namespace and, for the Enterprise comparisons, a standalone Enterprise server and an Enterprise cluster, all unavailable in the authoring environment. Run the block inside that namespace; the substituted hostname identifies the deployment being inspected and does not make `ss` inspect a remote machine. During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. No Neo4j installation is available in the authoring environment, so neither an exposed 7474 listener nor the fixed inventory was observed. During marking review (October 2026) the block ran with a stub ss and no network: it refused unchanged, partial, miscounted, example.com and angle-bracket input, and reached ss -tlnp only with neo4j-1.internal substituted. Those stub runs covered an earlier form of the block, whose refusals exited with status 1. The block now exits 1 when a listener is on port 7474, exits 3 when `ss` or `awk` fails or the table is empty, refuses with status 2 when `ss` is not installed, and otherwise exits 0, leaving the other listeners for you to judge; this form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the drafting stub runs recorded with the local checks above. Compare an exposed disposable installation with the configured state. Expect Bolt 7687 and HTTPS 7473 on the intended address after setup, with plaintext HTTP 7474 absent. If Enterprise online backup is running, confirm 6362 remains loopback-only for this baseline. This backup observation does not apply to Community. Confirm the retained listeners actually serve the positive queries below; an empty inventory is not a secure-service result. See [ports](https://neo4j.com/docs/operations-manual/current/configuration/ports/) and [online backup](https://neo4j.com/docs/operations-manual/current/backup-restore/online-backup/).
 
 REASONED: per the guide's cited Neo4j 5.26 (LTS) Enterprise cluster and monitoring ports, cluster settings and configuration reference entries; no Enterprise standalone server, cluster or Docker host is available in the authoring environment. No listener inventory was obtained, so nothing is recorded about these ports. **REASONED, Enterprise listener comparisons:** also read every listener for 5000 (discovery v1 only), 6000, 7000, and 7688 (server-side routing), including configured replacement ports and IPv6 bindings. In the exposed disposable state, a widened shared host can expose these even on a standalone server; in the fixed single-server state, expect loopback binds. In a cluster, expect the intended private binds and peer-reachable advertised addresses, with firewall access confined to members. Under `V2_ONLY`, do not require 5000; discovery shares 6000. Check 2004 only if Prometheus is enabled, on loopback or the explicitly restricted monitoring interface. There should be no inbound Graphite 2003 listener from enabling its exporter; investigate any JMX 3637 or debugger 5005 listener against the JVM configuration. Inspect the container's namespace as well as host publication rules for Docker. These expectations follow the [5.26 ports inventory](https://neo4j.com/docs/operations-manual/5/configuration/ports/#_cluster) and [setting defaults](https://neo4j.com/docs/operations-manual/5/configuration/configuration-settings/).
 
@@ -36928,7 +36947,7 @@ REASONED: per the guide's cited Neo4j 5.26 (LTS) Enterprise cluster and monitori
 
 **REASONED, not demonstrated: the authoring host forbids opening listeners without an isolated network namespace, and has none.** A disposable Enterprise cluster and its certificates are required. A listener inventory does not prove TLS or peer authentication. The vendor's [Nmap cipher enumeration](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config) establishes that TLS is offered, not rejection of unauthenticated peers. The OpenSSL procedure below is reasoned from the [documented cluster mutual-authentication policy](https://neo4j.com/docs/operations-manual/5/security/ssl-framework/#ssl-cluster-config); it is not a vendor-documented cluster-port check.
 
-Run from an allowed peer location against each member and every active cluster listener: 6000, 7000, 5000 when discovery v1 runs, and 7688 when server-side routing runs, or their configured replacements. Substitute the member's certificate DNS name, cluster port, and direct client Bolt TLS URI inside the quotes. The Bolt URI uses the client connector, normally 7687, not the cluster port. Install the Bolt signing CA in Cypher Shell's trust store as described above; the command assumes section 3's Bolt policy and prompts for the administrator password.
+REASONED: the probe targets and the values the block below takes, per the guide's cited Neo4j 5.26 ports inventory and cluster SSL policy entries; no disposable Enterprise cluster is available in the authoring environment. Run from an allowed peer location against each member and every active cluster listener: 6000, 7000, 5000 when discovery v1 runs, and 7688 when server-side routing runs, or their configured replacements. Substitute the member's certificate DNS name, cluster port, direct client Bolt TLS URI, and `none` or `require` for the members' current client_auth policy inside the quotes. The Bolt URI uses the client connector, normally 7687, not the cluster port. Install the Bolt signing CA in Cypher Shell's trust store as described above; the command assumes section 3's Bolt policy and prompts for the administrator password.
 
 Provide `ca.pem` containing the cluster server's trusted signing CA; `member.crt` and `member.key` for a trusted test member; and `untrusted.crt` and `untrusted.key` for an otherwise valid certificate signed by a different CA absent from every member's trust directory. Both certificates need the EKUs above, current validity, and matching keys. Supply each issuing chain in `member-chain.pem` or `untrusted-chain.pem`, starting with the issuing CA; for direct root issuance, use that root certificate. Keep the private keys protected and do not add the untrusted CA to the cluster's trust directory.
 
@@ -36936,14 +36955,14 @@ Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies t
 
 ```bash
 (
-  set +e
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_DNS_NAME' 'REPLACE_WITH_CLUSTER_PORT' 'REPLACE_WITH_BOLT_TLS_URI'
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_DNS_NAME' 'REPLACE_WITH_CLUSTER_PORT' 'REPLACE_WITH_BOLT_TLS_URI' 'REPLACE_WITH_none_OR_require'   # the 4th value is the members' current policy: none for client_auth=NONE, require for client_auth=REQUIRE with trust_all=false
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "expected a DNS name, cluster port, and Bolt TLS URI; not probing"; exit 2; }
-  case "$1|$2|$3" in
+  [ "$#" -eq 4 ] || { echo "expected a DNS name, cluster port, Bolt TLS URI, and none or require; not probing"; exit 2; }
+  case "$1|$2|$3|$4" in
     *REPLACE_WITH_*|*'<'*|*'>'*|*example.com*)
-      echo "substitute all three values inside the quotes; not probing"; exit 2 ;;
+      echo "substitute all four values inside the quotes; not probing"; exit 2 ;;
   esac
   case "$1" in
     ""|*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-]*) echo "supply the member's certificate DNS name; not probing"; exit 2 ;;
@@ -36951,42 +36970,116 @@ Use OpenSSL 3 and a `timeout` command supporting `15s`. `-cert_chain` supplies t
   case "$2" in
     ""|*[!0123456789]*) echo "supply a numeric cluster port; not probing"; exit 2 ;;
   esac
-  [ "${#2}" -le 5 ] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || {
-    echo "cluster port must be 1 through 65535; not probing"; exit 2;
-  }
+  [ "${#2}" -le 5 ] || { echo "cluster port must be 1 through 65535; not probing"; exit 2; }
+  [ "$2" -ge 1 ] || { echo "cluster port must be 1 through 65535; not probing"; exit 2; }
+  [ "$2" -le 65535 ] || { echo "cluster port must be 1 through 65535; not probing"; exit 2; }
   case "$3" in
     bolt+s://?*) ;;
     *) echo "supply a direct bolt+s:// URI; not probing"; exit 2 ;;
   esac
-  [ -r ca.pem ] && [ -r member.crt ] && [ -r member.key ] &&
+  case "$4" in
+    none|require) ;;
+    *) echo "supply none (client_auth=NONE on every member) or require (client_auth=REQUIRE with trust_all=false) as the 4th value; not probing"; exit 2 ;;
+  esac
+  if [ -r ca.pem ] && [ -r member.crt ] && [ -r member.key ] &&
     [ -r member-chain.pem ] && [ -r untrusted.crt ] &&
-    [ -r untrusted.key ] && [ -r untrusted-chain.pem ] || {
-      echo "provide the CA, both certificates, keys, and issuing chains; not probing"; exit 2;
-    }
+    [ -r untrusted.key ] && [ -r untrusted-chain.pem ]; then :; else
+    echo "provide the CA, both certificates, keys, and issuing chains; not probing"; exit 2
+  fi
   unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  # Each probe below reads as: alert (a received fatal TLS alert), held (a completed handshake, no alert,
+  # and the connection still open when the 15s wait expired, exit 124), closed (a completed handshake,
+  # no alert, then a clean end, exit 0), failed (a completed handshake, no alert, then any other exit
+  # status, such as a reset), or neither. The probe's exit status is kept beside its reading.
 
   echo "(a) No client certificate"
-  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
     -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
-    -state -brief -ign_eof </dev/null
-  printf 'no-client exit=%s\n' "$?"
+    -state -brief -ign_eof </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"   # the status, the probe's output, then its exit status
+  printf '%s\n' "$6"
+  printf 'no-client exit=%s\n' "$7"
+  case "$6" in
+    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert "$7" ;;
+    *'CONNECTION ESTABLISHED'*)
+      case "$7" in
+        124) set -- "$1" "$2" "$3" "$4" "$5" held "$7" ;;
+        0) set -- "$1" "$2" "$3" "$4" "$5" closed "$7" ;;
+        *) set -- "$1" "$2" "$3" "$4" "$5" failed "$7" ;;
+      esac ;;
+    *) set -- "$1" "$2" "$3" "$4" "$5" neither "$7" ;;
+  esac
+  case "$4:$6" in
+    require:alert) echo "(a) $6, as $4 should give; correlate a generic alert with the member's logs" ;;
+    none:held|none:closed) echo "(a) $6, as $4 should give; this shows only that the client_auth=NONE baseline behaved as declared, not that mutual TLS works" ;;
+    *:failed) echo "(a) failed: the handshake completed, then the client exited $7 without a received alert or an expired 15s wait, an operational failure such as a reset rather than a certificate rejection; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+    require:held) echo "FINDING: (a) completed the handshake without a client certificate and was not rejected within 15s"; set -- "$1" "$2" "$3" "$4" 1 ;;
+    require:closed) echo "(a) closed: the connection ended after the handshake without a received alert, so correlate it with the member's logs; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+    none:alert) echo "(a) alert under none, where the baseline should complete the handshake; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+    *) echo "(a) neither a received alert nor a completed handshake: a refusal, DNS failure, reset, local key-loading failure or timeout alone proves nothing about mutual TLS; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
 
   echo "(b) Certificate from an untrusted CA"
-  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
     -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
     -cert untrusted.crt -key untrusted.key -cert_chain untrusted-chain.pem \
-    -state -brief -ign_eof </dev/null
-  printf 'untrusted-client exit=%s\n' "$?"
+    -state -brief -ign_eof </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"   # the status, the probe's output, then its exit status
+  printf '%s\n' "$6"
+  printf 'untrusted-client exit=%s\n' "$7"
+  case "$6" in
+    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert "$7" ;;
+    *'CONNECTION ESTABLISHED'*)
+      case "$7" in
+        124) set -- "$1" "$2" "$3" "$4" "$5" held "$7" ;;
+        0) set -- "$1" "$2" "$3" "$4" "$5" closed "$7" ;;
+        *) set -- "$1" "$2" "$3" "$4" "$5" failed "$7" ;;
+      esac ;;
+    *) set -- "$1" "$2" "$3" "$4" "$5" neither "$7" ;;
+  esac
+  case "$4:$6" in
+    require:alert) echo "(b) $6, as $4 should give; correlate a generic alert with the member's logs" ;;
+    none:held|none:closed) echo "(b) $6, as $4 should give; this shows only that the client_auth=NONE baseline behaved as declared, not that mutual TLS works" ;;
+    *:failed) echo "(b) failed: the handshake completed, then the client exited $7 without a received alert or an expired 15s wait, an operational failure such as a reset rather than a certificate rejection; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+    require:held) echo "FINDING: (b) completed the handshake with a certificate from an untrusted CA and was not rejected within 15s"; set -- "$1" "$2" "$3" "$4" 1 ;;
+    require:closed) echo "(b) closed: the connection ended after the handshake without a received alert, so correlate it with the member's logs; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+    none:alert) echo "(b) alert under none, where the baseline should complete the handshake; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+    *) echo "(b) neither a received alert nor a completed handshake: a refusal, DNS failure, reset, local key-loading failure or timeout alone proves nothing about mutual TLS; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
 
   echo "(c) Trusted member certificate"
-  timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if timeout 15s openssl s_client -connect "$1:$2" -servername "$1" \
     -verify_hostname "$1" -verify_return_error -CAfile ca.pem \
     -cert member.crt -key member.key -cert_chain member-chain.pem \
-    -state -brief -ign_eof </dev/null
-  printf 'trusted-client exit=%s\n' "$?"
+    -state -brief -ign_eof </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"   # the status, the probe's output, then its exit status
+  printf '%s\n' "$6"
+  printf 'trusted-client exit=%s\n' "$7"
+  case "$6" in
+    *'alert read:fatal'*|*'sslv3 alert '*|*'tlsv1 alert '*|*'tlsv13 alert '*) set -- "$1" "$2" "$3" "$4" "$5" alert "$7" ;;
+    *'CONNECTION ESTABLISHED'*)
+      case "$7" in
+        124) set -- "$1" "$2" "$3" "$4" "$5" held "$7" ;;
+        0) set -- "$1" "$2" "$3" "$4" "$5" closed "$7" ;;
+        *) set -- "$1" "$2" "$3" "$4" "$5" failed "$7" ;;
+      esac ;;
+    *) set -- "$1" "$2" "$3" "$4" "$5" neither "$7" ;;
+  esac
+  case "$6" in
+    held|closed) echo "(c) $6: the trusted member completed the handshake, as both policies should give" ;;
+    failed) echo "(c) failed: the handshake completed, then the client exited $7 without a received alert or an expired 15s wait, an operational failure such as a reset; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+    *) echo "(c) $6: the trusted member did not complete the handshake, so the positive control failed; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3 ;;
+  esac
 
   echo "(d) Cluster status: enter the administrator password at the prompt"
-  cypher-shell -a "$3" -u neo4j -d system 'SHOW SERVERS;'
+  if cypher-shell -a "$3" -u neo4j -d system 'SHOW SERVERS;'; then
+    echo "(d) unclassified observation: the expected members must show state Enabled and health Available, and missing or unavailable members invalidate the positive control"
+  else
+    echo "cypher-shell exit $?: SHOW SERVERS did not complete, so the positive control failed; inconclusive"; [ "$5" = 1 ] || set -- "$1" "$2" "$3" "$4" 3
+  fi
+  echo "block exit $5; the SHOW SERVERS rows, each handshake's protocol, cipher and server verification, and the reason behind any generic alert are not classified, so judge them yourself and correlate them with the member's logs"
+  exit "$5"
 )
 ```
 
@@ -37015,28 +37108,53 @@ The OpenSSL command and Cypher Shell checks below assume `client_auth=NONE`. If 
       echo "substitute the hostname inside the quotes; not probing"
       exit 2
       ;;
-    *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
-      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
-
-      openssl s_client -connect "$1:7687" -servername "$1" \
-        -verify_hostname "$1" -verify_return_error -CAfile ca.pem </dev/null
-
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
-        -o /dev/null \
-        -w 'http7474=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "http://$1:7474/"
-
-      echo "Plaintext transport test: enter only the public default password neo4j."
-      cypher-shell -a "bolt://$1:7687" -u neo4j 'RETURN 1 AS ok;'
-
-      echo "Default-password test over TLS: enter neo4j at the password prompt."
-      cypher-shell -a "bolt+s://$1:7687" -u neo4j 'RETURN 1 AS ok;'
-
-      echo "Positive control over TLS: enter the rotated administrator password."
-      cypher-shell -a "bolt+s://$1:7687" -u neo4j 'RETURN 1 AS ok;'
-      ;;
   esac
+  [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+
+  if openssl s_client -connect "$1:7687" -servername "$1" \
+    -verify_hostname "$1" -verify_return_error -CAfile ca.pem </dev/null; then
+    echo "the TLS handshake on 7687 completed with certificate and hostname verification"
+  else
+    echo "s_client exit $?: the verified TLS handshake on 7687 did not complete; inconclusive"; set -- "$1" 3
+  fi
+
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
+    -o /dev/null \
+    -w 'http7474=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    "http://$1:7474/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%%$'\n'*}" "${3##*$'\n'}"   # the status, curl's write-out line, then curl's exit status
+  printf '%s\n' "$3"
+  case "$4" in
+    0) echo "FINDING: the 7474 endpoint answered over plaintext HTTP"; set -- "$1" 1 ;;
+    7|28) echo "unclassified observation: 7474 did not answer; read err above, because a refusal or timeout counts only after confirming the intended host and path, alongside the working TLS service and the listener inventory" ;;
+    *) echo "curl exit $4: neither an HTTP answer nor a refusal or timeout on 7474; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+
+  echo "Plaintext transport test: enter only the public default password neo4j."
+  if cypher-shell -a "bolt://$1:7687" -u neo4j 'RETURN 1 AS ok;'; then
+    echo "FINDING: the plaintext bolt:// query ran, so plaintext reached the service"; set -- "$1" 1
+  else
+    echo "plaintext test exit $?: unclassified observation: read the error above; a transport-layer failure is the pass, while an authentication error or a password-change requirement means plaintext reached the service, a finding"
+  fi
+
+  echo "Default-password test over TLS: enter neo4j at the password prompt."
+  if cypher-shell -a "bolt+s://$1:7687" -u neo4j 'RETURN 1 AS ok;'; then
+    echo "FINDING: the default password neo4j was accepted"; set -- "$1" 1
+  else
+    echo "default-password test exit $?: unclassified observation: read the error above; an authentication failure is the pass, a password-change requirement is a finding, and a transport failure or a temporary lockout is inconclusive"
+  fi
+
+  echo "Positive control over TLS: enter the rotated administrator password."
+  if cypher-shell -a "bolt+s://$1:7687" -u neo4j 'RETURN 1 AS ok;'; then
+    echo "the positive control returned its result over TLS"
+  else
+    echo "cypher-shell exit $?: the positive control over TLS failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+  fi
+  echo "block exit $2; the certificate details, the err text of a 7474 refusal or timeout, and the errors of the plaintext and default-password tests are not classified, so judge them yourself"
+  exit "$2"
 )
 ```
 
@@ -37064,11 +37182,15 @@ The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs
       echo "substitute the hostname inside the quotes; not probing"
       exit 2
       ;;
-    *)
-      unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
-      cypher-shell -a "bolt+s://$1:7687" -u catalog_app -d neo4j --history disable
-      ;;
   esac
+  unset NEO4J_PASSWORD || { echo "cannot clear NEO4J_PASSWORD"; exit 2; }
+  if cypher-shell -a "bolt+s://$1:7687" -u catalog_app -d neo4j --history disable; then
+    set -- 0
+  else
+    echo "cypher-shell exit $?: the session failed or ended with an error, so later denials cannot be read against a working control; inconclusive"; set -- 3
+  fi
+  echo "block exit $1; the session's results, such as the ok=1 control and the denials below, are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -37208,22 +37330,63 @@ Provision `neo4j-auth.header` through your secret-management mechanism as an own
       echo "substitute the hostname inside the quotes; not probing"
       exit 2
       ;;
-    *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
-      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        --cacert ca.pem -H 'Content-Type: application/json' \
-        --data '{"statement":"RETURN 1 AS ok"}' \
-        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "https://$1:7473/db/neo4j/query/v2"
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        --cacert ca.pem --header @neo4j-auth.header \
-        -H 'Content-Type: application/json' \
-        --data '{"statement":"RETURN 1 AS ok"}' \
-        -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "https://$1:7473/db/neo4j/query/v2"
-      ;;
   esac
+  [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+  [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
+  command -v python3 >/dev/null 2>&1 || { echo "python3 is not installed here; not probing"; exit 2; }
+  set +e                                # errexit off here, so a request that ends nonzero is classified below instead of ending the block
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert ca.pem -H 'Content-Type: application/json' \
+    --data '{"statement":"RETURN 1 AS ok"}' \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1:7473/db/neo4j/query/v2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
+  printf '%s' "$3"
+  # python3 parses the whole body as JSON, so text after a result fails the parse, and prints e for an errors member and r for exactly one ok=1 value; "if 1:" lets its lines be indented
+  set -- "$1" "$2" "$(if printf '%s' "${3%$'\n'http=*}" | python3 -I -c 'if 1:
+      import json, sys
+      try: d = json.loads(sys.stdin.buffer.read())
+      except (ValueError, RecursionError): d = None
+      d = d if isinstance(d, dict) else {}
+      t = d.get("data") if isinstance(d.get("data"), dict) else {}
+      print("e" * ("errors" in d) + "r" * (json.dumps((t.get("fields"), t.get("values"))) == json.dumps((("ok",), ((1,),)))), end="")'
+    then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*http=}"   # the parsed body's marks and python3's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # the marks, curl's exit status, the HTTP code, then python3's exit status
+  case "$4:$6:$5:$3" in
+    0:0:401:*) echo "the anonymous query was refused with 401" ;;
+    0:0:2??:r) echo "FINDING: the anonymous query was accepted with HTTP $5, so authentication is not enforced"; set -- "$1" 1 ;;
+    0:0:2??:*) echo "HTTP $5 for the anonymous query without the ok=1 result alone (an errors member, or an empty or malformed body) is neither the 401 pass nor an accepted query, since HTTP success alone is not enough; inconclusive"; set -- "$1" 3 ;;
+    0:0:*) echo "HTTP $5 for the anonymous query is neither the 401 pass nor an accepted query, and a 404 does not prove authentication enforcement; inconclusive"; set -- "$1" 3 ;;
+    0:*) echo "python3 exit $6: the anonymous response could not be processed; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $4: the anonymous request failed, and a connection or TLS failure does not prove authentication enforcement; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert ca.pem --header @neo4j-auth.header \
+    -H 'Content-Type: application/json' \
+    --data '{"statement":"RETURN 1 AS ok"}' \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1:7473/db/neo4j/query/v2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
+  printf '%s' "$3"
+  set -- "$1" "$2" "$(if printf '%s' "${3%$'\n'http=*}" | python3 -I -c 'if 1:
+      import json, sys
+      try: d = json.loads(sys.stdin.buffer.read())
+      except (ValueError, RecursionError): d = None
+      d = d if isinstance(d, dict) else {}
+      t = d.get("data") if isinstance(d.get("data"), dict) else {}
+      print("e" * ("errors" in d) + "r" * (json.dumps((t.get("fields"), t.get("values"))) == json.dumps((("ok",), ((1,),)))), end="")'
+    then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*http=}"   # the parsed body's marks and python3's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # the marks, curl's exit status, the HTTP code, then python3's exit status
+  case "$4:$6:$5:$3" in
+    0:0:2??:e*) echo "HTTP $5 with an errors member: the authenticated query did not return ok=1, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:0:2??:r) echo "the authenticated query returned ok=1" ;;
+    0:0:*) echo "HTTP $5 without the expected ok=1 result, and a Query API 202 alone does not prove query success, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) echo "python3 exit $6: the authenticated response could not be processed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $4: the authenticated request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the response headers and bodies are not classified beyond the checks above, so judge them yourself"
+  exit "$2"
 )
 ```
 
@@ -37242,22 +37405,64 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
       echo "substitute the hostname inside the quotes; not probing"
       exit 2
       ;;
-    *)
-      [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
-      [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        --cacert ca.pem -H 'Content-Type: application/json' \
-        --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \
-        -w '\nlegacy-no-auth=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "https://$1:7473/db/neo4j/tx/commit"
-      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-        --cacert ca.pem --header @neo4j-auth.header \
-        -H 'Content-Type: application/json' \
-        --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \
-        -w '\nlegacy-auth=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-        "https://$1:7473/db/neo4j/tx/commit"
-      ;;
   esac
+  [ -r ca.pem ] || { echo "provide the signing CA in ca.pem"; exit 2; }
+  [ -r neo4j-auth.header ] || { echo "provide the protected header file"; exit 2; }
+  command -v python3 >/dev/null 2>&1 || { echo "python3 is not installed here; not probing"; exit 2; }
+  set +e                                # errexit off here, so a request that ends nonzero is classified below instead of ending the block
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert ca.pem -H 'Content-Type: application/json' \
+    --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \
+    -w '\nlegacy-no-auth=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1:7473/db/neo4j/tx/commit"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
+  printf '%s' "$3"
+  # python3 parses the whole body as JSON, so text after a result fails the parse, and prints e for an empty errors array and r for exactly one ok=1 row; "if 1:" lets its lines be indented
+  set -- "$1" "$2" "$(if printf '%s' "${3%$'\n'legacy-no-auth=*}" | python3 -I -c 'if 1:
+      import json, sys
+      try: d = json.loads(sys.stdin.buffer.read())
+      except (ValueError, RecursionError): d = None
+      d = d if isinstance(d, dict) else {}
+      r = d.get("results") if isinstance(d.get("results"), list) else ()
+      r = tuple((x.get("columns"), tuple(y.get("row") if isinstance(y, dict) else None for y in x.get("data")) if isinstance(x.get("data"), list) else None) if isinstance(x, dict) else None for x in r)
+      print("e" * (d.get("errors") == list()) + "r" * (json.dumps(r) == json.dumps(((("ok",), ((1,),)),))), end="")'
+    then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*legacy-no-auth=}"   # the parsed body's marks and python3's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # the marks, curl's exit status, the HTTP code, then python3's exit status
+  case "$4:$6:$5:$3" in
+    0:0:401:*) echo "the anonymous legacy query was refused with 401" ;;
+    0:0:2??:er) echo "FINDING: the anonymous legacy query was accepted with HTTP $5, so authentication is not enforced"; set -- "$1" 1 ;;
+    0:0:2??:*) echo "HTTP $5 for the anonymous legacy query without ok=1 and an empty errors array (an error-only, empty or malformed body) is neither the 401 pass nor an accepted query, since HTTP success alone is not enough; inconclusive"; set -- "$1" 3 ;;
+    0:0:*) echo "HTTP $5 for the anonymous legacy query is neither the 401 pass nor an accepted query (a missing endpoint proves nothing); inconclusive"; set -- "$1" 3 ;;
+    0:*) echo "python3 exit $6: the anonymous legacy response could not be processed; inconclusive"; set -- "$1" 3 ;;
+    *) echo "curl exit $4: the anonymous legacy request failed (a TLS error or connection failure proves nothing); inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    --cacert ca.pem --header @neo4j-auth.header \
+    -H 'Content-Type: application/json' \
+    --data '{"statements":[{"statement":"RETURN 1 AS ok"}]}' \
+    -w '\nlegacy-auth=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    "https://$1:7473/db/neo4j/tx/commit"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the status, the response with its write-out line, then curl's exit status
+  printf '%s' "$3"
+  set -- "$1" "$2" "$(if printf '%s' "${3%$'\n'legacy-auth=*}" | python3 -I -c 'if 1:
+      import json, sys
+      try: d = json.loads(sys.stdin.buffer.read())
+      except (ValueError, RecursionError): d = None
+      d = d if isinstance(d, dict) else {}
+      r = d.get("results") if isinstance(d.get("results"), list) else ()
+      r = tuple((x.get("columns"), tuple(y.get("row") if isinstance(y, dict) else None for y in x.get("data")) if isinstance(x.get("data"), list) else None) if isinstance(x, dict) else None for x in r)
+      print("e" * (d.get("errors") == list()) + "r" * (json.dumps(r) == json.dumps(((("ok",), ((1,),)),))), end="")'
+    then printf '\n0'; else printf '\n%s' "$?"; fi)" "$4" "${3##*legacy-auth=}"   # the parsed body's marks and python3's exit status, curl's exit status, then the HTTP code
+  set -- "$1" "$2" "${3%$'\n'*}" "$4" "${5%%[!0123456789]*}" "${3##*$'\n'}"   # the marks, curl's exit status, the HTTP code, then python3's exit status
+  case "$4:$6:$5:$3" in
+    0:0:2??:er) echo "the authenticated legacy query returned ok=1 with an empty errors array" ;;
+    0:0:*) echo "HTTP $5 without ok=1 and an empty errors array, and HTTP 200 alone does not demonstrate query success, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    0:*) echo "python3 exit $6: the authenticated legacy response could not be processed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    *) echo "curl exit $4: the authenticated legacy request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the response headers and bodies are not classified beyond the checks above, so judge them yourself"
+  exit "$2"
 )
 ```
 
@@ -37433,7 +37638,7 @@ Claims (full source mapping in the JSON block below):
 - query-secrets (REASONED; docs): Disable parameter and early raw logging and enable literal obfuscation; clearQueryCaches makes dynamic literal changes affect cached queries.
 - error-obfuscation (REASONED; errors5, errors-current): obfuscate_errors arrived in 5.26.21 and current-series 2026.01.3; do not add it on older versions, and treat obfuscated logs as sensitive.
 - http-log (REASONED; docs): Community optional HTTP request logging applies only with HTTP/HTTPS and does not supply equivalent Bolt, query or security auditing.
-- local-guards (DEMONSTRATED; docs): Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. Those checks covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form was not re-run.
+- local-guards (DEMONSTRATED; docs): Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. Those checks covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form is covered by gate-suite bash -n and ShellCheck passes and drafting stub runs.
 - tls-schemes (REASONED; docs): neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options.
 - verify-listeners (REASONED; docs, cluster, docker): Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient.
 - verify-cluster-tls (REASONED; cluster, openssl, tls, timeout): Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake.
@@ -37463,7 +37668,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a3a2acb7b9a1ae76a699b7a3727baccc004e6ea73c27604d93a7f35883b2fff9",
+  "body_sha256": "fe435bf36c3b77a03d7a286d7b18d3dab0265c202de2137ae2d4cff3c90e6ad1",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",
@@ -37711,7 +37916,7 @@ Claims (full source mapping in the JSON block below):
     "query-secrets": {"text": "Disable parameter and early raw logging and enable literal obfuscation; clearQueryCaches makes dynamic literal changes affect cached queries.", "components": ["docs"], "sources": ["docs:s849558d7ac94", "docs:s9f0fd7367ed5"], "status": "REASONED"},
     "error-obfuscation": {"text": "obfuscate_errors arrived in 5.26.21 and current-series 2026.01.3; do not add it on older versions, and treat obfuscated logs as sensitive.", "components": ["errors5", "errors-current"], "sources": ["errors5:s213150a93a9b", "errors-current:sf356a53bcdde"], "status": "REASONED"},
     "http-log": {"text": "Community optional HTTP request logging applies only with HTTP/HTTPS and does not supply equivalent Bolt, query or security auditing.", "components": ["docs"], "sources": ["docs:s849558d7ac94"], "status": "REASONED"},
-    "local-guards": {"text": "Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. Those checks covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form was not re-run.", "components": ["docs"], "sources": ["docs:s27aabf32542c"], "status": "DEMONSTRATED", "evidence": "Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks."},
+    "local-guards": {"text": "Historical guard-only checks rejected placeholders and malformed marker/count inputs in six guarded blocks; no Neo4j service behavior was demonstrated. Those checks covered an earlier form of the guarded blocks, whose refusals exited with status 1; the current form is covered by gate-suite bash -n and ShellCheck passes and drafting stub runs.", "components": ["docs"], "sources": ["docs:s27aabf32542c"], "status": "DEMONSTRATED", "evidence": "Guard-only checks exercised placeholder and malformed marker/count rejection in all six guarded blocks."},
     "tls-schemes": {"text": "neo4j+s and bolt+s verify certificates; +ssc skips verification. Cypher Shell trust configuration is independent of OpenSSL/curl CA options.", "components": ["docs"], "sources": ["docs:s9114febb4116", "docs:s27aabf32542c"], "status": "REASONED"},
     "verify-listeners": {"text": "Confirm working Bolt/HTTPS, absent HTTP, Enterprise loopback backup, conditional cluster/Prometheus ports and Docker namespace/publication controls; an empty inventory is insufficient.", "components": ["docs", "cluster", "docker"], "sources": ["docs:s6e25ca2b57e6", "docs:sb0ddc8887396", "cluster:s0a9b520e7dd9", "cluster:s213150a93a9b", "docker:s67d863435d75"], "status": "REASONED", "verify": [1]},
     "verify-cluster-tls": {"text": "Compare cluster TLS client_auth NONE with REQUIRE: no certificate and untrusted issuer must be rejected while a trusted member completes a verified handshake.", "components": ["cluster", "openssl", "tls", "timeout"], "sources": ["cluster:s3b91bd83988a", "cluster:s213150a93a9b", "openssl:s00aaf106164f", "tls:se28608fb71a7", "timeout:s8844a42d0596"], "status": "REASONED", "verify": [2]},
@@ -42186,18 +42391,27 @@ Run the service under a dedicated unprivileged OS account with access only to th
 
 ## Verify
 
-REASONED: historical service-run overview, not a new demonstration; a live Datasette, sqlite-web or Caddy stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. All five shell blocks passed bash -n and ShellCheck 0.11.0 without output, and local metadata JSON parsing printed metadata JSON parsed. Block A printed `STUB sudo <ss> <-tlnp>`; 42 block B/C guard runs rejected invalid fixtures with exit 2 and refusal messages, and valid fixtures printed curl argument records with exit 0. These local checks do not establish HTTP behavior. Exposed routes return protected data anonymously; fixed authentication denies or filters it, per the guide's cited Datasette authentication and permissions (rolling documentation, checked September 2026) and sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback). The following is the historical authoring record. The service outcomes below were **demonstrated on loopback** against Datasette 0.65.5 (with datasette-auth-passwords 1.1.1 and datasette-write 0.4) and sqlite-web 0.8.1, installed from PyPI into a virtual environment, with every server on 127.0.0.1 and, for the HTTPS blocks, native TLS or a Caddy TLS proxy with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`. Blocks B and C ran as printed with only their placeholders substituted. What those runs do not show is marked **REASONED** where it occurs, with its reason and basis in the cited vendor documentation.
+REASONED: historical service-run overview, not a new demonstration; a live Datasette, sqlite-web or Caddy stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. All five shell blocks passed bash -n and ShellCheck 0.11.0 without output, and local metadata JSON parsing printed metadata JSON parsed. Block A printed `STUB sudo <ss> <-tlnp>`; 42 block B/C guard runs rejected invalid fixtures with exit 2 and refusal messages, and valid fixtures printed curl argument records with exit 0. These local checks do not establish HTTP behavior. Exposed routes return protected data anonymously; fixed authentication denies or filters it, per the guide's cited Datasette authentication and permissions (rolling documentation, checked September 2026) and sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback). The following is the historical authoring record. The service outcomes below were **demonstrated on loopback** against Datasette 0.65.5 (with datasette-auth-passwords 1.1.1 and datasette-write 0.4) and sqlite-web 0.8.1, installed from PyPI into a virtual environment, with every server on 127.0.0.1 and, for the HTTPS blocks, native TLS or a Caddy TLS proxy with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`. Blocks B and C ran as printed with only their placeholders substituted. What those runs do not show is marked **REASONED** where it occurs, with its reason and basis in the cited vendor documentation. Those runs, and the loopback runs recorded below, used earlier forms of blocks A, B and C, which did not classify their results. Block A now refuses with status 2 when `ss` is not installed, exits 3 if `ss` fails and otherwise 0, block B classifies its response by the step named on its `set --` line, and block C compares the authorized and anonymous responses against an expected text. Their current forms are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network.
 
-DEMONSTRATED: local shell preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9. All five shell blocks passed bash -n and the metadata JSON parsed. An unescaped URL apostrophe failed bash -n with exit 2; proper escaping forwarded one intact URL argument to an explicitly substituted curl argument recorder. Blocks B and C forwarded -q -g, --noproxy and error write-out options, without -k or redirect-following. These are local argument checks, not HTTP observations. Use Bash with real, unshadowed builtins and curl 7.75.0 or newer. Paste whole subshells and substitute inside the single quotes. A literal apostrophe requires proper shell escaping; do not simply paste it between those quotes. Use URLs without embedded credentials or signed tokens. Every curl begins with `-q -g`, disables environment proxies, and reports the error text. Do not add `-k` or redirect-following.
+DEMONSTRATED: local shell preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9. All five shell blocks passed bash -n and the metadata JSON parsed. An unescaped URL apostrophe failed bash -n with exit 2; proper escaping forwarded one intact URL argument to an explicitly substituted curl argument recorder. Blocks B and C forwarded -q -g, --noproxy and error write-out options, without -k or redirect-following. These are local argument checks, not HTTP observations, and they ran on earlier forms of blocks B and C, which did not classify their results; the current forms are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. Use Bash with real, unshadowed builtins and curl 7.75.0 or newer. Paste whole subshells and substitute inside the single quotes. A literal apostrophe requires proper shell escaping; do not simply paste it between those quotes. Use URLs without embedded credentials or signed tokens. Every curl begins with `-q -g`, disables environment proxies, and reports the error text. Do not add `-k` or redirect-following.
 
 ### A. Listener inventory
 
-REASONED: listener-inventory scope; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The Cloud Run ingress comparison also needs a provider deployment, and the root inventory needs sudo; neither was available. Block A passed bash -n and ShellCheck 0.11.0 without output and a sudo stub printed `STUB sudo <ss> <-tlnp>`, exiting 0; no privileged inventory ran. Expect a wildcard origin in the exposed state and the intended loopback listeners in the fixed same-host state, per the guide's cited ss manual, Datasette CLI reference (rolling documentation, checked September 2026), and sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback). Host publication is separate per Docker port publishing (Docker's pre-28.0.0 localhost-publication caveat) and Cloud Run container contract. The following capability statements describe the historical authoring environment. **The fixed bind demonstrated on loopback; a wildcard bind and container publications REASONED** (the host forbids binding every interface and has no container runtime). On the deployment host, inspect the complete listener table:
+REASONED: listener-inventory scope; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The Cloud Run ingress comparison also needs a provider deployment, and the root inventory needs sudo; neither was available. Block A passed bash -n and ShellCheck 0.11.0 without output and a sudo stub printed `STUB sudo <ss> <-tlnp>`, exiting 0; no privileged inventory ran. That run covered an earlier form of block A, which ran `sudo ss -tlnp` at top level; its current form, which refuses with status 2 when `ss` is not installed, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. Expect a wildcard origin in the exposed state and the intended loopback listeners in the fixed same-host state, per the guide's cited ss manual, Datasette CLI reference (rolling documentation, checked September 2026), and sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback). Host publication is separate per Docker port publishing (Docker's pre-28.0.0 localhost-publication caveat) and Cloud Run container contract. The following capability statements describe the historical authoring environment. **The fixed bind demonstrated on loopback; a wildcard bind and container publications REASONED** (the host forbids binding every interface and has no container runtime). On the deployment host, inspect the complete listener table:
 
-REASONED: following block; the cited ss and deployment documentation supplies the full inventory check; sudo, wildcard binding and container publication were unavailable. Only the unprivileged loopback inventory is recorded as demonstrated below.
+REASONED: following block; the cited ss and deployment documentation supplies the full inventory check; sudo, wildcard binding and container publication were unavailable. Only the unprivileged loopback inventory is recorded as demonstrated below. Per the guide's cited sudo sudoers manual, secure_path entry, where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH, so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it.
 
 ```bash
-sudo ss -tlnp
+(                                       # a subshell, so the exit below ends only the subshell
+  command -v ss >/dev/null 2>&1 || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  if sudo ss -tlnp; then
+    set -- 0
+  else
+    echo "sudo ss -tlnp exit $?: the listener table could not be read, and an inspection error followed by an empty table is inconclusive"; set -- 3
+  fi
+  echo "block exit $1; every listener is an unclassified observation, including IPv6 entries and unexpected ports, so judge it yourself: a wildcard origin bind is the finding"
+  exit "$1"
+)
 ```
 
 For the same-host examples, expect `127.0.0.1:8001` and/or `127.0.0.1:8080`, owned by the intended processes. A wildcard origin bind is the finding. Read IPv6 entries and unexpected ports too. An inspection error followed by an empty table is inconclusive. These example ports match the documented CLI defaults; substitute the actual configured ports when testing. On loopback, bare `datasette serve` with no host or port flag listened on `127.0.0.1:8001` and bare `sqlite_web` on `127.0.0.1:8080`, as `ss -tlnp` run without `sudo` by the same account showed (the authoring host has no `sudo`).
@@ -42206,36 +42420,49 @@ REASONED: publication boundaries from the cited Docker and Cloud Run documentati
 
 ### B. Direct reachability and anonymous access
 
-REASONED: historical direct, provider and proxy comparison scope; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. An external vantage, provider deployment, and IAP or Cloudflare Access tenancy remain prerequisites for those comparisons. Block B passed bash -n and ShellCheck 0.11.0 without output; across ordinary Bash, set -u, and set -u with IFS=0, placeholders, missing assignments, empty URLs, non-HTTP schemes and userinfo exited 2 with their refusal messages, while valid URLs exited 0 and printed one STUB curl argument record. Exposed paths return protected data anonymously; fixed protected routes deny or filter it, and a loopback-only direct origin gives no answer from an external vantage after a successful local control. Those outcomes are per the guide's cited Datasette authentication and permissions (rolling documentation, checked September 2026), sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback), Caddy Basic authentication (rolling documentation, checked September 2026), Google IAP overview and origin protection, and Cloudflare Access HTTP applications. The following is the historical authoring record, including its missing second network and provider deployment. **Demonstrated on loopback against both tools; an external vantage and provider hostnames REASONED** (the host has no second network and no provider deployment). The same-host reverse proxy was demonstrated with Caddy (section C); identity-aware-proxy routes are REASONED, since no IAP or Cloudflare Access tenancy was available.
+REASONED: historical direct, provider and proxy comparison scope; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. An external vantage, provider deployment, and IAP or Cloudflare Access tenancy remain prerequisites for those comparisons. Block B passed bash -n and ShellCheck 0.11.0 without output; across ordinary Bash, set -u, and set -u with IFS=0, placeholders, missing assignments, empty URLs, non-HTTP schemes and userinfo exited 2 with their refusal messages, while valid URLs exited 0 and printed one STUB curl argument record. Those runs covered an earlier form of block B; its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. Exposed paths return protected data anonymously; fixed protected routes deny or filter it, and a loopback-only direct origin gives no answer from an external vantage after a successful local control. Those outcomes are per the guide's cited Datasette authentication and permissions (rolling documentation, checked September 2026), sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback), Caddy Basic authentication (rolling documentation, checked September 2026), Google IAP overview and origin protection, and Cloudflare Access HTTP applications. The following is the historical authoring record, including its missing second network and provider deployment. **Demonstrated on loopback against both tools; an external vantage and provider hostnames REASONED** (the host has no second network and no provider deployment). The same-host reverse proxy was demonstrated with Caddy (section C); identity-aware-proxy routes are REASONED, since no IAP or Cloudflare Access tenancy was available.
 
 REASONED: deployment controls from the cited route and proxy documentation; no external vantage or provider deployment is available. First obtain a successful local control against the running backend. Then run the block from an authorized external testing host against each direct origin and provider hostname, followed by the published HTTPS routes. For a protected route, establish section C's authorized positive control first. Use disposable databases for any local exposed-state reproduction.
 
-REASONED: following block; the complete deployment scenario needs an external vantage and provider deployment, neither available. The cited route documentation supplies expectations; the separate loopback outcomes are recorded below.
+REASONED: following block; the complete deployment scenario needs an external vantage and provider deployment, neither available. Its direct-origin and provider reachability and anonymous-access expectations follow the cited Datasette/sqlite-web routes, deployment and proxy documentation, because no running frontend, external test path or provider deployment is available for these service checks; the separate loopback outcomes and local guard observations are recorded below. The block's second value names the step: `control` for the local control, `direct` for a direct origin probed from the external testing host, and `route` for a provider hostname or published route. With `direct` it exits 1 for any HTTP response and 0 for a curl exit 7 or 28, whose err text you read; `control` and `route` exit 0 with an unclassified-observation line when a response arrives, and any other curl failure exits 3.
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTP_OR_HTTPS_URL'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTP_OR_HTTPS_URL' 'REPLACE_WITH_control_OR_direct_OR_route'   # the URL, then control (the local control against the running backend), direct (a direct origin, probed from the external testing host) or route (a provider hostname or published route)
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
-  [ "$#" -eq 1 ] || { echo 'exactly one URL required; not probing'; exit 2; }
+  [ "$#" -eq 2 ] || { echo 'exactly one URL and one of control, direct or route required; not probing'; exit 2; }
   case "$1" in
     ''|*REPLACE_WITH_*|*YOUR_PUBLIC_IP*) echo 'substitute the target URL; not probing'; exit 2 ;;
   esac
   case "$1" in http://?*|https://?*) ;; *) echo 'HTTP or HTTPS required; not probing'; exit 2 ;; esac
   case "$1" in *@*|*[[:cntrl:]]*) echo 'userinfo or control character rejected; not probing'; exit 2 ;; esac
-  curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"
+  case "$2" in control|direct|route) ;; *) echo 'substitute control, direct or route as the second value; not probing'; exit 2 ;; esac
+  set -- "$1" "$2" "$(if curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the URL, the step, the response with its write-out line, then curl's exit status
+  printf '%s' "$3"
+  case "$2:$4" in
+    direct:0) echo "FINDING: the direct origin answered, and any HTTP response from a direct origin, including 401, 403 or 404, proves that path answered"; set -- 1 ;;
+    direct:7|direct:28) echo "unclassified observation: a refusal or timeout supports isolation only after confirming the target and a successful local control"; set -- 0 ;;
+    control:0) echo "unclassified observation: the local control answered; confirm from the response that it came from the running backend"; set -- 0 ;;
+    route:0) echo "unclassified observation: a database listing, schema result or protected rows without credentials is the finding, and a denial or the configured login redirect with no protected data is the fixed state"; set -- 0 ;;
+    control:*) echo "curl exit $4: the local control failed; inconclusive"; set -- 3 ;;
+    *) echo "curl exit $4: DNS, TLS and local socket errors prove nothing about exposure; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the response headers, its body and curl's err text are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; local request examples, direct-origin/provider reachability, anonymous access and query targets follow the cited Datasette/sqlite-web routes, deployment and proxy documentation. No running frontend, external test path or provider deployment is available for these service checks; local guard observations are recorded separately below. For a disposable `published.db` containing at least one table, these are local control examples:
+REASONED: following block; the local request examples and query targets in the table below follow the cited Datasette/sqlite-web routes documentation, and no running frontend is available to answer them. For a disposable `published.db` containing at least one table, these are local control examples:
 
 | Tool | UI | Read query |
 |---|---|---|
 | REASONED: request targets from the cited Datasette query and JSON API documentation; no running Datasette fixture is available. Datasette | `http://127.0.0.1:8001/` | `http://127.0.0.1:8001/published.json?sql=SELECT+name+FROM+sqlite_master+LIMIT+1` |
 | REASONED: request targets from the cited sqlite-web query handler; no running sqlite-web fixture is available. sqlite-web | `http://127.0.0.1:8080/` | `http://127.0.0.1:8080/query/?sql=SELECT+name+FROM+sqlite_master+LIMIT+1` |
 
-REASONED: query-route provenance; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Block B passed bash -n and ShellCheck 0.11.0 without output; across ordinary Bash, set -u, and set -u with IFS=0, placeholders, missing assignments, empty URLs, non-HTTP schemes and userinfo exited 2 with their refusal messages, while valid URLs exited 0 and printed one STUB curl argument record. An in-memory SQLite fixture with an items table ran SELECT name FROM sqlite_master LIMIT 1 and printed [('items',)]; this checks the query only. Exposed anonymous query routes return schema data and fixed protected routes deny or filter it. Those outcomes are per the guide's cited Datasette SQL queries and writable canned queries (rolling documentation, checked September 2026), Datasette JSON API and CORS (rolling documentation, checked September 2026), Datasette authentication and permissions (rolling documentation, checked September 2026), and sqlite-web implementation. The following source and package confirmation is the historical record. Datasette's query and JSON interfaces are documented; sqlite-web's GET route was traced to the inspected source and confirmed for the 0.8.1 package on loopback.
+REASONED: query-route provenance; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Block B passed bash -n and ShellCheck 0.11.0 without output; across ordinary Bash, set -u, and set -u with IFS=0, placeholders, missing assignments, empty URLs, non-HTTP schemes and userinfo exited 2 with their refusal messages, while valid URLs exited 0 and printed one STUB curl argument record. Those runs covered an earlier form of block B; its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. An in-memory SQLite fixture with an items table ran SELECT name FROM sqlite_master LIMIT 1 and printed [('items',)]; this checks the query only. Exposed anonymous query routes return schema data and fixed protected routes deny or filter it. Those outcomes are per the guide's cited Datasette SQL queries and writable canned queries (rolling documentation, checked September 2026), Datasette JSON API and CORS (rolling documentation, checked September 2026), Datasette authentication and permissions (rolling documentation, checked September 2026), and sqlite-web implementation. The following source and package confirmation is the historical record. Datasette's query and JSON interfaces are documented; sqlite-web's GET route was traced to the inspected source and confirmed for the 0.8.1 package on loopback.
 
 REASONED: external test scope from the cited deployment and curl references; no external testing host or provider deployment is available. For external testing, replace loopback with the actual deployment address, port, and path. Loopback on the testing machine cannot test the server's external exposure. Interpret the results as follows:
 
@@ -42243,50 +42470,75 @@ REASONED: external test scope from the cited deployment and curl references; no 
 - REASONED: exposure criteria from the cited query and authentication references; no live frontend fixture is available. **Anonymous exposure:** a bare GET of the UI, a `?sql=` route, or a `.json` route returns a database listing, schema result, or protected rows without credentials. That is the finding. The schema query reveals a name; repeat with a known nonsensitive row endpoint to check row access.
 - REASONED: denial interpretation from the cited authentication references; no live protected frontend fixture is available. **Fixed:** a denial or the configured login redirect returns no protected data. A 200 login page is not query success, and an unexplained 404 does not prove authentication.
 - REASONED: SQL comparison from the cited Datasette permissions and settings; no authorized browsing fixture is available. **SQL disabled:** an authorized browsing account still reaches its permitted table page but receives no SQL result. Check that browsing positive control separately.
-- REASONED: proxy-only comparison; a live Caddy and Datasette stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Block C passed bash -n and ShellCheck 0.11.0 without output. Block C's guard runs across ordinary Bash, set -u, and set -u with IFS=0 showed that placeholders, missing assignments, empty URLs, non-HTTPS schemes, userinfo, missing header files and directories exited 2 with their refusal messages; valid URLs and a regular mode-0600 header file exited 0 and printed two STUB curl argument records, with only the header path forwarded. An untrusted direct backend path exposes data; the fixed proxy path denies anonymous requests while allowing the authorized control, and requires backend isolation, per the guide's cited Caddy Basic authentication (rolling documentation, checked September 2026) and Datasette proxy deployment (rolling documentation, checked September 2026). The demonstration reference is historical. **Proxy-only authentication (demonstrated with Caddy; see section C):** a loopback backend may intentionally return data without credentials. Exposure exists when an untrusted caller reaches it or bypasses the proxy.
+- REASONED: proxy-only comparison; a live Caddy and Datasette stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Block C passed bash -n and ShellCheck 0.11.0 without output. Block C's guard runs across ordinary Bash, set -u, and set -u with IFS=0 showed that placeholders, missing assignments, empty URLs, non-HTTPS schemes, userinfo, missing header files and directories exited 2 with their refusal messages; valid URLs and a regular mode-0600 header file exited 0 and printed two STUB curl argument records, with only the header path forwarded. Those runs covered an earlier form of block C; its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. An untrusted direct backend path exposes data; the fixed proxy path denies anonymous requests while allowing the authorized control, and requires backend isolation, per the guide's cited Caddy Basic authentication (rolling documentation, checked September 2026) and Datasette proxy deployment (rolling documentation, checked September 2026). The demonstration reference is historical. **Proxy-only authentication (demonstrated with Caddy; see section C):** a loopback backend may intentionally return data without credentials. Exposure exists when an untrusted caller reaches it or bypasses the proxy.
 
-On loopback, block B against bare `datasette serve` returned the database listing, and the SQL JSON route returned the known row (`widget-canary`), both with `200`, and `/-/versions.json` answered `200` anonymously: the exposed state. Against the baseline command above, the SQL JSON route returned `403` while the table's JSON page still returned `200` (SQL disabled, browsing permitted), and `/published.db` returned `403`; without `--setting allow_download off` it returned `200`. `--cors` added `Access-Control-Allow-Origin: *`, absent without it. Bare `sqlite_web` answered the query GET with `200` anonymously, and an anonymous `POST` insert wrote a row to a disposable database; with `--read-only` the read still returned `200` and the insert changed nothing. `SQLITE_WEB_PASSWORD` set without `-P` left sqlite-web open (`200` anonymously), as the source reading above says; with `-P` the anonymous query GET got `302` to `/login/`.
+DEMONSTRATED: historical loopback runs at authoring against Datasette 0.65.5 and sqlite-web 0.8.1, recorded as observed. On loopback, block B against bare `datasette serve` returned the database listing, and the SQL JSON route returned the known row (`widget-canary`), both with `200`, and `/-/versions.json` answered `200` anonymously: the exposed state. Against the baseline command above, the SQL JSON route returned `403` while the table's JSON page still returned `200` (SQL disabled, browsing permitted), and `/published.db` returned `403`; without `--setting allow_download off` it returned `200`. `--cors` added `Access-Control-Allow-Origin: *`, absent without it. Bare `sqlite_web` answered the query GET with `200` anonymously, and an anonymous `POST` insert wrote a row to a disposable database; with `--read-only` the read still returned `200` and the insert changed nothing. `SQLITE_WEB_PASSWORD` set without `-P` left sqlite-web open (`200` anonymously), as the source reading above says; with `-P` the anonymous query GET got `302` to `/login/`. Block B in these runs was an earlier form that printed the response without classifying it; the current form prints the same response before its classification line and is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026.
 
 ### C. Authorized positive control versus anonymous access
 
-REASONED: historical native-TLS, same-host proxy and identity-aware-proxy comparison scope; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Caddy TLS proxy reproduction also needs a listener under that isolation requirement, and IAP or Cloudflare Access header comparisons need their respective tenancy. Block C passed bash -n and ShellCheck 0.11.0 without output. Block C's guard runs across ordinary Bash, set -u, and set -u with IFS=0 showed that placeholders, missing assignments, empty URLs, non-HTTPS schemes, userinfo, missing header files and directories exited 2 with their refusal messages; valid URLs and a regular mode-0600 header file exited 0 and printed two STUB curl argument records, with only the header path forwarded. Exposed routes answer anonymously; fixed routes deny or filter anonymous data while returning it to the authorized control. Those outcomes are per the guide's cited Datasette authentication and permissions (rolling documentation, checked September 2026), sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback), Caddy Basic authentication (rolling documentation, checked September 2026), Google IAP overview and origin protection, and Cloudflare Access HTTP applications. The following is the historical authoring record. **Demonstrated on loopback over native TLS; the same-host proxy demonstrated with Caddy; identity-aware-proxy headers REASONED, since no IAP or Cloudflare Access tenancy was available.**
+REASONED: historical native-TLS, same-host proxy and identity-aware-proxy comparison scope; a live Datasette/sqlite-web stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Caddy TLS proxy reproduction also needs a listener under that isolation requirement, and IAP or Cloudflare Access header comparisons need their respective tenancy. Block C passed bash -n and ShellCheck 0.11.0 without output. Block C's guard runs across ordinary Bash, set -u, and set -u with IFS=0 showed that placeholders, missing assignments, empty URLs, non-HTTPS schemes, userinfo, missing header files and directories exited 2 with their refusal messages; valid URLs and a regular mode-0600 header file exited 0 and printed two STUB curl argument records, with only the header path forwarded. Those runs covered an earlier form of block C; its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. Exposed routes answer anonymously; fixed routes deny or filter anonymous data while returning it to the authorized control. Those outcomes are per the guide's cited Datasette authentication and permissions (rolling documentation, checked September 2026), sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback), Caddy Basic authentication (rolling documentation, checked September 2026), Google IAP overview and origin protection, and Cloudflare Access HTTP applications. The following is the historical authoring record. **Demonstrated on loopback over native TLS; the same-host proxy demonstrated with Caddy; identity-aware-proxy headers REASONED, since no IAP or Cloudflare Access tenancy was available.**
 
-DEMONSTRATED: local file preparation and block C guards on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and a disposable Authorization header. The real file tests accepted a regular mode-0600 file and an explicitly substituted curl argument recorder received only its @path, not its contents. Missing, directory and mode-000 files exited 2 before the recorder ran. A mode-0644 file was also accepted, confirming the guard does not establish privacy; chmod 600 restored the private fixture. No service authentication was tested. Prepare a private mode-0600 header file per [secrets.md](https://github.com/jposluns/secureconfig/blob/main/secrets.md), containing the required Authorization, session Cookie, or fronting-layer headers. Only its path enters argv through `-H "@file"`. Keep credentials out of the URL, shell history, tracing, and shared output. The guard checks that the file is readable and regular; preparation must establish its privacy.
+DEMONSTRATED: local file preparation and block C guards on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and a disposable Authorization header. The real file tests accepted a regular mode-0600 file and an explicitly substituted curl argument recorder received only its @path, not its contents. Missing, directory and mode-000 files exited 2 before the recorder ran. A mode-0644 file was also accepted, confirming the guard does not establish privacy; chmod 600 restored the private fixture. No service authentication was tested, and these runs used an earlier form of block C, with two values on its `set --` line; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. Prepare a private mode-0600 header file per [secrets.md](https://github.com/jposluns/secureconfig/blob/main/secrets.md), containing the required Authorization, session Cookie, or fronting-layer headers. Only its path enters argv through `-H "@file"`. Keep credentials out of the URL, shell history, tracing, and shared output. The guard checks that the file is readable and regular; preparation must establish its privacy.
 
 REASONED: positive-control selection from the cited query and permission references; no protected deployment or test identity is available. Choose a URL that returns known nonsensitive protected data. When arbitrary SQL is disabled, use a permitted table page or its JSON representation.
 
-REASONED: following block; the complete fronting-layer scenario includes IAP or Cloudflare Access, and no tenancy was available. The cited authentication documentation supplies expectations; native-TLS and Caddy loopback outcomes are recorded below.
+REASONED: following block; the complete fronting-layer scenario includes IAP or Cloudflare Access, and no tenancy was available. The cited authentication documentation supplies expectations; native-TLS and Caddy loopback outcomes are recorded below. The block's third value is a nonsensitive text that appears only in that protected data. It exits 3 when the authorized response lacks that text or a request fails, 1 when the anonymous response contains it, 0 when the control contains it and the anonymous response withholds it, and 2 for a guard refusal.
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_DATA_URL' 'REPLACE_WITH_AUTH_HEADER_FILE'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HTTPS_DATA_URL' 'REPLACE_WITH_AUTH_HEADER_FILE' 'REPLACE_WITH_EXPECTED_DATA_TEXT'   # the data URL, the header file, then a nonsensitive text that appears only in the protected data
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo 'exactly one URL and one file required; not probing'; exit 2; }
+  [ "$#" -eq 3 ] || { echo 'exactly one URL, one file and one expected text required; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the data URL; not probing'; exit 2 ;; esac
   case "$1" in https://?*) ;; *) echo 'HTTPS required; not probing'; exit 2 ;; esac
   case "$2" in ''|*REPLACE_WITH_*) echo 'substitute the header file; not probing'; exit 2 ;; esac
+  case "$3" in ''|*REPLACE_WITH_*) echo 'substitute the expected data text; not probing'; exit 2 ;; esac
   case "$1" in *@*) echo 'userinfo rejected; not probing'; exit 2 ;; esac
-  case "$1$2" in *[[:cntrl:]]*) echo 'control character rejected; not probing'; exit 2 ;; esac
+  case "$1$2$3" in *[[:cntrl:]]*) echo 'control character rejected; not probing'; exit 2 ;; esac
   [ -f "$2" ] || { echo 'regular header file required; not probing'; exit 2; }
   [ -r "$2" ] || { echo 'readable header file required; not probing'; exit 2; }
 
-  curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -H "@$2" -w '\nauthorized http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"
-  curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -w '\nanonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"
+  set -- "$1" "$2" "$3" "$(if curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -H "@$2" -w '\nauthorized http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the authorized response with its write-out line, then curl's exit status
+  printf '%s' "$4"
+  set -- "$1" "$2" "$3" 0 "${4%$'\n'authorized http=*}" "$5"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), the response, then curl's exit status
+  case "$6" in
+    0)
+      case "$5" in
+        *"$3"*) echo "positive control: the authorized response contains the expected data" ;;
+        *) echo "the authorized response does not contain the expected data, and HTTP success alone is insufficient: the control failed, so the comparison is inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+      esac ;;
+    *) echo "curl exit $6: the authorized request failed, so the comparison is inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nanonymous http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' --url "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # the status, the anonymous response with its write-out line, then curl's exit status
+  printf '%s' "$5"
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'anonymous http=*}" "$6"
+  case "$6" in
+    0)
+      case "$5" in
+        *"$3"*) echo "FINDING: the anonymous response contains the expected protected data"; set -- "$1" "$2" "$3" 1 ;;
+        *) echo "the anonymous response withholds the expected data" ;;
+      esac ;;
+    *) echo "curl exit $6: the anonymous request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  echo "block exit $4; the response headers and bodies, and the repeat with an authenticated but unauthorized account, are not classified, so judge them yourself"
+  exit "$4"
 )
 ```
 
-REASONED: authorization comparison from the cited authentication and permission references; no live deployment or test identities are available. The authorized response must contain the expected data; HTTP success alone is insufficient. Only then assess whether the anonymous response withholds that result. If the control fails, the comparison is inconclusive. Repeat with an authenticated but unauthorized account where actor permissions apply.
+- REASONED: authorization comparison from the cited authentication and permission references; no live deployment or test identities are available. The authorized response must contain the expected data; HTTP success alone is insufficient. Only then assess whether the anonymous response withholds that result. If the control fails, the comparison is inconclusive. Repeat with an authenticated but unauthorized account where actor permissions apply.
 
-On loopback, with the metadata above plus datasette-auth-passwords, the block returned the table's rows to the `analyst` session cookie (`authorized http=200`) and `403` anonymously; an authenticated `guest` got `403`, the unauthorized outcome, and the analyst got `403` on SQL under `allow_sql: false`. For sqlite-web with `-P`, the session cookie got the row with `200` and the anonymous request `302` to `/login/`. With datasette-write on a disposable database, an anonymous write got `403`, a root write without the CSRF token `403`, and with the token `302`, and the row was written. Under the same metadata, `/-/versions.json`, `/-/metadata.json`, `/-/plugins.json`, `/-/settings.json` and `/-/databases.json` returned `403` anonymously and `200` to a freshly logged-in analyst. The same metadata's `/-/metadata.json` showed that analyst both users' password hashes when they were written inline in the plugin configuration, but only the `$env` references when they were supplied through environment variables.
+DEMONSTRATED: historical loopback runs at authoring, recorded as observed. On loopback, with the metadata above plus datasette-auth-passwords, the block returned the table's rows to the `analyst` session cookie (`authorized http=200`) and `403` anonymously; an authenticated `guest` got `403`, the unauthorized outcome, and the analyst got `403` on SQL under `allow_sql: false`. For sqlite-web with `-P`, the session cookie got the row with `200` and the anonymous request `302` to `/login/`. With datasette-write on a disposable database, an anonymous write got `403`, a root write without the CSRF token `403`, and with the token `302`, and the row was written. Under the same metadata, `/-/versions.json`, `/-/metadata.json`, `/-/plugins.json`, `/-/settings.json` and `/-/databases.json` returned `403` anonymously and `200` to a freshly logged-in analyst. Under the same metadata, `/-/metadata.json` showed that analyst both users' password hashes when they were written inline in the plugin configuration, but only the `$env` references when they were supplied through environment variables. Block C in these runs was an earlier form that printed both responses without comparing them; the current form prints the same responses before its classification lines and is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026.
 
-The Caddy proxy was Caddy v2.11.4 (the release tarball, its SHA-256 equal to GitHub's published digest) on `127.0.0.1:8443` with `bind 127.0.0.1`, `auto_https off`, the admin API off and TLS files from the test CA, with [caddy.md](https://github.com/jposluns/secureconfig/blob/main/caddy.md)'s `basic_auth` in front of a Datasette that had no authentication of its own. Requests through that Caddy proxy to `/`, the SQL JSON route, `/published.db`, `/-/versions.json` and `/published/items.csv` returned `401` anonymously and `200` with the Basic credential, while the loopback backend answered each of those routes directly with `200`: the proxy-only pattern, safe only while nothing untrusted reaches the backend. Block C through the proxy gave `authorized http=200` with the rows and `anonymous http=401` with `www-authenticate: Basic realm="restricted"`.
+DEMONSTRATED: historical loopback run of a Caddy TLS proxy at authoring, recorded as observed. The Caddy proxy was Caddy v2.11.4 (the release tarball, its SHA-256 equal to GitHub's published digest) on `127.0.0.1:8443` with `bind 127.0.0.1`, `auto_https off`, the admin API off and TLS files from the test CA, with [caddy.md](https://github.com/jposluns/secureconfig/blob/main/caddy.md)'s `basic_auth` in front of a Datasette that had no authentication of its own. Requests through that Caddy proxy to `/`, the SQL JSON route, `/published.db`, `/-/versions.json` and `/published/items.csv` returned `401` anonymously and `200` with the Basic credential, while the loopback backend answered each of those routes directly with `200`: the proxy-only pattern, safe only while nothing untrusted reaches the backend. Block C through the proxy gave `authorized http=200` with the rows and `anonymous http=401` with `www-authenticate: Basic realm="restricted"`. That block C run used an earlier form, which printed both responses without comparing them; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026.
 
-Local authoring checks passed: `bash -n` on all five shell blocks, parsing of the metadata JSON, and 120 guard executions covering 40 cases under ordinary Bash, `set -u`, and `set -u` with `IFS=0`. The cases included missing assignments or markers, shortened and extra arguments, embedded placeholders, invalid schemes, URL userinfo, control characters, invalid header-file paths, and valid argument forwarding. An isolated curl argument recorder measured guard behavior; the HTTP outcomes above were demonstrated separately on loopback.
+DEMONSTRATED: historical local authoring checks, recorded as run. Local authoring checks passed: `bash -n` on all five shell blocks, parsing of the metadata JSON, and 120 guard executions covering 40 cases under ordinary Bash, `set -u`, and `set -u` with `IFS=0`. The cases included missing assignments or markers, shortened and extra arguments, embedded placeholders, invalid schemes, URL userinfo, control characters, invalid header-file paths, and valid argument forwarding. An isolated curl argument recorder measured guard behavior; the HTTP outcomes above were demonstrated separately on loopback. Those checks covered earlier forms of blocks A, B and C; their current forms are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026.
 
-DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9. Across 48 block B/C cases under ordinary Bash, set -u, and set -u with IFS=0, an explicitly substituted curl argument recorder ran with valid whole-block values, inherited matching marker/arguments, and pastes below the guards. Whole-block placeholders and omitted assignments without a matching marker exited 2 without calling it. These observations establish shell behavior only. Partial pastes beginning below the guards remain unguarded. An inherited marker with exactly the expected arguments is indistinguishable from a complete assignment. Paste whole blocks; these checks do not claim otherwise.
+DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9. Across 48 block B/C cases under ordinary Bash, set -u, and set -u with IFS=0, an explicitly substituted curl argument recorder ran with valid whole-block values, inherited matching marker/arguments, and pastes below the guards. Whole-block placeholders and omitted assignments without a matching marker exited 2 without calling it. These observations establish shell behavior only, and they covered earlier forms of blocks B and C, whose current forms are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026. Partial pastes beginning below the guards remain unguarded. An inherited marker with exactly the expected arguments is indistinguishable from a complete assignment. Paste whole blocks; these checks do not claim otherwise.
 
 **REASONED:** the cited vendor documentation is the basis for what the loopback runs could not show: a wildcard bind and container publications, an external vantage against direct origins and provider hostnames, the identity-aware-proxy pattern, and `ss` run as root.
 
@@ -42294,7 +42546,7 @@ DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with 
 
 Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; the container-generator discussion here is scoped to commit `caf238aac86ebe370959b25384d6e05f6a1e2359`, not a tagged release or the separately pinned Cloud Run implementation. The sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
 
-Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1 tag entries, which were checked against the locally extracted tag snapshot in October 2026. This list also records the source-fetch review.
+Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1 tag entries, which were checked against the locally extracted tag snapshot in October 2026, and the sudo sudoers manual entry, which was checked against the file at its tag on 2026-10-31. This list also records the source-fetch review.
 
 - Datasette CLI reference (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/cli-reference.html
 - Datasette authentication and permissions (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/authentication.html
@@ -42343,6 +42595,7 @@ Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1
 - Tailscale Serve and Funnel distinction: https://tailscale.com/docs/reference/tailscale-cli/serve
 - curl manual (write-out variables `exitcode` and `errormsg` added in curl 7.75.0): https://curl.se/docs/manpage.html
 - ss manual: https://man7.org/linux/man-pages/man8/ss.8.html
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 - OWASP SQL injection prevention: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
 
 
@@ -42421,15 +42674,15 @@ Claims (full source mapping in the JSON block below):
 - verify-inventory (REASONED; web, ss, docker, cloudrun, datasette-docs): Inspect complete listener table, IPv6 and unexpected ports; empty output after an error is inconclusive. Root ss, wildcard binds, Docker publication and managed ingress remain reasoned without sudo/container capability.
 - verify-external (REASONED; web, iap, curl, datasette-docs): External origin/provider tests require a successful local control and actual deployment targets; any HTTP response proves reachability, while transport failures alone prove no isolation. No second network/provider deployment was available.
 - verify-anonymous (REASONED; web, datasette-docs): UI, schema or row data without credentials is exposure; login pages, unexplained 404s and HTTP success alone do not establish protection. SQL-disabled tests also need an authorized browsing control.
-- datasette-exposed (DEMONSTRATED; datasette-docs): Local bare Datasette returned listing and known SQL row with 200 and /-/versions.json anonymously with 200; baseline SQL returned 403 while table JSON still returned 200.
+- datasette-exposed (DEMONSTRATED; datasette-docs): Local bare Datasette returned listing and known SQL row with 200 and /-/versions.json anonymously with 200; baseline SQL returned 403 while table JSON still returned 200. Block B was then in an earlier form; its current form has the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.
 - web-exposed (DEMONSTRATED; web, web-source): Local bare sqlite-web returned query GET 200 anonymously and accepted an anonymous insert into a disposable database.
 - verify-authorized (REASONED; web, curl, iap, access, datasette-docs): Private mode-0600 header file supplies credentials by path, not argv values; compare known authorized data with anonymous denial and repeat with an unauthorized actor. File guards establish readability/type, not privacy; identity-proxy scenarios lack a tenancy.
-- actor-results (DEMONSTRATED; passwords, datasette-docs): Local password-plugin analyst cookie returned table rows with 200, anonymous and guest requests got 403, and analyst SQL got 403 under allow_sql:false.
+- actor-results (DEMONSTRATED; passwords, datasette-docs): Local password-plugin analyst cookie returned table rows with 200, anonymous and guest requests got 403, and analyst SQL got 403 under allow_sql:false. Block C was then in an earlier form; its current form has the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.
 - web-auth-results (DEMONSTRATED; web, web-source): Local sqlite-web -P session cookie returned the row with 200 and the anonymous request redirected to /login/.
 - introspection-results (DEMONSTRATED; passwords, datasette-docs): Under the local metadata policy, all five auxiliary JSON routes returned 403 anonymously and 200 to a freshly logged-in analyst.
-- caddy-results (DEMONSTRATED; caddy-docs, datasette-docs): Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation.
-- local-checks (DEMONSTRATED; curl): Recorded bash parsing, metadata JSON parsing and 120 guard executions passed; curl argument recording tested guards separately from service outcomes.
-- guard-limits (DEMONSTRATED; curl): Use Bash with real unshadowed builtins and curl 7.75.0 or newer; paste whole blocks, escape apostrophes, avoid credential URLs, and retain TLS verification. Partial pastes and inherited matching marker/arguments remain outside guard coverage.
+- caddy-results (DEMONSTRATED; caddy-docs, datasette-docs): Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation. Block C was then in an earlier form; its current form has the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.
+- local-checks (DEMONSTRATED; curl): Recorded bash parsing, metadata JSON parsing and 120 guard executions passed; curl argument recording tested guards separately from service outcomes. They covered earlier forms of blocks A, B and C; their current forms have the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.
+- guard-limits (DEMONSTRATED; curl): Use Bash with real unshadowed builtins and curl 7.75.0 or newer; paste whole blocks, escape apostrophes, avoid credential URLs, and retain TLS verification. Partial pastes and inherited matching marker/arguments remain outside guard coverage. Those cases ran on earlier forms of blocks B and C; their current forms have the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.
 - datasette-cli (REASONED; datasette-docs): Bare datasette invokes serve; -h/--host and -p/--port override its bind and port.
 - web-cli (REASONED; web, web-source): sqlite-web -H/--host uses uppercase H and -p/--port overrides the port; the documented default is 127.0.0.1:8080.
 - write-test (DEMONSTRATED; write, datasette-docs): Local anonymous write and root write without CSRF were denied; root write with the token returned 302 and wrote the row.
@@ -42444,7 +42697,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3b257d052a6365f1b9aa98a3f21e8405f58da646fe0115a0b6ca95a13f2ba83b",
+  "body_sha256": "f32f2d8ab5237bf48e3a0dbb55bc212b9cf5e903bd7165f3324c1758aad3cc47",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -42659,15 +42912,15 @@ Claims (full source mapping in the JSON block below):
     "verify-inventory": {"text": "Inspect complete listener table, IPv6 and unexpected ports; empty output after an error is inconclusive. Root ss, wildcard binds, Docker publication and managed ingress remain reasoned without sudo/container capability.", "components": ["web", "ss", "docker", "cloudrun", "datasette-docs"], "sources": ["datasette-docs:sb0aae2446988", "web:s91f8591a5f84", "ss:sfc58f455acfa", "docker:s1e53417c513d", "cloudrun:sb90a6c13388a"], "status": "REASONED", "verify": [1]},
     "verify-external": {"text": "External origin/provider tests require a successful local control and actual deployment targets; any HTTP response proves reachability, while transport failures alone prove no isolation. No second network/provider deployment was available.", "components": ["web", "iap", "curl", "datasette-docs"], "sources": ["datasette-docs:s53e84082f6d1", "web:s91f8591a5f84", "iap:saafdfc163fce", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
     "verify-anonymous": {"text": "UI, schema or row data without credentials is exposure; login pages, unexplained 404s and HTTP success alone do not establish protection. SQL-disabled tests also need an authorized browsing control.", "components": ["web", "datasette-docs"], "sources": ["datasette-docs:s878851fd8eac", "datasette-docs:s824eb176fda7", "web:s91f8591a5f84"], "status": "REASONED", "verify": [2]},
-    "datasette-exposed": {"text": "Local bare Datasette returned listing and known SQL row with 200 and /-/versions.json anonymously with 200; baseline SQL returned 403 while table JSON still returned 200.", "components": ["datasette-docs"], "sources": ["datasette-docs:sb0aae2446988", "datasette-docs:se154b0fa47dd", "datasette-docs:s96c8e6562139", "datasette-docs:s1e93b280c5af"], "status": "DEMONSTRATED", "evidence": "Against the baseline command above, the SQL JSON route returned `403` while the table's JSON page still returned `200` (SQL disabled, browsing permitted)"},
+    "datasette-exposed": {"text": "Local bare Datasette returned listing and known SQL row with 200 and /-/versions.json anonymously with 200; baseline SQL returned 403 while table JSON still returned 200. Block B was then in an earlier form; its current form has the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.", "components": ["datasette-docs"], "sources": ["datasette-docs:sb0aae2446988", "datasette-docs:se154b0fa47dd", "datasette-docs:s96c8e6562139", "datasette-docs:s1e93b280c5af"], "status": "DEMONSTRATED", "evidence": "Against the baseline command above, the SQL JSON route returned `403` while the table's JSON page still returned `200` (SQL disabled, browsing permitted)"},
     "web-exposed": {"text": "Local bare sqlite-web returned query GET 200 anonymously and accepted an anonymous insert into a disposable database.", "components": ["web", "web-source"], "sources": ["web:s91f8591a5f84", "web-source:s13d71c0a8cb2"], "status": "DEMONSTRATED", "evidence": "Bare `sqlite_web` answered the query GET with `200` anonymously, and an anonymous `POST` insert wrote a row to a disposable database"},
     "verify-authorized": {"text": "Private mode-0600 header file supplies credentials by path, not argv values; compare known authorized data with anonymous denial and repeat with an unauthorized actor. File guards establish readability/type, not privacy; identity-proxy scenarios lack a tenancy.", "components": ["web", "curl", "iap", "access", "datasette-docs"], "sources": ["datasette-docs:s878851fd8eac", "web:s91f8591a5f84", "curl:s2b2686afaf41", "iap:saafdfc163fce", "access:sfe56578bedf4"], "status": "REASONED", "verify": [3]},
-    "actor-results": {"text": "Local password-plugin analyst cookie returned table rows with 200, anonymous and guest requests got 403, and analyst SQL got 403 under allow_sql:false.", "components": ["passwords", "datasette-docs"], "sources": ["datasette-docs:s878851fd8eac", "passwords:sb6597be5af67"], "status": "DEMONSTRATED", "evidence": "the block returned the table's rows to the `analyst` session cookie (`authorized http=200`) and `403` anonymously; an authenticated `guest` got `403`, the unauthorized outcome, and the analyst got `403` on SQL under `allow_sql: false`."},
+    "actor-results": {"text": "Local password-plugin analyst cookie returned table rows with 200, anonymous and guest requests got 403, and analyst SQL got 403 under allow_sql:false. Block C was then in an earlier form; its current form has the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.", "components": ["passwords", "datasette-docs"], "sources": ["datasette-docs:s878851fd8eac", "passwords:sb6597be5af67"], "status": "DEMONSTRATED", "evidence": "the block returned the table's rows to the `analyst` session cookie (`authorized http=200`) and `403` anonymously; an authenticated `guest` got `403`, the unauthorized outcome, and the analyst got `403` on SQL under `allow_sql: false`."},
     "web-auth-results": {"text": "Local sqlite-web -P session cookie returned the row with 200 and the anonymous request redirected to /login/.", "components": ["web", "web-source"], "sources": ["web:s91f8591a5f84", "web-source:s13d71c0a8cb2"], "status": "DEMONSTRATED", "evidence": "For sqlite-web with `-P`, the session cookie got the row with `200` and the anonymous request `302` to `/login/`."},
     "introspection-results": {"text": "Under the local metadata policy, all five auxiliary JSON routes returned 403 anonymously and 200 to a freshly logged-in analyst.", "components": ["passwords", "datasette-docs"], "sources": ["datasette-docs:s1e93b280c5af", "datasette-docs:s878851fd8eac", "passwords:sb6597be5af67"], "status": "DEMONSTRATED", "evidence": "Under the same metadata, `/-/versions.json`, `/-/metadata.json`, `/-/plugins.json`, `/-/settings.json` and `/-/databases.json` returned `403` anonymously and `200` to a freshly logged-in analyst"},
-    "caddy-results": {"text": "Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation.", "components": ["caddy-docs", "datasette-docs"], "sources": ["caddy-docs:sbc2bd9599bd1", "datasette-docs:s53e84082f6d1"], "status": "DEMONSTRATED", "evidence": "Block C through the proxy gave `authorized http=200` with the rows and `anonymous http=401` with `www-authenticate: Basic realm=\"restricted\"`."},
-    "local-checks": {"text": "Recorded bash parsing, metadata JSON parsing and 120 guard executions passed; curl argument recording tested guards separately from service outcomes.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "Local authoring checks passed: `bash -n` on all five shell blocks, parsing of the metadata JSON, and 120 guard executions covering 40 cases under ordinary Bash, `set -u`, and `set -u` with `IFS=0`."},
-    "guard-limits": {"text": "Use Bash with real unshadowed builtins and curl 7.75.0 or newer; paste whole blocks, escape apostrophes, avoid credential URLs, and retain TLS verification. Partial pastes and inherited matching marker/arguments remain outside guard coverage.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "Across 48 block B/C cases under ordinary Bash, set -u, and set -u with IFS=0, an explicitly substituted curl argument recorder ran with valid whole-block values, inherited matching marker/arguments, and pastes below the guards. Whole-block placeholders and omitted assignments without a matching marker exited 2 without calling it."},
+    "caddy-results": {"text": "Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation. Block C was then in an earlier form; its current form has the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.", "components": ["caddy-docs", "datasette-docs"], "sources": ["caddy-docs:sbc2bd9599bd1", "datasette-docs:s53e84082f6d1"], "status": "DEMONSTRATED", "evidence": "Block C through the proxy gave `authorized http=200` with the rows and `anonymous http=401` with `www-authenticate: Basic realm=\"restricted\"`."},
+    "local-checks": {"text": "Recorded bash parsing, metadata JSON parsing and 120 guard executions passed; curl argument recording tested guards separately from service outcomes. They covered earlier forms of blocks A, B and C; their current forms have the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "Local authoring checks passed: `bash -n` on all five shell blocks, parsing of the metadata JSON, and 120 guard executions covering 40 cases under ordinary Bash, `set -u`, and `set -u` with `IFS=0`."},
+    "guard-limits": {"text": "Use Bash with real unshadowed builtins and curl 7.75.0 or newer; paste whole blocks, escape apostrophes, avoid credential URLs, and retain TLS verification. Partial pastes and inherited matching marker/arguments remain outside guard coverage. Those cases ran on earlier forms of blocks B and C; their current forms have the gate suite's bash -n and ShellCheck 0.11.0 passes and drafting stub runs.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "Across 48 block B/C cases under ordinary Bash, set -u, and set -u with IFS=0, an explicitly substituted curl argument recorder ran with valid whole-block values, inherited matching marker/arguments, and pastes below the guards. Whole-block placeholders and omitted assignments without a matching marker exited 2 without calling it."},
     "datasette-cli": {"text": "Bare datasette invokes serve; -h/--host and -p/--port override its bind and port.", "components": ["datasette-docs"], "sources": ["datasette-docs:sb0aae2446988"], "status": "REASONED"},
     "web-cli": {"text": "sqlite-web -H/--host uses uppercase H and -p/--port overrides the port; the documented default is 127.0.0.1:8080.", "components": ["web", "web-source"], "sources": ["web:s91f8591a5f84", "web-source:s13d71c0a8cb2"], "status": "REASONED"},
     "write-test": {"text": "Local anonymous write and root write without CSRF were denied; root write with the token returned 302 and wrote the row.", "components": ["write", "datasette-docs"], "sources": ["datasette-docs:s406cc998a5da", "write:s073e10d21091"], "status": "DEMONSTRATED", "evidence": "With datasette-write on a disposable database, an anonymous write got `403`, a root write without the CSRF token `403`, and with the token `302`, and the row was written."},
@@ -52293,11 +52546,24 @@ location /mcp {
 
 ## Verify
 
-REASONED: following block; the ss listener inventory and the guarded direct-origin probe, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding) and curl manual entry (exitcode and errormsg, both added in curl 7.75.0). During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. The direct-origin comparison requires an MCP 2026-07-28 server, fronting layer and second probe host, unavailable in the authoring environment, so neither the exposed result (any HTTP code from your address) nor the fixed one (a refusal or timeout reaching your address, or an answer only from the fronting layer) was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0, then ran with stub ss and curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with the set -- line shortened, or given a second value under IFS=0, the exactly-1-value refusal. The stub curl in that marking-review run (October 2026), with no network and 198.51.100.7 substituted, received http://198.51.100.7:3000/mcp. The bash -n, ShellCheck and stub runs recorded here covered the listener block in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2. The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
+REASONED: following block; the ss listener inventory, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding). During marking review (October 2026), in the authoring environment, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. The inventory then shared one block with the direct-origin probe, and that block's bash -n, ShellCheck and stub runs are recorded with the probe below. The inventory now has its own block, run on the MCP host: it refuses with status 2 when `ss` is not installed, exits 3 if `ss -tlnp` fails and otherwise 0 with an unclassified-observation line, because you judge every listener it prints. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by drafting stub runs in October 2026 with no network, in which a stub ss that succeeded gave 0, one that failed gave 3 and a PATH without ss gave 2.
 
 ```bash
-# REASONED: listener isolation follows the cited deployment guidance; no live MCP 2026-07-28 server is available.
-ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
+(                                       # a subshell, so the exit below ends only the subshell; run it on the MCP host
+  command -v ss >/dev/null 2>&1 || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  if ss -tlnp; then                     # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
+    set -- 0
+  else
+    echo "ss -tlnp exit $?: the listener table could not be read; inconclusive"; set -- 3
+  fi
+  echo "block exit $1; every listener is an unclassified observation, so judge it yourself: the MCP HTTP transport belongs on 127.0.0.1:3000 only, never 0.0.0.0 or ::"
+  exit "$1"
+)
+```
+
+REASONED: the guarded direct-origin probe in the block below, run from another host, whose declaration is the Probe 1 paragraph after it, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding) and curl manual entry (exitcode and errormsg, both added in curl 7.75.0). The direct-origin comparison requires an MCP 2026-07-28 server, fronting layer and second probe host, unavailable in the authoring environment, so neither the exposed result (any HTTP code from your address) nor the fixed one (a refusal or timeout reaching your address, or an answer only from the fronting layer) was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0, then ran with stub ss and curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with the set -- line shortened, or given a second value under IFS=0, the exactly-1-value refusal. The stub curl in that marking-review run (October 2026), with no network and 198.51.100.7 substituted, received http://198.51.100.7:3000/mcp. Those runs covered an earlier form, in one block with the listener inventory, whose guard refusals left the subshell with status 0. The current form exits 1 when your address answers over HTTP, 0 with an unclassified-observation line when curl exits 7 or 28, so that you read err, and 3 for any other curl failure. That form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network. The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
+
+```bash
 # From another host: refused at the origin, or answered only by the fronting layer.
 # read err, not the number: it must name a refusal or timeout reaching YOUR address. An HTTP code
 # means the port answered. A resolver failure, a local socket error, or a timeout that did not come
@@ -52309,64 +52575,100 @@ ss -tlnp   # read every listener; 127.0.0.1:3000 only, never 0.0.0.0 or ::
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -s -o /dev/null --noproxy '*' -X POST --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/mcp" ;;
   esac
+  set -- "$1" "$(if curl -q -g -s -o /dev/null --noproxy '*' -X POST --connect-timeout 5 --max-time 20 \
+       -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:3000/mcp"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2%%$'\n'*}" "${2##*$'\n'}"           # the address, curl's write-out line, then curl's exit status
+  printf '%s\n' "$2"
+  case "$3" in
+    0) echo "FINDING: http://$1:3000/mcp answered over HTTP, so the port is reachable from this host"; set -- 1 ;;
+    7|28) echo "unclassified observation: a refusal or timeout reaching your address is the pass, while a resolver failure, a local socket error or a timeout that did not come from the remote address is inconclusive"; set -- 0 ;;
+    *) echo "curl exit $3: neither an HTTP answer nor a refusal or timeout; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; curl's err text is not classified, so read it yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; this Probe 1 paragraph and the listener block above it. Probe 1's expected 401 and exposed discovery result rest on the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries, and the listener block on the entries named in the declaration before it, which also records that block's local runs; Probe 1's own local runs are recorded with the following block. **Probe 1 - REASONED, not demonstrated.** No live MCP 2026-07-28 server is available in the authoring environment. Fixed: the unauthenticated request receives the applicable `401` denial; exposed: it returns an actual discovery result without authentication. A login page, redirect, transport failure, or JSON-RPC error does not demonstrate an exposed MCP result. The expected denial and metadata-discovery alternatives follow Authorization and Authorization Server Discovery.
+REASONED: preceding block; this Probe 1 paragraph and the direct-origin block above it. Probe 1's expected 401 and exposed discovery result rest on the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries, and the direct-origin block on the entries named in the paragraph before it, which also records that block's local runs; Probe 1's own local runs are recorded with the following block. **Probe 1 - REASONED, not demonstrated.** No live MCP 2026-07-28 server is available in the authoring environment. Fixed: the unauthenticated request receives the applicable `401` denial; exposed: it returns an actual discovery result without authentication. A login page, redirect, transport failure, or JSON-RPC error does not demonstrate an exposed MCP result. The expected denial and metadata-discovery alternatives follow Authorization and Authorization Server Discovery.
 
-REASONED: the header shape of the three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (request headers, header/body validation) and Discovery entry (request shape). No MCP server is available in the authoring environment to answer a mismatched header with HTTP 400 and -32020, or a matching one without it. During marking review (October 2026) the four server/discover bodies in those blocks parsed as JSON, and in each the MCP-Protocol-Version header equalled the protocol version 2026-07-28 in `params._meta`, Mcp-Method equalled the body's method, clientCapabilities and clientInfo were present, and no Mcp-Name header appeared. `Mcp-Name` is deliberately absent: it is required only for `tools/call`, `resources/read`, and `prompts/get`, not `server/discover`. The `MCP-Protocol-Version` header must equal the body's `_meta` version; all three probes satisfy that requirement by construction. See Streamable HTTP and the Discovery request shape.
+REASONED: the header shape of the three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (request headers, header/body validation) and Discovery entry (request shape). No MCP server is available in the authoring environment to answer a mismatched header with HTTP 400 and -32020, or a matching one without it. During marking review (October 2026) the four server/discover bodies in those blocks parsed as JSON, and in each the MCP-Protocol-Version header equalled the protocol version 2026-07-28 in `params._meta`, Mcp-Method equalled the body's method, clientCapabilities and clientInfo were present, and no Mcp-Name header appeared. Those checks ran on earlier forms of the three blocks; their current forms send the same headers and bodies and are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network. `Mcp-Name` is deliberately absent: it is required only for `tools/call`, `resources/read`, and `prompts/get`, not `server/discover`. The `MCP-Protocol-Version` header must equal the body's `_meta` version; all three probes satisfy that requirement by construction. See Streamable HTTP and the Discovery request shape.
 
-REASONED: following block; the unauthenticated server/discover probe and well-known metadata read in the following block, and the placeholder guards of all three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries. The authoring environment has no MCP server or authorization server, so neither the fixed 401 nor an exposed discovery result was observed. During marking review (October 2026) the three blocks passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network. Unchanged, each printed its substitute-the-MCP-HTTPS-URL refusal; without its set -- line, the paste-the-whole-block refusal; shortened, its exactly-N-values refusal; and an http:// URL drew the https:// refusal. In the following block an unsubstituted Origin drew the allowed-Origin refusal and a control character the control-character refusal, and with both values substituted the stub received one POST carrying the Origin, MCP-Protocol-Version, Mcp-Method, Content-Type and Accept headers. At the October 2026 marking review the block's well-known read sat outside the subshell, named mcp.example.com and reached the stub in every run. The well-known read now sits in its own subshell and takes the MCP server's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; that guard has not been run, and neither bash -n nor ShellCheck was re-run on the changed block. Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole subshell block.
+REASONED: following block; the unauthenticated server/discover probe and well-known metadata read in the following block, and the placeholder guards of all three RPC probe blocks, per the guide's cited MCP specification 2026-07-28 Authorization and Authorization Server Discovery entries. The authoring environment has no MCP server or authorization server, so neither the fixed 401 nor an exposed discovery result was observed. During marking review (October 2026) the three blocks passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network. Unchanged, each printed its substitute-the-MCP-HTTPS-URL refusal; without its set -- line, the paste-the-whole-block refusal; shortened, its exactly-N-values refusal; and an http:// URL drew the https:// refusal. In the following block an unsubstituted Origin drew the allowed-Origin refusal and a control character the control-character refusal, and with both values substituted the stub received one POST carrying the Origin, MCP-Protocol-Version, Mcp-Method, Content-Type and Accept headers. At the October 2026 marking review the block's well-known read sat outside the subshell, named mcp.example.com and reached the stub in every run. Those runs covered earlier forms of the three blocks, which did not classify their results. The following block now runs its two parts in one outer subshell with one exit status: 1 when the unauthenticated request returns a discovery result, 0 when it is refused with 401 and the well-known read succeeds, 3 for any other answer or a failed request, and 2 when a part refuses its input and nothing else was found or inconclusive. Its well-known read takes the MCP server's host name on its own guarded `set --` line, which refuses example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network, which also exercised that host-name guard. Replace each RPC probe's placeholders inside the single quotes on its `set --` line, keeping the quotes, and paste the whole block.
 
 ```bash
-# REASONED: unauthenticated discovery follows MCP 2026-07-28 Authorization and Authorization Server Discovery; no live server is available.
 # Unauthenticated server/discover: expect 401 (Option A: the WWW-Authenticate header MAY carry
 # resource_metadata; if absent, use the well-known URL below) or the proxy's 401 (Option B).
 # A 400 with JSON-RPC -32020 is a HEADER MISMATCH (missing/malformed Mcp-* headers or a
 # header/body version disagreement), not an authentication verdict: fix the probe, do not
 # read it as a pass or fail of the auth check.
 # --noproxy '*' so a client HTTPS_PROXY cannot answer with its own 401/407 in place of the target.
-(
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MCP_HTTPS_URL' 'REPLACE_WITH_ALLOWED_ORIGIN'
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
-  shift
-  [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not probing'; exit 2; }
-  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the MCP HTTPS URL; not probing'; exit 2 ;; esac
-  case "$1" in https://*) ;; *) echo 'use an https:// URL; not probing'; exit 2 ;; esac
-  case "$2" in ''|*REPLACE_WITH_*) echo 'substitute the allowed Origin; not probing'; exit 2 ;; esac
-  case "$1$2" in *[[:cntrl:]]*) echo 'control character in input; not probing'; exit 2 ;; esac
-  curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
-    -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
-    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
-)
-# Option A only: FOLLOW the resource_metadata URL from the 401's WWW-Authenticate header WHEN PRESENT
-# (the spec permits well-known-only discovery; fall back to /.well-known/oauth-protected-resource/mcp,
-# then the root below) and confirm it names your authorization server.
-(                                       # a subshell, so your own script arguments are untouched
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MCP_HOST'   # the host name of the MCP HTTPS URL used above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  curl -q -g -s --noproxy '*' "https://$1/.well-known/oauth-protected-resource"   # JSON with "authorization_servers"
+(                                       # the whole block in one subshell, so one exit status covers both parts
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  (
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MCP_HTTPS_URL' 'REPLACE_WITH_ALLOWED_ORIGIN'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+    shift
+    [ "$#" -eq 2 ] || { echo 'the set -- line needs exactly 2 values; not probing'; exit 2; }
+    case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the MCP HTTPS URL; not probing'; exit 2 ;; esac
+    case "$1" in https://*) ;; *) echo 'use an https:// URL; not probing'; exit 2 ;; esac
+    case "$2" in ''|*REPLACE_WITH_*) echo 'substitute the allowed Origin; not probing'; exit 2 ;; esac
+    case "$1$2" in *[[:cntrl:]]*) echo 'control character in input; not probing'; exit 2 ;; esac
+    set -- "$1" "$2" "$(if curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
+      -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
+      -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+      -w '\nhttp=%{http_code}\n' \
+      -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"           # the response with its http= line, then curl's exit status
+    printf '%s' "$3"
+    set -- "$1" "$2" "$3" "$4" "$(if printf '%s' "$3" | tr -d ' \t\r\n'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the response without white space, then tr's exit status
+    case "${5##*$'\n'}" in 0) ;; *) echo "tr exit ${5##*$'\n'}: the response could not be processed; inconclusive"; exit 3 ;; esac
+    set -- "$1" "$2" "${5%$'\n'*}" "$4" "${3##*http=}"   # the response without white space, curl's exit status, then the HTTP code
+    set -- "$1" "$2" "$3" "$4" "${5%%[!0123456789]*}" ""
+    case "$3" in *'"resultType":"complete"'*) set -- "$1" "$2" "$3" "$4" "$5" "${6}r" ;; esac
+    case "$3" in *'"supportedVersions"'*) set -- "$1" "$2" "$3" "$4" "$5" "${6}v" ;; esac
+    case "$3" in *'"capabilities"'*) set -- "$1" "$2" "$3" "$4" "$5" "${6}c" ;; esac
+    case "$4:$5:$6" in
+      0:401:*) echo "pass: the unauthenticated server/discover request was refused with 401"; exit 0 ;;
+      0:2??:rvc) echo "FINDING: the unauthenticated server/discover request returned a discovery result (resultType complete, supportedVersions and capabilities)"; exit 1 ;;
+      0:*) echo "HTTP $5 without a discovery result is neither the 401 pass nor an exposed result: a login page, redirect, JSON-RPC error or 400 -32020 header mismatch demonstrates neither; inconclusive"; exit 3 ;;
+      *) echo "curl exit $4: the server/discover request failed; inconclusive"; exit 3 ;;
+    esac
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  # Option A only: FOLLOW the resource_metadata URL from the 401's WWW-Authenticate header WHEN PRESENT
+  # (the spec permits well-known-only discovery; fall back to /.well-known/oauth-protected-resource/mcp,
+  # then the root below) and confirm it names your authorization server.
+  (                                     # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MCP_HOST'   # the host name of the MCP HTTPS URL used above, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    set -- "$1" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    case "${2##*$'\n'}" in 0) ;; *) echo "tr exit ${2##*$'\n'}: the host name could not be lowercased; inconclusive"; exit 3 ;; esac
+    case "${2%$'\n'*}" in                # the host name in lower case
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    if curl -q -g -s --noproxy '*' "https://$1/.well-known/oauth-protected-resource"; then   # JSON with "authorization_servers"
+      echo
+      echo "unclassified observation (Option A only): confirm that the JSON above names your authorization server in authorization_servers"; exit 0
+    else
+      echo "curl exit $?: the well-known metadata read failed; inconclusive"; exit 3
+    fi
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
+  echo "block exit $1; the response headers and the well-known metadata JSON are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; this Probe 2 paragraph and the unauthenticated discovery block above it. Probe 2's expected 403 and exposed discovery result rest on the guide's cited MCP specification 2026-07-28 Streamable HTTP, Discovery and Caching entries; the block above rests on the entries named in the declaration before it, which also records its local runs, and Probe 2's own local runs are recorded with the following block. **Probe 2 - REASONED, not demonstrated.** No live MCP 2026-07-28 server and valid deployment credential are available in the authoring environment. Establish the allowed-Origin positive control before interpreting the negative request. Require a real `DiscoverResult`, including `resultType:"complete"`, `supportedVersions`, `capabilities`, and the `ttlMs`/`cacheScope` caching hints required for complete discovery results. See Discovery and Caching. Fixed: changing only Origin produces `403`; exposed: the disallowed Origin still receives a discovery result. A `403` counts as an Origin rejection only after the otherwise-identical positive control succeeds. See Streamable HTTP, Security & Endpoint.
-
-REASONED: following block; the header-file handling and the allowed and disallowed Origin pair in the following block, per the guide's cited curl manual entry (header files) and MCP specification 2026-07-28 Streamable HTTP entry (Origin validation). The authoring environment has no MCP server or deployment credential, so neither the fixed 403 nor an exposed discovery result for the disallowed Origin was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network: unchanged, without its set -- line, shortened or with an http:// URL, it printed the matching refusal and exited 2, and an unsubstituted or unreadable header-file path drew its own refusal. With a mode-0600 fixture header file, the stub received -H with @ and the file's path in both calls, the Origin changed from the allowed value to https://attacker.example, and the fixture token appeared in neither argument list. Header files keep credential values out of curl's argv; this does not protect a secret copied into shell history, exposed through tracing, or readable by the account owner. See [secrets.md](https://github.com/jposluns/secureconfig/blob/main/secrets.md) and the curl manual.
+REASONED: following block; Probe 2, the header-file handling and the allowed and disallowed Origin pair in the following block, per the guide's cited curl manual entry (header files) and MCP specification 2026-07-28 Streamable HTTP (Origin validation), Discovery and Caching entries. **Probe 2 - REASONED, not demonstrated.** No live MCP 2026-07-28 server and valid deployment credential are available in the authoring environment, so neither the fixed 403 nor an exposed discovery result for the disallowed Origin was observed. Establish the allowed-Origin positive control before interpreting the negative request. Require a real `DiscoverResult`, including `resultType:"complete"`, `supportedVersions`, `capabilities`, and the `ttlMs`/`cacheScope` caching hints required for complete discovery results. See Discovery and Caching. Fixed: changing only Origin produces `403`; exposed: the disallowed Origin still receives a discovery result. A `403` counts as an Origin rejection only after the otherwise-identical positive control succeeds. See Streamable HTTP, Security & Endpoint. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network: unchanged, without its set -- line, shortened or with an http:// URL, it printed the matching refusal and exited 2, and an unsubstituted or unreadable header-file path drew its own refusal. With a mode-0600 fixture header file, the stub received -H with @ and the file's path in both calls, the Origin changed from the allowed value to https://attacker.example, and the fixture token appeared in neither argument list. Those runs covered an earlier form of the block, which did not classify its two requests. The current form exits 1 when the disallowed Origin still receives a discovery result, 0 when the positive control returns a complete discovery result and the disallowed Origin is refused with 403, 3 when the control fails or a request gives any other answer or fails, and 2 for a guard refusal. That form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network. Header files keep credential values out of curl's argv; this does not protect a secret copied into shell history, exposed through tracing, or readable by the account owner. See [secrets.md](https://github.com/jposluns/secureconfig/blob/main/secrets.md) and the curl manual.
 
 ```bash
-# REASONED: Origin rejection follows MCP 2026-07-28 Streamable HTTP security requirements; no live server or deployment credential is available.
 # Origin control (DNS rebinding): a wrong Origin must be rejected even WITH a valid credential. Run the
 # positive control first (ALLOWED Origin + a real server/discover body: require an actual discovery
 # result - resultType:"complete", supportedVersions, capabilities, and ttlMs/cacheScope - not merely a 2xx
@@ -52376,6 +52678,7 @@ REASONED: following block; the header-file handling and the allowed and disallow
 # Keep the credential in a mode-0600 header file (secrets.md), never on the command line:
 # REPLACE_WITH_AUTH_HEADER_FILE holds a line like "Authorization: Bearer <token>".
 (
+  set +e                                # errexit off here, so a request that ends nonzero is classified below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MCP_HTTPS_URL' 'REPLACE_WITH_ALLOWED_ORIGIN' 'REPLACE_WITH_AUTH_HEADER_FILE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
   shift
@@ -52386,26 +52689,64 @@ REASONED: following block; the header-file handling and the allowed and disallow
   case "$3" in ''|*REPLACE_WITH_*) echo 'substitute the mode-0600 auth-header file path on the set -- line above; not probing'; exit 2 ;; esac
   [ -r "$3" ] || { echo 'header file not readable; not probing'; exit 2; }
   case "$1$2$3" in *[[:cntrl:]]*) echo 'control character in input; not probing'; exit 2 ;; esac
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # Allowed Origin + valid credential: require a real DiscoverResult.
-  curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
     -H "@$3" \
     -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
     -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+    -w '\nhttp=%{http_code}\n' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # the status, the response with its http= line, then curl's exit status
+  printf '%s' "$5"
+  set -- "$1" "$2" "$3" "$4" "$(if printf '%s' "$5" | tr -d ' \t\r\n'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$6" "${5##*http=}"   # the response without white space and tr's exit status, curl's exit status, then the HTTP code
+  case "${5##*$'\n'}" in
+    0) set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "$6" "${7%%[!0123456789]*}" "" ;;
+    *) echo "tr exit ${5##*$'\n'}: the positive-control response could not be processed; inconclusive"; set -- "$1" "$2" "$3" 3 "" tr "" "" ;;
+  esac
+  case "$5" in *'"resultType":"complete"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}r" ;; esac
+  case "$5" in *'"supportedVersions"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}v" ;; esac
+  case "$5" in *'"capabilities"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}c" ;; esac
+  case "$5" in *'"ttlMs"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}t" ;; esac
+  case "$5" in *'"cacheScope"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}k" ;; esac
+  case "$6:$7:$8" in
+    tr:*) ;;                            # tr failed above, so this response is not classified
+    0:2??:rvctk) echo "positive control: the allowed Origin with your credential returned a complete discovery result" ;;
+    0:*) echo "HTTP $7 without a complete discovery result (resultType complete, supportedVersions, capabilities, ttlMs and cacheScope): the positive control failed, so a 403 below is not attributable to the Origin check; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $6: the positive-control request failed; inconclusive"; set -- "$1" "$2" "$3" 3 ;;
+  esac
   # Only the Origin changed to a disallowed value: expect 403.
-  curl -q -g -si --noproxy '*' -X POST --url "$1" -H 'Origin: https://attacker.example' \
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -si --noproxy '*' -X POST --url "$1" -H 'Origin: https://attacker.example' \
     -H "@$3" \
     -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
     -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+    -w '\nhttp=%{http_code}\n' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "${5##*$'\n'}"   # the status, the response with its http= line, then curl's exit status
+  printf '%s' "$5"
+  set -- "$1" "$2" "$3" "$4" "$(if printf '%s' "$5" | tr -d ' \t\r\n'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$6" "${5##*http=}"   # the response without white space and tr's exit status, curl's exit status, then the HTTP code
+  case "${5##*$'\n'}" in
+    0) set -- "$1" "$2" "$3" "$4" "${5%$'\n'*}" "$6" "${7%%[!0123456789]*}" "" ;;
+    *) echo "tr exit ${5##*$'\n'}: the disallowed-Origin response could not be processed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; set -- "$1" "$2" "$3" "$4" "" tr "" "" ;;
+  esac
+  case "$5" in *'"resultType":"complete"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}r" ;; esac
+  case "$5" in *'"supportedVersions"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}v" ;; esac
+  case "$5" in *'"capabilities"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8}c" ;; esac
+  case "$6:$7:$8" in
+    tr:*) ;;                            # tr failed above, so this response is not classified
+    0:2??:rvc) echo "FINDING: the disallowed Origin https://attacker.example still received a discovery result"; set -- "$1" "$2" "$3" 1 ;;
+    0:403:*) echo "the disallowed Origin was refused with 403, which counts as an Origin rejection only after the positive control above succeeded" ;;
+    0:*) echo "HTTP $7 for the disallowed Origin is neither the 403 pass nor a discovery result (a 401 is an auth failure and a 400 -32020 a header mismatch, neither an Origin verdict); inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $6: the disallowed-Origin request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  echo "block exit $4; the response headers are not classified, so judge them yourself"
+  exit "$4"
 )
 ```
 
-REASONED: following block; the wrong-audience probe in the following block, per the guide's cited MCP specification 2026-07-28 Authorization entry (audience validation, error codes). During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network: unchanged, without its set -- line, shortened, with an http:// URL, and with an unsubstituted or unreadable header-file path, it printed the matching refusal and exited 2. The stub curl in that marking-review run (October 2026), with no network and a mode-0600 fixture header file, received -H with @ and the file's path, and the fixture token did not appear in its arguments. **Probe 3 - REASONED, not demonstrated.** The authoring environment has no live authorization server with a second registered resource. Use an otherwise valid, unexpired token for that other resource, keeping the endpoint, allowed Origin, and request body unchanged. The audience-validation requirement and `401` outcome come from Authorization and Authorization Security Considerations.
+REASONED: following block; the wrong-audience probe in the following block, per the guide's cited MCP specification 2026-07-28 Authorization entry (audience validation, error codes). During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with a stub curl and no network: unchanged, without its set -- line, shortened, with an http:// URL, and with an unsubstituted or unreadable header-file path, it printed the matching refusal and exited 2. The stub curl in that marking-review run (October 2026), with no network and a mode-0600 fixture header file, received -H with @ and the file's path, and the fixture token did not appear in its arguments. Those runs covered an earlier form of the block, which did not classify its request. The current form exits 0 for a 401, 1 for a complete discovery result, 3 for any other answer or a failed request, and 2 for a guard refusal; it is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by drafting stub runs in October 2026 with no network. **Probe 3 - REASONED, not demonstrated.** The authoring environment has no live authorization server with a second registered resource. Use an otherwise valid, unexpired token for that other resource, keeping the endpoint, allowed Origin, and request body unchanged. The audience-validation requirement and `401` outcome come from Authorization and Authorization Security Considerations.
 
 ```bash
-# REASONED: wrong-audience check follows MCP 2026-07-28 Authorization and Authorization Security Considerations;
-# no live authorization server with a second registered resource is available here.
 # Wrong audience (Option A): a token issued for a DIFFERENT resource must fail with 401. Use an
 # otherwise valid, unexpired token whose aud names another resource (a forged or expired token would
 # fail for the wrong reason), in its own mode-0600 header file. Fixed: 401, the audience is rejected.
@@ -52427,11 +52768,33 @@ REASONED: following block; the wrong-audience probe in the following block, per 
   [ -r "$3" ] || { echo 'header file not readable; not probing'; exit 2; }
   case "$1$2$3" in *[[:cntrl:]]*) echo 'control character in input; not probing'; exit 2 ;; esac
   # Otherwise-valid token, wrong aud: require 401.
-  curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
+  set -- "$1" "$2" "$3" "$(if curl -q -g -si --noproxy '*' -X POST --url "$1" -H "Origin: $2" \
     -H "@$3" \
     -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' \
     -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+    -w '\nhttp=%{http_code}\n' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"check","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the response with its http= line, then curl's exit status
+  printf '%s' "$4"
+  set -- "$1" "$2" "$3" "$(if printf '%s' "$4" | tr -d ' \t\r\n'; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$5" "${4##*http=}"   # the response without white space and tr's exit status, curl's exit status, then the HTTP code
+  case "${4##*$'\n'}" in
+    0) set -- "$1" "$2" "$3" "${4%$'\n'*}" "$5" "${6%%[!0123456789]*}" "" ;;
+    *) echo "tr exit ${4##*$'\n'}: the response could not be processed; inconclusive"; set -- "$1" "$2" "$3" "" tr "" "" ;;
+  esac
+  case "$4" in *'"resultType":"complete"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}r" ;; esac
+  case "$4" in *'"supportedVersions"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}v" ;; esac
+  case "$4" in *'"capabilities"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}c" ;; esac
+  case "$4" in *'"ttlMs"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}t" ;; esac
+  case "$4" in *'"cacheScope"'*) set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7}k" ;; esac
+  case "$5:$6:$7" in
+    tr:*) set -- 3 ;;                   # tr failed above, so the response is not classified
+    0:401:*) echo "pass: the token for another resource was refused with 401, so the audience is rejected"; set -- 0 ;;
+    0:2??:rvctk) echo "FINDING: a token minted for another audience received a complete discovery result"; set -- 1 ;;
+    0:*) echo "HTTP $6 is neither the 401 pass nor a complete discovery result (a login page or JSON-RPC error, even with 2xx, is not acceptance, and a 400 -32020 is a header mismatch); inconclusive"; set -- 3 ;;
+    *) echo "curl exit $5: the wrong-audience request failed; inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; the response headers are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -52535,7 +52898,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1346807c224e3b788bd4ec84642e0ae15f04368f526a7f6537e99361197b246b",
+  "body_sha256": "dcbed46d507b650c6371eea9b2aa0c2b1b77466a3edac3b6b9f3338fccfa9636",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -52629,11 +52992,11 @@ Claims (full source mapping in the JSON block below):
     "caddy-stream": {"text": "Caddy flushes text/event-stream immediately and defaults to no read timeout.", "components": ["caddy"], "sources": ["caddy:s3865a73ccda3"], "status": "REASONED"},
     "cache": {"text": "Private caches must separate authorization contexts and result-affecting inputs; cacheScope never replaces access checks; public results may be shared.", "components": ["mcp"], "sources": ["mcp:s047fe3fd0dc0"], "status": "REASONED"},
     "nginx-cache": {"text": "proxy_cache off keeps caching disabled; default methods are GET/HEAD, and POST caching needs explicit configuration.", "components": ["nginx"], "sources": ["nginx:sf3430c5a0b22"], "status": "REASONED"},
-    "verify-network": {"text": "Inventory listeners and probe actual direct origin; any HTTP response proves reachability, local errors and unexplained timeouts are inconclusive.", "components": ["mcp", "curl"], "sources": ["mcp:s6e1c66cfb825", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-anonymous": {"text": "Unauthenticated discovery should get 401; actual discovery data is exposure, while redirects, login pages and RPC/transport errors are inconclusive.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s117c3edbfcd7", "mcp:s1d962c091f09"], "status": "REASONED", "verify": [2]},
-    "verify-origin": {"text": "Require valid-credential allowed-Origin DiscoverResult, including complete/version/capabilities/cache hints; changing only Origin should yield 403.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [3]},
-    "verify-audience": {"text": "Otherwise-valid token for another resource should get 401, not DiscoverResult; no second-resource authorization server was available.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s4b9b953ca683", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [4]},
-    "verify-credential-file": {"text": "Mode-0600 header files keep credentials out of curl argv, without protecting history, tracing or account-owner access.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [3, 4]}
+    "verify-network": {"text": "Inventory listeners and probe actual direct origin; any HTTP response proves reachability, local errors and unexplained timeouts are inconclusive.", "components": ["mcp", "curl"], "sources": ["mcp:s6e1c66cfb825", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1, 2]},
+    "verify-anonymous": {"text": "Unauthenticated discovery should get 401; actual discovery data is exposure, while redirects, login pages and RPC/transport errors are inconclusive.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s117c3edbfcd7", "mcp:s1d962c091f09"], "status": "REASONED", "verify": [3]},
+    "verify-origin": {"text": "Require valid-credential allowed-Origin DiscoverResult, including complete/version/capabilities/cache hints; changing only Origin should yield 403.", "components": ["mcp"], "sources": ["mcp:s6e1c66cfb825", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [4]},
+    "verify-audience": {"text": "Otherwise-valid token for another resource should get 401, not DiscoverResult; no second-resource authorization server was available.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7", "mcp:s4b9b953ca683", "mcp:s1d962c091f09", "mcp:s047fe3fd0dc0"], "status": "REASONED", "verify": [5]},
+    "verify-credential-file": {"text": "Mode-0600 header files keep credentials out of curl argv, without protecting history, tracing or account-owner access.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [4, 5]}
   }
 }
 ````
