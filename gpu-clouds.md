@@ -74,18 +74,23 @@ SSH: authenticate with your own key, not a password. Lambda requires an SSH key 
 
 REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no service run is recorded. Expected readings below follow the cited platform documentation, the Vast.ai base-image portal configurator at commit 00064421641881c1f83ff58c55f13cbc10cbea4d, Jupyter Server v2.18.0 implementation, REST specification and security documentation, iproute2 v6.12.0 ss manual and implementation, and Linux man-pages-5.13 network namespace isolation. This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. This is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each mapped port from outside.
 
-REASONED: following block; this guide's test design compares anonymous and valid-token requests directly to loopback `:8888/api/contents`. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in `Authorization: token` or the `token` query parameter; password-only and cookie-authenticated requests need separate controls. The Sources entries below pin the contents route, authenticated GET, API refusal, token handling and authentication/authorization defaults; the REST specification documents the successful GET response as HTTP 200. These are source-based expectations, not observed deployment results; the missing deployment and credentials prevent the live comparison here. The block exits 1 when the anonymous request gets a 2xx data response, 3 when `ss -tlnp` or a request fails, the anonymous request gets anything but 403 or a 2xx, or the valid-token positive control does not return 200, 2 when its token guard refuses, and otherwise 0; it leaves the listener table for you to judge.
+REASONED: following block; this guide's test design compares anonymous and valid-token requests directly to loopback `:8888/api/contents`. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in `Authorization: token` or the `token` query parameter; password-only and cookie-authenticated requests need separate controls. The Sources entries below pin the contents route, authenticated GET, API refusal, token handling and authentication/authorization defaults; the REST specification documents the successful GET response as HTTP 200. These are source-based expectations, not observed deployment results; the missing deployment and credentials prevent the live comparison here. The block exits 1 when the anonymous request gets a 2xx data response, 3 when `ss -tlnp` or a request fails, the anonymous request gets anything but 403 or a 2xx, or the valid-token positive control does not return 200, 2 when `ss` is not installed or its token guard refuses, and otherwise 0. It gives 2 only while no other part gave a finding or an inconclusive result, and it leaves any listener table it printed for you to judge.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is not installed, or a part refused its input), which outranks 0, so 2 stands only while nothing else was recorded
   # Inventory assumes normal live kernel/proc inputs, without ss input-file environment overrides.
-  ss -tlnp ||  # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
-               # the platform's NAT/proxy publication. A port here may be private OR public (once exposed/
-               # mapped), and a port published by the platform need not appear here at all, so cross-check
-               # against the platform's port mappings and probe each MAPPED port from outside (next block).
-    { echo "ss -tlnp exit $?; inconclusive"; set -- 3; }
+  if command -v ss >/dev/null; then
+    ss -tlnp ||  # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
+                 # the platform's NAT/proxy publication. A port here may be private OR public (once exposed/
+                 # mapped), and a port published by the platform need not appear here at all, so cross-check
+                 # against the platform's port mappings and probe each MAPPED port from outside (next block).
+      { echo "ss -tlnp exit $?; inconclusive"; set -- 3; }
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
+  fi
   # Does the LISTENER itself demand auth? Test it DIRECTLY on loopback, with no platform proxy in the path,
   # as a matched pair: this guide's test design. Jupyter Server v2.18.0 accepts
   # 'Authorization: token <token>' or ?token=. With token auth enabled and no session cookie,
@@ -129,7 +134,7 @@ REASONED: following block; this guide's test design compares anonymous and valid
     exit "$2"
   )
   case "$?:$1" in 0:*) ;; 1:*) set -- 1 ;; 2:0) set -- 2 ;; 2:*|*:1) ;; *) set -- 3 ;; esac   # fold that part's status into the block's, ranked as above
-  echo "block exit $1; the listener table is not classified, so judge it yourself, then probe each mapped port from outside with the next block"
+  echo "block exit $1; the listener table, if one was printed, is not classified, so judge it yourself, then probe each mapped port from outside with the next block"
   exit "$1"
 )
 ```
@@ -378,7 +383,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "40eae2de9a5794a06f28f617b63160f657a2eb22325878efd01bf022af13678e",
+  "body_sha256": "987e395d78900fcb8f247ee334e70cf832f1d272bbd202d0f2200133369a4335",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
