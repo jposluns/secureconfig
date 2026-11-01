@@ -114,7 +114,12 @@ printed and you compare it. The first block takes your host name, an unconfigure
 protected path on its `set --` line, and refuses with status 2 if any is left unsubstituted or
 malformed, or if the unconfigured name is your own host name in any letter case. That
 comparison cannot see your other ServerName and ServerAlias values, so check the name against
-them yourself. The block also needs bash: in a shell without bash's `shopt`, such as dash, it
+them yourself. The comparison runs in the C locale, so the letters A to Z match in either case
+in every locale, Turkish included, and every other letter matches only itself; the block refuses
+with status 2 if LC_ALL is read-only in your shell. From that comparison on, the block's own
+matches use the C locale, and the commands it runs get no LC_ALL from it, so they follow your
+LANG and other LC_ settings (or LC_ALL=C under `set -a`), which changes at most the language of
+their messages. The block also needs bash: in a shell without bash's `shopt`, such as dash, it
 refuses with status 2 before probing. The block then runs the
 configuration test and reload, classifies its requests to the site root and to the
 unconfigured name, records each outcome as it runs, and exits once at the end. It exits 1 if
@@ -141,14 +146,16 @@ vhost list it prints.
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute a name your certificate covers that no ServerName or ServerAlias matches (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  { unset -v LC_ALL; } 2>/dev/null || { echo "LC_ALL is read-only in this shell, so the host name comparison cannot run; not probing"; exit 2; }
+  LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as host names need
   shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
   case "$2" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
     "$1") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
   esac
   shopt -u nocasematch   # every match below compares letter case exactly again
-  case "$3" in
-    ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
   set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   if sudo apachectl configtest && sudo systemctl reload apache2; then :; else   # httpd on RHEL
     echo "configuration test or reload exit $?: the requests below may test the configuration Apache was already running; inconclusive"; set -- "$1" "$2" "$3" 3
@@ -312,7 +319,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "54db654ed41b0ccc1ffde67ccb872ac76f942402334302bb07e149a6788454af",
+  "body_sha256": "b4ed49d16ce0275c82e5075632f9a27720336bbb5c56394e3f7c9d2e50de7d26",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
