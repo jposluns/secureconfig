@@ -14850,15 +14850,13 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-REASONED: following block; workload exposure and Gateway TLS/authentication, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, and Kubernetes ports and protocols. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of this block, which also held the API reachability check and the node scans, before its app checks took the host on a guarded `set --` line. On the current form, which runs every part in one subshell and classifies the redirect, the request without credentials and the credentialed positive control, bash -n exited 0 and stub runs with kubectl and curl stubbed gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block, and no live demonstration was re-run. Five YAML blocks parsed. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure and Gateway TLS/authentication, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, and Kubernetes ports and protocols. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on an earlier form of this block, which also held the API reachability check and the node scans, before its app checks took the host on a guarded `set --` line. The form before this change runs every part in one subshell and classifies the redirect, the request without credentials and the credentialed positive control, and it lowercased the app host and the redirect line with `tr` before refusing a reserved name and comparing the redirect. On that form, bash -n exited 0 and stub runs with kubectl and curl stubbed gave the statuses its comments describe; the repository's gate suite runs ShellCheck 0.11.0 over every block, and no live demonstration was re-run. The current form refuses a reserved name, and compares the redirect's Location with the host, under bash's `nocasematch` option instead of through `tr`, and its app-check part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by kubectl and curl stub runs on 2026-11-01 with no network. In bash, that part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. In those runs a 301 to the host in another letter case, with or without `:443`, passed the redirect check, also with `tr` absent or failing, and a 301 to another host was inconclusive. That part compares the redirect's Location with the host in a nested subshell that unsets LC_ALL and sets LC_ALL=C, because `nocasematch` folds case through the locale and a Turkish or Azerbaijani locale does not fold `I` to `i`; the C locale folds A to Z only, so the Location matches the host in any letter case in every locale, and a non-ASCII letter must match exactly. Its `grep -i` for the basic-auth challenge runs as `LC_ALL=C grep -i` for the same reason, so it does not miss an all-capital `WWW-AUTHENTICATE` header in a Turkish locale. Its requests, listing and other matches keep your locale, which curl uses to convert a non-ASCII host name. If LC_ALL is read-only, that part says so and exits 2 before any request, after trying `unset` in a subshell of its own. In stub runs on 2026-11-01 without the LC_ALL lines, LC_ALL=tr_TR.UTF-8 or LANG=tr_TR.UTF-8 made a 301 from `WIKI.ACME.TEST` to `https://wiki.acme.test/`, or from `wiki.acme.test` to `https://WIKI.ACME.TEST:443/`, inconclusive with 3, and let a credentialed answer carrying `WWW-AUTHENTICATE: Basic` pass the positive control. With them, both 301s passed and that answer was inconclusive under C, C.UTF-8 and both Turkish settings, also under an inherited `nocasematch`, `set -a` or `set -e`, a 301 to another host stayed inconclusive, and a read-only LC_ALL gave 2 and its message with no curl call. With real curl pointed at a missing Unix socket, so that nothing was looked up or connected, a non-ASCII host name reached curl's connect step with a UTF-8 locale set in LC_ALL, in LANG or in both, also under `set -a`, as before this change. Under dash, that part refused every host name with 2 and the bash message before its probes, and the whole block exited 3, because dash reads the first part's `$'\n'` differently and that part reported an inconclusive result. Five YAML blocks parsed. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes: exposed endpoints answer
 untrusted sources, while fixed workloads use the authenticated Gateway. The node-scan and kubelet
 expectations, with their sources, are stated after the node-scan block, in the marker for that block.
 
 ```bash
-# REASONED: workload exposure and Gateway checks follow the cited documentation;
-# no Kubernetes cluster or isolated network namespace is available.
 # Run this where kubectl reaches the cluster. Every part runs in one subshell and the block exits once:
 # 1 for a finding, 3 for a failed command or an inconclusive result, 2 if the app checks refused their
 # input, and 0 otherwise.
@@ -14890,19 +14888,35 @@ expectations, with their sources, are stated after the node-scan block, in the m
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
+    ( unset -v LC_ALL ) 2>/dev/null || { echo "LC_ALL is read-only in this shell, so the redirect's Location cannot be compared with your host name; not probing"; exit 2; }   # unset only in a subshell of its own, so every command in this part keeps your locale
     set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
     set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sI -w 'http=%{http_code} location=%{redirect_url}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # curl's exit status, then the headers and the http= line
     printf '%s' "$4"                    # 301 with Location: https:// and your host name
     set -- "$1" "$2" "$3" "${4%$'\n'}"
-    set -- "$1" "$2" "$3" "$(printf '%s' "${4##*$'\n'}" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
-    case "$3:$4" in
-      "0:http=301 location=https://$5/"*|"0:http=301 location=https://$5:443/"*) ;;
-      0:*) echo "the plain HTTP request did not get a 301 to https://$1/; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-      *) echo "curl exit $3: the plain HTTP request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    set -- "$1" "$2" "$3" "${4##*$'\n'}"
+    (                                   # a nested subshell, so only this comparison runs in the C locale and every other command keeps your locale
+      { unset -v LC_ALL; } 2>/dev/null || exit 4
+      LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as host names need
+      shopt -s nocasematch || exit 5   # the Location's scheme and host name ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+      case "$3:$4" in
+        "0:http=301 location=https://$1/"*|"0:http=301 location=https://$1:443/"*) exit 0 ;;
+        0:*) exit 6 ;;
+      esac
+      exit 7
+    )
+    case "$?" in                        # the comparison's result; the messages are printed out here, in your locale
+      0) ;;
+      4) echo "LC_ALL is read-only in this shell, so the redirect's Location cannot be compared with your host name; not probing"; exit 2 ;;
+      5) echo "this block needs bash; run it in bash; not probing"; exit 2 ;;
+      6) echo "the plain HTTP request did not get a 301 to https://$1/; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      7) echo "curl exit $3: the plain HTTP request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "the redirect comparison did not finish; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
     esac
     set -- "$1" "$2" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w 'http=%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"  # curl's exit status, then the http= line
@@ -14925,7 +14939,7 @@ expectations, with their sources, are stated after the node-scan block, in the m
       printf '%s\n' "$4"
       if [ "$3" != 0 ]; then
         echo "curl exit $3: the credentialed request failed, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
-      elif printf '%s\n' "$4" | grep -i '^www-authenticate: *basic' > /dev/null; then
+      elif printf '%s\n' "$4" | LC_ALL=C grep -i '^www-authenticate: *basic' > /dev/null; then   # LC_ALL=C for grep alone, so -i folds A to Z only, in every locale
         echo "the gateway's basic-auth challenge answered the credentialed request, so the positive control failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
       else
         case "$?" in 1) ;; *) echo "grep could not read the response headers; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;; esac
@@ -15270,7 +15284,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "af701b98e73bf16a019f0ba5e76d05b2fe4fe4d2ecfcfeddf96bbe3c704ea9c7",
+  "body_sha256": "08dbbdd50a94f03ed62e67c53f597cce1df7cbf385c8ff1c300c0dc0d0f2d215",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -23239,7 +23253,7 @@ At the time of writing, the pinned Dev Mode docs require PRO or Team & Enterpris
 
 ## 6. Verify
 
-REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no run is recorded. The redirect and unauthenticated-request checks take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the unauthenticated-request check takes its protected path on the same line; the guards have not been run. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
+REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no live run is recorded. The redirect and unauthenticated-request checks take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the unauthenticated-request check takes its protected path on the same line. No run of the guards on the form before this change, which lowercased the host and the redirect's headers with `tr` and deleted the headers' spaces and tabs with a second `tr`, was recorded before 2026-11-01; curl-stub runs of it that day refused the reserved spellings with `tr` present, and with `tr` absent or failing refused none, probed the reserved name and reported a finding. The current form refuses a reserved name, and matches the Location header, under bash's `nocasematch` option, and deletes the spaces and tabs with bash expansions, instead of through `tr`; each part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs on 2026-11-01 with no network. In bash, each part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached both probes. In those runs a 301 whose Location header read `LOCATION:` and a tab before `HTTPS://`, or `location :` and spaces and a tab before `https://`, passed, also with `tr` absent or failing, while a 301 with an http:// Location or with no Location line was a finding. The redirect part unsets LC_ALL and sets LC_ALL=C inside its subshell just before the Location match, because `nocasematch` folds case through the locale and a Turkish or Azerbaijani locale does not fold `I` to `i`; the C locale folds A to Z only, so `location:` matches in any letter case in every locale, and a non-ASCII letter must match exactly. If LC_ALL is read-only, that part says so and exits 2 instead of classifying the redirect; both arms of the match end the part, so no later command runs in that locale. In stub runs on 2026-11-01 without the LC_ALL lines, LC_ALL=tr_TR.UTF-8 or LANG=tr_TR.UTF-8 turned a 301 whose header read `LOCATION: https://` into a finding. With them, that 301 passed under C, C.UTF-8 and both Turkish settings, also under an inherited `nocasematch` or `set -e`, while an http:// Location stayed a finding and a read-only LC_ALL gave 2 and its message. Under dash, each part refused every host name with 2 and the bash message before its probe, and the block exited 2. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
 
 ```bash
 # 1. This guide checks HTTP->HTTPS redirection. Spot-check on / only: it does not prove HTTPS on every route/method, nor that
@@ -23260,16 +23274,22 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$1" "$(if curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
     set -- "$1" "${2##*$'\n'}" "${2%$'\n\n'*}"   # curl's exit status, then the headers and the http= line
     set -- "$1" "$2" "$3" "${3##*$'\n'}"         # the same values, then the http= line alone
     printf '%s\n' "$3"
     case "$2:$4" in
       0:http=301|0:http=302|0:http=307|0:http=308)
-        case "$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | tr -d ' \t')" in   # header names ignore letter case, and spaces and tabs are deleted, so any of them may follow location:
+        set -- "$1" "$2" "${3// /}" "$4"   # the headers with their spaces deleted by a bash expansion, not an outside command
+        { unset -v LC_ALL; } 2>/dev/null || { echo "LC_ALL is read-only in this shell, so the Location header cannot be matched; not classifying the redirect"; exit 2; }
+        LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as header names need
+        shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # header names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail; both of its arms end this part's subshell, and the option with it
+        case "${3//$'\t'/}" in   # the headers with their tabs deleted too, so any spaces and tabs may follow location:
           *$'\n''location:https://'*) exit 0 ;;
           *) echo "FINDING: a ${4#http=} redirect without an https:// Location, which this guide's check requires"; exit 1 ;;
         esac ;;
@@ -23297,9 +23317,11 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in
       ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
@@ -23453,7 +23475,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "3d96152884624d8f1c20707895b1d312d53ff6661ae06aa7f37c030ebbb563f0",
+  "body_sha256": "e40d25d632104592ed2b539f95436f36f972b2125a69dd2e69638330c5fb1d4d",
   "components": {
     "render": {
       "name": "Render documentation",
@@ -67827,10 +67849,9 @@ BIMI is optional display metadata that shows a brand logo in supporting clients;
 
 ## Verify
 
-REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard and its whole-block exit status were added; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
+REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard and its whole-block exit status were added; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. The form before this change, with the name guard and the whole-block exit status, lowercased the three names with `tr` before refusing a reserved one; the gate suite's bash -n and ShellCheck 0.11.0 passes covered it, and no stub run of it is recorded. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by dig and openssl stub runs on 2026-11-01 with no network. In bash, the block refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings as the mail domain, the bounce domain or the submission host with 2 and no dig or openssl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`. Names outside the reserved names reached all seven lookups and both TLS probes, and under dash the block refused every set of names with 2 and the bash message before any lookup. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state. The DNS/TLS inspection, and the message alignment and relay discrimination checks at the end of this paragraph, also follow the guide's cited RFC 9989, RFC 8601 and RFC 2505, with RFC 8314. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled sender or recipient is available either. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. After running the block, prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ```bash
-# REASONED: DNS and TLS expectations follow the cited RFCs; no DNS control, SMTP endpoint, or container runtime is available.
 # Inspect the published records. Substitute your own names inside the quotes on the set -- line below,
 # taking the DKIM selector from the s= tag of a real signature. The block refuses example.com,
 # example.net, example.org and their subdomains: example.com publishes real DNS records of its own, so
@@ -67854,9 +67875,11 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
   case "$4" in
     ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your submission host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '|%s|%s|%s|' "$1" "$2" "$4" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "|$1|$2|$4|" in
     *'|example.com|'*|*'|example.net|'*|*'|example.org|'*|*'.example.com|'*|*'.example.net|'*|*'.example.org|'*) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own names on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 3 (inconclusive) outranks 0
   dig +noall +answer TXT "$2" || set -- "$1" "$2" "$3" "$4" 3
   dig +noall +answer TXT "$3._domainkey.$1" || set -- "$1" "$2" "$3" "$4" 3
@@ -67885,8 +67908,6 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
   exit "$5"
 )
 ```
-
-REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314, RFC 9989, RFC 8601 and RFC 2505. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard and its whole-block exit status were added; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ## Common mistakes
 
@@ -67987,7 +68008,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "90712210639d9c2972b731b5ab61b08e9c8f4743a18fcf3d9477fba57835e5d0",
+  "body_sha256": "0c9afe559fced06e08a4ecc11d575dc4b0554047fda2d4389dea62fdc9ac229f",
   "components": {
     "spf": {
       "name": "SPF",
