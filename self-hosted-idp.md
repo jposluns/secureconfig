@@ -162,32 +162,17 @@ authentik also reaches past this host. Its Compose file, by default, "mounts the
 
 ## Verify
 
-REASONED: scope of every live check below; the authoring host forbids opening listeners without an isolated network namespace, and has none, and ran neither identity provider, while the fenced shell blocks below passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 at marking time with no diagnostics. Live checks here are **REASONED**: the authoring host forbids opening listeners without an isolated network namespace, and has none. This source audit ran neither identity provider. The expected outcomes, including those of the existing checks below, follow the cited vendor documentation and pinned sources; the pinned curl and Keycloak sources support the documented exit codes, timeout options, proxy controls and listener defaults; no deployed outcome was observed. This guide assesses that a password-only refusal for an already-enrolled administrator does not distinguish enrolment from enforcement: Keycloak's default configured-OTP condition and authentik's validation-stage behaviour can both refuse that login. Test a user with no registered factor and inspect the realm flow or authentik stage settings. The runnable Verify commands below retain their existing pass conditions.
+REASONED: scope of every live check below; the authoring host forbids opening listeners without an isolated network namespace, and has none, and ran neither identity provider. The fenced shell blocks below passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 at marking time with no diagnostics in an earlier form, which ran steps 1 to 8 as one block; the repository's gate suite runs bash -n and ShellCheck 0.11.0 over their current forms, whose exit statuses were also stub-run under Bash 5.3.9 on 2026-10-31 with curl, ss and docker replaced by local stubs. Live checks here are **REASONED**: the authoring host forbids opening listeners without an isolated network namespace, and has none. This source audit ran neither identity provider. The expected outcomes, including those of the existing checks below, follow the cited vendor documentation and pinned sources; the pinned curl and Keycloak sources support the documented exit codes, timeout options, proxy controls and listener defaults; no deployed outcome was observed. This guide assesses that a password-only refusal for an already-enrolled administrator does not distinguish enrolment from enforcement: Keycloak's default configured-OTP condition and authentik's validation-stage behaviour can both refuse that login. Test a user with no registered factor and inspect the realm flow or authentik stage settings. The runnable Verify commands below retain their existing pass conditions.
 
 REASONED: authentik setup-flow comparison per the cited pinned root redirect, setup view, OOBE policy and source tests at version/2026.8.3; no disposable authentik instance or isolated test network is available in the authoring environment, so the expected redirects and logins were not observed. For authentik's setup check, use a disposable instance in an isolated test network and a fresh browser session. Open `http://127.0.0.1:9000/` locally or through the SSH forward. In the exposed state, with no bootstrap credentials and no usable `akadmin` password, expect the redirects through `/setup` to `/if/flow/initial-setup/`, then the setup form without a login. Complete it with test credentials and confirm those credentials log in as `akadmin`. After setup, a new anonymous session visiting `/setup` must return through the root to authentication rather than offer setup. Repeat on a fresh instance bootstrapped with `AUTHENTIK_BOOTSTRAP_PASSWORD`: expect login with the supplied password and no setup form. A direct visit to the flow is not a sufficient negative check because it is denied even before setup. The pinned root redirect, setup view, OOBE policy and source tests distinguish these outcomes; the tests were read, not executed here.
 
 REASONED: network-boundary comparison per the cited shipped Compose publications at version/2026.8.3; no isolated exposed fixture or untrusted test client is available in the authoring environment, so neither reachability state was observed. For the network boundary, compare section 1's shipped publications with the loopback replacement using step 1 below. In the isolated exposed fixture, an untrusted test client can reach the setup route; with the loopback mappings and public proxy route closed, that client must not reach it, while the local browser still can. Retain this positive control so a stopped service cannot pass as an effective restriction. Confirm that neither configuration publishes 9300; its wildcard listener inside the container remains a separate monitoring-network boundary.
 
-REASONED: authentik replacement-route design from the pinned core, OAuth2 provider, OAuth2 app configuration, root URL, app registry, installed-app settings, API mount and flow files; no deployed authentik route was probed. For authentik, substitute the deployed application's OAuth2 discovery URL as the positive control and confirm that its issuer matches the configured global or per-provider value. Check that an untrusted client cannot reach the chosen administration route while an allowed administrator can. Check the administration API surface you choose to restrict separately: an untrusted client must be refused while an authorized administrator on the allowed network can complete an API request. Do not refuse the whole API prefix without tracing login dependencies; confirm that an ordinary user can still complete login. The pinned OAuth2 file defines the per-application discovery suffix and `/if/admin/` is a core route. The pinned OAuth2 app configuration mounts `authentik.providers.oauth2.urls` at `application/o/` and `authentik.providers.oauth2.urls_root` at the root. The pinned settings install that app and name `authentik.root.urls` as the root URL configuration, which mounts each installed authentik app's mountpoints under the web path, so the discovery URL is `<web path>application/o/<slug:application_slug>/.well-known/openid-configuration`, which is `/application/o/<slug:application_slug>/.well-known/openid-configuration` with the default web path `/`. These files place the route in authentik's URL configuration; they do not show that a deployed instance answers it, so the discovery-URL and issuer check above remains the positive control. Section 7's cited files place the v3 router at `<web path>api/v3/`, which is `/api/v3/` with the default web path `/`, and register the flow executor under it at `flows/executor/<slug:flow_slug>/` with `AllowAny`. This guide infers that end-user flow execution uses the API prefix and that refusing the whole prefix would break login, because the flow interface calls `flowsExecutorGet`, which this guide takes to be the generated client method for that operation. No deployed login was observed. The Keycloak-route exclusion in the following fence is this guide's inference from the fetched authentik route files, not a proof of every mounted route. For authentik, the discovery-URL and issuer check replaces the following fence comment's allowance to use any endpoint you expect to answer.
+REASONED: authentik replacement-route design from the pinned core, OAuth2 provider, OAuth2 app configuration, root URL, app registry, installed-app settings, API mount and flow files; no deployed authentik route was probed. For authentik, substitute the deployed application's OAuth2 discovery URL as the positive control and confirm that its issuer matches the configured global or per-provider value. Check that an untrusted client cannot reach the chosen administration route while an allowed administrator can. Check the administration API surface you choose to restrict separately: an untrusted client must be refused while an authorized administrator on the allowed network can complete an API request. Do not refuse the whole API prefix without tracing login dependencies; confirm that an ordinary user can still complete login. The pinned OAuth2 file defines the per-application discovery suffix and `/if/admin/` is a core route. The pinned OAuth2 app configuration mounts `authentik.providers.oauth2.urls` at `application/o/` and `authentik.providers.oauth2.urls_root` at the root. The pinned settings install that app and name `authentik.root.urls` as the root URL configuration, which mounts each installed authentik app's mountpoints under the web path, so the discovery URL is `<web path>application/o/<slug:application_slug>/.well-known/openid-configuration`, which is `/application/o/<slug:application_slug>/.well-known/openid-configuration` with the default web path `/`. These files place the route in authentik's URL configuration; they do not show that a deployed instance answers it, so the discovery-URL and issuer check above remains the positive control. Section 7's cited files place the v3 router at `<web path>api/v3/`, which is `/api/v3/` with the default web path `/`, and register the flow executor under it at `flows/executor/<slug:flow_slug>/` with `AllowAny`. This guide infers that end-user flow execution uses the API prefix and that refusing the whole prefix would break login, because the flow interface calls `flowsExecutorGet`, which this guide takes to be the generated client method for that operation. No deployed login was observed. The Keycloak-route exclusion in the comments of the steps 2 to 5 fence below is this guide's inference from the fetched authentik route files, not a proof of every mounted route. For authentik, that fence's comments say to request the application's discovery URL in step 2 and to put its expected issuer on the `set --` line, so this discovery-URL and issuer check is the fence's positive control there too.
 
-REASONED: listener, routing, login, port-isolation and bootstrap-removal checks follow the vendor documentation and pinned sources below; the authoring host has no isolated network namespace for listeners and ran neither identity provider; the pinned curl and Keycloak sources support the documented exit codes, timeout options, proxy controls and listener defaults; no deployed outcome was observed. Expected outcomes and positive controls are recorded in the block.
+REASONED: host listener inventory (step 1) in the following block, per the Keycloak listener and cache-port documentation, the pinned authentik listener defaults and the authentik Redis removal notes cited below; the authoring host has no isolated network namespace for listeners and ran neither identity provider, so no listener table was observed. The block exits 2 with `ss is not installed here; not listing sockets` when `ss` is missing, 3 when `ss -tlnp` fails, and otherwise 0, leaving every listener for you to judge against the ports in its comment, because whether 6379 matters depends on your authentik version and the host table does not show a container's own namespace.
 
 ```bash
-# Steps 2 to 5 and 7 must run from a host OUTSIDE every network you have allowed, against a
-# system you are authorized to test. Neutralize the proxy settings first, all of them:
-# curl reads ALL_PROXY and all_proxy as well as per-scheme variables (http_proxy is
-# lowercase only), and it reads ~/.curlrc too. This guide assesses that a proxy whose
-# egress sits inside an allowed range can make a blocked endpoint appear reachable
-# from a location that should have been refused.
-unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy NO_PROXY no_proxy
-# A function, not a variable: an unquoted $CURL would glob-expand the * against whatever is
-# in the reader's current directory, and the command would quietly stop disabling the proxy.
-# -q as curl's first option ignores ~/.curlrc, which can itself set a proxy or turn verification off.
-probe() { curl -q --noproxy '*' -sS "$@"; }
-# Every path below is KEYCLOAK's. authentik does not serve /realms/ or /admin/master/,
-# so on authentik substitute its own application and administration URLs; step 2's job is
-# to prove this host reaches that name at all, and any endpoint you expect to answer does it.
-
 # 1. On the host itself: nothing listens on a public address. Keycloak defaults to HTTPS 8443; HTTP 8080 is enabled explicitly here,
 #    and management 9000; authentik serves 9000 and 9443, and metrics on 9300. Three more
 #    are easy to forget because they are not the product's front door. 7800 and 57800 are
@@ -198,49 +183,157 @@ probe() { curl -q --noproxy '*' -sS "$@"; }
 #    embedded outpost's session store and WebSocket connections. It moved tasks to
 #    Postgres in 2025.8 and the rest in 2025.10, which "no longer uses Redis at all", so
 #    whether this port matters depends on your version. Check it rather than assume.
-ss -tlnp   # read every listener; 6379/7800/8080/8443/9000/9443/9300/57800: 127.0.0.1 or an RFC 1918 address only
+(                                       # a subshell, so the exits below end only the subshell
+  command -v ss > /dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  if ss -tlnp; then   # read every listener; 6379/7800/8080/8443/9000/9443/9300/57800: 127.0.0.1 or an RFC 1918 address only
+    echo "block exit 0; unclassified observation: every listener above is yours to judge against the ports in this block's comment"
+    exit 0
+  else
+    echo "ss -tlnp exit $?: the listener table could not be read; inconclusive (block exit 3)"
+    exit 3
+  fi
+)
+```
+
+REASONED: following block; Compose publication cross-check per the shipped Compose file and the Docker Compose CLI reference cited below; no Compose deployment of either provider is available in the authoring environment, so no publication table was observed. Run it from the identity provider's Compose project directory. It exits 2 when `docker` is not installed, which on a host that runs Keycloak without Docker means this check does not apply, or when `docker compose version` fails, which this guide expects without the Compose plugin, 3 when `docker compose ps` fails, and otherwise 0, leaving the published ports for you to judge, since a proxy in the same project publishing 443 is expected.
+
+```bash
 # ss on the HOST does not see a container's own namespace, and a published Docker port
 # bypasses the host firewall besides, so cross-check what Compose actually published:
-docker compose ps --format 'table {{.Service}}\t{{.Ports}}'
-# no 0.0.0.0 or :: on the identity provider's OWN rows. A proxy in the same
-# project publishing 443 is correct and expected. This also sees one Compose
-# project, not every container on the host.
+(                                       # a subshell, so the exits below end only the subshell
+  command -v docker > /dev/null || { echo "docker is not installed here; not listing Compose publications"; exit 2; }
+  docker compose version > /dev/null 2>&1 || { echo "docker compose is not available here; not listing Compose publications"; exit 2; }
+  if docker compose ps --format 'table {{.Service}}\t{{.Ports}}'; then
+    # no 0.0.0.0 or :: on the identity provider's OWN rows. A proxy in the same
+    # project publishing 443 is correct and expected. This also sees one Compose
+    # project, not every container on the host.
+    echo "block exit 0; unclassified observation: the published ports above are yours to judge"
+    exit 0
+  else
+    echo "docker compose ps exit $?: run it from the identity provider's Compose project directory; inconclusive (block exit 3)"
+    exit 3
+  fi
+)
+```
 
-# 2. POSITIVE CONTROL, and the reason every check below means anything: the public
-#    hostname answers from out here. Use the realm your APPLICATIONS use, not master:
-#    section 3 restricts the master realm to your administrators' range, so probing it here
-#    would test the wrong thing and tell you nothing about the realm your applications use.
-probe https://id.example.com/realms/apps/.well-known/openid-configuration \
-  | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["issuer"])'
-# It must print YOUR issuer URL. A 200 alone proves only that something answered: a wrong
-# upstream or a generic responder satisfies it while the real provider sits exposed
-# elsewhere. If this does not print the issuer you expect, stop reading and fix that first,
-# because every check below will "pass" for the wrong reason.
+REASONED: following block; steps 2 to 5 per the Keycloak hostname, reverse proxy and production documentation and the nginx `location` and `return` documentation cited below; no deployed provider or outside test host is available in the authoring environment, so none of these answers was observed. Run it from a host outside every network you have allowed, with your public host name, the realm your applications use and the issuer you expect on its `set --` line. It refuses with status 2 if a value is left unsubstituted or malformed, if the host is example.com, example.net, example.org or one of their subdomains, if the realm is master, if `python3` is missing or if a proxy variable cannot be cleared. Step 2 is the positive control: unless the discovery document's issuer is a JSON string equal in full to the one on the `set --` line, the block reports 3 and does not run steps 3 to 5. Step 3 passes on 404 and is a finding (1) on any 2xx, any 3xx, 401 or 403; step 4 passes on 404 and is a finding on 401; step 5 passes on 403 and is a finding on 200 or 404. Any other code, or a request that fails, is inconclusive (3), and a finding outranks an inconclusive result. The paths are Keycloak's; on authentik, adapt them and the issuer as the block's comments and the authentik paragraph above say. Steps 3 to 5 sample three routes, so the rest of the administration surface and step 6's login stay for you to check, as the block's last line says.
 
-# 3. The administration console is closed on the PUBLIC hostname.
-probe -o /dev/null -w '%{http_code}\n' https://id.example.com/admin/master/console/
-# 404 is the pass. A 302 to a login page is NOT a pass: it means the console answered
-# and is offering to authenticate you. Any 2xx, any 3xx, 401 or 403 all mean the path
-# was served by something.
+```bash
+# Steps 2 to 5 and 7 must run from a host OUTSIDE every network you have allowed, against a
+# system you are authorized to test. Neutralize the proxy settings first, all of them:
+# curl reads ALL_PROXY and all_proxy as well as per-scheme variables (http_proxy is
+# lowercase only), and it reads ~/.curlrc too. This guide assesses that a proxy whose
+# egress sits inside an allowed range can make a blocked endpoint appear reachable
+# from a location that should have been refused. This block and step 7's clear those
+# variables inside their own subshells, so your own shell keeps its settings, and pass
+# --noproxy '*' to every curl as well.
+# -q as curl's first option ignores ~/.curlrc, which can itself set a proxy or turn verification off.
+# Every path below is KEYCLOAK's. authentik does not serve /realms/ or /admin/master/,
+# so on authentik substitute its own application and administration URLs. In step 2, request
+# your application's OAuth2 discovery URL and put the issuer it should name on the set -- line:
+# step 2 passes only when that document's issuer is exactly that value.
+(                                       # a subshell, so your own script arguments and proxy settings are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_HOST' 'REPLACE_WITH_YOUR_APP_REALM' 'REPLACE_WITH_YOUR_ISSUER_URL'   # the public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), the realm your APPLICATIONS use (not master), then the issuer URL step 2 must print: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
+  case "$2" in
+    ""|*REPLACE_WITH_*|master|*/*|*[?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the realm your applications use (not master; no slash, query, fragment or percent sign) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$3" in
+    ""|*REPLACE_WITH_*|*[[:space:][:cntrl:]]*) echo "substitute the issuer URL your applications expect, exactly as they are configured with it, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  command -v python3 > /dev/null || { echo "python3 is not installed here, and step 2 needs it to read the issuer; not probing"; exit 2; }
+  unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy NO_PROXY no_proxy ||
+    { echo "a proxy variable is readonly in this shell and cannot be cleared; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
 
-# 4. The administration REST API is closed on that same hostname. hostname-admin does
-#    not do this for you, so this is the step that proves your proxy rule does.
-probe -o /dev/null -w '%{http_code}\n' https://id.example.com/admin/realms/master/users
-# 404 is the pass. 401 means the API answered and asked for a token.
+  # 2. POSITIVE CONTROL, and the reason every check below means anything: the public
+  #    hostname answers from out here. Use the realm your APPLICATIONS use, not master:
+  #    section 3 restricts the master realm to your administrators' range, so probing it here
+  #    would test the wrong thing and tell you nothing about the realm your applications use.
+  # python3 reads the discovery document straight from curl through a pipe, never from a shell capture,
+  # which would drop a NUL byte, and exits 4 for an issuer that is not a string or holds a NUL byte.
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS "https://$1/realms/$2/.well-known/openid-configuration" | python3 -c 'import json,sys; d=json.load(sys.stdin.buffer); i=d["issuer"]; isinstance(i, str) or sys.exit(4); chr(0) in i and sys.exit(4); print(i)'; then printf '\n%s %s' "${PIPESTATUS[0]}" "${PIPESTATUS[1]}"; else printf '\n%s %s' "${PIPESTATUS[0]}" "${PIPESTATUS[1]}"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # curl's and python3's exit statuses, then all python3 printed, ending in print's own newline
+  set -- "$1" "$2" "$3" "$4" "${5%% *}" "$6" "${5#* }"   # curl's exit status, python3's output, then python3's exit status
+  if [ "$5" != 0 ]; then
+    echo "curl exit $5: the discovery request failed, so the positive control failed; inconclusive"; set -- "$1" "$2" "$3" 3
+  else
+    set -- "$1" "$2" "$3" "$4" "$7" "${6%$'\n'}"   # python3's exit status, then the whole issuer without print's newline, so an issuer with a line break in it cannot match
+    printf '%s\n' "$6"
+    # It must print YOUR issuer URL. A 200 alone proves only that something answered: a wrong
+    # upstream or a generic responder satisfies it while the real provider sits exposed
+    # elsewhere. If this does not print the issuer you expect, stop reading and fix that first,
+    # because every check below will "pass" for the wrong reason.
+    if [ "$5" != 0 ]; then
+      echo "python3 exit $5: the answer is not a discovery document with an issuer, so the positive control failed; inconclusive"; set -- "$1" "$2" "$3" 3
+    elif [ "$6" != "$3" ]; then
+      echo "the issuer printed above is not the one on the set -- line, so the positive control failed; inconclusive"; set -- "$1" "$2" "$3" 3
+    fi
+  fi
+  [ "$4" = 0 ] || { echo "block exit 3; steps 3 to 5 did not run: fix step 2 first, because until it prints your issuer their answers mean nothing"; exit 3; }
 
-# 5. The administrative realm's login paths are RESTRICTED, not refused. Section 3 allows
-#    them from your administrators' range and denies everything else, so from out here:
-#    403 is the pass. nginx answers a denied source with 403, not 404.
-#    200 means the allow rule covers the whole internet, or is not there at all.
-#    404 means you used `return 404` rather than an allow rule, which closes the path for
-#    your administrators too; see section 3 for why the console needs it on this hostname.
-probe -o /dev/null -w '%{http_code}\n' \
-  https://id.example.com/realms/master/.well-known/openid-configuration
-# Steps 3 to 5 sample three routes and expect two different answers: 404 from the two
-# /admin/ paths, which are refused outright, and 403 from the master realm, which is
-# restricted by source. Either way they prove those three requests were handled as intended,
-# not that the whole administration surface is. A more specific `location` elsewhere in the
-# same server block can still serve one, so read the effective configuration too.
+  # 3. The administration console is closed on the PUBLIC hostname.
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin/master/console/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
+  # 404 is the pass. A 302 to a login page is NOT a pass: it means the console answered
+  # and is offering to authenticate you. Any 2xx, any 3xx, 401 or 403 all mean the path
+  # was served by something.
+  case "$5:$6" in
+    0:404) ;;
+    0:2??|0:3??|0:401|0:403) echo "FINDING: the console path answered $6 on the public host name, so something served it"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "HTTP $6 from the console path is neither the 404 pass nor a code step 3 reads as served; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the console request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+
+  # 4. The administration REST API is closed on that same hostname. hostname-admin does
+  #    not do this for you, so this is the step that proves your proxy rule does.
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' "https://$1/admin/realms/master/users"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
+  # 404 is the pass. 401 means the API answered and asked for a token.
+  case "$5:$6" in
+    0:404) ;;
+    0:401) echo "FINDING: the admin REST API answered 401 on the public host name, so it is still served there"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "HTTP $6 from the admin REST API path is neither the 404 pass nor the 401 finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the admin REST API request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+
+  # 5. The administrative realm's login paths are RESTRICTED, not refused. Section 3 allows
+  #    them from your administrators' range and denies everything else, so from out here:
+  #    403 is the pass. nginx answers a denied source with 403, not 404.
+  #    200 means the allow rule covers the whole internet, or is not there at all.
+  #    404 means you used `return 404` rather than an allow rule, which closes the path for
+  #    your administrators too; see section 3 for why the console needs it on this hostname.
+  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g --noproxy '*' -sS -o /dev/null -w '%{http_code}\n' \
+    "https://$1/realms/master/.well-known/openid-configuration"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$6"
+  case "$5:$6" in
+    0:403) ;;
+    0:200) echo "FINDING: the master realm answered 200 from out here, so the allow rule covers the whole internet or is not there at all"; set -- "$1" "$2" "$3" 1 ;;
+    0:404) echo "FINDING: the master realm answered 404, so return 404 closes the path for your administrators too"; set -- "$1" "$2" "$3" 1 ;;
+    0:*) echo "HTTP $6 from the master realm is not the 403 pass or a 200 or 404 finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    *) echo "curl exit $5: the master realm request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+  esac
+  # Steps 3 to 5 sample three routes and expect two different answers: 404 from the two
+  # /admin/ paths, which are refused outright, and 403 from the master realm, which is
+  # restricted by source. Either way they prove those three requests were handled as intended,
+  # not that the whole administration surface is. A more specific `location` elsewhere in the
+  # same server block can still serve one, so read the effective configuration too.
+  echo "block exit $4; steps 3 to 5 sampled three routes, so the rest of the administration surface (read the effective configuration) and step 6 below are yours to check"
+  exit "$4"
+)
 
 # 6. An administrator can still log in. This is the half the rule in section 3 can break and
 #    the half nobody tests. From inside the network you allowed in that rule, complete a REAL
@@ -253,33 +346,63 @@ probe -o /dev/null -w '%{http_code}\n' \
 #    which is the state step 5 warns about and it locks out every administrator. If you are
 #    testing from outside the allowed range it SHOULD fail, and that is the rule working
 #    rather than a fault.
+```
 
+```bash
 # 7. The management, metrics and application ports are not routable from out here. All of
 #    them: a reader who remapped 9000 and left 9443 published passes every other step.
 #    --connect-timeout is separate from -m so the two deadlines are distinguishable in the
 #    output, not because it changes the exit code: this guide infers that a port that
 #    accepts the connection and then stalls, and one never reached before the deadline,
 #    can both end in exit 28. The diagnostic may distinguish them, so print it whole.
-for p in 8080 8443 9000 9300 9443; do
-  err=$(probe --connect-timeout 3 -m 8 -o /dev/null -v "http://id.example.com:$p/" 2>&1 >/dev/null)
-  rc=$?
-  echo "=== $p: curl exit $rc"
-  printf '%s\n' "$err"
-done
-# Exit 0 means curl completed the HTTP operation, so treat it as an answer. Exit 7 reports
-# a connection failure. Treat that as the isolation outcome you want only after checking
-# the diagnostic and target. This guide infers that exits 52 and 56 follow an accepted
-# connection, so a listener is reachable; inspect the diagnostic. Other exits require diagnostic review.
-# Exit 28 is a timeout and does NOT settle it on its own: this guide infers that a port
-# that accepted you and then went quiet, and one never reached, can both end there.
-# The whole diagnostic is printed rather than filtered for that reason.
-# Read it yourself. A line saying the connection was established, before a timeout, means
-# something accepted you and then went quiet, which is an answer. Do not reduce this to a
-# grep for a fixed phrase: curl has changed that wording more than once, and an earlier
-# version of this guide matched a phrase current curl no longer prints and then read its
-# absence as proof that nothing was listening. Absence of a line you were looking for is not
-# evidence. If the output does not settle it, the result is inconclusive and has to be
-# chased rather than accepted.
+#    Run it from the same outside host as steps 2 to 5; like that block, it clears the
+#    proxy variables in its own subshell and starts curl with -q and --noproxy '*'.
+(                                       # a subshell, so your own script arguments and proxy settings are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_HOST'   # the public host name, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
+  unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy NO_PROXY no_proxy ||
+    { echo "a proxy variable is readonly in this shell and cannot be cleared; not probing"; exit 2; }
+  set -- "$1" 0 8080 8443 9000 9300 9443   # the host, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports still to probe
+  while [ "$#" -gt 2 ]; do
+    set -- "$1" "$2" "$3" "$(if curl -q -g --noproxy '*' -sS --connect-timeout 3 -m 8 -o /dev/null -v "http://$1:$3/" 2>&1 >/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${@:4}"
+    set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}" "${@:5}"   # the host, the status so far, this port, curl's exit status, its diagnostic, then the ports still to probe
+    echo "=== $3: curl exit $4"
+    printf '%s\n' "$5"
+    # Exit 0 means curl completed the HTTP operation, so treat it as an answer. Exit 7 reports
+    # a connection failure, which is consistent with isolation but not proof of it, and counts only
+    # once the diagnostic shows the target you meant. This guide infers that exits 52 and 56 follow an accepted
+    # connection, so a listener is reachable; inspect the diagnostic. Other exits require diagnostic review.
+    # Exit 28 is a timeout and does NOT settle it on its own: this guide infers that a port
+    # that accepted you and then went quiet, and one never reached, can both end there.
+    # The whole diagnostic is printed rather than filtered for that reason.
+    # Read it yourself. A line saying the connection was established, before a timeout, means
+    # something accepted you and then went quiet, which is an answer. Do not reduce this to a
+    # grep for a fixed phrase: curl has changed that wording more than once, and an earlier
+    # version of this guide matched a phrase current curl no longer prints and then read its
+    # absence as proof that nothing was listening. Absence of a line you were looking for is not
+    # evidence. If the output does not settle it, the result is inconclusive and has to be
+    # chased rather than accepted. A firewall that drops rather than refuses connections
+    # gives exit 28 on every port, so this block then ends with 3 and the diagnostics decide it.
+    case "$4" in
+      0|52|56) echo "FINDING: port $3 accepted the connection from out here (curl exit $4), so a listener is reachable"; set -- "$1" 1 "${@:3}" ;;
+      7) echo "port $3: connection failed (curl exit 7), consistent with isolation from this host but not proof of it; it counts only if the diagnostic above shows the target you meant" ;;
+      *) echo "port $3: curl exit $4 does not settle it on its own; read the diagnostic above; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 "${@:3}" ;;
+    esac
+    set -- "$1" "$2" "${@:6}"
+  done
+  echo "block exit $2; the diagnostics above are yours to read (exit 7 counts only for the target you meant, and a connection established before a timeout is an answer), and step 8 below is a lookup you make yourself"
+  exit "$2"
+)
 
 # 8. Keycloak's bootstrap admin is gone. This guide infers from manual-removal guidance
 #    that it does not expire on its own. Ask for the name
@@ -297,7 +420,7 @@ done
 #    by the client-id form of the same mechanism and is not in the user list at all.
 ```
 
-REASONED: preceding block; all eight steps of that fence, including the listener inventory, routing, administrative login, port isolation and bootstrap-account removal checks, and the repeat coverage across addresses and families and the surfaces that block does not test, per the cited Keycloak and authentik documentation and pinned sources. No deployed provider, isolated network namespace for listeners, or public address is available in the authoring environment, so none of the steps ran. The pinned curl and Keycloak sources support the documented exit codes, timeout options, proxy controls and listener defaults; no deployed outcome was observed. One name is not one address, and one address is not one origin. Repeat steps 2 to 5 and 7 for every public address the name carries and in both families, since a host filtered on IPv4 while it answers on IPv6 passes all of them. A CDN or load balancer answering on 443 also says nothing about whether the backend has its own reachable address, so check the origin directly as well. And nothing here tests `id-admin.internal`, the database, or any authentik outpost's boundary, including the embedded outpost's routes on the core server ports; those surfaces need separate checks. The port list is the one this guide's own topology creates, not an inventory: scan the whole range if you want one.
+REASONED: preceding block; step 7's direct port probes, step 8's bootstrap-account lookup, the repeat coverage across addresses and families and the surfaces these blocks do not test, per the cited Keycloak and authentik documentation, pinned sources and curl exit-code documentation. No deployed provider, isolated network namespace for listeners, or public address is available in the authoring environment, so none of the steps ran against a provider. The marking-time bash -n and ShellCheck 0.11.0 passes covered the earlier single-block form; the current blocks are covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the stub runs recorded at the top of this section. The pinned curl and Keycloak sources support the documented exit codes, timeout options, proxy controls and listener defaults; no deployed outcome was observed. The step 7 block takes your public host name on its `set --` line and refuses with status 2 if it is left unsubstituted or malformed, if it is example.com, example.net, example.org or one of their subdomains, or if a proxy variable cannot be cleared. It records a finding (1) for a port whose curl exit is 0, 52 or 56, and an inconclusive result (3) for exit 28 or any other exit except 7. It records exit 7 as 0 and prints that the connection failure is consistent with isolation but not proof, counting only once the diagnostic shows the target you meant; behind a firewall that drops rather than refuses connections, it cannot end with 0. One name is not one address, and one address is not one origin. Repeat steps 2 to 5 and 7 for every public address the name carries and in both families, since a host filtered on IPv4 while it answers on IPv6 passes all of them. A CDN or load balancer answering on 443 also says nothing about whether the backend has its own reachable address, so check the origin directly as well. And nothing here tests `id-admin.internal`, the database, or any authentik outpost's boundary, including the embedded outpost's routes on the core server ports; those surfaces need separate checks. The port list is the one this guide's own topology creates, not an inventory: scan the whole range if you want one.
 
 ## Sources (checked September 2026)
 
@@ -386,6 +509,8 @@ REASONED: preceding block; all eight steps of that fence, including the listener
 - Docker Engine rootless mode, daemon and containers without root privileges (checked October 2026): https://docs.docker.com/engine/security/rootless/
 - Docker daemon privileges, trusted control and host filesystem access, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112
 - Docker rootless non-root daemon and containers in a user namespace, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/rootless/_index.md#L8-L21
+- Docker Compose CLI reference for `docker compose version`, which shows the Docker Compose version information (checked October 2026): https://docs.docker.com/reference/cli/docker/compose/version/
+- Docker Compose CLI reference for `docker compose ps` and its `--format` option, which takes `table`, `table TEMPLATE`, `json` or a Go template (checked October 2026): https://docs.docker.com/reference/cli/docker/compose/ps/
 - curl `curl-8_23_0` exit-code list, defining exit 7 as a connection failure: https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/_EXITCODES.md#L23-L24
 - Keycloak `26.7.4` Admin CLI user filtering example and its non-exact matching note (no documented flag-order behaviour): https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/admin-cli.adoc#L1034-L1045
 - Keycloak server administration guide, brute force detection ("Brute force detection is disabled by default") and unspecific redirect URIs: https://www.keycloak.org/docs/latest/server_admin/index.html
@@ -531,7 +656,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "66bf0f507fe23e3d17303229c3e4e9a64899605e8486162332ef9d6056c253ec",
+  "body_sha256": "6c8e31ced36290bd76665ef0e504af3d87f686f82b687ce73bb01e7da38d1874",
   "components": {
     "keycloak-admin-cli": {
       "name": "Keycloak Admin CLI",
@@ -777,15 +902,15 @@ Claims (full source mapping in the JSON block below):
     "redis-history": {"text": "Redis 6379 is relevant to older authentik: tasks moved in 2025.8 and remaining uses in 2025.10, which removes Redis entirely.", "components": ["redis-removal"], "sources": ["redis-removal:seaa0a9896153"], "status": "REASONED"},
     "verify-setup": {"text": "On a disposable instance, complete anonymous root-to-setup flow and confirm akadmin login; after setup or password bootstrap, fresh /setup visits must return to authentication. Source tests were read, not run.", "components": ["authentik"], "sources": ["authentik:sd73827ef7cf2", "authentik:s7ad14bbb32f2", "authentik:s865b0b9b23cc"], "status": "REASONED"},
     "verify-publication": {"text": "Compare exposed and loopback publications: untrusted clients lose setup access while a local browser still reaches it. Neither configuration publishes 9300.", "components": ["authentik"], "sources": ["authentik:s20f8787bddf2", "authentik:sb6abd20b147e"], "status": "REASONED"},
-    "verify-inventory": {"text": "Inspect all listeners plus Compose publications: host ss misses container namespaces, Compose ps sees one project, and proxy 443 publication is expected.", "components": ["authentik", "keycloak"], "sources": ["authentik:s20f8787bddf2", "authentik:sb6abd20b147e", "keycloak:s44e24ad4e579", "keycloak:s4b5df6f4ef2e"], "status": "REASONED", "verify": [1]},
-    "verify-issuer": {"text": "From outside allowed networks, application-realm discovery must print the expected issuer before negative route checks are interpreted; an arbitrary 200 is insufficient.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f", "keycloak:sffc6123bea5c"], "status": "REASONED", "verify": [1]},
-    "verify-console": {"text": "Public /admin/master/console/ must return 404; 2xx, 3xx, 401 and 403 do not show that the console path is closed.", "components": ["keycloak", "nginx"], "sources": ["keycloak:sffc6123bea5c", "nginx:s8d8f3323b468"], "status": "REASONED", "verify": [1]},
-    "verify-admin-api": {"text": "Public /admin/realms/master/users must return 404; 401 means the API still answers and requests a token.", "components": ["keycloak", "nginx"], "sources": ["keycloak:se5538391cf9f", "nginx:s8d8f3323b468"], "status": "REASONED", "verify": [1]},
-    "verify-master": {"text": "Outside allowed sources, master-realm discovery must return 403; 200 exposes it and 404 indicates blanket denial. Review effective locations beyond these sampled routes.", "components": ["keycloak", "nginx"], "sources": ["keycloak:s2f5f079c5e00", "nginx:sf7458f108aca"], "status": "REASONED", "verify": [1]},
-    "verify-admin-login": {"text": "An allowed administrator must complete real login through the private console and frontend master realm; outside sources must fail.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f", "keycloak:sffc6123bea5c"], "status": "REASONED", "verify": [1]},
-    "verify-direct-ports": {"text": "Probe 8080/8443/9000/9300/9443 directly: curl exit 0 reports a completed operation, 7 reports a connection failure, and 28 is an inconclusive timeout requiring full diagnostics to distinguish accepted-then-stalled from unreachable. Treat a connection failure as the desired isolation outcome only after checking the diagnostic and target; this guide infers that exits 52 and 56 follow an accepted connection, so a listener is reachable. Other exits require diagnostic review. The connection and full-transfer deadlines differ. The checks remain REASONED expectations, not observed outcomes.", "components": ["keycloak", "authentik", "curl", "keycloak-2674"], "sources": ["curl:s9d0c5b92e9a4", "keycloak:s4b5df6f4ef2e", "keycloak:sffc6123bea5c", "authentik:s20f8787bddf2", "authentik:s6ef2a53196aa", "authentik:sb6abd20b147e", "keycloak-2674:s631013c7f55c", "curl:s25c3e6e61c14", "curl:s9c78f229c8ba", "curl:sc7945d33c78d", "curl:s977c1ef288cc", "curl:sc39d43ba6e58", "curl:s9380fc35e98e"], "status": "REASONED", "verify": [1]},
-    "verify-bootstrap-removal": {"text": "Look up the bootstrap username with exact=true rather than a default 100-result user list, inspect the returned username, and separately check bootstrap service accounts. Keycloak documents non-exact matching for its -q q=username: filter; this guide keeps the -q order (exact=true first) as defensive advice based on a report, not documented ordering behaviour.", "components": ["keycloak", "keycloak-admin-cli"], "sources": ["keycloak:sbbd55dcb81cd", "keycloak:sefec90245fa1", "keycloak-admin-cli:s5ac2f5372c57"], "status": "REASONED", "verify": [1]},
-    "verify-address-coverage": {"text": "Repeat external checks for every public IPv4/IPv6 address and the origin; private admin, database and outposts need separate checks, and the listed ports are not a full inventory.", "components": ["keycloak", "authentik-docs"], "sources": ["keycloak:s2f5f079c5e00", "keycloak:sffc6123bea5c", "authentik-docs:sb44156cde339"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "Inspect all listeners plus Compose publications: host ss misses container namespaces, Compose ps sees one project, and proxy 443 publication is expected.", "components": ["authentik", "keycloak"], "sources": ["authentik:s20f8787bddf2", "authentik:sb6abd20b147e", "keycloak:s44e24ad4e579", "keycloak:s4b5df6f4ef2e"], "status": "REASONED", "verify": [1, 2]},
+    "verify-issuer": {"text": "From outside allowed networks, application-realm discovery must print the expected issuer before negative route checks are interpreted; an arbitrary 200 is insufficient.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f", "keycloak:sffc6123bea5c"], "status": "REASONED", "verify": [3]},
+    "verify-console": {"text": "Public /admin/master/console/ must return 404; 2xx, 3xx, 401 and 403 do not show that the console path is closed.", "components": ["keycloak", "nginx"], "sources": ["keycloak:sffc6123bea5c", "nginx:s8d8f3323b468"], "status": "REASONED", "verify": [3]},
+    "verify-admin-api": {"text": "Public /admin/realms/master/users must return 404; 401 means the API still answers and requests a token.", "components": ["keycloak", "nginx"], "sources": ["keycloak:se5538391cf9f", "nginx:s8d8f3323b468"], "status": "REASONED", "verify": [3]},
+    "verify-master": {"text": "Outside allowed sources, master-realm discovery must return 403; 200 exposes it and 404 indicates blanket denial. Review effective locations beyond these sampled routes.", "components": ["keycloak", "nginx"], "sources": ["keycloak:s2f5f079c5e00", "nginx:sf7458f108aca"], "status": "REASONED", "verify": [3]},
+    "verify-admin-login": {"text": "An allowed administrator must complete real login through the private console and frontend master realm; outside sources must fail.", "components": ["keycloak"], "sources": ["keycloak:se5538391cf9f", "keycloak:sffc6123bea5c"], "status": "REASONED", "verify": [3]},
+    "verify-direct-ports": {"text": "Probe 8080/8443/9000/9300/9443 directly: curl exit 0 reports a completed operation, 7 reports a connection failure, and 28 is an inconclusive timeout requiring full diagnostics to distinguish accepted-then-stalled from unreachable. Treat a connection failure as the desired isolation outcome only after checking the diagnostic and target; this guide infers that exits 52 and 56 follow an accepted connection, so a listener is reachable. Other exits require diagnostic review. The connection and full-transfer deadlines differ. The checks remain REASONED expectations, not observed outcomes.", "components": ["keycloak", "authentik", "curl", "keycloak-2674"], "sources": ["curl:s9d0c5b92e9a4", "keycloak:s4b5df6f4ef2e", "keycloak:sffc6123bea5c", "authentik:s20f8787bddf2", "authentik:s6ef2a53196aa", "authentik:sb6abd20b147e", "keycloak-2674:s631013c7f55c", "curl:s25c3e6e61c14", "curl:s9c78f229c8ba", "curl:sc7945d33c78d", "curl:s977c1ef288cc", "curl:sc39d43ba6e58", "curl:s9380fc35e98e"], "status": "REASONED", "verify": [4]},
+    "verify-bootstrap-removal": {"text": "Look up the bootstrap username with exact=true rather than a default 100-result user list, inspect the returned username, and separately check bootstrap service accounts. Keycloak documents non-exact matching for its -q q=username: filter; this guide keeps the -q order (exact=true first) as defensive advice based on a report, not documented ordering behaviour.", "components": ["keycloak", "keycloak-admin-cli"], "sources": ["keycloak:sbbd55dcb81cd", "keycloak:sefec90245fa1", "keycloak-admin-cli:s5ac2f5372c57"], "status": "REASONED", "verify": [4]},
+    "verify-address-coverage": {"text": "Repeat external checks for every public IPv4/IPv6 address and the origin; private admin, database and outposts need separate checks, and the listed ports are not a full inventory.", "components": ["keycloak", "authentik-docs"], "sources": ["keycloak:s2f5f079c5e00", "keycloak:sffc6123bea5c", "authentik-docs:sb44156cde339"], "status": "REASONED", "verify": [3, 4]},
     "authentik-mfa": {"text": "authentik has TOTP and WebAuthn setup stages; enrol a phishing-resistant administrator factor before connecting the first app and require it through an Authenticator Validate stage bound to the authentication flow (this guide's requirement; the cited sources do not state this ordering). A registered device alone does not establish the flow binding. For a user with no allowed device, DENY refuses access. CONFIGURE errors and refuses when no configuration stage is set, inserts one stage when exactly one is set, or offers a choice when several are set; with a configuration stage set, only DENY refuses that user. The pinned validate-stage and flow-binding sources support these behaviours but do not establish an administrator-specific factor policy.", "components": ["authentik-docs", "authentik"], "sources": ["authentik-docs:sb44156cde339", "authentik:seb7e2b93f90d", "authentik:s6562dd778e9e", "authentik:s0af3ecd559b6", "authentik:s4502a88a3ace", "authentik:s0d77ce39834b", "authentik:sd44d285958df", "authentik:s4ebd0cc01832", "authentik:s24e69eaacb04"], "status": "REASONED"},
     "authentik-admin-boundary": {"text": "At version/2026.8.3, /if/admin/, /if/user/ and flows share core routing. This guide assesses that authentik has no equivalent to hostname-admin: the cited configuration, Go startup and Rust server startup show no separate administration listener, not an exhaustive proof of deployed topology. The permission boundary remains unestablished.", "components": ["authentik"], "sources": ["authentik:s348351d7d65e", "authentik:s3e60cde54f52", "authentik:sd02909e948ae", "authentik:sddf26c6bdc5c", "authentik:seb9056af7a7b", "authentik:sce4e17d31a9e"], "status": "REASONED"},
     "authentik-admin-listeners": {"text": "At version/2026.8.3, defaults are HTTP [::]:9000, HTTPS [::]:9443 and metrics [::]:9300; Go startup adds these configured listeners and a Unix socket, and its plain HTTP, HTTPS and Unix listeners share the application proxy router after outpost handling. These files show shared routing, not a separate admin port, and do not prove which listeners a deployed build starts.", "components": ["authentik"], "sources": ["authentik:sb6abd20b147e", "authentik:sd02909e948ae", "authentik:sddf26c6bdc5c", "authentik:s9c8058b95d3c", "authentik:s427c0d034db0", "authentik:sa2fe855c9416"], "status": "REASONED"},
@@ -808,10 +933,10 @@ Claims (full source mapping in the JSON block below):
     "outpost-proxy-image": {"text": "At version/2026.8.3, proxy.Dockerfile, titled the authentik proxy outpost image, builds the Rust authentik binary with only the proxy feature, has no go build step, copies only that binary and runs /authentik proxy. This guide infers that an image built from it runs the Rust proxy outpost, not the cited Go proxy code; whether published images were built from it is NOT ESTABLISHED.", "components": ["authentik"], "sources": ["authentik:sc22f73f38a1b", "authentik:sff2f1710b584", "authentik:sa6f52b5bd70d", "authentik:s318165203c9d", "authentik:sca0f5839c601"], "status": "REASONED"},
     "outpost-proxy-listeners": {"text": "At version/2026.8.3, the authentik proxy subcommand starts the Rust proxy outpost, which serves plain HTTP on each listen.http address and rustls on each listen.https address unless it is the embedded outpost; Rust startup schedules the metrics server on listen.metrics before mode dispatch. Pinned defaults are [::]:9000, [::]:9443 and [::]:9300, and proxy.Dockerfile exposes 9000, 9300 and 9443.", "components": ["authentik"], "sources": ["authentik:sa6f52b5bd70d", "authentik:s318165203c9d", "authentik:s6ef2a53196aa", "authentik:sa28f81f21b1d", "authentik:sb6abd20b147e", "authentik:sfb5a6689d8f5", "authentik:sa3979acd3303", "authentik:sc22f73f38a1b", "authentik:sff2f1710b584"], "status": "REASONED"},
     "outpost-deployment-listeners": {"text": "At version/2026.8.3, the pinned Go proxy code listens on configured HTTP, HTTPS and metrics addresses. The Docker controller maps the outpost's ports to the host unless docker_map_ports is false; docker_map_ports defaults to true. The Kubernetes controller reconciles Deployment and Service objects. LDAP and RADIUS listener code is also pinned, but RAC listeners were not traced.", "components": ["authentik"], "sources": ["authentik:sca0f5839c601", "authentik:s8fc4619c4d4b", "authentik:sb6abd20b147e", "authentik:sb5dbba465354", "authentik:s71722cfad526", "authentik:see76fb8454ce", "authentik:sfb87a6898f29"], "status": "REASONED"},
-    "verify-proxy-neutralization": {"text": "Run external probes outside every allowed network; unset HTTP/HTTPS/ALL/NO_PROXY variables in both cases and use curl -q --noproxy '*' to bypass proxies and curlrc, which this guide assesses could otherwise make blocked endpoints appear reachable through allowed egress. Curl's HTTP proxy environment variable is lowercase only; -q must be curl's first option.", "components": ["keycloak", "curl"], "sources": ["keycloak:sffc6123bea5c", "curl:sde07f1edf2dc", "curl:s75e3807878ff", "curl:s508454c45cf1", "curl:s2278b86c08a6", "curl:sc8658f8a2e89"], "status": "REASONED", "verify": [1]},
-    "verify-authentik-routes": {"text": "The fenced paths are Keycloak-specific; the exclusion of Keycloak paths from authentik is this guide's inference from the fetched route files, not an exhaustive route proof. For authentik, use a deployed application's actual OAuth2 discovery URL as the positive control and confirm its configured issuer. A responding status alone is not the positive-control pass condition.", "components": ["authentik-docs", "authentik"], "sources": ["authentik-docs:sb44156cde339", "authentik:s348351d7d65e", "authentik:s9f8f5dfeca92", "authentik:s2b2c994a59e6", "authentik:s91525f4e30dc", "authentik:s5a70f3599721"], "status": "REASONED", "verify": [1]},
-    "verify-authentik-admin-routes": {"text": "For authentik, an untrusted client must not reach the chosen administration route while an allowed administrator can. Check the administration API surface you choose to restrict separately: an untrusted client must be refused while an authorized administrator on the allowed network can complete an API request.", "components": ["authentik-docs", "authentik"], "sources": ["authentik-docs:sb44156cde339", "authentik:s348351d7d65e", "authentik:se0352eb4cba5"], "status": "REASONED", "verify": [1]},
-    "verify-authentik-login-api": {"text": "Do not refuse the whole authentik API prefix without tracing login dependencies; confirm an ordinary user can still complete login. At version/2026.8.3 the v3 router is at <web path>api/v3/ (/api/v3/ by default) and registers the flow executor with AllowAny; the flow interface calls flowsExecutorGet, taken here as its generated client method, so this guide infers that login uses the API prefix.", "components": ["authentik"], "sources": ["authentik:s5a70f3599721", "authentik:sbe6392bdb300", "authentik:s3e274c13f369", "authentik:se0352eb4cba5", "authentik:s805bd431630c", "authentik:sfc21d0891247", "authentik:sb7089c82fae9", "authentik:s3b6031f49229", "authentik:sce23f2109660", "authentik:sfb5a6689d8f5", "authentik:sa3979acd3303", "authentik:sad484892bdf9", "authentik:sccc7238b13d0"], "status": "REASONED", "verify": [1]},
+    "verify-proxy-neutralization": {"text": "Run external probes outside every allowed network; unset HTTP/HTTPS/ALL/NO_PROXY variables in both cases and use curl -q --noproxy '*' to bypass proxies and curlrc, which this guide assesses could otherwise make blocked endpoints appear reachable through allowed egress. Curl's HTTP proxy environment variable is lowercase only; -q must be curl's first option.", "components": ["keycloak", "curl"], "sources": ["keycloak:sffc6123bea5c", "curl:sde07f1edf2dc", "curl:s75e3807878ff", "curl:s508454c45cf1", "curl:s2278b86c08a6", "curl:sc8658f8a2e89"], "status": "REASONED", "verify": [3, 4]},
+    "verify-authentik-routes": {"text": "The fenced paths are Keycloak-specific; the exclusion of Keycloak paths from authentik is this guide's inference from the fetched route files, not an exhaustive route proof. For authentik, use a deployed application's actual OAuth2 discovery URL as the positive control and confirm its configured issuer. A responding status alone is not the positive-control pass condition.", "components": ["authentik-docs", "authentik"], "sources": ["authentik-docs:sb44156cde339", "authentik:s348351d7d65e", "authentik:s9f8f5dfeca92", "authentik:s2b2c994a59e6", "authentik:s91525f4e30dc", "authentik:s5a70f3599721"], "status": "REASONED", "verify": [3]},
+    "verify-authentik-admin-routes": {"text": "For authentik, an untrusted client must not reach the chosen administration route while an allowed administrator can. Check the administration API surface you choose to restrict separately: an untrusted client must be refused while an authorized administrator on the allowed network can complete an API request.", "components": ["authentik-docs", "authentik"], "sources": ["authentik-docs:sb44156cde339", "authentik:s348351d7d65e", "authentik:se0352eb4cba5"], "status": "REASONED", "verify": [3]},
+    "verify-authentik-login-api": {"text": "Do not refuse the whole authentik API prefix without tracing login dependencies; confirm an ordinary user can still complete login. At version/2026.8.3 the v3 router is at <web path>api/v3/ (/api/v3/ by default) and registers the flow executor with AllowAny; the flow interface calls flowsExecutorGet, taken here as its generated client method, so this guide infers that login uses the API prefix.", "components": ["authentik"], "sources": ["authentik:s5a70f3599721", "authentik:sbe6392bdb300", "authentik:s3e274c13f369", "authentik:se0352eb4cba5", "authentik:s805bd431630c", "authentik:sfc21d0891247", "authentik:sb7089c82fae9", "authentik:s3b6031f49229", "authentik:sce23f2109660", "authentik:sfb5a6689d8f5", "authentik:sa3979acd3303", "authentik:sad484892bdf9", "authentik:sccc7238b13d0"], "status": "REASONED", "verify": [3]},
     "verify-authentik-oauth2-routes": {"text": "At version/2026.8.3 the installed OAuth2 app mounts its urls module, which defines the per-application discovery suffix, at application/o/ and urls_root at the root; the root URL module mounts installed authentik apps' mountpoints under the web path, so the prefix is <web path>application/o/, /application/o/ by default. The issuer can be global or per-provider; /if/admin/ is a core route.", "components": ["authentik"], "sources": ["authentik:s9f8f5dfeca92", "authentik:s2b2c994a59e6", "authentik:s91525f4e30dc", "authentik:s348351d7d65e", "authentik:s5a70f3599721", "authentik:s6ca5a09cf25f", "authentik:s2107dc563e3d", "authentik:sc2a2f5ac4d6b", "authentik:s161f7474250b", "authentik:s61c7672e8c51", "authentik:sce23f2109660", "authentik:sfb5a6689d8f5", "authentik:sa3979acd3303", "authentik:sad484892bdf9", "authentik:sccc7238b13d0"], "status": "REASONED"},
     "admin-factor-order": {"text": "Enrol a phishing-resistant factor on the administrator account of either provider before connecting the first application and enforce it in the flow (this guide's requirement; the cited sources do not state this ordering). Keycloak documents Required executions; authentik version/2026.8.3 binds ordered stages to flows, but the cited files do not establish an administrator-specific factor policy.", "components": ["keycloak", "authentik-docs", "keycloak-2674", "authentik"], "status": "REASONED", "sources": ["keycloak:sefec90245fa1", "authentik-docs:sb44156cde339", "keycloak-2674:se3124b00898b", "authentik:s4502a88a3ace", "authentik:s0d77ce39834b", "authentik:seb7e2b93f90d", "authentik:s6562dd778e9e"]},
     "keycloak-http-opt-in": {"text": "In the production example, backend plain HTTP on default port 8080 exists only when explicitly enabled with --http-enabled=true; confine that hop to loopback or a controlled private segment. At 26.7.4, the HTTP listener option defaults false but is enabled by default in development mode, and HTTPS defaults to port 8443. In production, http-host defaults to 0.0.0.0, so constrain the bind or network reachability.", "components": ["keycloak", "keycloak-2674"], "sources": ["keycloak:s2f5f079c5e00", "keycloak:sffc6123bea5c", "keycloak-2674:s07c5f54d49d7", "keycloak-2674:s631013c7f55c", "keycloak-2674:s13a81516d2b4", "keycloak-2674:sf10fbdd955bd"], "status": "REASONED"},

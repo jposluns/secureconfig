@@ -75,7 +75,7 @@ Where a system cannot revoke immediately, such as a session cached until its own
 
 ## Verify
 
-REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains; the guards have not been run. The four checks are separate blocks, each with its own exit status: the IPv4 scan, the IPv6 scan, the retired-name DNS check and the certificate check. The retired-name block cannot exit 0 by design, because it reads your configured resolver only: it exits 1 for any answer and 3 otherwise, and only the authoritative check in its comment can establish removal.
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no live run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference. DNS response interpretations follow RFC 2308 section 2, and cache timing follows the cited DNS RFCs, including RFC 8767's serve-stale exception; the authoritative-removal checks are this guide's advice and do not establish that all recursive caches have refreshed. The DNS-retirement and certificate checks take the retired host name and the live app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. November 2026 stub runs of both blocks under bash 5.3.9, with curl, dig and openssl stubbed and no network, refused eight reserved names in lower, upper and mixed case, bare and as subdomains, each with status 2 and the reserved-name message before any curl, dig or openssl call, also with `tr` absent from PATH and under an inherited `nocasematch`, readonly and `declare -i` variables, or `set -e`. A host outside those names reached the stubbed calls, and under dash both blocks refused reserved and other host names alike with status 2 and the message that the block needs bash, before any call; no live DNS or certificate result is recorded. The four checks are separate blocks, each with its own exit status: the IPv4 scan, the IPv6 scan, the retired-name DNS check and the certificate check. The retired-name block cannot exit 0 by design, because it reads your configured resolver only: it exits 1 for any answer and 3 otherwise, and only the authoritative check in its comment can establish removal.
 
 ```bash
 # From a second network, not the host itself:
@@ -124,7 +124,7 @@ REASONED: following block; outside-network IPv6 scan, per the cited Nmap documen
 )
 ```
 
-REASONED: following block; retired-name DNS check, per the cited dig documentation and DNS RFCs, including RFC 2308 section 2; no retired host name or authoritative DNS zone was supplied, and no run is recorded. This block cannot exit 0 by design: it reads your configured resolver only, so it exits 1 when that resolver returns any A, AAAA or CNAME answer and 3 otherwise, including empty answers and a failed lookup or request. Removal is decided by the authoritative check in its comment, `dig @AUTH_NS name TYPE +norecurse` against each authoritative nameserver, which must give NXDOMAIN or NOERROR/NODATA with no CNAME.
+REASONED: following block; retired-name DNS check, per the cited dig documentation and DNS RFCs, including RFC 2308 section 2; no retired host name or authoritative DNS zone was supplied, and no live run is recorded. This block cannot exit 0 by design: it reads your configured resolver only, so it exits 1 when that resolver returns any A, AAAA or CNAME answer and 3 otherwise, including empty answers and a failed lookup or request. Removal is decided by the authoritative check in its comment, `dig @AUTH_NS name TYPE +norecurse` against each authoritative nameserver, which must give NXDOMAIN or NOERROR/NODATA with no CNAME.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -135,9 +135,11 @@ REASONED: following block; retired-name DNS check, per the cited dig documentati
   case "$1" in
     ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the retired host name (no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), and no lookup returns it to 0
   curl -q -g -sI "https://$1/" ||       # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
     { echo "curl exit $?: the request failed, which is not proof the record is gone; inconclusive"; set -- "$1" 3; }
@@ -178,7 +180,7 @@ REASONED: following block; retired-name DNS check, per the cited dig documentati
 )
 ```
 
-REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 documentation; no live app host name was supplied, and no run is recorded. Run it from outside on a schedule: it exits 0 when s_client verified the chain and the name and x509 printed the notAfter date, which it leaves for you to judge, and 3 when s_client or x509 failed, so an expired, untrusted or misnamed certificate gives 3.
+REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 documentation; no live app host name was supplied, and no live run is recorded. Run it from outside on a schedule: it exits 0 when s_client verified the chain and the name and x509 printed the notAfter date, which it leaves for you to judge, and 3 when s_client or x509 failed, so an expired, untrusted or misnamed certificate gives 3.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -189,9 +191,11 @@ REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 d
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" "$(if openssl s_client -connect "$1:443" -servername "$1" \
     -verify_hostname "$1" -verify_return_error </dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # s_client's own status, captured before x509 reads its output
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"         # the host, s_client's output, then its exit status
@@ -327,7 +331,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1c1822b2d79c736033e81216f612e68a4bee35538c34f0bd008855eb659149b1",
+  "body_sha256": "eabb2694f387dcd9a23efc4d2972fc9de007bcb44ee99aad46f873b59bc0ef96",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
