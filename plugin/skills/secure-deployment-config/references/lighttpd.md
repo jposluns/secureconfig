@@ -87,16 +87,15 @@ auth.require = ( "/" =>
 
 Create the user file with Apache's `htpasswd` (Debian `apache2-utils`; for Fedora, use `httpd-tools` as this guide's package assessment). In lighttpd 1.4.75, the htpasswd backend reads `username:stored-hash` entries. The 1.4.75 htpasswd backend checks `{SHA}` SHA-1 and `$apr1$` hashes internally and, when built with `crypt()` support, checks other stored hashes of at least 13 characters through the platform's `crypt()`, except that, when built with MD4 support, the `$1+ntlm$` path derives an NTLM hash and calls `crypt()` with the derived value and a `$1$` salt. The `$1+ntlm$` path is conditional on `USE_LIB_CRYPTO_MD4` in the 1.4.75 source (https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L340-L397; https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L613-L740). Check the build and platform's accepted hash formats before choosing an `htpasswd` flag; this is the guide's compatibility advice. Check the lighttpd mod_auth documentation and Apache `htpasswd` manual in Sources for the supported hash formats.
 
-Basic authentication is single-factor, and this guide finds no lighttpd entry in Authelia v4.39.28's complete supported-proxy list (https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L24-L36). Add MFA by fronting the service with Cloudflare Access ([cloudflare.md](cloudflare.md)) or an MFA-capable proxy; options in [mfa.md](mfa.md). Cloudflare documents an Access application as an authentication layer between users and a self-hosted origin. Cloudflare Access application sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16. More Cloudflare Access application sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54. Cloudflare documents an Access policy that can require MFA. Cloudflare Access MFA policy sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81. Applying these controls to a lighttpd origin is this guide's assessment. This guide assesses that a lighttpd origin reachable without passing through Access is not protected by it. Origin-protection assessment sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L45-L45. More origin-protection assessment sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48.
+Basic authentication is single-factor, and this guide finds no lighttpd entry in Authelia v4.39.28's complete supported-proxy list (https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L24-L36). Add MFA by fronting the service with Cloudflare Access ([cloudflare.md](cloudflare.md)) or an MFA-capable proxy; options in [mfa.md](mfa.md). Cloudflare documents an Access application as an authentication layer between users and a self-hosted origin. Cloudflare Access application sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16. More Cloudflare Access application sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54. Cloudflare documents an Access policy that can require MFA. Cloudflare Access MFA policy sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81. Applying Access and its MFA policy to a lighttpd origin is this guide's assessment. This guide assesses that a lighttpd origin reachable without passing through Access is not protected by it. Origin-protection assessment sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L45-L45. More origin-protection assessment sources: https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48.
 
 ## 4. Verify
 
-REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. These are read-and-judge checks: the status code is printed and you compare it.
+REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. The block classifies its two authentication requests and exits once at the end: 1 if the site root answers a 2xx without credentials or the request carrying another Host answers 200, otherwise 3 if either answers anything but 401 or the configuration test, the reload or a curl or ss command fails, and 0 when both answer 401. The redirect headers and the listener list stay for you to judge, and its last line says so.
 
-REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous. The block takes the site's host name and a protected path on its guarded `set --` line and refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous. The block takes the site's host name and a protected path on its guarded `set --` line, refuses example.com, example.net, example.org and their subdomains, and only then runs the configuration test and reload. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes; no stub or deployment run of it is recorded here.
 
 ```bash
-sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_A_PROTECTED_PATH'   # the site's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot), then a protected path without its leading slash: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -111,14 +110,29 @@ sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lightt
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sI "http://$1/"          # expect a redirect to https://
-  curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"
+  set -- "$1" "$2" 0                    # the 3rd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  if sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd; then :; else
+    echo "configuration test or reload exit $?: the requests below may test the configuration lighttpd was already running; inconclusive"; set -- "$1" "$2" 3
+  fi
+  curl -q -g -sI "http://$1/" ||       # expect a redirect to https://
+    { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+  set -- "$1" "$2" "$3" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$5"
                                       # expect 401 without credentials once auth is on
+  case "$4:$5" in
+    0:401) ;;
+    0:2??) echo "FINDING: / answered $5 without credentials"; set -- "$1" "$2" 1 ;;
+    0:*) echo "HTTP $5 from / without credentials is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    *) echo "curl exit $4: the HTTPS request without credentials failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
+  set -- "$1" "$2" "$3"
 
   # Read every listener rather than filtering to the ports you expect. The checks above prove
   # the front door asks for credentials; they do not prove it is the only door, and a filtered
   # list cannot show you a port you did not think of.
-  ss -tlnp
+  ss -tlnp ||
+    { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
 
   # `auth.require` can sit at the top level or inside a `$HTTP["host"]` conditional, and a
   # conditional one applies only to the hosts it names. If yours is conditional, a request
@@ -130,11 +144,21 @@ sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lightt
   # for name-based TLS virtual-host
   # selection. This guide's advice is to vary Host while keeping the URL and SNI fixed for
   # this auth check:
-  curl -q -g -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
-    "https://$1/$2"
+  set -- "$1" "$2" "$3" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
+    "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+  printf '%s\n' "$5"
                                       # This guide interprets 401 as the pass and 200 as the protected
                                       # path served without authentication on this TLS connection to a
                                       # client that sends another host
+  case "$4:$5" in
+    0:401) ;;
+    0:200) echo "FINDING: /$2 answered 200 to a request carrying another Host, so it was served without authentication"; set -- "$1" "$2" 1 ;;
+    0:*) echo "HTTP $5 from /$2 with another Host is neither the 401 pass nor the 200 finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+    *) echo "curl exit $4: the request carrying another Host failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+  esac
+  echo "block exit $3; the redirect headers and the listener list are not classified, so judge them yourself"
+  exit "$3"
 )
 ```
 
@@ -234,7 +258,7 @@ Claims (full source mapping in the JSON block below):
 - password-file (REASONED; docs, authn-source, htpasswd-tool, debian-package, fedora-package): Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice.
 - mfa (REASONED; docs, authelia, cloudflare-access): Basic authentication is single-factor; add MFA by fronting this service with Cloudflare Access or an MFA-capable proxy (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment. This guide assesses that a lighttpd origin reachable without passing through Access is not protected by it.
 - verify-config (REASONED; docs, lighttpd-verify-source, systemd-reload): lighttpd 1.4.75 -tt -f /etc/lighttpd/lighttpd.conf tests the named file for syntax errors and initializes modules; configuration failures prevent the &amp;&amp; reload (this guide's inference from the nonzero process result and shell chaining). The cited upstream unit starts from that file and defines a USR1 reload through ExecReload; systemctl reload triggers the service action, whose signal does not establish completion. Confirm the installed unit uses that file and defines reload (this guide's advice).
-- verify-redirect (REASONED; docs): The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks.
+- verify-redirect (REASONED; docs): The HTTP header request should show a redirect to HTTPS; the block leaves that header for the reader to judge.
 - verify-auth (REASONED; docs): An HTTPS request without credentials should return 401 once authentication is enabled.
 - verify-listeners (REASONED; tls): Read every listener with ss -tlnp: front-door authentication does not establish that no other listener serves content. The ss version is unrecorded.
 - verify-host (REASONED; docs, lighttpd-verify-source, apache-vhosts): In lighttpd 1.4.75, request-time $HTTP["host"] matching uses the HTTP Host value, while TLS SNI can select mod_openssl settings before request headers; a Host outside a conditional auth.require falls back to global configuration for that rule (this guide's inference from conditional merging and mod_auth documentation). On a protected path, this guide interprets 401 as the pass and 200 as the protected path served without authentication on this TLS connection to a client that sends another host. Apache 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI, for name-based TLS virtual-host selection; varying Host while keeping URL and SNI fixed is this guide's auth-check advice.
@@ -244,7 +268,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "19b194f5fcdbbc47a962f42bfdd51d074cf741148a86d9068a56c80c7e6c24b3",
+  "body_sha256": "c7382f55429aaa14da2ce74e71ab4ec0b2b78411c0c9dc00373fc6fd11426bb8",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",
@@ -396,7 +420,7 @@ Claims (full source mapping in the JSON block below):
     "password-file": {"text": "Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice.", "components": ["docs", "authn-source", "htpasswd-tool", "debian-package", "fedora-package"], "sources": ["docs:s1dbd1ce27da5", "authn-source:s2c11c0fbc0ca", "authn-source:se971effb489f", "htpasswd-tool:scde9004bb967", "debian-package:s436bdf5f1fb9", "fedora-package:s919088d03a5e"], "status": "REASONED"},
     "mfa": {"text": "Basic authentication is single-factor; add MFA by fronting this service with Cloudflare Access or an MFA-capable proxy (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment. This guide assesses that a lighttpd origin reachable without passing through Access is not protected by it.", "components": ["docs", "authelia", "cloudflare-access"], "sources": ["docs:s1dbd1ce27da5", "authelia:s77083bc8faa2", "cloudflare-access:sfddb92e438ca", "cloudflare-access:s7cafe1b17afd", "cloudflare-access:sdcac732541da", "cloudflare-access:s603bdb6b24ab", "cloudflare-access:s863803bd9a1f"], "status": "REASONED"},
     "verify-config": {"text": "lighttpd 1.4.75 -tt -f /etc/lighttpd/lighttpd.conf tests the named file for syntax errors and initializes modules; configuration failures prevent the && reload (this guide's inference from the nonzero process result and shell chaining). The cited upstream unit starts from that file and defines a USR1 reload through ExecReload; systemctl reload triggers the service action, whose signal does not establish completion. Confirm the installed unit uses that file and defines reload (this guide's advice).", "components": ["docs", "lighttpd-verify-source", "systemd-reload"], "sources": ["docs:s6d5666b862a0", "lighttpd-verify-source:s0bbb4c861d5e", "lighttpd-verify-source:sca076bcd18dc", "lighttpd-verify-source:s9e69235fbbc7", "lighttpd-verify-source:s87104d328493", "lighttpd-verify-source:sba72bab46867", "lighttpd-verify-source:s2faa9b3149ac", "lighttpd-verify-source:s87b4b266bb0e", "lighttpd-verify-source:sa989ef425f1d", "lighttpd-verify-source:sf9d56b052c61", "systemd-reload:sb3f5069cd250", "systemd-reload:s441757b7048f"], "status": "REASONED", "verify": [1]},
-    "verify-redirect": {"text": "The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks.", "components": ["docs"], "sources": ["docs:s6de629323c64"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "The HTTP header request should show a redirect to HTTPS; the block leaves that header for the reader to judge.", "components": ["docs"], "sources": ["docs:s6de629323c64"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "An HTTPS request without credentials should return 401 once authentication is enabled.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED", "verify": [1]},
     "verify-listeners": {"text": "Read every listener with ss -tlnp: front-door authentication does not establish that no other listener serves content. The ss version is unrecorded.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED", "verify": [1]},
     "verify-host": {"text": "In lighttpd 1.4.75, request-time $HTTP[\"host\"] matching uses the HTTP Host value, while TLS SNI can select mod_openssl settings before request headers; a Host outside a conditional auth.require falls back to global configuration for that rule (this guide's inference from conditional merging and mod_auth documentation). On a protected path, this guide interprets 401 as the pass and 200 as the protected path served without authentication on this TLS connection to a client that sends another host. Apache 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI, for name-based TLS virtual-host selection; varying Host while keeping URL and SNI fixed is this guide's auth-check advice.", "components": ["docs", "lighttpd-verify-source", "apache-vhosts"], "sources": ["docs:s1dbd1ce27da5", "lighttpd-verify-source:s6a29b290d83a", "lighttpd-verify-source:s2fc4cf82abd9", "lighttpd-verify-source:s3f692a48bd01", "lighttpd-verify-source:sbb09703388c3", "lighttpd-verify-source:s8bb6bd7774f9", "lighttpd-verify-source:sb4c43fa1a807", "lighttpd-verify-source:s9e49b928cc81", "apache-vhosts:s558db45d4d61"], "status": "REASONED", "verify": [1]}

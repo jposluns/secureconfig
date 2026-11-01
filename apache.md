@@ -104,20 +104,25 @@ SSLVerifyDepth 2
 
 Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsupported for its proxy integration (https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115). For human-facing sites, use [mod_auth_openidc](https://github.com/OpenIDC/mod_auth_openidc) v2.4.20.3 to make Apache an OIDC relying party (https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20), and configure MFA at the identity provider as this guide advises. Cloudflare Access is another suggested option for fronting an Apache origin (this guide's assessment). A Cloudflare Access self-hosted application places an authentication layer between users and an origin server. Sources for the self-hosted application sentence (1 of 2): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16. Sources for the self-hosted application sentence (2 of 2): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54. An Access policy can require MFA (https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81); see [mfa.md](mfa.md). This guide assesses that an Apache origin reachable without passing through Access is not protected by it. Sources for the unprotected-origin assessment (1 of 2): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L45-L45. Sources for the unprotected-origin assessment (2 of 2): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
+## 5. Verify
 
-Most of these are read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so
-the status code is printed and you compare it. The first block takes your host name, an
-unconfigured name and a protected path on its `set --` line, and refuses with status 2 if any is
-left unsubstituted or malformed, or if the unconfigured name is your own host name in any letter
-case. That comparison cannot see your other ServerName and ServerAlias values, so check the name
-against them yourself. The block then runs the configuration test and reload, classifies its
-requests to the site root and to the unconfigured name, records each outcome as it runs, and
-exits once at the end: 1 if either request answers 200, otherwise 3 if either answers anything
-but 401 or the configuration test, the reload or one of its curl or ss commands fails, and 0
-when both answer 401. The redirect headers and the listener list stay for you to judge. The
-`apachectl -S` block exits 3 if the command fails and 0 otherwise, because you judge the vhost
-list it prints.
+**REASONED:** this introduction and the block that follows it; the first block's scenarios follow
+the cited Apache documentation, and this guide records no exposed/fixed deployment run. This
+metadata-only review has no authorized Apache deployment fixture. Most of the checks below are
+read-and-judge checks. `curl` exits 0 for a 401 as readily as for a 200, so the status code is
+printed and you compare it. The first block takes your host name, an unconfigured name and a
+protected path on its `set --` line, and refuses with status 2 if any is left unsubstituted or
+malformed, or if the unconfigured name is your own host name in any letter case. That
+comparison cannot see your other ServerName and ServerAlias values, so check the name against
+them yourself. The block also refuses with status 2 if `tr` is not installed, and exits 3
+before probing if `tr` fails while folding a name to lower case. The block then runs the
+configuration test and reload, classifies its requests to the site root and to the
+unconfigured name, records each outcome as it runs, and exits once at the end. It exits 1 if
+either request answers 200, otherwise 3 if either answers anything but 401 or the configuration
+test, the reload or one of its curl or ss commands fails, otherwise 2 if `ss` is not installed,
+and 0 when both answer 401. The redirect headers and the listener list stay for you to judge.
+The `apachectl -S` block exits 3 if the command fails and 0 otherwise, because you judge the
+vhost list it prints.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -128,19 +133,26 @@ list it prints.
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  command -v tr >/dev/null || { echo "tr is not installed here; not probing"; exit 2; }
+  set -- "$1" "$2" "$3" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # tr's exit status, then your host name in lower case
+  case "$4" in 0) ;; *) echo "tr exit $4: your host name could not be folded to lower case, so the checks on it cannot run; not probing, inconclusive"; exit 3 ;; esac
+  case "$5" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute a name your certificate covers that no ServerName or ServerAlias matches (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
-    "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # tr's exit status, then the unconfigured name in lower case
+  case "$6" in 0) ;; *) echo "tr exit $6: the unconfigured name could not be folded to lower case, so the check against your host name cannot run; not probing, inconclusive"; exit 3 ;; esac
+  case "$7" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
+    "$5") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$3" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   if sudo apachectl configtest && sudo systemctl reload apache2; then :; else   # httpd on RHEL
     echo "configuration test or reload exit $?: the requests below may test the configuration Apache was already running; inconclusive"; set -- "$1" "$2" "$3" 3
   fi
@@ -161,8 +173,13 @@ list it prints.
   # Read every listener. Do not filter to the ports you expect: a filter cannot show you a port
   # you did not think of, which is the whole question, and `grep ':(80|443)'` also matches an
   # address such as [2001:db8:80::1]:9000.
-  ss -tlnp ||
-    { echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
+  if command -v ss >/dev/null; then
+    ss -tlnp ||
+      { echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3; }
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+  fi
 
   # A request whose name matches no ServerName or ServerAlias does not fail. Apache falls through
   # to "the first listed virtual host that matches" the address and port, so a vhost listed
@@ -192,7 +209,10 @@ list it prints.
 )
 ```
 
-That name has to be one your certificate already covers, typically a spare label under a
+**REASONED:** following block; the `apachectl -S` configuration review rests on the cited Apache
+name-based virtual host and virtual host matching documentation, and this guide records no
+exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment
+fixture. That name has to be one your certificate already covers, typically a spare label under a
 wildcard SAN, because the guide will not tell you to disable certificate verification to run a
 test. If the certificate covers no name you can spare, this check is a configuration review
 instead: list the vhosts for that address and port, and confirm the first one Apache would
@@ -295,7 +315,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "3b69ef78ccd26273a38ce7360f0a1172a0c33422de23407664f88afbf6e7e530",
+  "body_sha256": "1c117ebc20866e49f0f35dce80eaa7c48c1887b54b777b317cb75357bd2be380",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",

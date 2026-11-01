@@ -301,7 +301,7 @@ REASONED: service-comparison provenance, per the guide's cited MongoDB security 
 
 Local checks did run: Bash parsing, ShellCheck, JavaScript syntax parsing, duplicate-key YAML parsing, and merges for both membership alternatives. Shell-only argument tracing checked probe dispatch; it did not simulate or verify MongoDB behavior. Placeholder tests rejected unchanged tokens, embedded `REPLACE_WITH_` values, angle brackets, empty values, example hosts, shortened assignments, an omitted assignment with ordinary inherited arguments, and a wrong argument count under a modified `IFS`. The JavaScript probe guards also rejected unchanged placeholders before database access.
 
-### Listener exposure (REASONED: listener inventory and interpretation; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; a stubbed ss returned fixture listeners. Expected comparison: unintended wildcard or public binds are exposed; selected private or loopback binds are the fixed expectation. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB security checklist and Community authentication support.)
+### Listener exposure (REASONED: listener inventory and interpretation; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; a stubbed ss returned fixture listeners. Those runs and the attempt recorded below covered an earlier form of the block, a bare ss -tlnp whose exit status was its own; on the current form, which exits 3 when ss fails and 0 otherwise, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the stub run was not repeated. Expected comparison: unintended wildcard or public binds are exposed; selected private or loopback binds are the fixed expectation. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB security checklist and Community authentication support.)
 
 **REASONED:** no MongoDB service is available. The local command was attempted, but the sandbox refused its netlink socket with `Operation not permitted`; that output establishes nothing about listeners.
 
@@ -309,12 +309,18 @@ Run on every database and router host:
 
 ```bash
 # REASONED: listener inventory; no MongoDB service or permitted netlink socket. Expected binds and network-hardening source follow.
-ss -tlnp
+(                                       # a subshell, so the exits below end only the subshell
+  if ss -tlnp; then
+    echo "unclassified observation: read every listener above; an unintended wildcard or public bind is the exposed state"; exit 0
+  else
+    echo "ss -tlnp exit $?: the listener inventory failed; inconclusive"; exit 3
+  fi
+)
 ```
 
 Read every relevant listener. The exposed state includes an unintended wildcard or public listener. The fixed state listens only on loopback or deliberately selected private addresses. Check the actual configured ports, including any non-default ports, and inspect firewall rules separately. A private listener alone does not prove remote firewall behavior. See [network hardening](https://www.mongodb.com/docs/manual/administration/security-checklist/).
 
-### Guarded connection probes (REASONED: all five connection modes, options, substitution and paste guards; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; stub runs printed STUB_MONGOSH with the expected arguments for all five modes, while invalid values, omitted or shortened assignments and an unknown mode exited 1 with guard messages. These runs covered an earlier form of the block, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected comparison: plaintext acceptance, anonymous access and missing-certificate acceptance must change as the corresponding controls are enabled; authenticated TLS remains the positive control. These deployment outcomes remain unobserved in this run, per the guide's cited mongosh connection, TLS, authentication, and password-prompt options; Bash redirection and noclobber behavior.)
+### Guarded connection probes (REASONED: all five connection modes, options, substitution and paste guards; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; stub runs printed STUB_MONGOSH with the expected arguments for all five modes, while invalid values, omitted or shortened assignments and an unknown mode exited 1 with guard messages. These runs covered an earlier form of the block, whose guard refusals exited with status 1; on the current form, whose guard refusals exit with status 2 and whose modes exit 1 for a completed plaintext ping, 3 for a failed control or session and otherwise 0, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the stub runs were not repeated. Expected comparison: plaintext acceptance, anonymous access and missing-certificate acceptance must change as the corresponding controls are enabled; authenticated TLS remains the positive control. These deployment outcomes remain unobserved in this run, per the guide's cited mongosh connection, TLS, authentication, and password-prompt options; Bash redirection and noclobber behavior.)
 
 Use the whole Bash block below. Substitute inside the single quotes on its `set --` lines. Supply all six values even when a mode does not use every value. Use the real hostname covered by the server certificate and a valid application client PEM, never a cluster-member PEM.
 
@@ -347,33 +353,71 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
     done
   }
   check_values "$@" || exit 2
+  set -- "$@" 0                         # the 7th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
 
   case "$1" in
+    plaintext|missing-certificate)      # positive control first: a TLS ping that presents the client certificate
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
+        --eval 'db.runCommand({ping: 1})'; then
+        echo "positive control: the TLS ping presenting the client certificate completed"
+      else
+        echo "mongosh exit $?: the TLS ping presenting the client certificate, this mode's positive control, did not complete; inconclusive"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
+  esac
+  case "$1" in
     plaintext)
-      mongosh --norc --host "$2" --port 27017 \
-        --eval 'db.runCommand({ping: 1})' ;;
+      if mongosh --norc --host "$2" --port 27017 \
+        --eval 'db.runCommand({ping: 1})'; then
+        echo "FINDING: the plaintext ping completed, so this endpoint accepts connections without TLS"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 1
+      else
+        echo "mongosh exit $?: the plaintext ping did not complete; with the TLS control above completed, that is the requireTLS result (read the error above to confirm a TLS rejection), but that control is an unauthenticated ping, so the guide's authenticated scram control still applies"
+      fi ;;
     tls)
-      mongosh --norc --host "$2" --port 27017 --tls \
-        --tlsCAFile "$3" --tlsCertificateKeyFile "$4" ;;
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --tlsCertificateKeyFile "$4"; then
+        echo "the tls session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the tls session did not connect or ended with an error; inconclusive"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     scram)
-      mongosh --norc --host "$2" --port 27017 --tls \
+      if mongosh --norc --host "$2" --port 27017 --tls \
         --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
         --username "$5" --authenticationDatabase "$6" \
-        --authenticationMechanism SCRAM-SHA-256 --password ;;
+        --authenticationMechanism SCRAM-SHA-256 --password; then
+        echo "the scram session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the scram session did not connect or ended with an error; inconclusive (an authentication failure is the expected result only from an excluded source or listener)"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     x509)
-      mongosh --norc --host "$2" --port 27017 --tls \
+      if mongosh --norc --host "$2" --port 27017 --tls \
         --tlsCAFile "$3" --tlsCertificateKeyFile "$4" \
         --authenticationDatabase "\$external" \
-        --authenticationMechanism MONGODB-X509 ;;
+        --authenticationMechanism MONGODB-X509; then
+        echo "the x509 session ended; what it showed is not classified, so judge it yourself"
+      else
+        echo "mongosh exit $?: the x509 session did not connect or ended with an error; inconclusive (an authentication failure is the expected result only for an unregistered subject)"
+        set -- "$1" "$2" "$3" "$4" "$5" "$6" 3
+      fi ;;
     missing-certificate)
-      mongosh --norc --host "$2" --port 27017 --tls \
-        --tlsCAFile "$3" --eval 'db.runCommand({ping: 1})' ;;
+      if mongosh --norc --host "$2" --port 27017 --tls \
+        --tlsCAFile "$3" --eval 'db.runCommand({ping: 1})'; then
+        echo "the TLS ping without a client certificate completed: expected with allowConnectionsWithoutCertificates true and the exposed state once it is false, so judge it against your setting"
+      else
+        echo "mongosh exit $?: the TLS ping without a client certificate did not complete; with the TLS control above completed, that is the result the setting false requires (read the error above to confirm a certificate rejection)"
+      fi ;;
     *) echo "unknown mode; not probing"; exit 2 ;;
   esac
+  echo "block exit $7; any session's contents, any error text and, for missing-certificate, whether a completed ping matches your setting are left for you to judge"
+  exit "$7"
 )
 ```
 
-### Plaintext versus TLS (REASONED: plaintext and authenticated TLS comparison; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; plaintext and scram dispatch printed STUB_MONGOSH with their respective arguments. Those runs of the connection block covered an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. Expected comparison: plaintext ping succeeds when allowed and fails under requireTLS while authenticated TLS succeeds. These deployment outcomes remain unobserved in this run, per the guide's cited Configuration-file startup and network, TLS, and security options; Connectivity probe using ping.)
+### Plaintext versus TLS (REASONED: plaintext and authenticated TLS comparison; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; plaintext and scram dispatch printed STUB_MONGOSH with their respective arguments. Those runs of the connection block covered an earlier form, whose guard refusals exited with status 1 and whose plaintext mode had no in-run TLS control, and the stub dispatch was not repeated. On the current form, whose guard refusals exit with status 2 and whose plaintext mode exits 1 when its ping completes and 0 when it is refused after the TLS control completed, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. Expected comparison: plaintext ping succeeds when allowed and fails under requireTLS while authenticated TLS succeeds. These deployment outcomes remain unobserved in this run, per the guide's cited Configuration-file startup and network, TLS, and security options; Connectivity probe using ping.)
 
 **REASONED:** no `mongod`, `mongosh`, Docker, or Podman is available.
 
@@ -571,7 +615,7 @@ db.clients.insertOne({name: "Probe", note: "SECURECONFIG_REDACTION_CANARY"});
 
 Without redaction, the canary value appears in the matching log entry. With `security.redactClientLogData` enabled, the entry still exists but its attached values are shown as `###`, while metadata such as error and operation codes and line numbers remains visible. A missing log entry is inconclusive on its own. See [the redactClientLogData parameter](https://www.mongodb.com/docs/v8.0/reference/parameters/) and the [log-redaction example](https://www.mongodb.com/docs/v8.0/administration/monitoring/).
 
-### Verify storage encryption (REASONED: encrypted and unencrypted storage, key initialization and KMIP failure; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; fixture grep printed Encryption key manager initialized and returned 1 without output for an unrelated line. Expected comparison: encrypted files require the correct keys; missing keys or mismatched KMIP identity prevent startup, while unencrypted files reopen without keys. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure.)
+### Verify storage encryption (REASONED: encrypted and unencrypted storage, key initialization and KMIP failure; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, Bash parsing and ShellCheck 0.11.0 exited 0 without diagnostics; fixture grep printed Encryption key manager initialized and returned 1 without output for an unrelated line. Those runs covered an earlier form of the block, a bare grep whose exit status was grep's own; on the current form, which exits 0 when grep matches and 3 when it matches nothing or fails, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the fixture grep was not repeated. Expected comparison: encrypted files require the correct keys; missing keys or mismatched KMIP identity prevent startup, while unencrypted files reopen without keys. These deployment outcomes remain unobserved in this run, per the guide's cited MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure.)
 
 **REASONED:** no MongoDB Enterprise binaries, disposable data directory, or KMIP endpoint is available.
 
@@ -579,7 +623,16 @@ Create equivalent unencrypted and encrypted fixtures, each holding a known docum
 
 ```bash
 # REASONED: storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
-grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log
+(                                       # a subshell, so the exits below end only the subshell
+  if grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log; then
+    echo "unclassified observation: read the matched lines above; with encryption enabled, the log records that the encryption key manager initialized"; exit 0
+  else
+    case "$?" in
+      1) echo "no matching line in /var/log/mongodb/mongod.log, so it shows no key-manager initialization; inconclusive (the log may have rotated or be written elsewhere)"; exit 3 ;;
+      *) echo "grep could not read /var/log/mongodb/mongod.log; inconclusive"; exit 3 ;;
+    esac
+  fi
+)
 ```
 
 With encryption enabled, the log records that the encryption key manager initialized; with a mismatched KMIP server identity or a missing key, initialization fails and the server does not start. The unencrypted fixture reopens with no key. Do not treat the absence of plaintext under `strings` as proof of encryption, since compression alone can produce that result. See the [encryption-at-rest reference](https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/) and the [configure-encryption procedure](https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/).
@@ -598,7 +651,7 @@ Create a Queryable Encryption collection with an `encryptedFields` definition an
 
 | Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| Service behavior | REASONED: deployment-comparison inventory; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local Bash and JavaScript syntax checks exited 0, shell and JavaScript guard fixtures rejected unchanged placeholders, and stub dispatch tested argument construction only. Those runs of the connection block covered an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. The comparisons specified in this row remain unobserved, per the guide's cited sources (part 1 of 3): MongoDB security checklist and Community authentication support; Configure TLS and client-certificate validation; Create custom roles and understand their scope; Update users and apply authentication restrictions. The guide's cited sources for the same unobserved comparisons as part 1 (part 2 of 3): Register and authenticate x.509 client identities; Internal membership authentication and certificate requirements; MongoDB 8.0 Enterprise auditing; MongoDB 8.0 server parameters (auditAuthorizationSuccess, redactClientLogData). The guide's cited sources for the same unobserved comparisons as part 1 (part 3 of 3): MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure; MongoDB 8.0 client-side field level encryption; MongoDB 8.0 Queryable Encryption. REASONED from the cited MongoDB documentation; not demonstrated | On an authorized isolated deployment with MongoDB binaries, certificates, listener-inspection permission, and permitted/excluded source hosts, demonstrate (part 1 of 2): exposed versus fixed listener binding, plaintext/TLS behavior, unauthenticated collection access with a valid client certificate, collection-role allows and denials. The same demonstration on that authorized isolated deployment is to cover (part 2 of 2): user source/listener restrictions, registered/unregistered/missing client-certificate cases, membership credentials, and member/router source restrictions. Record commands, versions, responses, and positive controls. The sections 5 to 9 controls are also REASONED: on an authorized MongoDB Enterprise deployment with an audit destination, encryption keys or a KMIP endpoint, and an encryption-capable driver, additionally demonstrate (part 1 of 2): audit records for authentication and authorization events with auditAuthorizationSuccess off and on, diagnostic-log redaction of a canary value. The same demonstration on that authorized MongoDB Enterprise deployment is to cover (part 2 of 2): encrypted versus plaintext storage fixtures under local-key and KMIP configurations, and CSFLE and Queryable Encryption field ciphertext with a permitted encrypted query and a rejected plaintext write. |
+| Service behavior | REASONED: deployment-comparison inventory; a live MongoDB stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local Bash and JavaScript syntax checks exited 0, shell and JavaScript guard fixtures rejected unchanged placeholders, and stub dispatch tested argument construction only. Those Bash runs covered earlier forms of the listener, connection and storage-encryption blocks, whose connection guard refusals exited with status 1, and the shell guard fixtures and stub dispatch were not repeated. On the current forms, whose connection guard refusals exit with status 2 and whose listener, connection and log checks exit 0, 1 or 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. The comparisons specified in this row remain unobserved, per the guide's cited sources (part 1 of 3): MongoDB security checklist and Community authentication support; Configure TLS and client-certificate validation; Create custom roles and understand their scope; Update users and apply authentication restrictions. The guide's cited sources for the same unobserved comparisons as part 1 (part 2 of 3): Register and authenticate x.509 client identities; Internal membership authentication and certificate requirements; MongoDB 8.0 Enterprise auditing; MongoDB 8.0 server parameters (auditAuthorizationSuccess, redactClientLogData). The guide's cited sources for the same unobserved comparisons as part 1 (part 3 of 3): MongoDB 8.0 encryption at rest; MongoDB 8.0 configure encryption and KMIP procedure; MongoDB 8.0 client-side field level encryption; MongoDB 8.0 Queryable Encryption. REASONED from the cited MongoDB documentation; not demonstrated | On an authorized isolated deployment with MongoDB binaries, certificates, listener-inspection permission, and permitted/excluded source hosts, demonstrate (part 1 of 2): exposed versus fixed listener binding, plaintext/TLS behavior, unauthenticated collection access with a valid client certificate, collection-role allows and denials. The same demonstration on that authorized isolated deployment is to cover (part 2 of 2): user source/listener restrictions, registered/unregistered/missing client-certificate cases, membership credentials, and member/router source restrictions. Record commands, versions, responses, and positive controls. The sections 5 to 9 controls are also REASONED: on an authorized MongoDB Enterprise deployment with an audit destination, encryption keys or a KMIP endpoint, and an encryption-capable driver, additionally demonstrate (part 1 of 2): audit records for authentication and authorization events with auditAuthorizationSuccess off and on, diagnostic-log redaction of a canary value. The same demonstration on that authorized MongoDB Enterprise deployment is to cover (part 2 of 2): encrypted versus plaintext storage fixtures under local-key and KMIP configurations, and CSFLE and Queryable Encryption field ciphertext with a permitted encrypted query and a rejected plaintext write. |
 
 ## 5. Enable Enterprise auditing with deliberate event coverage
 
@@ -858,7 +911,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "6e261f19e17f8c67b4d035b60d5136fa4e204bfa582d36bd7675c81729222b93",
+  "body_sha256": "8ff6f01b23a2adb7dc271f7ff4c0964c6ce374eded4782fec52c6efdf3ab16c2",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
