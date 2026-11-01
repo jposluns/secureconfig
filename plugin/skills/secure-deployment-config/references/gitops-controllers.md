@@ -254,9 +254,9 @@ request answers 2xx with such a list, and 3 when a request fails, the anonymous 
 nor such a list, the token-bearing answer is not a 200 with such a list, or python3 cannot parse a body,
 so HTML, invalid JSON and JSON that is not such a list are inconclusive. A refusal in its token part
 gives 2, and the block exits 0 only for an anonymous 401 beside that token-bearing 200.
-The current form is covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over
-every block, and by October 2026 stub runs under bash 5.3.9 with curl stubbed, the real python3 parsing
-and the token typed at a pseudo-terminal. In those runs an anonymous 401 beside a token-bearing 200 whose
+October 2026 stub runs under bash 5.3.9 with curl stubbed, the real python3 parsing and the token typed
+at a pseudo-terminal covered the guarded form while its reserved-name check lowercased the host with
+`tr`. In those runs an anonymous 401 beside a token-bearing 200 whose
 list held the application exited 0; an anonymous 200 whose list held it exited 1, also when the
 token-bearing request failed or answered 403 or the token was empty or readonly. A 200 at either request
 holding HTML, invalid JSON, `{"error":"demo"}` for an application named demo, a list naming only
@@ -265,7 +265,13 @@ top-level array exited 3.
 So did an anonymous login page, 302 or curl failure, a token-bearing 403 or failure, a failing python3
 and no readable /dev/tty. A missing python3, each `set --` refusal, and beside an anonymous 401 an empty
 or readonly token or a readonly IFS exited 2; an inherited `set -e`, `set -u` or `declare -i tok` left
-these results unchanged.
+these results unchanged. The current form instead matches reserved names in any letter case through
+bash's `nocasematch` option, and is covered by the repository gate suite's bash -n and ShellCheck 0.11.0
+passes over every block, and by October 2026 stub runs under bash 5.3.9 with curl stubbed and no
+network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains,
+each exited 2 with the reserved-name message before any request; two of them in upper or mixed case
+also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and `declare -i`
+variables, or `set -e`, and a host outside those names reached the anonymous request.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
 also clears the `REDIS_PASSWORD` environment copy, and per-handler RBAC coverage in `argocd-server`.
@@ -288,9 +294,11 @@ every line after the first for your shell to run.
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the Argo CD server's host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo "substitute the path of the CA file that issued the Argo CD server's certificate inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -490,13 +498,20 @@ before the secret prompt, that refuses an unsubstituted value and example.com, e
 and their subdomains. It records a finding (1) when the unsigned request is accepted with a 2xx, reads a
 4xx or 5xx answer to it as a rejection, and records 3 when a request fails, the unsigned answer is
 anything else, or the signed request is not accepted with a 2xx. A failed prompt read or signature now
-exits 3 rather than 2. The current form is covered by the repository gate suite's bash -n and
-ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs under bash 5.3.9 with curl
-stubbed, the real python3 signing and the secret typed at a pseudo-terminal. In those runs an unsigned
+exits 3 rather than 2. October 2026 stub runs under bash 5.3.9 with curl stubbed, the real python3
+signing and the secret typed at a pseudo-terminal covered that form while its reserved-name check
+lowercased the host with `tr`. In those runs an unsigned
 401 or 500 beside a signed 200 exited 0, and the stub received the body on stdin and the expected HMAC
 header. An unsigned 200 exited 1, also when the signed request failed; an unsigned 302 or curl failure,
 a signed 401, a failing or silent python3 and no readable /dev/tty exited 3; and an empty secret, a
-readonly hmac or IFS and each `set --` refusal exited 2.
+readonly hmac or IFS and each `set --` refusal exited 2. The current form instead matches reserved
+names in any letter case through bash's `nocasematch` option, and is covered by the repository gate
+suite's bash -n and ShellCheck 0.11.0 passes over every block, and by October 2026 stub runs under bash
+5.3.9 with curl stubbed and no network. In those runs eight reserved names in lower, upper and mixed
+case, bare and as subdomains, each exited 2 with the reserved-name message before the secret prompt;
+two of them in upper or mixed case also did with `tr` absent from PATH, and under an inherited
+`nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached
+the secret prompt.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
@@ -536,9 +551,11 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the receiver's public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*[?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the receiver's path after /hook/ (no slash, query, fragment or percent sign) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -839,7 +856,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "85369075c037b3f77df005afa2a71cc0a6f52d8b73e68e398b591a5cb3bee82b",
+  "body_sha256": "6b412f96623577d2c50f9de5a9a76fa751a6a0b9bd0e38315ce08eebaf20e6bd",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",

@@ -135,9 +135,11 @@ REASONED: following block; retired-name DNS check, per the cited dig documentati
   case "$1" in
     ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the retired host name (no scheme, user name, port, path, query, fragment, percent sign, leading hyphen, leading plus sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), and no lookup returns it to 0
   curl -q -g -sI "https://$1/" ||       # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
     { echo "curl exit $?: the request failed, which is not proof the record is gone; inconclusive"; set -- "$1" 3; }
@@ -189,9 +191,11 @@ REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 d
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" "$(if openssl s_client -connect "$1:443" -servername "$1" \
     -verify_hostname "$1" -verify_return_error </dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # s_client's own status, captured before x509 reads its output
   set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"         # the host, s_client's output, then its exit status
@@ -327,7 +331,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1c1822b2d79c736033e81216f612e68a4bee35538c34f0bd008855eb659149b1",
+  "body_sha256": "311912132a928e52f9b273bfb9e99ec6e13a17625943be15a209b3ec0a180c05",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
