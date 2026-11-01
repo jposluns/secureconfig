@@ -9882,8 +9882,12 @@ printed and you compare it. The first block takes your host name, an unconfigure
 protected path on its `set --` line, and refuses with status 2 if any is left unsubstituted or
 malformed, or if the unconfigured name is your own host name in any letter case. That
 comparison cannot see your other ServerName and ServerAlias values, so check the name against
-them yourself. The block also refuses with status 2 if `tr` is not installed, and exits 3
-before probing if `tr` fails while folding a name to lower case. The block then runs the
+them yourself. The comparison runs in the C locale, so the letters A to Z match in either case
+in every locale, Turkish included, and every other letter matches only itself; the block refuses
+with status 2 if LC_ALL is read-only in your shell. Only that comparison runs in the C locale,
+in a nested subshell of its own, so the rest of the block, including the commands it runs, keeps
+your locale settings. The block also needs bash: in a shell without bash's `shopt`, such as
+dash, it refuses with status 2 before probing. The block then runs the
 configuration test and reload, classifies its requests to the site root and to the
 unconfigured name, records each outcome as it runs, and exits once at the end. It exits 1 if
 either request answers 200, otherwise 3 if either answers anything but 401 or the configuration
@@ -9901,25 +9905,35 @@ vhost list it prints.
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  command -v tr >/dev/null || { echo "tr is not installed here; not probing"; exit 2; }
-  set -- "$1" "$2" "$3" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # tr's exit status, then your host name in lower case
-  case "$4" in 0) ;; *) echo "tr exit $4: your host name could not be folded to lower case, so the checks on it cannot run; not probing, inconclusive"; exit 3 ;; esac
-  case "$5" in
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute a name your certificate covers that no ServerName or ServerAlias matches (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  set -- "$1" "$2" "$3" "$4" "$5" "$(if printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # tr's exit status, then the unconfigured name in lower case
-  case "$6" in 0) ;; *) echo "tr exit $6: the unconfigured name could not be folded to lower case, so the check against your host name cannot run; not probing, inconclusive"; exit 3 ;; esac
-  case "$7" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
-    "$5") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$3" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
+  if (                                  # a nested subshell, so only this comparison runs in the C locale and the rest of the block keeps yours
+    { unset -v LC_ALL; } 2>/dev/null || exit 4
+    LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as host names need
+    shopt -s nocasematch || exit 5   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$2" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
+      "$1") exit 6 ;;
+    esac
+  )
+  then :
+  else
+    case "$?" in
+      4) echo "LC_ALL is read-only in this shell, so the host name comparison cannot run; not probing" ;;
+      5) echo "this block needs bash; run it in bash; not probing" ;;
+      6) echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing" ;;
+      *) echo "the host name comparison did not finish; not probing" ;;
+    esac
+    exit 2
+  fi
   set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   if sudo apachectl configtest && sudo systemctl reload apache2; then :; else   # httpd on RHEL
     echo "configuration test or reload exit $?: the requests below may test the configuration Apache was already running; inconclusive"; set -- "$1" "$2" "$3" 3
@@ -10083,7 +10097,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1c117ebc20866e49f0f35dce80eaa7c48c1887b54b777b317cb75357bd2be380",
+  "body_sha256": "4fc847dae3fcde93596591c447ffe745048433b4cbf149aa2527c49ae90709a2",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -12997,7 +13011,7 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 - This guide advises: never set `NODE_TLS_REJECT_UNAUTHORIZED=0`, which disables certificate validation for TLS connections in the Node.js process, and never pass `rejectUnauthorized: false`, which disables server-certificate verification for that client connection. Never configure an `https.Agent` with `rejectUnauthorized: false`: requests using that agent inherit its TLS option. The agent reach is this guide's assessment of Node.js's documented request, agent and TLS options.
 - For an internal CA or self-signed server, this guide advises instead: set `NODE_EXTRA_CA_CERTS=/path/ca.crt` before starting Node.js, pointing at a PEM file of trusted certificates (see [self-signed.md](https://github.com/jposluns/secureconfig/blob/main/self-signed.md)). Node.js adds these to its well-known root CAs at launch; changing the variable at runtime has no effect on the current process. An explicit `ca` option prevents use of both the well-known and extra CAs for that TLS or HTTPS client or server, and Node.js ignores the variable when run as setuid root or with Linux file capabilities.
 
-## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test. The block refuses with status 2 if tr is not installed and exits 3 before probing if tr fails. At the end it exits 2 when ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
+## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test. The block needs bash: in a shell without bash's shopt, such as dash, it refuses with status 2 before probing. At the end it exits 2 when ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -13008,13 +13022,11 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  command -v tr >/dev/null || { echo "tr is not installed here; not probing"; exit 2; }
-  set -- "$1" "$2" "$3" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # tr's exit status, then your host name in lower case
-  case "$4" in 0) ;; *) echo "tr exit $4: your host name could not be folded to lower case, so the checks on it cannot run; not probing, inconclusive"; exit 3 ;; esac
-  case "$5" in
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -13207,7 +13219,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "77147f785bc93875a5fa3ffd0130264d53513c000125059de42b0a8d67ecc803",
+  "body_sha256": "3db566e58c4bd93039927f1ea7503ab6f8e658811504bcf3f9fb5c175d1062ee",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",
@@ -13531,7 +13543,7 @@ python -m http.server -b 127.0.0.1 8000
 
 Reach it through an SSH tunnel, including one that runs over your tailnet, never a public bind.
 
-## 6. Verify (REASONED: TLS, authentication and listener expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Python application, proxy or managed ingress to test. The block refuses with status 2 if tr is not installed and exits 3 before probing if tr fails. At the end it exits 2 when ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
+## 6. Verify (REASONED: TLS, authentication and listener expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Python application, proxy or managed ingress to test. The block needs bash: in a shell without bash's shopt, such as dash, it refuses with status 2 before probing. At the end it exits 2 when ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -13542,13 +13554,11 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  command -v tr >/dev/null || { echo "tr is not installed here; not probing"; exit 2; }
-  set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # tr's exit status, then your host name in lower case
-  case "$3" in 0) ;; *) echo "tr exit $3: your host name could not be folded to lower case, so the checks on it cannot run; not probing, inconclusive"; exit 3 ;; esac
-  case "$4" in
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -13727,7 +13737,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "bf40bdd68929537bcf5fcc43a33b22541ccab9b66162610585b362e3732e96cd",
+  "body_sha256": "61c29d607578912d904ff8fbae14eff92c1033fb04e49408f00ce6dfc2e7d006",
   "components": {
     "django": {
       "name": "Django documentation",
@@ -19698,9 +19708,11 @@ Use semicolon-separated hostnames without ports. `*` permits all hosts. Host fil
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is missing), which outranks 0
   curl -q -g --noproxy '*' -sI "http://$1/" ||         # expect 307 or 308 with a https:// Location
     { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
@@ -19739,7 +19751,7 @@ For the `/api` check, the route must exist, require authorization, and use the a
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
-REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. Every block in section 9, including the one above, records each classified result and each failed request as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed request or an inconclusive result, a finding outranking an inconclusive result. The first block in section 9 refuses only its listener inventory when `ss` is missing: it prints `ss is not installed here; not listing sockets` after its requests have run, then still ends with its `block exit` line, which names the listener list only when `ss` ran, and exits 2 only when none of the requests found something or was inconclusive. Stub runs (October 2026, Bash 5.3.9, scratch `ss` and `curl` stubs, no network, under an inherited `readonly` variable, `declare -i` variable and `set -e`) covered that block in an earlier form, whose `block exit` line named the listener list even when `ss` was missing. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs under the same conditions, which exited 0 with `ss` and the stubbed requests passing, 3 with `ss` failing, and 2 with `ss` missing; with `ss` missing, a stubbed `200` from `/api` gave 1, stubbed failed requests gave 3 and the last line did not name the listener list. Unless a guard ends the block early, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The cookie-continuity block also refuses with status 2, before any request, when `./dotnet-verify.cookies` is not readable in the current directory.
+REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each complete guarded block. Substitute the entire URL inside its single quotes; a literal apostrophe requires proper shell escaping. Run public-exposure checks from outside the application host and its trusted proxy network. Supply trusted CA configuration where needed; do not use `-k`. A DNS error, TLS failure, timeout, or HTTP `000` is not proof of an application-level rejection. Every block in section 9, including the one above, records each classified result and each failed request as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed request or an inconclusive result, a finding outranking an inconclusive result. The first block in section 9 refuses only its listener inventory when `ss` is missing: it prints `ss is not installed here; not listing sockets` after its requests have run, then still ends with its `block exit` line, which names the listener list only when `ss` ran, and exits 2 only when none of the requests found something or was inconclusive. Stub runs (October 2026, Bash 5.3.9, scratch `ss` and `curl` stubs, no network, under an inherited `readonly` variable, `declare -i` variable and `set -e`) covered that block in an earlier form, whose `block exit` line named the listener list even when `ss` was missing. Stub runs under the same conditions then covered a later form, which lowercased the host with `tr` before refusing reserved names, and exited 0 with `ss` and the stubbed requests passing, 3 with `ss` failing, and 2 with `ss` missing; with `ss` missing, a stubbed `200` from `/api` gave 1, stubbed failed requests gave 3 and the last line did not name the listener list. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs on 2026-11-01 (Bash 5.3.9 and dash 0.5.12, the same kind of stubs, no network). In Bash, under the same conditions and with `tr` present or absent, those runs gave the same statuses and refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with status 2 before any request. Under dash they refused every host name with status 2 and the message that the block needs bash, before any request. Unless a guard ends the block early, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The cookie-continuity block also refuses with status 2, before any request, when `./dotnet-verify.cookies` is not readable in the current directory.
 
 #### Production error disclosure (REASONED: the following block tests error representations against the cited error-handling documentation; no .NET runtime or deployed test application, as recorded below.)
 
@@ -20073,7 +20085,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "4668d750ddccad76294c748f8a1623015ddf3dbb511ff2946fe8dc54d0051f07",
+  "body_sha256": "491cc1c3bc0a7bf2272de9ea1c5c47d04f5cd7a8202aedafa9b844145ff851f0",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -20518,9 +20530,11 @@ None of these properties establishes a universal JSON body limit. Bound other re
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 3 (a command failed), which outranks 2 (ss is missing), which outranks 0
   curl -q -g -sI --noproxy '*' "https://$1/" ||        # succeeds without -k; shows Strict-Transport-Security
     { echo "curl exit $?: the HTTPS request failed; inconclusive"; set -- "$1" 3; }
@@ -20564,7 +20578,7 @@ A zero generated-password log count is inconclusive: logging may suppress the me
 
 REASONED: the deployment checks below are not demonstrated. The authoring environment has no runnable Spring Boot fixture, no Maven or Gradle executable, and no container runtime; its filesystem is read-only and network access is restricted. Shell syntax and negative placeholder-guard cases were checked locally. Those local checks covered the guarded blocks below in an earlier form, whose guard refusals ended with status 0, and no recorded local check covered the later form that ended each block with `) || echo "block exit $?"`. The current form of every block in this section, which reports its result in its exit status, is covered by the repository gate suite, which runs bash -n and ShellCheck 0.11.0 over every block, and the first block's current form is also covered by the stub runs recorded in the next paragraph. Expected deployment outcomes rest on the cited Spring Boot and vendor documentation.
 
-REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each guarded block whole and substitute inside the single quotes. Every block in this section records each classified result and each failed command as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed command or an inconclusive result, a finding outranking an inconclusive result. The first block in this section refuses only its listener inventory when `ss` is missing: it prints `ss is not installed here; not listing sockets` after its requests have run, then still ends with its `block exit` line, which names the listener list only when `ss` ran, and exits 2 only when neither request failed. Stub runs (October 2026, Bash 5.3.9, scratch `ss` and `curl` stubs, no network, under an inherited `readonly` variable, `declare -i` variable and `set -e`) covered that block in an earlier form, whose `block exit` line named the listener list even when `ss` was missing. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs under the same conditions, which exited 0 with `ss` and the stubbed requests passing, 3 with `ss` failing, and 2 with `ss` missing; with `ss` missing, stubbed failed requests gave 3 and the last line did not name the listener list. Unless a guard ends the block early, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The generated-password count is a block of its own because it cannot exit 0: a zero count is inconclusive. The blocks that read `./java-verify-auth.headers`, `./below-limit.bin`, `./over-limit.bin` or `app.log` refuse with status 2, before any request or count, when a file they need is not readable in the current directory. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
+REASONED: paste and status guidance, following the cited curl behavior and CONTRIBUTING.md rule 6. Paste each guarded block whole and substitute inside the single quotes. Every block in this section records each classified result and each failed command as it runs and exits once: 0 for a pass or a result it leaves unclassified, 1 for a finding, 2 for a guard refusal and 3 for a failed command or an inconclusive result, a finding outranking an inconclusive result. The first block in this section refuses only its listener inventory when `ss` is missing: it prints `ss is not installed here; not listing sockets` after its requests have run, then still ends with its `block exit` line, which names the listener list only when `ss` ran, and exits 2 only when neither request failed. Stub runs (October 2026, Bash 5.3.9, scratch `ss` and `curl` stubs, no network, under an inherited `readonly` variable, `declare -i` variable and `set -e`) covered that block in an earlier form, whose `block exit` line named the listener list even when `ss` was missing. Stub runs under the same conditions then covered a later form, which lowercased the host with `tr` before refusing reserved names, and exited 0 with `ss` and the stubbed requests passing, 3 with `ss` failing, and 2 with `ss` missing; with `ss` missing, stubbed failed requests gave 3 and the last line did not name the listener list. Its current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs on 2026-11-01 (Bash 5.3.9 and dash 0.5.12, the same kind of stubs, no network). In Bash, under the same conditions and with `tr` present or absent, those runs gave the same statuses and refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with status 2 before any request. Under dash they refused every host name with status 2 and the message that the block needs bash, before any request. Unless a guard ends the block early, each block ends with a `block exit` line that gives its status and names the output it leaves for you to judge, so status 0 alone does not mean the check passed. The generated-password count is a block of its own because it cannot exit 0: a zero count is inconclusive. The blocks that read `./java-verify-auth.headers`, `./below-limit.bin`, `./over-limit.bin` or `app.log` refuse with status 2, before any request or count, when a file they need is not readable in the current directory. Supply URLs without a trailing slash where the block appends a path, and without existing query parameters where it appends a query. These blocks require curl 7.75.0 or newer for `exitcode` and `errormsg`. A DNS error, TLS failure, or timeout is not proof that an endpoint is securely configured; inspect the error and confirm the intended service and network path.
 
 For authenticated requests, prepare `./java-verify-auth.headers` as a private, mode `0600` file containing the actual request headers for a test identity, one header per line. Use the application's authentication method, such as its session cookie or an accepted authorization header. For uploads, include the matching session and valid CSRF header where required. The blocks pass that file to curl through stdin, keeping credential values out of command arguments. Protect and remove the file after testing. Curl documents [header input and transfer diagnostics](https://curl.se/docs/manpage.html).
 
@@ -20928,7 +20942,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "bab8603ba1155174653f8a3eacc348e6da231532f89ff60be86f586c572a10df",
+  "body_sha256": "48f596a614667a2f4284f778f9ce929ff800155978d0bfec39ad85686d335fcc",
   "components": {
     "boot41": {
       "name": "Spring Boot",
