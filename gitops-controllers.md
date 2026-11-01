@@ -269,10 +269,10 @@ these results unchanged. The current form instead matches reserved names in any 
 bash's `nocasematch` option, and is covered by the repository gate suite's bash -n and ShellCheck 0.11.0
 passes over every block, and by November 2026 stub runs under bash 5.3.9 with curl stubbed and no
 network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains,
-each exited 2 with the reserved-name message before any request; two of them in upper or mixed case
-also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and `declare -i`
-variables, or `set -e`, and a host outside those names reached the anonymous request.
-Under dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names
+each exited 2 with the reserved-name message before any request; two reserved names in upper or mixed
+case also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and
+`declare -i` variables, or `set -e`, and a host outside those names reached the anonymous request. Under
+dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names
 alike with status 2 and its message that the block needs bash, before any request.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
@@ -511,11 +511,11 @@ names in any letter case through bash's `nocasematch` option, and is covered by 
 suite's bash -n and ShellCheck 0.11.0 passes over every block, and by November 2026 stub runs under bash
 5.3.9 with curl stubbed and no network. In those runs eight reserved names in lower, upper and mixed
 case, bare and as subdomains, each exited 2 with the reserved-name message before the secret prompt;
-two of them in upper or mixed case also did with `tr` absent from PATH, and under an inherited
+two reserved names in upper or mixed case also did with `tr` absent from PATH, and under an inherited
 `nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached
-the secret prompt. Under dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and
-other host names alike with status 2 and its message that the block needs bash, before the secret
-prompt.
+the secret prompt. Under dash, which lacks bash's `shopt`, stub runs of the current form refused
+reserved and other host names alike with status 2 and its message that the block needs bash, before the
+secret prompt.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
@@ -860,7 +860,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "5b20bbdbdc03134868c38739d426c6859102561af563e38330fd42855d5ac001",
+  "body_sha256": "b93332fac2381126c55dd1cf869f3ff85ee57aa99959e15fc102c28f872a09af",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
