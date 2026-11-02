@@ -713,6 +713,23 @@ for changelog_check in test_changelog_format.py check_changelog_format.py; do
   fi
 done
 
+echo "== the release check still refuses what it claims =="
+# tools/check_release.py runs in the release procedure (CONTRIBUTING.md "Releasing"), not here:
+# it needs a built release directory and runs this suite in a worktree of the target. Its
+# self-test runs here so the shipped rule is tested on every pull request. The self-test builds
+# throwaway repositories with fixed commit dates and stays offline; the check compares a
+# target's UTC date with today's, and the fixtures sit in October 2026 and in 2099.
+if release_tests=$(python3 -I -B tools/test_release.py 2>&1); then
+  printf '%s\n' "$release_tests"
+  if grep -q '^  FAIL  ' <<< "$release_tests" ||
+     ! grep -qE '^  ok    [0-9]+ recorded cases for the release check$' <<< "$release_tests"; then
+    bad "test_release.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$release_tests"
+  bad "test_release.py failed"
+fi
+
 echo "== TODO.md: one backlog row per line =="
 # Finding F-TODO-ROW-CONCATENATION: a lost line break joins two banded-table rows onto one line,
 # and Markdown renders the second inside the first row's last cell. #71 committed one, joining

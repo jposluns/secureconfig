@@ -440,6 +440,79 @@ fallback. Selected tracked paths that are missing or inaccessible also fail clos
 This does not change independent scanners or explicitly named inputs such as the
 no-dashes gate's optional `NOTICE` and `.aiqt/attribution.toml`.
 
+## Releasing
+
+A release is a GitHub release on a tag `v1.0.<N>` that names one merge commit on `main`, where
+`1.0.<N>` is `VERSION` at that commit, for example `v1.0.1153`. Releases are cut "on
+completion of major milestones or on demand", on no fixed schedule, under the maintainer's
+rulings of 2026-11-01 in `DECISIONS.md`. A release changes nothing on `main`, and its tag is
+never moved or removed once published. Those rulings call for a `v*` tag ruleset that blocks
+update and deletion, with creation open to write access, and for immutable releases if GitHub
+offers them; both are repository settings. When the orchestrator read them from the GitHub API
+on 2026-11-01, immutable releases were already enabled, and the existing "All Tags" tag ruleset
+already blocked tag update, deletion and non-fast-forward, and also creation except for its
+bypass role, so no new ruleset was created; `DECISIONS.md` records that observation. A
+release's assets are
+`site/llms-full.txt` as committed, the plugin tarball, the full release notes and
+`SHA256SUMS`; its body is short and generated, with the list of pull requests and a link to
+`CHANGELOG.md` at the tag.
+
+1. Fetch `main` and the release tags with `git fetch origin main 'refs/tags/v*:refs/tags/v*'`,
+   and confirm that `git rev-parse main origin/main` prints one commit twice and that the
+   working tree is clean.
+2. Choose the target: the last first-parent merge on `main` of a UTC day that has ended,
+   normally the day before the cut. `TZ=UTC git log --first-parent --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%H %cd %s' main`
+   lists the merges with their UTC times. The target's subject begins
+   `Merge pull request #N from `, and the tag is `v` plus `git show <sha>:VERSION`.
+3. Confirm online that the target's `gates` check run on its push to `main` concluded
+   `success`, for example with
+   `gh api 'repos/jposluns/secureconfig/commits/<sha>/check-runs?check_name=gates'`, and note
+   the check run's id. If it failed or never completed, choose the last merge of an earlier
+   UTC day whose run passed.
+4. Build the release twice, into two new directories outside the repository, and compare
+   them with `diff -r`; any difference stops the release. Each build is
+   `python3 -I -B tools/check_release.py --target <sha> --tag v1.0.<N> --previous <tag> --gates-check-run <id> --dir <dir> --build`,
+   where `<tag>` is the previous release's tag; the first release passes `--first` instead of
+   `--previous <tag>`.
+5. Check the release with the same command without `--build`, on one of the two directories.
+   The docstring of `tools/check_release.py` lists what it refuses. It runs
+   `tools/run_all_checks.sh` in a worktree of the target and refuses any line beginning
+   `  FAIL  ` and any line beginning `  SKIP  ` but two: the one for the untracked
+   `.claude/settings.json`, and the suite's advisory line saying the local `python3` differs
+   from CI's pinned `PYTHON_VERSION`. So it needs shellcheck installed, though not CI's pinned
+   release, and not CI's Python release: CI's pinned shellcheck, like its Python, is covered by
+   the online `gates` check of step 3 on the target. The pass line names the shellcheck version
+   the suite reported, says so when that Python line was printed, and always says the online
+   `gates` result is recorded, not verified.
+6. Create the release as a draft once the offline release check and the online `gates` check
+   pass. Under the maintainer's standing grant of 2026-11-01 the orchestrator creates it with
+   `gh release create v1.0.<N> --draft --target <sha> --title "secureconfig v1.0.<N>" --notes-file <dir>/body.md <dir>/assets/*`.
+   Never run `git push --tags`, which would publish the local `qa/` tags.
+7. Download the draft's assets into a new directory with
+   `gh release download v1.0.<N> --dir <new>`, run `sha256sum -c SHA256SUMS` there, and
+   compare that directory with `<dir>/assets` using `diff -r`. Any failure or difference stops
+   the release, and the draft is fixed or discarded before anything is published.
+8. Only then publish the draft with `gh release edit v1.0.<N> --draft=false`, and confirm with
+   `git ls-remote origin refs/tags/v1.0.<N>` that the tag names the target. Immutable releases
+   were enabled on this repository when this procedure was written (read from the GitHub API on
+   2026-11-01), so once a release is published its assets and tag cannot be changed, which is
+   why its assets are verified while it is a draft. Five online behaviours of steps 6 to 8 were
+   not verified offline, and the first release will confirm them. They are whether a draft
+   creates the tag before it is published; whether `gh release download v1.0.<N>` finds a draft
+   by its tag; whether `gh release edit --draft=false` creates the tag at the draft's
+   `--target`; whether the download holds exactly the four uploaded assets, as step 7's
+   `diff -r` assumes; and whether the "All Tags" ruleset's bypass role lets the publisher create
+   the tag. Step 7's checks, the publish command's exit status and the `git ls-remote` check
+   are what would show one of them failing.
+9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
+   bullet naming the tag, its target commit and the UTC dates it covers. The next release
+   passes this tag as `--previous`.
+
+The released `llms-full.txt` is the committed file, so its repository links point at `main`,
+not at the tag, and the body says so. The bundled
+`plugin/skills/secure-deployment-config/scripts/update-guides.sh` still reads `main`, not a
+release.
+
 ## Licence
 
 Everything here is dedicated to the public domain under [CC0 1.0](LICENSE), except the AIQT Guardrails material that [`.aiqt/PIN`](.aiqt/PIN) lists (the files vendored under `.aiqt/` and `tools/`, and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), which is licensed under the Apache License 2.0 (see [`.aiqt/LICENSE`](.aiqt/LICENSE) and [`.aiqt/NOTICE`](.aiqt/NOTICE)). Submitting a contribution means dedicating it under CC0, except a change to that material, which is contributed under the Apache License 2.0 (section 5), carries a `LOCAL PATCH` notice in the file, and is recorded in `.aiqt/PIN`.
