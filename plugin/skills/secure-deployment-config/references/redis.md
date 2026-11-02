@@ -211,7 +211,7 @@ GET app:probe
 
 REASONED: the deployment checks below, from the cited Redis documentation and pinned sources; they are not demonstrated. The authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and denies socket inspection. No live deployment was supplied. Shell syntax and placeholder rejection were checked locally; Redis configuration parsing remains unconfirmed, and exposed/fixed runtime behaviour is REASONED from the cited documentation and pinned sources. Those local checks covered an earlier form of the guarded shell blocks, whose refusals exited with status 1 and whose probes set no status of their own. The current form of every shell block in this section is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026 under bash 5.3.9, with stand-ins for `ss`, `redis-cli`, `nc`, `openssl` and `timeout`; no Redis process or network was involved. Each block now exits once with one status: 1 for a finding, which outranks 3 for a failed command or an inconclusive result; 2 for a refusal before any probe; and 0 otherwise. Once its probes run, its last line names what it leaves for you to judge. The two listener inventories refuse with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, and the replica-certificate, cluster-bus certificate and peer-name checks refuse with status 2 when a CA, certificate or key file they read is not readable. For a plaintext request, a closed or reset connection without a RESP reply is the expected rejection, and any other plaintext failure is inconclusive. In the replica-certificate, cluster-bus certificate and peer-name checks, a failed negative probe counts as the expected rejection only when its error names a bad-certificate, certificate-unknown or certificate-required alert, or an unknown-CA alert for the untrusted certificate. A generic handshake failure, a closed or reset connection or any other failure there cannot be told apart from an unrelated failure, so it is inconclusive even in a fixed state, and the server's log line for the rejected handshake is left for you to read. Which error text `redis-cli` and OpenSSL print, and which alert a rejecting server sends, is this guide's assessment, not observed here, so a real rejection worded otherwise reads as inconclusive.
 
-**REASONED: listener inventory.** On the Redis host, inspect every listener:
+**Listener inventory.** On the Redis host, inspect every listener:
 
 ```bash
 (                                       # a subshell, so the exits below end only the subshell
@@ -228,7 +228,7 @@ REASONED: the deployment checks below, from the cited Redis documentation and pi
 
 For the local-only configuration, Redis TCP listeners should be on loopback. An unintended wildcard or external-interface listener fails that configuration's check. Deliberate remote access needs the intended private listener and network restrictions. A socket-inspection error is inconclusive. The bind behaviour follows the [pinned configuration](https://raw.githubusercontent.com/redis/redis/8.2.1/redis.conf).
 
-**REASONED: plaintext and unauthenticated TLS checks.** Run from a client location that should reach Redis. Substitute the actual hostname inside the quotes. For mutual TLS, add the client certificate and key options to the TLS command.
+**Plaintext and unauthenticated TLS checks.** Run from a client location that should reach Redis. Substitute the actual hostname inside the quotes. For mutual TLS, add the client certificate and key options to the TLS command.
 
 ```bash
 (
@@ -266,7 +266,7 @@ Any RESP reply to the plaintext command, including `PONG`, `NOAUTH`, or another 
 
 For the secured default user in this guide, the unauthenticated TLS request should return `NOAUTH`. An exposed `default on nopass +@all` returns `PONG` when the connection is otherwise permitted. With mutual TLS, a missing client certificate fails before this authentication check. Then authenticate as `app` using section 7 and confirm `GET app:probe` succeeds. These distinctions follow the [TLS listener documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/) and [ACL default-user rules](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/).
 
-**REASONED: ACL readback and denied-privilege review.** In the separate administrative session:
+**ACL readback and denied-privilege review.** In the separate administrative session:
 
 ```
 ACL GETUSER app
@@ -293,7 +293,7 @@ ACL LOG 20
 
 Look for the corresponding denied CONFIG command, the `app` username, and a recent event age. Review unexpected `auth`, `command`, `key`, and `channel` failures. Record relevant events before any reset; do not clear the log as part of this check. The log is bounded and held in memory, so an empty result is not proof that no failures occurred. See [ACL LOG](https://redis.io/docs/latest/commands/acl-log/) and the [pinned ACL-log configuration](https://raw.githubusercontent.com/redis/redis/8.2.1/redis.conf).
 
-**REASONED: read/write and channel policy checks, Redis 7.0+.** If section 4's worker is configured, run these from the administrative session:
+**Read/write and channel policy checks, Redis 7.0+.** If section 4's worker is configured, run these from the administrative session:
 
 ```
 ACL GETUSER app-worker
@@ -311,7 +311,7 @@ Expect `OK` for reading inputs, writing outputs, and publishing within the allow
 
 The following checks cover sections 9-15. All are **REASONED, not demonstrated**: the authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and no live HA topology was supplied. Run exposed-state comparisons only in a disposable isolated environment. Redis-prompt commands below are not shell commands. Use section 7's guarded connection block, masked password prompt, and disabled CLI history for authenticated data-server sessions, changing the username as directed. Certificate and key options name files; never put their contents or passwords in process arguments. References below to disabling certificate-to-user automatic authentication apply only to Redis 8.6+, as explained in section 2. Earlier releases lack that setting; do not add the directive to their configuration.
 
-**REASONED: replication authentication and promotion, section 9.** No live primary/replica pair or failover topology was available. Compare an unsecured primary accepting an uncredentialed replica with a secured primary rejecting missing or wrong replication credentials. After restoring correct credentials, run this in an administrative session on the replica:
+**Replication authentication and promotion, section 9.** No live primary/replica pair or failover topology was available. Compare an unsecured primary accepting an uncredentialed replica with a secured primary rejecting missing or wrong replication credentials. After restoring correct credentials, run this in an administrative session on the replica:
 
 ```
 INFO replication
@@ -328,7 +328,7 @@ ACL DRYRUN app PSYNC ? -1
 
 Expect `OK` for `replication` and a permission-denial description for the guide's restricted `app` user. These are permission checks, not synchronization tests. They need one server; synchronization needs two processes; preserving authentication through promotion needs a live failover exercise with the checks repeated after roles change. See [ACL DRYRUN](https://redis.io/docs/latest/commands/acl-dryrun/) and the [replica command requirements](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas).
 
-**REASONED: Sentinel listener, incoming authentication, and peers, section 10.** No live Sentinel or peer group was available. Repeat the unfiltered `ss -tlnp` inventory on the Sentinel host and account for its separate 26379 listener. Against Sentinel itself, compare this request before and after securing incoming authentication, while holding the transport configuration constant:
+**Sentinel listener, incoming authentication, and peers, section 10.** No live Sentinel or peer group was available. Repeat the unfiltered `ss -tlnp` inventory on the Sentinel host and account for its separate 26379 listener. Against Sentinel itself, compare this request before and after securing incoming authentication, while holding the transport configuration constant:
 
 ```
 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
@@ -338,7 +338,7 @@ An exposed instance returns the monitored endpoint; the secured instance returns
 
 One Sentinel suffices for listener and incoming-authentication checks. From an administrative Sentinel session, use `SENTINEL SENTINELS mymaster` to inspect peer announcements, and verify actual authenticated peer communication with multiple Sentinels. Announcement readback alone does not establish reachability. See the [pinned peer and announcement settings](https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf).
 
-**REASONED: Sentinel monitored-server permissions and failover, section 11.** No live data server or Sentinel topology was available. In a data-server session authenticated as `sentinel-monitor`, run:
+**Sentinel monitored-server permissions and failover, section 11.** No live data server or Sentinel topology was available. In a data-server session authenticated as `sentinel-monitor`, run:
 
 ```
 PING
@@ -350,7 +350,7 @@ Expect `PONG`, then `NOPERM` for both the key read and unrelated-channel publish
 
 In a disposable Sentinel and primary/replica topology, missing or wrong `sentinel auth-pass` must prevent successful authenticated monitoring; correct credentials must restore it. Exercise promotion, then confirm Sentinel monitoring and replication continue with the former replica as primary. The [pinned authentication implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c) uses the monitored primary's credentials for its replicas too.
 
-**REASONED: cluster-bus exposure and announcements, section 12.** No cluster-enabled process or multi-node topology was available. Repeat unfiltered `ss -tlnp`, then run this through an authenticated administrative data-port session:
+**Cluster-bus exposure and announcements, section 12.** No cluster-enabled process or multi-node topology was available. Repeat unfiltered `ss -tlnp`, then run this through an authenticated administrative data-port session:
 
 ```
 CLUSTER NODES
@@ -358,7 +358,7 @@ CLUSTER NODES
 
 Inspect the advertised address and `@bus-port`. Compare bus connectivity from an unauthorized network with connectivity from an allowed peer: an exposed bus permits the former, while the fixed network boundary denies it and retains the working peer path. Failure from outside is meaningful only alongside a working authorized path and listener/network-policy evidence. A missing Redis `PING` response is not evidence that the binary bus is blocked. One cluster-enabled process can demonstrate its listener; working membership and advertised reachability need multiple nodes. See [CLUSTER NODES](https://redis.io/docs/latest/commands/cluster-nodes/), [cluster networking](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports), and the [pinned listener and announcement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
 
-REASONED: following block; the section 12 network comparison, from the cited cluster networking requirements, because no live bus endpoint or authorized and unauthorized probe locations were available. Run this concrete TCP probe from both locations, using OpenBSD `nc`. Substitute the actual host and bus port inside the quotes, and `unauthorized` or `allowed` for the location you run it from.
+The section 12 network comparison in the following block is REASONED from the cited cluster networking requirements, because no live bus endpoint or authorized and unauthorized probe locations were available. Run this concrete TCP probe from both locations, using OpenBSD `nc`. Substitute the actual host and bus port inside the quotes, and `unauthorized` or `allowed` for the location you run it from.
 
 ```bash
 (
@@ -492,7 +492,7 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
 )
 ```
 
-REASONED: preceding block; the replica-certificate check above, which no live primary/replica pair or certificate fixtures were available to run. With `tls-auth-clients yes`, require a TLS certificate rejection for the first request and `NOAUTH` for the trusted-certificate positive control. In the isolated comparison with `tls-auth-clients no`, both requests reach `NOAUTH`. This tests the data listener's certificate requirement, which also applies to incoming replicas; it does not authenticate a replication session. A missing or unreadable CA, certificate or key file is refused with status 2 before any request. A timeout, an unreachable endpoint, a generic handshake failure, an unknown-CA alert, a closed or reset connection or any other failure without a bad-certificate, certificate-unknown or certificate-required alert is inconclusive. In this guide's assessment, under TLS 1.3 a server that rejects the missing certificate after the handshake may leave `redis-cli` reporting only a closed connection, so a fixed listener can read 3; read the server's log line for the rejected handshake.
+The replica-certificate check above is REASONED, because no live primary/replica pair or certificate fixtures were available to run it. With `tls-auth-clients yes`, require a TLS certificate rejection for the first request and `NOAUTH` for the trusted-certificate positive control. In the isolated comparison with `tls-auth-clients no`, both requests reach `NOAUTH`. This tests the data listener's certificate requirement, which also applies to incoming replicas; it does not authenticate a replication session. A missing or unreadable CA, certificate or key file is refused with status 2 before any request. A timeout, an unreachable endpoint, a generic handshake failure, an unknown-CA alert, a closed or reset connection or any other failure without a bad-certificate, certificate-unknown or certificate-required alert is inconclusive. In this guide's assessment, under TLS 1.3 a server that rejects the missing certificate after the handshake may leave `redis-cli` reporting only a closed connection, so a fixed listener can read 3; read the server's log line for the rejected handshake.
 
 To confirm current synchronization, write a fresh disposable value at an authorized primary Redis prompt:
 
@@ -584,11 +584,11 @@ These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU 
 )
 ```
 
-REASONED: preceding block; the cluster-bus certificate check above, which no live TLS cluster-bus listener or certificate fixtures were available to run. Require certificate-related TLS rejection for the first two probes and a completed, verified TLS handshake for the trusted positive control. Repeat with data-port `tls-auth-clients no` and `yes`; the bus must require a trusted certificate in both cases. A timeout, local file error, protocol-version mismatch, or failed server-certificate verification does not demonstrate rejection of the client certificate. The block counts a bad-certificate, certificate-unknown or certificate-required alert as the rejection, and an unknown-CA alert too for the untrusted certificate; a generic handshake failure, or an unknown-CA alert without a client certificate, is inconclusive. In this guide's assessment, with TLS 1.2 a server may reject a missing or untrusted certificate with only that generic alert, so a fixed bus can read 3; read the server's log line for the rejected handshake.
+The cluster-bus certificate check above is REASONED, because no live TLS cluster-bus listener or certificate fixtures were available to run it. Require certificate-related TLS rejection for the first two probes and a completed, verified TLS handshake for the trusted positive control. Repeat with data-port `tls-auth-clients no` and `yes`; the bus must require a trusted certificate in both cases. A timeout, local file error, protocol-version mismatch, or failed server-certificate verification does not demonstrate rejection of the client certificate. The block counts a bad-certificate, certificate-unknown or certificate-required alert as the rejection, and an unknown-CA alert too for the untrusted certificate; a generic handshake failure, or an unknown-CA alert without a client certificate, is inconclusive. In this guide's assessment, with TLS 1.2 a server may reject a missing or untrusted certificate with only that generic alert, so a fixed bus can read 3; read the server's log line for the rejected handshake.
 
 An exposed plaintext bus has no TLS certificate gate and will fail the TLS positive control; that failure must not be mistaken for a protected bus. Use the section 12 TCP reachability comparison separately. OpenSSL does not speak the binary cluster protocol, so a successful handshake establishes neither cluster membership nor working node-to-node traffic. Listener checks need one cluster-enabled process; working cluster transport needs multiple nodes. See the [pinned cluster certificate requirement](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c) and [TLS cluster documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
 
-**REASONED: Sentinel TLS and outgoing connections, section 14.** No live Sentinel or data-node topology was available. Repeat the plaintext/TLS discriminator on 26379, not only on the Redis data port. The following block assumes the Redis 6.2+ `discovery` account, the monitored group `mymaster`, and certificate-to-user automatic authentication disabled. For the password-only Sentinel arrangement, use `--user default` instead. Replace the host inside the single quotes and use the installed certificate file paths, then paste the whole block:
+**Sentinel TLS and outgoing connections, section 14.** No live Sentinel or data-node topology was available. Repeat the plaintext/TLS discriminator on 26379, not only on the Redis data port. The following block assumes the Redis 6.2+ `discovery` account, the monitored group `mymaster`, and certificate-to-user automatic authentication disabled. For the password-only Sentinel arrangement, use `--user default` instead. Replace the host inside the single quotes and use the installed certificate file paths, then paste the whole block:
 
 ```bash
 (
@@ -654,7 +654,7 @@ Run the following block, then enable the intended identity at that same administ
 CONFIG SET tls-expected-peer-name redis-ha.example.com
 ```
 
-REASONED: following block; the peer-name comparison, from the cited pinned identity configuration and enforcement paths. Replace the example identity consistently with the identity issued to intended HA nodes. Require `OK` from each configuration change. The shell block uses the same TLS 1.2, GNU `timeout`, and protected PEM-file prerequisites as the preceding bus-certificate check. Substitute the DNS hostname or IPv4 address, actual bus port and expected peer name inside the quotes, and the phase: `unrestricted` for the first run and `restricted` for the run after enabling the intended identity. The block counts a bad-certificate, certificate-unknown or certificate-required alert to the wrong-name probe as the restricted phase's rejection. An unknown-CA alert there means the wrong-name fixture is not from the trusted CA, and a generic handshake failure does not show that the peer name caused it, so both are inconclusive. In this guide's assessment a node may report the mismatch with only that generic alert, so a working restriction can read 3; read the server's log line for the rejected handshake.
+The peer-name comparison in the following block is REASONED from the cited pinned identity configuration and enforcement paths. Replace the example identity consistently with the identity issued to intended HA nodes. Require `OK` from each configuration change. The shell block uses the same TLS 1.2, GNU `timeout`, and protected PEM-file prerequisites as the preceding bus-certificate check. Substitute the DNS hostname or IPv4 address, actual bus port and expected peer name inside the quotes, and the phase: `unrestricted` for the first run and `restricted` for the run after enabling the intended identity. The block counts a bad-certificate, certificate-unknown or certificate-required alert to the wrong-name probe as the restricted phase's rejection. An unknown-CA alert there means the wrong-name fixture is not from the trusted CA, and a generic handshake failure does not show that the peer name caused it, so both are inconclusive. In this guide's assessment a node may report the mismatch with only that generic alert, so a working restriction can read 3; read the server's log line for the rejected handshake.
 
 ```bash
 (
@@ -1089,7 +1089,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fda8b608fc2d08fe15bf6beff43f9201a36d72efddfa0757484eec5b17a6c143",
+  "body_sha256": "fa2cae058289856b567209194eda26b4e7b97d426b3f84f8c113132b92e5d0f3",
   "components": {
     "r60": {
       "name": "Redis configuration",
