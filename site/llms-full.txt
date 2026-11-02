@@ -10387,7 +10387,7 @@ that tolerance rather than removing the timeout.
 
 Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket. That CDN or proxy arrangement means the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guards but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; no form before that one has a recorded run. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its two host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl, sudo, head, rm and ss and no network, also ran no deployment. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in each host part with 2 and the bash message before its probes; the block still ran `sudo nginx -t`, the reload and `ss -tlnp` and exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guards but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; earlier QA reports record stub runs of forms before that one, and no exposed/fixed deployment run of any form is recorded. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its two host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs on 2026-11-01 of the previous form, before the curl exit 60, TLS 1.1, body-size and rate-limit changes recorded below, with stub curl, sudo, head, rm and ss and no network, also ran no deployment. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, those stub runs refused every host name in each host part with 2 and the bash message before its probes; the block still ran `sudo nginx -t`, the reload and `ss -tlnp` and exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. Stub runs of the current form on 2026-11-02, in bash 5.3.9 with stub curl, sudo, ss, openssl, wget and nc and no network, also ran no deployment. In them, curl exit 60 on the HTTPS request and a TLS 1.1 request failing locally with exit 35 each recorded 3 with a message that also names the client-side cause, an 11M body answered with the 9M control's own 405 or 302 recorded 3 with a message naming three readings, a 405 pair after an earlier TLS 1.1 finding kept 1, a 200 pair recorded 1 as accepted, and an 11M 413 passed. An 11M 400 after a 405 control recorded 3, a voided 9M control (401, 413, 502 or curl exit 28) never made the 11M answer a finding, a failing `xargs` or curl in the rate-limit run recorded 3 with the message naming `xargs`, and under dash 0.5.12 the block still exited 3. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -10396,7 +10396,7 @@ Mind the client address these headers carry. At a direct internet edge the block
   if sudo nginx -t && sudo systemctl reload nginx; then :; else
     echo "nginx -t or reload exit $?: the requests below may test the configuration nginx was already running; inconclusive"; set -- 3
   fi
-  (                                     # a subshell, so your own script arguments are untouched
+  (                                     # a nested subshell, so this part's set -- and exit leave the block's status above untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_auth_OR_open'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then auth if section 3's auth covers location / or open if you left / public on purpose: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
     shift
@@ -10416,10 +10416,10 @@ Mind the client address these headers carry. At a direct internet edge the block
     set -- "$1" "$2" 0                  # the 3rd value is this part's status so far, ranked as above
     curl -q -g -sI "http://$1/" ||      # expect 301 with a https:// Location
       { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
-    if curl -q -g -sI --max-time 10 "https://$1/"; then :; else   # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
+    if curl -q -g -sI --max-time 10 "https://$1/"; then :; else   # TLS must verify with NO -k (a cert error means TLS is misconfigured, or that this client does not trust your CA); status is 200 if / is open, or 401 if you applied section 3's auth to it
       set -- "$1" "$2" "$3" "$?"
       case "$4" in
-        60) echo "FINDING: curl exit 60, a certificate that did not verify, and a cert error means TLS is misconfigured"; set -- "$1" "$2" 1 ;;
+        60) echo "curl exit 60: the certificate did not verify, so either TLS is misconfigured or this client does not trust its CA, as with an internal CA (see self-signed.md); inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
         *) echo "curl exit $4: the HTTPS request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
       esac
     fi
@@ -10477,7 +10477,7 @@ Mind the client address these headers carry. At a direct internet edge the block
     case "$4:$5" in
       0:*) echo "FINDING: a handshake offering only TLS 1.1 succeeded, so the TLSv1.2+ floor is not in force"; set -- "$1" "$2" 1 ;;
       *protocol?version*) ;;
-      *) echo "curl exit $4 without a protocol_version alert, which is not proof of the floor; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      *) echo "curl exit $4 without a protocol_version alert, so this probe cannot establish the server's TLS floor, and a client unable to offer TLS 1.1 cannot complete this check; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
     esac
     if head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin; then
       set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 20 --config - --data-binary @/tmp/under.bin "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -10488,12 +10488,12 @@ Mind the client address these headers carry. At a direct internet edge the block
                                       # the size limit, were exercised, and a 000 means transport failed: either voids the control
       case "$4:$5" in
         0:401|0:413) echo "HTTP $5 for the 9M body voids the positive control; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
-        0:2??|0:3??|0:4??) ;;
+        0:2??|0:3??|0:4??) set -- "$1" "$2" "$3" "$4" "$5" "$5" ;;   # the control passed: keep its code to compare with the 11M body's
         0:*) echo "HTTP $5 for the 9M body is not your app's normal response; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
         *) echo "curl exit $4: the 9M request failed, which voids the positive control; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
       esac
-      set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-      set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+      set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${6-}"
+      set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}" "$5"   # curl's exit status, the HTTP code, then the 9M code if that control passed
       printf '%s\n' "$5"
                                       # 413. The 9M control is the discriminating half: nginx's default
                                       # client_max_body_size is 1m, so 9M is refused until `10m` is set,
@@ -10505,14 +10505,15 @@ Mind the client address these headers carry. At a direct internet edge the block
       case "$4:$5" in
         0:413) ;;
         0:2??) echo "FINDING: the 11M body was accepted with $5, so no body-size limit refused it"; set -- "$1" "$2" 1 ;;
-        0:*) echo "HTTP $5 for the 11M body is neither the 413 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        "0:${6:-none}") echo "HTTP $5 for the 11M body is the 9M control's own response, so one of three readings holds: no body-size limit refused it, something answered both requests before nginx's limit applies (a proxy in front, or a server-level return or rewrite), or an error_page remapped the limit's 413; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        0:*) echo "HTTP $5 for the 11M body is neither the 413 pass, a 2xx nor the 9M control's response; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
         *) echo "curl exit $4: the 11M request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
       esac
     else
       echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3
     fi
     (set -o pipefail; seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c) ||   # pipefail only in this subshell
-      { echo "rate-limit run exit $?: seq, sort, uniq or one of the 40 curl requests failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+      { echo "rate-limit run exit $?: seq, xargs, sort, uniq or one of the 40 curl requests failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
                                       # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
                                       # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
                                       # phase, so an unauthenticated flood still exercises the limiter, which
@@ -10664,7 +10665,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "a8b706072c2c22484988ae2695df8f801be089ea369672e206a9a8cdce5e9c9d",
+  "body_sha256": "6c226632c8df68825225d00a105ed73f68c268e3114fcf4f90d81a59ebb821b5",
   "components": {
     "nginx-source": {
       "name": "nginx source",
@@ -11389,7 +11390,7 @@ RuntimeDirectory=caddy
 
 The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660) says `RuntimeDirectory=caddy` creates `/run/caddy` when the unit starts, owns it according to `User=`/`Group=`, and removes it when the unit stops unless preservation is configured. The switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: this is the guide's reasoning that a restart creates the runtime directory and binds the socket in one step. After that, `caddy reload`, and the [dist unit's `ExecReload` at 33ae08ff](https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32), apply config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy`. A manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`. A change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took.
 
-## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guards but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; no form before that one has a recorded run. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its two host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl, caddy, head, rm, ss and ls and no network, also ran no deployment. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in each host part with 2 and the bash message before its probes; the block still ran `caddy validate`, `ss -tlnp` and `ls` and exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive. With no `/run/caddy/admin.sock` as well, it records 3, because without the listener table it cannot tell an admin API on TCP or turned off from a failed `ls`.)
+## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guards but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; earlier QA reports record stub runs of forms before that one, and no exposed/fixed deployment run of any form is recorded. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its two host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl, caddy, head, rm, ss and ls and no network, also ran no deployment. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in each host part with 2 and the bash message before its probes; the block still ran `caddy validate`, `ss -tlnp` and `ls` and exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive. With no `/run/caddy/admin.sock` as well, it records 3, because without the listener table it cannot tell an admin API on TCP or turned off from a failed `ls`.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -11397,7 +11398,7 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
   set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found ss missing), which outranks 0
   caddy validate --config /etc/caddy/Caddyfile ||
     { echo "caddy validate exit $?: the configuration did not validate; inconclusive"; set -- 3; }
-  (                                     # a subshell, so your own script arguments are untouched
+  (                                     # a nested subshell, so this part's set -- and exit leave the block's status above untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_site_OR_admin'   # your public host name (the site address), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then site if section 3's basic_auth covers the whole site or admin for its @admin matcher variant: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
     shift
@@ -11646,7 +11647,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "deaa23d3c18f33d30114118b8c02be6e0eb96e73ba6d4112129ad354b18f32c5",
+  "body_sha256": "f59528008eb773855503796a9aaad19e78311c2d4d4355eb0ef8c2076bdb2eb6",
   "components": {
     "admin": {
       "name": "Caddy admin source",
@@ -21978,13 +21979,13 @@ Never set `verify_mode = OpenSSL::SSL::VERIFY_NONE`. Ruby's default SSL context 
 
 ## Verify
 
-REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guard but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; no form before that one has a recorded run. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and its host part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl and ss and no network, also ran no deployment. In bash, the host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in the host part with 2 and the bash message before its probes, and the block exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.
+REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial and master-key tracking. No application deployment or run outcome is recorded here; these checks are reasoned from the cited Puma, Rails and Sidekiq sources. The four curls take the application's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guard but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; earlier QA reports record stub runs of forms before that one, and no exposed/fixed deployment run of any form is recorded. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and its host part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl and ss and no network, also ran no deployment. In bash, the host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in the host part with 2 and the bash message before its probes, and the block exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
   set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found ss missing), which outranks 0
-  (                                     # a subshell, so your own script arguments are untouched
+  (                                     # a nested subshell, so this part's set -- and exit leave the block's status above untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your Rails app is served on (a name in config.hosts), no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
     shift
@@ -22149,7 +22150,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "795b66580b81a21c15e6063b8267847e6e75b43902e4512104b1fceab8ede4b1",
+  "body_sha256": "5abe45766cdb5cb3239379744dc7afee97dda1f3115d12d146a5a59e1672ca5c",
   "components": {
     "rails": {
       "name": "Rails documentation",
@@ -28578,7 +28579,7 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
 **REASONED for every connection mode:** no `mongod`, `mongosh`, Docker, or Podman is available. Expected exposed and fixed outcomes follow each probe below. The options are documented in the [mongosh reference](https://www.mongodb.com/docs/mongodb-shell/reference/options/).
 
 ```bash
-# REASONED: connection modes; no mongod, mongosh, Docker, Podman or authorized deployment. Expected outcomes and MongoDB sources follow.
+# Connection modes; no mongod, mongosh, Docker, Podman or authorized deployment. Expected outcomes and MongoDB sources follow.
 (
   set -- PASTE_WHOLE_BLOCK 'scram' 'REPLACE_WITH_DB_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_PEM' \
@@ -28678,7 +28679,7 @@ With plaintext accepted, the plaintext `ping` succeeds. With `requireTLS`, it mu
 
 Open a fresh session using `tls` mode, then substitute and run:
 
-**REASONED:** unauthenticated collection access; no MongoDB deployment. Expected authorization outcomes and MongoDB sources follow.
+Unauthenticated collection access; no MongoDB deployment. Expected authorization outcomes and MongoDB sources follow.
 
 ```javascript
 (() => {
@@ -28709,7 +28710,7 @@ Do not substitute `listDatabases` as proof of collection access. Its results dep
 
 Use a disposable test deployment with two existing ordinary collections and the application's actual role configuration. The probe document must satisfy the collection's validation rules. Choose a fresh probe ID for each run. Use `scram` mode as the application identity, then run:
 
-**REASONED:** collection-role allows and denials; no disposable MongoDB deployment. Expected results and command sources follow.
+Collection-role allows and denials; no disposable MongoDB deployment. Expected results and command sources follow.
 
 ```javascript
 (() => {
@@ -28793,7 +28794,7 @@ Without the user restriction, authentication from both sources succeeds. With th
 
 In the permitted session, inspect:
 
-**REASONED:** user source and listener restrictions; no MongoDB deployment or permitted/excluded hosts. Expected results and sources follow.
+User source and listener restrictions; no MongoDB deployment or permitted/excluded hosts. Expected results and sources follow.
 
 ```javascript
 db.runCommand({connectionStatus: 1});
@@ -28823,7 +28824,7 @@ In an isolated replica-set test, compare a configured member with valid membersh
 
 From a separate operator session with the `replSetGetStatus` privilege, inspect:
 
-**REASONED:** cluster membership; no multi-host MongoDB deployment. Expected results and membership sources follow.
+Cluster membership; no multi-host MongoDB deployment. Expected results and membership sources follow.
 
 ```javascript
 db.adminCommand({replSetGetStatus: 1});
@@ -28839,7 +28840,7 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 
 In an isolated Enterprise fixture with the auditing configuration from section 5, perform a successful authentication, a failed authentication, a collection creation, a permitted collection read, and a read attempted by an authenticated user that lacks find permission on the collection, then inspect the audit destination. Confirm the successful-authorization-check setting first:
 
-**REASONED:** Enterprise audit coverage; no Enterprise deployment or readable audit destination. Expected events and MongoDB 8.0 sources follow.
+Enterprise audit coverage; no Enterprise deployment or readable audit destination. Expected events and MongoDB 8.0 sources follow.
 
 ```javascript
 db.adminCommand({getParameter: 1, auditAuthorizationSuccess: 1});
@@ -28853,7 +28854,7 @@ With no destination configured, no audit records are produced. With the destinat
 
 Set the log verbosity to 1 in both fixtures so the operation is logged regardless of latency, insert a harmless canary, read the corresponding entry in the process log, then restore the previous verbosity:
 
-**REASONED:** diagnostic-log redaction; no Enterprise test server or process-log access. Expected canary results and MongoDB 8.0 sources follow.
+Diagnostic-log redaction; no Enterprise test server or process-log access. Expected canary results and MongoDB 8.0 sources follow.
 
 ```javascript
 db.setLogLevel(1);
@@ -28869,7 +28870,7 @@ Without redaction, the canary value appears in the matching log entry. With `sec
 Create equivalent unencrypted and encrypted fixtures, each holding a known document, then confirm on disposable copies that the encrypted data files require the key configuration while a correctly configured server reads them. Inspect the startup log for the key-manager initialization:
 
 ```bash
-# REASONED: storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
+# Storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
 (                                       # a subshell, so the exits below end only the subshell
   if grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log; then
     echo "unclassified observation: read the matched lines above; with encryption enabled, the log records that the encryption key manager initialized"; exit 0
@@ -29158,7 +29159,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "8811ef803003fe82057f4a1686022b12b9e6b3d73e53643bd3fafa82d9bfbec7",
+  "body_sha256": "1bb9e73717f13c924ac93b39d92f444534291f5f1a536195180052d14b41d682",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
@@ -33912,7 +33913,7 @@ Use Bash and paste whole guarded blocks. Substitute inside the single quotes on 
 **1. Accounts and roles - REASONED: no `rabbitmqctl` or broker was available at authoring.** Run after migration and reconnecting clients:
 
 ```bash
-# REASONED: accounts and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Accounts and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_users
 sudo rabbitmqctl list_user_permissions 'app'
 sudo rabbitmqctl list_permissions -p 'app-prod'
@@ -33944,7 +33945,7 @@ On the conventional installation above, the cookie should be owned by `rabbitmq`
 From an external non-peer host, target the broker's public address:
 
 ```bash
-# REASONED: external reachability; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# External reachability; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_PUBLIC_ADDR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -33966,7 +33967,7 @@ From an external non-peer host, target the broker's public address:
 From hosts allowed by the corresponding firewall rules, target the private address. Execute the cluster, application, and administration commands on their respective allowed hosts if those roles are separate:
 
 ```bash
-# REASONED: allowed-peer controls; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Allowed-peer controls; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_PRIVATE_ADDR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -33991,7 +33992,7 @@ From hosts allowed by the corresponding firewall rules, target the private addre
 From an allowed CLI host with its owner-only matching cookie file, also require an authenticated distribution connection to the same broker. Supply its actual node name, such as the deployed `rabbit@` name. This form assumes short node names; add `--longnames` for a deployment using long names. The documented [diagnostics ping](https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8) checks authentication as well as reachability:
 
 ```bash
-# REASONED: authenticated distribution ping; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Authenticated distribution ping; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_NODE_NAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -34009,7 +34010,7 @@ From an allowed CLI host with its owner-only matching cookie file, also require 
 On the broker itself, confirm that the retained HTTP management listener works with authentication:
 
 ```bash
-# REASONED: loopback management control; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Loopback management control; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 curl -q -g --noproxy '*' --connect-timeout 5 --max-time 20 \
   -sS --user observer -o /dev/null \
   -w 'loopback http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -34023,7 +34024,7 @@ For removed plaintext AMQP, first demonstrate a connection to its old listener i
 **4. Management authentication and roles - REASONED: no broker or management endpoint was available at authoring.** From an allowed administration host, use the management certificate's hostname:
 
 ```bash
-# REASONED: management authentication and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Management authentication and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MANAGEMENT_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -34064,7 +34065,7 @@ An exposed management listener can still require authentication: external reacha
 **5. Mutual TLS - REASONED: no broker, trusted test certificates, or broker logs were available at authoring.** From an allowed application host, place `ca.pem`, `client.pem`, and the protected `client.key` in the working directory. Use a valid client certificate with `clientAuth`, not a server-only certificate:
 
 ```bash
-# REASONED: mutual TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Mutual TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AMQP_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -34105,7 +34106,7 @@ Keeping stdin open helps expose delayed TLS 1.3 alerts; ten seconds is a timing-
 The positive control declares, binds, publishes, and retrieves a message as `app`. Separate channels test resource denials. The shared queue is durable because RabbitMQ 4.3 disables transient non-exclusive queues by default; an exclusive queue would make the observer's read test ambiguous. The script uses the [documented permission model](https://www.rabbitmq.com/docs/access-control), [channel error codes](https://www.rabbitmq.com/docs/channels), [queue rules](https://www.rabbitmq.com/docs/queues), and [Pika's blocking client](https://pika.github.io/pika/latest/modules/adapters/blocking/).
 
 ```bash
-# REASONED: AMQP authentication and authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# AMQP authentication and authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AMQP_HOSTNAME' 'REPLACE_WITH_EXISTING_UNGRANTED_VHOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -34246,7 +34247,7 @@ For the exposed comparison, use an isolated fixture with unrestricted applicatio
 **7. Definitions provisioning and export - REASONED: no blank broker, `rabbitmqadmin`, or exported definitions file was available at authoring.** Boot an isolated blank node using the approved file and boot settings from section 1, then run:
 
 ```bash
-# REASONED: definitions provisioning and export; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Definitions provisioning and export; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_users
 sudo rabbitmqctl list_permissions -p 'app-prod'
 
@@ -34287,7 +34288,7 @@ Run section 1's reduced export and compare it with a private untransformed expor
 **8. Inter-node and CLI distribution TLS - REASONED: no Erlang runtime, RabbitMQ broker, or multi-node cluster was available at authoring.** On an authorized test cluster with the section 6 configuration, from an authorized CLI host holding the matching cookie and substituting the deployed long node name for `rabbit@node1.internal`:
 
 ```bash
-# REASONED: distribution TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Distribution TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmq-diagnostics --longnames -n rabbit@node1.internal ping
 sudo rabbitmqctl --longnames -n rabbit@node1.internal cluster_status
 ```
@@ -34297,7 +34298,7 @@ With plaintext distribution a plaintext CLI authenticates; with TLS required, a 
 **9. Topic-exchange routing-key authorization - REASONED: no RabbitMQ broker or AMQP client was available at authoring.** On an authorized broker with an administrator-provisioned `app.shared.topic` exchange, hold the section 1 resource permissions constant and vary only whether the section 7 topic permission exists:
 
 ```bash
-# REASONED: topic routing-key authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Topic routing-key authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_topic_permissions -p 'app-prod'
 ```
 
@@ -34480,7 +34481,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "113b1d3892545afe00aaebbca50b52ada8809fc89c6babf933a1b7670dacafff",
+  "body_sha256": "4dd4667118e768510142581699323653c35cc976934653a4e5d4dbdb6084802a",
   "components": {
     "source": {
       "name": "RabbitMQ source",
@@ -41251,7 +41252,7 @@ Paste the whole subshell after substituting all four values. These probes accept
 The first publish is the allowed control. The subsequent operations deliberately test missing credentials, a wrong password, a missing client certificate, and forbidden publish/subscribe subjects. Inspect each command's diagnostics; the block's final exit status is not a combined verdict.
 
 ```bash
-# REASONED: authentication, TLS and subject permissions; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Authentication, TLS and subject permissions; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -41315,7 +41316,7 @@ A successful publish message or a quiet subscriber is insufficient proof of deli
 Terminal 1 is self-contained and reads its password inside the guarded subshell. Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. Piping a password to `nats sub` does not configure authentication; in CLI v0.4.0, a username without a password is treated as a token.
 
 ```bash
-# REASONED: subscriber delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Subscriber delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -41351,7 +41352,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 Terminal 2 independently establishes its target, TLS configuration, and credentials; it cannot inherit variables from terminal 1's subshell. Paste its password alone at the hidden prompt too: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
-# REASONED: publisher delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Publisher delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -41394,7 +41395,7 @@ For queue comparisons, rerun the complete consumer block with the `order-worker`
 The following self-contained request block is also used by V4 and V5. Its last three inputs are identity, subject, and JSON body. Keep subjects such as `$SYS.REQ.SERVER.PING` and `$JS.API.INFO` single-quoted on the `set --` line. The inbox prefix matches the selected identity. Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
-# REASONED: request/reply, account and JetStream checks; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Request/reply, account and JetStream checks; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -41524,7 +41525,7 @@ A client-port test, TCP connection alone, or successful TLS handshake without me
 First complete the listener inventory in V1. Run this whole block from the intended collector with its permitted target, then from the unauthorized observer with the inventoried externally reachable address. For the selected loopback binding, the collector runs on the broker host and targets `127.0.0.1`.
 
 ```bash
-# REASONED: monitoring reachability; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Monitoring reachability; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MONITOR_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -41758,7 +41759,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6ad5212400cc800b717df0420b17d3d0468236306f9268fbb1f15404317e3ae8",
+  "body_sha256": "8f57a44a39137aa26215775bbc8de2f859663916b34462fa8afddfd718b2479c",
   "components": {
     "server": {
       "name": "NATS Server",
@@ -42721,9 +42722,7 @@ REASONED: following block; LiteFS and Litestream listener isolation follows the 
 )
 ```
 
-REASONED: preceding block; the listener probe above, this paragraph's reading of its result, and the Turso introduction, per the guide's cited LiteFS route dispatch and reads (pinned tag v0.5.14), Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later) and Turso SQL over HTTP (`/v2/pipeline`, bearer authentication) entries. No LiteFS or Litestream listener, untrusted vantage, Turso database or token was available during marking review (October 2026). Expected exposed outcome: any HTTP response at the untrusted vantage; fixed: none there while the authorized control answers. The listener and Turso blocks passed `bash -n` and ShellCheck 0.11.0 with no findings in that review; their guards were exercised during marking review (October 2026) under bash 5.3.9 with a Bash curl stub: written placeholders, `ftp://example.test`, bare `https://`, extra values and omitted initial `set --` lines each produced the corresponding refusal and exited 2 without calling curl. The Turso block also refused readonly `turso_tok`, readonly `IFS`, an empty token, a placeholder token and a token containing a tab, each exiting 2 without calling curl. Through a pseudo-terminal its hidden prompt did not echo the supplied token; the valid dummy token reached the authorized curl stub on stdin as `Authorization: Bearer dummy.token.review` followed by a newline and was absent from both recorded curl argument lists. The valid listener and Turso cases exited 0 using synthetic HTTP 200 output; no live-service behavior, shell-history behavior or inherited tracing behavior was exercised by these runs. Those runs covered earlier forms of both blocks, whose requests set no exit status; the current forms are covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026, as recorded beside each block. Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block uses Bash's terminal-only hidden input and tests the resulting value for control characters before constructing the header; Bash `read` ignores NUL and reads one line, so this is not a claim that every malformed paste is rejected. This guide's assessment, assuming the clean shell required by CONTRIBUTING rule 7 and a token pasted only at the prompt, is that clearing the token's attributes, disabling allexport and tracing, and feeding the builtin `printf` output to curl's `--header @-` keep that value out of curl's argv, the exported environment, shell-parser history and subsequent `set -x` output. These documented primitives do not prove that no secret can leak, and the running account remains outside this protection:
-
-REASONED: following block; the cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+REASONED: the listener probe above, this paragraph's reading of its result, and the Turso introduction, per the guide's cited LiteFS route dispatch and reads (pinned tag v0.5.14), Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later) and Turso SQL over HTTP (`/v2/pipeline`, bearer authentication) entries. The declaration of the listener probe above is the paragraph before its block, and that of the Turso check below is the paragraph after its block. No LiteFS or Litestream listener, untrusted vantage, Turso database or token was available during marking review (October 2026). Expected exposed outcome: any HTTP response at the untrusted vantage; fixed: none there while the authorized control answers. The listener and Turso blocks passed `bash -n` and ShellCheck 0.11.0 with no findings in that review; their guards were exercised during marking review (October 2026) under bash 5.3.9 with a Bash curl stub: written placeholders, `ftp://example.test`, bare `https://`, extra values and omitted initial `set --` lines each produced the corresponding refusal and exited 2 without calling curl. The Turso block also refused readonly `turso_tok`, readonly `IFS`, an empty token, a placeholder token and a token containing a tab, each exiting 2 without calling curl. Through a pseudo-terminal its hidden prompt did not echo the supplied token; the valid dummy token reached the authorized curl stub on stdin as `Authorization: Bearer dummy.token.review` followed by a newline and was absent from both recorded curl argument lists. The valid listener and Turso cases exited 0 using synthetic HTTP 200 output; no live-service behavior, shell-history behavior or inherited tracing behavior was exercised by these runs. Those runs covered earlier forms of both blocks, whose requests set no exit status; the current forms are covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026, as recorded beside each block. Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. The cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available. Have a valid database token from the secret store ready to paste. The block uses Bash's terminal-only hidden input and tests the resulting value for control characters before constructing the header; Bash `read` ignores NUL and reads one line, so this is not a claim that every malformed paste is rejected. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. This guide's assessment, assuming the clean shell required by CONTRIBUTING rule 7 and a token pasted only at the prompt, is that clearing the token's attributes, disabling allexport and tracing, and feeding the builtin `printf` output to curl's `--header @-` keep that value out of curl's argv, the exported environment, shell-parser history and subsequent `set -x` output. These documented primitives do not prove that no secret can leak, and the running account remains outside this protection:
 
 ```bash
 (
@@ -42895,7 +42894,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "4785f14f45950e880e2680eac9113b5ef638445543132a560b529c7b8f2953d3",
+  "body_sha256": "6e44867fed7f8eceb07674a7a4da09f72418ec7cd1a7e85f394aaffda99c829d",
   "components": {
     "sqlite-rolling": {
       "name": "SQLite documentation (rolling)",
@@ -46300,7 +46299,7 @@ From an unrelated unprivileged test account, run `test -w /var/lib/ollama/models
 
 ### V2. Probe direct-backend bypass from another machine (REASONED: direct-origin reachability and approved-proxy inference comparison follow C1 binding documentation; no live target or external observer. The local address-guard cases above establish no network outcome)
 
-**REASONED:** no deployed target or disallowed external observer is available. Use the actual deployment address, not a documentation address. For IPv6, supply the actual address enclosed in square brackets inside the quotes. Repeat for each deployed address family and publication:
+No deployed target or disallowed external observer is available. Use the actual deployment address, not a documentation address. For IPv6, supply the actual address enclosed in square brackets inside the quotes. Repeat for each deployed address family and publication:
 
 ```bash
 (
@@ -46334,7 +46333,7 @@ Read `err`, not merely the exit number. A resolver failure, local socket error, 
 
 ### V3. Verify authentication and TLS with a real inference request (REASONED: cited Ollama, proxy and curl behavior; no live proxy, certificates, credentials or model)
 
-**REASONED:** no proxy deployment, trusted certificates, credentials, or loaded model is available. Prepare a small approved local model and a request body file such as `chat.json`:
+No proxy deployment, trusted certificates, credentials, or loaded model is available. Prepare a small approved local model and a request body file such as `chat.json`:
 
 ```json
 {
@@ -46480,7 +46479,7 @@ The discriminators are C3's [API methods](https://github.com/ollama/ollama/blob/
 
 ### V5. Compare browser origins and preflights (REASONED: required/unrelated/built-in/missing Origin, preflight, actual browser calls and authenticated/anonymous POST comparisons follow C4 AllowedOrigins and C2 proxy policies; no live backend, proxy or browser fixture. The header text was not exercised by a browser)
 
-**REASONED:** no live backend or authorized browser frontend is available. Use V3 with OPTIONS, `/dev/null`, and a client configuration containing these non-secret test headers:
+No live backend or authorized browser frontend is available. Use V3 with OPTIONS, `/dev/null`, and a client configuration containing these non-secret test headers:
 
 ```text
 header = "Origin: https://REPLACE_WITH_BROWSER_ORIGIN"
@@ -46498,7 +46497,7 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 
 ### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
-**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
+No inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
 ```bash
 (
@@ -46985,7 +46984,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "34ce44d281751ff9aa97d8c2db5a40aec64981cecd0ef5d3a0d1443d348fd4aa",
+  "body_sha256": "fb6b9e3bc57f76abf4ae68fc9ff95bef8f89ac83514b14733bc0376992ab2b77",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -49133,11 +49132,12 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
-**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. The /invocations runs and the bash -n result covered an earlier form, before the key and /invocations subshells took the model server's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains and exit 2 on a partial paste or a wrong value count. They also came before the listener inventory checked for `ss` and before the block ran its parts in one subshell with one exit status. Local bash -n and stub runs of the whole block with `ss` and `pgrep` present, failing and missing, with the placeholders left in and substituted, and with a partial paste, a wrong value count and a reserved name on each host line, also under an inherited `readonly`, `declare -i` and `set -e`, covered a later form, whose host lines lowercased the host with `tr` before refusing those names. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n, ShellCheck 0.11.0 and stub runs on 2026-11-01, in which each host line refused those names in lower, upper and mixed case, also with `tr` absent and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and under dash refused every host with status 2. The block runs its listener inventory, `pgrep` count, model-list key check and /invocations request as four parts of one subshell with errexit off, and exits once at the end. It exits 1 if the model list answers a request without a key with a 2xx or /invocations answers 200 without one. Otherwise it exits 3 if `ss`, `pgrep` or a request fails, the request without a key gets neither 401 nor a 2xx, the positive control with the key does not answer 200, or /invocations answers anything but 200. It exits 2 if a part refuses, including a missing `ss` or `pgrep` and an unsubstituted or partly pasted `set --` line, only while no other part found something or was inconclusive, and otherwise 0. A fixed deployment therefore also ends with 3, because the block cannot tell a proxy's refusal of /invocations from vLLM's own error; its last line leaves the listener list, any process count above 0 and the printed /invocations headers and `invocations-body.txt` for you to judge. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body. That /invocations subshell run gave these results: a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. The /invocations runs and the bash -n result covered an earlier form, before the key and /invocations subshells took the model server's host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains and exit 2 on a partial paste or a wrong value count. They also came before the listener inventory checked for `ss` and before the block ran its parts in one subshell with one exit status. Local bash -n and stub runs of the whole block with `ss` and `pgrep` present, failing and missing, with the placeholders left in and substituted, and with a partial paste, a wrong value count and a reserved name on each host line, also under an inherited `readonly`, `declare -i` and `set -e`, covered a later form, whose host lines lowercased the host with `tr` before refusing those names. Local bash -n, ShellCheck 0.11.0 and stub runs on 2026-11-01 covered the next form, which had no bash check ahead of its parts: each host line refused those names in lower, upper and mixed case, also with `tr` absent and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and under dash refused every host with status 2. A stub run of that form under dash 0.5.12 on 2026-11-02 then stopped at a Bad substitution error in the status fold, with status 2 and no last line. The current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n, ShellCheck 0.11.0 and stub runs on 2026-11-02 under Bash 5.3.9 and dash 0.5.12. Under dash it refused at its bash check, before any part ran, with status 2 and the bash message, calling no stub, with the placeholders left in and substituted. Under bash, also under an inherited `set -e` or `nocasematch`, it exited 2 with the placeholders left in or a reserved name on both host lines, 3 for a 401, a keyed 200 and an /invocations 404, and 1 for a 200 without a key or an /invocations 200. With `ss` missing, that 401 case still exited 3. With a lower-case `replace_with_` host on both host lines it exited 2 without calling curl under an inherited `nocasematch` and 3 after probing without it, as the form before the bash check also did in the same runs. The block runs its listener inventory, `pgrep` count, model-list key check and /invocations request as four parts of one subshell with errexit off, and exits once at the end. It exits 1 if the model list answers a request without a key with a 2xx or /invocations answers 200 without one. Otherwise it exits 3 if `ss`, `pgrep` or a request fails, the request without a key gets neither 401 nor a 2xx, the positive control with the key does not answer 200, or /invocations answers anything but 200. It exits 2 if a part refuses, including a missing `ss` or `pgrep` and an unsubstituted or partly pasted `set --` line, only while no other part found something or was inconclusive, and otherwise 0. In a shell without bash's `shopt`, such as dash, it exits 2 at its bash check, before any part runs; that check runs in a subshell of its own, so it leaves the block's `nocasematch` setting as your shell left it. A fixed deployment therefore also ends with 3, because the block cannot tell a proxy's refusal of /invocations from vLLM's own error; its last line leaves the listener list, any process count above 0 and the printed /invocations headers and `invocations-body.txt` for you to judge. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
 
 ```bash
 (                                       # one subshell around the whole block, so one exit status covers all four parts
   set +e                                # errexit off here, so each part's status is recorded below instead of ending the block
+  (shopt -u nocasematch) || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # a shell without bash's shopt, such as dash, refuses here before any part runs; the check runs in its own subshell, so the block's nocasematch setting stays as your shell left it
   set --                                # each part's exit status, in order, folded into the block's status at the end
   (                                     # the listener inventory: 2 when ss is not installed, 3 when it fails
     command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
@@ -49258,7 +49258,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 )
 ```
 
-REASONED: following block; text-generation-webui authentication follows the cited modules/api/script.py, and no container runtime is available. This paragraph also records the mixed process-matching evidence and parser/visibility limitations of the preceding block's `pgrep` line, from the printed expression and cited parser sources. The historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward. The pgrep line's demonstration covered only local expression matching, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The current form of that block runs the unchanged `pgrep` line as its own part and records its status. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line. The `pgrep` line prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4). The stub arguments `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`. The stub arguments `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`. The `pgrep` line therefore tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen. For the text-generation-webui block that follows, anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage was available. Bash 5.3.9 bash -n accepted all four Verify shell fences, the first in an earlier form, before its key and /invocations probes took the model server's host on guarded `set --` lines, its listener inventory checked for `ss` and it ran its parts in one subshell with one exit status. The first fence's current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the local bash -n and stub runs recorded above it. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For the text-generation-webui block, the bash -n and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0; its current form, whose guard refusals leave the subshell with status 2 and whose leading comment no longer declares it, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n and stub runs. In those local stub runs each guard refusal exited 2 without calling curl, and a substituted host reached curl once, the block then exiting with curl's own status. For the Triton block, the bash -n run recorded here preceded the removal of `REASONED:` from its leading comment, which changed no command; its current form is covered by local bash -n and ShellCheck 0.11.0 runs. For the vLLM internal-listener block, the bash -n run recorded here used an earlier form, whose Python target refusal and `NO CONNECTION` result each exited with status 1; its current form, whose target refusal exits with status 2 and whose `NO CONNECTION` result exits with status 3, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
+REASONED: following block; text-generation-webui authentication follows the cited modules/api/script.py, and no container runtime is available. This paragraph also records the mixed process-matching evidence and parser/visibility limitations of the preceding block's `pgrep` line, from the printed expression and cited parser sources. The historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward. The pgrep line's demonstration covered only local expression matching, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The current form of that block runs the unchanged `pgrep` line as its own part and records its status. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line. The `pgrep` line prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4). The stub arguments `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`. The stub arguments `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`. The `pgrep` line therefore tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen. For the text-generation-webui block that follows, anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage was available. Bash 5.3.9 bash -n accepted all four Verify shell fences, the first in an earlier form, before its key and /invocations probes took the model server's host on guarded `set --` lines, its listener inventory checked for `ss` and it ran its parts in one subshell with one exit status. The first fence's current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by the local bash -n and stub runs recorded above it. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For the text-generation-webui block, the bash -n and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0. Local bash -n and stub runs of a later form, whose guard refusals left the subshell with status 2 and whose leading comment no longer declared it, saw each guard refusal exit 2 without calling curl and a substituted host reach curl once, the block then exiting with curl's own status. Its current form exits 1 for a 200 and 3 for a 401 or any other answer. That form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n, ShellCheck 0.11.0 and stub runs on 2026-11-02 under Bash 5.3.9 and dash 0.5.12 with a curl stub. In those runs, also under an inherited `set -e`, each guard refusal exited 2 without calling curl, a 200 exited 1, and a 401, a 400, 403 or 404, a curl exit 7 or 28 and a missing curl each exited 3. For the Triton block, the bash -n run recorded here preceded the removal of `REASONED:` from its leading comment, which changed no command, and local bash -n and ShellCheck 0.11.0 runs covered a later form that ended with curl's own status. Its current form exits 1 for a 200, 0 for a 403 carrying Triton's restriction message and 3 for any other answer. That form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n, ShellCheck 0.11.0 and stub runs on 2026-11-02 under Bash 5.3.9 and dash 0.5.12 with a curl stub. In those runs a 200 exited 1 and that 403 exited 0, and a 403 without the message, a 401, a 404, a curl exit 7 or 28 and a missing curl each exited 3. For the vLLM internal-listener block, the bash -n run recorded here used an earlier form, whose Python target refusal and `NO CONNECTION` result each exited with status 1. A later form, whose target refusal exits with status 2 and whose `NO CONNECTION` result exits with status 3, was covered by the gate suite's bash -n and ShellCheck 0.11.0 passes, and in a stub run on 2026-11-02 under Bash 5.3.9 it ended with status 127 when `python3` was not installed. Its current form checks for `python3` first and refuses with status 2 when it is missing. That form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by local bash -n, ShellCheck 0.11.0 and stub runs on 2026-11-02 under Bash 5.3.9 and dash 0.5.12. In those runs a missing `python3` and the placeholders left in each exited 2 without running `python3`, and a `python3` stub's statuses 0, 2 and 3 passed through unchanged. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. The block exits 1 for that `200` and 3 for a `401`, any other answer or a failed request, because it cannot tell the API's own `401` from a fronting proxy's; confirm a `401` against the API listener's own address and port directly. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
 ```bash
 # text-generation-webui authentication follows the cited modules/api/script.py; no container runtime is available.
@@ -49269,26 +49269,41 @@ REASONED: following block; text-generation-webui authentication follows the cite
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-         -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/v1/models" ;;
+  esac
+  set -- "$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w 'http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/v1/models")"   # the response body, then curl's http= line
+  printf '%s\n' "$1"
+  case "${1##*http=}" in
+    '200 exit=0 '*) echo "FINDING: the API listed its models without a key"; exit 1 ;;
+    '401 exit=0 '*) echo "the request without a key got 401, but this block cannot tell the API's own 401 from a fronting proxy's; confirm it against the API listener directly; inconclusive"; exit 3 ;;
+    *) echo "no 200 or 401 from a completed request; inconclusive: read the http, exit and err fields above"; exit 3 ;;
   esac
 )
 ```
 
-REASONED: following block; the before/after logging read and all stated inconclusive outcomes follow the linked Triton logging handler and restriction check; no running Triton HTTP listener or isolated logging fixture. Local bash -n checks syntax only, not the expected 200/settings and 403/restriction responses. For Triton, this read checks the `logging` restriction directly on the server host. **REASONED, not demonstrated:** no Triton server, container runtime, or GPU is available in the authoring environment. On an isolated instance with logging support, run it before and after applying the restriction above. Before, expect HTTP 200 with settings JSON containing `log_file` and `log_verbose_level`; after, expect HTTP 403 with `This API is restricted, expecting header 'gateway-key'`. These outcomes follow from the [logging handler](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149) and [restriction check](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953). Use the same address and port for both runs. This command assumes Triton's HTTP listener is on loopback port 8000 and needs curl 7.75.0 or newer. A connection error, a proxy rejection, 404, or a logging-unsupported response is inconclusive; a failing request alone is not a pass. This checks only logging over HTTP, not the other categories, gRPC, or external listener isolation. The existing `pgrep` check measures argv exposure, not API authorization.
+REASONED: following block; the before/after logging read and all stated inconclusive outcomes follow the linked Triton logging handler and restriction check; no running Triton HTTP listener or isolated logging fixture. Local bash -n checks syntax only, not the expected 200/settings and 403/restriction responses. For Triton, this read checks the `logging` restriction directly on the server host. **REASONED, not demonstrated:** no Triton server, container runtime, or GPU is available in the authoring environment. On an isolated instance with logging support, run it before and after applying the restriction above. Before, expect HTTP 200 with settings JSON containing `log_file` and `log_verbose_level`; after, expect HTTP 403 with `This API is restricted, expecting header 'gateway-key'`. These outcomes follow from the [logging handler](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149) and [restriction check](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953). Use the same address and port for both runs. This command assumes Triton's HTTP listener is on loopback port 8000 and needs curl 7.75.0 or newer. A connection error, a proxy rejection, 404, or a logging-unsupported response is inconclusive; a failing request alone is not a pass. The block exits 1 for a 200, the unrestricted state, 0 for a 403 whose body carries Triton's `This API is restricted` message and 3 for any other answer, including a 403 without that message, or a failed request. This checks only logging over HTTP, not the other categories, gRPC, or external listener isolation. The existing `pgrep` check measures argv exposure, not API authorization.
 
 ```bash
 # Triton logging restriction follows the pinned logging handler and restriction check; no server, runtime, or GPU is available.
-curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-  -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  http://127.0.0.1:8000/v2/logging
+(                              # a subshell, so each exit below ends only it
+  set -- "$(curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+    http://127.0.0.1:8000/v2/logging)"   # the response body, then curl's http= line
+  printf '%s\n' "$1"
+  case "${1##*http=}" in
+    '200 exit=0 '*) echo "FINDING: the logging API answered 200 without the restriction header"; exit 1 ;;
+    '403 exit=0 '*) case "$1" in *'This API is restricted'*) echo "the logging API refused the request with 403 and Triton's restriction message, the fixed answer"; exit 0 ;; esac ;;
+  esac
+  echo "no 200, and no 403 with Triton's restriction message, from a completed request; inconclusive: read the http, exit and err fields above"
+  exit 3
+)
 ```
 
 ### vLLM internal-listener isolation (REASONED: cited v0.30.0 listener constructors; no multi-node cluster)
 
 **REASONED, not demonstrated:** no multi-GPU or multi-node cluster is available in the authoring environment. The expected distinction follows from v0.30.0's [internal-network warning and firewall guidance](https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138) and the listener constructors cited below. No vLLM server was run for this addition.
 
-On every node, run `sudo ss -tlnp` in the host and service network namespaces, during startup and after the engines become ready. Record each vLLM, worker and backend listener, including dynamically assigned ports; re-inventory after a restart. Check container publications and cloud firewall rules too. A private bind or an absent startup-only handshake is not proof that the remaining ports are isolated.
+On every node, first run `command -v ss`, which prints the path of `ss` or nothing; if it prints nothing, `ss` is not installed and no inventory can be taken, so install it rather than reading the missing output as no listeners. Then run `sudo ss -tlnp` in the host and service network namespaces, during startup and after the engines become ready. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH (the guide's cited sudo sudoers manual, secure_path entry), so `command -v ss` can print nothing although sudo would find `ss`, or print a path although sudo cannot run it. Record each vLLM, worker and backend listener, including dynamically assigned ports; re-inventory after a restart. Check container publications and cloud firewall rules too. A private bind or an absent startup-only handshake is not proof that the remaining ports are isolated.
 
 For each endpoint intended for cross-node traffic, run this block in `remote` mode from a trusted cluster peer and then from a host outside the allowed cluster network. Substitute the actual numeric node address reachable from that vantage and the observed port inside the existing quotes on the `set --` line; use the node endpoint, not the API proxy.
 
@@ -49303,6 +49318,7 @@ For a deliberately loopback-only endpoint, such as a NIXL handshake left on loca
   case "$1$2$3" in
     *REPLACE_WITH_*) echo 'substitute the target IP and port; not probing'; exit 2 ;;
   esac
+  command -v python3 >/dev/null || { echo 'python3 is not installed here; not probing'; exit 2; }
   python3 - "$@" <<'PYPROBE'
 import ipaddress
 import socket
@@ -49404,6 +49420,7 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 - TGI launcher: `api_key` is `#[clap(long, env)]`, and the launcher pushes `--api-key` and the value into the router's arguments (pinned tag v3.3.7): https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs
 - Linux ACLs, acl(5): default ACL inheritance and how a default ACL takes the place of the umask for new files (man-pages; checked against the local acl 2.3.2 manual, October 2026): https://man7.org/linux/man-pages/man5/acl.5.html
 - getfacl(1): `-d` (default ACL), `-c` (omit the header) and `-p` (keep leading `/`) options (man-pages; checked against the local acl 2.3.2 manual, October 2026): https://man7.org/linux/man-pages/man1/getfacl.1.html
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 
 
 <!-- version-basis:start -->
@@ -49506,7 +49523,7 @@ Claims (full source mapping in the JSON block below):
 - verify-listeners (REASONED; llama, vllm, tgi, triton, sglang): Inspect all backend listeners, namespaces and publications; ss alone proves no external isolation.
 - verify-proxy-auth (REASONED; tgi-router, curl): Proxy model-list probes expect no-key 401 and keyed 200/list; TGI model listing does not establish native key enforcement.
 - verify-invocations (REASONED; vllm): Use valid JSON/served model and upstream evidence: unknown-model 404 or proxy-intercepted errors cannot establish vLLM route denial.
-- verify-webui (REASONED; webui-api, curl): No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy.
+- verify-webui (REASONED; webui-api, curl): No-key API model-list 200 is exposure; 401 is inconclusive until confirmed at the API listener, as a proxy's 401 looks the same; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy.
 - verify-triton (REASONED; triton, curl): Direct HTTP logging should change from 200/settings to 403/restriction; other errors prove neither this control nor other categories/protocols.
 - verify-cluster (REASONED; vllm): Inventory startup/dynamic sockets; trusted peers connect to cross-node endpoints while outsiders fail with firewall evidence; local-only endpoints need local positive controls.
 - verify-transport (REASONED; vllm): TCP probe establishes only reachability; stale ports, wrong address or stopped service are inconclusive, and RDMA/non-TCP need separate tests.
@@ -49519,7 +49536,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "9480aebe57bb00be9a46438d8f391fb9ab016c9d4671c963705b9f050a59ad1a",
+  "body_sha256": "732025b7f5972943243190c76962d47e3be508af0f78115257c1f7be9a2724a2",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -49825,7 +49842,7 @@ Claims (full source mapping in the JSON block below):
     "verify-listeners": {"text": "Inspect all backend listeners, namespaces and publications; ss alone proves no external isolation.", "components": ["llama", "vllm", "tgi", "triton", "sglang"], "sources": ["llama:s808f8d1c8da9", "vllm:s90b2ada8e38b", "tgi:s6d442de48f37", "triton:s33bf29bf71da", "sglang:saf08ef6910b0"], "status": "REASONED", "verify": [1]},
     "verify-proxy-auth": {"text": "Proxy model-list probes expect no-key 401 and keyed 200/list; TGI model listing does not establish native key enforcement.", "components": ["tgi-router", "curl"], "sources": ["tgi-router:sc46baeb2e20d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-invocations": {"text": "Use valid JSON/served model and upstream evidence: unknown-model 404 or proxy-intercepted errors cannot establish vLLM route denial.", "components": ["vllm"], "sources": ["vllm:s65a60be2808c", "vllm:s36fcb4c4fc18"], "status": "REASONED", "verify": [1]},
-    "verify-webui": {"text": "No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy.", "components": ["webui-api", "curl"], "sources": ["webui-api:s7534b811a6d8", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-webui": {"text": "No-key API model-list 200 is exposure; 401 is inconclusive until confirmed at the API listener, as a proxy's 401 looks the same; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy.", "components": ["webui-api", "curl"], "sources": ["webui-api:s7534b811a6d8", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
     "verify-triton": {"text": "Direct HTTP logging should change from 200/settings to 403/restriction; other errors prove neither this control nor other categories/protocols.", "components": ["triton", "curl"], "sources": ["triton:s7f5038fa0fe2", "triton:s2a4cdfc6be30", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
     "verify-cluster": {"text": "Inventory startup/dynamic sockets; trusted peers connect to cross-node endpoints while outsiders fail with firewall evidence; local-only endpoints need local positive controls.", "components": ["vllm"], "sources": ["vllm:se5660cf62498", "vllm:sfecabc3bc16d", "vllm:se3e528b9ca5c"], "status": "REASONED", "verify": [4]},
     "verify-transport": {"text": "TCP probe establishes only reachability; stale ports, wrong address or stopped service are inconclusive, and RDMA/non-TCP need separate tests.", "components": ["vllm"], "sources": ["vllm:se5660cf62498", "vllm:sec32bab94990"], "status": "REASONED", "verify": [4]},
@@ -54124,7 +54141,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   REASONED: following block; address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
+   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (                                       # a subshell, so the exit below ends only the subshell
@@ -54148,7 +54165,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0, and the fixture runs were not repeated. On the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
+   The bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0, and the fixture runs were not repeated. On the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
 
    ```bash
    (
@@ -54175,7 +54192,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 5. **`application_type` is present on DCR (reasoned).** Prerequisite unavailable: the client's live DCR request. Capture the registration request body the client `POST`s to the DCR endpoint and confirm it includes `application_type` (`native` or `web` per step 3). A fixed native client's captured body looks like this (an illustrative shape, not a live capture):
 
-   REASONED: following block; illustrative native registration follows MCP Client Registration and OIDC Registration; no live DCR request is available.
+   Illustrative native registration follows MCP Client Registration and OIDC Registration; no live DCR request is available.
 
    ```json
    {"redirect_uris":["http://localhost:3000/callback"],"grant_types":["authorization_code"],"response_types":["code"],"token_endpoint_auth_method":"none","application_type":"native"}
@@ -54183,7 +54200,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   REASONED: following block; application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
+   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    (                                       # a subshell, so the exits below end only the subshell
@@ -54285,7 +54302,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "67e8c37bc54a00b0784ca93ffc7452b7e4030e622d441ecc18798412446a6c02",
+  "body_sha256": "cc910598b718d48835c0e1ae7c32a916940e0f59156a8d4733ae02ad0066c5d1",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -56933,7 +56950,7 @@ A Compose error, missing service, stopped application, or empty inventory is not
 **Reasoned, not demonstrated, including the cross-host vantage** (historical authoring note: no container runtime and no second host in the authoring environment). Probe every application or dashboard port found in check 2, using its actual host port. Include reachable LAN addresses and public IPv4/IPv6 addresses; bracket an IPv6 literal used in the HTTP URL. Exclude the intentionally public TLS ingress. The outcomes below rest on two sources: the curl manual for what its exit status, error text and timing actually report, and Docker's packet-filtering page for how a published port interacts with a host firewall, which is what makes a refusal meaningful rather than incidental.
 
 ```bash
-# REASONED: Direct HTTP reachability, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. The bash -n, ShellCheck and fixture runs recorded here covered check 3 in an earlier form, whose marker and count refusals ended with status 0 and whose placeholder refusal exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals all exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime or second host was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect an HTTP response or completed connection when exposed, and refusal corroborated by inventory and working ingress when fixed; timeout or http=000 alone is inconclusive.
+# Direct HTTP reachability, per the guide's cited curl manual and Docker packet filtering and firewalls. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. The bash -n, ShellCheck and fixture runs recorded here covered check 3 in an earlier form, whose marker and count refusals ended with status 0 and whose placeholder refusal exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals all exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime or second host was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect an HTTP response or completed connection when exposed, and refusal corroborated by inventory and working ingress when fixed; timeout or http=000 alone is inconclusive.
 (                              # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_HOST_ADDRESS' 'REPLACE_WITH_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -56973,8 +56990,6 @@ A timeout alone is inconclusive. `http=000` can occur after a server accepts and
 **Reasoned, not demonstrated** (historical authoring note: no container runtime in the authoring environment). From another host, run this for every private port found in check 2, including the application's ports from check 3. The distinguishing authority here is the publication state, read together with the firewall configuration, per Docker's packet-filtering page and Compose ps in Sources: under Docker's default firewall integration a backing service with no host publication is not reachable from another host, so a refusal corroborated by check 2 means the boundary holds. That page also states the limit of the guarantee: with Docker's firewalling disabled and no replacement rules, every container port becomes accessible, published or not, so an unpublished port is evidence of the boundary only while that integration is in place. An answer from any of these ports means the boundary does not hold.
 
 For the unchanged vendor examples, Mem0 adds 8432 and 3000 beside API port 8888. Onyx development adds 5432, 9200, 9000, 6379, 9004, 9005, and 8000 beside API port 8080, and nginx contributes 80 and 3000 from the base file. Environment variables can move these ports; the running inventory is the authority.
-
-REASONED: following block; Backing-port reachability and the example publication inventory, per the guide's cited Docker packet filtering and firewalls, Docker Compose ps, Mem0 server Compose, Onyx development Compose and Onyx base Compose. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. The successful nc stub printed its arguments and exit=0. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 4 in an earlier form, whose guard refusals and completed connections ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2 and which exits with status 1 after a completed connection, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime or external vantage was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect a completed connection when exposed and corroborated refusal when fixed; option errors, timeout and silence are inconclusive.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -57016,8 +57031,6 @@ Do not choose a health endpoint, documentation page, login page, or an invented 
 Test the ingress and the native layer as SEPARATE controls. Where a service's native key does not cover every route (Text Embeddings Inference leaves `/metrics`, `/docs` and the health routes outside it), also probe one of those uncovered routes anonymously THROUGH the public ingress: the fronting auth must gate it, so an anonymous `2xx` there is a finding even when the capability route is protected. Where the ingress and the application use different credentials, send the application's own credential WITHOUT the ingress credential and confirm the ingress still rejects it, so a keyed backend behind a TLS-only proxy cannot pass this check while the ingress itself is open.
 
 Set the second value on the `set --` line to the actual method, such as `GET` or `POST`. Keep the third value's empty quotes for a request without a body; otherwise put a harmless JSON test body there.
-
-REASONED: following block; Ingress authentication and route coverage, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. Wrong schemes printed use a https:// URL; not probing. Body and no-body requests reached stub curl; Python parsed the probe JSON as an inputs string. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 5 in an earlier form, whose guard refusals ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime or live ingress was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect protected output for an exposed anonymous caller, and rejection or the configured sign-in redirect when fixed, paired with authorized application output; errors and generic pages are inconclusive.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -57068,8 +57081,6 @@ A redirect alone is insufficient: inspect its destination. Do not follow it auto
 **Reasoned, not demonstrated** (historical authoring note: no container runtime in the authoring environment). For LocalAI or Text Embeddings Inference with a key set, Mem0, Onyx, or LangServe with application authentication, run the same harmless protected request against the private upstream from a trusted location that can reach it. Do not publish a port to perform this check. The same per-service passages in Sources supply the expected outcomes as in check 5, and one of them bounds this check rather than supporting it: the Text Embeddings Inference server source shows its key middleware covering the inference routes only, so an anonymous answer from `/metrics`, `/health` or `/docs` is not evidence that the key is unset.
 
 For SearxNG, for LangServe relying entirely on its proxy, or for any service you have deliberately left unauthenticated on the private side, run this capability check through the authenticated HTTPS ingress. An intentionally unauthenticated private upstream cannot demonstrate native authentication.
-
-REASONED: following block; Native authentication, its limits and the private positive control, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication, SearxNG server settings and LangServe README at commit `27e57af`. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Local placeholder, empty-value, wrong-marker and short-count fixtures printed not probing before any stub call; substituted values reached the stub. Body and no-body requests reached stub curl; anonymous requests omitted credentials and wrong or fixture headers reached only stdin. LF and CR headers printed put the credential header on one line; not probing; invalid schemes were refused. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 6 in an earlier form, whose guard refusals ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime or live service was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect protected output without credentials when exposed; when fixed, the same request rejects empty and wrong credentials and returns real output with valid credentials. Stub calls do not establish authentication.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -57144,7 +57155,7 @@ REASONED: Credentialed HTTPS success and header transport, per the guide's cited
 
 REASONED: Credentialed HTTPS success and header transport, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Placeholder, empty-value, marker, count and scheme fixtures stopped before stub curl; body and no-body requests reached it. One and two fixture headers appeared only on stdin; LF, CR and placeholders in either header were refused before a stub call. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 7 in an earlier form, whose guard refusals ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime, TLS exchange or browser flow was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect anonymous rejection paired with authorized application output when fixed; success alone, errors and login pages cannot establish protection. Stub calls do not establish authentication. The header below is reader-supplied. For a configured bearer-token proxy it is `Authorization: Bearer` followed by the token. Mem0 accepts its native per-user key through `X-API-Key`, or a JWT through `Authorization: Bearer`. Other native credential transports are **unverified in the supplied record**. Where ingress and application require separate credentials, send both headers on curl's stdin: `--header @-` reads one header per line, so pipe both lines to it under the same control-character guard, and never pass a credential header with `-H`, which puts it in curl's argv.
 
-REASONED: following block; Credentialed HTTPS success and header transport, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Placeholder, empty-value, marker, count and scheme fixtures stopped before stub curl; body and no-body requests reached it. One and two fixture headers appeared only on stdin; LF, CR and placeholders in either header were refused before a stub call. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 7 in an earlier form, whose guard refusals ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime, TLS exchange or browser flow was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect anonymous rejection paired with authorized application output when fixed; success alone, errors and login pages cannot establish protection. Stub calls do not establish authentication.
+REASONED: following block; Credentialed HTTPS success and header transport, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Placeholder, empty-value, marker, count and scheme fixtures stopped before stub curl; body and no-body requests reached it. One and two fixture headers appeared only on stdin; LF, CR and placeholders in either header were refused before a stub call. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 7 in an earlier form, whose guard refusals ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime, TLS exchange or browser flow was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect anonymous rejection paired with authorized application output when fixed; success alone, errors and login pages cannot establish protection. Stub calls do not establish authentication. **Broken:** both anonymous and credentialed requests return protected data, or the credentialed request cannot reach a working application after the restrictions were applied. Connection failures, `401`/`403`, `5xx`, or a login page in place of the expected result do not establish a working protected service. **Fixed:** the anonymous request is rejected and the following block's credentialed request returns the expected application result, normally `2xx`. A `2xx` alone is insufficient; inspect the body to distinguish application output from a generic page. Credentialed success can also occur on an exposed service. It only completes the verification when the negative checks above pass.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -57199,12 +57210,6 @@ REASONED: following block; Credentialed HTTPS success and header transport, per 
   esac
 )
 ```
-
-REASONED: preceding block; Credentialed HTTPS success and header transport, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Placeholder, empty-value, marker, count and scheme fixtures stopped before stub curl; body and no-body requests reached it. One and two fixture headers appeared only on stdin; LF, CR and placeholders in either header were refused before a stub call. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 7 in an earlier form, whose guard refusals ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime, TLS exchange or browser flow was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect anonymous rejection paired with authorized application output when fixed; success alone, errors and login pages cannot establish protection. Stub calls do not establish authentication. **Broken:** both anonymous and credentialed requests return protected data, or the credentialed request cannot reach a working application after the restrictions were applied. Connection failures, `401`/`403`, `5xx`, or a login page in place of the expected result do not establish a working protected service.
-
-REASONED: Credentialed HTTPS success and header transport, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Placeholder, empty-value, marker, count and scheme fixtures stopped before stub curl; body and no-body requests reached it. One and two fixture headers appeared only on stdin; LF, CR and placeholders in either header were refused before a stub call. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 7 in an earlier form, whose guard refusals ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime, TLS exchange or browser flow was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect anonymous rejection paired with authorized application output when fixed; success alone, errors and login pages cannot establish protection. Stub calls do not establish authentication. **Fixed:** the anonymous request is rejected and this credentialed request returns the expected application result, normally `2xx`. A `2xx` alone is insufficient; inspect the body to distinguish application output from a generic page.
-
-REASONED: Credentialed HTTPS success and header transport, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Placeholder, empty-value, marker, count and scheme fixtures stopped before stub curl; body and no-body requests reached it. One and two fixture headers appeared only on stdin; LF, CR and placeholders in either header were refused before a stub call. The bash -n, ShellCheck, fixture and stub runs recorded here covered check 7 in an earlier form, whose guard refusals ended with status 0; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. Historical authoring note: no container runtime, TLS exchange or browser flow was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect anonymous rejection paired with authorized application output when fixed; success alone, errors and login pages cannot establish protection. Stub calls do not establish authentication. Credentialed success can also occur on an exposed service. It only completes the verification when the negative checks above pass.
 
 For browser access, follow the MFA enforcement check in [mfa.md](https://github.com/jposluns/secureconfig/blob/main/mfa.md) against a protected operation. **Broken:** the protected operation succeeds with only a password when policy requires a second factor. **Fixed:** the password-only attempt is refused and completing the second factor allows the operation. This browser outcome is reasoned rather than demonstrated here.
 
@@ -57414,7 +57419,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "de0dfa1a5037134a4de95a4470920dc895107e99760cecbcd5ab0b1fe4d766fa",
+  "body_sha256": "331f03951a7cba90763377539828ef813b137dbde1737f715785aca53a5aa0f8",
   "components": {
     "searx": {
       "name": "SearxNG documentation",

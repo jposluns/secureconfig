@@ -783,7 +783,7 @@ Paste the whole subshell after substituting all four values. These probes accept
 The first publish is the allowed control. The subsequent operations deliberately test missing credentials, a wrong password, a missing client certificate, and forbidden publish/subscribe subjects. Inspect each command's diagnostics; the block's final exit status is not a combined verdict.
 
 ```bash
-# REASONED: authentication, TLS and subject permissions; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Authentication, TLS and subject permissions; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -847,7 +847,7 @@ A successful publish message or a quiet subscriber is insufficient proof of deli
 Terminal 1 is self-contained and reads its password inside the guarded subshell. Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. Piping a password to `nats sub` does not configure authentication; in CLI v0.4.0, a username without a password is treated as a token.
 
 ```bash
-# REASONED: subscriber delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Subscriber delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -883,7 +883,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 Terminal 2 independently establishes its target, TLS configuration, and credentials; it cannot inherit variables from terminal 1's subshell. Paste its password alone at the hidden prompt too: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
-# REASONED: publisher delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Publisher delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -926,7 +926,7 @@ For queue comparisons, rerun the complete consumer block with the `order-worker`
 The following self-contained request block is also used by V4 and V5. Its last three inputs are identity, subject, and JSON body. Keep subjects such as `$SYS.REQ.SERVER.PING` and `$JS.API.INFO` single-quoted on the `set --` line. The inbox prefix matches the selected identity. Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
-# REASONED: request/reply, account and JetStream checks; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Request/reply, account and JetStream checks; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -1056,7 +1056,7 @@ A client-port test, TCP connection alone, or successful TLS handshake without me
 First complete the listener inventory in V1. Run this whole block from the intended collector with its permitted target, then from the unauthorized observer with the inventoried externally reachable address. For the selected loopback binding, the collector runs on the broker host and targets `127.0.0.1`.
 
 ```bash
-# REASONED: monitoring reachability; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Monitoring reachability; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MONITOR_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -1290,7 +1290,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6ad5212400cc800b717df0420b17d3d0468236306f9268fbb1f15404317e3ae8",
+  "body_sha256": "8f57a44a39137aa26215775bbc8de2f859663916b34462fa8afddfd718b2479c",
   "components": {
     "server": {
       "name": "NATS Server",
