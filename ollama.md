@@ -525,7 +525,7 @@ From an unrelated unprivileged test account, run `test -w /var/lib/ollama/models
 
 ### V2. Probe direct-backend bypass from another machine (REASONED: direct-origin reachability and approved-proxy inference comparison follow C1 binding documentation; no live target or external observer. The local address-guard cases above establish no network outcome)
 
-**REASONED:** no deployed target or disallowed external observer is available. Use the actual deployment address, not a documentation address. For IPv6, supply the actual address enclosed in square brackets inside the quotes. Repeat for each deployed address family and publication:
+No deployed target or disallowed external observer is available. Use the actual deployment address, not a documentation address. For IPv6, supply the actual address enclosed in square brackets inside the quotes. Repeat for each deployed address family and publication:
 
 ```bash
 (
@@ -559,7 +559,7 @@ Read `err`, not merely the exit number. A resolver failure, local socket error, 
 
 ### V3. Verify authentication and TLS with a real inference request (REASONED: cited Ollama, proxy and curl behavior; no live proxy, certificates, credentials or model)
 
-**REASONED:** no proxy deployment, trusted certificates, credentials, or loaded model is available. Prepare a small approved local model and a request body file such as `chat.json`:
+No proxy deployment, trusted certificates, credentials, or loaded model is available. Prepare a small approved local model and a request body file such as `chat.json`:
 
 ```json
 {
@@ -705,7 +705,7 @@ The discriminators are C3's [API methods](https://github.com/ollama/ollama/blob/
 
 ### V5. Compare browser origins and preflights (REASONED: required/unrelated/built-in/missing Origin, preflight, actual browser calls and authenticated/anonymous POST comparisons follow C4 AllowedOrigins and C2 proxy policies; no live backend, proxy or browser fixture. The header text was not exercised by a browser)
 
-**REASONED:** no live backend or authorized browser frontend is available. Use V3 with OPTIONS, `/dev/null`, and a client configuration containing these non-secret test headers:
+No live backend or authorized browser frontend is available. Use V3 with OPTIONS, `/dev/null`, and a client configuration containing these non-secret test headers:
 
 ```text
 header = "Origin: https://REPLACE_WITH_BROWSER_ORIGIN"
@@ -723,7 +723,7 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 
 ### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
-**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
+No inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
 ```bash
 (
@@ -1210,7 +1210,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "34ce44d281751ff9aa97d8c2db5a40aec64981cecd0ef5d3a0d1443d348fd4aa",
+  "body_sha256": "fb6b9e3bc57f76abf4ae68fc9ff95bef8f89ac83514b14733bc0376992ab2b77",
   "components": {
     "ollama": {
       "name": "Ollama",

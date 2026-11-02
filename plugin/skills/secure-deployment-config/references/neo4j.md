@@ -523,7 +523,7 @@ The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs
 
 ### Interactive application and administrative checks (REASONED: Cypher Shell and the configured deployment are unavailable; session expectations follow the cited documentation)
 
-**REASONED: requires Cypher Shell and the configured deployment, unavailable here.** This session prompts for the application password. `--history disable` requires Cypher Shell 2025.08 or later; earlier shells documenting this option use `--history in-memory` to avoid persistent history.
+**Requires Cypher Shell and the configured deployment, unavailable here.** This session prompts for the application password. `--history disable` requires Cypher Shell 2025.08 or later; earlier shells documenting this option use `--history in-memory` to avoid persistent history.
 
 ```bash
 (
@@ -820,7 +820,7 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
 )
 ```
 
-**REASONED: requires a deployment with the legacy HTTP API, trusted certificates, and protected credentials, unavailable here.** With authentication disabled in a disposable baseline, the anonymous request returns the query result. With authentication enabled, it must return 401; the authenticated request must return `ok=1` with an empty `errors` array. HTTP 200 alone does not demonstrate query success. A missing endpoint, TLS error, connection failure, or an authentication failure without a working positive control is inconclusive. See [legacy authorization responses](https://neo4j.com/docs/http-api/current/authentication-authorization/) and [legacy query results](https://neo4j.com/docs/http-api/current/query/).
+**Requires a deployment with the legacy HTTP API, trusted certificates, and protected credentials, unavailable here.** With authentication disabled in a disposable baseline, the anonymous request returns the query result. With authentication enabled, it must return 401; the authenticated request must return `ok=1` with an empty `errors` array. HTTP 200 alone does not demonstrate query success. A missing endpoint, TLS error, connection failure, or an authentication failure without a working positive control is inconclusive. See [legacy authorization responses](https://neo4j.com/docs/http-api/current/authentication-authorization/) and [legacy query results](https://neo4j.com/docs/http-api/current/query/).
 
 ### Verification scope
 
@@ -1022,7 +1022,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fe435bf36c3b77a03d7a286d7b18d3dab0265c202de2137ae2d4cff3c90e6ad1",
+  "body_sha256": "a5bae35dce475f51d51a0897f48af22dc879fa254260e5b604de23c48c7051ce",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",
