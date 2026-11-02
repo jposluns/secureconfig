@@ -452,10 +452,9 @@ offers them; both are repository settings. When the orchestrator read them from 
 on 2026-11-01, immutable releases were already enabled, and the existing "All Tags" tag ruleset
 already blocked tag update, deletion and non-fast-forward, and also creation except for its
 bypass role, so no new ruleset was created; `DECISIONS.md` records that observation. A
-release's assets are
-`site/llms-full.txt` as committed, the plugin tarball, the full release notes and
-`SHA256SUMS`; its body is short and generated, with the list of pull requests and a link to
-`CHANGELOG.md` at the tag.
+release's assets are `site/llms-full.txt` as committed, the plugin tarball, the full release
+notes and `SHA256SUMS`; its body is short and generated, with the list of pull requests and a
+link to `CHANGELOG.md` at the tag.
 
 1. Fetch `main` and the release tags with `git fetch origin main 'refs/tags/v*:refs/tags/v*'`,
    and confirm that `git rev-parse main origin/main` prints one commit twice and that the
