@@ -840,16 +840,14 @@ the deployment's password policy:
 }
 ```
 
-REASONED: preceding block; signup JSON structure and the protected-stdin request procedure in this paragraph. No disposable Appwrite installation with a first console account and controlled signup fixture is available; a live Appwrite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The signup JSON parsed as four expected string fields. The registration block passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; under bash -u, written and embedded placeholders, example.com, angle brackets, empty values, omitted or shortened set -- lines, HTTP, query, fragment, userinfo, and a control character printed refusal messages without invoking the curl stub. A valid fixture printed CURL_STUB arguments ending in https://console.internal/v1/account and STDIN containing the JSON; the password field did not occur in those arguments. The bash -n, ShellCheck and stub runs recorded here covered the registration block in an earlier form, whose guard refusals left the subshell with status 0, and the stub runs were not repeated on the current form, whose guard refusals leave the subshell with status 2 and which exits 1 for a 201 and 3 when curl fails; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Expected exposed registration returns 201; root-only registration after bootstrap rejects an additional account, per the guide’s cited Appwrite 2.2.0 console registration handler. The request can create an account on a misconfigured instance. Run it only on the disposable
+REASONED: the signup JSON structure in the block above, whose declaration is the paragraph before that block, and the protected-stdin request procedure in this paragraph for the following registration block, whose declaration is the paragraph after that block. No disposable Appwrite installation with a first console account and controlled signup fixture is available; a live Appwrite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The signup JSON parsed as four expected string fields. The registration block passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; under bash -u, written and embedded placeholders, example.com, angle brackets, empty values, omitted or shortened set -- lines, HTTP, query, fragment, userinfo, and a control character printed refusal messages without invoking the curl stub. A valid fixture printed CURL_STUB arguments ending in https://console.internal/v1/account and STDIN containing the JSON; the password field did not occur in those arguments. The bash -n, ShellCheck and stub runs recorded here covered the registration block in an earlier form, whose guard refusals left the subshell with status 0, and the stub runs were not repeated on the current form, whose guard refusals leave the subshell with status 2 and which exits 1 for a 201 and 3 when curl fails; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Expected exposed registration returns 201; root-only registration after bootstrap rejects an additional account, per the guide’s cited Appwrite 2.2.0 console registration handler. The request can create an account on a misconfigured instance. Run it only on the disposable
 fixture or an explicitly designated registration-test deployment. Use the API origin serving
 the console project, not a guessed `/console` UI path. The block feeds the signup JSON, test
 password included, to curl on stdin from the protected file: no password is typed into the command
 or held in a shell variable, so neither shell history nor `set -x` tracing records it, provided the
 file is prepared with an editor, not a shell command containing the password, which would enter
 shell history. Stdin closes the argv channel only; the account owner and root can still read the
-file and curl's memory.
-
-REASONED: following block; console registration comparisons follow the pinned Appwrite handler; no disposable Appwrite installation or controlled signup fixture was available.
+file and curl's memory. Console registration comparisons follow the pinned Appwrite handler; no disposable Appwrite installation or controlled signup fixture was available.
 
 ```bash
 (
@@ -1266,7 +1264,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-10",
-  "body_sha256": "3194cb14574c7d7481b93fc5d7699097996c2cb59177324ff9908bd400451f49",
+  "body_sha256": "eccb9fdafd708e2530ab8cf5c4192092e215acb683fa3c80f73c5ce0ac1d9f93",
   "components": {
     "pb": {
       "name": "PocketBase",
