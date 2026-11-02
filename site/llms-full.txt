@@ -1967,9 +1967,7 @@ Serve for anything private (most things). Funnel or [cloudflare.md](https://gith
 )
 ```
 
-REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. For the direct-address probe block, the bash -n, ShellCheck and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0 and whose probe left curl's own status. Its current form, whose guard refusals leave the subshell with status 2 and whose probe exits 1 on an HTTP reply and 3 otherwise, passes the repository's shell-block gate (bash -n and ShellCheck 0.11.0) but was not stub-run. For the listener block, the bash -n and ShellCheck runs recorded here used an earlier form, a top-level ss command whose status was its own. Its current form, which exits 0 when every port 3000 listener is 127.0.0.1:3000, 1 for a wildcard listener, 2 when `ss` is not installed, and 3 otherwise, is covered by the repository's shell-block gate (bash -n and ShellCheck 0.11.0) and by stub runs with `ss` present and passing, present and failing, and missing. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
-
-REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. The authoring environment cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
+REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. For the direct-address probe block, the bash -n, ShellCheck and stub runs recorded here used an earlier form, whose guard refusals left the subshell with status 0 and whose probe left curl's own status. Its current form, whose guard refusals leave the subshell with status 2 and whose probe exits 1 on an HTTP reply and 3 otherwise, passes the repository's shell-block gate (bash -n and ShellCheck 0.11.0) but was not stub-run. For the listener block, the bash -n and ShellCheck runs recorded here used an earlier form, a top-level ss command whose status was its own. Its current form, which exits 0 when every port 3000 listener is 127.0.0.1:3000, 1 for a wildcard listener, 2 when `ss` is not installed, and 3 otherwise, is covered by the repository's shell-block gate (bash -n and ShellCheck 0.11.0) and by stub runs with `ss` present and passing, present and failing, and missing. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. Direct-backend isolation follows the cited Serve identity-header guidance. The authoring environment cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
 
 ```bash
 (                                       # a subshell, so your own shell keeps its positional parameters and the guard's exit does not close it
@@ -1990,9 +1988,7 @@ REASONED: following block; direct-backend isolation follows the cited Serve iden
 # Any HTTP reply (including 4xx/5xx) proves the app is reachable past the tailnet at that address. A failed request does not by itself prove a loopback bind (a firewall, a wrong address, or a stalled response fails the same way), so read `err`/`exitcode` and rely on the `ss` line above for the actual bind address.
 ```
 
-REASONED: preceding block; direct-backend isolation and the allowed tailnet path, per the guide's cited Tailscale serve identity headers and Tailscale serve. No Serve host or allowed/excluded tailnet devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; rejected guards reached no curl stub and a substituted direct address reached one. The bash -n, ShellCheck and stub runs recorded here covered the direct-address probe block in an earlier form, whose guard refusals left the subshell with status 0 and whose probe left curl's own status. Its current form, whose guard refusals leave the subshell with status 2 and whose probe exits 1 on an HTTP reply and 3 otherwise, passes the repository's shell-block gate (bash -n and ShellCheck 0.11.0) but was not stub-run. No live access was observed: exposed direct access bypasses the tailnet; fixed direct access is isolated while the allowed tailnet request works. Allowed access alone does not distinguish allow-all from scoped policy. Then confirm the tailnet path works and that the section-1 restriction actually holds:
-
-REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. The authoring environment cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
+REASONED: preceding block; direct-backend isolation and the allowed tailnet path, per the guide's cited Tailscale serve identity headers and Tailscale serve. No Serve host or allowed/excluded tailnet devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; rejected guards reached no curl stub and a substituted direct address reached one. The bash -n, ShellCheck and stub runs recorded here covered the direct-address probe block in an earlier form, whose guard refusals left the subshell with status 0 and whose probe left curl's own status. Its current form, whose guard refusals leave the subshell with status 2 and whose probe exits 1 on an HTTP reply and 3 otherwise, passes the repository's shell-block gate (bash -n and ShellCheck 0.11.0) but was not stub-run. No live access was observed: exposed direct access bypasses the tailnet; fixed direct access is isolated while the allowed tailnet request works. Allowed access alone does not distinguish allow-all from scoped policy. Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. The authoring environment cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction. Then confirm the tailnet path works and that the section-1 restriction actually holds:
 
 ```bash
 (                                                   # the whole block in one subshell, so one exit status covers every part of it
@@ -2070,7 +2066,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "5611464b9aed93a446136902c2dd6eec603ca20185c3290351a118f9de255503",
+  "body_sha256": "d732d5b8d86a5b322517082d8b97dc0d66bd13ba623f0841e82da4153625cf59",
   "components": {
     "cli": {
       "name": "Tailscale CLI change",
@@ -38076,7 +38072,7 @@ The expected distinctions follow [connector TLS behavior](https://neo4j.com/docs
 
 ### Interactive application and administrative checks (REASONED: Cypher Shell and the configured deployment are unavailable; session expectations follow the cited documentation)
 
-**REASONED: requires Cypher Shell and the configured deployment, unavailable here.** This session prompts for the application password. `--history disable` requires Cypher Shell 2025.08 or later; earlier shells documenting this option use `--history in-memory` to avoid persistent history.
+**Requires Cypher Shell and the configured deployment, unavailable here.** This session prompts for the application password. `--history disable` requires Cypher Shell 2025.08 or later; earlier shells documenting this option use `--history in-memory` to avoid persistent history.
 
 ```bash
 (
@@ -38373,7 +38369,7 @@ For deployments exposing the legacy transactional HTTP API, including Neo4j 5 ve
 )
 ```
 
-**REASONED: requires a deployment with the legacy HTTP API, trusted certificates, and protected credentials, unavailable here.** With authentication disabled in a disposable baseline, the anonymous request returns the query result. With authentication enabled, it must return 401; the authenticated request must return `ok=1` with an empty `errors` array. HTTP 200 alone does not demonstrate query success. A missing endpoint, TLS error, connection failure, or an authentication failure without a working positive control is inconclusive. See [legacy authorization responses](https://neo4j.com/docs/http-api/current/authentication-authorization/) and [legacy query results](https://neo4j.com/docs/http-api/current/query/).
+**Requires a deployment with the legacy HTTP API, trusted certificates, and protected credentials, unavailable here.** With authentication disabled in a disposable baseline, the anonymous request returns the query result. With authentication enabled, it must return 401; the authenticated request must return `ok=1` with an empty `errors` array. HTTP 200 alone does not demonstrate query success. A missing endpoint, TLS error, connection failure, or an authentication failure without a working positive control is inconclusive. See [legacy authorization responses](https://neo4j.com/docs/http-api/current/authentication-authorization/) and [legacy query results](https://neo4j.com/docs/http-api/current/query/).
 
 ### Verification scope
 
@@ -38575,7 +38571,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fe435bf36c3b77a03d7a286d7b18d3dab0265c202de2137ae2d4cff3c90e6ad1",
+  "body_sha256": "a5bae35dce475f51d51a0897f48af22dc879fa254260e5b604de23c48c7051ce",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",
