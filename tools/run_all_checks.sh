@@ -32,6 +32,41 @@ not_a_guide() {
   esac
 }
 
+echo "== gate parser preflight: this python3 has the pinned markdown-it-py =="
+# Several gates below need the markdown-it-py that tools/requirements-gates.txt pins. On a host
+# whose python3 has another release, each of them printed its own FAIL line and traceback, which
+# read like code findings. tools/check_parser_pin.py runs first, in the python3 -I -B form the
+# parser gates use, and prints one line. Anything but its ok line stops the suite here with
+# status 2, before any other gate runs, so a host problem never reads as a red tree. CI installs
+# the pin before the suite starts. The Python-version advisory further down is unchanged.
+if preflight=$(python3 -I -B tools/check_parser_pin.py 2>&1); then
+  printf '%s\n' "$preflight"
+  if grep -q '^  FAIL  ' <<< "$preflight" ||
+     ! grep -q '^  ok    gate parser preflight: ' <<< "$preflight"; then
+    printf '  FAIL  gate parser preflight exited 0 without its ok line; the suite ran no other gate\n'
+    exit 2
+  fi
+else
+  preflight_rc=$?
+  printf '%s\n' "$preflight"
+  if [ "$preflight_rc" -ne 2 ]; then
+    printf '  FAIL  gate parser preflight did not complete (exit %s); the suite ran no other gate\n' "$preflight_rc"
+  fi
+  exit 2
+fi
+
+echo "== the gate parser preflight still refuses what it should =="
+if preflight_tests=$(python3 -I -B tools/test_parser_pin.py 2>&1); then
+  printf '%s\n' "$preflight_tests"
+  if grep -q '^  FAIL  ' <<< "$preflight_tests" ||
+     ! grep -qE '^  ok    [0-9]+ recorded tests for the gate parser preflight$' <<< "$preflight_tests"; then
+    bad "test_parser_pin.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$preflight_tests"
+  bad "test_parser_pin.py failed"
+fi
+
 echo "== credential scanner regressions and shell lint =="
 python3 tools/test_scan_credential.py || bad "credential scanner self-test"
 if command -v shellcheck >/dev/null 2>&1; then
@@ -1096,7 +1131,9 @@ else
 fi
 echo "== Verify fences, list items, table rows and prose declare demonstration or reasoning =="
 # Keep retained exemptions visible; a baseline pass is not full corpus compliance.
-# Local absent/mismatched parsers emit one SKIP; fence checks still run.
+# Run on its own, an absent/mismatched parser emits one SKIP and fence checks still run, but
+# each guide whose intro recognition needs the parser is then a finding, so it exits 1; in
+# this suite, the parser preflight at the top stops before this gate is reached.
 # CI requires the pin even when this suite is invoked outside the workflow.
 vm_args=(--strict)
 if [ -n "${CI:-}" ]; then vm_args+=(--require-parser); fi
