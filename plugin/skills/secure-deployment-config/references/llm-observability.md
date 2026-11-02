@@ -170,7 +170,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-REASONED: following block; the listener inventory, with the Langfuse checks and the Collector OTLP/HTTP probe in the two blocks after it, each marked in its own first line, per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) an earlier form, which held all three checks in one block, passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network. With the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. That review covered the Langfuse checks before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the Collector probe while it targeted a fixed illustrative host. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block, and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss and no network, which ran the guards and every exit status. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. The Langfuse and Collector blocks exit 1 for an anonymous 2xx; the Langfuse block exits 3 for any other anonymous answer than 401 or a keyed answer other than a 2xx, and the Collector block exits 0 for 401 or 403 and 3 for any other answer. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, and its last line names what it leaves for you to judge. The listener inventory refuses with status 2 when `ss` is not installed, and an `ss` that runs and fails gives 3. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the listener inventory, with the Langfuse checks and the Collector OTLP/HTTP probe in the two blocks after it, each marked in its own first line, per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) an earlier form, which held all three checks in one block, passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network. With the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. That review covered the Langfuse checks before they took the Langfuse host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the Collector probe while it targeted a fixed illustrative host. The repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block cover the current forms of the three blocks. Stub runs on 2026-10-31 with Bash 5.3.9, stub curl and ss and no network ran the guards and every exit status, on the inventory's current form and on the earlier form of the Langfuse and Collector blocks, which lowercased the host with `tr` before refusing reserved names. Those two blocks now refuse a reserved name under bash's `nocasematch` option instead of through `tr`, and each of their host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. That current form is covered by curl-stub runs on 2026-11-01 with no network. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probe. Under dash, stub runs of the current form refused every host name in each host part with 2 and the bash message before its probe, and both blocks exited 2. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. The Langfuse and Collector blocks exit 1 for an anonymous 2xx; the Langfuse block exits 3 for any other anonymous answer than 401 or a keyed answer other than a 2xx, and the Collector block exits 0 for 401 or 403 and 3 for any other answer. Each block exits 2 when a guard refuses and 3 when a command it attempts fails, and its last line names what it leaves for you to judge. The listener inventory refuses with status 2 when `ss` is not installed, and an `ss` that runs and fails gives 3. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -212,9 +212,11 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max-time 15 \
       -o /dev/null -w 'dashboard final=%{http_code} url=%{url_effective} exit=%{exitcode}\n' "https://$1/"
     case "$?" in 0) exit 0 ;; *) echo "curl exit $?: the dashboard request failed; inconclusive"; exit 3 ;; esac
@@ -240,9 +242,11 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the public key on the set -- line above; not probing"; exit 2 ;; esac
     case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the secret key on the set -- line above; not probing"; exit 2 ;; esac
     set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}"
@@ -303,9 +307,11 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute the Collector's host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
     -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
     "https://$1:4318/v1/traces"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -574,7 +580,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "47c25de5aed6255532f0b055817262e49769244d5dadef1d731431c08c444a2c",
+  "body_sha256": "7ab2e7fc7abeb60b9b2a7e6dcce4166eca7d91b33c61d194b3be8e36cc2ae6a3",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",

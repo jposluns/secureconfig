@@ -141,7 +141,7 @@ from memory to disk. Raising the first increases what you will buffer, not where
 in-flight requests rather than their rate, and its `sourceCriterion` defaults to the request host rather
 than the client, so set it explicitly if you want a per-client cap.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The current forms of the three blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker, sudo, rm and ss and no network, which ran the guards and every exit status; no Traefik answered them. The first block records 2 for a missing `ss` only when nothing else was recorded, because none of its other parts needs `ss`, and 3 when `sudo ss -tlnp` runs and fails. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH (the guide's cited sudo sudoers manual, secure_path entry), so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited Traefik and curl documentation; no live Docker/Traefik canary demonstration is recorded. The recorded 429 alone does not demonstrate limiter attribution, and the 429 was recorded before the flood probe took a guarded host and before the first block ran its parts in one subshell with one exit status. This metadata-only review has no authorized deployment fixture. The redirect, unauthenticated, body-size and flood requests take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block cover the current forms of the three blocks. Stub runs on 2026-10-31 with Bash 5.3.9, stub curl, docker, sudo, rm and ss and no network ran the guards and every exit status, on the current forms of the second and third blocks and on the earlier form of the first, which lowercased the host with `tr` before refusing reserved names; no Traefik answered them. The first block now refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. That current form is covered by stub runs on 2026-11-01 with stub curl, docker, sudo, head, rm and ss and no network. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in each host part with 2 and the bash message before its probes; the block still ran `docker compose ps` and `sudo ss -tlnp` and exited 2. The first block records 2 for a missing `ss` only when nothing else was recorded, because none of its other parts needs `ss`, and 3 when `sudo ss -tlnp` runs and fails. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH (the guide's cited sudo sudoers manual, secure_path entry), so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -155,9 +155,11 @@ than the client, so set it explicitly if you want a per-client cap.
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$1" 0                       # the 2nd value is this part's status so far, ranked as above
     curl -q -g -sI "http://$1/"         # expect a redirect to https://
     case "$?" in 0) ;; *) echo "curl exit $?: the redirect request failed; inconclusive"; set -- "$1" 3 ;; esac
@@ -181,9 +183,11 @@ than the client, so set it explicitly if you want a per-client cap.
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
     set -- "$1" "${2//\\/\\\\}"
     set -- "$1" "${2//\"/\\\"}"
@@ -215,9 +219,11 @@ than the client, so set it explicitly if you want a per-client cap.
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -o pipefail                     # the pipeline's status is its last failing command's, so a failed request inside xargs is not hidden by uniq
     seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c
                                          # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
@@ -415,7 +421,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "224b79522f518fee6c708430d9798762b450e1bbba5db71dd142ae23ec644e57",
+  "body_sha256": "c3358954dbc0b5f3d281ba0721a8ec2dbec8a0b7a01fd28eba01eb388bf573bb",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",

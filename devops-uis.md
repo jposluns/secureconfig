@@ -152,9 +152,11 @@ REASONED: following block; listener check, per the panel, Docker daemon and GitL
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" "$(if curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"                    # the host, curl's exit status, then the HTTP code
   printf '%s\n' "$3"
@@ -384,7 +386,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "bab58b17be5faca94ba017924b1c15d036af5e7c1a1b56add3f898549dc2141c",
+  "body_sha256": "adf7ad8a80aa173d02cc81a02884dc892d6eb65d764ad6693bb516b5d863b4b8",
   "components": {
     "portainer": {
       "name": "Portainer",

@@ -114,8 +114,12 @@ printed and you compare it. The first block takes your host name, an unconfigure
 protected path on its `set --` line, and refuses with status 2 if any is left unsubstituted or
 malformed, or if the unconfigured name is your own host name in any letter case. That
 comparison cannot see your other ServerName and ServerAlias values, so check the name against
-them yourself. The block also refuses with status 2 if `tr` is not installed, and exits 3
-before probing if `tr` fails while folding a name to lower case. The block then runs the
+them yourself. The comparison runs in the C locale, so the letters A to Z match in either case
+in every locale, Turkish included, and every other letter matches only itself; the block refuses
+with status 2 if LC_ALL is read-only in your shell. Only that comparison runs in the C locale,
+in a nested subshell of its own, so the rest of the block, including the commands it runs, keeps
+your locale settings. The block also needs bash: in a shell without bash's `shopt`, such as
+dash, it refuses with status 2 before probing. The block then runs the
 configuration test and reload, classifies its requests to the site root and to the
 unconfigured name, records each outcome as it runs, and exits once at the end. It exits 1 if
 either request answers 200, otherwise 3 if either answers anything but 401 or the configuration
@@ -133,25 +137,35 @@ vhost list it prints.
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  command -v tr >/dev/null || { echo "tr is not installed here; not probing"; exit 2; }
-  set -- "$1" "$2" "$3" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # tr's exit status, then your host name in lower case
-  case "$4" in 0) ;; *) echo "tr exit $4: your host name could not be folded to lower case, so the checks on it cannot run; not probing, inconclusive"; exit 3 ;; esac
-  case "$5" in
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute a name your certificate covers that no ServerName or ServerAlias matches (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
-  esac
-  set -- "$1" "$2" "$3" "$4" "$5" "$(if printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # tr's exit status, then the unconfigured name in lower case
-  case "$6" in 0) ;; *) echo "tr exit $6: the unconfigured name could not be folded to lower case, so the check against your host name cannot run; not probing, inconclusive"; exit 3 ;; esac
-  case "$7" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
-    "$5") echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$3" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
+  if (                                  # a nested subshell, so only this comparison runs in the C locale and the rest of the block keeps yours
+    { unset -v LC_ALL; } 2>/dev/null || exit 4
+    LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as host names need
+    shopt -s nocasematch || exit 5   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$2" in   # letter case ignored; this catches only your own host name, so check the name against your other ServerName and ServerAlias values yourself
+      "$1") exit 6 ;;
+    esac
+  )
+  then :
+  else
+    case "$?" in
+      4) echo "LC_ALL is read-only in this shell, so the host name comparison cannot run; not probing" ;;
+      5) echo "this block needs bash; run it in bash; not probing" ;;
+      6) echo "the unconfigured name is your own host name, which selects your own vhost and answers 401 whatever the other vhosts serve: substitute a name no ServerName or ServerAlias matches on the set -- line above; not probing" ;;
+      *) echo "the host name comparison did not finish; not probing" ;;
+    esac
+    exit 2
+  fi
   set -- "$1" "$2" "$3" 0                 # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   if sudo apachectl configtest && sudo systemctl reload apache2; then :; else   # httpd on RHEL
     echo "configuration test or reload exit $?: the requests below may test the configuration Apache was already running; inconclusive"; set -- "$1" "$2" "$3" 3
@@ -315,7 +329,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1c117ebc20866e49f0f35dce80eaa7c48c1887b54b777b317cb75357bd2be380",
+  "body_sha256": "4fc847dae3fcde93596591c447ffe745048433b4cbf149aa2527c49ae90709a2",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
