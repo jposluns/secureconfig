@@ -45145,7 +45145,7 @@ Leave the final value as `browser` for a password-only server. If a token is alr
 )
 ```
 
-**REASONED: no Jupyter runtime or browser session here.** In a clean browser profile, visit the same deployment without a token query or existing cookies. It must require authentication before loading a notebook. Log in with the configured password, then request the same `/api/kernels` URL: expect `200` with a JSON kernel list, including an empty list when no kernels are running. An existing session legitimately skips the login prompt. [Server authentication](https://jupyter-server.readthedocs.io/en/latest/operators/security.html), [kernels API](https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html).
+**No Jupyter runtime or browser session here.** In a clean browser profile, visit the same deployment without a token query or existing cookies. It must require authentication before loading a notebook. Log in with the configured password, then request the same `/api/kernels` URL: expect `200` with a JSON kernel list, including an empty list when no kernels are running. An existing session legitimately skips the login prompt. [Server authentication](https://jupyter-server.readthedocs.io/en/latest/operators/security.html), [kernels API](https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html).
 
 Use these exposed-versus-fixed comparisons:
 
@@ -45284,7 +45284,7 @@ Set the base URL to the actual server URL, including any deployment prefix. Set 
 )
 ```
 
-**REASONED: the same missing runtime and session prevent these comparisons here.**
+**The same missing runtime and session prevent these comparisons here.**
 
 | Check | Exposed comparison | Fixed result and positive control |
 |---|---|---|
@@ -45592,7 +45592,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6c9b8134c654140bcf43bd0273a4e0bd56f347fe99a05b2303f03f38a251e842",
+  "body_sha256": "a5e7a35a0d67aeee4c8f3c6663980e33f2ee99dce04c34821f4ec2512a6aef2b",
   "components": {
     "server": {
       "name": "Jupyter Server",
@@ -62584,11 +62584,9 @@ observed. On the host:
 )
 ```
 
-REASONED: following block; its guard's recorded stub run and the off-host probe this paragraph introduces, per the guide's cited listener and authentication sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. That stub run used an earlier form of the following block, whose guard refusals ended with status 0, and was not repeated on the current form, whose guard refusals exit with status 2 and which exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
+REASONED: the recorded stub run of the following block's guard and the off-host probe this paragraph introduces, per the guide's cited listener and authentication sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. That stub run used an earlier form of the following block, whose guard refusals ended with status 0, and was not repeated on the current form, whose guard refusals exit with status 2 and which exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection; the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
 and likewise for the others. Fixed means a loopback or private address. Then probe from a host that
 should not have access. The block refuses to run until you substitute the address.
-
-REASONED: following block; external probes follow the cited listener and authentication sources; the authoring environment had no second host and no Loki listener was run.
 
 ```bash
 (                              # a subshell, so your own script arguments are untouched
@@ -62618,7 +62616,7 @@ REASONED: following block; external probes follow the cited listener and authent
 )
 ```
 
-REASONED: preceding block; the second-host probes of node_exporter, Alertmanager, Pushgateway, Jaeger and Loki and the Loki tenant-header repeat, per the guide's cited Prometheus security model, Exporter toolkit v0.17.1 web configuration, Jaeger 2.21 security and Loki v3.7.8 authentication entries. The authoring environment had no second host and no Loki listener. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: without its set -- line it printed the paste-the-whole-block refusal, and with 203.0.113.10 substituted the stub received the five URLs in order. The bash -n and stub runs recorded here covered the probe block in an earlier form, whose guard refusals ended with status 0, and the stub runs were not repeated on the current form. The current form's guard refusals exit with status 2, it exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. The expected exposed and fixed results are those stated here. Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
+REASONED: preceding block; the second-host probes of node_exporter, Alertmanager, Pushgateway, Jaeger and Loki and the Loki tenant-header repeat, per the guide's cited Prometheus security model, Exporter toolkit v0.17.1 web configuration, Jaeger 2.21 security and Loki v3.7.8 authentication entries. External probes follow the cited listener and authentication sources. The authoring environment had no second host and no Loki listener. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: without its set -- line it printed the paste-the-whole-block refusal, and with 203.0.113.10 substituted the stub received the five URLs in order. The bash -n and stub runs recorded here covered the probe block in an earlier form, whose guard refusals ended with status 0, and the stub runs were not repeated on the current form. The current form's guard refusals exit with status 2, it exits 1 for any 200 and 3 for a request that fails other than by a refused or timed-out connection, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. The expected exposed and fixed results are those stated here. Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
 TLS, switch that URL to `https`. A `401` then means its authentication is on. From a host that should
 be blocked, a connection refusal or a connect timeout is consistent with isolation. Read the `err`
 text to confirm it happened while connecting, not in a local proxy or policy. The write-out fields need
@@ -62629,7 +62627,12 @@ REASONED: the positive-control and stdin-password instructions for the following
 The password reaches curl on stdin, not argv. Substitute inside the quotes, and add
 `--cacert /path/to/ca.crt` if the certificate is private.
 
-DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporter, Pushgateway, Alertmanager and Jaeger returned 401 without credentials and 200 with them. The loopback runs used an earlier form of the block, whose guard refusals ended with status 0 and whose two results set no exit status; the current form, whose guard refusals exit with status 2 and which exits 1, 3 or 0 on those two results, has not been run against a service, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it.
+DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporter, Pushgateway, Alertmanager and Jaeger returned 401 without credentials and 200 with them. The loopback runs used an earlier form of the block, whose guard refusals ended with status 0 and whose two results set no exit status; the current form, whose guard refusals exit with status 2 and which exits 1, 3 or 0 on those two results, has not been run against a service, and the repository gate suite's bash -n and ShellCheck 0.11.0 passes cover it. The Loki mTLS sentence below is a reasoned equivalent that did not run. Fixed, the following block's `no credentials` result is `401` and its `with credentials` result is `200`. The loopback runs gave exactly that
+pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager
+`/api/v2/status` and Jaeger `/api/v3/services`. For Loki under mTLS, the REASONED equivalent is `--cert` and `--key` on an authorized client
+(`200`) against the same request without them, which fails in the handshake. This closes the argv
+channel only. The password can still reach shell history or `set -x` output, and stdin does not hide it
+from your own account's view of the process.
 
 ```bash
 (
@@ -62670,13 +62673,6 @@ DEMONSTRATED: following block; the recorded loopback HTTPS GETs for node_exporte
   exit "$4"
 )
 ```
-
-DEMONSTRATED: preceding block; the recorded loopback HTTPS GETs gave the pair stated here on an earlier form of that block, as the declaration before the block records, and the Loki mTLS sentence below is a reasoned equivalent that did not run. Fixed, `no credentials` is `401` and `with credentials` is `200`. The loopback runs gave exactly that
-pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager
-`/api/v2/status` and Jaeger `/api/v3/services`. For Loki under mTLS, the REASONED equivalent is `--cert` and `--key` on an authorized client
-(`200`) against the same request without them, which fails in the handshake. This closes the argv
-channel only. The password can still reach shell history or `set -x` output, and stdin does not hide it
-from your own account's view of the process.
 
 ## Sources (checked September 2026)
 
@@ -63204,7 +63200,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "dd8a9fff6cd4cca65840fdfe34de78714834956e02d70c1c8cb63b4f4c0794f1",
+  "body_sha256": "9722177864aa4aa4d580a0c275c4345f746695bdc295b7cfbb11cb86dd45ff68",
   "components": {
     "node": {
       "name": "node_exporter",
