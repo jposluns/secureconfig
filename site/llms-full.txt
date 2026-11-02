@@ -42726,9 +42726,7 @@ REASONED: following block; LiteFS and Litestream listener isolation follows the 
 )
 ```
 
-REASONED: preceding block; the listener probe above, this paragraph's reading of its result, and the Turso introduction, per the guide's cited LiteFS route dispatch and reads (pinned tag v0.5.14), Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later) and Turso SQL over HTTP (`/v2/pipeline`, bearer authentication) entries. No LiteFS or Litestream listener, untrusted vantage, Turso database or token was available during marking review (October 2026). Expected exposed outcome: any HTTP response at the untrusted vantage; fixed: none there while the authorized control answers. The listener and Turso blocks passed `bash -n` and ShellCheck 0.11.0 with no findings in that review; their guards were exercised during marking review (October 2026) under bash 5.3.9 with a Bash curl stub: written placeholders, `ftp://example.test`, bare `https://`, extra values and omitted initial `set --` lines each produced the corresponding refusal and exited 2 without calling curl. The Turso block also refused readonly `turso_tok`, readonly `IFS`, an empty token, a placeholder token and a token containing a tab, each exiting 2 without calling curl. Through a pseudo-terminal its hidden prompt did not echo the supplied token; the valid dummy token reached the authorized curl stub on stdin as `Authorization: Bearer dummy.token.review` followed by a newline and was absent from both recorded curl argument lists. The valid listener and Turso cases exited 0 using synthetic HTTP 200 output; no live-service behavior, shell-history behavior or inherited tracing behavior was exercised by these runs. Those runs covered earlier forms of both blocks, whose requests set no exit status; the current forms are covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026, as recorded beside each block. Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block uses Bash's terminal-only hidden input and tests the resulting value for control characters before constructing the header; Bash `read` ignores NUL and reads one line, so this is not a claim that every malformed paste is rejected. This guide's assessment, assuming the clean shell required by CONTRIBUTING rule 7 and a token pasted only at the prompt, is that clearing the token's attributes, disabling allexport and tracing, and feeding the builtin `printf` output to curl's `--header @-` keep that value out of curl's argv, the exported environment, shell-parser history and subsequent `set -x` output. These documented primitives do not prove that no secret can leak, and the running account remains outside this protection:
-
-REASONED: following block; the cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+REASONED: the listener probe above, this paragraph's reading of its result, and the Turso introduction, per the guide's cited LiteFS route dispatch and reads (pinned tag v0.5.14), Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later) and Turso SQL over HTTP (`/v2/pipeline`, bearer authentication) entries. The declaration of the listener probe above is the paragraph before its block, and that of the Turso check below is the paragraph after its block. No LiteFS or Litestream listener, untrusted vantage, Turso database or token was available during marking review (October 2026). Expected exposed outcome: any HTTP response at the untrusted vantage; fixed: none there while the authorized control answers. The listener and Turso blocks passed `bash -n` and ShellCheck 0.11.0 with no findings in that review; their guards were exercised during marking review (October 2026) under bash 5.3.9 with a Bash curl stub: written placeholders, `ftp://example.test`, bare `https://`, extra values and omitted initial `set --` lines each produced the corresponding refusal and exited 2 without calling curl. The Turso block also refused readonly `turso_tok`, readonly `IFS`, an empty token, a placeholder token and a token containing a tab, each exiting 2 without calling curl. Through a pseudo-terminal its hidden prompt did not echo the supplied token; the valid dummy token reached the authorized curl stub on stdin as `Authorization: Bearer dummy.token.review` followed by a newline and was absent from both recorded curl argument lists. The valid listener and Turso cases exited 0 using synthetic HTTP 200 output; no live-service behavior, shell-history behavior or inherited tracing behavior was exercised by these runs. Those runs covered earlier forms of both blocks, whose requests set no exit status; the current forms are covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026, as recorded beside each block. Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. The cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available. Have a valid database token from the secret store ready to paste. The block uses Bash's terminal-only hidden input and tests the resulting value for control characters before constructing the header; Bash `read` ignores NUL and reads one line, so this is not a claim that every malformed paste is rejected. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. This guide's assessment, assuming the clean shell required by CONTRIBUTING rule 7 and a token pasted only at the prompt, is that clearing the token's attributes, disabling allexport and tracing, and feeding the builtin `printf` output to curl's `--header @-` keep that value out of curl's argv, the exported environment, shell-parser history and subsequent `set -x` output. These documented primitives do not prove that no secret can leak, and the running account remains outside this protection:
 
 ```bash
 (
@@ -42900,7 +42898,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "4785f14f45950e880e2680eac9113b5ef638445543132a560b529c7b8f2953d3",
+  "body_sha256": "6e44867fed7f8eceb07674a7a4da09f72418ec7cd1a7e85f394aaffda99c829d",
   "components": {
     "sqlite-rolling": {
       "name": "SQLite documentation (rolling)",
@@ -46305,7 +46303,7 @@ From an unrelated unprivileged test account, run `test -w /var/lib/ollama/models
 
 ### V2. Probe direct-backend bypass from another machine (REASONED: direct-origin reachability and approved-proxy inference comparison follow C1 binding documentation; no live target or external observer. The local address-guard cases above establish no network outcome)
 
-**REASONED:** no deployed target or disallowed external observer is available. Use the actual deployment address, not a documentation address. For IPv6, supply the actual address enclosed in square brackets inside the quotes. Repeat for each deployed address family and publication:
+No deployed target or disallowed external observer is available. Use the actual deployment address, not a documentation address. For IPv6, supply the actual address enclosed in square brackets inside the quotes. Repeat for each deployed address family and publication:
 
 ```bash
 (
@@ -46339,7 +46337,7 @@ Read `err`, not merely the exit number. A resolver failure, local socket error, 
 
 ### V3. Verify authentication and TLS with a real inference request (REASONED: cited Ollama, proxy and curl behavior; no live proxy, certificates, credentials or model)
 
-**REASONED:** no proxy deployment, trusted certificates, credentials, or loaded model is available. Prepare a small approved local model and a request body file such as `chat.json`:
+No proxy deployment, trusted certificates, credentials, or loaded model is available. Prepare a small approved local model and a request body file such as `chat.json`:
 
 ```json
 {
@@ -46485,7 +46483,7 @@ The discriminators are C3's [API methods](https://github.com/ollama/ollama/blob/
 
 ### V5. Compare browser origins and preflights (REASONED: required/unrelated/built-in/missing Origin, preflight, actual browser calls and authenticated/anonymous POST comparisons follow C4 AllowedOrigins and C2 proxy policies; no live backend, proxy or browser fixture. The header text was not exercised by a browser)
 
-**REASONED:** no live backend or authorized browser frontend is available. Use V3 with OPTIONS, `/dev/null`, and a client configuration containing these non-secret test headers:
+No live backend or authorized browser frontend is available. Use V3 with OPTIONS, `/dev/null`, and a client configuration containing these non-secret test headers:
 
 ```text
 header = "Origin: https://REPLACE_WITH_BROWSER_ORIGIN"
@@ -46503,7 +46501,7 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 
 ### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
-**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
+No inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
 ```bash
 (
@@ -46990,7 +46988,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "34ce44d281751ff9aa97d8c2db5a40aec64981cecd0ef5d3a0d1443d348fd4aa",
+  "body_sha256": "fb6b9e3bc57f76abf4ae68fc9ff95bef8f89ac83514b14733bc0376992ab2b77",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -54129,7 +54127,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   REASONED: following block; address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
+   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (                                       # a subshell, so the exit below ends only the subshell
@@ -54153,7 +54151,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0, and the fixture runs were not repeated. On the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
+   The bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0, and the fixture runs were not repeated. On the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
 
    ```bash
    (
@@ -54180,7 +54178,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 5. **`application_type` is present on DCR (reasoned).** Prerequisite unavailable: the client's live DCR request. Capture the registration request body the client `POST`s to the DCR endpoint and confirm it includes `application_type` (`native` or `web` per step 3). A fixed native client's captured body looks like this (an illustrative shape, not a live capture):
 
-   REASONED: following block; illustrative native registration follows MCP Client Registration and OIDC Registration; no live DCR request is available.
+   Illustrative native registration follows MCP Client Registration and OIDC Registration; no live DCR request is available.
 
    ```json
    {"redirect_uris":["http://localhost:3000/callback"],"grant_types":["authorization_code"],"response_types":["code"],"token_endpoint_auth_method":"none","application_type":"native"}
@@ -54188,7 +54186,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   REASONED: following block; application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
+   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    (                                       # a subshell, so the exits below end only the subshell
@@ -54290,7 +54288,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "67e8c37bc54a00b0784ca93ffc7452b7e4030e622d441ecc18798412446a6c02",
+  "body_sha256": "cc910598b718d48835c0e1ae7c32a916940e0f59156a8d4733ae02ad0066c5d1",
   "components": {
     "mcp": {
       "name": "MCP",
