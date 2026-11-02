@@ -194,7 +194,7 @@ Use Bash and paste whole guarded blocks. Substitute inside the single quotes on 
 **1. Accounts and roles - REASONED: no `rabbitmqctl` or broker was available at authoring.** Run after migration and reconnecting clients:
 
 ```bash
-# REASONED: accounts and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Accounts and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_users
 sudo rabbitmqctl list_user_permissions 'app'
 sudo rabbitmqctl list_permissions -p 'app-prod'
@@ -226,7 +226,7 @@ On the conventional installation above, the cookie should be owned by `rabbitmq`
 From an external non-peer host, target the broker's public address:
 
 ```bash
-# REASONED: external reachability; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# External reachability; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_PUBLIC_ADDR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -248,7 +248,7 @@ From an external non-peer host, target the broker's public address:
 From hosts allowed by the corresponding firewall rules, target the private address. Execute the cluster, application, and administration commands on their respective allowed hosts if those roles are separate:
 
 ```bash
-# REASONED: allowed-peer controls; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Allowed-peer controls; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_PRIVATE_ADDR'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -273,7 +273,7 @@ From hosts allowed by the corresponding firewall rules, target the private addre
 From an allowed CLI host with its owner-only matching cookie file, also require an authenticated distribution connection to the same broker. Supply its actual node name, such as the deployed `rabbit@` name. This form assumes short node names; add `--longnames` for a deployment using long names. The documented [diagnostics ping](https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8) checks authentication as well as reachability:
 
 ```bash
-# REASONED: authenticated distribution ping; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Authenticated distribution ping; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BROKER_NODE_NAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -291,7 +291,7 @@ From an allowed CLI host with its owner-only matching cookie file, also require 
 On the broker itself, confirm that the retained HTTP management listener works with authentication:
 
 ```bash
-# REASONED: loopback management control; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Loopback management control; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 curl -q -g --noproxy '*' --connect-timeout 5 --max-time 20 \
   -sS --user observer -o /dev/null \
   -w 'loopback http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
@@ -305,7 +305,7 @@ For removed plaintext AMQP, first demonstrate a connection to its old listener i
 **4. Management authentication and roles - REASONED: no broker or management endpoint was available at authoring.** From an allowed administration host, use the management certificate's hostname:
 
 ```bash
-# REASONED: management authentication and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Management authentication and roles; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_MANAGEMENT_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -346,7 +346,7 @@ An exposed management listener can still require authentication: external reacha
 **5. Mutual TLS - REASONED: no broker, trusted test certificates, or broker logs were available at authoring.** From an allowed application host, place `ca.pem`, `client.pem`, and the protected `client.key` in the working directory. Use a valid client certificate with `clientAuth`, not a server-only certificate:
 
 ```bash
-# REASONED: mutual TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Mutual TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AMQP_HOSTNAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -387,7 +387,7 @@ Keeping stdin open helps expose delayed TLS 1.3 alerts; ten seconds is a timing-
 The positive control declares, binds, publishes, and retrieves a message as `app`. Separate channels test resource denials. The shared queue is durable because RabbitMQ 4.3 disables transient non-exclusive queues by default; an exclusive queue would make the observer's read test ambiguous. The script uses the [documented permission model](https://www.rabbitmq.com/docs/access-control), [channel error codes](https://www.rabbitmq.com/docs/channels), [queue rules](https://www.rabbitmq.com/docs/queues), and [Pika's blocking client](https://pika.github.io/pika/latest/modules/adapters/blocking/).
 
 ```bash
-# REASONED: AMQP authentication and authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# AMQP authentication and authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_AMQP_HOSTNAME' 'REPLACE_WITH_EXISTING_UNGRANTED_VHOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
@@ -528,7 +528,7 @@ For the exposed comparison, use an isolated fixture with unrestricted applicatio
 **7. Definitions provisioning and export - REASONED: no blank broker, `rabbitmqadmin`, or exported definitions file was available at authoring.** Boot an isolated blank node using the approved file and boot settings from section 1, then run:
 
 ```bash
-# REASONED: definitions provisioning and export; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Definitions provisioning and export; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_users
 sudo rabbitmqctl list_permissions -p 'app-prod'
 
@@ -569,7 +569,7 @@ Run section 1's reduced export and compare it with a private untransformed expor
 **8. Inter-node and CLI distribution TLS - REASONED: no Erlang runtime, RabbitMQ broker, or multi-node cluster was available at authoring.** On an authorized test cluster with the section 6 configuration, from an authorized CLI host holding the matching cookie and substituting the deployed long node name for `rabbit@node1.internal`:
 
 ```bash
-# REASONED: distribution TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Distribution TLS; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmq-diagnostics --longnames -n rabbit@node1.internal ping
 sudo rabbitmqctl --longnames -n rabbit@node1.internal cluster_status
 ```
@@ -579,7 +579,7 @@ With plaintext distribution a plaintext CLI authenticates; with TLS required, a 
 **9. Topic-exchange routing-key authorization - REASONED: no RabbitMQ broker or AMQP client was available at authoring.** On an authorized broker with an administrator-provisioned `app.shared.topic` exchange, hold the section 1 resource permissions constant and vary only whether the section 7 topic permission exists:
 
 ```bash
-# REASONED: topic routing-key authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
+# Topic routing-key authorization; no RabbitMQ/Erlang broker, clients or peer fixtures. Expected outcomes and vendor sources are recorded in this section.
 sudo rabbitmqctl list_topic_permissions -p 'app-prod'
 ```
 
@@ -762,7 +762,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "113b1d3892545afe00aaebbca50b52ada8809fc89c6babf933a1b7670dacafff",
+  "body_sha256": "4dd4667118e768510142581699323653c35cc976934653a4e5d4dbdb6084802a",
   "components": {
     "source": {
       "name": "RabbitMQ source",
