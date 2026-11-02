@@ -65,7 +65,7 @@ At the time of writing, the pinned Dev Mode docs require PRO or Team & Enterpris
 
 ## 6. Verify
 
-REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no run is recorded. The redirect and unauthenticated-request checks take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the unauthenticated-request check takes its protected path on the same line; the guards have not been run. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
+REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no live run is recorded. The redirect and unauthenticated-request checks take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the unauthenticated-request check takes its protected path on the same line. No run of the guards on the form before this change, which lowercased the host and the redirect's headers with `tr` and deleted the headers' spaces and tabs with a second `tr`, was recorded before 2026-11-01; curl-stub runs of it that day refused the reserved spellings with `tr` present, and with `tr` absent or failing refused none, probed the reserved name and reported a finding. The current form refuses a reserved name, and matches the Location header, under bash's `nocasematch` option, and deletes the spaces and tabs with bash expansions, instead of through `tr`; each part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs on 2026-11-01 with no network. In bash, each part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached both probes. In those runs a 301 whose Location header read `LOCATION:` and a tab before `HTTPS://`, or `location :` and spaces and a tab before `https://`, passed, also with `tr` absent or failing, while a 301 with an http:// Location or with no Location line was a finding. The redirect part unsets LC_ALL and sets LC_ALL=C inside its subshell just before the Location match, because `nocasematch` folds case through the locale and a Turkish or Azerbaijani locale does not fold `I` to `i`; the C locale folds A to Z only, so `location:` matches in any letter case in every locale, and a non-ASCII letter must match exactly. If LC_ALL is read-only, that part says so and exits 2 instead of classifying the redirect; both arms of the match end the part, so no later command runs in that locale. In stub runs on 2026-11-01 without the LC_ALL lines, LC_ALL=tr_TR.UTF-8 or LANG=tr_TR.UTF-8 turned a 301 whose header read `LOCATION: https://` into a finding. With them, that 301 passed under C, C.UTF-8 and both Turkish settings, also under an inherited `nocasematch` or `set -e`, while an http:// Location stayed a finding and a read-only LC_ALL gave 2 and its message. Under dash, each part refused every host name with 2 and the bash message before its probe, and the block exited 2. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
 
 ```bash
 # 1. This guide checks HTTP->HTTPS redirection. Spot-check on / only: it does not prove HTTPS on every route/method, nor that
@@ -86,16 +86,22 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     set -- "$1" "$(if curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
     set -- "$1" "${2##*$'\n'}" "${2%$'\n\n'*}"   # curl's exit status, then the headers and the http= line
     set -- "$1" "$2" "$3" "${3##*$'\n'}"         # the same values, then the http= line alone
     printf '%s\n' "$3"
     case "$2:$4" in
       0:http=301|0:http=302|0:http=307|0:http=308)
-        case "$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | tr -d ' \t')" in   # header names ignore letter case, and spaces and tabs are deleted, so any of them may follow location:
+        set -- "$1" "$2" "${3// /}" "$4"   # the headers with their spaces deleted by a bash expansion, not an outside command
+        { unset -v LC_ALL; } 2>/dev/null || { echo "LC_ALL is read-only in this shell, so the Location header cannot be matched; not classifying the redirect"; exit 2; }
+        LC_ALL=C   # nocasematch folds case by locale, and the C locale folds A to Z only, as header names need
+        shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # header names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail; both of its arms end this part's subshell, and the option with it
+        case "${3//$'\t'/}" in   # the headers with their tabs deleted too, so any spaces and tabs may follow location:
           *$'\n''location:https://'*) exit 0 ;;
           *) echo "FINDING: a ${4#http=} redirect without an https:// Location, which this guide's check requires"; exit 1 ;;
         esac ;;
@@ -123,9 +129,11 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in
       ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
@@ -279,7 +287,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "3d96152884624d8f1c20707895b1d312d53ff6661ae06aa7f37c030ebbb563f0",
+  "body_sha256": "e40d25d632104592ed2b539f95436f36f972b2125a69dd2e69638330c5fb1d4d",
   "components": {
     "render": {
       "name": "Render documentation",
