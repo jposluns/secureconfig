@@ -189,9 +189,11 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is missing, recorded only while nothing else was), which outranks 0
   curl -q -g -sI "http://$1/"         # expect 301 with a https:// Location
   set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
@@ -367,7 +369,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "3eaa819aa5e806fd83ba10bda08c2d4b85422c7b8e8c595934d294e7f5160995",
+  "body_sha256": "5c4b33e6d16d118aaf133645b369cb3b46099ff732119bf81755e5b05f7b12a5",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
