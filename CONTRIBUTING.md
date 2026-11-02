@@ -55,10 +55,14 @@ This repository covers deployment exposure: TLS, authentication, MFA, secret han
 
    The parser, markdown-it-py, and its runtime dependency are pinned with hashes in
    `tools/requirements-gates.txt`, using the CommonMark preset with tables enabled.
-   CI installs the pin and fails on any missing or mismatched version. A local run
-   without the pinned version prints one advisory SKIP for the unit checks and still
-   runs the fence checks, so a local green predicts CI only when the pinned parser
-   is installed. The legacy fence scanner and its baseline are independent of the
+   CI installs the pin and fails on any missing or mismatched version. Without the
+   pin, `tools/run_all_checks.sh` stops with status 2 before any other gate runs,
+   in one line that names the interpreter, the version it found and the fix. Run
+   on its own without the pinned version, `tools/check_verify_marking.py` prints
+   one advisory SKIP for the unit checks and still runs the fence checks, but it
+   then reports a finding for each guide whose intro recognition needs the parser
+   and exits 1, so on this tree it passes only with the pinned parser installed.
+   The legacy fence scanner and its baseline are independent of the
    parser, including heading and adjacent-prose declarations. With the pin present,
    a separate unit layer parses each guide once and derives section selection,
    heading propagation and declarations from those tokens. A canonical Verify title
@@ -131,8 +135,11 @@ later in that block. A bare CR counts as a line break to the parser but not to
 the gate's LF-based line map: two bare CRs before a URL on LF line 3 can make
 the finding report line 5. Block code, HTML blocks and reference definitions have no
 inline tokens to scan. Parsed front matter is excluded. Without the pinned
-parser, a local run prints one advisory SKIP and runs the existing lexical
-fallback, which is less exact. CI and `--require-parser` fail if the parser is
+parser, the gate run on its own prints one advisory SKIP and runs the existing
+lexical fallback, which is less exact but can pass, unlike the standalone
+fallbacks of `tools/check_verify_marking.py` and `tools/version_basis.py`;
+`tools/run_all_checks.sh` stops at its parser preflight first. CI and
+`--require-parser` fail if the parser is
 absent or mismatched. The URL rule requires a literal HTTP(S) scheme: a bare
 URL written as `https&#58;//` or `https\://` exits zero even if it contains `__`.
 The gate does not recognize GFM `www.` autolinks or single-underscore pairs.
@@ -273,8 +280,10 @@ Schema 1 requires exactly these top-level fields:
   `markdown-it-py` parser, citation presence uses decoded rendered text and link or autolink
   `href` targets. Bare URLs in rendered text count; code spans and link labels
   do not supply citations. HTML comments remain forbidden by the Verify-markup check.
-  CI requires the parser. Local runs without the
-  pin print an advisory SKIP and count citations with the raw-text fallback. The rendered
+  CI requires the parser. Local runs of `tools/version_basis.py` on its own without the
+  pin print an advisory SKIP and count citations with the raw-text fallback, but exit 1 at
+  the first guide whose intro recognition needs the parser, so on this tree they pass only
+  with the pin; `tools/run_all_checks.sh` stops at its parser preflight first. The rendered
   check rejects vertical tab (U+000B), form feed (U+000C), file separator (U+001C), group
   separator (U+001D), record separator (U+001E), next line (U+0085), line separator (U+2028)
   and paragraph separator (U+2029) anywhere in a guide, because they can skew parser line
