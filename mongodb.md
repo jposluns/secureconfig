@@ -332,7 +332,7 @@ The guard assumes normal Bash builtins. A literal apostrophe requires proper she
 **REASONED for every connection mode:** no `mongod`, `mongosh`, Docker, or Podman is available. Expected exposed and fixed outcomes follow each probe below. The options are documented in the [mongosh reference](https://www.mongodb.com/docs/mongodb-shell/reference/options/).
 
 ```bash
-# REASONED: connection modes; no mongod, mongosh, Docker, Podman or authorized deployment. Expected outcomes and MongoDB sources follow.
+# Connection modes; no mongod, mongosh, Docker, Podman or authorized deployment. Expected outcomes and MongoDB sources follow.
 (
   set -- PASTE_WHOLE_BLOCK 'scram' 'REPLACE_WITH_DB_HOST' \
     'REPLACE_WITH_CA_FILE' 'REPLACE_WITH_CLIENT_PEM' \
@@ -432,7 +432,7 @@ With plaintext accepted, the plaintext `ping` succeeds. With `requireTLS`, it mu
 
 Open a fresh session using `tls` mode, then substitute and run:
 
-**REASONED:** unauthenticated collection access; no MongoDB deployment. Expected authorization outcomes and MongoDB sources follow.
+Unauthenticated collection access; no MongoDB deployment. Expected authorization outcomes and MongoDB sources follow.
 
 ```javascript
 (() => {
@@ -463,7 +463,7 @@ Do not substitute `listDatabases` as proof of collection access. Its results dep
 
 Use a disposable test deployment with two existing ordinary collections and the application's actual role configuration. The probe document must satisfy the collection's validation rules. Choose a fresh probe ID for each run. Use `scram` mode as the application identity, then run:
 
-**REASONED:** collection-role allows and denials; no disposable MongoDB deployment. Expected results and command sources follow.
+Collection-role allows and denials; no disposable MongoDB deployment. Expected results and command sources follow.
 
 ```javascript
 (() => {
@@ -547,7 +547,7 @@ Without the user restriction, authentication from both sources succeeds. With th
 
 In the permitted session, inspect:
 
-**REASONED:** user source and listener restrictions; no MongoDB deployment or permitted/excluded hosts. Expected results and sources follow.
+User source and listener restrictions; no MongoDB deployment or permitted/excluded hosts. Expected results and sources follow.
 
 ```javascript
 db.runCommand({connectionStatus: 1});
@@ -577,7 +577,7 @@ In an isolated replica-set test, compare a configured member with valid membersh
 
 From a separate operator session with the `replSetGetStatus` privilege, inspect:
 
-**REASONED:** cluster membership; no multi-host MongoDB deployment. Expected results and membership sources follow.
+Cluster membership; no multi-host MongoDB deployment. Expected results and membership sources follow.
 
 ```javascript
 db.adminCommand({replSetGetStatus: 1});
@@ -593,7 +593,7 @@ See [internal membership authentication](https://www.mongodb.com/docs/manual/cor
 
 In an isolated Enterprise fixture with the auditing configuration from section 5, perform a successful authentication, a failed authentication, a collection creation, a permitted collection read, and a read attempted by an authenticated user that lacks find permission on the collection, then inspect the audit destination. Confirm the successful-authorization-check setting first:
 
-**REASONED:** Enterprise audit coverage; no Enterprise deployment or readable audit destination. Expected events and MongoDB 8.0 sources follow.
+Enterprise audit coverage; no Enterprise deployment or readable audit destination. Expected events and MongoDB 8.0 sources follow.
 
 ```javascript
 db.adminCommand({getParameter: 1, auditAuthorizationSuccess: 1});
@@ -607,7 +607,7 @@ With no destination configured, no audit records are produced. With the destinat
 
 Set the log verbosity to 1 in both fixtures so the operation is logged regardless of latency, insert a harmless canary, read the corresponding entry in the process log, then restore the previous verbosity:
 
-**REASONED:** diagnostic-log redaction; no Enterprise test server or process-log access. Expected canary results and MongoDB 8.0 sources follow.
+Diagnostic-log redaction; no Enterprise test server or process-log access. Expected canary results and MongoDB 8.0 sources follow.
 
 ```javascript
 db.setLogLevel(1);
@@ -623,7 +623,7 @@ Without redaction, the canary value appears in the matching log entry. With `sec
 Create equivalent unencrypted and encrypted fixtures, each holding a known document, then confirm on disposable copies that the encrypted data files require the key configuration while a correctly configured server reads them. Inspect the startup log for the key-manager initialization:
 
 ```bash
-# REASONED: storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
+# Storage encryption; no Enterprise fixture, disposable data directory or KMIP endpoint. Expected key-manager results and MongoDB 8.0 sources follow.
 (                                       # a subshell, so the exits below end only the subshell
   if grep -iE 'encryption.*key|key manager' /var/log/mongodb/mongod.log; then
     echo "unclassified observation: read the matched lines above; with encryption enabled, the log records that the encryption key manager initialized"; exit 0
@@ -912,7 +912,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "8811ef803003fe82057f4a1686022b12b9e6b3d73e53643bd3fafa82d9bfbec7",
+  "body_sha256": "1bb9e73717f13c924ac93b39d92f444534291f5f1a536195180052d14b41d682",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
