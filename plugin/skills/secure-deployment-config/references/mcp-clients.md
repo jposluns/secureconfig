@@ -98,7 +98,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   REASONED: following block; address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
+   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (                                       # a subshell, so the exit below ends only the subshell
@@ -122,7 +122,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0, and the fixture runs were not repeated. On the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
+   The bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n. The bash -n and fixture runs recorded here covered the token-scan block in an earlier form, whose guard refusals left the subshell with status 0 and whose result arms ended with status 0, and the fixture runs were not repeated. On the current form, whose guard refusals leave the subshell with status 2, whose FOUND arm exits 1 and whose scan-error arm exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run. That bash -n run also covered earlier forms of the address-classification and application_type blocks, which ended with the status of their last command; on their current forms, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run.
 
    ```bash
    (
@@ -149,7 +149,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 5. **`application_type` is present on DCR (reasoned).** Prerequisite unavailable: the client's live DCR request. Capture the registration request body the client `POST`s to the DCR endpoint and confirm it includes `application_type` (`native` or `web` per step 3). A fixed native client's captured body looks like this (an illustrative shape, not a live capture):
 
-   REASONED: following block; illustrative native registration follows MCP Client Registration and OIDC Registration; no live DCR request is available.
+   Illustrative native registration follows MCP Client Registration and OIDC Registration; no live DCR request is available.
 
    ```json
    {"redirect_uris":["http://localhost:3000/callback"],"grant_types":["authorization_code"],"response_types":["code"],"token_endpoint_auth_method":"none","application_type":"native"}
@@ -157,7 +157,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   REASONED: following block; application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
+   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    (                                       # a subshell, so the exits below end only the subshell
@@ -259,7 +259,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "67e8c37bc54a00b0784ca93ffc7452b7e4030e622d441ecc18798412446a6c02",
+  "body_sha256": "cc910598b718d48835c0e1ae7c32a916940e0f59156a8d4733ae02ad0066c5d1",
   "components": {
     "mcp": {
       "name": "MCP",
