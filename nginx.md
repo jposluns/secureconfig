@@ -143,7 +143,7 @@ that tolerance rather than removing the timeout.
 
 Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket. That CDN or proxy arrangement means the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guards but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; no form before that one has a recorded run. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its two host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl, sudo, head, rm and ss and no network, also ran no deployment. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in each host part with 2 and the bash message before its probes; the block still ran `sudo nginx -t`, the reload and `ss -tlnp` and exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guards but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; earlier QA reports record stub runs of forms before that one, and no exposed/fixed deployment run of any form is recorded. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its two host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs on 2026-11-01 of the previous form, before the curl exit 60, TLS 1.1, body-size and rate-limit changes recorded below, with stub curl, sudo, head, rm and ss and no network, also ran no deployment. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, those stub runs refused every host name in each host part with 2 and the bash message before its probes; the block still ran `sudo nginx -t`, the reload and `ss -tlnp` and exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. Stub runs of the current form on 2026-11-02, in bash 5.3.9 with stub curl, sudo, ss, openssl, wget and nc and no network, also ran no deployment. In them, curl exit 60 on the HTTPS request and a TLS 1.1 request failing locally with exit 35 each recorded 3 with a message that also names the client-side cause, an 11M body answered with the 9M control's own 405 or 302 recorded 3 with a message naming three readings, a 405 pair after an earlier TLS 1.1 finding kept 1, a 200 pair recorded 1 as accepted, and an 11M 413 passed. An 11M 400 after a 405 control recorded 3, a voided 9M control (401, 413, 502 or curl exit 28) never made the 11M answer a finding, a failing `xargs` or curl in the rate-limit run recorded 3 with the message naming `xargs`, and under dash 0.5.12 the block still exited 3. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -152,7 +152,7 @@ Mind the client address these headers carry. At a direct internet edge the block
   if sudo nginx -t && sudo systemctl reload nginx; then :; else
     echo "nginx -t or reload exit $?: the requests below may test the configuration nginx was already running; inconclusive"; set -- 3
   fi
-  (                                     # a subshell, so your own script arguments are untouched
+  (                                     # a nested subshell, so this part's set -- and exit leave the block's status above untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOST' 'REPLACE_WITH_auth_OR_open'   # your public host name (the server_name), no scheme, user name, port, path, query, fragment, percent sign or trailing dot, then auth if section 3's auth covers location / or open if you left / public on purpose: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
     shift
@@ -172,10 +172,10 @@ Mind the client address these headers carry. At a direct internet edge the block
     set -- "$1" "$2" 0                  # the 3rd value is this part's status so far, ranked as above
     curl -q -g -sI "http://$1/" ||      # expect 301 with a https:// Location
       { echo "curl exit $?: the redirect request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
-    if curl -q -g -sI --max-time 10 "https://$1/"; then :; else   # TLS must verify with NO -k (a cert error means TLS is misconfigured); status is 200 if / is open, or 401 if you applied section 3's auth to it
+    if curl -q -g -sI --max-time 10 "https://$1/"; then :; else   # TLS must verify with NO -k (a cert error means TLS is misconfigured, or that this client does not trust your CA); status is 200 if / is open, or 401 if you applied section 3's auth to it
       set -- "$1" "$2" "$3" "$?"
       case "$4" in
-        60) echo "FINDING: curl exit 60, a certificate that did not verify, and a cert error means TLS is misconfigured"; set -- "$1" "$2" 1 ;;
+        60) echo "curl exit 60: the certificate did not verify, so either TLS is misconfigured or this client does not trust its CA, as with an internal CA (see self-signed.md); inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
         *) echo "curl exit $4: the HTTPS request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
       esac
     fi
@@ -233,7 +233,7 @@ Mind the client address these headers carry. At a direct internet edge the block
     case "$4:$5" in
       0:*) echo "FINDING: a handshake offering only TLS 1.1 succeeded, so the TLSv1.2+ floor is not in force"; set -- "$1" "$2" 1 ;;
       *protocol?version*) ;;
-      *) echo "curl exit $4 without a protocol_version alert, which is not proof of the floor; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+      *) echo "curl exit $4 without a protocol_version alert, so this probe cannot establish the server's TLS floor, and a client unable to offer TLS 1.1 cannot complete this check; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
     esac
     if head -c 9M  /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin; then
       set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --max-time 20 --config - --data-binary @/tmp/under.bin "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -244,12 +244,12 @@ Mind the client address these headers carry. At a direct internet edge the block
                                       # the size limit, were exercised, and a 000 means transport failed: either voids the control
       case "$4:$5" in
         0:401|0:413) echo "HTTP $5 for the 9M body voids the positive control; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
-        0:2??|0:3??|0:4??) ;;
+        0:2??|0:3??|0:4??) set -- "$1" "$2" "$3" "$4" "$5" "$5" ;;   # the control passed: keep its code to compare with the 11M body's
         0:*) echo "HTTP $5 for the 9M body is not your app's normal response; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
         *) echo "curl exit $4: the 9M request failed, which voids the positive control; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
       esac
-      set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-      set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}"   # curl's exit status, then the HTTP code
+      set -- "$1" "$2" "$3" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -s -o /dev/null -w '%{http_code}\n' --config - --data-binary @/tmp/over.bin  "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "${6-}"
+      set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%%$'\n'*}" "$5"   # curl's exit status, the HTTP code, then the 9M code if that control passed
       printf '%s\n' "$5"
                                       # 413. The 9M control is the discriminating half: nginx's default
                                       # client_max_body_size is 1m, so 9M is refused until `10m` is set,
@@ -261,14 +261,15 @@ Mind the client address these headers carry. At a direct internet edge the block
       case "$4:$5" in
         0:413) ;;
         0:2??) echo "FINDING: the 11M body was accepted with $5, so no body-size limit refused it"; set -- "$1" "$2" 1 ;;
-        0:*) echo "HTTP $5 for the 11M body is neither the 413 pass nor a 2xx finding; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        "0:${6:-none}") echo "HTTP $5 for the 11M body is the 9M control's own response, so one of three readings holds: no body-size limit refused it, something answered both requests before nginx's limit applies (a proxy in front, or a server-level return or rewrite), or an error_page remapped the limit's 413; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
+        0:*) echo "HTTP $5 for the 11M body is neither the 413 pass, a 2xx nor the 9M control's response; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
         *) echo "curl exit $4: the 11M request failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3 ;;
       esac
     else
       echo "head could not create /tmp/under.bin and /tmp/over.bin, so the size checks did not run; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3
     fi
     (set -o pipefail; seq 1 40 | xargs -P 40 -I{} curl -q -g -s -o /dev/null -w '%{http_code}\n' "https://$1/" | sort | uniq -c) ||   # pipefail only in this subshell
-      { echo "rate-limit run exit $?: seq, sort, uniq or one of the 40 curl requests failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
+      { echo "rate-limit run exit $?: seq, xargs, sort, uniq or one of the 40 curl requests failed; inconclusive"; [ "$3" = 1 ] || set -- "$1" "$2" 3; }
                                       # Run them CONCURRENTLY and WITHOUT credentials: nginx evaluates
                                       # limit_req in the PREACCESS phase, before auth_basic in the ACCESS
                                       # phase, so an unauthenticated flood still exercises the limiter, which
@@ -420,7 +421,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "a8b706072c2c22484988ae2695df8f801be089ea369672e206a9a8cdce5e9c9d",
+  "body_sha256": "6c226632c8df68825225d00a105ed73f68c268e3114fcf4f90d81a59ebb821b5",
   "components": {
     "nginx-source": {
       "name": "nginx source",
