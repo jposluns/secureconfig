@@ -122,7 +122,8 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 # On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
 # The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains, and before this block reported one exit status for all of its parts.
 # On 2026-10-31 an earlier form, before the ss presence check, passed bash -n and ran whole against stubs, including those example-domain refusals; no n8n deployment or network was involved.
-# The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, which also passed bash -n and ShellCheck 0.11.0 and ran whole against stubs with no network in a later review that day, with ss present and passing, present and failing, and missing.
+# A later review that day ran the form with that check, whose three host parts lowercased the host with tr before refusing those names, through bash -n and ShellCheck 0.11.0 and whole against stubs with no network, with ss present and passing, present and failing, and missing.
+# The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, which on 2026-11-01 also passed bash -n and ShellCheck 0.11.0 and ran whole against stubs with no network: each host part refused those names in lower, upper and mixed case, also with tr absent, and under dash refused every host with status 2.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
 # owner-creation data to a live instance as a "test".
@@ -147,9 +148,11 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
       -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/" ||
       { echo "curl exit $?: the TLS request failed; inconclusive"; exit 3; }
@@ -169,9 +172,11 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
     case "$2" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 2 ;; esac
     set -- "$1" "$2" "https://$1/api/v1/workflows" 0   # the host, the key, the workflows URL, then this part's status so far, ranked as above
@@ -215,9 +220,11 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 2 ;; esac
     set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://$1/webhook/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "${3%%$'\n'*}" "${3##*$'\n'}"   # curl's write-out line, then its exit status
@@ -513,7 +520,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "eaf628b3b4d1c482194f8251aa6cb03e3188f0b4a5e2585cf4dc6b2d087de1ca",
+  "body_sha256": "c7033d13fc6e39a3d341b40f3ad106adec07ae36b61edcbe7f16218969ba8fef",
   "components": {
     "server": {
       "name": "n8n listener source",

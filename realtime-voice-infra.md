@@ -171,11 +171,12 @@ Unverified until checked in your deployment: the default service state and effec
 
 ## Verify
 
-REASONED: following block; listener inventory and interpretation, per the guide's cited LiveKit ports and firewall reference, LiveKit sample config and coturn option reference. No provisioned LiveKit or coturn exposed/fixed fixture is available for this offline review; service outcomes remain unobserved. Local bash -n and ShellCheck 0.11.0 both exited 0 without diagnostics. The sudo stub printed ss -tlnp and ss -aunp; no host sockets were inspected. Those runs covered an earlier form of the block; its current form, which exits 3 when either inventory command fails and otherwise 0, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes, and no stub run of it is recorded here. A local stand-up opens a listener, which the authoring host forbids without an isolated network namespace; the earlier review reported that it could not create one (`unshare: unshare failed: Operation not permitted`). Exposed signaling/admin/metrics should be reachable where the fixed deployment restricts them; media and allocated relays may remain public. Service outcomes below remain reasoned, not demonstrated: they are derived from the guide's cited vendor sources rather than observed against exposed and fixed services. Local shell, stub and certificate checks do not demonstrate those service outcomes. A redirect, a `404`, a timeout, or a TLS error is inconclusive, never proof of the fixed state; every negative check needs a working positive control.
+REASONED: following block; listener inventory and interpretation, per the guide's cited LiveKit ports and firewall reference, LiveKit sample config and coturn option reference. No provisioned LiveKit or coturn exposed/fixed fixture is available for this offline review; service outcomes remain unobserved. Local bash -n and ShellCheck 0.11.0 both exited 0 without diagnostics. The sudo stub printed ss -tlnp and ss -aunp; no host sockets were inspected. Those runs covered an earlier form of the block; its current form, which exits 2 when the `command -v ss` check finds no `ss`, 3 when either inventory command fails and otherwise 0, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes, and no stub run of it is recorded here. Per the guide's cited sudo sudoers manual, secure_path entry, where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH, so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it. A local stand-up opens a listener, which the authoring host forbids without an isolated network namespace; the earlier review reported that it could not create one (`unshare: unshare failed: Operation not permitted`). Exposed signaling/admin/metrics should be reachable where the fixed deployment restricts them; media and allocated relays may remain public. Service outcomes below remain reasoned, not demonstrated: they are derived from the guide's cited vendor sources rather than observed against exposed and fixed services. Local shell, stub and certificate checks do not demonstrate those service outcomes. A redirect, a `404`, a timeout, or a TLS error is inconclusive, never proof of the fixed state; every negative check needs a working positive control.
 
 ```bash
-(                # a subshell, so the exit below ends only the subshell
-  set -- 0       # the block's status so far: 3 (a command failed) outranks 0; this block classifies no finding
+(                # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  set -- 0       # the block's status so far: 3 (a command failed) outranks 0; this block classifies no finding, and a missing ss exits 2 above
   sudo ss -tlnp || { echo "sudo ss -tlnp exit $?: the TCP listener inventory failed; inconclusive"; set -- 3; }
   sudo ss -aunp || { echo "sudo ss -aunp exit $?: the UDP socket inventory failed; inconclusive"; set -- 3; }
                  # Read the bind address per port, do not just confirm the port. LiveKit signaling 7880
@@ -387,6 +388,7 @@ REASONED: preceding block; what a deployment run of the s_client command does no
 - coturn 4.18.0 default MD5 derivation (checked October 2026; lines 339-428), SASLprep (1920-1960), key-based integrity generation (1985-2034) and checking (2060-2145): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/client/ns_turn_msg.c
 - coturn 4.18.0 SHATYPE_DEFAULT definition (checked October 2026; lines 190-196): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/client/ns_turn_msg_defs.h
 - OpenSSL 3.5 openssl-dgst(1ssl) manual (checked October 2026 against the vendor page and the installed 3.5.5 manual; `-md5`, `-r` and stdin input): https://docs.openssl.org/3.5/man1/openssl-dgst/
+- sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 
 
 <!-- version-basis:start -->
@@ -470,7 +472,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "237beabc5399868678f33e90a9f35a133341cd61fd7c59e5721a45ed75990c78",
+  "body_sha256": "1e20db01fd7ee1682a9496212fa50653d3a0580a864097696f0417ed993f6b42",
   "components": {
     "livekit": {
       "name": "LiveKit",

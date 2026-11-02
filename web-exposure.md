@@ -282,7 +282,7 @@ REASONED: following block; planted-file denial, directory listing and ACME/looka
 ```
 
 ```bash
-# REASONED: client-bundle scan per the guide's cited Next.js environment variables and GNU grep 3.12 exit status and error handling; no built bundle was scanned here, and no deployment outcome is recorded.
+# Client-bundle scan per the guide's cited Next.js environment variables and GNU grep 3.12 exit status and error handling; no built bundle was scanned here, and no deployment outcome is recorded.
 (                                       # a subshell, so the exit below ends only this check
   set -- 0 0 .next/static build dist    # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), whether any directory was scanned, then the directories still to scan
   while [ "$#" -gt 2 ]; do
@@ -481,7 +481,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "3337d76db4d17e4c9879df36e58a4293e23fd16325ae0bc16bb123300da2be55",
+  "body_sha256": "aae3d726cc8316856b0ac1451f98074319106d8edacbf53599436267b268ef00",
   "components": {
     "nginx": {
       "name": "nginx documentation",
