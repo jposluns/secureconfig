@@ -221,7 +221,7 @@ The listener inventory in the following fence, which refuses with status 2 when 
 
 ```bash
 # The external probes follow the sources above; the authoring host forbids listeners without an isolated network namespace, and has none.
-# each must be unreachable from another host, so run this block there. Read err, not the number: it must name a refusal or
+# Each port must be unreachable from another host, so run this block there. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive. Every port is
 # probed even after one fails. The block exits 1 if any port answered with an HTTP code, otherwise 3 if
@@ -413,7 +413,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b35b939a171fad3a782838213f4433116e0bbea8283c0cf0c635b307376cfc3c",
+  "body_sha256": "77f39e9fc5ca0eaf69041d34459158440c099ae09bc07ffe0fe7fc939a6e8285",
   "components": {
     "comfy": {
       "name": "ComfyUI",
