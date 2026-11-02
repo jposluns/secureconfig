@@ -297,7 +297,7 @@ Leave the final value as `browser` for a password-only server. If a token is alr
 )
 ```
 
-**REASONED: no Jupyter runtime or browser session here.** In a clean browser profile, visit the same deployment without a token query or existing cookies. It must require authentication before loading a notebook. Log in with the configured password, then request the same `/api/kernels` URL: expect `200` with a JSON kernel list, including an empty list when no kernels are running. An existing session legitimately skips the login prompt. [Server authentication](https://jupyter-server.readthedocs.io/en/latest/operators/security.html), [kernels API](https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html).
+**No Jupyter runtime or browser session here.** In a clean browser profile, visit the same deployment without a token query or existing cookies. It must require authentication before loading a notebook. Log in with the configured password, then request the same `/api/kernels` URL: expect `200` with a JSON kernel list, including an empty list when no kernels are running. An existing session legitimately skips the login prompt. [Server authentication](https://jupyter-server.readthedocs.io/en/latest/operators/security.html), [kernels API](https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html).
 
 Use these exposed-versus-fixed comparisons:
 
@@ -436,7 +436,7 @@ Set the base URL to the actual server URL, including any deployment prefix. Set 
 )
 ```
 
-**REASONED: the same missing runtime and session prevent these comparisons here.**
+**The same missing runtime and session prevent these comparisons here.**
 
 | Check | Exposed comparison | Fixed result and positive control |
 |---|---|---|
@@ -744,7 +744,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6c9b8134c654140bcf43bd0273a4e0bd56f347fe99a05b2303f03f38a251e842",
+  "body_sha256": "a5e7a35a0d67aeee4c8f3c6663980e33f2ee99dce04c34821f4ec2512a6aef2b",
   "components": {
     "server": {
       "name": "Jupyter Server",
