@@ -373,7 +373,7 @@ Apply the same MariaDB client substitution when appropriate. Restrict access to 
 
 REASONED: service scope for every check in this section, from the authoring limitations recorded in this paragraph and the vendor documentation cited at each check below. Service behavior below is **REASONED, not demonstrated**. The authoring environment has a read-only filesystem, no MySQL/MariaDB client or server binaries, no Docker/Podman runtime, and no supplied writable deployment or database credentials. No available authorized environment could reproduce the exposed and fixed service states.
 
-DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. The bash -n, ShellCheck and guard-only runs recorded in this paragraph, at marking time and originally, covered the five guarded blocks in an earlier form, whose guard refusals exited with status 1; none was re-run on the current form, whose guard refusals exit with status 2. That earlier form of the two section 5 blocks with a positive control also exited with status 1 after a failed positive control, where the current form exits with status 3. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
+DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. The bash -n, ShellCheck and guard-only runs recorded in this paragraph, at marking time and originally, covered the five guarded blocks in an earlier form, whose guard refusals exited with status 1 where those of the current form exit with status 2, and the listener block also before its `ss` presence check and its status 3 for a failed `ss`. The current form of all seven blocks is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes, and that of the listener block also by local bash -n and stub runs with `ss` present, failing and missing. That earlier form of the two section 5 blocks with a positive control also exited with status 1 after a failed positive control, where the current form exits with status 3. At marking time, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
 
 DEMONSTRATED: the in-memory INI parse recorded in this paragraph, re-run at marking time against both states: all five INI fragments parsed with Python 3.14.4 configparser in strict mode (`ConfigParser(strict=True)`, other arguments at their defaults). The control fragments in that marking-time re-run against both states used the same parser and options: a control fragment repeating `require_secure_transport` under `[mysqld]` was rejected with DuplicateOptionError, and a control fragment placing that option before any section header was rejected with MissingSectionHeaderError. Vendor option acceptance stays with the reasoned native checks, as stated. All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
 
@@ -501,6 +501,8 @@ For MariaDB, adapt the whole block using `mariadb --no-defaults`, omit MySQL's `
 
 **REASONED: missing access to the database server's network namespace and its writable listener configuration.**
 
+REASONED: the listener block's statuses, from its own commands. The block exits 2 for a refusal, including when `ss` is not installed, 3 if `ss` runs and fails, and otherwise 0, and its last line says that it leaves every listener for you to judge.
+
 Run on the database server, using its actual `hostname` output:
 
 ```bash
@@ -515,7 +517,10 @@ Run on the database server, using its actual `hostname` output:
     *)
       [ -n "$1" ] || { echo "argument 1 is empty; not connecting"; exit 2; }
       [ "$(hostname)" = "$1" ] || { echo "run on the named database server"; exit 2; }
-      ss -tlnp
+      command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+      ss -tlnp || { echo "ss -tlnp exit $?: the listener list did not print; inconclusive"; exit 3; }
+      echo "block exit 0; no listener above is classified, so judge every listener yourself"
+      exit 0
       ;;
   esac
 )
@@ -851,7 +856,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d27a3234852d6e1e0ea36d68c6f9f1a19687c191ca507c1d8a10e670d032620",
+  "body_sha256": "f2d816e86442c44d0bb64fc147557151ea41ddccb731d3992fb1f870244bc5ba",
   "components": {
     "mysql": {
       "name": "MySQL reference",

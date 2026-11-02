@@ -120,8 +120,18 @@ still need their own TLS and auth on top ([postgresql.md](postgresql.md), [mysql
 REASONED: identity, filesystem, runtime security context and segmentation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker, Kubernetes and Linux man-pages sources; the authoring environment has no authorized Docker workload or Kubernetes cluster. This guide's assessment: the Compose `app` service's image must supply id, sh and touch, and the Pod's container image must supply id, sh and grep -E for these commands; the exact touch error depends on the Compose `app` service's image and probe path.
 
 ```bash
-docker compose exec app id                          # uid is not 0 (run from the Compose project; this guide advises using the actual container name with bare `docker exec` rather than the `app` service name)
-docker compose exec app sh -c 'touch /app/probe && echo WRITABLE || echo blocked'
+(                                                   # the whole block in one subshell, so one exit status covers every part of it
+  set -- 0 "$(if docker compose exec app id; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # uid is not 0 (run from the Compose project; this guide advises using the actual container name with bare `docker exec` rather than the `app` service name)
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"         # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), id's exit status, then what it printed
+  printf '%s' "$3"
+  case "$2:$3" in
+    "0:uid=0("*|"0:uid=0 "*) echo "FINDING: the app service runs as uid 0"; set -- 1 ;;
+    0:uid=*) set -- 0 ;;
+    0:*) echo "id printed no uid= value; inconclusive"; set -- 3 ;;
+    *) echo "docker compose exec exit $2: id did not run in the app service; inconclusive"; set -- 3 ;;
+  esac
+  docker compose exec app sh -c 'touch /app/probe && echo WRITABLE || echo blocked' ||
+    { echo "docker compose exec exit $?: the write probe did not run; inconclusive"; [ "$1" = 1 ] || set -- 3; }
                                                     # with read_only: true expect "blocked" (typically EROFS; the exact error is image-dependent). But `touch` also
                                                     # fails on a MISSING or non-writable /app (ENOENT/EACCES), which prints
                                                     # "blocked" on a WRITABLE fs too, and this line exits 0 either way (read the
@@ -132,14 +142,63 @@ docker compose exec app sh -c 'touch /app/probe && echo WRITABLE || echo blocked
                                                     # "blocked". Probe a path the container user owns, not `/` (a non-root
                                                     # user cannot write `/` on a writable fs either) and not a tmpfs you
                                                     # mounted (writable by design)
-kubectl get pod app -o jsonpath='{.spec.containers[0].securityContext}'   # the DECLARED context, not runtime proof; also inspect the running process:
-kubectl exec app -- sh -c 'id; grep -E "NoNewPrivs|Seccomp|CapEff|CapBnd" /proc/1/status'   # expect uid!=0, NoNewPrivs:1, Seccomp:2 (a filter is active, not 0=unconfined), and CapEff+CapBnd 0000000000000000 (this guide's expected runtime state under drop:[ALL] is zero effective AND bounding sets; CapEff alone is not enough). Assumes the container's own PID namespace; with shareProcessNamespace PID 1 is the pod sandbox (shown as /pause in the cited example), so pick the app PID and inspect its /proc/<pid>/status
+  echo "block exit $1; the WRITABLE or blocked word above is not classified: compare it across the read_only: false and read_only: true runs yourself, as the comments describe"
+  exit "$1"
+)
+```
 
+```bash
+# REASONED: the declared and runtime security context checks follow the cited Kubernetes, kubectl and
+# Linux man-pages sources; no authorized Kubernetes cluster is available here.
+(                                                   # the whole block in one subshell, so one exit status covers every part of it
+  set -- 0                                          # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  kubectl get pod app -o jsonpath='{.spec.containers[0].securityContext}' ||   # the DECLARED context, not runtime proof; also inspect the running process:
+    { echo "kubectl get exit $?: the declared securityContext could not be read; inconclusive"; set -- 3; }
+  set -- "$1" "$(if kubectl exec app -- sh -c 'id; grep -E "NoNewPrivs|Seccomp|CapEff|CapBnd" /proc/1/status'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # expect uid!=0, NoNewPrivs:1, Seccomp:2 (a filter is active, not 0=unconfined), and CapEff+CapBnd 0000000000000000 (this guide's expected runtime state under drop:[ALL] is zero effective AND bounding sets; CapEff alone is not enough). Assumes the container's own PID namespace; with shareProcessNamespace PID 1 is the pod sandbox (shown as /pause in the cited example), so pick the app PID and inspect its /proc/<pid>/status
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"         # the block's status so far, kubectl's exit status, then what it printed
+  printf '%s' "$3"
+  # The checks below read PID 1; with shareProcessNamespace that is the pod sandbox, so there this block's status is not the app's.
+  if [ "$2" != 0 ]; then
+    echo "kubectl exec exit $2: the running process could not be inspected; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3"
+  else
+    case "$3" in
+      "uid=0("*|"uid=0 "*) echo "FINDING: the process runs as uid 0"; set -- 1 "$2" "$3" ;;
+      uid=*) ;;
+      *) echo "id printed no uid= value; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;;
+    esac
+    case "$3" in
+      *$'\n'"NoNewPrivs:"$'\t'"1"$'\n'*) ;;
+      *$'\n'"NoNewPrivs:"$'\t'"0"$'\n'*) echo "FINDING: NoNewPrivs is 0, so privilege escalation is not blocked"; set -- 1 "$2" "$3" ;;
+      *) echo "no NoNewPrivs value of 0 or 1 was read; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;;
+    esac
+    case "$3" in
+      *$'\n'"Seccomp:"$'\t'"2"$'\n'*) ;;
+      *$'\n'"Seccomp:"$'\t'"0"$'\n'*) echo "FINDING: Seccomp is 0, so the process is unconfined"; set -- 1 "$2" "$3" ;;
+      *) echo "no Seccomp value of 2 or 0 was read; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;;
+    esac
+    case "$3" in
+      *$'\n'"CapEff:"$'\t'"0000000000000000"$'\n'*) ;;
+      *$'\n'"CapEff:"$'\t'*) echo "FINDING: CapEff is not zero, so the process keeps effective capabilities"; set -- 1 "$2" "$3" ;;
+      *) echo "no CapEff value was read; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;;
+    esac
+    case "$3" in
+      *$'\n'"CapBnd:"$'\t'"0000000000000000"$'\n'*) ;;
+      *$'\n'"CapBnd:"$'\t'*) echo "FINDING: CapBnd is not zero, so the bounding set still holds capabilities"; set -- 1 "$2" "$3" ;;
+      *) echo "no CapBnd value was read; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;;
+    esac
+  fi
+  echo "block exit $1; the declared securityContext is not classified, and the runtime values come from PID 1, which with shareProcessNamespace is the pod sandbox, so then judge the app PID's status yourself"
+  exit "$1"
+)
+```
+
+```bash
+# REASONED: the NetworkPolicy probes follow the cited Kubernetes NetworkPolicy, kubectl, RFC 7396 and
+# BusyBox sources; no authorized Kubernetes cluster is available here.
 # resolve the db Service's ClusterIP once and probe that same IP from both pods below; the
 # role: other pod has no DNS egress under the policies above, so a probe by hostname would fail on
 # name resolution rather than on the NetworkPolicy, and access by IP could still work even if
 # the policy were not enforcing anything
-DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 
 # A probe pod needs its own admission-compliant securityContext under the restricted PSA level (Pod Security
 # Standards). This guide's advice: make a real TCP connect to the db's actual port (a Postgres port does not
@@ -174,21 +233,37 @@ DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 # 1.36.1-glibc, which agrees with the mapping above but does not prove that build made the image.
 # This guide's advice: neither reading shows run-time behaviour, and tags move, so confirm that the image you pull
 # accepts `nc -z -w 3` and makes a TCP connect before relying on the probe.
-# Build the override per pod:
-probe_override() {
-  printf '%s' '{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"runAsGroup":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"'"$1"'","image":"busybox:1.36","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"command":["nc","-z","-w","3","'"$DBIP"'","5432"]}]}}'
-}
+# This block exits 1 if probe-forbidden connects, 2 if the db Service has no ClusterIP to probe (an empty or
+# None ClusterIP, or one containing characters other than hexadecimal digits, dots and colons), 3 if the
+# ClusterIP cannot be read or the probe-permitted positive control fails, and otherwise 0, leaving
+# probe-forbidden's kubectl output for you to read.
+(                                                    # the whole block in one subshell, so one exit status covers every part of it
+  set -- "$(if kubectl get svc db -o jsonpath='{.spec.clusterIP}'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "${1##*$'\n'}" "${1%$'\n'*}"                # kubectl's exit status, then the ClusterIP
+  [ "$1" = 0 ] || { echo "kubectl get svc exit $1: the db Service's ClusterIP could not be read; inconclusive"; exit 3; }
+  case "$2" in
+    ""|None|*[!0123456789abcdefABCDEF.:]*) echo "the db Service's ClusterIP is empty, None or not an address (a headless Service has none to probe); not probing"; exit 2 ;;
+  esac
+  # Build the override per pod: printf uses its format once for each pod name and ClusterIP pair, one line each
+  set -- "$2" 0 "$(printf '{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"runAsGroup":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"%s","image":"busybox:1.36","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"command":["nc","-z","-w","3","%s","5432"]}]}}\n' probe-permitted "$2" probe-forbidden "$2")"
+  set -- "$1" "$2" "${3%%$'\n'*}" "${3#*$'\n'}"     # the ClusterIP, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then each pod's override
 
-kubectl run probe-permitted --rm -it --restart=Never --image=busybox:1.36 --labels=role=app \
-  --overrides="$(probe_override probe-permitted)" -- true
+  if kubectl run probe-permitted --rm -it --restart=Never --image=busybox:1.36 --labels=role=app \
+    --overrides="$3" -- true; then :; else
+    echo "kubectl run exit $?: the probe-permitted positive control failed, so probe-forbidden below proves nothing; inconclusive"; set -- "$1" 3 "$3" "$4"
+  fi
                                                      # from a pod labeled role=app, by IP: must succeed FIRST. This is the
                                                      # positive control. If it fails, the policy, the override, or this
                                                      # image's `nc` is the problem, and the forbidden probe below proves
                                                      # nothing: a refusal you cannot distinguish from a broken probe is
                                                      # not evidence
 
-kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labels=role=other \
-  --overrides="$(probe_override probe-forbidden)" -- true
+  if kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labels=role=other \
+    --overrides="$4" -- true; then
+    echo "FINDING: probe-forbidden reached $1:5432 from a pod without role=app"; set -- "$1" 1 "$3" "$4"
+  else
+    echo "kubectl run exit $?: probe-forbidden did not connect"
+  fi
                                                      # from a pod without that label, same IP: must time out or be refused
                                                      # at TCP, not fail on DNS. Read this as an END-TO-END denial: role=other
                                                      # cannot reach the db, but the refusal could be its own default-deny
@@ -198,6 +273,9 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
                                                      # role=app) needs more elaborate per-layer probes, each with its own
                                                      # positive control, and is CNI-dependent, so validate the whole policy
                                                      # set on your CNI rather than reasoning rule by rule
+  echo "block exit $2; when probe-forbidden fails, its output above must show a TCP refusal or timeout rather than a kubectl or admission error, so read it yourself"
+  exit "$2"
+)
 ```
 
 ## Sources (checked September 2026)
@@ -299,7 +377,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "ce6bd4076af208d5f6dac9289040231b59c74da449d219bd76a14fdb756b3ba9",
+  "body_sha256": "1aebec7da57b179cd121a6e4a50acab780d17b39af6f7438353687adf082b3c0",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -432,10 +510,10 @@ Claims (full source mapping in the JSON block below):
     "policy-limits": {"text": "hostNetwork and same-node traffic handling are implementation-dependent; database TLS/authentication remain separate controls.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
     "verify-user": {"text": "Compose exec targets the app service in the resolved project and id must report a nonzero UID; using the actual container name for bare docker exec is this guide's advice.", "components": ["docker", "compose-2324"], "sources": ["docker:s6ca35cbd69e7", "docker:s8b7485a246e4", "compose-2324:s906b5822e9c4", "compose-2324:sfe4c568a9887"], "status": "REASONED", "verify": [1]},
     "verify-rootfs": {"text": "With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate.", "components": ["docker", "compose-2324"], "sources": ["docker:s8b7485a246e4", "compose-2324:s1bf114813e47"], "status": "REASONED", "verify": [1]},
-    "verify-context": {"text": "kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.", "components": ["kubernetes", "kubectl-134", "procfs-619", "kubernetes-website"], "sources": ["kubernetes:sb78ea91d0308", "kubectl-134:sf5417ce59241", "procfs-619:sa94440d59945", "procfs-619:s74035196d5f7", "kubernetes-website:s3df8336a2aa8"], "status": "REASONED", "verify": [1]},
-    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; no probe run is recorded, so this guide advises confirming that the image accepts nc -z -w 3 and makes a TCP connect before relying on it.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:s1adb8cde69c0", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
-    "probe-image": {"text": "As of official-images d6d62c71 (tags move), amd64 busybox:1.36 is the glibc variant imported from docker-library/busybox c1375496 artefacts; this guide infers that commit's build made it. Binary reading, not run: each of the nine linux images in the index served on 2026-10-24 has a BusyBox whose nc option string matches nc_bloaty.c's with NC_EXTRA; this guide infers its parser accepts -z and -w.", "components": ["busybox-1361", "busybox-library", "busybox-image"], "sources": ["busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s77dbf800f462", "busybox-1361:s7333a3b4590b", "busybox-1361:s43d921981bf2", "busybox-library:s080d20eae28c", "busybox-library:s72f8958126e8", "busybox-image:s0844cb594c98", "busybox-image:s58988a470c6b", "busybox-image:s26842ca97d63", "busybox-image:s6fd2add44b43"], "status": "REASONED", "verify": [1]},
-    "verify-segmentation": {"text": "The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED", "verify": [1]}
+    "verify-context": {"text": "kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.", "components": ["kubernetes", "kubectl-134", "procfs-619", "kubernetes-website"], "sources": ["kubernetes:sb78ea91d0308", "kubectl-134:sf5417ce59241", "procfs-619:sa94440d59945", "procfs-619:s74035196d5f7", "kubernetes-website:s3df8336a2aa8"], "status": "REASONED", "verify": [2]},
+    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; no probe run is recorded, so this guide advises confirming that the image accepts nc -z -w 3 and makes a TCP connect before relying on it.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:s1adb8cde69c0", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [3]},
+    "probe-image": {"text": "As of official-images d6d62c71 (tags move), amd64 busybox:1.36 is the glibc variant imported from docker-library/busybox c1375496 artefacts; this guide infers that commit's build made it. Binary reading, not run: each of the nine linux images in the index served on 2026-10-24 has a BusyBox whose nc option string matches nc_bloaty.c's with NC_EXTRA; this guide infers its parser accepts -z and -w.", "components": ["busybox-1361", "busybox-library", "busybox-image"], "sources": ["busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s77dbf800f462", "busybox-1361:s7333a3b4590b", "busybox-1361:s43d921981bf2", "busybox-library:s080d20eae28c", "busybox-library:s72f8958126e8", "busybox-image:s0844cb594c98", "busybox-image:s58988a470c6b", "busybox-image:s26842ca97d63", "busybox-image:s6fd2add44b43"], "status": "REASONED", "verify": [3]},
+    "verify-segmentation": {"text": "The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED", "verify": [3]}
   }
 }
 ````

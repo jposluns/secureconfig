@@ -209,32 +209,56 @@ GET app:probe
 
 ## 8. Verify (REASONED: deployment and HA comparisons from cited Redis documentation and pinned sources; no Redis runtime, live topology or permitted socket inspection.)
 
-The deployment checks below are **REASONED, not demonstrated**. The authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and denies socket inspection. No live deployment was supplied. Shell syntax and placeholder rejection were checked locally; Redis configuration parsing remains unconfirmed, and exposed/fixed runtime behaviour is REASONED from the cited documentation and pinned sources. Those local checks covered an earlier form of the guarded shell blocks, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2.
+REASONED: the deployment checks below, from the cited Redis documentation and pinned sources; they are not demonstrated. The authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and denies socket inspection. No live deployment was supplied. Shell syntax and placeholder rejection were checked locally; Redis configuration parsing remains unconfirmed, and exposed/fixed runtime behaviour is REASONED from the cited documentation and pinned sources. Those local checks covered an earlier form of the guarded shell blocks, whose refusals exited with status 1 and whose probes set no status of their own. The current form of every shell block in this section is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs on 31 October 2026 under bash 5.3.9, with stand-ins for `ss`, `redis-cli`, `nc`, `openssl` and `timeout`; no Redis process or network was involved. Each block now exits once with one status: 1 for a finding, which outranks 3 for a failed command or an inconclusive result; 2 for a refusal before any probe; and 0 otherwise. Once its probes run, its last line names what it leaves for you to judge. The two listener inventories refuse with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, and the replica-certificate, cluster-bus certificate and peer-name checks refuse with status 2 when a CA, certificate or key file they read is not readable. For a plaintext request, a closed or reset connection without a RESP reply is the expected rejection, and any other plaintext failure is inconclusive. In the replica-certificate, cluster-bus certificate and peer-name checks, a failed negative probe counts as the expected rejection only when its error names a bad-certificate, certificate-unknown or certificate-required alert, or an unknown-CA alert for the untrusted certificate. A generic handshake failure, a closed or reset connection or any other failure there cannot be told apart from an unrelated failure, so it is inconclusive even in a fixed state, and the server's log line for the rejected handshake is left for you to read. Which error text `redis-cli` and OpenSSL print, and which alert a rejecting server sends, is this guide's assessment, not observed here, so a real rejection worded otherwise reads as inconclusive.
 
-**REASONED: listener inventory.** On the Redis host, inspect every listener:
+**Listener inventory.** On the Redis host, inspect every listener:
 
 ```bash
-ss -tlnp
+(                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  if ss -tlnp; then
+    echo "unclassified observation: read every listener above; for the local-only configuration, Redis TCP listeners belong on loopback"
+    exit 0
+  else
+    echo "ss -tlnp exit $?: a socket-inspection error is inconclusive; read the error above"
+    exit 3
+  fi
+)
 ```
 
 For the local-only configuration, Redis TCP listeners should be on loopback. An unintended wildcard or external-interface listener fails that configuration's check. Deliberate remote access needs the intended private listener and network restrictions. A socket-inspection error is inconclusive. The bind behaviour follows the [pinned configuration](https://raw.githubusercontent.com/redis/redis/8.2.1/redis.conf).
 
-**REASONED: plaintext and unauthenticated TLS checks.** Run from a client location that should reach Redis. Substitute the actual hostname inside the quotes. For mutual TLS, add the client certificate and key options to the TLS command.
+**Plaintext and unauthenticated TLS checks.** Run from a client location that should reach Redis. Substitute the actual hostname inside the quotes. For mutual TLS, add the client certificate and key options to the TLS command.
 
 ```bash
 (
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_REDIS_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute your Redis host; not probing"; exit 2 ;;
-    *)
-      unset REDISCLI_AUTH || exit 2
-      redis-cli -h "$1" -p 6379 ping
-      redis-cli --tls --cacert /etc/redis/tls/ca.crt -h "$1" -p 6379 ping
-      ;;
   esac
+  unset REDISCLI_AUTH || exit 2
+  set -- 0 "$1" "$(if redis-cli -h "$1" -p 6379 ping 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), the host, redis-cli's exit status, then its output
+  printf '%s' "$4"
+  case "$3:$4" in
+    0:*|*PONG*|*NOAUTH*) echo "FINDING: the plaintext ping got a RESP reply, so plaintext Redis is still available at this endpoint"; set -- 1 "$2" ;;
+    *'Server closed the connection'*|*'Connection reset by peer'*) echo "no RESP reply recognized to the plaintext ping (redis-cli exit $3); the TLS ping below decides whether that is the pass"; set -- 0 "$2" ;;
+    *) echo "the plaintext ping got neither a RESP reply nor a closed or reset connection (redis-cli exit $3), as a timeout, resolution failure, refusal or local error does; inconclusive"; set -- 3 "$2" ;;
+  esac
+  set -- "$1" "$2" "$(if redis-cli --tls --cacert /etc/redis/tls/ca.crt -h "$2" -p 6379 ping 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # status, host, redis-cli's exit status, then its output
+  printf '%s' "$4"
+  case "$4" in
+    *NOAUTH*) echo "the TLS ping reached NOAUTH, the secured default user's reply" ;;
+    *PONG*) echo "FINDING: the TLS ping got PONG without credentials, as an exposed default on nopass +@all does"; set -- 1 "$2" ;;
+    *) echo "the TLS ping reached neither NOAUTH nor PONG (redis-cli exit $3), so it did not confirm the endpoint; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" ;;
+  esac
+  echo "block exit $1; the authenticated GET app:probe positive control from section 7 is left for you to run and judge"
+  exit "$1"
 )
 ```
 
@@ -242,7 +266,7 @@ Any RESP reply to the plaintext command, including `PONG`, `NOAUTH`, or another 
 
 For the secured default user in this guide, the unauthenticated TLS request should return `NOAUTH`. An exposed `default on nopass +@all` returns `PONG` when the connection is otherwise permitted. With mutual TLS, a missing client certificate fails before this authentication check. Then authenticate as `app` using section 7 and confirm `GET app:probe` succeeds. These distinctions follow the [TLS listener documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/) and [ACL default-user rules](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/).
 
-**REASONED: ACL readback and denied-privilege review.** In the separate administrative session:
+**ACL readback and denied-privilege review.** In the separate administrative session:
 
 ```
 ACL GETUSER app
@@ -269,7 +293,7 @@ ACL LOG 20
 
 Look for the corresponding denied CONFIG command, the `app` username, and a recent event age. Review unexpected `auth`, `command`, `key`, and `channel` failures. Record relevant events before any reset; do not clear the log as part of this check. The log is bounded and held in memory, so an empty result is not proof that no failures occurred. See [ACL LOG](https://redis.io/docs/latest/commands/acl-log/) and the [pinned ACL-log configuration](https://raw.githubusercontent.com/redis/redis/8.2.1/redis.conf).
 
-**REASONED: read/write and channel policy checks, Redis 7.0+.** If section 4's worker is configured, run these from the administrative session:
+**Read/write and channel policy checks, Redis 7.0+.** If section 4's worker is configured, run these from the administrative session:
 
 ```
 ACL GETUSER app-worker
@@ -287,7 +311,7 @@ Expect `OK` for reading inputs, writing outputs, and publishing within the allow
 
 The following checks cover sections 9-15. All are **REASONED, not demonstrated**: the authoring environment has no `redis-server`, `redis-cli`, Docker, or Podman, and no live HA topology was supplied. Run exposed-state comparisons only in a disposable isolated environment. Redis-prompt commands below are not shell commands. Use section 7's guarded connection block, masked password prompt, and disabled CLI history for authenticated data-server sessions, changing the username as directed. Certificate and key options name files; never put their contents or passwords in process arguments. References below to disabling certificate-to-user automatic authentication apply only to Redis 8.6+, as explained in section 2. Earlier releases lack that setting; do not add the directive to their configuration.
 
-**REASONED: replication authentication and promotion, section 9.** No live primary/replica pair or failover topology was available. Compare an unsecured primary accepting an uncredentialed replica with a secured primary rejecting missing or wrong replication credentials. After restoring correct credentials, run this in an administrative session on the replica:
+**Replication authentication and promotion, section 9.** No live primary/replica pair or failover topology was available. Compare an unsecured primary accepting an uncredentialed replica with a secured primary rejecting missing or wrong replication credentials. After restoring correct credentials, run this in an administrative session on the replica:
 
 ```
 INFO replication
@@ -304,7 +328,7 @@ ACL DRYRUN app PSYNC ? -1
 
 Expect `OK` for `replication` and a permission-denial description for the guide's restricted `app` user. These are permission checks, not synchronization tests. They need one server; synchronization needs two processes; preserving authentication through promotion needs a live failover exercise with the checks repeated after roles change. See [ACL DRYRUN](https://redis.io/docs/latest/commands/acl-dryrun/) and the [replica command requirements](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas).
 
-**REASONED: Sentinel listener, incoming authentication, and peers, section 10.** No live Sentinel or peer group was available. Repeat the unfiltered `ss -tlnp` inventory on the Sentinel host and account for its separate 26379 listener. Against Sentinel itself, compare this request before and after securing incoming authentication, while holding the transport configuration constant:
+**Sentinel listener, incoming authentication, and peers, section 10.** No live Sentinel or peer group was available. Repeat the unfiltered `ss -tlnp` inventory on the Sentinel host and account for its separate 26379 listener. Against Sentinel itself, compare this request before and after securing incoming authentication, while holding the transport configuration constant:
 
 ```
 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
@@ -314,7 +338,7 @@ An exposed instance returns the monitored endpoint; the secured instance returns
 
 One Sentinel suffices for listener and incoming-authentication checks. From an administrative Sentinel session, use `SENTINEL SENTINELS mymaster` to inspect peer announcements, and verify actual authenticated peer communication with multiple Sentinels. Announcement readback alone does not establish reachability. See the [pinned peer and announcement settings](https://raw.githubusercontent.com/redis/redis/8.10.1/sentinel.conf).
 
-**REASONED: Sentinel monitored-server permissions and failover, section 11.** No live data server or Sentinel topology was available. In a data-server session authenticated as `sentinel-monitor`, run:
+**Sentinel monitored-server permissions and failover, section 11.** No live data server or Sentinel topology was available. In a data-server session authenticated as `sentinel-monitor`, run:
 
 ```
 PING
@@ -326,7 +350,7 @@ Expect `PONG`, then `NOPERM` for both the key read and unrelated-channel publish
 
 In a disposable Sentinel and primary/replica topology, missing or wrong `sentinel auth-pass` must prevent successful authenticated monitoring; correct credentials must restore it. Exercise promotion, then confirm Sentinel monitoring and replication continue with the former replica as primary. The [pinned authentication implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c) uses the monitored primary's credentials for its replicas too.
 
-**REASONED: cluster-bus exposure and announcements, section 12.** No cluster-enabled process or multi-node topology was available. Repeat unfiltered `ss -tlnp`, then run this through an authenticated administrative data-port session:
+**Cluster-bus exposure and announcements, section 12.** No cluster-enabled process or multi-node topology was available. Repeat unfiltered `ss -tlnp`, then run this through an authenticated administrative data-port session:
 
 ```
 CLUSTER NODES
@@ -334,26 +358,43 @@ CLUSTER NODES
 
 Inspect the advertised address and `@bus-port`. Compare bus connectivity from an unauthorized network with connectivity from an allowed peer: an exposed bus permits the former, while the fixed network boundary denies it and retains the working peer path. Failure from outside is meaningful only alongside a working authorized path and listener/network-policy evidence. A missing Redis `PING` response is not evidence that the binary bus is blocked. One cluster-enabled process can demonstrate its listener; working membership and advertised reachability need multiple nodes. See [CLUSTER NODES](https://redis.io/docs/latest/commands/cluster-nodes/), [cluster networking](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports), and the [pinned listener and announcement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c).
 
-For the **REASONED** section 12 network comparison, no live bus endpoint or authorized and unauthorized probe locations were available. Run this concrete TCP probe from both locations, using OpenBSD `nc`. Substitute the actual host and bus port inside the quotes.
+The section 12 network comparison in the following block is REASONED from the cited cluster networking requirements, because no live bus endpoint or authorized and unauthorized probe locations were available. Run this concrete TCP probe from both locations, using OpenBSD `nc`. Substitute the actual host and bus port inside the quotes, and `unauthorized` or `allowed` for the location you run it from.
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT'
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_unauthorized_OR_allowed'   # the 3rd value is where you run this from: unauthorized, or allowed for the authorized-peer control
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 1 host and 1 port; not probing"; exit 2; }
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 location; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 2 ;;
   esac
   case "$2" in
     *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 2; }
-  if nc -vz -w 5 "$1" "$2"; then
+  if [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then :; else echo "port must be 1-65535; not probing"; exit 2; fi
+  case "$3" in
+    unauthorized|allowed) ;;
+    *) echo "substitute unauthorized or allowed, the location you run this from; not probing"; exit 2 ;;
+  esac
+  set -- 0 "$@" "$(if nc -vz -w 5 "$1" "$2" 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # the block's status so far, host, port, location, nc's exit status, then its messages
+  printf '%s' "$6"
+  if [ "$5" = 0 ]; then
     echo "TCP connected; the bus port is reachable from here"
   else
-    printf 'TCP probe exit=%s; compare with the allowed-peer control\n' "$?"
+    printf 'TCP probe exit=%s; compare with the allowed-peer control\n' "$5"
   fi
+  case "$4:$5:$6" in
+    unauthorized:0:*) echo "FINDING: the unauthorized location reached the bus port, so the network boundary permits it"; set -- 1 ;;
+    allowed:0:*) echo "the allowed-peer control connected" ;;
+    allowed:*) echo "the allowed-peer control did not connect; inconclusive"; set -- 3 ;;
+    *'Connection refused'*|*'timed out'*) echo "the unauthorized location was refused or timed out: the pass only alongside a connected allowed-peer run" ;;
+    *) echo "nc reported neither a refusal nor a timeout (a local tool error or name-resolution failure, for example); inconclusive"; set -- 3 ;;
+  esac
+  echo "block exit $1; nc's messages and the listener and network-policy evidence are left for you to judge"
+  exit "$1"
 )
 ```
 
@@ -378,7 +419,16 @@ INFO replication
 Require `tls-replication` to be `yes`, `master_host` and `master_port` to identify that primary's TLS endpoint, and `master_link_status:up`. On the replica host, inspect established connections:
 
 ```bash
-ss -tnp
+(                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  if ss -tnp; then
+    echo "unclassified observation: find the replica process's established connection to the recorded primary address and TLS port above; without process information the list cannot show which process owns it"
+    exit 0
+  else
+    echo "ss -tnp exit $?: a socket-inspection error is inconclusive; read the error above"
+    exit 3
+  fi
+)
 ```
 
 Identify the replica process's established connection to the recorded primary address and TLS port. Use an account permitted to see process information. Missing process information or a socket-inspection error is inconclusive.
@@ -387,6 +437,7 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
 
 ```bash
 (
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PRIMARY_HOST' 'REPLACE_WITH_PRIMARY_TLS_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -397,27 +448,51 @@ From an allowed client location, probe that same primary endpoint. Substitute a 
   case "$2" in
     *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 2; }
+  if [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then :; else echo "port must be 1-65535; not probing"; exit 2; fi
+  if [ -r /etc/redis/tls/ha-ca.crt ] && [ -r /etc/redis/tls/client.crt ] && [ -r /etc/redis/tls/client.key ]; then :; else
+    echo "the CA, client certificate and key files named below must be readable here; not probing"; exit 2
+  fi
   unset REDISCLI_AUTH || exit 2
   printf '\nNo client certificate\n'
-  if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
-      -h "$1" -p "$2" PING; then
+  set -- 0 "$1" "$2" "$(if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+      -h "$1" -p "$2" PING 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), host, port, the probe's exit status, then its output
+  printf '%s' "$5"
+  if [ "$4" = 0 ]; then
     echo "inspect the RESP reply; exit=0 alone is not a pass"
   else
-    printf 'probe exit=%s; inspect the TLS or authentication error\n' "$?"
+    printf 'probe exit=%s; inspect the TLS or authentication error\n' "$4"
   fi
+  # under TLS 1.3 a server that rejects the missing certificate after the handshake may leave redis-cli reporting only a closed connection, which reads as inconclusive here even when the listener is fixed
+  case "$4:$5" in
+    0:*|*NOAUTH*|*PONG*) echo "FINDING: the request without a client certificate reached Redis, so this listener does not require one"; set -- 1 "$2" "$3" ;;
+    124:*) echo "the request without a client certificate timed out, which does not demonstrate rejection; inconclusive"; set -- 3 "$2" "$3" ;;
+    *'alert bad certificate'*|*'alert certificate unknown'*|*'alert certificate required'*) echo "the request without a client certificate ended with a bad-certificate, certificate-unknown or certificate-required TLS alert, the rejection shape" ;;
+    *'alert handshake failure'*|*'alert unknown ca'*|*'Server closed the connection'*|*'Connection reset by peer'*) echo "the request without a client certificate ended with a generic handshake failure, an unknown-CA alert or a closed or reset connection, which does not show that the missing certificate caused it; inconclusive: read the server's log line for the rejected handshake"; set -- 3 "$2" "$3" ;;
+    *) echo "the request without a client certificate failed without a certificate-related TLS alert or a closed connection (a local file, name-resolution or connection error, for example); inconclusive"; set -- 3 "$2" "$3" ;;
+  esac
   printf '\nTrusted client certificate, positive control\n'
-  if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+  set -- "$1" "$2" "$3" "$(if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
       --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
-      -h "$1" -p "$2" PING; then
+      -h "$2" -p "$3" PING 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # status, host, port, the probe's exit status, then its output
+  printf '%s' "$5"
+  if [ "$4" = 0 ]; then
     echo "inspect the RESP reply; exit=0 alone is not a pass"
   else
-    printf 'probe exit=%s; inspect the TLS or authentication error\n' "$?"
+    printf 'probe exit=%s; inspect the TLS or authentication error\n' "$4"
   fi
+  case "$5" in
+    *NOAUTH*) echo "the trusted-certificate positive control reached NOAUTH" ;;
+    *PONG*) echo "FINDING: the trusted-certificate request got PONG without Redis credentials, as an exposed default on nopass +@all does"; set -- 1 ;;
+    *) echo "the trusted-certificate positive control did not reach NOAUTH; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  echo "block exit $1; the first request's error is left for you to judge: it must be a TLS certificate rejection, not a missing certificate file or an unreachable endpoint"
+  exit "$1"
 )
 ```
 
-With `tls-auth-clients yes`, require a TLS certificate rejection for the first request and `NOAUTH` for the trusted-certificate positive control. In the isolated comparison with `tls-auth-clients no`, both requests reach `NOAUTH`. This tests the data listener's certificate requirement, which also applies to incoming replicas; it does not authenticate a replication session. A timeout, missing certificate file, or unreachable endpoint is inconclusive.
+The replica-certificate check above is REASONED, because no live primary/replica pair or certificate fixtures were available to run it. With `tls-auth-clients yes`, require a TLS certificate rejection for the first request and `NOAUTH` for the trusted-certificate positive control. In the isolated comparison with `tls-auth-clients no`, both requests reach `NOAUTH`. This tests the data listener's certificate requirement, which also applies to incoming replicas; it does not authenticate a replication session. A missing or unreadable CA, certificate or key file is refused with status 2 before any request. A timeout, an unreachable endpoint, a generic handshake failure, an unknown-CA alert, a closed or reset connection or any other failure without a bad-certificate, certificate-unknown or certificate-required alert is inconclusive. In this guide's assessment, under TLS 1.3 a server that rejects the missing certificate after the handshake may leave `redis-cli` reporting only a closed connection, so a fixed listener can read 3; read the server's log line for the rejected handshake.
 
 To confirm current synchronization, write a fresh disposable value at an authorized primary Redis prompt:
 
@@ -439,6 +514,7 @@ These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU 
 
 ```bash
 (
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
@@ -449,63 +525,112 @@ These OpenSSL probes require TLS 1.2 to be enabled on the test endpoint and GNU 
   case "$2" in
     *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 2; }
+  if [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then :; else echo "port must be 1-65535; not probing"; exit 2; fi
   case "$3" in
     *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 2 ;;
   esac
+  if [ -r /etc/redis/tls/ha-ca.crt ] && [ -r /etc/redis/tls/untrusted-client.crt ] && [ -r /etc/redis/tls/untrusted-client.key ] &&
+    [ -r /etc/redis/tls/ha-client.crt ] && [ -r /etc/redis/tls/ha-client.key ]; then :; else
+    echo "the CA, untrusted and trusted certificate and key files named below must be readable here; not probing"; exit 2
+  fi
+  set -- 0 "$@"                         # the 1st value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   printf '\nNo client certificate\n'
-  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
-      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt </dev/null; then
+  set -- "$1" "$2" "$3" "$4" "$(if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
+      -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # status, host, port, peer name, the probe's exit status, then its output
+  printf '%s' "$6"
+  if [ "$5" = 0 ]; then
     echo "probe exit=0; inspect the handshake result"
   else
-    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+    printf 'probe exit=%s; inspect the TLS error\n' "$5"
   fi
+  # with TLS 1.2 a server may reject a missing or untrusted certificate with only a generic handshake-failure alert, which reads as inconclusive here even when the bus is fixed
+  case "$5:$6" in
+    0:*) echo "FINDING: the handshake completed without a client certificate, so the bus does not require one"; set -- 1 "$2" "$3" "$4" ;;
+    124:*) echo "a timeout does not demonstrate that the bus rejects a missing client certificate; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+    *'alert bad certificate'*|*'alert certificate unknown'*|*'alert certificate required'*) echo "the TLS error names a certificate-related alert, the rejection shape" ;;
+    *'alert handshake failure'*|*'alert unknown ca'*) echo "the TLS error is a generic handshake failure or an unknown-CA alert, which does not show that the missing certificate caused it; inconclusive: read the server's log line for the rejected handshake"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+    *) echo "the TLS error names no certificate-related alert (a local file, connection, protocol-version or server-verification error, for example); inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+  esac
   printf '\nUntrusted client certificate\n'
-  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
-      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
-      -cert /etc/redis/tls/untrusted-client.crt -key /etc/redis/tls/untrusted-client.key </dev/null; then
+  set -- "$1" "$2" "$3" "$4" "$(if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
+      -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/untrusted-client.crt -key /etc/redis/tls/untrusted-client.key </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"   # status, host, port, peer name, the probe's exit status, then its output
+  printf '%s' "$6"
+  if [ "$5" = 0 ]; then
     echo "probe exit=0; inspect the handshake result"
   else
-    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+    printf 'probe exit=%s; inspect the TLS error\n' "$5"
   fi
+  case "$5:$6" in
+    0:*) echo "FINDING: the handshake completed with the untrusted client certificate, so the bus accepts it"; set -- 1 "$2" "$3" "$4" ;;
+    124:*) echo "a timeout does not demonstrate that the bus rejects the untrusted certificate; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+    *'alert bad certificate'*|*'alert certificate unknown'*|*'alert unknown ca'*|*'alert certificate required'*) echo "the TLS error names a certificate-related alert, the rejection shape" ;;
+    *'alert handshake failure'*) echo "the TLS error is a generic handshake failure, which does not show that the untrusted certificate caused it; inconclusive: read the server's log line for the rejected handshake"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+    *) echo "the TLS error names no certificate-related alert (a local file, connection, protocol-version or server-verification error, for example); inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+  esac
   printf '\nTrusted client certificate, positive control\n'
-  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
-      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+  if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
+      -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
       -cert /etc/redis/tls/ha-client.crt -key /etc/redis/tls/ha-client.key </dev/null; then
     echo "probe exit=0; inspect the handshake result"
   else
     printf 'probe exit=%s; inspect the TLS error\n' "$?"
+    echo "the trusted positive control did not complete a verified handshake; inconclusive"; [ "$1" = 1 ] || set -- 3
   fi
+  echo "block exit $1; the TLS errors of the first two probes are left for you to judge: each must be a certificate-related rejection, not a local file error, protocol-version mismatch or failed server-certificate verification"
+  exit "$1"
 )
 ```
 
-Require certificate-related TLS rejection for the first two probes and a completed, verified TLS handshake for the trusted positive control. Repeat with data-port `tls-auth-clients no` and `yes`; the bus must require a trusted certificate in both cases. A timeout, local file error, protocol-version mismatch, or failed server-certificate verification does not demonstrate rejection of the client certificate.
+The cluster-bus certificate check above is REASONED, because no live TLS cluster-bus listener or certificate fixtures were available to run it. Require certificate-related TLS rejection for the first two probes and a completed, verified TLS handshake for the trusted positive control. Repeat with data-port `tls-auth-clients no` and `yes`; the bus must require a trusted certificate in both cases. A timeout, local file error, protocol-version mismatch, or failed server-certificate verification does not demonstrate rejection of the client certificate. The block counts a bad-certificate, certificate-unknown or certificate-required alert as the rejection, and an unknown-CA alert too for the untrusted certificate; a generic handshake failure, or an unknown-CA alert without a client certificate, is inconclusive. In this guide's assessment, with TLS 1.2 a server may reject a missing or untrusted certificate with only that generic alert, so a fixed bus can read 3; read the server's log line for the rejected handshake.
 
 An exposed plaintext bus has no TLS certificate gate and will fail the TLS positive control; that failure must not be mistaken for a protected bus. Use the section 12 TCP reachability comparison separately. OpenSSL does not speak the binary cluster protocol, so a successful handshake establishes neither cluster membership nor working node-to-node traffic. Listener checks need one cluster-enabled process; working cluster transport needs multiple nodes. See the [pinned cluster certificate requirement](https://raw.githubusercontent.com/redis/redis/8.10.1/src/cluster_legacy.c) and [TLS cluster documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
 
-**REASONED: Sentinel TLS and outgoing connections, section 14.** No live Sentinel or data-node topology was available. Repeat the plaintext/TLS discriminator on 26379, not only on the Redis data port. The following block assumes the Redis 6.2+ `discovery` account, the monitored group `mymaster`, and certificate-to-user automatic authentication disabled. For the password-only Sentinel arrangement, use `--user default` instead. Replace the host inside the single quotes and use the installed certificate file paths, then paste the whole block:
+**Sentinel TLS and outgoing connections, section 14.** No live Sentinel or data-node topology was available. Repeat the plaintext/TLS discriminator on 26379, not only on the Redis data port. The following block assumes the Redis 6.2+ `discovery` account, the monitored group `mymaster`, and certificate-to-user automatic authentication disabled. For the password-only Sentinel arrangement, use `--user default` instead. Replace the host inside the single quotes and use the installed certificate file paths, then paste the whole block:
 
 ```bash
 (
+  set +e                                # errexit off here, so a request that ends nonzero is classified below instead of ending the block
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_SENTINEL_HOST'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 host; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute your Sentinel host; not probing"; exit 2 ;;
-    *)
-      unset REDISCLI_AUTH || exit 2
-      timeout 10s redis-cli -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
-      timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
-        --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
-        -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
-      REDISCLI_HISTFILE=/dev/null timeout 10s redis-cli --tls \
-        --cacert /etc/redis/tls/ha-ca.crt \
-        --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
-        -h "$1" -p 26379 --user discovery --askpass \
-        SENTINEL GET-MASTER-ADDR-BY-NAME mymaster
-      ;;
   esac
+  unset REDISCLI_AUTH || exit 2
+  set -- 0 "$1" "$(if timeout 10s redis-cli -h "$1" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), the host, redis-cli's exit status, then its output
+  printf '%s' "$4"
+  case "$3:$4" in
+    0:*|*NOAUTH*) echo "FINDING: the plaintext request got a RESP reply, so plaintext Redis protocol is available at this endpoint"; set -- 1 "$2" ;;
+    *'Server closed the connection'*|*'Connection reset by peer'*) echo "no RESP reply recognized to the plaintext request (exit $3); a timeout, resolution error or refusal alone proves nothing, so the TLS requests below decide"; set -- 0 "$2" ;;
+    *) echo "the plaintext request got neither a RESP reply nor a closed or reset connection (exit $3), as a timeout, resolution failure, refusal or local error does; inconclusive"; set -- 3 "$2" ;;
+  esac
+  set -- "$1" "$2" "$(if timeout 10s redis-cli --tls --cacert /etc/redis/tls/ha-ca.crt \
+        --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
+        -h "$2" -p 26379 SENTINEL GET-MASTER-ADDR-BY-NAME mymaster 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # status, host, redis-cli's exit status, then its output
+  printf '%s' "$4"
+  case "$3:$4" in
+    *NOAUTH*) echo "the TLS request without Redis credentials reached NOAUTH, as the secured instance must" ;;
+    0:*) echo "FINDING: the TLS request without Redis credentials was answered, as an exposed instance returns the monitored endpoint"; set -- 1 "$2" ;;
+    *) echo "the TLS request without Redis credentials reached neither NOAUTH nor a reply (exit $3); inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" ;;
+  esac
+  if REDISCLI_HISTFILE=/dev/null timeout --foreground 10s redis-cli --tls \
+      --cacert /etc/redis/tls/ha-ca.crt \
+      --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key \
+      -h "$2" -p 26379 --user discovery --askpass \
+      SENTINEL GET-MASTER-ADDR-BY-NAME mymaster; then   # --foreground: this guide's assessment is that it lets the hidden password prompt read from your terminal
+    echo "unclassified observation: the authenticated request ended with exit 0; read its reply above, which must be the monitored endpoint"
+  else
+    echo "the authenticated request, or its hidden password prompt, failed with exit $?; inconclusive"
+    [ "$1" = 1 ] || set -- 3 "$2"
+  fi
+  echo "block exit $1; the authenticated reply above is left for you to judge: it must be the monitored endpoint"
+  exit "$1"
 )
 ```
 
@@ -513,7 +638,7 @@ Any RESP reply to the first request proves plaintext Redis protocol is available
 
 One Sentinel can demonstrate its incoming listener. Outgoing TLS, peer discovery, and failover need a live Sentinel/data-node topology and independent connection evidence; success on 26379 does not prove those outgoing connections use TLS. See the [pinned outgoing connection and advertisement implementation](https://raw.githubusercontent.com/redis/redis/8.10.1/src/sentinel.c).
 
-The Sentinel shell block above passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour. Those checks covered an earlier form of the block, whose refusals exited with status 1; none was re-run on the current form, whose refusals exit with status 2.
+REASONED: preceding block; the Sentinel shell block above, whose Redis behaviour was not demonstrated. The Sentinel shell block above passed local Bash syntax and ShellCheck checks. With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran. These local checks did not demonstrate Redis behaviour. Those checks covered an earlier form of the block, whose refusals exited with status 1 and whose requests set no status. The current form, whose refusals exit with status 2 and whose requests feed one exit status, is covered by the gate suite's `bash -n` and ShellCheck 0.11.0 passes and by the 31 October 2026 stub runs recorded at the start of this section. Its authenticated request now runs under `timeout --foreground`; that this lets its hidden password prompt read from your terminal is this guide's assessment, with no cited source, and was not observed against a live Sentinel.
 
 **REASONED: enforced HA peer identity, Redis 8.10+, section 15.** No Redis 8.10 runtime, certificate fixtures, or HA endpoints were available. Prepare two otherwise valid client certificates signed by the same trusted CA: one matching the configured HA identity and one that does not match it through either SAN or CN fallback. Keep certificate purpose, validity, CA trust, and Redis credentials constant.
 
@@ -529,40 +654,67 @@ Run the following block, then enable the intended identity at that same administ
 CONFIG SET tls-expected-peer-name redis-ha.example.com
 ```
 
-Replace the example identity consistently with the identity issued to intended HA nodes. Require `OK` from each configuration change. The shell block uses the same TLS 1.2, GNU `timeout`, and protected PEM-file prerequisites as the preceding bus-certificate check. Substitute the DNS hostname or IPv4 address and actual bus port inside the quotes.
+The peer-name comparison in the following block is REASONED from the cited pinned identity configuration and enforcement paths. Replace the example identity consistently with the identity issued to intended HA nodes. Require `OK` from each configuration change. The shell block uses the same TLS 1.2, GNU `timeout`, and protected PEM-file prerequisites as the preceding bus-certificate check. Substitute the DNS hostname or IPv4 address, actual bus port and expected peer name inside the quotes, and the phase: `unrestricted` for the first run and `restricted` for the run after enabling the intended identity. The block counts a bad-certificate, certificate-unknown or certificate-required alert to the wrong-name probe as the restricted phase's rejection. An unknown-CA alert there means the wrong-name fixture is not from the trusted CA, and a generic handshake failure does not show that the peer name caused it, so both are inconclusive. In this guide's assessment a node may report the mismatch with only that generic alert, so a working restriction can read 3; read the server's log line for the rejected handshake.
 
 ```bash
 (
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME'
+  set +e                                # errexit off here, so a probe that ends nonzero is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CLUSTER_HOST' 'REPLACE_WITH_BUS_PORT' 'REPLACE_WITH_EXPECTED_PEER_NAME' 'REPLACE_WITH_unrestricted_OR_restricted'   # the 4th value is the phase: unrestricted before tls-expected-peer-name is set, restricted after
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 2; }
   shift
-  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 1 host, 1 port, and 1 expected peer name; not probing"; exit 2; }
+  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 1 host, 1 port, 1 expected peer name, and 1 phase; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the host; not probing"; exit 2 ;;
   esac
   case "$2" in
     *[!0123456789]*|"") echo "substitute a numeric port; not probing"; exit 2 ;;
   esac
-  [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || { echo "port must be 1-65535; not probing"; exit 2; }
+  if [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then :; else echo "port must be 1-65535; not probing"; exit 2; fi
   case "$3" in
     *REPLACE_WITH_*|"") echo "substitute the expected peer name; not probing"; exit 2 ;;
   esac
+  case "$4" in
+    unrestricted|restricted) ;;
+    *) echo "substitute unrestricted or restricted, this run's phase; not probing"; exit 2 ;;
+  esac
+  if [ -r /etc/redis/tls/ha-ca.crt ] && [ -r /etc/redis/tls/wrong-name-client.crt ] && [ -r /etc/redis/tls/wrong-name-client.key ] &&
+    [ -r /etc/redis/tls/matching-name-client.crt ] && [ -r /etc/redis/tls/matching-name-client.key ]; then :; else
+    echo "the CA, wrong-name and matching-name certificate and key files named below must be readable here; not probing"; exit 2
+  fi
+  set -- 0 "$@"                         # the 1st value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   printf '\nSame CA, wrong peer name\n'
-  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
-      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
-      -cert /etc/redis/tls/wrong-name-client.crt -key /etc/redis/tls/wrong-name-client.key </dev/null; then
+  set -- "$1" "$2" "$3" "$4" "$5" "$(if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
+      -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+      -cert /etc/redis/tls/wrong-name-client.crt -key /etc/redis/tls/wrong-name-client.key </dev/null 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6##*$'\n'}" "${6%$'\n'*}"   # status, host, port, peer name, phase, the probe's exit status, then its output
+  printf '%s' "$7"
+  if [ "$6" = 0 ]; then
     echo "probe exit=0; inspect the handshake result"
   else
-    printf 'probe exit=%s; inspect the TLS error\n' "$?"
+    printf 'probe exit=%s; inspect the TLS error\n' "$6"
   fi
+  # a node may report the name mismatch with only a generic handshake-failure alert, which reads as inconclusive here even when the restriction works
+  case "$5:$6:$7" in
+    restricted:0:*) echo "FINDING: the wrong-name certificate was accepted with the setting enabled, which fails this enforcement check"; set -- 1 "$2" "$3" "$4" "$5" ;;
+    unrestricted:0:*) ;;
+    unrestricted:*) echo "without the name restriction both handshakes must complete; inconclusive"; set -- 3 "$2" "$3" "$4" "$5" ;;
+    restricted:124:*) echo "a timeout does not demonstrate rejection of the wrong-name certificate; inconclusive"; set -- 3 "$2" "$3" "$4" "$5" ;;
+    *'alert unknown ca'*) echo "the wrong-name probe got an unknown-CA alert, so the wrong-name fixture is not from the trusted CA; inconclusive"; set -- 3 "$2" "$3" "$4" "$5" ;;
+    *'alert bad certificate'*|*'alert certificate unknown'*|*'alert certificate required'*) echo "the TLS error names a certificate-related alert, the rejection shape" ;;
+    *'alert handshake failure'*) echo "the TLS error is a generic handshake failure, which does not show that the peer name caused it; inconclusive: read the server's log line for the rejected handshake"; set -- 3 "$2" "$3" "$4" "$5" ;;
+    *) echo "the TLS error names no certificate-related alert (a local file, connection, protocol-version or server-verification error, for example); inconclusive"; set -- 3 "$2" "$3" "$4" "$5" ;;
+  esac
   printf '\nSame CA, matching peer name, positive control\n'
-  if timeout 10s openssl s_client -connect "$1:$2" -tls1_2 -brief \
-      -verify_hostname "$3" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
+  if timeout 10s openssl s_client -connect "$2:$3" -tls1_2 -brief \
+      -verify_hostname "$4" -verify_return_error -CAfile /etc/redis/tls/ha-ca.crt \
       -cert /etc/redis/tls/matching-name-client.crt -key /etc/redis/tls/matching-name-client.key </dev/null; then
     echo "probe exit=0; inspect the handshake result"
   else
     printf 'probe exit=%s; inspect the TLS error\n' "$?"
+    echo "the matching-name positive control did not complete; inconclusive"; [ "$1" = 1 ] || set -- 3
   fi
+  echo "block exit $1; the wrong-name probe's TLS error, which in the restricted phase you correlate with the accepting node's certificate-verification error, and the node's startup warnings are left for you to judge"
+  exit "$1"
 )
 ```
 
@@ -930,14 +1082,14 @@ Claims (full source mapping in the JSON block below):
 - verify-peer-name (REASONED; ha): Same-CA bus certificates both pass without name restriction; enabled enforcement rejects wrong SAN/CN and accepts matching identity. Build warnings/readback alone are insufficient.
 - verify-outbound-name (REASONED; ha, docs): Force new replication connections: wrong-name server works unrestricted, fails with explicit name-verification evidence when restricted, then recovers with matching certificate/canary.
 - valkey (REASONED; valkey): Valkey shares requirepass/ACL/TLS concepts; verify its version-specific syntax. Redis HA findings and limitations have not been established for Valkey.
-- local-sentinel (DEMONSTRATED; docs): Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior; those runs covered an earlier form whose refusals exited with status 1, and the current form was not re-run.
+- local-sentinel (DEMONSTRATED; docs): Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior; those runs covered an earlier form whose refusals exited with status 1, and the current form is covered by gate bash -n and ShellCheck passes and stub runs.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5de4613021d23a25ca838a721e726e379306d1893143684caa8ec03676e1aafd",
+  "body_sha256": "fa2cae058289856b567209194eda26b4e7b97d426b3f84f8c113132b92e5d0f3",
   "components": {
     "r60": {
       "name": "Redis configuration",
@@ -1157,7 +1309,7 @@ Claims (full source mapping in the JSON block below):
     "verify-peer-name": {"text": "Same-CA bus certificates both pass without name restriction; enabled enforcement rejects wrong SAN/CN and accepts matching identity. Build warnings/readback alone are insufficient.", "components": ["ha"], "sources": ["ha:sf86ee0b4abaa", "ha:s28f3f121848c"], "status": "REASONED", "verify": [8]},
     "verify-outbound-name": {"text": "Force new replication connections: wrong-name server works unrestricted, fails with explicit name-verification evidence when restricted, then recovers with matching certificate/canary.", "components": ["ha", "docs"], "sources": ["ha:s9f433f5e78e3", "ha:s28f3f121848c", "docs:sb384cc06fc43", "docs:s89a679483b31", "docs:sce02504d451b"], "status": "REASONED"},
     "valkey": {"text": "Valkey shares requirepass/ACL/TLS concepts; verify its version-specific syntax. Redis HA findings and limitations have not been established for Valkey.", "components": ["valkey"], "sources": ["valkey:sb488496d1f4b", "valkey:s0eebdf8ee73e", "valkey:sdc8d63632a85"], "status": "REASONED"},
-    "local-sentinel": {"text": "Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior; those runs covered an earlier form whose refusals exited with status 1, and the current form was not re-run.", "components": ["docs"], "sources": ["docs:sc6b4e54687ac"], "status": "DEMONSTRATED", "evidence": "With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran."}
+    "local-sentinel": {"text": "Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior; those runs covered an earlier form whose refusals exited with status 1, and the current form is covered by gate bash -n and ShellCheck passes and stub runs.", "components": ["docs"], "sources": ["docs:sc6b4e54687ac"], "status": "DEMONSTRATED", "evidence": "With `set -u`, it rejected the unchanged placeholder, an embedded placeholder, an empty host, a marker-only assignment, an omitted assignment with no inherited arguments, and an extra host argument before any connection command ran."}
   }
 }
 ````

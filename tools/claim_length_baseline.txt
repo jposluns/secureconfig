@@ -32,7 +32,7 @@ docker.md	workload	421
 egress-metadata.md	cloud-egress	503
 egress-metadata.md	verify-allow	438
 frontend-frameworks.md	svelte-handle	1062
-frontend-frameworks.md	verify-host	1707
+frontend-frameworks.md	verify-host	1693
 frontend-frameworks.md	verify-proxy	889
 frontend-frameworks.md	verify-secret	569
 host.md	brokered-ssh	837

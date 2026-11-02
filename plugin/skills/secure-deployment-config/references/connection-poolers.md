@@ -229,10 +229,24 @@ The `local ... peer` line above has the same shape and the same requirement. `pe
 ## 7. Verify (REASONED: expected pooler outcomes follow the cited documentation and pinned sources; no running pooler/PostgreSQL deployment is available in the authoring environment)
 
 ```bash
-ss -tlnp   # read every listener; 6432/9999/9898
+(                                       # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null 2>&1 || { echo 'ss is not installed here; not listing sockets'; exit 2; }
+  set -- "$(if ss -tlnp; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the listener table, then ss's exit status
+  set -- "${1%$'\n'*}" "${1##*$'\n'}"
+  printf '%s' "$1"   # read every listener; 6432/9999/9898
+  [ "$2" = 0 ] || { echo "ss -tlnp failed; inconclusive"; exit 3; }
+  if printf '%s' "$1" | awk 'NR > 1 && $4 ~ /:9898$/ && $4 !~ /^127\./ && index($4, "[::1]") != 1 && index($4, "::ffff:127.") != 2 { found = 1 } END { exit !found }'; then
+    echo "FINDING: a listener on port 9898, the PCP control port, is bound to a non-loopback address"; exit 1
+  else
+    case "$?" in
+      1) echo "no port 9898 listener outside loopback; unclassified observation: read the 6432 and 9999 listeners and every other listener above"; exit 0 ;;
+      *) echo "awk could not read the listener list; inconclusive"; exit 3 ;;
+    esac
+  fi
+)
 ```
 
-Read that as an inventory rather than a pass. The application ports (`6432`, `9999`) must each be on `127.0.0.1` or a private address; the PCP control port (`9898`) must be loopback-only, IPv6 included, because section 1 keeps `pcp_listen_addresses` on `localhost`. An entry showing `0.0.0.0:9898`, `[::]:9898`, or `9898` on a private address is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding.
+Read that as an inventory rather than a pass. The application ports (`6432`, `9999`) must each be on `127.0.0.1` or a private address; the PCP control port (`9898`) must be loopback-only, IPv6 included, because section 1 keeps `pcp_listen_addresses` on `localhost`. An entry showing `0.0.0.0:9898`, `[::]:9898`, or `9898` on a private address is section 1 not applied, whatever `listen_addresses` says, and any listener you cannot account for is its own finding. The inventory runs on the pooler host, and with no running pooler in the authoring environment its expected listeners rest on section 1's settings and the cited PgBouncer configuration and Pgpool-II connection settings entries. The block refuses with status 2, printing `ss is not installed here; not listing sockets`, when `ss` is missing, exits 3 when `ss` or the awk read fails, 1 for a port 9898 listener outside loopback and otherwise 0 with an unclassified-observation line. It is covered by the repository gate suite's `bash -n` and ShellCheck 0.11.0 passes and by stub runs with `ss` replaced by a stub, in which a missing `ss` exited 2, a failing `ss` 3, a `0.0.0.0:9898` listener 1 and loopback-only listeners 0.
 
 The client hop takes three commands, not one. A single failing connection proves nothing, because a wrong password fails the same way as a refused plaintext connection; and a passing pair proves less than it looks, because a `trust` method in the HBA file lets any password through. Put the real password in `~/.pgpass` at mode `600` rather than the environment, which PostgreSQL says is "not recommended for security reasons" because some systems expose a process's environment to other users.
 
@@ -248,47 +262,125 @@ The client hop takes three commands, not one. A single failing connection proves
   shift
   [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
   case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  { unset -n PGPASSWORD && unset -v PGPASSWORD; } 2>/dev/null || { echo 'cannot clear PGPASSWORD in this shell; not probing'; exit 2; }
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
   # 1. Must FAIL, and the error must name TLS rather than authentication.
-  psql -X "host=$1 port=6432 dbname=app user=app sslmode=disable" -c 'SELECT 1;'
+  set -- "$1" "$2" "$(if psql -X "host=$1 port=6432 dbname=app user=app sslmode=disable" -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$3" in
+    0:*) echo "FINDING: the plaintext connection succeeded"; set -- "$1" 1 ;;
+    *SSL*|*TLS*|*encryption*) echo "psql exit $4: the plaintext connection failed; read its error above, which must name TLS rather than authentication" ;;
+    *) echo "psql exit $4: the plaintext connection failed without naming SSL, TLS or encryption, so it is not the expected refusal; inconclusive"; set -- "$1" 3 ;;
+  esac
+  set -- "$1" "$2"                      # the host and the status so far
   # 2. Must SUCCEED. The control: the credential is good, so the failure above was the TLS requirement,
   #    not a bad password.
-  psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'
+  if psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'; then :; else
+    echo "psql exit $?: the verified TLS control failed, so the failures in this block prove nothing; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3
+  fi
   # 3. Must FAIL on authentication. Without this, a `trust` method in auth_hba_file passes both above while
   #    checking no password at all. The wrong password is a literal here, not a real secret.
-  PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'
+  set -- "$1" "$2" "$(if PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the wrong password was accepted"; set -- "$1" 1 ;;
+    *authentication*) echo "psql exit $4: the wrong password was refused; read its error above, which must name authentication" ;;
+    *) echo "psql exit $4: the wrong-password connection failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the error texts of the first and third connections are checked only for a TLS or authentication word, so judge them yourself"
+  exit "$2"
 )
 ```
 
 Run the same three against pgpool-II on port 9999 where that is the pooler in front, because nothing above tests its listener. pgpool-II also needs its own effective-policy and admin-channel checks, because the client probes exercise one path and the console inspection below is PgBouncer-specific:
 
 ```bash
-# REASONED: pgpool-II policy and PCP checks follow the cited pgpool-II documentation;
-# no running pgpool-II/PCP deployment is available in the authoring environment.
+# The pgpool-II policy check follows the cited pgpool-II documentation;
+# no running pgpool-II deployment is available in the authoring environment.
 # Effective pgpool-II policy (through the pooler on 9999):
-psql -X "host=pooler.internal port=9999 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" \
-  -c 'PGPOOL SHOW enable_pool_hba;' -c 'PGPOOL SHOW ssl;'
-grep -vE '^\s*(#|$)' /etc/pgpool-II/pool_hba.conf   # active rules, in order; first match wins
-# Not demonstrated: no running pgpool-II/PCP deployment in the authoring environment.
-# Correct credentials must succeed; a wrong password must be refused on
-# authentication, and any other error leaves verification incomplete.
-# PCP admin channel on loopback: an authenticated read must succeed, a wrong password must be refused.
-pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W   # enter the correct PCP password: succeeds
-pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W   # enter a wrong password: must be refused on authentication
+(                                       # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_POOLER_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  set -- 0 "$(if psql -X -A -t "host=$1 port=9999 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" \
+    -c 'PGPOOL SHOW enable_pool_hba;' -c 'PGPOOL SHOW ssl;'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then the two values
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # status, enable_pool_hba then ssl, then psql's exit status
+  printf '%s' "$2"
+  case "$3:$2" in
+    0:"on"$'\n'"on"$'\n') echo "enable_pool_hba and ssl both read on" ;;
+    0:*off*) echo "FINDING: enable_pool_hba or ssl reads off, so the rules in pool_hba.conf are not the policy being applied"; set -- 1 "$2" "$3" ;;
+    0:*) echo "psql did not print on or off for both settings; inconclusive"; set -- 3 "$2" "$3" ;;
+    *) echo "psql exit $3: PGPOOL SHOW failed; inconclusive"; set -- 3 "$2" "$3" ;;
+  esac
+  if grep -vE '^\s*(#|$)' /etc/pgpool-II/pool_hba.conf; then :; else   # active rules, in order; first match wins
+    case "$?" in
+      1) echo "no active rules in /etc/pgpool-II/pool_hba.conf" ;;
+      *) echo "grep could not read /etc/pgpool-II/pool_hba.conf; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" ;;
+    esac
+  fi
+  echo "block exit $1; the pool_hba.conf rules are not classified, so judge them yourself"
+  exit "$1"
+)
 ```
 
 `enable_pool_hba` must read `on` and `ssl` must read `on`, or the rules in `pool_hba.conf` are not the policy being applied; inspect the reload logs for parse or file-access errors, confirm remote sources cannot reach 9898 at all, and test the Unix-socket route with valid and invalid credentials. Restart pgpool-II after changing any setting documented as startup-only.
+
+```bash
+# The PCP admin-channel checks follow the cited pgpool-II documentation;
+# no running pgpool-II/PCP deployment is available in the authoring environment.
+# Correct credentials must succeed; a wrong password must be refused on
+# authentication, and any other error leaves verification incomplete.
+# PCP admin channel on loopback: an authenticated read must succeed, a wrong password must be refused.
+(                                       # a subshell, so the exit below ends only the subshell
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  if pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W; then :; else   # enter the correct PCP password: succeeds
+    echo "pcp_node_count exit $?: the correct-password control failed; inconclusive"; set -- 3
+  fi
+  set -- "$1" "$(if pcp_node_count -h 127.0.0.1 -p 9898 -U pcpadmin -W 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # enter a wrong password: must be refused on authentication
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the status so far, the command's output and errors, then its exit status
+  printf '%s' "$2"
+  case "$3:$(printf '%s' "$2" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the wrong PCP password was accepted"; set -- 1 ;;
+    *authentication*) echo "pcp_node_count exit $3: the wrong password was refused; read its error above, which must name authentication" ;;
+    *) echo "pcp_node_count exit $3: the wrong-password command failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$1" = 1 ] || set -- 3 ;;
+  esac
+  echo "block exit $1; the second command's error text is checked only for the word authentication, so judge it yourself"
+  exit "$1"
+)
+```
 
 Three commands from one address prove one path. They say nothing about a second `hostssl` line further down the file that ends in `trust`, and nothing at all if `auth_type` is not `hba`, because `auth_hba_file` is then never read and the client-range restriction you wrote is inert while still sitting in the repository looking applied. So read the effective configuration as well as probing it:
 
 ```bash
 # A failed RELOAD must stop the block, not be masked by a following grep's exit status.
 (
-  psql -X -w -v ON_ERROR_STOP=1 \
+  set -- 0 "$(if psql -X -w -v ON_ERROR_STOP=1 \
     "host=/var/run/postgresql port=6432 dbname=pgbouncer user=pgbadmin" \
-    -c 'RELOAD;' -c 'SHOW CONFIG;' || exit 1
+    -c 'RELOAD;' -c 'SHOW CONFIG;'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the block's status so far, then psql's output
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # status, psql's output, then its exit status
+  printf '%s' "$2"
+  [ "$3" = 0 ] || { echo "psql exit $3: RELOAD or SHOW CONFIG failed, so the HBA file is not read; inconclusive"; exit 3; }
   # Inspect auth_type, auth_hba_file, client_tls_sslmode and server_tls_sslmode above.
+  set -- "$1" "$2" "$(if printf '%s' "$2" | awk -F'|' '{ k = $1; v = $2; gsub(/^ +| +$/, "", k); gsub(/^ +| +$/, "", v) } k == "auth_type" { print v; n++ } END { exit n != 1 }'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%%$'\n'*}" "${3##*$'\n'}"   # status, psql's output, the auth_type value, then awk's exit status
+  case "$4:$3" in
+    0:hba) echo "auth_type reads hba" ;;
+    0:*) echo "FINDING: auth_type reads $3, so auth_hba_file is not consulted"; set -- 1 "$2" "$3" "$4" ;;
+    *) echo "SHOW CONFIG printed no single auth_type row; inconclusive"; set -- 3 "$2" "$3" "$4" ;;
+  esac
   # Then read the effective HBA file (only reached if the reload succeeded):
-  grep -vE '^\s*(#|$)' /etc/pgbouncer/pg_hba.conf
+  if grep -vE '^\s*(#|$)' /etc/pgbouncer/pg_hba.conf; then :; else
+    case "$?" in
+      1) echo "no active rules in /etc/pgbouncer/pg_hba.conf" ;;
+      *) echo "grep could not read /etc/pgbouncer/pg_hba.conf; inconclusive"; [ "$1" = 1 ] || set -- 3 "$2" "$3" "$4" ;;
+    esac
+  fi
+  echo "block exit $1; auth_hba_file, the two TLS modes and the HBA rules are not classified, so judge them yourself"
+  exit "$1"
 )
 ```
 
@@ -299,7 +391,18 @@ The `RELOAD` is not decoration. `SHOW CONFIG` reports the running settings and t
 For the database hop, know what the probe can and cannot tell you:
 
 ```bash
-psql -X "host=pooler.internal port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c "SELECT current_user, inet_client_addr(), ssl FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) WHERE pid = pg_backend_pid();"
+(                                       # a subshell, so the exits below end only the subshell
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_POOLER_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  if psql -X "host=$1 port=6432 dbname=app user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c "SELECT current_user, inet_client_addr(), ssl FROM pg_stat_ssl JOIN pg_stat_activity USING (pid) WHERE pid = pg_backend_pid();"; then
+    echo "unclassified observation: read current_user, inet_client_addr and ssl above; ssl does not show whether the pooler validated the certificate"
+  else
+    echo "psql exit $?: the query failed; inconclusive"; exit 3
+  fi
+)
 ```
 
 `ssl` reports whether the pooler-to-PostgreSQL connection uses SSL. It does not report whether the pooler validated the certificate, so a `t` here is consistent with `server_tls_sslmode = require`, which validates nothing. Certificate validation cannot be observed from the client at all: for PgBouncer configured with `server_tls_sslmode = verify-full`, test enforcement by presenting the pooler with a certificate that should fail, one signed by an untrusted CA and one valid but issued for a different host name, and confirm that it refuses both. It has to be a fresh BACKEND connection rather than a fresh client one: a new client is routinely handed a server connection that was opened earlier, under the old certificate. `inet_client_addr()` is the address section 5 tells you to write into `pg_hba.conf`.
@@ -307,7 +410,7 @@ psql -X "host=pooler.internal port=6432 dbname=app user=app sslmode=verify-full 
 These direct-database checks are REASONED from the cited PostgreSQL HBA documentation, not demonstrated: the authoring environment lacks a running pooler/PostgreSQL deployment with distinct application and pooler source addresses. The outcomes of these direct-database checks are likewise REASONED from that documentation, not demonstrated: an exposed database admits the direct application connection while the intended HBA policy rejects it and the permitted controls succeed, and a password, certificate, DNS, or connection failure is inconclusive. Test the bypass the pooler cannot prevent. From an application source that is supposed to go through the pooler, connect to the DATABASE directly with the same credentials and require a rejection, then confirm the permitted pooler egress still connects and the application still connects through the pooler. Give the real destination as `hostaddr` while keeping the certificate host name in `host`, and guard the substituted values:
 
 ```bash
-# REASONED: direct-database isolation follows the cited PostgreSQL HBA documentation;
+# Direct-database isolation follows the cited PostgreSQL HBA documentation;
 # no running pooler/PostgreSQL deployment with distinct application and pooler source addresses is available.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DB_HOSTNAME' 'REPLACE_WITH_DB_IP'
@@ -319,7 +422,14 @@ These direct-database checks are REASONED from the cited PostgreSQL HBA document
   # From a client that must NOT bypass the pooler: a direct database connection must be REFUSED by pg_hba.
   # gssencmode=disable so libpq cannot prefer GSS and take an HBA rejection on that path for proof while a
   # hostssl path stays open.
-  psql -X "host=$1 hostaddr=$2 port=5432 dbname=app user=app gssencmode=disable sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;'
+  set -- "$1" "$2" "$(if psql -X "host=$1 hostaddr=$2 port=5432 dbname=app user=app gssencmode=disable sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SELECT 1;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # host name, address, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$3" in
+    0:*) echo "FINDING: the direct database connection was admitted"; exit 1 ;;
+    *pg_hba.conf*) echo "the database refused the direct connection by its HBA rules; confirm yourself that the permitted pooler egress and the application path through the pooler still connect"; exit 0 ;;
+    *) echo "psql exit $4 without an HBA refusal: a password, certificate, DNS or connection failure is inconclusive"; exit 3 ;;
+  esac
 )
 ```
 
@@ -328,7 +438,13 @@ These backend tests are REASONED from the cited PgBouncer and Pgpool-II TLS docu
 Ask the pooler what it negotiated, and what identity it forces:
 
 ```bash
-psql -X "host=/var/run/postgresql port=6432 dbname=pgbouncer user=pgbadmin" -c 'SHOW SERVERS;' -c 'SHOW DATABASES;'
+(                                       # a subshell, so the exit below ends only the subshell
+  if psql -X "host=/var/run/postgresql port=6432 dbname=pgbouncer user=pgbadmin" -c 'SHOW SERVERS;' -c 'SHOW DATABASES;'; then
+    echo "unclassified observation: read the tls column of each server row and the force_user column above"
+  else
+    echo "psql exit $?: SHOW SERVERS or SHOW DATABASES failed; inconclusive"; exit 3
+  fi
+)
 ```
 
 The `tls` column is "A string with TLS connection information, or empty if not using TLS". An empty `tls` on a server row is a plaintext database hop happening right now, which is section 3 caught in the act; it does not by itself distinguish the `prefer` fallback from TLS being disabled outright or from a Unix-socket backend. A non-empty one is weaker still: it says this connection negotiated TLS, not that a plaintext one would have been refused. These are snapshots of established connections, and enforcement is what the configuration file says.
@@ -338,7 +454,21 @@ The `tls` column is "A string with TLS connection information, or empty if not u
 Finally, the console must reject a user on neither list, and it must reject it at login:
 
 ```bash
-psql -X "host=pooler.internal port=6432 dbname=pgbouncer user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'
+(                                       # a subshell, so the exits below end only the subshell
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_POOLER_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  set -- "$1" "$(if psql -X "host=$1 port=6432 dbname=pgbouncer user=app sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2%$'\n'*}" "${2##*$'\n'}"   # the host, psql's output and errors, then its exit status
+  printf '%s' "$2"
+  case "$3:$2" in
+    0:*) echo "FINDING: the console admitted a user on neither list and printed a version; check auth_type first"; exit 1 ;;
+    *'not allowed'*) echo "the console refused the unlisted user at login with not allowed; nothing here is left to judge"; exit 0 ;;
+    *) echo "psql exit $3 without not allowed: a DNS, TLS or connection failure is inconclusive"; exit 3 ;;
+  esac
+)
 ```
 
 That has to fail while connecting, with `not allowed`. `SHOW VERSION` is chosen because it has no administrator gate of its own, so it cannot fail for the wrong reason: if the connection is accepted, the command succeeds and prints a version, which is exactly what `auth_type = any` produces. Read the outcome in three ways rather than two. A refusal at login is the pass. A version printed is a failure, and `auth_type` is the first thing to check. Anything else, a DNS failure, a TLS failure, a refused connection, is inconclusive and has to be resolved before the probe means anything.
@@ -346,8 +476,28 @@ That has to fail while connecting, with `not allowed`. `SHOW VERSION` is chosen 
 None of this tests the privileged name, and testing an unlisted one only proves the list is consulted. `admin_users` is an allowlist of names and says nothing about whether those names have to prove anything, so run the pair against the console itself rather than reusing the application query:
 
 ```bash
-psql -X "host=pooler.internal port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'
-PGPASSWORD=definitely-not-the-password psql -X "host=pooler.internal port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'
+(                                       # a subshell, so the exit below ends only the subshell
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_POOLER_HOST'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block, including its set -- line; not probing'; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo 'the set -- line needs exactly 1 value; not probing'; exit 2; }
+  case "$1" in ''|*REPLACE_WITH_*) echo 'substitute the pooler host; not probing'; exit 2 ;; esac
+  { unset -n PGPASSWORD && unset -v PGPASSWORD; } 2>/dev/null || { echo 'cannot clear PGPASSWORD in this shell; not probing'; exit 2; }
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  if psql -X "host=$1 port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;'; then :; else
+    echo "psql exit $?: the pgbadmin login with the correct password failed; inconclusive"; set -- "$1" 3
+  fi
+  set -- "$1" "$2" "$(if PGPASSWORD=definitely-not-the-password psql -X "host=$1 port=6432 dbname=pgbouncer user=pgbadmin sslmode=verify-full sslrootcert=/etc/ssl/certs/ca.crt" -c 'SHOW VERSION;' 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the status so far, psql's output and errors, then its exit status
+  printf '%s' "$3"
+  case "$4:$(printf '%s' "$3" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # letter case ignored
+    0:*) echo "FINDING: the console admitted pgbadmin with a wrong password"; set -- "$1" 1 ;;
+    *authentication*) echo "psql exit $4: the wrong password was refused; read its error above, which must be a refusal at login" ;;
+    *) echo "psql exit $4: the wrong-password login failed without naming authentication, so it is not the expected refusal; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+  esac
+  echo "block exit $2; the second command's error text is checked only for the word authentication, so judge it yourself"
+  exit "$2"
+)
 ```
 
 The first must succeed and the second must be refused at login. Both have to name `dbname=pgbouncer`: changing only the user name on the application probe leaves it asking the `app` database for `SELECT 1`, which tests nothing about the console.
@@ -488,7 +638,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3c39ae12564e8c069f96e153f2c16baa1d27bde9b9ae2e2e00b7ee94b5ff03d9",
+  "body_sha256": "d8331d53ffa0efedcdc7f3e28b77816137fcb59d5c4a6257408e19213547adb7",
   "components": {
     "pgb-bind": {
       "name": "PgBouncer listener source",
@@ -610,16 +760,16 @@ Claims (full source mapping in the JSON block below):
     "verify-client": {"text": "Plaintext must fail for TLS, verified TLS with the correct password must succeed, and a wrong password must fail authentication; repeat for pgpool-II 9999.", "components": ["pgb", "pgpool", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "postgres:s198d4780d9a4", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [2]},
     "password-delivery": {"text": "Use mode-600 .pgpass for real passwords; PGPASSWORD can expose credentials through process environments.", "components": ["postgres"], "sources": ["postgres:s97264da004c0", "postgres:s198d4780d9a4"], "status": "REASONED"},
     "verify-pgpool": {"text": "PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:s76141317a1b5", "pgpool:sa7204f187c7e", "pgpool:sd1c787b7784e"], "status": "REASONED", "verify": [3]},
-    "verify-pcp": {"text": "PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:sdc3d487af0ae", "pgpool:s13f19539cfbf"], "status": "REASONED", "verify": [3]},
-    "verify-pgb-policy": {"text": "RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests.", "components": ["pgb", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae", "postgres:sf8b93623c032"], "status": "REASONED", "verify": [4]},
-    "hba-parser": {"text": "PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete.", "components": ["pgb-source"], "sources": ["pgb-source:sd1ad8c2587a4"], "status": "REASONED", "verify": [4]},
-    "verify-backend-observation": {"text": "pg_stat_ssl reports negotiated encryption, not certificate enforcement; current_user and inet_client_addr identify backend role and source.", "components": ["postgres"], "sources": ["postgres:sc39eceeac711", "postgres:seed379369be7"], "status": "REASONED", "verify": [5]},
-    "verify-direct": {"text": "Direct application-to-database access must fail HBA while permitted pooler egress and application-through-pooler controls succeed; disable GSS precedence and guard host/hostaddr.", "components": ["postgres"], "sources": ["postgres:sbb484e8233fe", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [6]},
-    "verify-backend-enforcement": {"text": "Use fresh backend connections and restored positive controls: PgBouncer verify-full rejects untrusted CA, wrong hostname and TLS refusal; Pgpool-II only establishes CA rejection.", "components": ["pgb", "pgpool", "pgpool-source"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool-source:saf1078d5bb5c"], "status": "REASONED", "verify": [5]},
-    "verify-server-tls": {"text": "SHOW SERVERS tls reports existing TLS or an empty plaintext connection, not whether plaintext would have been refused.", "components": ["pgb"], "sources": ["pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [7]},
-    "verify-force-user": {"text": "SHOW DATABASES force_user reveals forced identity; pool counts do not establish role preservation.", "components": ["pgb"], "sources": ["pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [7]},
-    "verify-console-unlisted": {"text": "An unlisted console user must fail at login with not allowed; SHOW VERSION success is exposure and transport/DNS/TLS failures are inconclusive.", "components": ["pgb", "pgb-source"], "sources": ["pgb:s91d48cfb22ae", "pgb-source:sd8ac14670f91"], "status": "REASONED", "verify": [8]},
-    "verify-console-password": {"text": "The pgbadmin SHOW VERSION pair must succeed with the correct password and fail at login with the wrong one, both against dbname=pgbouncer.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [9]},
+    "verify-pcp": {"text": "PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable.", "components": ["pgpool"], "sources": ["pgpool:s7b1cbfaacbb8", "pgpool:sdc3d487af0ae", "pgpool:s13f19539cfbf"], "status": "REASONED", "verify": [4]},
+    "verify-pgb-policy": {"text": "RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests.", "components": ["pgb", "postgres"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae", "postgres:sf8b93623c032"], "status": "REASONED", "verify": [5]},
+    "hba-parser": {"text": "PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete.", "components": ["pgb-source"], "sources": ["pgb-source:sd1ad8c2587a4"], "status": "REASONED", "verify": [5]},
+    "verify-backend-observation": {"text": "pg_stat_ssl reports negotiated encryption, not certificate enforcement; current_user and inet_client_addr identify backend role and source.", "components": ["postgres"], "sources": ["postgres:sc39eceeac711", "postgres:seed379369be7"], "status": "REASONED", "verify": [6]},
+    "verify-direct": {"text": "Direct application-to-database access must fail HBA while permitted pooler egress and application-through-pooler controls succeed; disable GSS precedence and guard host/hostaddr.", "components": ["postgres"], "sources": ["postgres:sbb484e8233fe", "postgres:sd389a3478bc7"], "status": "REASONED", "verify": [7]},
+    "verify-backend-enforcement": {"text": "Use fresh backend connections and restored positive controls: PgBouncer verify-full rejects untrusted CA, wrong hostname and TLS refusal; Pgpool-II only establishes CA rejection.", "components": ["pgb", "pgpool", "pgpool-source"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s76141317a1b5", "pgpool-source:saf1078d5bb5c"], "status": "REASONED", "verify": [6]},
+    "verify-server-tls": {"text": "SHOW SERVERS tls reports existing TLS or an empty plaintext connection, not whether plaintext would have been refused.", "components": ["pgb"], "sources": ["pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [8]},
+    "verify-force-user": {"text": "SHOW DATABASES force_user reveals forced identity; pool counts do not establish role preservation.", "components": ["pgb"], "sources": ["pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [8]},
+    "verify-console-unlisted": {"text": "An unlisted console user must fail at login with not allowed; SHOW VERSION success is exposure and transport/DNS/TLS failures are inconclusive.", "components": ["pgb", "pgb-source"], "sources": ["pgb:s91d48cfb22ae", "pgb-source:sd8ac14670f91"], "status": "REASONED", "verify": [9]},
+    "verify-console-password": {"text": "The pgbadmin SHOW VERSION pair must succeed with the correct password and fail at login with the wrong one, both against dbname=pgbouncer.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242", "pgb:s91d48cfb22ae"], "status": "REASONED", "verify": [10]},
     "mfa": {"text": "Neither pooler provides native MFA or a PostgreSQL-wire TOTP dialogue; protect human host access separately.", "components": ["pgb", "pgpool"], "sources": ["pgb:sa5cdd62a9242", "pgpool:s7847f7feb03b"], "status": "REASONED"},
     "ldap-pam": {"text": "LDAP arrived in 1.25.0 and can appear in HBA; PAM is global and disables HBA selection, forwarding the supplied password instead of conducting an OTP challenge.", "components": ["pgb", "ldap-min", "pgb-source"], "sources": ["pgb:sa5cdd62a9242", "ldap-min:s2a1788c4296b", "pgb-source:sb9455e4f6c90"], "status": "REASONED"},
     "mtls-hba": {"text": "Client verify-full and verify-ca are equivalent for certificates and can retain HBA/SCRAM; auth_type=cert takes the certificate username and replaces HBA selection.", "components": ["pgb"], "sources": ["pgb:sa5cdd62a9242"], "status": "REASONED"}

@@ -17,6 +17,64 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-11-01 on tagged releases (#1158).** The maintainer gave these rulings through
+  AskUserQuestion in an attended session on 2026-11-01. No reasoning was recorded beyond the terms below. The
+  maintainer's ruling of 2026-11-01 that started this work reads "we'll start doing that this week. lets ensure that
+  we're fully recovered from the crash first". This entry does not record that recovery as confirmed, and the first
+  release waits for that confirmation.
+  - Tags. A release's tag is `v` plus `VERSION` at its target commit, for example `v1.0.1153`.
+  - Cadence. Releases are cut "on completion of major milestones or on demand"; there is no fixed schedule.
+  - Assets. A release carries `site/llms-full.txt`, the plugin tarball, the full release notes file, and
+    `SHA256SUMS` covering them.
+  - Publishing. The orchestrator publishes whenever the offline release check and the online `gates` check pass,
+    under the maintainer's standing grant.
+  - Body. The release body is short and generated, with the list of pull requests and a link to `CHANGELOG.md` at
+    the tag; the full notes are an asset.
+  - Tag protection. A `v*` tag ruleset blocks update and deletion, and creation stays open to write access.
+    Immutable releases are enabled if GitHub offers them for this repository. Both are repository settings. The
+    orchestrator observed through the GitHub API on 2026-11-01 that immutable releases were already enabled on
+    this repository; they were not newly applied. The existing "All Tags" tag ruleset already blocks tag update,
+    deletion and non-fast-forward, and also creation except for its bypass role, so no new ruleset was created;
+    the orchestrator's token could not create one (HTTP 403).
+  - Release record. A records pull request after each release adds one `CHANGELOG.md` bullet naming the tag, its
+    target commit and the dates it covers.
+  - First release. The first release targets the last merge of the UTC day before the cut. Its notes say "first
+    tagged release" and point to `CHANGELOG.md` at the tag.
+  - `llms-full.txt`. The asset ships as committed, and the body says its repository links follow `main`, not the
+    tag.
+  - Integrity. Integrity comes from the API-created tag, `SHA256SUMS` and, where enabled, immutable releases.
+  - The updater. `plugin/skills/secure-deployment-config/scripts/update-guides.sh` keeps reading `main` for now.
+  - Effect, applied in the same change as this entry: `tools/check_release.py` is the offline release check, and
+    its self-test, `tools/test_release.py`, runs in `tools/run_all_checks.sh`. CONTRIBUTING.md gains a "Releasing"
+    section with the steps, and the `CHANGELOG.md` preamble no longer says there is no release artifact.
+- **Maintainer rulings of 2026-10-31 on the `ss` listener inventories, isolation probes run from another host, the
+  #1106 proxy decisions and rule 6's `) || echo "block exit $?"` sentence (#1129).** The maintainer gave the first
+  three rulings through AskUserQuestion in an attended session at about 12:50Z that day, and the fourth at about
+  13:52Z. No reasoning was recorded beyond the terms below. The third confirms the two proxy decisions
+  of 2026-10-31 that "Proxy decisions awaiting maintainer review" below records, and each of those two proxy decisions
+  is now a maintainer ruling. Those entries keep their wording; this entry records the outcome.
+  - The `ss` listener inventories. A Verify listener inventory checks `command -v ss` before it runs `ss`, and refuses
+    with status 2 when `ss` is missing, under CONTRIBUTING.md rule 6's refusal for a missing required tool. An `ss`
+    that runs and fails stays at status 3. The refusal uses one message in every inventory:
+    `ss is not installed here; not listing sockets`. New batches apply this ruling, and a sweep updates the
+    inventories already merged; #1129 is the sweep's first batch.
+  - Isolation probes run from another host. When such a probe gets no connection, with curl exit 7 or with no TCP
+    connection formed, it may record status 0 rather than 3, with a message that the result is consistent with
+    isolation but not proof. The message tells the reader to corroborate the result, for example with an
+    enforcement-point deny record, the `err` text or a `time_connect` of 0.000000.
+  - The two proxy decisions of 2026-10-31 (#1106). The maintainer confirmed both. This confirms "Proxy decision of
+    2026-10-31 on where a Verify block's status 2 ends and status 3 begins, for the maintainer's later review (#1106)"
+    and "Proxy decision of 2026-10-31 on the unit of a Verify block's status, for the maintainer's later review
+    (#1106)". Under them, the failure of a check the block makes before relying on something is status 2 when it
+    reflects the reader's setup, the failure of an operation the block attempts after its checks passed is status 3,
+    and the block whose status rule 6 governs is the fence the reader pastes. The point the second of those entries
+    left for the maintainer's review, how rule 6's sentence on a block wrapped in `) || echo "block exit $?"` relates
+    to the fence as the unit, is settled by the fourth ruling below, which deletes that sentence.
+  - The `) || echo "block exit $?"` wrapper. The maintainer gave a fourth ruling in an attended session at about
+    13:52Z that day, choosing "Retire the wrap sentence". The pasted fence's own final status governs, so a trailing
+    `) || echo "block exit $?"` wrapper that forces status 0 is no longer allowed. Its effect, applied in the same
+    change as this entry: CONTRIBUTING.md rule 6 no longer has the sentence that described that wrapper, and the rest
+    of rule 6 is unchanged. No guide changes here.
 - **Maintainer ruling of 2026-10-30 on the exit status of a Verify block's result arms (#1083).** The maintainer
   chose option B of the p400a plan, which inventoried result arms that report a finding or a failed check but leave
   the block's status at 0. The ruling was recorded in the orchestrator's store on 2026-10-30 and is entered here

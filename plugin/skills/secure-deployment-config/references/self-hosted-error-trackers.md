@@ -87,14 +87,18 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 - **The public DSN misread as a secret.** Rotating a DSN does not protect the tracker; authenticating its web and API does. Do not treat a leaked DSN as the incident.
 - **Plaintext.** Neither serves TLS natively, so an instance reachable without a terminating proxy sends session cookies and the event UI in the clear.
 
-## Verify (REASONED: listener and backing-store inventory, Sentry/GlitchTip registration, redirect handling, disposable signup, off-host backing-port reachability and HTTP-to-HTTPS routing comparisons follow the cited tracker sources; no live tracker, backing stores, authorized signup fixture or external host. Bash 5.3.9 bash -n accepted both Verify fences. With curl replaced by printf LOCAL_CURL in the complete registration subshell, https://fixture.internal/api/chat reached one marker and exit 0; empty input, original placeholders, set -- without arguments and bad value printed guard diagnostics with exit 2 and no marker. This tests those guards only, not registration, protocol reachability, redirects or TLS; these runs covered earlier forms of both fences and were not repeated on the current forms)
+## Verify (REASONED: listener and backing-store inventory, Sentry/GlitchTip registration, redirect handling, disposable signup, off-host backing-port reachability and HTTP-to-HTTPS routing comparisons follow the cited tracker sources; no live tracker, backing stores, authorized signup fixture or external host. Bash 5.3.9 bash -n accepted both Verify fences. With curl replaced by printf LOCAL_CURL in the complete registration subshell, https://fixture.internal/api/chat reached one marker and exit 0; empty input, original placeholders, set -- without arguments and bad value printed guard diagnostics with exit 2 and no marker. This tests those guards only, not registration, protocol reachability, redirects or TLS; these runs covered earlier forms of both fences, the gate suite's bash -n and ShellCheck 0.11.0 passes cover their current forms, and the stub runs recorded under Listener inventory also cover the inventory's current form)
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state. The bash -n and stub runs recorded in the heading covered both blocks in an earlier form: the inventory then ran `sudo ss -tlnp` at top level, and the registration block took one value and ended with curl's own status. They were not repeated on the current form, which the repository's gate suite checks with bash -n and ShellCheck 0.11.0 like every block. The inventory block exits 3 when ss fails and otherwise 0, leaving the listeners it prints for you to judge.
+REASONED: every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state. The bash -n and stub runs recorded in the heading covered both blocks in an earlier form: the inventory then ran `sudo ss -tlnp` at top level, and the registration block took one value and ended with curl's own status. The repository's gate suite checks the current form of both blocks with bash -n and ShellCheck 0.11.0, like every block.
+
+### Listener inventory
+
+REASONED: following block; listener expectations follow the cited vendor sources and the guide's cited sudo sudoers manual, secure_path entry; no container runtime is available. The block exits 2 when ss is not installed, 3 when ss fails and otherwise 0, leaving the listeners it prints for you to judge. Where sudoers sets `secure_path`, sudo looks `ss` up in that path instead of your PATH, so the `command -v ss` check can refuse although sudo would find `ss`, or pass and then end with status 3 when sudo cannot run it. Stub runs of its current form, with stub `ss` and `sudo` commands, exited 0 when `ss` passed, 3 when it failed and 2 when it was missing, in a clean shell and under an inherited `readonly`, `declare -i` and `set -e`.
 
 ```bash
-# REASONED: listener expectations follow the cited vendor sources; no container runtime is available.
-(                  # a subshell, so the exit below ends only the subshell
-  set -- 0         # this block's status: 3 if ss fails, otherwise 0, because you judge the listeners it prints
+(                  # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  set -- 0         # this block's status: 2 if ss is not installed, 3 if ss fails, otherwise 0, because you judge the listeners it prints
   if sudo ss -tlnp; then :; else   # the tracker's own port only, on a private address: 9000 for Sentry, 8000 for
                                    # GlitchTip; and no PostgreSQL, Redis, Kafka, or ClickHouse port published beside it
     echo "sudo ss -tlnp exit $?: the listener inventory failed; inconclusive"; set -- 3
@@ -104,7 +108,7 @@ Every probe below is reasoned, not demonstrated: the authoring environment has n
 )
 ```
 
-REASONED: following block; registration and backing-port checks follow the cited Sentry and GlitchTip sources; no container runtime is available.
+### Registration and backing-store probe (REASONED: registration and backing-port checks follow the cited Sentry and GlitchTip sources; no container runtime is available)
 
 ```bash
 # Registration discriminator against the plaintext listener, or a backing-store reachability probe.
@@ -168,6 +172,7 @@ Point that block, with `web`, at Sentry's `http://tracker.example.com:9000/`: be
 - [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
 - [Sentry self-hosted 26.8.0 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63).
 - [Sentry 26.8.0 registration and single-organization membership (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py).
+- [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655).
 
 
 <!-- version-basis:start -->
@@ -220,7 +225,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "adc1da237d959568ef5d5cc0c46caa9e67b187351932638cdd7843d21ca32b4c",
+  "body_sha256": "bf08d8ccb68d7172c334bd62968c0b5c74669dbed084c584025cb570e8554318",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",

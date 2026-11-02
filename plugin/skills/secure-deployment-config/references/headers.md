@@ -54,8 +54,6 @@ On logout, clear what the browser already holds. `Cache-Control: no-cache` does 
 
 ## Verify
 
-REASONED: final-response header inspection follows the cited MDN header documentation; curl 8.23.0 documents the command options and write-out fields, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment. No deployment URL was supplied for live checks, and this guide records no run; the following block states the expected values and treats failed fetches as inconclusive.
-
 ```bash
 # -q (first) skips curlrc, -g disables URL globbing, and -sS hides progress but shows errors.
 # Fetch the FINAL page and read its response headers by eye. -L follows redirects (--proto-redir
@@ -71,9 +69,11 @@ REASONED: final-response header inspection follows the cited MDN header document
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   set +e                                # errexit off here, so a check that ends nonzero is classified below instead of ending the block
   set -- "$(if curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'final: %{http_code} %{url_effective}\n' "https://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "${1##*$'\n'}" "${1%$'\n'*}"   # curl's exit status, then every response's headers and the final: line
@@ -103,7 +103,7 @@ REASONED: final-response header inspection follows the cited MDN header document
 )
 ```
 
-REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and before the block classified the final response's headers and exited with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
+REASONED: preceding block; final-response header inspection follows the cited MDN header documentation, and final-response header values, external scanning and CSP discrimination follow the guide's cited MDN HTTP headers reference and Security header scanner. The command options and write-out fields are documented by curl 8.23.0, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment. No deployment URL was supplied for live checks, no deployed application or controlled browser application session is available, and network access is unavailable. The block states the expected values and treats failed fetches as inconclusive. ShellCheck 0.11.0 and bash -n exited 0 without diagnostics on this block in an earlier form, before its curl took your site's host on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and before the block classified the final response's headers and exited with one status. On the current, classifying form, bash -n and ShellCheck 0.11.0 pass in the repository's shell-block gate (`tools/check_shell_blocks.py`), and this guide records no run of the guard or the classification. No HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
 
 REASONED: shared-cache caller separation, per the guide's cited MDN Cache-Control. No deployed shared cache or authenticated A/B accounts are available; this prose supplies no local command or configuration to execute. No response sequence was observed. Exposed caching replays a previous caller's private content; fixed responses after warming the same URL belong only to their current authenticated or anonymous caller. For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
@@ -205,7 +205,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "a349943ef4844d606d158bcb8e42d64b131a5e74fa785391ac55b7d929cb9275",
+  "body_sha256": "39ca21a6acd6f5e964df85181ee154aa3168d8cb4fc6335f88a465ae8739629b",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",

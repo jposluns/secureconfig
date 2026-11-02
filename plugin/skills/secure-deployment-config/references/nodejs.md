@@ -136,7 +136,7 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 - This guide advises: never set `NODE_TLS_REJECT_UNAUTHORIZED=0`, which disables certificate validation for TLS connections in the Node.js process, and never pass `rejectUnauthorized: false`, which disables server-certificate verification for that client connection. Never configure an `https.Agent` with `rejectUnauthorized: false`: requests using that agent inherit its TLS option. The agent reach is this guide's assessment of Node.js's documented request, agent and TLS options.
 - For an internal CA or self-signed server, this guide advises instead: set `NODE_EXTRA_CA_CERTS=/path/ca.crt` before starting Node.js, pointing at a PEM file of trusted certificates (see [self-signed.md](self-signed.md)). Node.js adds these to its well-known root CAs at launch; changing the variable at runtime has no effect on the current process. An explicit `ca` option prevents use of both the well-known and extra CAs for that TLS or HTTPS client or server, and Node.js ignores the variable when run as setuid root or with Linux file capabilities.
 
-## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test.)
+## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test. The block needs bash: in a shell without bash's shopt, such as dash, it refuses with status 2 before probing. At the end it exits 2 when ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -147,9 +147,11 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
+  shopt -u nocasematch   # every match below compares letter case exactly again
   case "$2" in
     ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
@@ -160,7 +162,7 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   [ -f "$3" ] || { echo "the session cookie file is unreadable; not probing"; exit 2; }
   [ -r "$3" ] || { echo "the session cookie file is unreadable; not probing"; exit 2; }
   set +e                                # errexit off here, so a check that ends nonzero is recorded below instead of ending the block
-  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 0
+  set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sI --noproxy '*' -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the headers, the HTTP code and the redirect URL
   set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and the redirect URL
@@ -199,9 +201,14 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
     *) echo "curl exit $5: the request with the session cookie failed, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
   esac
 
-  ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
-             # ingress the platform's required address and port from section 1
-  case "$?" in 0) ;; *) echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
+  if command -v ss >/dev/null; then
+    ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
+               # ingress the platform's required address and port from section 1
+    case "$?" in 0) ;; *) echo "ss -tlnp failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+  fi
   # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
   #   app.get('/whoami', (req, res) => res.send(req.ip))
   set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' "https://$1/whoami"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
@@ -337,7 +344,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "2b0bf0a0327dfb09e9ea4e3ebe94bfbaff03c05228b44a636b47201a6d9f1f30",
+  "body_sha256": "3db566e58c4bd93039927f1ea7503ab6f8e658811504bcf3f9fb5c175d1062ee",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",
