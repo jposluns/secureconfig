@@ -118,11 +118,153 @@ With `--serve-artifacts` (the default) and `--artifacts-destination s3://bucket`
 
 ```bash
 # REASONED: listener and authentication checks follow the cited MLflow documentation; no running basic-auth server is available.
-ss -tlnp   # read every listener; 5000: 127.0.0.1 only
-# from another machine, checking the port is unreachable from outside. The pass is that no TCP
+# Run this block on the MLflow host: its backend checks reach 127.0.0.1:5000 and its listener list reads that host.
+# experiments/search is a POST endpoint, so each check posts a minimal body. --noproxy so no client
+# proxy answers. A 401 at your public MLflow host can come from the fronting proxy OR from MLflow's own basic
+# auth, so the backend check below proves MLflow itself enforces it, not just the proxy. Each command prints
+# its HTTP status and the block classifies it against the comment beside it; curl exits 0
+# for 401/403/404 too, so shell success is NOT a pass, and an open MLflow backend answers the anonymous
+# search with 200. If you front MLflow with an identity-aware proxy (Cloudflare Access etc., the MFA
+# option in step 3) instead of plain basic auth, the public https probes also need that proxy's own
+# credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
+# backend 401/403. Behind such a proxy the three public requests, which send no service-token headers, get
+# that proxy's redirect or denial, so this block cannot exit 0 there; its four backend requests still show
+# MLflow's own enforcement. The credentials below reach curl through a config file on stdin (curl --config -),
+# never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
+# the argv channel only, not shell history, set -x tracing, or your own
+# account's view of the process. Substitute each password INSIDE the
+# single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
+# The block exits 1 for a finding (a 2xx where a refusal is expected), 3 if ss or a request fails or a request
+# answers anything else the comments do not expect, 2 if ss is not installed or the credential part refuses its
+# input, and otherwise 0.
+(                                       # the whole block in one subshell, so one exit status covers every part of it
+  set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is not installed, or a part refused its input), which outranks 0
+  if command -v ss >/dev/null; then
+    ss -tlnp || { echo "ss -tlnp exit $?: the listener list failed; inconclusive"; set -- 3; }   # read every listener; 5000: 127.0.0.1 only
+    set -- "$1" listed                  # the 2nd value says whether ss ran, so the last line names the listeners only when it did
+  else
+    echo "ss is not installed here; not listing sockets"
+    case "$1" in 0) set -- 2 ;; esac
+    set -- "$1" unlisted
+  fi
+  (
+    # Each credential reaches curl on stdin via a config file (curl --config -), never
+    # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
+    trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+    set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MLFLOW_HOST' 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # first the public host name your proxy serves MLflow on, which is also a Host that --allowed-hosts admits, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace each value inside the quotes, keeping them
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+    shift
+    [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit 2; }
+    case "$1" in
+      ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+      example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+    esac
+    case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
+    case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit 2 ;; esac
+    case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit 2 ;; esac
+    case "$5" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit 2 ;; esac
+    set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}" "${4//\\/\\\\}" "$5"
+    set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}" "${4//\"/\\\"}" "$5"
+    set -- "$1" "$2" "$3" "$4" "$5" 0   # the 6th value is this part's status so far, ranked as above
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      "https://$1/api/2.0/mlflow/experiments/search"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # 401: no credentials
+    case "$7:$8" in
+      0:401) ;;
+      0:2??) echo "FINDING: the public search answered $8 with no credentials"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      0:*) echo "HTTP $8 from the public search with no credentials is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the public search with no credentials failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      --config - "https://$1/api/2.0/mlflow/experiments/search"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # positive control: 200 with the admin password
+    case "$7:$8" in
+      0:200) ;;
+      0:*) echo "HTTP $8 from the public search with the admin password is not the 200 positive control; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the public search with the admin password failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf 'user = "admin:not-the-real-password"\n' | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      --config - "https://$1/api/2.0/mlflow/experiments/search"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
+    case "$7:$8" in
+      0:401) ;;
+      0:2??) echo "FINDING: the public search answered $8 to a wrong admin password"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      0:*) echo "HTTP $8 from the public search with a wrong password is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the public search with a wrong password failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    # On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
+    # MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
+    # so send the allowed Host header, your MLflow host name from the set -- line:
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      http://127.0.0.1:5000/api/2.0/mlflow/experiments/search; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # 401: no credentials, on the backend
+    case "$7:$8" in
+      0:401) ;;
+      0:2??) echo "FINDING: the backend search answered $8 with no credentials, so MLflow itself does not enforce authentication"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      0:403) echo "HTTP 403 from the backend search: --allowed-hosts refused the Host header before authentication ran; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      0:*) echo "HTTP $8 from the backend search with no credentials is neither the 401 pass nor a 2xx finding; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the backend search with no credentials failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
+      --config - http://127.0.0.1:5000/api/2.0/mlflow/experiments/search; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # backend positive control: 200 with the admin password
+    case "$7:$8" in
+      0:200) ;;
+      0:*) echo "HTTP $8 from the backend search with the admin password is not the 200 positive control; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      *) echo "curl exit $7: the backend search with the admin password failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    # Authorization, not just authentication: experiments/search only returns results the caller may see, so
+    # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
+    # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(if printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
+      --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7##*$'\n'}" "${7%%$'\n'*}"   # curl's exit status, then the HTTP code
+    printf '%s\n' "$8"                  # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
+    case "$7:$8" in
+      0:200) set -- "$1" "$2" "$3" "$4" "$5" "$6" admin-ok ;;
+      0:*) echo "HTTP $8 from the admin experiment check is not 200: a wrong id or wrong admin credentials; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3; set -- "$1" "$2" "$3" "$4" "$5" "$6" admin-failed ;;
+      *) echo "curl exit $7: the admin experiment check failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3; set -- "$1" "$2" "$3" "$4" "$5" "$6" admin-failed ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$(if printf 'user = "%s:%s"\n' "$3" "$4" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
+      --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "$5" "$6" "$7" "${8##*$'\n'}" "${8%%$'\n'*}"   # the admin check's result, curl's exit status, then the HTTP code
+    printf '%s\n' "$9"                  # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+    case "$7:$8:$9" in
+      admin-ok:0:403) ;;
+      admin-ok:0:2??) echo "FINDING: the low-permission user read the experiment ($9), so MLflow did not refuse it"; set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      admin-ok:0:401) echo "HTTP 401 for the low-permission user: its credentials are wrong, so authorization was not tested; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      admin-ok:0:*) echo "HTTP $9 for the low-permission user is neither the 403 pass nor a 2xx finding; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+      admin-failed:0:*) echo "HTTP $9 for the low-permission user is not classified, because the admin check above failed" ;;
+      *) echo "curl exit $8: the low-permission experiment check failed; inconclusive"; [ "$6" = 1 ] || set -- "$1" "$2" "$3" "$4" "$5" 3 ;;
+    esac
+    exit "$6"
+  )
+  case "$?:$1" in 0:*) ;; 1:*) set -- 1 "$2" ;; 2:0) set -- 2 "$2" ;; 2:*|*:1) ;; *) set -- 3 "$2" ;; esac   # fold that part's status into the block's, ranked as above
+  case "$2" in
+    listed) echo "block exit $1; the listeners are not classified, so read every one against the comment on the ss line" ;;
+    *) echo "block exit $1; ss did not run, so there is no listener list to read" ;;
+  esac
+  exit "$1"
+)
+```
+
+```bash
+# Run this block from another machine, checking the port is unreachable from outside. The pass is that no TCP
 # connection formed: time_connect stays 0.000000 and err names a connection-level failure (refused, no
 # route, or a filtered-port connect timeout). A non-zero time_connect, or any http code, means the
 # handshake completed and the port answered. A name-resolution or local socket error is inconclusive.
+# The block exits 0 for curl exit 7 or 28 with time_connect 0.000000 and an err that opens "Failed to connect to"
+# or "Connection timed out" (curl 8.18.0's connection-level wording; other wording reads as 3), 1 for a handshake
+# or an http code, 3 for any other failure, a resolver timeout included, and 2 if it refuses its input. A local
+# socket error can also exit 7 with "Failed to connect to", so read err before taking 0 as the pass.
 (                                       # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_THE_SERVER_PUBLIC_IP'   # replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -130,67 +272,23 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
-    *) curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
-         -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:5000/" || true ;;
   esac
-)
-# experiments/search is a POST endpoint, so each check posts a minimal body. --noproxy so no client
-# proxy answers. A 401 at your public MLflow host can come from the fronting proxy OR from MLflow's own basic
-# auth, so the backend check below proves MLflow itself enforces it, not just the proxy. These are
-# MANUAL checks: each command prints its HTTP status for you to compare with the comment; curl exits 0
-# for 401/403/404 too, so shell success is NOT a pass, and an open MLflow backend answers the anonymous
-# search with 200. If you front MLflow with an identity-aware proxy (Cloudflare Access etc., the MFA
-# option in step 3) instead of plain basic auth, the public https probes also need that proxy's own
-# credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
-# backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
-# never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
-# the argv channel only, not shell history, set -x tracing, or your own
-# account's view of the process. Substitute each password INSIDE the
-# single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
-(
-  # Each credential reaches curl on stdin via a config file (curl --config -), never
-  # argv; -u user:password is world-readable in /proc/<pid>/cmdline on a shared host.
-  trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_MLFLOW_HOST' 'REPLACE_WITH_ADMIN_PASSWORD' 'REPLACE_WITH_LOWPERM_USER' 'REPLACE_WITH_LOWPERM_PASSWORD' 'REPLACE_WITH_A_REAL_EXPERIMENT_ID'   # first the public host name your proxy serves MLflow on, which is also a Host that --allowed-hosts admits, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace each value inside the quotes, keeping them
-  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
-  shift
-  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit 2; }
-  case "$1" in
-    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  set -- "$1" "$(if curl -q -g -sI -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
+       -w 'http=%{http_code} time_connect=%{time_connect} exit=%{exitcode} err=%{errormsg}\n' "http://$1:5000/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%$'\n'*}"     # curl's exit status, then its write-out line
+  printf '%s' "$3"
+  case "$2:$3" in
+    7:'http=000 time_connect=0.000000 '*' err=Failed to connect to '*|28:'http=000 time_connect=0.000000 '*' err=Failed to connect to '*|28:'http=000 time_connect=0.000000 '*' err=Connection timed out '*) echo "no TCP connection formed (curl exit $2); the pass, if err names a refusal, no route or a connect timeout"; set -- 0 ;;
+    *:'http=000 time_connect=0.000000 '*) echo "curl exit $2 with no connection: a name-resolution or local error; inconclusive"; set -- 3 ;;
+    *:http=*) echo "FINDING: the handshake completed or the port answered (a non-zero time_connect or an http code), so port 5000 is reachable from this machine"; set -- 1 ;;
+    *) echo "curl exit $2 printed no write-out line; inconclusive"; set -- 3 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
-  esac
-  case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
-  case "$3" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission user on the set -- line above; not probing"; exit 2 ;; esac
-  case "$4" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the low-permission password on the set -- line above; not probing"; exit 2 ;; esac
-  case "$5" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute a real experiment id on the set -- line above; not probing"; exit 2 ;; esac
-  set -- "$1" "${2//\\/\\\\}" "${3//\\/\\\\}" "${4//\\/\\\\}" "$5"
-  set -- "$1" "${2//\"/\\\"}" "${3//\"/\\\"}" "${4//\"/\\\"}" "$5"
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    "https://$1/api/2.0/mlflow/experiments/search"   # 401: no credentials
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - "https://$1/api/2.0/mlflow/experiments/search"   # positive control: 200 with the admin password
-  printf 'user = "admin:not-the-real-password"\n' | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - "https://$1/api/2.0/mlflow/experiments/search"   # 401: a wrong password is refused (MLflow rejects the legacy password1234 by design, so there is no default to "remove")
-  # On the MLflow host, the same no-credential POST must ALSO be 401 - a 401 only at the proxy would leave
-  # MLflow open behind it. On the host, --allowed-hosts rejects a bare 127.0.0.1 Host with 403 before auth,
-  # so send the allowed Host header, your MLflow host name from the set -- line:
-  curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # 401: no credentials, on the backend
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -X POST -H "Host: $1" -H 'Content-Type: application/json' -d '{"max_results":1}' \
-    --config - http://127.0.0.1:5000/api/2.0/mlflow/experiments/search   # backend positive control: 200 with the admin password
-  # Authorization, not just authentication: experiments/search only returns results the caller may see, so
-  # it tests authn, not authz. Pick a REAL experiment id (not the placeholder), confirm admin can GET it,
-  # then confirm a low-permission user is refused THERE - a 403 from MLflow on the backend, not the proxy:
-  printf 'user = "admin:%s"\n' "$2" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
-    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"   # do this admin check FIRST: 200 means the experiment exists and admin may read it; a 401/403/404 here means a wrong id or wrong admin credentials, so fix that before trusting the next line
-  printf 'user = "%s:%s"\n' "$3" "$4" | curl -q -g -sS -o /dev/null --noproxy '*' -w '%{http_code}\n' -H "Host: $1" \
-    --config - "http://127.0.0.1:5000/api/2.0/mlflow/experiments/get?experiment_id=$5"   # 403: authenticated but not permitted, same real experiment from MLflow (a 401 here means the low-permission credentials are wrong, not authz)
+  echo "block exit $1; the err text is not classified, so confirm it names a connection-level failure before reading 0 as the pass"
+  exit "$1"
 )
 ```
 
-REASONED: preceding block; listener inventory, external TCP reachability, proxy/backend authentication and experiment authorization follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; the guard has not been run.
+REASONED: preceding block; external TCP reachability follows the cited MLflow host/binding documentation and curl connection/error write-out reference; no external test path is available in the authoring environment, so no reachability result is recorded. The first block's listener inventory, proxy/backend authentication and experiment authorization are declared by its own leading comment and follow the cited MLflow host/binding and authentication documentation; no deployed server, credentials or experiment-permission fixture is available for them. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation. The public checks and the backend Host header take the MLflow host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The second block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted. Those curl-stub runs covered an earlier form of the first block, that guard included, before its `command -v ss` check. Stub runs with `ss` present and passing, present and failing, and missing covered a later form, whose last line named the listeners even when `ss` was missing. The first block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs under the same three `ss` conditions, in which its last line named the listeners only when `ss` ran.
 
 ## Common mistakes
 
@@ -292,7 +390,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "eb23186fa44285caae697fb95581894572df447cf1fb847722d1d1ec47896370",
+  "body_sha256": "3e2b50f2fa463baefc1046948ea9107b8e6fb9ddf5e1cd18d35717ee8108254d",
   "components": {
     "source": {
       "name": "MLflow pinned source",
@@ -437,7 +535,7 @@ Claims (full source mapping in the JSON block below):
     "artifact-existing": {"text": "Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "artifact-direct": {"text": "With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1.", "components": ["source", "iproute2"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
-    "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [1]},
+    "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [2]},
     "verify-public-auth": {"text": "POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.", "components": ["docs", "curl"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-backend-auth": {"text": "Repeat anonymous 401/admin 200 directly on loopback with the public Host header that --allowed-hosts admits; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s5b79d1871e0b", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]},
     "verify-authorization": {"text": "Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]}

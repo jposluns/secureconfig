@@ -163,7 +163,7 @@ Build the image from the pinned checkout and run that local build, not the GHCR 
 
 The image build excludes `auth.json`, so mount it read-only at `/content/app/auth.json`: `-v /srv/fooocus/auth.json:/content/app/auth.json:ro` with `docker run`, or `- /srv/fooocus/auth.json:/content/app/auth.json:ro` under the service's `volumes:` in `docker-compose.yml`. Fooocus runs in the image as its unprivileged `user` account, so the host file must be owned by that account's uid and readable by no other account. Read the uid from the image you built: on the `docker build . -t fooocus` path, `docker run --rm --entrypoint id fooocus -u user` prints it; on the Compose path, run `docker compose build` and then `docker run --rm --entrypoint id ghcr.io/lllyasviel/fooocus -u user`, which reads the local build Compose tagged with that name. Then `sudo chown` the file to that uid and `sudo chmod 0400` it. Read from the source and not observed on a running server (above), an unreadable file should stop Fooocus from starting, and a malformed file or an empty list should start it with no login, so check for the login prompt. Under rootless Docker or user-namespace remapping the host-side owner differs; this guide has not checked that case.
 
-## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence in an earlier form, before the proxy check took its host on a guarded set -- line; bash -n was not re-run on the guarded fence, and the new guard has not been run. In the extracted port-loop subshell with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so neither exit status nor this guard validates an address or service exposure. The bash -n run recorded here covered the shell fence and the stub runs covered the extracted port-loop subshell, each in an earlier form, whose guard refusals left the subshell with status 0; none was re-run on the current form, whose guard refusals leave the subshell with status 2)
+## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence in an earlier form, before the proxy check took its host on a guarded set -- line. In the extracted port-loop subshell of an earlier form, with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so in that form neither exit status nor the guard validated an address or service exposure. The bash -n run recorded here covered the shell fence and the stub runs covered the extracted port-loop subshell, each in an earlier form, whose guard refusals left the subshell with status 0. The checks are now four fences, each ending with its own exit status; the gate suite's bash -n and ShellCheck 0.11.0 passes cover their current form, and so do stub runs, with no network reached, in which each guard refusal exited 2. For the proxy check, those runs covered the form that lowercased the host with tr, and the stub runs of its current form are recorded with that check below)
 
 None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. The checks remain REASONED from the cited vendor documentation and pinned sources, as detailed below.
 
@@ -171,18 +171,61 @@ The ComfyUI (8188), AUTOMATIC1111 (7860 with the explicit `--port 7860` above) a
 
 The InvokeAI `/api/v1/boards/` check is also REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none. The cited Multi-User Administrator Guide distinguishes the default single-user mode from `multiuser: true`, which requires a login. The [Multi-User API Guide](https://invoke.ai/features/multi-user-mode/api-guide/) documents the boards endpoint and missing-token `401`. The expected pair is an unauthenticated boards response in single-user mode (the cited guides give no status code for it; record the observed code) and `401` in multi-user mode.
 
-The proxy check is REASONED: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. The header request below takes your configured host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and the guard has not been run. The header request checks the TLS connection and authentication response, and a browser check confirms the login gates the UI.
+REASONED: the proxy check is not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no proxy or backend was run. Following [fronting-auth.md](fronting-auth.md), the expected exposed state serves the UI without proxy authentication, and the fixed state requires a login before the UI loads. The header request in the last fence below takes your configured host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; no proxy has answered it. Stub runs in which each guard refusal exited 2 covered an earlier form of that fence, which lowercased the host with `tr`. Its current form, which matches reserved names in any letter case through bash's `nocasematch` option, is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by November 2026 stub runs under bash 5.3.9 with curl stubbed and no network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains, each exited 2 with the reserved-name message before any request; two reserved names in upper or mixed case also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached the header request. Under dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names alike with status 2 and its message that the block needs bash, before any request. The header request checks the TLS connection and authentication response, and a browser check confirms the login gates the UI, so that fence exits 3 when curl fails and otherwise 0, leaving the response and the browser check to you.
 
-The Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are REASONED, not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code. The expectation drawn from the same v2.5.5 sources is that a Fooocus process started on the host as above should show `127.0.0.1:7865` in `ss`, and that the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)). A container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and a container published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the port-loop block's `set --` line. The block probes every port even when an earlier probe fails, so its exit status is not the verification result: read each `port=` line. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
+REASONED: the listener inventory in the following fence, which refuses with status 2 when `ss` is not installed, and the Fooocus entries below (port 7865 in the `ss` comment and in the probe loop) are not demonstrated: the authoring host forbids opening a listener until an isolated network namespace exists, and it has none, so no Fooocus instance was run. From the v2.5.5 sources cited below (the `--listen` default and its bare-flag constant in the argument parser, and the launch call that passes the bind and port to gradio), a Fooocus process started on the host with a bare `--listen` should show a wildcard listener on 7865 in `ss` and answer the probe from another host with an HTTP code. The expectation drawn from the same v2.5.5 sources is that a Fooocus process started on the host as above should show `127.0.0.1:7865` in `ss`, and that the probe should report a refusal or timeout reaching your address. The argument parse alone is demonstrated: `argparse` given that `--listen` definition (`type=str`, `default="127.0.0.1"`, `nargs="?"`, `const="0.0.0.0"`) returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`. Confirm Fooocus is up and answers on the host itself before reading an external refusal as the fixed state. The `ss` expectations cover host processes only. For a container, the check is the PORTS column of `docker ps` plus the probe from another host, not `ss`, because socket visibility varies by Docker version and config (see [docker.md](docker.md#4-verify)). A container published as `7865:7865` should list the publication on every host address in the PORTS column and answer the probe with an HTTP code, and a container published as `127.0.0.1:7865:7865` should list `127.0.0.1` as its only host address, with the probe reporting a refusal or timeout reaching your address. A publication with no host address binds `[::]` as well as `0.0.0.0`, so run the probe block twice, once with your public IPv4 address and once with your public IPv6 address in square brackets, each inside the quotes on the port-loop block's `set --` line. The port-loop block probes every port even when an earlier probe fails, and exits 1 if any port answers with an HTTP code, otherwise 3 if any curl fails other than by failing to connect (exit 7) or timing out (exit 28), and otherwise 0, so read each `port=` line: a refusal or timeout passes only when its `err` text shows that it reached your address. Under rootful Docker's host networking nothing is published and the PORTS column is empty; the listener is in the host's network namespace, so read `ss` for it as for a host process: `127.0.0.1:7865` when fixed, or `0.0.0.0:7865` when `CMDARGS` still binds the wildcard, whether the image's default `--listen` was left in or a bridge-network `--listen 0.0.0.0` was copied over.
 
 ```bash
-# REASONED: inventory, external probes, InvokeAI authentication and proxy TLS/login follow the sources above.
 # ComfyUI 8188, AUTOMATIC1111 7860, InvokeAI 9090; Fooocus 7865. The authoring host forbids listeners without an isolated network namespace, and has none; expected outcomes and sources above.
-ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
-# each must be unreachable from another host. Read err, not the number: it must name a refusal or
+# Run this block on the host itself. It exits 2 if ss is not installed, 3 if ss fails and otherwise 0, because you judge every listener it prints.
+(                                                   # a subshell, so the exits below end only the subshell
+  command -v ss >/dev/null || { echo "ss is not installed here; not listing sockets"; exit 2; }
+  if ss -tlnp; then  # host processes: read every listener; 8188/7860/9090/7865: each service on 127.0.0.1 only
+    echo "block exit 0; unclassified observation: read every listener above, where 8188, 7860, 9090 and 7865 each pass only on 127.0.0.1"
+    exit 0
+  else
+    echo "ss -tlnp exit $?: the listener inventory failed; inconclusive; block exit 3"
+    exit 3
+  fi
+)
+```
+
+```bash
+# REASONED: InvokeAI authentication follows the cited Multi-User Administrator and API Guides;
+# the authoring host forbids listeners without an isolated network namespace, and has none.
+# Run this block on the host itself. With multi it exits 0 for a 401, 1 for a 2xx and 3 for any other
+# code or a failed request; with single it exits 0 for any answer, whose code you record.
+(                                                   # a subshell, so your own script arguments are untouched
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_single_OR_multi'   # single for InvokeAI's default single-user mode, or multi if you set multiuser: true: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    single|multi) ;;
+    *) echo "substitute single (InvokeAI's default single-user mode) or multi (multiuser: true) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  # guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
+  set -- "$1" "$(if curl -q -g -s --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"         # the mode, curl's exit status, then the HTTP code
+  printf '%s\n' "$3"                                # from the host itself, InvokeAI multiuser mode: 401
+                                                    # without a Bearer token, never the app itself
+  case "$1:$2:$3" in
+    multi:0:401) echo "block exit 0; multiuser mode refused the request without a Bearer token, and this block leaves nothing else to judge"; exit 0 ;;
+    multi:0:2??) echo "FINDING: /api/v1/boards/ answered $3 without a Bearer token in multiuser mode; block exit 1"; exit 1 ;;
+    multi:0:*) echo "HTTP $3 is neither the 401 pass nor a 2xx finding; inconclusive; block exit 3"; exit 3 ;;
+    single:0:*) echo "block exit 0; unclassified observation: single-user mode has no login, so record the code above yourself; loopback binding is the boundary"; exit 0 ;;
+    *) echo "curl exit $2: InvokeAI did not answer on 127.0.0.1:9090, so confirm it is running there; inconclusive; block exit 3"; exit 3 ;;
+  esac
+)
+```
+
+```bash
+# REASONED: the external probes follow the sources above; the authoring host forbids listeners without an isolated network namespace, and has none.
+# each must be unreachable from another host, so run this block there. Read err, not the number: it must name a refusal or
 # timeout reaching YOUR address. An HTTP code means the port answered. A resolver failure, a local
 # socket error, or a timeout that did not come from the remote address is inconclusive. Every port is
-# probed even after one fails, so the exit status is not the result; read each port= line.
+# probed even after one fails. The block exits 1 if any port answered with an HTTP code, otherwise 3 if
+# any curl failed other than by failing to connect (exit 7) or timing out (exit 28), and otherwise 0.
 # Run it once with your public IPv4 address, then again with your public IPv6 address in brackets.
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
@@ -191,20 +234,33 @@ ss -tlnp   # host processes: read every listener; 8188/7860/9090/7865: each serv
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) for p in 8188 7860 9090 7865; do                         # ComfyUI, SD WebUI, InvokeAI, Fooocus
-         curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
-           -w "port=$p http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$p/" || :
-       done ;;
   esac
+  set -- "$1" 0 8188 7860 9090 7865                 # your address, the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the ports: ComfyUI, SD WebUI, InvokeAI, Fooocus
+  while [ "$#" -gt 2 ]; do                          # one pass per port; each pass drops the port it probed
+    set -- "$(if curl -q -g -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -w "port=$3 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n" "http://$1:$3/"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+    printf '%s' "${1%$'\n'*}"                       # the port= line; the values above now follow curl's output and exit status
+    case "$1" in
+      *" http=000 "*)
+        case "${1##*$'\n'}" in
+          7|28) set -- "$2" "$3" "${@:5}" ;;       # failed to connect or timed out: read err, which must name YOUR address
+          *) echo "curl exit ${1##*$'\n'} with no HTTP answer from port $4; inconclusive"
+             case "$3" in 1) set -- "$2" 1 "${@:5}" ;; *) set -- "$2" 3 "${@:5}" ;; esac ;;
+        esac ;;
+      *" http="*) echo "FINDING: port $4 answered with an HTTP code, so it is reachable from here"; set -- "$2" 1 "${@:5}" ;;
+      *) echo "curl exit ${1##*$'\n'} printed no port= line for port $4; inconclusive"
+         case "$3" in 1) set -- "$2" 1 "${@:5}" ;; *) set -- "$2" 3 "${@:5}" ;; esac ;;
+    esac
+  done
+  echo "block exit $2; a port= line with http=000 and exit 7 or 28 passes only if its err names a refusal or timeout reaching your address, so read each one yourself"
+  exit "$2"
 )
-# REASONED: InvokeAI authentication follows the cited Multi-User Administrator and API Guides;
+```
+
+```bash
+# TLS and login follow the fronting-auth.md guidance above;
 # the authoring host forbids listeners without an isolated network namespace, and has none.
-# guard-conventions: allow probe of a fixed loopback target; no reader-substituted placeholder in this probe's argv
-curl -q -g -s --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9090/api/v1/boards/
-                                                       # from the host itself, InvokeAI multiuser mode: 401
-                                                       # without a Bearer token, never the app itself
-# REASONED: TLS and login follow the fronting-auth.md guidance above;
-# the authoring host forbids listeners without an isolated network namespace, and has none.
+# This block exits 3 if curl fails and otherwise 0, because you judge the response and the browser login.
 (                                                   # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_IMAGEGEN_HOST'   # the public host name your proxy serves the UI on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -213,11 +269,19 @@ curl -q -g -s --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:90
   case "$1" in
     ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
-  case "$(printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  curl -q -g -sI "https://$1/"                # via the proxy: TLS, and a login prompt
+  shopt -u nocasematch   # every match below compares letter case exactly again
+  if curl -q -g -sI "https://$1/"; then               # via the proxy: TLS, and a login prompt
                                                          # or 401 without credentials, before the UI loads
+    echo "block exit 0; unclassified observation: read the status line and headers above, and confirm in a fresh browser session that a login appears before the UI loads"
+    exit 0
+  else
+    echo "curl exit $?: the request through your proxy failed, so TLS and the login were not checked; inconclusive; block exit 3"
+    exit 3
+  fi
 )
 ```
 
@@ -349,7 +413,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "c0f1a7eb554ff6af7ee09a207ef29709a3411f82d6e98cef183d92dab112d338",
+  "body_sha256": "e1ce0c6d73be665e814c3cf58402bbb69a7478db87a3b83a1fbd2e567fd5732e",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -520,9 +584,9 @@ Claims (full source mapping in the JSON block below):
     "image-build": {"text": "Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image.", "components": ["fooocus", "compose", "compose-cli"], "sources": ["fooocus:s79380d927e3b", "fooocus:s431336fa6375", "compose:sfb1cd5e15347", "compose:s2d25c00e22f6", "compose:s16a4e1bb5e9f", "compose-cli:s0e2ca4d9b8c0"], "status": "REASONED"},
     "auth-mount": {"text": "Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked.", "components": ["fooocus"], "sources": ["fooocus:s6157fae93872", "fooocus:scb18d8c421f5", "fooocus:s21eb28118a14"], "status": "REASONED"},
     "argparse": {"text": "Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration.", "components": ["fooocus"], "sources": ["fooocus:s63ce6f5a8fa9"], "status": "DEMONSTRATED", "evidence": "returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`."},
-    "verify-network": {"text": "Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.", "components": ["comfy", "webui", "fooocus", "engine", "curl", "invoke-rolling"], "sources": ["comfy:sbd178d58a098", "webui:s370f032e0497", "invoke-rolling:sb0dc1b679ef2", "fooocus:s63ce6f5a8fa9", "engine:s1e53417c513d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-invoke": {"text": "Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:s23a1a14da479", "invoke-rolling:s4c6175f3800d"], "status": "REASONED", "verify": [1]},
-    "verify-proxy": {"text": "TLS/header and browser checks should require login before UI; no service/proxy listeners were run.", "components": ["fooocus", "comfy-rolling"], "sources": ["comfy-rolling:s8b2f213483c1", "fooocus:s38232435e83d"], "status": "REASONED", "verify": [1]}
+    "verify-network": {"text": "Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.", "components": ["comfy", "webui", "fooocus", "engine", "curl", "invoke-rolling"], "sources": ["comfy:sbd178d58a098", "webui:s370f032e0497", "invoke-rolling:sb0dc1b679ef2", "fooocus:s63ce6f5a8fa9", "engine:s1e53417c513d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1, 3]},
+    "verify-invoke": {"text": "Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:s23a1a14da479", "invoke-rolling:s4c6175f3800d"], "status": "REASONED", "verify": [2]},
+    "verify-proxy": {"text": "TLS/header and browser checks should require login before UI; no service/proxy listeners were run.", "components": ["fooocus", "comfy-rolling"], "sources": ["comfy-rolling:s8b2f213483c1", "fooocus:s38232435e83d"], "status": "REASONED", "verify": [4]}
   }
 }
 ````
