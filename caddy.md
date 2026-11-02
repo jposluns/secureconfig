@@ -133,7 +133,7 @@ RuntimeDirectory=caddy
 
 The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660) says `RuntimeDirectory=caddy` creates `/run/caddy` when the unit starts, owns it according to `User=`/`Group=`, and removes it when the unit stops unless preservation is configured. The switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: this is the guide's reasoning that a restart creates the runtime directory and binds the socket in one step. After that, `caddy reload`, and the [dist unit's `ExecReload` at 33ae08ff](https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32), apply config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy`. A manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`. A change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took.
 
-## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. No earlier form of this block has a recorded run; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with the network and host commands replaced, which ran its guards but no deployment. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive. With no `/run/caddy/admin.sock` as well, it records 3, because without the listener table it cannot tell an admin API on TCP or turned off from a failed `ls`.)
+## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture. The redirect, authentication and matcher-scope curls and the body-size password subshell take the site host on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guards but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; no form before that one has a recorded run. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its two host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl, caddy, head, rm, ss and ls and no network, also ran no deployment. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in each host part with 2 and the bash message before its probes; the block still ran `caddy validate`, `ss -tlnp` and `ls` and exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive. With no `/run/caddy/admin.sock` as well, it records 3, because without the listener table it cannot tell an admin API on TCP or turned off from a failed `ls`.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -149,14 +149,11 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    case "${3##*$'\n'}:${3%$'\n'*}" in  # tr's exit status, then the host name in lower case
-      0:?*) ;;
-      *) echo "tr exit ${3##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
-    esac
-    case "${3%$'\n'*}" in
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in
       site|admin) ;;
       *) echo "substitute site (basic_auth covers the whole site) or admin (the @admin matcher variant) inside the quotes on the set -- line above; not probing"; exit 2 ;;
@@ -212,14 +209,11 @@ The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/syste
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case; no named variable, so a declare -u in your shell cannot alter it
-    case "${3##*$'\n'}:${3%$'\n'*}" in  # tr's exit status, then the host name in lower case
-      0:?*) ;;
-      *) echo "tr exit ${3##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
-    esac
-    case "${3%$'\n'*}" in
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
     set -- "$1" "${2//\\/\\\\}"
     set -- "$1" "${2//\"/\\\"}"
@@ -396,7 +390,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3883dccc93d4c205522f54bb6ca6de83e088bd520a4aa65ca73ec7275d24942c",
+  "body_sha256": "deaa23d3c18f33d30114118b8c02be6e0eb96e73ba6d4112129ad354b18f32c5",
   "components": {
     "admin": {
       "name": "Caddy admin source",

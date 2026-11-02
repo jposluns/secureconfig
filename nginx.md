@@ -143,7 +143,7 @@ that tolerance rather than removing the timeout.
 
 Mind the client address these headers carry. At a direct internet edge the block above appends the peer to `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, so the app must read the LAST entry (the one nginx added), never the client-controlled first one. And if nginx sits behind a CDN or another proxy (for example fronting the site with Cloudflare Access, above), `$binary_remote_addr` is the CDN's edge IP, not the client's, so all callers arriving via the same edge IP share one `limit_req`/`limit_conn` bucket. That CDN or proxy arrangement means the limits blur across clients or throttle real users, and a client-supplied `X-Forwarded-For` reaches the app, to be trusted if the app reads its first entry. Recover the real client address with `set_real_ip_from <cdn-ranges>` and `real_ip_header CF-Connecting-IP` (or `X-Forwarded-For`) from `ngx_http_realip_module`, so the limit key and the logged address are the client rather than the edge.
 
-## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture. No earlier form of this block has a recorded run; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with the network and host commands replaced, which ran its guards but no deployment. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.)
+## 5. Verify (REASONED: all Verify scenarios follow the cited nginx documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized nginx deployment fixture. The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form of this block. Stub runs with the network and host commands replaced ran its guards but no deployment on an earlier form, which lowercased the host with `tr` and checked `tr`'s exit status before refusing reserved names; no form before that one has a recorded run. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and each of its two host parts refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Stub runs of the current form on 2026-11-01, with stub curl, sudo, head, rm and ss and no network, also ran no deployment. In bash, each host part refused example.com, example.net, example.org and their subdomains in lower, upper and mixed case with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached its probes. Under dash, stub runs of the current form refused every host name in each host part with 2 and the bash message before its probes; the block still ran `sudo nginx -t`, the reload and `ss -tlnp` and exited 3, as the earlier form did there for every host, which it reported inconclusive at its `tr` step. When `ss` is missing, the block prints `ss is not installed here; not listing sockets` and exits 2 only if no other part found something or was inconclusive.)
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -160,14 +160,11 @@ Mind the client address these headers carry. At a direct internet edge the block
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case
-    case "${3##*$'\n'}:${3%$'\n'*}" in  # tr's exit status, then the host name in lower case
-      0:?*) ;;
-      *) echo "tr exit ${3##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
-    esac
-    case "${3%$'\n'*}" in
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in
       auth|open) ;;
       *) echo "substitute auth (section 3's auth covers location /) or open (you left / public on purpose) inside the quotes on the set -- line above; not probing"; exit 2 ;;
@@ -213,14 +210,11 @@ Mind the client address these headers carry. At a direct internet edge the block
     case "$1" in
       ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
-    set -- "$1" "$2" "$(if printf '%s' "$1" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # host names ignore letter case
-    case "${3##*$'\n'}:${3%$'\n'*}" in  # tr's exit status, then the host name in lower case
-      0:?*) ;;
-      *) echo "tr exit ${3##*$'\n'}: the host name was not lower-cased; inconclusive"; exit 3 ;;
-    esac
-    case "${3%$'\n'*}" in
+    shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+    case "$1" in
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
+    shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the admin password on the set -- line above; not probing"; exit 2 ;; esac
     set -- "$1" "${2//\\/\\\\}"
     set -- "$1" "${2//\"/\\\"}"
@@ -426,7 +420,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "c7f9bbb4aef8980e310cd899b9107776ab81fd9cb84a3d85554f9ea56beb3411",
+  "body_sha256": "a8b706072c2c22484988ae2695df8f801be089ea369672e206a9a8cdce5e9c9d",
   "components": {
     "nginx-source": {
       "name": "nginx source",
