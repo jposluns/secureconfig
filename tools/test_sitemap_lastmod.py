@@ -24,6 +24,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
@@ -218,6 +219,20 @@ def uncommitted(tmp):
     return repo.root
 
 
+def staged_edit(dated_today):
+    """The home page edited and staged with its sitemap, as the suite runs before a commit."""
+    def fixture(tmp):
+        # Read when the fixture is built, so a run that crosses UTC midnight before the gate
+        # reads the clock would see the next day.
+        lastmod = datetime.now(timezone.utc).date().isoformat() if dated_today else "2026-10-01"
+        repo = start(tmp)
+        repo.write({"site/index.html": page("home, staged"),
+                    "site/sitemap.xml": sitemap(("/", lastmod))})
+        repo.git("add", "-A")
+        return repo.root
+    return fixture
+
+
 def untracked(tmp):
     repo = start(tmp)
     repo.write({"site/guides/index.html": page("guides"),
@@ -343,9 +358,14 @@ CASES = [
     ("missing history: a copy inside another work tree", nested, "/draft/", 2,
      ("git history is unavailable", "has no history of its own")),
     ("a listed page with an uncommitted edit", uncommitted, "/draft/", 1,
-     ("site/index.html has a change that is not committed",)),
+     ("site/index.html has a change that is not committed", "must be today's UTC date")),
     ("a listed page that was never committed", untracked, "/draft/", 1,
-     ("site/guides/index.html has a change that is not committed",)),
+     ("site/guides/index.html has a change that is not committed", "must be today's UTC date")),
+    ("a staged page edit dated today in UTC, before its commit", staged_edit(True), "/draft/", 0,
+     ()),
+    ("a staged page edit dated another day", staged_edit(False), "/draft/", 1,
+     ("site/index.html has a change that is not committed", "must be today's UTC date",
+      "its lastmod is '2026-10-01'", "a commit made on a later UTC day fails CI")),
     ("a sitemap with no url", empty_sitemap, "/draft/", 1, ("lists no <url>",)),
     ("a loc this gate cannot map to a page", unmapped, "/draft/", 1,
      ("the only URL form this gate maps to a page", "cannot be dated")),

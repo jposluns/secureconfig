@@ -1376,10 +1376,10 @@ echo "== site/sitemap.xml lists the live pages dated by their last change, and r
 # lastmod and no /draft/ page, and robots.txt carries one Sitemap line. tools/check_sitemap.py
 # parses the sitemap with expat and maps each loc to its page under site/, reading no git history.
 # tools/check_sitemap_lastmod.py then requires each lastmod to equal the date of the last commit
-# that changed its page (git log -1 --format=%cs), refuses a listed page with uncommitted changes,
-# and fails closed in a shallow clone or a tree without its history, so this suite needs the full
-# history that CI's checkout fetches. Each self-test runs before its gate, so what runs against
-# the files is the shipped gate.
+# that changed its page (git log -1 --format=%cs), or today's UTC date for a listed page with
+# uncommitted or staged changes, and fails closed in a shallow clone or a tree without its
+# history, so this suite needs the full history that CI's checkout fetches. Each self-test runs
+# before its gate, so what runs against the files is the shipped gate.
 for sitemap_check in test_sitemap.py check_sitemap.py test_sitemap_lastmod.py check_sitemap_lastmod.py; do
   if sitemap=$(python3 -I -B "tools/$sitemap_check" 2>&1); then
     printf '%s\n' "$sitemap"

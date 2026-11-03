@@ -31,9 +31,12 @@ WHAT IT CHECKS:
     `Sitemap: https://secureconfig.ai/sitemap.xml`.
 
 THE BASE PATH: the draft tree (DRAFT, site/draft) and its base path (BASE, /draft/) are imported
-from tools/check_draft.py, the one place they are kept. The site is staged while BASE is not `/`.
-When promotion sets BASE to `/`, the two draft rules above switch off: no `loc` is refused as a
-draft page, and every page under site/ is a live page.
+from tools/check_draft.py, so this gate keeps no copy of its own. The site is staged while BASE is
+not `/`. When promotion sets BASE to `/`, the two draft rules above switch off: no `loc` is
+refused as a draft page, and every page under site/ is a live page. That needs no edit here only
+while tools/check_draft.py stays importable with BASE = "/". If that gate is retired or rewritten
+and DRAFT and BASE move, the import below must name their new home, still with BASE = "/"; until
+it does, this gate and tools/check_sitemap_lastmod.py fail at import.
 
 WHAT IT DOES NOT CHECK: that a `lastmod` is the date the page last changed. That needs git
 history, and this gate reads none, so it runs the same with or without a repository;

@@ -20,11 +20,17 @@ WHAT IT CHECKS, reading only local git objects and the working tree:
     for `/<path>/`, at any depth, so every listed page is dated by its own file. While the site
     is staged (tools/check_draft.py's BASE is not `/`), a `loc` under BASE maps to no page and is
     refused, as is a `loc` in any other form;
-  - git status shows no change to the page, staged, unstaged or untracked, because a change that
-    is not committed has no commit date yet;
-  - the `lastmod` equals `git log -1 --format=%cs -- <page>`: the committer date, in the offset
-    the committer recorded, of the last commit that changed the file. A mismatch names the page,
-    the commit, both dates and the date to write.
+  - a page that git status shows as changed (staged, unstaged or untracked) has no commit date
+    yet, so its `lastmod` must be today's date in UTC, the date its commit gets when made today
+    in UTC. This project runs the suite on the staged tree before committing, so that run passes
+    for an edited page. A commit made on a later UTC day than the run, or recorded in an offset
+    whose date differs, gets another date, and CI fails until the `lastmod` is set to it. The
+    check reads git's own status, so a file a contributor marked assume-unchanged or skip-worktree
+    shows no change and is dated as committed; that deliberate mark is outside this check;
+  - for a page with no such change, the `lastmod` equals `git log -1 --format=%cs -- <page>`: the
+    committer date, in the offset the committer recorded, of the last commit that changed the
+    file, which CI checks on the committed tree. A mismatch names the page, the commit, both dates
+    and the date to write.
 
 MERGES: the log uses git's default history simplification, not --first-parent. A merge whose
 version of the page equals one parent's is not counted, and the log follows that parent, so a
@@ -37,8 +43,10 @@ Rewriting a commit (an amend, a rebase, a cherry-pick, or a squash or rebase mer
 new committer date, so its `lastmod` must be set again.
 
 KEEPING IT GREEN: change the page and set its `lastmod` to the date you commit on, in the time
-zone your commit records, in one commit, and rerun this gate. On a mismatch, set the `lastmod` to
-the date the finding names; a commit that changes only site/sitemap.xml does not move that date.
+zone your commit records, in one commit, and rerun this gate. A run before the commit accepts
+today's UTC date for the edited page; commit on that UTC day, or set the date again, so CI passes
+on the committed tree. On a mismatch, set the `lastmod` to the date the finding names; a commit
+that changes only site/sitemap.xml does not move that date.
 
 WHERE IT RUNS: in tools/run_all_checks.sh only, after tools/check_sitemap.py. It is not in
 scripts/pages-build.sh, the Pages build check, because that build may run without the history,
@@ -53,6 +61,7 @@ history cannot be read.
 """
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -128,8 +137,14 @@ def check(root):
         status = git(root, "status", "--porcelain=v1", "--untracked-files=all", "--",
                      page.as_posix()).strip()
         if status:
-            findings.append(f"{line}: {page} has a change that is not committed ({status!r}), "
-                            f"so it has no commit date yet; commit it, then rerun this gate")
+            today = datetime.now(timezone.utc).date().isoformat()
+            checked += 1
+            if lastmod != today:
+                findings.append(f"{line}: {page} has a change that is not committed ({status!r}), "
+                                f"so its lastmod must be today's UTC date, {today}, the date its "
+                                f"commit gets when made today in UTC, but its lastmod is "
+                                f"{lastmod!r}; a commit made on a later UTC day fails CI until "
+                                f"the lastmod is set to that day")
             continue
         last = git(root, "log", "-1", "--format=%h %cs", "--", page.as_posix()).split()
         if len(last) != 2:
@@ -159,7 +174,8 @@ def main() -> int:
             print(f"  FAIL  {finding}")
         return 1
     print(f"  ok    all {count} lastmod(s) in {SITEMAP} equal the committer date of the last "
-          f"commit that changed their page (git log -1 --format=%cs)")
+          f"commit that changed their page (git log -1 --format=%cs), or today's UTC date for a "
+          f"page with a change that is not committed")
     return 0
 
 
