@@ -72,16 +72,20 @@ fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellin
     across a line end too, as a Markdown link may break there):
       a. `/draft(?![a-z0-9_-])`;
       b. `(?<![a-z0-9_-])draft/`;
-      c. a Markdown link destination whose first segment is `draft`:
-         `\\]\\(\\s*<?\\s*(?:\\./)*draft(?![a-z0-9_-])`;
-      d. a reference definition:
-         `(?m)^[ \\t]{0,3}\\[[^\\]\\n]+\\]:[ \\t]*<?[ \\t]*(?:\\./)*draft(?![a-z0-9_-])`;
+      c. a Markdown link destination whose first segment is `draft`, with any whitespace, line
+         ends and blockquote `>` markers before it or its `<`:
+         `\\]\\([\\s>]*<?[\\s>]*(?:\\./)*draft(?![a-z0-9_-])`;
+      d. a reference definition, with no line-start anchor, so its label may span lines and it
+         may sit in a blockquote or a list item, and with any whitespace, line ends and
+         blockquote `>` markers before its destination or its `<`, so the destination may be on
+         the next line: `\\]:[\\s>]*<?[\\s>]*(?:\\./)*draft(?![a-z0-9_-])`;
       e. an HTML attribute value:
          `\\b(?:href|src|action|formaction|content|url)\\s*=\\s*["']?\\s*(?:\\./)*draft(?![a-z0-9_-])`.
     So `/draft/`, `./draft/`, `[x](draft)`, `[x](<draft>)`, `[x](draft#top)`, `[x]: draft`,
-    `href="draft"`, `secureconfig.ai/draft/`, `%2Fdraft%2F`, `/&#100;raft/`, `\\draft\\` and
-    `/draft.html` are refused, while "drafting", "the draft's", "draft-ietf-oauth-v2-1" and
-    `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are accepted.
+    `> [x]: draft`, `- [x]: draft`, `href="draft"`, `secureconfig.ai/draft/`, `%2Fdraft%2F`,
+    `/&#100;raft/`, `\\draft\\` and `/draft.html` are refused, while "drafting", "the draft's",
+    "draft-ietf-oauth-v2-1" and `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are
+    accepted.
   Each finding names the file and the line, counting `\\n` only (a U+2028 or a `\\r` ends no line),
   and the file is read without newline translation.
 
@@ -127,8 +131,8 @@ DRAFT_WORD = re.compile(r"draft")
 DRAFT_REFS = (
     re.compile(r"/draft(?![a-z0-9_-])"),
     re.compile(r"(?<![a-z0-9_-])draft/"),
-    re.compile(r"\]\(\s*<?\s*(?:\./)*draft(?![a-z0-9_-])"),
-    re.compile(r"(?m)^[ \t]{0,3}\[[^\]\n]+\]:[ \t]*<?[ \t]*(?:\./)*draft(?![a-z0-9_-])"),
+    re.compile(r"\]\([\s>]*<?[\s>]*(?:\./)*draft(?![a-z0-9_-])"),
+    re.compile(r"\]:[\s>]*<?[\s>]*(?:\./)*draft(?![a-z0-9_-])"),
     re.compile(r"""\b(?:href|src|action|formaction|content|url)\s*=\s*["']?\s*(?:\./)*draft(?![a-z0-9_-])"""),
 )
 DECODE_ROUNDS = 8

@@ -23,8 +23,10 @@ NFKC, case folding and `\\` read as `/`: site/llms.txt, site/robots.txt and
 site/.well-known/security.txt are refused for any `draft` (relative, Disallow, bold, host-only,
 www, href=, backslash, 1-slash, .html and character-reference spellings among the cases), and
 site/llms-full.txt for each form of the draft path (character references, bare Markdown link
-destinations, reference definitions, HTML attribute values, a link broken across a line end, and
-1 case for each form only it catches), while its prose ("drafting", "the draft's",
+destinations, reference definitions, HTML attribute values, a link broken across a line end, a
+link broken inside a blockquote, a reference definition whose destination is on the next line,
+whose label spans 2 lines, or that sits in a blockquote or a list item, and 1 case each for forms
+b, d and e that only that form catches), while its prose ("drafting", "the draft's",
 "draft-ietf-oauth-v2-1" and a datatracker draft URL) is accepted. A 9-times percent-encoded path
 exceeds the round limit and is refused. Each refusal names the file and line, counted by `\\n`
 only (a U+2028 ends no line).
@@ -114,13 +116,14 @@ def prepend(rel, text):
     return mutate
 
 
-def refused_at(rel):
-    """The start of the gate's PART 3 finding for a line appended to rel: its file and line, with
-    lines counted by `\\n` only, as the gate counts them."""
+def refused_at(rel, after=0):
+    """The start of the gate's PART 3 finding for a match on the first line appended to rel, or
+    `after` lines below it: its file and line, with lines counted by `\\n` only, as the gate counts
+    them."""
     text = (ROOT / rel).read_bytes().decode("utf-8")
     if not text.endswith("\n"):
         raise AssertionError(f"{rel} does not end with a newline, so an appended line joins its last")
-    n = text.count("\n") + 1
+    n = text.count("\n") + 1 + after
     return f"{rel}:{n}: the published-index rule refuses"
 
 
@@ -170,18 +173,33 @@ REFUSED_LINES = {
     ),
 }
 # The llms-full.txt cases that only 1 corpus form catches (DRAFT_REFS a to e in the gate), each
-# with that form's letter; main() asserts that no other form matches.
+# with that form's letter and how many lines below the first appended line its match starts;
+# main() asserts that no other form matches. The reference definition follows a blank line, so it
+# is a definition and not a paragraph continuation.
 SINGLE_FORM = (
-    ("The next version: see draft/notes for review.\n", "b"),
-    ("[review]: draft\n", "d"),
-    ('The next version is staged <a href="draft">here</a>.\n', "e"),
+    ("The next version: see draft/notes for review.\n", "b", 0),
+    ("\n[review]: draft\n", "d", 1),
+    ('The next version is staged <a href="draft">here</a>.\n', "e", 0),
 )
-REFUSED_LINES["site/llms-full.txt"] += tuple(line for line, _ in SINGLE_FORM)
+# Ordinary Markdown that forms c and d read across a line end or a blockquote or list marker, each
+# with how many lines below the first appended line its match starts: a reference definition (after
+# a blank line) whose destination is on the next line, whose label spans 2 lines, or that sits in a
+# blockquote or a list item, and an inline link broken inside a blockquote.
+MARKDOWN_FORMS = (
+    ("\n[review]:\n  draft\n", 1),
+    ("\n[review\nnotes]: draft\n", 2),
+    ("\n> [review]: draft\n", 1),
+    ("\n- [review]: draft\n", 1),
+    ("> The next version is staged [x](\n> draft) for review.\n", 0),
+)
 INDEX_CASES = [(f"{rel[5:]} naming {spelling}", append(rel, line.format(spelling)),
                 refused_at(rel), 1)
                for rel, line in INDEX_LINES.items() for spelling in DRAFT_SPELLINGS]
 INDEX_CASES += [(f"{rel[5:]} carrying {line.strip()!r}", append(rel, line), refused_at(rel), 1)
                 for rel, lines in REFUSED_LINES.items() for line in lines]
+INDEX_CASES += [(f"llms-full.txt carrying {line.strip()!r}", append("site/llms-full.txt", line),
+                 refused_at("site/llms-full.txt", after), 1)
+                for line, *_, after in (*SINGLE_FORM, *MARKDOWN_FORMS)]
 # 9 times percent-encoded: still changing after the 8-round limit, so refused as such.
 NINE = "%" + "25" * 8 + "2F"
 INDEX_CASES += [("llms-full.txt carrying /draft/ percent-encoded 9 times",
@@ -196,7 +214,7 @@ INDEX_CASES += [("llms-full.txt line 1 carrying a U+2028 before /draft/",
 CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
                 "Read the draft's scope before the policy.\n",
                 "OAuth 2.1 is still draft-ietf-oauth-v2-1.\n",
-                "OAuth 2.1: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2/\n",
+                "OAuth 2.1: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/\n",
                 "[draft-ietf-oauth-v2-1]: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/\n",
                 "[Drafting notes](/guides/)\n")
 INDEX_CASES += [(f"llms-full.txt prose {line.strip()!r}", append("site/llms-full.txt", line),
@@ -389,7 +407,7 @@ def main():
     # Each SINGLE_FORM line is caught by its own corpus form and by no other.
     sys.path.insert(0, str(TOOLS))
     from check_draft import DRAFT_REFS, normalized
-    for line, form in SINGLE_FORM:
+    for line, form, _ in SINGLE_FORM:
         forms = "".join(f for f, p in zip("abcde", DRAFT_REFS) if p.search(normalized(line)))
         if forms != form:
             failures.append(f"{line.strip()!r}: expected only form {form} to match, got {forms!r}")
