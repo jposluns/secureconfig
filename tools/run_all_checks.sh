@@ -1235,9 +1235,10 @@ fi
 echo "== site CSP pins every inline block by hash, or until promotion permits it =="
 # Until promotion (the owner's decision A15 of 2026-11-03) the live policy in site/_headers pins no
 # hash and permits the live pages' inline blocks with 'unsafe-inline', so that Cloudflare's
-# JavaScript Detections loader runs; tools/check_csp_hashes.py accepts that policy and none
-# wider, keeps every other refusal below, and records in its docstring that the acceptance is
-# temporary. Under the hash model the gate otherwise enforces, the paragraph below holds.
+# JavaScript Detections loader runs; tools/check_csp_hashes.py accepts 'unsafe-inline' only in
+# that policy's script-src and style-src, beside only the sources it names, keeps every other
+# refusal below, and records in its docstring that the acceptance is temporary. Under the hash
+# model the gate otherwise enforces, the paragraph below holds.
 # The CSP in site/_headers names the sha256 of each inline <script> and <style> in every page
 # tools/check_csp_hashes.py lists (the same gate refuses an on* handler on a page, refuses XHTML,
 # compressed SVG and symbolic links under site/, and fails any SVG carrying a <script>, an on*

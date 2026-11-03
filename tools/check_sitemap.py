@@ -23,8 +23,8 @@ WHAT IT CHECKS:
     nofollow`), each read as one comma-separated token in any case. No `loc` is listed twice;
   - every `lastmod` is a calendar date written YYYY-MM-DD;
   - every indexable live page is listed: each `index.html` under site/ outside site/draft/ with no
-    robots `noindex` or `none`. Any other `.html` outside site/draft/ must carry `noindex` (site/404.html
-    does), because this gate maps only folder pages to URLs;
+    robots `noindex` or `none`. Any other `.html` outside site/draft/ must carry `noindex` or
+    `none` (site/404.html carries `noindex`), because this gate maps only folder pages to URLs;
   - site/robots.txt carries exactly one Sitemap line (the field name in any case), and it is
     `Sitemap: https://secureconfig.ai/sitemap.xml`.
 

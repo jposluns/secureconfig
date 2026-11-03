@@ -237,7 +237,8 @@ CASES = (
      PAGE.replace(":root", "/* an edit */\n    :root", 1), None, True, "lacks the hash"),
     ("an edited inline script nobody repinned", SCRIPT_PAGE, None, True, "lacks the hash"),
     ("a style= attribute, which no hash can ever cover",
-     PAGE.replace("<body", '<body style="color:red"', 1), None, True, "style= attribute"),
+     PAGE.replace("<body", '<body style="color:red"', 1), None, True,
+     "a CSP hash covers an element's text, never an attribute, so no pin here could cover one"),
     ("'unsafe-inline' coming back",
      None, re.sub(r"style-src '[^']*'", "style-src 'unsafe-inline'", HEADERS, count=1), True,
      "'unsafe-inline'"),
@@ -385,7 +386,7 @@ CASES = (
      {"404.html": PAGE_404.replace("<style>", "<style>\x00", 1)}, None, True, "NUL byte"),
     ("a style= attribute on the 404 page's body",
      {"404.html": PAGE_404.replace("<body", '<body style="color:red"', 1)}, None, True,
-     "style= attribute"),
+     "a CSP hash covers an element's text, never an attribute, so no pin here could cover one"),
     ("a <STYLE> smuggled through <svg><title> on the 404 page",
      {"404.html": SVG_TITLE_STYLE_404}, None, True, "openers"),
     ("a <script> smuggled through <svg><title> on the script-free 404 page",
@@ -679,6 +680,9 @@ for name in ("probe.svg.gz", "probe.html.br", "probe.svg.zst", "probe.SVG.GZ", "
 scope_case("a directory named assets.gz", expected=COMPRESSED,
            setup=lambda d: (d / "site" / "assets.gz").mkdir())
 
+# The wording every page on* finding shares, whatever the policy.
+ON_RULE = ("refuses every on* handler on a page (P5), whatever the site's script-src or "
+           "script-src-attr would let a browser do with it")
 # P5 (3): an on* handler attribute on an HTML page, structural and literal, on both pages.
 ONJS_PAGE = PAGE.replace("(function () {", "(function () {\n  document.body.onload = null;", 1)
 ONCSS_PAGE = PAGE.replace(":root", "/* onclick= here is stylesheet text */\n    :root", 1)
@@ -686,7 +690,7 @@ scope_case("P5 page handler on index's body", expected="on* handler",
            page=PAGE.replace("<body", '<body onload="init()"', 1))
 scope_case("P5 upper-case page handler on the 404 page names the page", expected="site/404.html",
            page={"404.html": PAGE_404.replace("<body", "<body ONCLICK=go", 1)})
-scope_case("P5 valueless page handler", expected="on* handler",
+scope_case("P5 valueless page handler", expected=ON_RULE,
            page=PAGE.replace("<body", "<body onclick", 1))
 scope_case("P5 page handler with a spaced =", expected="on* handler",
            page=PAGE.replace("<body", "<body onload = 'x'", 1))
@@ -742,6 +746,13 @@ scope_case("P5 a handler-bearing tag in a JavaScript string is script text, repi
            page=ONTAG_JS_PAGE, headers=repinned(ONTAG_JS_PAGE, "script"))
 scope_case("P5 a handler-bearing tag in a page comment fails closed", expected="on* handler",
            page=PAGE.replace("</body>", "<!-- <b onclick> -->\n</body>", 1))
+# The on* literal-accounting message fires only beside another refusal: every place html.parser
+# misses a tag (a comment, CDATA, a declaration, raw text, SVG integration points) is also refused
+# by rule 2 or 3, which is why the docstring calls the accounting defense in depth. This case, an
+# allowlisted <a> in a comment, pins its wording beside rule 2's comment finding.
+scope_case("P5 the on* accounting message, beside the comment refusal",
+           expected="literal on* attribute names in tags and this gate accounts for 0",
+           page=PAGE.replace("</body>", "<!-- <a onclick> -->\n</body>", 1))
 
 # Round 3 of #352 (codex finding): fake markup inside inert text made literal_on_attrs() read a tag
 # that a browser never sees and swallow a real handler after it as a quoted value, while html.parser
@@ -1001,12 +1012,13 @@ live_case("a nonce beside 'unsafe-inline' in style-src",
           expected="beside 'nonce-abc'")
 live_case("a hash beside 'unsafe-inline' in script-src names the JavaScript Detections loader",
           headers=LIVE_HEADERS.replace("script-src 'self'", f"script-src {SCRIPT_PIN} 'self'", 1),
-          expected="refuses every other inline script and on* handler, Cloudflare's injected "
-                   "JavaScript Detections loader included")
+          expected="runs only the inline <script> elements its hashes or nonces cover and "
+                   "refuses every other one, Cloudflare's injected JavaScript Detections loader "
+                   "included")
 live_case("a hash beside 'unsafe-inline' in style-src names the effect on inline styles",
           headers=LIVE_HEADERS.replace("style-src 'self'", f"style-src {STYLE_PIN} 'self'", 1),
-          expected="applies only the pinned inline <style> blocks and refuses every other inline "
-                   "<style> block and every style= attribute;")
+          expected="so it applies only the inline <style> blocks its hashes or nonces cover "
+                   "and refuses every other one;")
 for kind, extra in (("script-src", "https://cdn.example.com"), ("script-src", "'strict-dynamic'"),
                     ("script-src", "'unsafe-eval'"), ("script-src", "'unsafe-hashes'"),
                     ("script-src", "https:"), ("script-src", "*"),
@@ -1030,12 +1042,24 @@ live_case("script-src-elem 'none' beside the live script-src",
 live_case("a valued on* handler on index's body",
           page=PAGE.replace("<body", '<body onload="x"', 1), expected=ON_TEXT)
 live_case("a valueless on* handler on index's body", page=PAGE.replace("<body", "<body onload", 1),
-          expected="a browser runs it")
+          expected=ON_RULE)
 live_case("an on* handler on the 404 page's body",
           page={"404.html": PAGE_404.replace("<body", "<body onclick", 1)},
           expected="carries an on* handler attribute (onclick)")
 live_case("a style= attribute", page=PAGE.replace("<body", '<body style="color:red"', 1),
-          expected="while the temporary 'unsafe-inline' is in style-src a browser applies it")
+          expected="This gate refuses every style= attribute on a page, whatever the site's "
+                   "style-src or style-src-attr would let a browser do with it")
+# Round 2 codex reproductions: an attribute directive overrides the element directive's fallback,
+# so the finding must not claim what a browser does with the attribute.
+live_case("style-src-attr 'none' beside the live policy, and a style= attribute",
+          page=PAGE.replace("<body", '<body style="color:red"', 1),
+          headers=LIVE_HEADERS.replace("; font-src", "; style-src-attr 'none'; font-src", 1),
+          expected="This gate refuses every style= attribute on a page, whatever the site's "
+                   "style-src or style-src-attr would let a browser do with it")
+live_case("script-src-attr 'none' beside the live policy, and an on* handler on the 404 page",
+          page={"404.html": PAGE_404.replace("<body", "<body onclick", 1)},
+          headers=LIVE_HEADERS.replace("; font-src", "; script-src-attr 'none'; font-src", 1),
+          expected="carries an on* handler attribute (onclick). This gate " + ON_RULE)
 live_case("an SVG style element, refused whatever style-src allows",
           expected="refuses one whatever the site's style-src allows",
           extra_files={"assets/probe.svg": svg("<style>path{fill:red}</style>")})
