@@ -62,30 +62,43 @@ site/.well-known/security.txt): none of them refers to the /draft/ review page. 
 fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellings:
   - the whole file text is normalized: the round { percent-decode; `html.unescape` } repeats until
     the text stops changing, at most 8 rounds (text still changing in a 9th round is refused);
-    then Unicode NFKC, case folding, and every `\\` read as `/`. The text is normalized piece by
-    piece between its `\\n`s and the pieces joined with `\\n` again, which is the same text, as no
-    step reads across a `\\n`; so a match maps to the original line it starts on;
+    then Unicode NFKC, case folding, every `\\` read as `/`, and every ASCII tab and CR deleted
+    (a browser deletes tab, LF and CR from a URL; LF stays, as it ends a line, and the patterns
+    below read it instead). The text is normalized piece by piece between its `\\n`s and the
+    pieces joined with `\\n` again, which is the same text, as no step reads across a `\\n`; so a
+    match maps to the original line it starts on;
+  - in the patterns below, W is the word with any whitespace run between its letters,
+    `d\\s*r\\s*a\\s*f\\s*t`; P is any `./` prefix with an LF run after each `.` and `/`,
+    `(?:\\.\\n*/\\n*)*`; and E is `(?![a-z0-9_-])`. Beside a `/` of the path only an LF run is
+    read (`\\n*`), since a wider run there would read prose such as `draft / final`. So
+    `/dr<LF>aft/`, `/<LF>draft` and `./<LF>draft` are read as the path a browser opens;
   - site/llms.txt, site/robots.txt and site/.well-known/security.txt are hand-written indexes that
-    never need the word, so any `draft` anywhere in their normalized text is refused;
+    never need the word, so any match of W anywhere in their normalized text is refused;
   - site/llms-full.txt, the generated guide corpus, uses "draft" in prose and in `draft-ietf-...`
     names, so there each match of any of these on the normalized text is refused (each read
     across a line end too, as a Markdown link may break there):
-      a. `/draft(?![a-z0-9_-])`;
-      b. `(?<![a-z0-9_-])draft/`;
+      a. `/\\n*` W E;
+      b. `(?<![a-z0-9_-])` W `\\n*/`;
       c. a Markdown link destination whose first segment is `draft`, with any whitespace, line
-         ends and blockquote `>` markers before it or its `<`:
-         `\\]\\([\\s>]*<?[\\s>]*(?:\\./)*draft(?![a-z0-9_-])`;
+         ends and blockquote `>` markers before it or its `<`: `\\]\\([\\s>]*<?[\\s>]*` P W E;
       d. a reference definition, with no line-start anchor, so its label may span lines and it
          may sit in a blockquote or a list item, and with any whitespace, line ends and
          blockquote `>` markers before its destination or its `<`, so the destination may be on
-         the next line: `\\]:[\\s>]*<?[\\s>]*(?:\\./)*draft(?![a-z0-9_-])`;
-      e. an HTML attribute value:
-         `\\b(?:href|src|action|formaction|content|url)\\s*=\\s*["']?\\s*(?:\\./)*draft(?![a-z0-9_-])`.
+         the next line: `\\]:[\\s>]*<?[\\s>]*` P W E;
+      e. an HTML attribute value that is 1 URL, which `xlink:href` matches through `\\bhref`:
+         `\\b(?:href|src|action|formaction|url|data|cite|poster|background|longdesc)\\s*=\\s*["']?\\s*`
+         P W E; or any item of a list value, so any `srcset` candidate, any `ping` URL and a meta
+         refresh URL without `url=` count:
+         `\\b(?:srcset|imagesrcset|ping|content)\\s*=\\s*(?:"(?:[^"]*[\\s,;])?|'(?:[^']*[\\s,;])?|(?:[^\\s"'<>]*[,;])?)\\s*`
+         P W E;
+      f. a same-scheme URL, which a browser resolves against the page whether or not `//`
+         follows the scheme: `https?:[/\\n]*` P W E (so a host named `draft` is refused too).
     So `/draft/`, `./draft/`, `[x](draft)`, `[x](<draft>)`, `[x](draft#top)`, `[x]: draft`,
-    `> [x]: draft`, `- [x]: draft`, `href="draft"`, `secureconfig.ai/draft/`, `%2Fdraft%2F`,
-    `/&#100;raft/`, `\\draft\\` and `/draft.html` are refused, while "drafting", "the draft's",
-    "draft-ietf-oauth-v2-1" and `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are
-    accepted.
+    `> [x]: draft`, `- [x]: draft`, `href="draft"`, `srcset="a.png 1x, draft 2x"`,
+    `content="0; ./draft"`, `https:draft`, `secureconfig.ai/draft/`, `%2Fdraft%2F`,
+    `/&#100;raft/`, `/dr&#9;aft/`, `\\draft\\` and `/draft.html` are refused, while "drafting",
+    "the draft's", "draft-ietf-oauth-v2-1" and
+    `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are accepted.
   Each finding names the file and the line, counting `\\n` only (a U+2028 or a `\\r` ends no line),
   and the file is read without newline translation.
 
@@ -126,14 +139,21 @@ NOTFOUND = "404.html"
 # each form of the draft path, both read after normalized().
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
 CORPUS_INDEX = "llms-full.txt"
-DRAFT_WORD = re.compile(r"draft")
-# The corpus forms a to e of the docstring, each matched on its own.
+# W, P and E of the docstring: the word with any whitespace run between its letters, any `./`
+# prefix with an LF run after each `.` and `/`, and the end of the word.
+W = r"d\s*r\s*a\s*f\s*t"
+P = r"(?:\.\n*/\n*)*"
+E = r"(?![a-z0-9_-])"
+DRAFT_WORD = re.compile(W)
+# The corpus forms a to f of the docstring, each matched on its own.
 DRAFT_REFS = (
-    re.compile(r"/draft(?![a-z0-9_-])"),
-    re.compile(r"(?<![a-z0-9_-])draft/"),
-    re.compile(r"\]\([\s>]*<?[\s>]*(?:\./)*draft(?![a-z0-9_-])"),
-    re.compile(r"\]:[\s>]*<?[\s>]*(?:\./)*draft(?![a-z0-9_-])"),
-    re.compile(r"""\b(?:href|src|action|formaction|content|url)\s*=\s*["']?\s*(?:\./)*draft(?![a-z0-9_-])"""),
+    re.compile(rf"/\n*{W}{E}"),
+    re.compile(rf"(?<![a-z0-9_-]){W}\n*/"),
+    re.compile(rf"\]\([\s>]*<?[\s>]*{P}{W}{E}"),
+    re.compile(rf"\]:[\s>]*<?[\s>]*{P}{W}{E}"),
+    re.compile(rf"""\b(?:href|src|action|formaction|url|data|cite|poster|background|longdesc)\s*=\s*["']?\s*{P}{W}{E}"""
+               rf"""|\b(?:srcset|imagesrcset|ping|content)\s*=\s*(?:"(?:[^"]*[\s,;])?|'(?:[^']*[\s,;])?|(?:[^\s"'<>]*[,;])?)\s*{P}{W}{E}"""),
+    re.compile(rf"https?:[/\n]*{P}{W}{E}"),
 )
 DECODE_ROUNDS = 8
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
@@ -258,12 +278,13 @@ def resolves(root, path):
 
 def normalized(text):
     """Published-index text (PART 3) put through { percent-decode; html.unescape } until stable,
-    then NFKC, case folded and with `\\` read as `/`, or None when it still changes in round
-    DECODE_ROUNDS + 1."""
+    then NFKC, case folded, with `\\` read as `/` and with every tab and CR deleted (a browser
+    deletes them from a URL), or None when it still changes in round DECODE_ROUNDS + 1."""
     for _ in range(DECODE_ROUNDS + 1):
         decoded = html.unescape(unquote(text))
         if decoded == text:
-            return unicodedata.normalize("NFKC", text).casefold().replace("\\", "/")
+            text = unicodedata.normalize("NFKC", text).casefold().replace("\\", "/")
+            return text.replace("\t", "").replace("\r", "")
         text = decoded
     return None
 

@@ -19,17 +19,22 @@ review page, none on the 404); the "no page links /draft/" and Disclosure and Li
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
 percent-encoded letter or a fragment does not get past them; and the published indexes are read
 by a fail-closed rule after percent-decoding and character-reference decoding (at most 8 rounds),
-NFKC, case folding and `\\` read as `/`: site/llms.txt, site/robots.txt and
+NFKC, case folding, `\\` read as `/` and tab and CR deleted: site/llms.txt, site/robots.txt and
 site/.well-known/security.txt are refused for any `draft` (relative, Disallow, bold, host-only,
-www, href=, backslash, 1-slash, .html and character-reference spellings among the cases), and
+www, href=, backslash, 1-slash, .html, character-reference and tab spellings among the cases), and
 site/llms-full.txt for each form of the draft path (character references, bare Markdown link
 destinations, reference definitions, HTML attribute values, a link broken across a line end, a
 link broken inside a blockquote, a reference definition whose destination is on the next line,
-whose label spans 2 lines, or that sits in a blockquote or a list item, and 1 case each for forms
-b, d and e that only that form catches), while its prose ("drafting", "the draft's",
-"draft-ietf-oauth-v2-1" and a datatracker draft URL) is accepted. A 9-times percent-encoded path
-exceeds the round limit and is refused. Each refusal names the file and line, counted by `\\n`
-only (a U+2028 ends no line).
+whose label spans 2 lines, or that sits in a blockquote or a list item, a tab, LF or CR inside
+the path, `http:draft` and `https:draft`, each URL attribute beyond href, src, action, formaction,
+content and url, a meta refresh URL without `url=`, and cases for forms b, d, e and f that only
+that form catches), while its prose ("drafting", "the draft's", "draft-ietf-oauth-v2-1" and a
+datatracker draft URL) is accepted. A 9-times percent-encoded path exceeds the round limit and is
+refused. Each refusal names the file and the line its match starts on, counted by `\\n` only (a
+U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a
+reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and write
+bytes, so they translate no newline. A second robots meta whose first name attribute is robots
+is read by that first name, as a browser reads it.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -59,12 +64,13 @@ def run(mutate=None):
 
 
 def edit(rel, old, new):
+    """The first old in rel replaced with new, read and written as bytes (no newline translation)."""
     def mutate(d):
         path = d / rel
-        text = path.read_text(encoding="utf-8")
-        if old not in text:
+        data, old_b = path.read_bytes(), old.encode("utf-8")
+        if old_b not in data:
             raise AssertionError(f"mutation {old!r} no longer matches {rel}")
-        path.write_text(text.replace(old, new, 1), encoding="utf-8")
+        path.write_bytes(data.replace(old_b, new.encode("utf-8"), 1))
     return mutate
 
 
@@ -87,12 +93,12 @@ STRAY = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<ti
 
 
 def append(rel, text):
-    """text added at the end of an existing file."""
+    """text added at the end of an existing file, read and written as bytes."""
     def mutate(d):
         path = d / rel
         if not path.is_file():
             raise AssertionError(f"mutation target {rel} does not exist")
-        path.write_text(path.read_text(encoding="utf-8") + text, encoding="utf-8")
+        path.write_bytes(path.read_bytes() + text.encode("utf-8"))
     return mutate
 
 
@@ -107,12 +113,25 @@ def guides_link(value):
 
 
 def prepend(rel, text):
-    """text added at the start of an existing file."""
+    """text added at the start of an existing file, read and written as bytes."""
     def mutate(d):
         path = d / rel
         if not path.is_file():
             raise AssertionError(f"mutation target {rel} does not exist")
-        path.write_text(text + path.read_text(encoding="utf-8"), encoding="utf-8")
+        path.write_bytes(text.encode("utf-8") + path.read_bytes())
+    return mutate
+
+
+def crlf(rel, second):
+    """rel with every line ending written `\\r\\n` and second inserted as its line 2."""
+    def mutate(d):
+        path = d / rel
+        data = path.read_bytes()
+        lines = data.split(b"\n")
+        if len(lines) < 2 or b"\r" in data:
+            raise AssertionError(f"{rel} has fewer than 2 lines or already carries a CR")
+        lines.insert(1, second.encode("utf-8"))
+        path.write_bytes(b"\r\n".join(lines))
     return mutate
 
 
@@ -150,6 +169,7 @@ REFUSED_LINES = {
         "- Draft review: the next version\n",
         "- [Review](/&#100;raft/): the next version\n",
         "- The next version: dr&#97;ft/\n",
+        "- [Review](/dr&#9;aft/): the next version\n",
     ),
     "site/robots.txt": ("Disallow: draft/\n", "Disallow:/draft/\n", "Disallow: \\draft\\\n"),
     "site/.well-known/security.txt": ("Policy: https://secureconfig.ai/draft/\n",),
@@ -170,9 +190,34 @@ REFUSED_LINES = {
         "The next version is staged at \\draft\\ for review.\n",
         # 8 times percent-encoded: decoded within the round limit, then refused by its form.
         "The next version is staged at %" + "25" * 7 + "2Fdraft%" + "25" * 7 + "2F for review.\n",
+        # A tab, LF or CR inside the path, which a browser deletes from a URL: as a character
+        # reference, and as the character itself in a Markdown destination or an attribute value.
+        "The next version is staged at /dr&#9;aft/ for review.\n",
+        "The next version is staged at /dr&#13;aft/ for review.\n",
+        "The next version is staged [x](</dr\taft/>) for review.\n",
+        "The next version is staged at /dr\raft/ for review.\n",
+        '<a href="/dr&#10;aft/">Review</a>\n',
+        '<a href="/dr\naft/">Review</a>\n',
+        '<a href="dr\naft">Review</a>\n',
+        '<a href="/\ndraft">Review</a>\n',
+        # A same-scheme URL without //.
+        "The next version is staged at http:draft for review.\n",
+        # The URL attributes beyond href, src, action, formaction, content and url.
+        '<img srcset="draft 1x" alt="">\n',
+        '<link rel="preload" as="image" imagesrcset="a.png 1x, draft 2x">\n',
+        '<object data="draft"></object>\n',
+        '<blockquote cite="draft">x</blockquote>\n',
+        '<video poster="draft"></video>\n',
+        '<a href="/guides/" ping="/guides/ draft">x</a>\n',
+        '<table background="draft"></table>\n',
+        '<img longdesc="draft" alt="">\n',
+        '<svg><a xlink:href="draft"></a></svg>\n',
+        # A meta refresh URL without url=.
+        '<meta http-equiv="refresh" content="0;draft">\n',
+        '<meta http-equiv="refresh" content="0; ./draft">\n',
     ),
 }
-# The llms-full.txt cases that only 1 corpus form catches (DRAFT_REFS a to e in the gate), each
+# The llms-full.txt cases that only 1 corpus form catches (DRAFT_REFS a to f in the gate), each
 # with that form's letter and how many lines below the first appended line its match starts;
 # main() asserts that no other form matches. The reference definition follows a blank line, so it
 # is a definition and not a paragraph continuation.
@@ -180,6 +225,8 @@ SINGLE_FORM = (
     ("The next version: see draft/notes for review.\n", "b", 0),
     ("\n[review]: draft\n", "d", 1),
     ('The next version is staged <a href="draft">here</a>.\n', "e", 0),
+    ('<img srcset="a.png 1x, draft 2x" alt="">\n', "e", 0),
+    ("The next version is staged at https:draft for review.\n", "f", 0),
 )
 # Ordinary Markdown that forms c and d read across a line end or a blockquote or list marker, each
 # with how many lines below the first appended line its match starts: a reference definition (after
@@ -210,6 +257,14 @@ INDEX_CASES += [("llms-full.txt line 1 carrying a U+2028 before /draft/",
                  prepend("site/llms-full.txt",
                          "Staged:\N{LINE SEPARATOR}the next version is at /draft/.\n"),
                  "site/llms-full.txt:1: the published-index rule refuses", 1)]
+# `\r\n` line endings throughout: a `\r` ends no line, so a reference on line 2 is reported there,
+# and the corpus written that way is still accepted.
+INDEX_CASES += [("llms-full.txt with \\r\\n line endings and /draft/ on line 2",
+                 crlf("site/llms-full.txt", "The next version is staged at /draft/ for review."),
+                 "site/llms-full.txt:2: the published-index rule refuses", 1),
+                ("llms-full.txt with \\r\\n line endings",
+                 crlf("site/llms-full.txt", "Keep drafting the policy until it is reviewed."),
+                 OK_LINE, 0)]
 # Guide-corpus prose and draft-ietf names that the llms-full.txt rule accepts.
 CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
                 "Read the draft's scope before the policy.\n",
@@ -231,6 +286,9 @@ CASES = [
      "must carry exactly 1 robots meta", 1),
     ("a second robots meta on the review page, single-quoted, allowing indexing",
      edit(REVIEW, META, META + "<meta name='ROBOTS' content='index, follow'>"),
+     "must carry exactly 1 robots meta", 1),
+    ("a duplicate name attribute on a second robots meta on the review page, the first being robots",
+     edit(REVIEW, META, META + '<meta name="robots" name="x" content="index, follow">'),
      "must carry exactly 1 robots meta", 1),
     ("the review page's robots meta in upper case with other spacing",
      edit(REVIEW, META, '<META NAME="Robots" CONTENT="NOINDEX,NOFOLLOW">'), OK_LINE, 0),
@@ -408,7 +466,7 @@ def main():
     sys.path.insert(0, str(TOOLS))
     from check_draft import DRAFT_REFS, normalized
     for line, form, _ in SINGLE_FORM:
-        forms = "".join(f for f, p in zip("abcde", DRAFT_REFS) if p.search(normalized(line)))
+        forms = "".join(f for f, p in zip("abcdef", DRAFT_REFS) if p.search(normalized(line)))
         if forms != form:
             failures.append(f"{line.strip()!r}: expected only form {form} to match, got {forms!r}")
     # Source to generated page: a Unicode host written in content.json is generated, passes the

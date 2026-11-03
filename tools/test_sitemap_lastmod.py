@@ -13,10 +13,13 @@ Each run sets the BASE line of the fixture's copy of check_draft.py to the case'
 cases hold whichever base the shipped file names. The base-path cases take their pages from
 scripts/build-site.py. At base /draft/ the staged build sits under site/draft/, unlisted and
 undated, beside a live root page. At base /, the shipped value since promotion, the promoted
-build (`--base / --out <fixture>/site`) puts the template pages at the
-root, where the sitemap lists all of its folder pages and each is dated by its own file. One case
-also runs check_sitemap.py on the stale fixture, which it accepts, so the staleness is caught only
-by this gate.
+build (`--base / --out <fixture>/site`) puts the template pages at the root, where the sitemap
+lists the 7 indexable folder pages (INDEXABLE in check_draft.py), each dated by its own file, and
+not the noindex /draft/ review page, which check_sitemap.py refuses in a sitemap. One case adds
+the review page to that sitemap with a stale lastmod: this gate dates it like any other path.
+check_sitemap.py also runs on 3 fixtures: it accepts the stale one, so the staleness is caught
+only by this gate; it accepts the promoted one, so that sitemap is one the site could ship; and it
+refuses the one listing the review page.
 """
 import os
 import re
@@ -28,6 +31,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
+sys.path.insert(0, str(TOOLS))
+from check_draft import INDEXABLE, REVIEW_PAGE  # noqa: E402  (the pages a shipped sitemap lists)
+
 BUILD = TOOLS.parent / "scripts" / "build-site.py"
 GATES = ("check_sitemap_lastmod.py", "check_sitemap.py", "check_draft.py", "check_csp_hashes.py")
 # The line of check_draft.py that sets the base path, which each run sets to its own base.
@@ -283,13 +289,14 @@ def staged_draft_listed(tmp):
 def promote(tmp, lastmod=lambda loc: "2026-10-08"):
     """Base /: on 2026-10-08 the draft is removed and the promoted build is written at the root.
 
-    The sitemap lists every folder page of the build, `lastmod(loc path)` each; returns the repo.
+    The sitemap lists the build's 7 indexable folder pages, `lastmod(loc path)` each, and not its
+    noindex /draft/ review page, as check_sitemap.py requires; returns the repo.
     """
     repo = staged_repo(tmp)
     repo.git("rm", "-r", "-q", "site/draft", "site/index.html")
     pages = build("/", repo.root / "site")
-    folders = [p for p in pages if p.endswith("index.html")]
-    assert len(folders) > 1 and "index.html" in folders, folders
+    folders = [p for p in pages if p.endswith("index.html") and p != REVIEW_PAGE]
+    assert REVIEW_PAGE in pages and sorted(folders) == sorted(INDEXABLE), pages
     paths = ["/" + p[:-len("index.html")] for p in folders]
     repo.commit("2026-10-08T12:00:00+00:00",
                 {"site/sitemap.xml": sitemap(*((p, lastmod(p)) for p in paths))})
@@ -326,15 +333,17 @@ def promoted_subpage_current(tmp):
 
 
 def promoted_draft_loc(tmp):
-    # At base / a /draft/ loc is an ordinary path; the promoted build writes the review page at
-    # site/draft/index.html (committed 2026-10-08 here), so a wrong lastmod on it is a mismatch
-    # like any other. promote() already lists it with the right date; this lists it again, stale.
+    # At base / a /draft/ loc is an ordinary path to this gate; the promoted build writes the
+    # review page at site/draft/index.html (committed 2026-10-08 here), so a wrong lastmod on it is
+    # a mismatch like any other. promote() leaves it out, as check_sitemap.py refuses the noindex
+    # page in a sitemap; this adds it, stale.
     repo = promote(tmp)
     text = (repo.root / "site" / "sitemap.xml").read_text(encoding="utf-8")
-    old = "/draft/</loc>\n    <lastmod>2026-10-08</lastmod>"
-    assert text.count(old) == 1, text
+    assert "/draft/</loc>" not in text and text.count("</urlset>") == 1, text
+    entry = ("  <url>\n    <loc>https://secureconfig.ai/draft/</loc>\n"
+             "    <lastmod>2026-10-06</lastmod>\n  </url>\n")
     repo.commit("2026-10-09T12:00:00+00:00",
-                {"site/sitemap.xml": text.replace(old, old.replace("2026-10-08", "2026-10-06"))})
+                {"site/sitemap.xml": text.replace("</urlset>\n", entry + "</urlset>\n")})
     return repo.root
 
 
@@ -379,7 +388,7 @@ CASES = [
      ()),
     ("base /draft/: a listed draft page", staged_draft_listed, "/draft/", 1,
      ("is a /draft/ page", "cannot be dated")),
-    ("base /: every promoted folder page, each dated by the promotion", promoted, "/", 0, ()),
+    ("base /: the 7 indexable promoted pages, each dated by the promotion", promoted, "/", 0, ()),
     ("base /: a promoted page dated by its draft copy", promoted_by_draft_date, "/", 1,
      ("site/guides/index.html last changed", "on 2026-10-08", "its lastmod is '2026-10-06'")),
     ("base /: a promoted subpage edited later, its lastmod left", promoted_subpage_stale, "/", 1,
@@ -387,9 +396,17 @@ CASES = [
       "set the lastmod of https://secureconfig.ai/guides/ to 2026-10-10")),
     ("base /: a promoted subpage edited later, with its lastmod", promoted_subpage_current, "/",
      0, ()),
-    ("base /: a /draft/ loc is an ordinary path, dated by the review page like any other",
+    ("base /: a /draft/ loc added is an ordinary path, dated by the review page like any other",
      promoted_draft_loc, "/", 1,
      ("site/draft/index.html last changed", "on 2026-10-08", "its lastmod is '2026-10-06'")),
+]
+# check_sitemap.py, which reads no history, on 3 of the fixtures above (same columns as CASES).
+FORM_CASES = [
+    ("check_sitemap.py on the stale lastmod, which only this gate catches", stale, "/draft/", 0,
+     ()),
+    ("check_sitemap.py on the promoted sitemap, one the site could ship", promoted, "/", 0, ()),
+    ("check_sitemap.py on a promoted sitemap listing the review page", promoted_draft_loc, "/", 1,
+     ("site/draft/index.html", "so it must not be in the sitemap")),
 ]
 
 
@@ -422,19 +439,21 @@ def main() -> int:
             failures.append(f"{desc}: the fixture could not be built: {exc}")
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
-    # The form gate reads no history and accepts the stale fixture, so only this gate catches it.
-    tmp = Path(tempfile.mkdtemp())
-    try:
-        root = stale(tmp)
-        rc, out = run(root, tmp, gate="check_sitemap.py")
-        failures += verdict("check_sitemap.py on the stale lastmod", rc, out, 0, ())
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+    for desc, fixture, base, expected, wanted in FORM_CASES:
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            root = fixture(tmp)
+            rc, out = run(root, tmp, base, gate="check_sitemap.py")
+            failures += verdict(desc, rc, out, expected, wanted)
+        except AssertionError as exc:
+            failures.append(f"{desc}: the fixture could not be built: {exc}")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {len(CASES) + 1} recorded cases for the sitemap lastmod gate")
+    print(f"  ok    {len(CASES) + len(FORM_CASES)} recorded cases for the sitemap lastmod gate")
     return 0
 
 
