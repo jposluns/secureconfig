@@ -23,12 +23,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
-VERSION = "1.6.0"
+VERSION = "1.6.1"
 UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # The archive's digest in https://posluns.ca/baseline/SHA256SUMS, and the digest of the version's
-# SHA256SUMS in https://posluns.dev/hashes.txt (the template owner's adoption notice of 2026-11-03).
-ARCHIVE_SHA256 = "d1cc5b45de9263253109d78b5d868ed92a420101ab76c0600c87ef748a684ec9"
-SUMS_SHA256 = "57544ba86ba19b0b5a1adf4910f9dd0a28d7e9d3a52d5e150c0c9818c6cc978f"
+# SHA256SUMS in https://posluns.dev/hashes.txt (the template owner's 1.6.1 notice of 2026-11-03).
+ARCHIVE_SHA256 = "e14f950a151a9c2b2d6c7e58d96fd5a41360dd4698835b3c3feef3de2e672474"
+SUMS_SHA256 = "774784943c6c97768af5956ad299c06390273e1455a2e6a1214300cc4c516c4e"
 # Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
 # The runtime and licence files the site publishes. The reference pages, tools/measure.js,

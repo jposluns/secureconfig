@@ -6,7 +6,7 @@
 # the previous deployment) on any failure:
 #   - the copied site template files match .baseline/pin.toml;
 #   - the site's palette passes the template's contrast gate, .baseline/check_palette.py, pinned by
-#     the gate above (baseline 1.6.0, mandatory; secureconfig.ai has no site-palette.css);
+#     the gate above (mandatory from baseline 1.6.0; secureconfig.ai has no site-palette.css);
 #   - the pages under site/ match a fresh build of their sources at the root;
 #   - the site is self-contained and only the /draft/ review page and the 404 are noindex;
 #   - every page fits the template page model and site/_headers carries exactly the shared policy;

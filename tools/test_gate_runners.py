@@ -29,24 +29,25 @@ The committed script is the promoted root form (promotion made `/` build-site.py
 and rewrote tools/check_draft.py for the root), so each case runs on it once; the staged form and
 the derived promoted variant this test once ran retired with the staging.
 
-THE PALETTE GATE (baseline 1.6.0, mandatory on every site): both runners must carry the exact call
+THE PALETTE GATE (mandatory on every site from baseline 1.6.0): both runners must carry the exact call
 PALETTE_CALL outside a comment, pages-build.sh right after the pin gate that holds the copied gate
 to its pin, so that the cases above run it in order and a failure there stops the deploy; a
 pages-build.sh in which the call is not read as a gate is a finding too.
 
-THE PALETTE BLOCK of tools/run_all_checks.sh, which holds the palette gate to its own RESULT line
-rather than through run_gate: the block (from `if palette=$(` to its `fi`) and the ok and bad
-helpers are read out of the file and run with bash, with python3 replaced by a stand-in that
-records its arguments and runs a stand-in gate body. Each case checks the call it made, what it
-prints and whether it set fail=1:
-  - an exit 0 with `RESULT: pass (1 site, 0 failing checks)` passes with the block's ok line;
-  - an exit 0 with a FAIL in the tables, with no RESULT line, or with a malformed or other RESULT
-    line fails ("exited 0 without a clean RESULT: pass line");
-  - a failing gate, exit 1 with a `RESULT: fail ` line, fails ("found a palette failure") and
-    prints the gate's output;
-  - a crash, a non-zero exit with a traceback or an `...Error: ` line, fails as a crash;
-  - a non-zero exit with no RESULT line, a malformed one or a pass line fails ("exited non-zero
-    without reporting a result").
+THE PALETTE BLOCK of tools/run_all_checks.sh, which holds the palette gate to its exit code (the
+baseline 1.6.1 README: 0 pass, 1 fail or unreadable input, 2 usage error; never the wording of
+its RESULT line) rather than through run_gate: the block (from `if palette=$(` to its `fi`) and
+the ok and bad helpers are read out of the file and run with bash, with python3 replaced by a
+stand-in that records its arguments and runs a stand-in gate body. Each case checks the call it
+made, that the gate's output is printed, and whether it set fail=1:
+  - an exit 0 passes with the block's ok line whatever it prints: a clean or malformed RESULT
+    line, a FAIL in the tables, a `RESULT: fail ` line or no output at all;
+  - an exit 1 fails ("exited 1: a palette check failed or its input could not be read") whatever
+    it prints: a `RESULT: fail ` line, a malformed one, a pass line, or a crash's traceback, one
+    printed by a stand-in and one raised by a real interpreter;
+  - an exit 2 fails as a usage error ("exited 2, a usage error"), a pass line beside it or not;
+  - any other code fails as an unexpected error ("exited N, an unexpected error"): an exit 3, and
+    a gate killed by a signal (137).
 
 Nothing here runs a real gate; tools/run_all_checks.sh runs those. Exit 0 ok, 1 on a finding.
 """
@@ -75,42 +76,54 @@ PIN_GATE = "-I -B tools/check_baseline_pin.py"
 PALETTE_BLOCK = re.compile(r"^if palette=\$\(python3 .*?^fi$", re.M | re.S)
 PALETTE_OK = "  ok    check_palette.py: the secureconfig palette passes in both schemes"
 PALETTE_PASS = "RESULT: pass (1 site, 0 failing checks)"
-PALETTE_NOT_CLEAN = "  FAIL  check_palette.py exited 0 without a clean RESULT: pass line"
-PALETTE_NO_RESULT = "  FAIL  check_palette.py exited non-zero without reporting a result"
-# (stand-in gate body, fail=1 expected, texts the output must hold, texts it must not hold)
+PALETTE_FAILED = "  FAIL  check_palette.py exited 1: a palette check failed or its input could not be read"
+PALETTE_USAGE = "  FAIL  check_palette.py exited 2, a usage error; the palette is unverified"
+PALETTE_ANY_FAIL = "  FAIL  check_palette.py exited"
+# (stand-in gate body, fail=1 expected, texts the output must hold, texts it must not hold). The
+# block decides by the exit code only, so an exit 0 passes whatever it prints and a non-zero exit
+# fails whatever it prints; every case also holds the block to printing the gate's output.
 PALETTE_CASES = (
     (f"printf '  site  4.60:1  needs 4.5\\n{PALETTE_PASS}\\n'", False,
-     [PALETTE_OK, "  site  4.60:1  needs 4.5"], ["FAIL"]),
-    (f"printf '  site  4.10:1  needs 4.5  FAIL\\n{PALETTE_PASS}\\n'", True, [PALETTE_NOT_CLEAN],
-     [PALETTE_OK]),
-    ("printf '  site  4.60:1  needs 4.5\\n'", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
-    ("true", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
-    ("printf 'RESULT: pass\\n'", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
-    ("printf 'RESULT: pass (2 sites, 0 failing checks)\\n'", True, [PALETTE_NOT_CLEAN],
-     [PALETTE_OK]),
-    (f"printf '{PALETTE_PASS} \\n'", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
-    (f"printf '  {PALETTE_PASS}\\n'", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
-    ("printf 'RESULT: fail (1 site, 1 failing check)\\n'", True, [PALETTE_NOT_CLEAN],
-     [PALETTE_OK]),
+     [PALETTE_OK, "  site  4.60:1  needs 4.5", PALETTE_PASS], [PALETTE_ANY_FAIL]),
+    (f"printf '  site  4.10:1  needs 4.5  FAIL\\n{PALETTE_PASS}\\n'", False,
+     [PALETTE_OK, "  site  4.10:1  needs 4.5  FAIL"], [PALETTE_ANY_FAIL]),
+    ("printf '  site  4.60:1  needs 4.5\\n'", False, [PALETTE_OK, "  site  4.60:1  needs 4.5"],
+     [PALETTE_ANY_FAIL]),
+    ("true", False, [PALETTE_OK], [PALETTE_ANY_FAIL]),
+    ("printf 'RESULT: pass\\n'", False, [PALETTE_OK, "RESULT: pass"], [PALETTE_ANY_FAIL]),
+    ("printf 'RESULT: pass (2 sites, 0 failing checks)\\n'", False,
+     [PALETTE_OK, "RESULT: pass (2 sites"], [PALETTE_ANY_FAIL]),
+    (f"printf '{PALETTE_PASS} \\n'", False, [PALETTE_OK, f"{PALETTE_PASS} "], [PALETTE_ANY_FAIL]),
+    (f"printf '  {PALETTE_PASS}\\n'", False, [PALETTE_OK, f"  {PALETTE_PASS}"], [PALETTE_ANY_FAIL]),
+    ("printf 'RESULT: fail (1 site, 1 failing check)\\n'", False,
+     [PALETTE_OK, "RESULT: fail (1 site, 1 failing check)"], [PALETTE_ANY_FAIL]),
     ("printf '  site  4.10:1  needs 4.5  FAIL\\nRESULT: fail (1 site, 1 failing check)\\n'; exit 1",
-     True, ["  site  4.10:1  needs 4.5  FAIL", "  FAIL  check_palette.py found a palette failure"],
-     [PALETTE_OK, "crashed", "without reporting"]),
+     True, ["  site  4.10:1  needs 4.5  FAIL", PALETTE_FAILED], [PALETTE_OK, PALETTE_USAGE]),
     ("printf 'RESULT: fail (the input could not be checked)\\n'; exit 1", True,
-     ["  FAIL  check_palette.py found a palette failure"], [PALETTE_OK, "crashed"]),
+     ["RESULT: fail (the input could not be checked)", PALETTE_FAILED], [PALETTE_OK]),
     ("printf 'Traceback (most recent call last):\\n  File \"x\", line 1\\nKeyError: 1\\n'; exit 1",
-     True, ["  FAIL  check_palette.py crashed; the palette is unverified"],
-     [PALETTE_OK, "found a palette failure"]),
+     True, ["KeyError: 1", PALETTE_FAILED], [PALETTE_OK]),
     ("printf 'RESULT: fail (1 site, 1 failing check)\\nValueError: bad\\n'; exit 1", True,
-     ["  FAIL  check_palette.py crashed; the palette is unverified"],
-     [PALETTE_OK, "found a palette failure"]),
-    ("printf 'RESULT:fail (1 site, 1 failing check)\\n'; exit 1", True, [PALETTE_NO_RESULT],
-     [PALETTE_OK, "found a palette failure"]),
-    ("printf 'RESULT: failed\\n'; exit 1", True, [PALETTE_NO_RESULT],
-     [PALETTE_OK, "found a palette failure"]),
-    ("printf '  RESULT: fail (1 site, 1 failing check)\\n'; exit 1", True, [PALETTE_NO_RESULT],
-     [PALETTE_OK, "found a palette failure"]),
-    (f"printf '{PALETTE_PASS}\\n'; exit 1", True, [PALETTE_NO_RESULT], [PALETTE_OK]),
-    ("exit 2", True, [PALETTE_NO_RESULT], [PALETTE_OK]),
+     ["ValueError: bad", PALETTE_FAILED], [PALETTE_OK]),
+    ("printf 'RESULT:fail (1 site, 1 failing check)\\n'; exit 1", True,
+     ["RESULT:fail", PALETTE_FAILED], [PALETTE_OK]),
+    ("printf 'RESULT: failed\\n'; exit 1", True, ["RESULT: failed", PALETTE_FAILED], [PALETTE_OK]),
+    ("printf '  RESULT: fail (1 site, 1 failing check)\\n'; exit 1", True,
+     ["  RESULT: fail", PALETTE_FAILED], [PALETTE_OK]),
+    (f"printf '{PALETTE_PASS}\\n'; exit 1", True, [PALETTE_PASS, PALETTE_FAILED], [PALETTE_OK]),
+    ("exit 2", True, [PALETTE_USAGE], [PALETTE_OK, PALETTE_FAILED]),
+    # Any other code fails too: a usage error that prints a pass line, an unknown code, a crash in
+    # a real interpreter (exit 1) and a gate killed by a signal (128 + 9).
+    (f"printf 'usage: check_palette.py\\n{PALETTE_PASS}\\n'; exit 2", True,
+     ["usage: check_palette.py", PALETTE_USAGE], [PALETTE_OK]),
+    ("printf 'x\\n'; exit 3", True,
+     ["  FAIL  check_palette.py exited 3, an unexpected error; the palette is unverified"],
+     [PALETTE_OK]),
+    ("python3 -I -c 'raise KeyError(1)'", True, ["Traceback (most recent call last):", PALETTE_FAILED],
+     [PALETTE_OK]),
+    ("kill -KILL $$", True,
+     ["  FAIL  check_palette.py exited 137, an unexpected error; the palette is unverified"],
+     [PALETTE_OK]),
 )
 # The stand-in python3: it records its arguments, runs the script's `-c` version check with this
 # interpreter and sys.version_info set to STANDIN_VERSION, answers --version from STANDIN_VERSION,
@@ -333,8 +346,8 @@ def main():
     print(f"  ok    {len(RUN_GATE_CASES)} run_gate cases and {build_cases} pages-build.sh cases "
           f"(Python 3.10 refused before any gate; with 3.11, every gate in order, and each gate's "
           f"failure stopping the build, in {' and '.join(forms)}), the palette gate in both "
-          f"runners, and {len(PALETTE_CASES)} cases of run_all_checks.sh's palette block (a pass, "
-          f"a failing gate, a crash and malformed RESULT lines)")
+          f"runners, and {len(PALETTE_CASES)} cases of run_all_checks.sh's palette block (decided "
+          f"by the exit code only: 0 passes, 1, 2, any other code and a crash fail)")
     return 0
 
 

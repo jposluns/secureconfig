@@ -1291,27 +1291,25 @@ run_gate test_baseline_pin.py python3 -I -B tools/test_baseline_pin.py
 run_gate check_baseline_pin.py python3 -I -B tools/check_baseline_pin.py
 
 echo "== the site palette passes the template's contrast gate =="
-# Baseline 1.6.0 makes the palette gate mandatory on every site (SPECIFICATION section 4 item 3).
+# From baseline 1.6.0 the palette gate is mandatory on every site (SPECIFICATION section 4 item 3).
 # .baseline/check_palette.py is the template's own file, copied and pinned (the gate above holds it
 # to its pin), so it prints its contrast tables and a RESULT line rather than an ok line, and
-# run_gate's ok-line rule does not fit it; this holds it to its own result line instead.
-# secureconfig.ai has no site-palette.css. scripts/pages-build.sh runs the same call.
+# run_gate's ok-line rule does not fit it. Its contract is its exit code (baseline 1.6.1 README):
+# 0 pass, 1 fail or unreadable input, 2 usage error. This decides by the exit code only, never by
+# the wording of the printed lines, and prints the gate's output in every case; any code other than
+# 0 fails, a crash (1) or a signal included. secureconfig.ai has no site-palette.css.
+# scripts/pages-build.sh runs the same call under set -e.
 if palette=$(python3 -I -B .baseline/check_palette.py --site secureconfig --palettes site/assets/baseline/palettes.css 2>&1); then
   printf '%s\n' "$palette"
-  if grep -q 'FAIL' <<< "$palette" || ! grep -qE '^RESULT: pass \(1 site, 0 failing checks\)$' <<< "$palette"; then
-    bad "check_palette.py exited 0 without a clean RESULT: pass line"
-  else
-    ok "check_palette.py: the secureconfig palette passes in both schemes"
-  fi
-elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$palette"; then
-  bad "check_palette.py crashed; the palette is unverified"
-  printf '%s\n' "$palette" | sed 's/^/          /'
-elif grep -qE '^RESULT: fail ' <<< "$palette"; then
-  printf '%s\n' "$palette"
-  bad "check_palette.py found a palette failure"
+  ok "check_palette.py: the secureconfig palette passes in both schemes"
 else
-  bad "check_palette.py exited non-zero without reporting a result"
-  printf '%s\n' "$palette" | sed 's/^/          /'
+  palette_rc=$?
+  printf '%s\n' "$palette"
+  case "$palette_rc" in
+    1) bad "check_palette.py exited 1: a palette check failed or its input could not be read" ;;
+    2) bad "check_palette.py exited 2, a usage error; the palette is unverified" ;;
+    *) bad "check_palette.py exited $palette_rc, an unexpected error; the palette is unverified" ;;
+  esac
 fi
 
 echo "== the site pages are a fresh build of their sources =="

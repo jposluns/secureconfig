@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the secureconfig.ai pages on the shared site template (baseline 1.6.0).
+"""Build the secureconfig.ai pages on the shared site template (baseline 1.6.1).
 
 Usage:
   python3 -I -B scripts/build-site.py                 write the pages under site/
@@ -473,7 +473,10 @@ class Builder:
                      f'<p><strong>Claim:</strong> {self.inline(e["claim"])}</p>',
                      f'<p><strong>Limitation:</strong> {self.inline(e["limitation"])}</p>',
                      f"<p><strong>Evidence:</strong> {ev}</p>"]
-        body += ['<p class="lbl blk">Security</p>', f'<p>{self.inline(d["security"]["text"])}</p>',
+        # SPECIFICATION 7.20 from 1.6.0: "Your browser" (what the light and dark switch stores)
+        # comes before the Security paragraph.
+        body += ['<p class="lbl blk">Your browser</p>', f'<p>{self.inline(d["browser"]["text"])}</p>',
+                 '<p class="lbl blk">Security</p>', f'<p>{self.inline(d["security"]["text"])}</p>',
                  self.next_block(d["next"])]
         rail = self.rail([(e["id"], e["title"]) for e in d["entries"]])
         return self.page("Disclosure", "disclosure/", self.doc("Disclosure", "Disclosure", rail, body),
