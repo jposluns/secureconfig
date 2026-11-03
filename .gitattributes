@@ -1,8 +1,5 @@
-# These two files are the CSP hash gate's input and a browser's input, so keep them boring:
-# LF in the index and LF in every checkout. The gate normalizes newlines itself, the way HTML's
-# input-stream preprocessing does, so this pin is not what makes it correct. It just stops the
-# two files drifting between platforms for no reason.
-site/index.html text eol=lf
+# The headers file is the CSP gate's input, so keep it boring: LF in the index and LF in every
+# checkout, so the file cannot drift between platforms for no reason.
 site/_headers text eol=lf
 
 # The claim-length gate splits its baseline on LF alone and refuses a CR in any line, so a CRLF
@@ -10,7 +7,7 @@ site/_headers text eol=lf
 tools/claim_length_baseline.txt text eol=lf
 
 # The copied site template files are pinned by SHA-256 in .baseline/pin.toml, so no checkout may
-# rewrite their bytes; the generated draft pages are compared byte for byte by
+# rewrite their bytes; the generated pages are compared byte for byte by
 # scripts/build-site.py --check, so they stay LF.
-site/draft/assets/baseline/** -text
-site/draft/**/*.html text eol=lf
+site/assets/baseline/** -text
+site/**/*.html text eol=lf

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Copy the shared site template's runtime files into the draft and write the pin.
+"""Copy the shared site template's runtime files into the site and write the pin.
 
 Usage: python3 -I -B scripts/copy-baseline.py --from <unpacked baseline version folder>
 
 The folder is a verified copy of https://posluns.ca/baseline/<version>/ (its SHA256SUMS checked
 against the published digest before this runs). This script checks every file it copies against
-that SHA256SUMS, refuses on any mismatch, copies only the runtime and licence files the draft
-publishes (RUNTIME below) byte for byte into site/draft/assets/baseline/, and writes
+that SHA256SUMS, refuses on any mismatch, copies only the runtime and licence files the site
+publishes (RUNTIME below) byte for byte into site/assets/baseline/, and writes
 .baseline/pin.toml with the version and each copied file's SHA-256. tools/check_baseline_pin.py
 then fails if a copied file ever differs from the pin. Never edit a copied file: a new baseline
 version is 1 pull request that reruns this script and commits the result.
@@ -20,17 +20,17 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEST = Path("site") / "draft" / "assets" / "baseline"
+DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
-VERSION = "1.5.0"
+VERSION = "1.5.1"
 UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # The archive's digest in https://posluns.ca/baseline/SHA256SUMS, and the digest of the version's
 # SHA256SUMS in https://posluns.dev/hashes.txt (the template note of 2026-11-03).
-ARCHIVE_SHA256 = "dd60449934b911a51f0cf25b6af7d650ded0ffc60be95e76defa40b22fa4b22f"
-SUMS_SHA256 = "1b110ac403898ce2fc6bae1bdc4923b17530a83583dea06422c56be371b4ece8"
-# Pin keys are paths relative to the draft root (site/draft/), as the baseline README shows them.
+ARCHIVE_SHA256 = "8d20f70612d524789ed0d7fc3fe269551413da8f29495dbafa06d8e0b9b0778e"
+SUMS_SHA256 = "65a62b3aaac4bc6addc33eec71f4685b71b1bd88db0d7f7e382e5755beac37a1"
+# Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
-# The runtime and licence files the draft publishes. The reference pages, tools/measure.js,
+# The runtime and licence files the site publishes. The reference pages, tools/measure.js,
 # gen_palettes.py, the documentation and the scripts no page loads (select.js, search.js) are not
 # copied.
 RUNTIME = (
@@ -53,7 +53,7 @@ RUNTIME = (
 HEADER = """\
 # Shared site template baseline pin, read by tools/check_baseline_pin.py.
 #
-# The files under site/draft/assets/baseline/ are copied byte for byte from the baseline package
+# The files under site/assets/baseline/ are copied byte for byte from the baseline package
 # at the upstream URL below by scripts/copy-baseline.py, which checked each one against the
 # package's SHA256SUMS. Never edit a copied file. A new baseline version is 1 pull request that
 # reruns the copy script and commits the copied files and this pin together.
@@ -102,7 +102,7 @@ def main(argv=None):
         shutil.copyfile(src / name, target)
     lines = [HEADER, f'version = "{VERSION}"', f'upstream = "{UPSTREAM}"',
              f'archive_sha256 = "{ARCHIVE_SHA256}"', f'sha256sums_sha256 = "{SUMS_SHA256}"',
-             f'copied = "{args.date}"', "", "# Paths are relative to site/draft/.", "[files]"]
+             f'copied = "{args.date}"', "", "# Paths are relative to site/.", "[files]"]
     lines += [f'"{KEY_PREFIX}{name}" = "{pins[name]}"' for name in sorted(pins)]
     (ROOT / PIN).parent.mkdir(parents=True, exist_ok=True)
     (ROOT / PIN).write_text("\n".join(lines) + "\n", encoding="utf-8")

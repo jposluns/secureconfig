@@ -1,13 +1,6 @@
-# Cloudflare sends X-Content-Type-Options and Referrer-Policy itself and Strict-Transport-Security from the zone's HSTS setting, so this file does not set them. Until promotion the policy permits the live pages' inline blocks with 'unsafe-inline' and pins no hash; tools/check_csp_hashes.py records why.
+# Cloudflare sends X-Content-Type-Options and Referrer-Policy itself and Strict-Transport-Security from the zone's HSTS setting, so this file does not set them. The policy is the shared template policy of baseline SPECIFICATION section 9, the same on all 6 sites; tools/check_csp_hashes.py requires it exactly, under /* alone.
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-inline' https://ajax.cloudflare.com https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-inline' https://ajax.cloudflare.com https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Frame-Options: DENY
   Permissions-Policy: accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(), display-capture=(), fullscreen=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
-
-# The staged template rebuild (baseline SPECIFICATION section 4.1): the shared 6-site draft policy in
-# place of the live one, and no indexing. Removed at promotion, when this policy moves to /*.
-/draft/*
-  ! Content-Security-Policy
-  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-inline' https://ajax.cloudflare.com https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
-  X-Robots-Tag: noindex

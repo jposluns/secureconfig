@@ -243,15 +243,102 @@
       ]
     },
     {
-      "kind": "directory",
-      "target": "site/draft",
+      "kind": "file",
+      "target": "site/index.html",
       "regenerate": "python3 scripts/build-site.py",
       "sources": [
         "scripts/build-site.py",
         "site-src/content.json",
         "README.md",
-        "tools/version_basis_guides.txt",
-        "site/index.html"
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/guides/index.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/for-ai/index.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/for-humans/index.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/checklist/index.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/disclosure/index.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/license/index.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/404.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/draft/index.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
       ]
     }
   ]

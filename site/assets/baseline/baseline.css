@@ -1,4 +1,4 @@
-/* baseline.css 1.5.0: the shared stylesheet of the project sites (the Atrium direction).
+/* baseline.css 1.5.1: the shared stylesheet of the project sites (the Atrium direction).
    Newsreader for text and headings, Public Sans for labels and navigation, JetBrains Mono for code,
    Dancing Script for the signature; the fonts are declared in fonts.css.
    Scale: perfect fourth (1.333) on a 1.1875rem base. No rules except the table header hairline.
@@ -14,6 +14,10 @@
 @media (prefers-color-scheme: dark) { :root:not([data-scheme="light"]) { --gold: #e6c15a; --silver: #cfcfcf; --ord-progress: #6faa62; --ord-speed: #e1791b; --ord-cost: #ef675c; } }
 :root[data-scheme="dark"] { --gold: #e6c15a; --silver: #cfcfcf; --ord-progress: #6faa62; --ord-speed: #e1791b; --ord-cost: #ef675c; }
 *, *::before, *::after { box-sizing: border-box; }
+/* Hidden means hidden, whatever display a component gives the element: `.doc section` and `.doc article` are
+   `display: contents`, which overrode the browser's own [hidden] rule and kept every section the install
+   selector hid on screen (1.0.0 to 1.5.0). The older per-component [hidden] rules below are kept. */
+[hidden] { display: none !important; }
 :root { color-scheme: light dark; }
 html { -webkit-text-size-adjust: 100%; }
 body {

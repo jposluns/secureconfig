@@ -2,16 +2,18 @@
 """Cases for check_sitemap.py: the real files pass, and each defect it names fails.
 
 Each case copies the real gate and the modules it imports (check_draft.py, check_csp_hashes.py)
-into a throwaway tree with the real site/index.html, site/404.html, site/robots.txt and
-site/sitemap.xml, applies one change, and runs the gate as a subprocess, so what is under test is
-the shipped entry point. A must-fail case names a substring its finding must carry; every case
-checks the exit status, the ok line on a pass and a FAIL line on a refusal.
+into a throwaway tree with the real pages under site/, site/robots.txt and site/sitemap.xml,
+applies one change, and runs the gate as a subprocess, so what is under test is the shipped entry
+point. A must-fail case names a substring its finding must carry; every case checks the exit
+status, the ok line on a pass and a FAIL line on a refusal.
 
 Each run sets the BASE line of the copied check_draft.py, so the cases hold whichever base the
-shipped file names. CASES run at base /draft/, the staged site. ROOT_CASES run at base /, the
-value check_draft.py's docstring names for promotion, where the draft rules are off. One case at
-each base writes the pages of scripts/build-site.py, under site/draft/ at /draft/ and with
-`--base / --out <tree>/site` at /, the promoted form.
+shipped file names. CASES run at base /, the promoted site, where the real sitemap lists the 7
+indexable pages and the /draft/ review page and the 404 stay out by their noindex. STAGED_CASES
+run at base /draft/, where the gate's staged rules switch back on: a tree under site/draft/ is
+left out of the sitemap and a /draft/ loc is refused outright. One case at each base writes the
+pages of scripts/build-site.py, with `--base / --out <tree>/site` at / and under site/draft/ at
+/draft/.
 """
 import re
 import shutil
@@ -27,8 +29,10 @@ BUILD = ROOT / "scripts" / "build-site.py"
 GATES = ("check_sitemap.py", "check_draft.py", "check_csp_hashes.py")
 # The line of check_draft.py that sets the base path, which each run sets to its own base.
 BASE_LINE = re.compile(r'^BASE = "[^"\n]*"$', re.M)
-REAL = {name: (SITE / name).read_bytes() for name in
-        ("index.html", "404.html", "robots.txt", "sitemap.xml")}
+PAGES = ("index.html", "404.html", "guides/index.html", "for-ai/index.html",
+         "for-humans/index.html", "checklist/index.html", "disclosure/index.html",
+         "license/index.html", "draft/index.html")
+REAL = {name: (SITE / name).read_bytes() for name in PAGES + ("robots.txt", "sitemap.xml")}
 SITEMAP = REAL["sitemap.xml"].decode("utf-8")
 ROBOTS = REAL["robots.txt"].decode("utf-8")
 # The real sitemap's first lastmod, read rather than written here, so a lastmod update cannot turn
@@ -38,6 +42,7 @@ LOC = "<loc>https://secureconfig.ai/</loc>"
 URL_END = "  </url>\n"
 INDEXABLE = b'<!doctype html>\n<meta charset="utf-8">\n<title>t</title>\n'
 HIDDEN = b'<!doctype html>\n<meta charset="utf-8">\n<meta name="robots" content="noindex">\n'
+NOINDEX_META = b'<meta name="robots" content="noindex, nofollow">\n'
 
 
 def entry(path, lastmod=LASTMOD):
@@ -49,7 +54,7 @@ def with_entry(path, lastmod=LASTMOD):
     return SITEMAP.replace("</urlset>", entry(path, lastmod) + "</urlset>", 1)
 
 
-def run(files=None, setup=None, base="/draft/"):
+def run(files=None, setup=None, base="/"):
     """Run the real gate against the real files with `files` (name: str, bytes or None) applied."""
     d = Path(tempfile.mkdtemp())
     try:
@@ -94,26 +99,27 @@ def built(base, out):
     return setup
 
 
-# (description, files, setup, expected substring for a refusal or None for a pass)
+# (description, files, setup, expected substring for a refusal or None for a pass), at base /.
 CASES = [
     ("the real files", None, None, None),
-    ("a /draft/ tree with its own index pages, left out of the sitemap",
-     {"draft/index.html": INDEXABLE, "draft/guides/index.html": INDEXABLE}, None, None),
-    ("the draft build of scripts/build-site.py under site/draft/, left out of the sitemap", None,
-     built("/draft/", "site/draft"), None),
-    ("a second live folder page, listed",
-     {"guides/index.html": INDEXABLE, "sitemap.xml": with_entry("/guides/")}, None, None),
+    ("the promoted build of scripts/build-site.py at the root, its indexable pages listed", None,
+     built("/", "site"), None),
+    ("a new live folder page, listed",
+     {"extra/index.html": INDEXABLE, "sitemap.xml": with_entry("/extra/")}, None, None),
     ("a listed folder page whose robots meta carries noindex, nofollow",
-     {"guides/index.html": INDEXABLE.replace(
+     {"extra/index.html": INDEXABLE.replace(
          b"<title>", b'<meta name="robots" content="noindex, nofollow">\n<title>'),
-      "sitemap.xml": with_entry("/guides/")}, None, "carries a robots noindex"),
+      "sitemap.xml": with_entry("/extra/")}, None, "carries a robots noindex"),
     ("a noindex folder page left out of the sitemap",
-     {"guides/index.html": HIDDEN}, None, None),
+     {"extra/index.html": HIDDEN}, None, None),
     ("a listed folder page whose robots meta is NONE, noarchive",
-     {"guides/index.html": HIDDEN.replace(b'content="noindex"', b'content="NONE, noarchive"'),
-      "sitemap.xml": with_entry("/guides/")}, None, "carries a robots noindex"),
+     {"extra/index.html": HIDDEN.replace(b'content="noindex"', b'content="NONE, noarchive"'),
+      "sitemap.xml": with_entry("/extra/")}, None, "carries a robots noindex"),
     ("a folder page whose robots meta is none, left out of the sitemap",
-     {"guides/index.html": HIDDEN.replace(b'content="noindex"', b'content="none"')}, None, None),
+     {"extra/index.html": HIDDEN.replace(b'content="noindex"', b'content="none"')}, None, None),
+    ("the /draft/ review page, noindex, left out of the sitemap", None, None, None),
+    ("the /draft/ review page listed, which its noindex forbids",
+     {"sitemap.xml": with_entry("/draft/")}, None, "carries a robots noindex"),
     ("no sitemap", {"sitemap.xml": None}, None, "site/sitemap.xml is missing"),
     ("the sitemap as a symbolic link", None, symlinked, "symbolic link"),
     ("a sitemap that is not UTF-8", {"sitemap.xml": REAL["sitemap.xml"] + b"\xff"}, None,
@@ -159,23 +165,19 @@ CASES = [
     ("a loc naming a file, not a folder", {"sitemap.xml": with_entry("/404.html")}, None,
      "folder path"),
     ("a loc with a dot-dot segment", {"sitemap.xml": with_entry("/../")}, None, "folder path"),
-    ("a /draft/ page", {"draft/index.html": INDEXABLE, "sitemap.xml": with_entry("/draft/")}, None,
-     "is a /draft/ page"),
-    ("a /draft/ subpage", {"draft/guides/index.html": INDEXABLE,
-                           "sitemap.xml": with_entry("/draft/guides/")}, None, "is a /draft/ page"),
-    ("a loc naming a page that does not exist", {"sitemap.xml": with_entry("/guides/")}, None,
-     "site/guides/index.html is missing"),
+    ("a loc naming a page that does not exist", {"sitemap.xml": with_entry("/nowhere/")}, None,
+     "site/nowhere/index.html is missing"),
     ("the same loc twice", {"sitemap.xml": with_entry("/")}, None, "listed more than once"),
-    ("an indexable live folder page left out", {"guides/index.html": INDEXABLE}, None,
-     "does not list https://secureconfig.ai/guides/"),
-    ("the home page left out",
+    ("an indexable live folder page left out", {"extra/index.html": INDEXABLE}, None,
+     "does not list https://secureconfig.ai/extra/"),
+    ("every page left out",
      {"sitemap.xml": '<?xml version="1.0" encoding="UTF-8"?>\n'
                      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n'},
      None, "does not list https://secureconfig.ai/"),
     ("an indexable page that is not a folder index", {"about.html": INDEXABLE}, None,
      "not a folder index.html"),
     ("the 404 page losing its noindex",
-     {"404.html": REAL["404.html"].replace(b'<meta name="robots" content="noindex">\n', b"", 1)},
+     {"404.html": REAL["404.html"].replace(NOINDEX_META, b"", 1)},
      None, "site/404.html is an indexable live page"),
     ("robots.txt with no Sitemap line",
      {"robots.txt": ROBOTS.replace("Sitemap: https://secureconfig.ai/sitemap.xml\n", "", 1)}, None,
@@ -184,28 +186,30 @@ CASES = [
      {"robots.txt": ROBOTS + "sitemap: https://secureconfig.ai/other.xml\n"}, None,
      "exactly one Sitemap line"),
     ("robots.txt naming another sitemap",
-     {"robots.txt": ROBOTS.replace("/sitemap.xml", "/draft/sitemap.xml", 1)}, None,
+     {"robots.txt": ROBOTS.replace("/sitemap.xml", "/other/sitemap.xml", 1)}, None,
      "exactly one Sitemap line"),
     ("no robots.txt", {"robots.txt": None}, None, "site/robots.txt is missing"),
 ]
 
-# The same shape as CASES, run at base / (after promotion).
-ROOT_CASES = [
+# The same shape as CASES, run at base /draft/ (a staged rebuild), where the gate's draft rules
+# switch back on: the staged tree stays out of the sitemap and a /draft/ loc is refused outright.
+STAGED_CASES = [
     ("the real files", None, None, None),
-    ("the promoted build of scripts/build-site.py at the root, its indexable pages listed", None,
-     built("/", "site"), None),
-    ("a site/draft/ folder page, a live page at the root base, left out",
-     {"draft/index.html": INDEXABLE}, None, "does not list https://secureconfig.ai/draft/"),
-    ("a /draft/ loc at the root base, naming its folder page",
-     {"draft/index.html": INDEXABLE, "sitemap.xml": with_entry("/draft/")}, None, None),
+    ("a staged tree with its own index pages, left out of the sitemap",
+     {"draft/staging/index.html": INDEXABLE, "draft/guides/index.html": INDEXABLE}, None, None),
+    ("the staged build of scripts/build-site.py under site/draft/, left out of the sitemap", None,
+     built("/draft/", "site/draft"), None),
+    ("a /draft/ page", {"sitemap.xml": with_entry("/draft/")}, None, "is a /draft/ page"),
+    ("a /draft/ subpage", {"draft/guides/index.html": INDEXABLE,
+                           "sitemap.xml": with_entry("/draft/guides/")}, None, "is a /draft/ page"),
 ]
 
 
 def main() -> int:
     failures = []
     for (desc, files, setup, expected), base in (
-            [(case, "/draft/") for case in CASES] + [(case, "/") for case in ROOT_CASES]):
-        desc = desc if base == "/draft/" else f"base /: {desc}"
+            [(case, "/") for case in CASES] + [(case, "/draft/") for case in STAGED_CASES]):
+        desc = desc if base == "/" else f"base /draft/: {desc}"
         for name, content in (files or {}).items():
             if name in REAL and content is not None and (
                     content if isinstance(content, bytes) else content.encode("utf-8")) == REAL[name]:
@@ -226,8 +230,8 @@ def main() -> int:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {len(CASES) + len(ROOT_CASES)} recorded cases for the sitemap gate, "
-          f"{len(ROOT_CASES)} of them at base /")
+    print(f"  ok    {len(CASES) + len(STAGED_CASES)} recorded cases for the sitemap gate, "
+          f"{len(STAGED_CASES)} of them at base /draft/")
     return 0
 
 

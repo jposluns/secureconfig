@@ -1,135 +1,54 @@
 #!/usr/bin/env python3
-"""Cases for check_csp_hashes.py, one per defect a reviewer demonstrated against it.
+"""Cases for check_csp_hashes.py under the template page model, since promotion.
 
-Six rounds are recorded, and the arc matters more than any single case. Round 1 broke a
-regular-expression reader and the gate moved to `html.parser`. Rounds 2, 3 and 4 then spent
-themselves teaching that parser about HTML: `src` on a style, foreign content, integration points,
-MathML, inert script types. Round 3 found that a round-2 fix was BACKWARDS and that the case written
-for it was holding the wrong answer in place. Round 4 found two more silent fail-opens in the same
-family, a `<style>` inside `<svg><title>` that `html.parser` swallows entirely and a `<script>` whose
-escape states it misreads. Round 5 found three wrong pages that satisfied every one of the new guards,
-the worst of which had this gate printing the hash of the EMPTY STRING in its own failure message and
-going green once an author pinned what it asked for.
+WHAT CARRIED OVER, AND WHAT RETIRED. Six review rounds and the row 3.18 and P5 rulings built this
+suite against the hash-pinning gate that guarded the old hand-written pages. At promotion the
+pages became generated template pages with no inline block anywhere, and the gate dropped the
+hash model, #1181's temporary A15 'unsafe-inline' acceptance and the /draft/* rule model. Each
+case group was kept, retargeted or dropped as follows, with the reason:
 
-Round 6 generalized the gate from one hard-coded page to a KNOWN LIST of pages, because
-`site/404.html` shipped a `<style>` pinned in the shared `/*` CSP that the gate never read, so editing
-it would leave the gate green while a browser refused the style. The cases below now run against BOTH
-real pages; the ones that reconstruct the CSP carry every page's pin, and the header-topology cases
-that once spoke of "reaching the root" now assert the one-policy-under-/* contract that a page served
-at any request path forces. New cases exercise the second page directly: an edited-but-unrepinned 404
-style FAILS, a block added to the script-free page FAILS, an unlisted page FAILS, and the happy path
-now proves three blocks across two pages.
+  - KEPT, unchanged: every row 3.18 and P5 document and filesystem case (SVG scripts, handlers,
+    javascript: URLs with each URL_NOISE character, style elements and attributes, fail-closed
+    parsing, refused suffixes, dotfiles, trailing dots, compressed names, symlinks, FIFOs, the
+    site-root shapes, and the injected I/O failures). None of them depended on the hash model.
+  - KEPT, retargeted to the generated pages: the page-model refusals whose rule still applies
+    under a shape of 0 inline blocks: an inline <style> or <script>, a self-closing <style/>, a
+    charset other than exactly one `<meta charset="utf-8">`, a NUL byte, a style= attribute, a
+    valued and a valueless on* handler (structural and literal, the <svg><title> smuggling
+    included by the allowlist below), rules 1 to 4 of the refused contexts (handler-like text,
+    inert text holding `<`, <math>, malformed end tags) and the element allowlist. The staged
+    draft's page cases BECAME these cases: the template model that covered site/draft/ now covers
+    every page, so "a baseline script written any other way", "an element outside the allowlist"
+    and their kin run against the root pages.
+  - DROPPED, hash-model cases: the pin-matching, directive-resolution (script-src-elem /
+    default-src fallback), orphan-pin, base64url, sha384, repinned-pass and CRLF-pin cases all
+    exercised machinery the gate no longer contains; the policy carries no hash and no page
+    carries a block to pin. The repinned-pass variants of rounds 3 to 5 (which isolated each new
+    rule from a pin mismatch) collapse into plain refusals, because with no pins there is nothing
+    to mask a refusal; their rules are still exercised below.
+  - DROPPED, A15 live-policy cases: the temporary 'unsafe-inline' acceptance left the gate; the
+    shared policy is now required byte for byte, so every widening those cases probed
+    ('strict-dynamic', extra hosts, a hash or nonce beside 'unsafe-inline') is refused by the
+    exact-policy rule, which has its own cases below.
+  - DROPPED, /draft/* rule-model cases: the rule and its model are gone; reintroducing any
+    /draft/* block now fails the no-detach, one-policy or X-Robots-Tag rule, which the header
+    cases below pin.
+  - DROPPED, wording and base-path-advice cases: they pinned message clauses of the hash model
+    (pins that look like nonces, the per-shape handler advice) and the staged/promoted shape
+    split, none of which exists in the gate; the surviving messages are pinned by the expected
+    substrings of the cases below.
+  - The round-1 to round-6 narrative cases that asserted PASSES after a repin (stylesheet text
+    with <!-- and -->, a <style> in a JavaScript string) dropped with the blocks they lived in; a
+    page has no inline block for such text to sit in, and any <style> opener is refused outright.
 
-So the gate stopped modelling HTML and started refusing what it cannot model, and most of the cases
-below are now assertions that it refuses. Several of them USED to be passes, and each says so, because
-a case that quietly changes direction is how round 2's regression survived.
+HEADER CASES. site/_headers must carry exactly the shared template policy under the bare /*:
+widened, reordered, comma-split, duplicated, detached, path-scoped or host-scoped policies fail,
+as does any X-Robots-Tag; a comment between the rule and its headers passes, as Cloudflare allows.
 
-Two kinds of case appear here. Most modify the page and assert the gate FAILS. The rest modify the
-page, repin the CSP to the hash a browser would actually compute, and assert it PASSES; those hold a
-closed defect closed, because reintroducing the old behaviour moves the computed hash and the case
-goes red. `body_hash` computes that pin independently of the gate.
-
-Row 3.18 (the maintainer's 2026-09-25 ruling) extended the gate past HTML pages to the rest of
-`site/`: an `.xhtml`, `.xht` or `.svgz` is refused, a symbolic link or non-regular entry is refused,
-and every `.svg` is inspected and fails on a `<script>` element or an `on*` attribute, failing closed
-on anything it cannot read, decode or parse. The same day's P5 ruling ("all three") added, each as
-its own refusal with its own cases: a `javascript:` URL in any SVG attribute, an href or an
-animation's `to`, `from`, `by` or `values` alike; an SVG `<style>` element or `style=` attribute; and
-an `on*` attribute on an HTML page, structural and literal, mirroring the `style=` accounting. These
-cases are counted separately from the six review rounds, because they record a scope extension
-rather than a defect a reviewer demonstrated. The harness now writes the real `site/favicon.svg`
-into every run, so every case, old and new, also proves the real favicon passes; `extra_files` may
-name subdirectories and carry bytes; `setup` makes the entries that are not plain files (links, a
-FIFO, a missing or regular site root). Injected I/O errors exercise the traversal's failure handling
-independently of the account's permissions, since a `chmod` fixture is a no-op for root. Passing
-boundary cases document what the rulings do not ask this gate to police (references, `data:` URLs,
-presentation attributes, text that merely looks like a URL or a handler).
-
-Round 2 of the #352 review added three sets, counted with the row 3.18 cases: valueless,
-slash-terminated and hyphenated page handlers at each SVG integration point on both pages, which the
-old `on<word>=` accounting let through inside `<title>`, with prose and `data-onload` guards; a
-case per character an XML attribute can carry to URL_NOISE (tab, LF, CR, DEL, space), so dropping
-any one of them turns the suite red, which dropping CR once did not; and dotfile (`.svg`),
-trailing-dot and compressed (`.gz`, `.br`, `.zst`) names, which pathlib's suffix let escape.
-
-Round 3 of #352 found fake markup inside inert text (`<!-- <b title=" -->`, CDATA, a bogus
-`<!thing>` or `<?thing>`, and text crossing a `textarea`, `title`, `noscript` or `xmp` boundary)
-making the literal scan swallow a real handler inside SVG `<title>`, which html.parser missed too.
-Its cases, on both pages, are counted with the row 3.18 cases: every reproduction with a valued and
-a valueless handler, each refusal rule alone (the context-free valued-handler scan, inert text
-holding a `<`, and `<math>` or an SVG `title`, `desc`, `foreignObject`, `style` or `script`), and
-false-positive guards (plain text in a comment, `<title>`, `<noscript>` and `<textarea>`, on-words in
-prose, `data-onload`). Three earlier cases changed: the round-2 integration-point cases now expect
-the SVG refusal; the prose guard, which sat inside `<svg><title>` and carried `on = off`, moved to the
-page's own `<title>` and a `<p>` without the `=`; and `data-onload` inside `<svg><title>`, once a
-pass, is now refused as an SVG `<title>`, with a new pass case for `data-onload` in the body.
-
-Round 4 of #352 found that a malformed end tag (`</ x </svg>`, `</1`, `</` and a tab, `</!`) is a
-bogus comment to a browser, which this gate's literal tag reading does not model (html.parser, at the
-Python this runs on, does, but it reads a `<style>` or `<script>` inside `<svg>` as raw text where a
-browser still reads markup), so it hid an `</svg>` from a browser and let a pinned stylesheet or
-script, wrapped in `<svg>`, carry a live `<a onclick>`. Its cases, counted with the row 3.18 cases,
-repin every reproduction so that only the new rule can refuse it: the sixteen stylesheet combinations
-(two pages, two handler forms, four prefixes), the script-wrapping variant in both forms, `</` in the
-pinned script itself, and each malformed spelling in page text.
-
-Round 5 of #352 found `<frameset>` and `<select>` wrapping the pinned stylesheet so that a browser
-built a `<frame onload>` or `<a onclick>` from what html.parser hashed as the block, and the model
-changed: every tag name on a page must be in an allowlist of the elements the real pages use. Its
-cases, counted with the row 3.18 cases, are both reproductions in both handler forms on both pages
-(repinned so only the allowlist can refuse them), a refusal per disallowed element, mixed case, a
-lone end tag, a name inside a comment and one inside the pinned script, and a pass for allowed
-elements in any case, and, so that rule 2 stays tested behind the allowlist, each inert context
-holding only an allowlisted `<p>`. Two earlier cases changed: the `<noscript>`/`<textarea>` plain-text guard, once
-a pass, is now refused by the allowlist, and the handler-bearing tag in the pinned script string is
-an `<a>` rather than a `<b>`, so that it still passes.
-
-The owner's decision A15 of 2026-11-03 moved the live site/_headers, until promotion, to a policy
-that pins no hash and permits the live pages' inline blocks with `'unsafe-inline'`, and the gate
-accepts it as TEMPORARY 'unsafe-inline' in its docstring sets out. Every case above therefore no
-longer reads site/_headers: HEADERS is a fixture rebuilt from the real pages in the hash-pinned
-shape the file had before, so each case still tests the hash model it was written for, with every
-string it edits unchanged. The A15 cases, counted separately, run against the real file: it passes,
-it passes edited blocks without a repin, each hash, nonce or source beyond the accepted ones fails,
-and the shape, allowlist, handler, style, SVG and one-policy refusals still fail under it.
-
-The staged draft (the owner's decisions of 2026-11-02 and 2026-11-03) added a page model for
-site/draft/ and 1 `/draft/*` rule. Its cases, counted separately, run the generated For AI
-assistants page under site/draft/ against the real site/_headers (LIVE_HEADERS), which carries
-both the A15 live policy and the `/draft/*` rule: it passes as generated; an inline script, a baseline script
-written any other way, an inline style block, a `style=` attribute, an `on*` handler and an element
-outside the draft allowlist each fail; a template element on a live page still fails the 28-element
-list; and the `/draft/*` rule fails when it is missing while a draft page exists, widens or does not
-detach the policy, only detaches, or is repeated, while a deeper `/draft/x/*` rule is still
-refused by the live model. With the real file carrying the 1 modelled `/draft/*` rule, the 2 A15
-cases that append a `/draft/*` rule now append a second one, and are refused as that. QA round 1 of
-#1182 added cases for the draft allowlist as exactly the generator's elements (an `<svg>` and a
-`<details>` fail), a `.HTM` draft page, a `site/foo/draft/` page that stays unlisted, the `/draft/*`
-rule's 3 pinned lines (an extra detach or a missing noindex fails), and other rules that can match a
-draft URL (a deeper rule, a placeholder rule and an absolute-URL rule on this host fail when they
-carry any header; an unrelated path or another host passes). Round 2 replaced sampled paths with
-the rule's literal prefix: a folder rule, an asset rule, an unprobed subtree, `/draft` itself, a
-placeholder, a short splat and an upper-case path each fail with `! X-Robots-Tag`, `/drafts/*`
-passes, X-Robots-Tag in `/*` fails and a rule with a percent escape is refused as unmodelled. #1181's
-2 original `/draft/*` A15 cases run again against the real file with its `/draft/*` block removed,
-with their original expectations, beside the same rules added to the full file.
-
-The LOW fixes for the gate's explanations (TODO rows from #1181) made 4 messages exact to their
-triggers and changed no refusal. Their cases, counted separately, pin each new clause and, where the
-old clause claimed more than its trigger, its absence: a NUL outside any inline block, inside one, and
-both; a harmless `<!--` in the pinned script, worded as the gate's rule; a token that only begins like
-a hash or nonce (`'nonce-!'`, `'sha256-'`), which no longer claims what a browser does, beside a valid
-nonce or hash, which still does; the on* accounting in both directions; and the on* advice on each
-page by its declared shape. The base-path runs build the template pages with scripts/build-site.py
-at the gate's draft root and at /, put each page where that base serves it under site/, and require
-the advice of that location's declared shape. A source check pins the reworded docstring and comment
-clauses.
+Exit 0 ok, 1 on a finding.
 """
-import base64
 import contextlib
 import gzip
-import hashlib
-import importlib.util
 import io
 import os
 import re
@@ -144,36 +63,36 @@ TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 PAGE = (ROOT / "site" / "index.html").read_bytes().decode("utf-8")
 PAGE_404 = (ROOT / "site" / "404.html").read_bytes().decode("utf-8")
-# The real site/_headers, which until promotion carries the temporary live policy; the cases above the
-# A15 ones below run against HEADERS, the hash-pinned fixture built from the real pages further down.
-LIVE_HEADERS = (ROOT / "site" / "_headers").read_text(encoding="utf-8")
+SCRIPTED = (ROOT / "site" / "for-ai" / "index.html").read_bytes().decode("utf-8")
+REVIEW = (ROOT / "site" / "draft" / "index.html").read_bytes().decode("utf-8")
+HEADERS = (ROOT / "site" / "_headers").read_text(encoding="utf-8")
 FAVICON = (ROOT / "site" / "favicon.svg").read_bytes()
+COPY_JS = '<script src="/assets/baseline/copy.js" defer></script>'
+# The default fixture pages: the generated home and 404, a page that loads a baseline script, and
+# the /draft/ review page.
+FIXTURE = {"index.html": PAGE, "404.html": PAGE_404, "for-ai/index.html": SCRIPTED,
+           "draft/index.html": REVIEW}
+OK_PAGES = "4 page(s) under site"
+SHARED = "shared template policy"
 
 
-def run_against(page=None, headers=None, extra_files=None, gate=None, setup=None):
+def run_against(page=None, headers=None, extra_files=None, setup=None):
     """Run the real gate against a copy of the site. Returns (exit, stdout and stderr).
 
-    `page` is None (both real pages), a str (an index.html override, so every pre-round-6 case is
-    byte-identical), or a dict {"index.html"/"404.html": text} overriding those pages; an unknown key
-    RAISES, so a typo cannot silently test a pristine corpus. The real `site/favicon.svg` is written
-    into every run. `extra_files` writes extra files under site/, in subdirectories as named, as
-    text (written as UTF-8) or bytes (written as given). `gate` is an (old, new) pair applied to the
-    gate SOURCE (for the config-guard case); it RAISES if `old` no longer matches, so a refactor
-    cannot turn a mutation case into a run of the pristine gate. `setup` is called with the copy's
-    root, for entries that are not plain files (a link, a FIFO, a replaced site/). A gate that hangs
-    (on a FIFO it should never open) is reported as exit 124 rather than hanging the suite.
+    `page` is None (the fixture pages), a str (an index.html override), or a dict keyed by a
+    FIXTURE path overriding that page; an unknown key RAISES, so a typo cannot silently test a
+    pristine fixture. The real `site/favicon.svg` is written into every run. `extra_files` writes
+    extra files under site/, in subdirectories as named, as text (written as UTF-8) or bytes
+    (written as given). `setup` is called with the copy's root, for entries that are not plain
+    files (a link, a FIFO, a replaced site/). A gate that hangs (on a FIFO it should never open)
+    is reported as exit 124 rather than hanging the suite.
     """
     d = Path(tempfile.mkdtemp())
     try:
         (d / "tools").mkdir()
         (d / "site").mkdir()
-        src = (TOOLS / "check_csp_hashes.py").read_text(encoding="utf-8")
-        if gate is not None:
-            if gate[0] not in src:
-                raise AssertionError(f"gate mutation {gate[0]!r} no longer matches the source")
-            src = src.replace(gate[0], gate[1])
-        (d / "tools" / "check_csp_hashes.py").write_text(src, encoding="utf-8")
-        pages = {"index.html": PAGE, "404.html": PAGE_404}
+        shutil.copy(TOOLS / "check_csp_hashes.py", d / "tools" / "check_csp_hashes.py")
+        pages = dict(FIXTURE)
         if isinstance(page, str):
             pages["index.html"] = page
         elif isinstance(page, dict):
@@ -183,7 +102,9 @@ def run_against(page=None, headers=None, extra_files=None, gate=None, setup=None
                 pages[k] = v
         # Bytes, not text: the newline cases are only cases if the bytes survive the write.
         for name, text in pages.items():
-            (d / "site" / name).write_bytes(text.encode("utf-8"))
+            target = d / "site" / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(text.encode("utf-8"))
         (d / "site" / "favicon.svg").write_bytes(FAVICON)
         for name, content in (extra_files or {}).items():
             target = d / "site" / name
@@ -203,285 +124,188 @@ def run_against(page=None, headers=None, extra_files=None, gate=None, setup=None
         shutil.rmtree(d, ignore_errors=True)
 
 
-def body_hash(page, tag):
-    """sha256 of an element's text, computed here rather than asked of the gate."""
-    m = re.search(rf"<{tag}>(.*?)</{tag}>", page, re.S)
-    return base64.b64encode(hashlib.sha256(m.group(1).encode("utf-8")).digest()).decode()
+def edited(base, old, new):
+    """base with old replaced once; RAISES when old no longer matches, so a page edit cannot turn
+    a mutation case into a pristine run."""
+    if old not in base:
+        raise AssertionError(f"mutation {old!r} no longer matches the page")
+    return base.replace(old, new, 1)
 
 
-def repinned(page, tag, base_page=None, headers=None):
-    """HEADERS with that element's pin replaced by what the page now hashes to.
+# The wording every page on* finding shares, whatever the policy.
+ON_RULE = ("refuses every on* handler on a page (P5), whatever the site's script-src or "
+           "script-src-attr would let a browser do with it")
+ON_TEXT = "outside the inline <style> and <script> blocks"
+ALLOWLIST = "is not in the page allowlist"
+MALFORMED = "has a malformed end tag"
+SVG_REFUSAL = "inside an inline <svg>"
 
-    `base_page` is the page whose OLD hash is being replaced (PAGE for index, PAGE_404 for the 404
-    page), so a 404 repin replaces exactly the 404 token and leaves the index tokens intact.
-    """
-    base = HEADERS if headers is None else headers
-    old = PAGE if base_page is None else base_page
-    return base.replace(f"'sha256-{body_hash(old, tag)}'", f"'sha256-{body_hash(page, tag)}'")
+# (description, page override, headers override, must_fail, expected substring or None)
+CASES = [
+    ("the generated pages under the shared policy", None, None, False, OK_PAGES),
 
+    # THE PAGE MODEL: no inline block, scripts only in the generator's baseline form.
+    ("an inline <script> on the home page",
+     edited(PAGE, "</head>", "<script>alert(1)</script>\n</head>"), None, True,
+     "has 1 <script> elements and this gate models exactly 0"),
+    ("an inline <style> on the home page",
+     edited(PAGE, "</head>", "<style>p{}</style>\n</head>"), None, True,
+     "has 1 <style> elements and this gate models exactly 0"),
+    ("a baseline script without defer",
+     {"for-ai/index.html": edited(SCRIPTED, COPY_JS,
+                                  '<script src="/assets/baseline/copy.js"></script>')}, None, True,
+     "<script> elements"),
+    ("a script from another host",
+     {"for-ai/index.html": edited(SCRIPTED, COPY_JS,
+                                  '<script src="https://cdn.example.net/x.js" defer></script>')},
+     None, True, "<script> elements"),
+    ("a baseline script with a body",
+     {"for-ai/index.html": edited(SCRIPTED, COPY_JS,
+                                  COPY_JS.replace("></script>", ">alert(1)</script>"))}, None, True,
+     "<script> elements"),
+    ("a baseline script still written with the staged /draft/ path",
+     {"for-ai/index.html": edited(SCRIPTED, COPY_JS,
+                                  '<script src="/draft/assets/baseline/copy.js" defer></script>')},
+     None, True, "<script> elements"),
+    ("a self-closing <style/>",
+     edited(PAGE, "</head>", "<style/>\n</head>"), None, True, "self-closing"),
+    ("a charset declaration this gate does not obey",
+     edited(PAGE, '<meta charset="utf-8">', '<meta charset="windows-1252">'), None, True, "charset"),
+    ("the charset declaration removed",
+     edited(PAGE, '<meta charset="utf-8">\n', ""), None, True, "charset"),
+    ("a NUL byte on a page",
+     edited(PAGE, "</body>", "\x00</body>"), None, True, "NUL byte"),
 
-def alt_pin(page, tag, fn):
-    """The same element text under another CSP-permitted hash algorithm."""
-    m = re.search(rf"<{tag}>(.*?)</{tag}>", page, re.S)
-    return base64.b64encode(fn(m.group(1).encode("utf-8")).digest()).decode()
+    # style= AND on* HANDLERS, structural and literal, on each kind of page.
+    ("a style= attribute on the home page",
+     edited(PAGE, "<body>", '<body style="color:red">'), None, True,
+     "This gate refuses every style= attribute on a page"),
+    ("a style= attribute on the 404 page names the page",
+     {"404.html": edited(PAGE_404, "<body>", '<body style="color:red">')}, None, True,
+     "site/404.html"),
+    ("a valued on* handler", edited(PAGE, "<body>", '<body onload="x()">'), None, True, ON_TEXT),
+    ("a valueless on* handler", edited(PAGE, "<body>", "<body onclick>"), None, True, ON_RULE),
+    ("an on* handler on the review page names the page",
+     {"draft/index.html": edited(REVIEW, "<body>", "<body ONCLICK=go>")}, None, True,
+     "site/draft/index.html"),
+    ("a handler with a spaced =", edited(PAGE, "<body>", "<body onload = 'x'>"), None, True, ON_TEXT),
+    ("handler-like text in prose",
+     edited(PAGE, "</body>", "<p>x onclick=alert(1)</p>\n</body>"), None, True, ON_TEXT),
+    ("prose on-words are not handlers",
+     edited(PAGE, "</body>", "<p>only one on duty, on-call; online, on</p>\n</body>"), None, False,
+     OK_PAGES),
+    ("data-onload= is not a handler",
+     edited(PAGE, "</body>", '<p data-onload="x" data-on>x</p>\n</body>'), None, False, OK_PAGES),
 
+    # THE ELEMENT ALLOWLIST (round 5 of #352): every tag name, read context-free. An inline <svg>
+    # is itself outside the template's elements, so every <svg>-smuggling reproduction of rounds 2
+    # to 5 is refused here first.
+    ("an inline <svg>, outside the generator's elements",
+     edited(PAGE, "</body>", '<svg><title><style>p{}</style></title></svg>\n</body>'), None, True,
+     "element <svg> " + ALLOWLIST),
+    ("a <details>, which the generator never emits",
+     edited(PAGE, "</body>", "<details><summary>x</summary></details>\n</body>"), None, True,
+     "element <details> " + ALLOWLIST),
+    ("a <frameset> in mixed case",
+     edited(PAGE, "</body>", "<FrameSet>\n</body>"), None, True, "element <frameset> " + ALLOWLIST),
+    ("an end tag alone",
+     edited(PAGE, "</body>", "</select>\n</body>"), None, True, "element <select> " + ALLOWLIST),
+    ("an unlisted element inside a comment, read context-free",
+     edited(PAGE, "</body>", "<!-- <frameset> -->\n</body>"), None, True,
+     "element <frameset> " + ALLOWLIST),
+    ("allowed elements in any case pass",
+     edited(PAGE, "</body>", "<P>x <SPAN>y</SPAN> <Code>z</Code></P>\n</body>"), None, False,
+     OK_PAGES),
 
-STYLE_PIN = f"'sha256-{body_hash(PAGE, 'style')}'"
-SCRIPT_PIN = f"'sha256-{body_hash(PAGE, 'script')}'"
-STYLE_404_PIN = f"'sha256-{body_hash(PAGE_404, 'style')}'"
-# The hash-pinned policy the site served before A15, rebuilt from the real pages, so every case of the
-# six review rounds and of row 3.18 and P5 still tests the hash model it was written for.
-HEADERS = ("/*\n"
-           f"  Content-Security-Policy: default-src 'none'; script-src {SCRIPT_PIN}; style-src "
-           f"{STYLE_PIN} {STYLE_404_PIN}; img-src 'self'; base-uri 'none'; form-action 'none'; "
-           "frame-ancestors 'none'\n"
-           "  X-Frame-Options: DENY\n")
+    # REFUSED CONTEXTS (rounds 3 and 4 of #352), each rule alone, with only allowlisted names.
+    ("a comment holding a <", edited(PAGE, "</body>", "<!-- a <p> c -->\n</body>"), None, True,
+     "has a comment whose text"),
+    ("a comment holding plain text passes",
+     edited(PAGE, "</body>", "<!-- only one on duty; see _headers -->\n</body>"), None, False,
+     OK_PAGES),
+    ("a CDATA section holding a <", edited(PAGE, "</body>", "<![CDATA[ a <p> c ]]>\n</body>"), None,
+     True, "has a CDATA section whose text"),
+    ("a bogus declaration holding a <", edited(PAGE, "</body>", "<!thing a <p>\n</body>"), None,
+     True, "has a <! declaration whose text"),
+    ("a bogus processing instruction holding a <",
+     edited(PAGE, "</body>", "<?thing a <p>\n</body>"), None, True, "has a <? declaration whose text"),
+    ("a <title> whose content holds a <",
+     edited(PAGE, "</body>", "<title>a <p>c</title>\n</body>"), None, True,
+     "has a <title> whose content"),
+    ("a <title> holding plain text passes",
+     re.sub(r"<title>[^<]*</title>", "<title>Only one, on call</title>", PAGE, count=1), None,
+     False, OK_PAGES),
+    ("a <math> element", edited(PAGE, "</body>", "<math><mi>x</mi></math>\n</body>"), None, True,
+     "element <math> " + ALLOWLIST),
+    ("a malformed end tag, </ and a space",
+     edited(PAGE, "</body>", "<p>a</ p>b</p>\n</body>"), None, True, MALFORMED),
+    ("a malformed end tag, </>", edited(PAGE, "</body>", "<p>a</>b</p>\n</body>"), None, True,
+     MALFORMED),
+    ("a malformed end tag, </ and a digit",
+     edited(PAGE, "</body>", "<p>a</1>b</p>\n</body>"), None, True, MALFORMED),
+    ("a malformed end tag, </!", edited(PAGE, "</body>", "<p>a</!x>b</p>\n</body>"), None, True,
+     MALFORMED),
+    ("a CRLF page, normalized as a browser's tokenizer normalizes it",
+     PAGE.replace("\n", "\r\n"), None, False, OK_PAGES),
+    ("a lone-CR page, normalized the same way", PAGE.replace("\n", "\r"), None, False, OK_PAGES),
 
-COMMENTY = "/* <!-- keep this --> */\n    :root"
-STRINGY = "(function () {\n  var tpl = \"<style>h1{color:red}</style>\";"
-COMMENT_PAGE = PAGE.replace(":root", COMMENTY, 1)
-STRING_PAGE = PAGE.replace("(function () {", STRINGY, 1)
-SCRIPT_PAGE = PAGE.replace("(function () {", "(function () {\n  /* an edit */", 1)
-CRLF_PAGE = PAGE.replace("\n", "\r\n")
-CR_PAGE = PAGE.replace("\n", "\r")
-CRLF_PINS = HEADERS.replace(STYLE_PIN, f"'sha256-{body_hash(CRLF_PAGE, 'style')}'").replace(
-    SCRIPT_PIN, f"'sha256-{body_hash(CRLF_PAGE, 'script')}'")
-
-# Round-6 second-page mutations (site/404.html has one <style>, no <script>).
-E404 = PAGE_404.replace("<style>", "<style>\n    /* an edit */", 1)
-E404_COMMENT = PAGE_404.replace("<style>", "<style>\n    /* <!-- keep --> */", 1)
-TWO_STYLE_404 = PAGE_404.replace("</style>", "</style>\n<style>h1{color:red}</style>", 1)
-SCRIPT_ON_404 = PAGE_404.replace("</style>", "</style>\n<script>var x=1;</script>", 1)
-NOSCRIPT_INDEX = re.sub(r"<script>.*?</script>", "", PAGE, count=1, flags=re.S)
-IDX_STYLE_BODY = re.search(r"<style>(.*?)</style>", PAGE, re.S).group(1)
-P404_SHARED = re.sub(r"<style>.*?</style>", lambda m: "<style>" + IDX_STYLE_BODY + "</style>",
-                     PAGE_404, count=1, flags=re.S)
-SVG_TITLE_STYLE_404 = PAGE_404.replace(
-    "</style>", "</style>\n<svg><title><STYLE>p{color:red}</STYLE></title></svg>", 1)
-SVG_TITLE_SCRIPT_404 = PAGE_404.replace(
-    "</style>", "</style>\n<svg><title><script>x</script></title></svg>", 1)
-ORPHAN = "'sha256-" + "A" * 43 + "='"
-
-# (description, page, headers, must_fail, expected substring or None)
-CASES = (
-    ("the real pages under the hash-pinned policy, three blocks across two pages", None, None, False,
-     None),
-    ("an edited stylesheet nobody repinned",
-     PAGE.replace(":root", "/* an edit */\n    :root", 1), None, True, "lacks the hash"),
-    ("an edited inline script nobody repinned", SCRIPT_PAGE, None, True, "lacks the hash"),
-    ("a style= attribute, which no pin this gate checks can cover",
-     PAGE.replace("<body", '<body style="color:red"', 1), None, True,
-     "this gate pins only an element's text, never an attribute"),
-    ("'unsafe-inline' coming back",
-     None, re.sub(r"style-src '[^']*'", "style-src 'unsafe-inline'", HEADERS, count=1), True,
-     "'unsafe-inline'"),
-
-    # THE PAGE OUTGROWING THE GATE. Each of these used to be modelled, mostly wrongly.
-    ("a second inline block, which this gate no longer tries to tell apart",
-     PAGE.replace("</style>", "</style>\n<style>h1{color:red}</style>", 1), None, True,
-     "models exactly one"),
-    ("a <style src=>, once skipped as external and once hashed",
-     PAGE.replace("</style>", "</style>\n<style src=\"theme.css\">h1{color:red}</style>", 1),
-     None, True, "models exactly one"),
-    ("an attribute on the hashed block, where a browser's rules decide whether it runs",
-     PAGE.replace("<style>", '<style title="a > b">', 1), None, True, "carries attributes"),
-    ("a <script> with a type, which used to be judged live or inert here",
-     PAGE.replace("<script>", '<script type="module">', 1), None, True, "carries attributes"),
-    ("a <style> inside <svg><title>, which html.parser never reports",
-     PAGE.replace("</svg>", "<title><style>p{color:red}</style></title>\n    </svg>", 1), None,
-     True, "openers"),
-    ("a <style> inside the inline <svg>",
-     PAGE.replace("</svg>", "<style>circle{fill:red}</style>\n    </svg>", 1), None, True,
-     "models exactly one"),
-    ("a <style> inside <math>",
-     PAGE.replace("</style>", "</style>\n<math><style>m{color:red}</style></math>", 1), None,
-     True, "models exactly one"),
-    ("a <script> containing <!--, which opens HTML's script-data escape states",
-     PAGE.replace("(function () {", "// <!--<script>x</script>-->\n(function () {", 1), None,
-     True, "escape states"),
-    ("a NUL byte, which a browser replaces with U+FFFD before hashing",
-     PAGE.replace(":root", "\x00:root", 1), None, True, "NUL byte"),
-
-    # DIRECTIVE RESOLUTION, per CSP3's fallback chain.
-    ("script-src-elem 'none' added beside a correct script-src",
-     None, HEADERS.replace("; img-src", "; script-src-elem 'none'; img-src", 1), True,
-     "script-src-elem lacks the hash"),
-    # style-src-elem, once present, governs BOTH pages' styles, so it must carry both pins.
-    ("style-src-elem preferred over a hostile style-src, carrying both style pins",
-     None, HEADERS.replace(f"style-src {STYLE_PIN} {STYLE_404_PIN}", "style-src 'none'", 1)
-     .replace("; img-src", f"; style-src-elem {STYLE_PIN} {STYLE_404_PIN}; img-src", 1),
-     False, None),
-    ("style-src-elem 'none' added beside a correct style-src",
-     None, HEADERS.replace("; img-src", "; style-src-elem 'none'; img-src", 1), True,
-     "style-src-elem lacks the hash"),
-    ("default-src carrying every hash, with no script-src or style-src",
-     None, HEADERS.replace(
-         f"default-src 'none'; script-src {SCRIPT_PIN}; style-src {STYLE_PIN}",
-         f"default-src {SCRIPT_PIN} {STYLE_PIN}", 1), False, None),
-    ("a directive repeated, the first one hostile, which is the one a browser takes",
-     None, HEADERS.replace("style-src ", "style-src 'none'; style-src ", 1), True,
-     "style-src lacks the hash"),
-    ("a directive name in mixed case, which CSP3 matches case-insensitively",
-     None, HEADERS.replace("style-src ", "Style-Src ", 1), False, None),
-    ("the style hash pinned under script-src instead of style-src",
-     None, HEADERS.replace(f"style-src {STYLE_PIN}", "style-src 'none'", 1)
-     .replace("script-src 'sha256-", f"script-src {STYLE_PIN} 'sha256-", 1),
-     True, "style-src lacks the hash"),
-
-    # THE HEADERS FILE, whose syntax is Cloudflare's. Round 6 requires exactly one CSP, under /*.
-    ("a later rule detaching the Content-Security-Policy entirely",
-     None, HEADERS + "\n/*\n  ! Content-Security-Policy\n", True, "detaches"),
-    ("a second CSP in a host-scoped rule, which this gate forbids",
+    # THE HEADERS FILE: exactly the shared policy, under /* alone, no detach, no X-Robots-Tag.
+    ("style-src widened with 'unsafe-inline'",
+     None, HEADERS.replace("style-src 'self';", "style-src 'self' 'unsafe-inline';", 1), True,
+     SHARED),
+    ("script-src widened with another host",
+     None, HEADERS.replace("script-src 'self'", "script-src 'self' https://cdn.example.net", 1),
+     True, SHARED),
+    ("a hash added to script-src",
+     None, HEADERS.replace("script-src 'self'", "script-src 'sha256-" + "A" * 43 + "=' 'self'", 1),
+     True, SHARED),
+    ("a directive dropped from the policy",
+     None, HEADERS.replace(" font-src 'self';", "", 1), True, SHARED),
+    ("a comma splitting the value into two policies",
+     None, HEADERS.replace("style-src 'self';", "style-src 'none', style-src 'self';", 1), True,
+     "comma"),
+    ("a second CSP in a host-scoped rule",
      None, HEADERS + "\nhttps://secureconfig.example/*\n  Content-Security-Policy: style-src 'none'\n",
      True, "exactly one Content-Security-Policy"),
-    ("a comment between a rule and its headers, which is valid in _headers",
-     None, HEADERS.replace("/*\n", "/*\n# the policy below is pinned by tools/check_csp_hashes.py\n", 1),
-     False, None),
-    ("a hostile CSP in a separate / block beside the /* block",
-     None, "/\n  Content-Security-Policy: default-src 'none'\n\n" + HEADERS, True,
-     "exactly one Content-Security-Policy"),
-    ("two /* blocks, the hostile policy in the first",
-     None, "/*\n  Content-Security-Policy: default-src 'none'\n\n" + HEADERS, True,
-     "exactly one Content-Security-Policy"),
-    ("the only CSP under a non-root rule, which cannot govern every page",
-     None, HEADERS.replace("/*", "/assets/*", 1), True, "not the /* rule"),
-    ("a root rule with no Content-Security-Policy line",
-     None, re.sub(r"^  Content-Security-Policy:.*$", "  X-Other: 1", HEADERS, count=1,
-                  flags=re.M), True, "Content-Security-Policy header"),
-
-    # NEWLINES. Round 2 recorded this backwards and the case killed the mutant that fixed it.
-    ("a CRLF page against the real pins, which a browser renders correctly",
-     CRLF_PAGE, None, False, None),
-    ("a CRLF page pinned to the hash of its CRLF bytes, which no browser computes",
-     CRLF_PAGE, CRLF_PINS, True, "lacks the hash"),
-    ("a lone-CR page against the real pins, normalized the same way",
-     CR_PAGE, None, False, None),
-
-    # ROUND 5. Three wrong pages that passed every guard, each verified against html5lib and Gumbo.
-    ("a self-closing <style/>, which html.parser reads as empty and a browser does not",
-     PAGE.replace("<style>", "<style/>", 1), None, True, "self-closing"),
-    ("a charset declaration this gate does not obey",
-     PAGE.replace('<meta charset="utf-8">', '<meta charset="windows-1252">', 1), None, True,
-     "charset"),
-    ("a style= attribute smuggled through <svg><title>",
-     PAGE.replace("</svg>", '<title>t<div style="display:none">x</div></title>\n    </svg>', 1),
-     None, True, "style="),
-    ("a comma splitting the CSP into two policies, the first hostile",
-     None, HEADERS.replace("style-src ", "style-src 'none', style-src ", 1), True, "comma"),
-    ("an uppercase <STYLE> smuggled through <svg><title>",
-     PAGE.replace("</svg>", "<title>t<STYLE>p{color:red}</STYLE></title>\n    </svg>", 1),
-     None, True, "openers"),
-    ("a CSP with no style-src, style-src-elem or default-src at all",
-     None, re.sub(r"Content-Security-Policy: .*$", "Content-Security-Policy: img-src 'self'",
-                  HEADERS, count=1, flags=re.M), True, "no script-src directive"),
-    ("the correct hash embedded in a longer, invalid token",
-     None, HEADERS.replace(STYLE_PIN, STYLE_PIN[:-1] + "x'", 1), True, "lacks the hash"),
-    ("'unsafe-inline' on script-src beside the correct pin",
-     None, HEADERS.replace("script-src ", "script-src 'unsafe-inline' ", 1), True,
-     "'unsafe-inline'"),
-    ("a pin whose algorithm name is upper case, which CSP3 accepts",
-     None, HEADERS.replace(STYLE_PIN, STYLE_PIN.replace("sha256", "SHA256"), 1), False, None),
-    ("a sha384 pin, which is stronger and equally valid",
-     None, HEADERS.replace(STYLE_PIN, f"'sha384-{alt_pin(PAGE, 'style', hashlib.sha384)}'", 1),
-     False, None),
-
-    # REPINNED, ASSERTING A PASS. These hold a closed round-1 defect closed.
-    ("stylesheet text containing <!-- and -->, which is text and not a comment node",
-     COMMENT_PAGE, repinned(COMMENT_PAGE, "style"), False, None),
-    ("a <style> written inside a JavaScript string, which is a string and not an element",
-     STRING_PAGE, repinned(STRING_PAGE, "script"), False, None),
-
-    # ROUND 6. The second page, site/404.html, exercised directly.
-    ("an edited 404 stylesheet nobody repinned",
-     {"404.html": E404}, None, True, "site/404.html"),
-    ("the edited 404 stylesheet, repinned to what a browser computes",
-     {"404.html": E404}, repinned(E404, "style", base_page=PAGE_404), False, None),
-    ("the 404 style pin deleted from style-src, the page untouched",
-     None, HEADERS.replace(" " + STYLE_404_PIN, "", 1), True, "lacks the hash"),
-    ("the index style pin deleted, the 404 pin kept, which must fail on index",
-     None, HEADERS.replace(STYLE_PIN + " ", "", 1), True, "site/index.html"),
-    ("a second <style> on the 404 page",
-     {"404.html": TWO_STYLE_404}, None, True, "models exactly one"),
-    ("a <script> added to the script-free 404 page",
-     {"404.html": SCRIPT_ON_404}, None, True, "models exactly 0"),
-    ("index's <script> deleted, its pin left behind",
-     NOSCRIPT_INDEX, None, True, "has 0 <script>"),
-    ("index's script moved onto the 404 page, both pins untouched",
-     {"index.html": NOSCRIPT_INDEX, "404.html": SCRIPT_ON_404}, None, True, "models exactly 0"),
-    ("a self-closing <style/> on the 404 page",
-     {"404.html": PAGE_404.replace("<style>", "<style/>", 1)}, None, True, "self-closing"),
-    ("a charset the 404 page does not obey",
-     {"404.html": PAGE_404.replace('<meta charset="utf-8">', '<meta charset="windows-1252">', 1)},
-     None, True, "charset"),
-    ("the 404 charset declaration removed",
-     {"404.html": PAGE_404.replace('<meta charset="utf-8">', "", 1)}, None, True, "charset"),
-    ("a NUL byte on the 404 page",
-     {"404.html": PAGE_404.replace("<style>", "<style>\x00", 1)}, None, True, "NUL byte"),
-    ("a style= attribute on the 404 page's body",
-     {"404.html": PAGE_404.replace("<body", '<body style="color:red"', 1)}, None, True,
-     "this gate pins only an element's text, never an attribute"),
-    ("a <STYLE> smuggled through <svg><title> on the 404 page",
-     {"404.html": SVG_TITLE_STYLE_404}, None, True, "openers"),
-    ("a <script> smuggled through <svg><title> on the script-free 404 page",
-     {"404.html": SVG_TITLE_SCRIPT_404}, None, True, "openers"),
-    ("the 404 style made byte-identical to index's, pinned by the one shared token",
-     {"404.html": P404_SHARED}, HEADERS.replace(" " + STYLE_404_PIN, "", 1), False, None),
-    ("a bogus unused hash appended to style-src, an orphan pin the gate now rejects",
-     None, HEADERS.replace(STYLE_404_PIN, STYLE_404_PIN + " " + ORPHAN, 1), True, "orphan"),
-    ("a used pin also spelled in the base64url alphabet is the same pin, not an orphan",
-     None, HEADERS.replace(STYLE_404_PIN, STYLE_404_PIN + " " + STYLE_404_PIN.replace("+", "-").replace("/", "_"), 1), False, None),
-    ("the CSP moved under a / rule only",
-     None, HEADERS.replace("/*", "/", 1), True, "not the /* rule"),
     ("a second CSP under a /guides/* rule, which governs the 404 page on those paths",
      None, HEADERS + "\n/guides/*\n  Content-Security-Policy: style-src 'none'\n", True,
      "exactly one Content-Security-Policy"),
     ("a CSP detached under a /guides/* rule",
      None, HEADERS + "\n/guides/*\n  ! Content-Security-Policy\n", True, "detaches"),
-    ("an unlisted extra page served under the same /* CSP",
-     None, None, True, "not in this gate's page list"),
-    ("a declared block count outside {0, 1}",
-     None, None, True, "0 or 1"),
-    ("a CRLF 404 page against the real pin, normalized the same way",
-     {"404.html": PAGE_404.replace("\n", "\r\n")}, None, False, None),
-    ("the 404 style repinned under sha384",
-     None, HEADERS.replace(STYLE_404_PIN, f"'sha384-{alt_pin(PAGE_404, 'style', hashlib.sha384)}'", 1),
-     False, None),
-    ("<!-- inside the 404 stylesheet text, which is text and not a script",
-     {"404.html": E404_COMMENT}, repinned(E404_COMMENT, "style", base_page=PAGE_404), False, None),
-
-    # ROUND 6 fixes, each locked by an independent verifier's finding.
-    ("the sole CSP under a host-scoped absolute-URL rule, which covers only that host",
-     None, HEADERS.replace("/*", "https://secureconfig.example/*", 1), True, "not the /* rule"),
-    ("a CSP detached with a trailing colon and value under a path-scoped rule",
-     None, HEADERS + "\n/guides/*\n  ! Content-Security-Policy: default-src 'none'\n", True,
+    ("the old /draft/* block reintroduced",
+     None, HEADERS + "\n/draft/*\n  ! Content-Security-Policy\n  X-Robots-Tag: noindex\n", True,
      "detaches"),
-    ("a Content-Security-Policy header line with no colon, which must fail without crashing",
+    ("an X-Robots-Tag under the /* rule",
+     None, HEADERS.replace("  Cross-Origin-Opener-Policy: same-origin\n",
+                           "  Cross-Origin-Opener-Policy: same-origin\n  X-Robots-Tag: noindex\n",
+                           1), True, "X-Robots-Tag"),
+    ("an X-Robots-Tag under another rule",
+     None, HEADERS + "\n/draft/*\n  X-Robots-Tag: noindex\n", True, "X-Robots-Tag"),
+    ("an X-Robots-Tag detached",
+     None, HEADERS + "\n/guides/*\n  ! X-Robots-Tag\n", True, "X-Robots-Tag"),
+    ("the only CSP under a non-root rule",
+     None, HEADERS.replace("\n/*\n", "\n/assets/*\n", 1), True, "not the /* rule"),
+    ("the CSP under a bare / rule only",
+     None, HEADERS.replace("\n/*\n", "\n/\n", 1), True, "not the /* rule"),
+    ("the sole CSP under a host-scoped absolute-URL rule",
+     None, HEADERS.replace("\n/*\n", "\nhttps://secureconfig.ai/*\n", 1), True, "not the /* rule"),
+    ("a root rule with no Content-Security-Policy line",
+     None, re.sub(r"^  Content-Security-Policy:.*$", "  X-Other: 1", HEADERS, count=1, flags=re.M),
+     True, "no Content-Security-Policy header"),
+    ("a Content-Security-Policy line with no colon, which must fail without crashing",
      None, re.sub(r"^  Content-Security-Policy:.*$", "  Content-Security-Policy", HEADERS, count=1,
-                  flags=re.M), True, "Content-Security-Policy header"),
-    ("an unlisted page with an upper-case .HTML extension",
-     None, None, True, "not in this gate's page list"),
-    ("an unlisted page with a .htm extension",
-     None, None, True, "not in this gate's page list"),
-)
+                  flags=re.M), True, "no Content-Security-Policy header"),
+    ("a comment between the rule and its headers, which is valid in _headers",
+     None, HEADERS.replace("/*\n", "/*\n# the policy below is held by tools/check_csp_hashes.py\n", 1),
+     False, OK_PAGES),
+]
 
 # Cases carried by run_against arguments rather than page/headers overrides.
-EXTRA_ARGS = {
-    "an unlisted extra page served under the same /* CSP":
-        {"extra_files": {"extra.html": "<!doctype html>\n<meta charset=\"utf-8\">\n"
-                         "<style>a{color:red}</style>\n"}},
-    "a declared block count outside {0, 1}":
-        {"gate": ('"style": 1', '"style": 2')},
-    "an unlisted page with an upper-case .HTML extension":
-        {"extra_files": {"help.HTML": '<!doctype html>\n<meta charset="utf-8">\n'
-                         '<style>a{color:red}</style>\n'}},
-    "an unlisted page with a .htm extension":
-        {"extra_files": {"help.htm": '<!doctype html>\n<meta charset="utf-8">\n'
-                         '<style>a{color:red}</style>\n'}},
-}
+EXTRA_ARGS = {}
 
 # Row 3.18 and P5 cases, appended to CASES below and carried by run_against arguments. Each is a
-# document, a filesystem entry, a page or a parser input the gate must refuse or must pass.
-LEGACY_CASE_COUNT = len(CASES)
+# document, a filesystem entry, a page or a parser input the gate must refuse or must pass. They
+# are kept from the hash-model suite unchanged: none of them depended on the hash model.
 SCOPE_CASES = []
 # The gate's result lines, matched at a line start because run_against strips the first line's indent.
 FAIL_LINE = re.compile(r"^\s*FAIL  ", re.M)
@@ -492,8 +316,8 @@ def scope_case(desc, content=None, expected=None, name="assets/probe.svg", setup
                headers=None):
     """Record one row 3.18 or P5 case: a must-fail if `expected` names the finding, a must-pass if None.
 
-    `content` is written under site/ at `name`; `page` and `headers` are run_against's overrides,
-    for the P5 page cases; `setup` makes an entry that is not a plain file.
+    `content` is written under site/ at `name`; `page` and `headers` are run_against's overrides;
+    `setup` makes an entry that is not a plain file.
     """
     desc = "row 3.18: " + desc
     if desc in EXTRA_ARGS:
@@ -681,10 +505,17 @@ for href in ("#local", "other.svg#id", "https://example.com/a.svg#id", "//exampl
     scope_case("use reference " + href, svg(f'<use href="{href}"/>'))
 scope_case("external xlink use outside scope", svg('<use xl:href="https://example.com/a.svg#id"/>'))
 
-# Unlisted HTML, nested, still refused by the new walk with the old message.
+# A stray page anywhere under site/ is checked as a page under the template model: the gate has no
+# page list any more, so nothing is "unlisted"; what the old unlisted-page refusal protected (a
+# page served under the /* policy going unchecked) is protected by checking every page.
 for suffix in (".html", ".HTML", ".HtM"):
-    scope_case("nested unlisted HTML " + suffix, "<!doctype html>", "not in this gate's page list",
-               name="deep/probe" + suffix)
+    scope_case("a nested stray page with an inline style, checked as a page " + suffix,
+               '<!doctype html>\n<meta charset="utf-8">\n<style>a{color:red}</style>\n',
+               "models exactly 0", name="deep/probe" + suffix)
+scope_case("a nested stray page without the charset, checked as a page",
+           "<!doctype html>\n<p>x</p>\n", "charset", name="deep/probe.htm")
+scope_case("a clean stray page is a page like any other",
+           '<!doctype html>\n<meta charset="utf-8">\n<p>x</p>\n', name="deep/extra.html")
 
 # Round 2 of #352 (claude finding 2): pathlib gives a dotfile no suffix, so a file named exactly
 # `.svg` escaped every rule. The suffix is now the text from the last dot of the whole name.
@@ -693,8 +524,8 @@ scope_case("dotfile .SVG carrying a handler", svg(attrs='onload="x"'), "on* hand
 scope_case("clean dotfile .svg is inspected and passes", svg("<path/>"), name="deep/.svg")
 for dotfile, expected, content in ((".xhtml", "is XHTML", XHTML_DOC), (".xht", "is XHTML", XHTML_DOC),
                                    (".svgz", "compressed SVG", gzip.compress(FAVICON, mtime=0)),
-                                   (".html", "not in this gate's page list", "<!doctype html>"),
-                                   (".htm", "not in this gate's page list", "<!doctype html>")):
+                                   (".html", "charset", "<!doctype html>"),
+                                   (".htm", "charset", "<!doctype html>")):
     scope_case("dotfile " + dotfile, content, expected, name="deep/" + dotfile)
 scope_case("an unrelated dotfile is not inspected", "", name=".nojekyll")
 # A name ending with a dot, file or directory, is refused: pathlib gives `probe.svg.` the suffix ".".
@@ -713,248 +544,12 @@ for name in ("probe.svg.gz", "probe.html.br", "probe.svg.zst", "probe.SVG.GZ", "
 scope_case("a directory named assets.gz", expected=COMPRESSED,
            setup=lambda d: (d / "site" / "assets.gz").mkdir())
 
-# The wording every page on* finding shares, whatever the policy.
-ON_RULE = ("refuses every on* handler on a page (P5), whatever the site's script-src or "
-           "script-src-attr would let a browser do with it")
-# P5 (3): an on* handler attribute on an HTML page, structural and literal, on both pages.
-ONJS_PAGE = PAGE.replace("(function () {", "(function () {\n  document.body.onload = null;", 1)
-ONCSS_PAGE = PAGE.replace(":root", "/* onclick= here is stylesheet text */\n    :root", 1)
-scope_case("P5 page handler on index's body", expected="on* handler",
-           page=PAGE.replace("<body", '<body onload="init()"', 1))
-scope_case("P5 upper-case page handler on the 404 page names the page", expected="site/404.html",
-           page={"404.html": PAGE_404.replace("<body", "<body ONCLICK=go", 1)})
-scope_case("P5 valueless page handler", expected=ON_RULE,
-           page=PAGE.replace("<body", "<body onclick", 1))
-scope_case("P5 page handler with a spaced =", expected="on* handler",
-           page=PAGE.replace("<body", "<body onload = 'x'", 1))
-scope_case("P5 page handler on the inline <svg>", expected="on* handler",
-           page=PAGE.replace("<svg ", '<svg onload="x" ', 1))
-scope_case("P5 page handler on the 404 page's inline <svg>", expected="on* handler",
-           page={"404.html": PAGE_404.replace("<svg ", '<svg onclick="x" ', 1)})
-scope_case("P5 page handler smuggled through <svg><title>", expected="on* handler",
-           page=PAGE.replace("</svg>", '<title>t<div onclick="x">x</div></title>\n    </svg>', 1))
-scope_case("P5 handler text inside the index script is text, repinned",
-           page=ONJS_PAGE, headers=repinned(ONJS_PAGE, "script"))
-scope_case("P5 handler text inside the index stylesheet is text, repinned",
-           page=ONCSS_PAGE, headers=repinned(ONCSS_PAGE, "style"))
-scope_case("P5 data-onload= on a page is not a handler",
-           page=PAGE.replace("<body", '<body data-onload="x"', 1))
-
-# Round 2 of #352 (codex finding 1): the literal accounting once required `on<word>=`, so a
-# valueless, slash-terminated or hyphenated handler name hidden at an SVG integration point passed.
-# Each form, at each integration point, on both pages.
-HIDDEN_HANDLERS = (("valueless onclick", "<div onclick>x</div>"),
-                   ("valueless onload after another attribute", "<div hidden onload>x</div>"),
-                   ("slash-terminated onclick", "<div onclick/>x"),
-                   ("hyphenated on-click", '<div on-click="x">x</div>'))
-INTEGRATION_POINTS = (("title", "<title>t{}</title>"), ("desc", "<desc>d{}</desc>"),
-                      ("foreignObject", "<foreignObject>{}</foreignObject>"))
-# Round 3 of #352 refuses every one of those integration points inside <svg> outright, so each case
-# now expects that refusal rather than the literal-accounting message; each is still refused.
-SVG_REFUSAL = "inside an inline <svg>"
-for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
-    for point, wrapper in INTEGRATION_POINTS:
-        for form, fragment in HIDDEN_HANDLERS:
-            scope_case(f"P5 {form} inside <svg><{point}> on {page_name}", expected=SVG_REFUSAL,
-                       page={page_name: base.replace(
-                           "</svg>", wrapper.format(fragment) + "\n    </svg>", 1)})
-    # Round 3 of #352 changed these two: the prose once sat inside <svg><title>, now refused, and
-    # carried `on = off` and `one = two`, which the context-free scan now refuses as text it cannot
-    # tell from a handler (a case below). The prose moves to the page's own <title> and a <p>.
-    scope_case(f"P5 prose on-words on {page_name} are not handlers",
-               page={page_name: re.sub(r"<title>[^<]*</title>",
-                                       "<title>only one on duty, on-call; one, on</title>", base,
-                                       count=1)
-                   .replace("</body>", "<p>only one on duty, on-call; online, on</p>\n</body>", 1)})
-    scope_case(f"P5 data-onload inside <svg><title> on {page_name} is refused as SVG <title>",
-               expected=SVG_REFUSAL,
-               page={page_name: base.replace(
-                   "</svg>", '<title>t<div data-onload="x" data-on>x</div></title>\n    </svg>', 1)})
-    scope_case(f"P5 data-onload on {page_name} is not a handler",
-               page={page_name: base.replace(
-                   "</body>", '<div data-onload="x" data-on>x</div>\n</body>', 1)})
-# Round 5 of #352: `<b>` is not in the page allowlist, so the string now carries an `<a>`.
-ONTAG_JS_PAGE = PAGE.replace("(function () {", '(function () {\n  var tpl = "<a onclick>x</a>";', 1)
-scope_case("P5 a handler-bearing tag in a JavaScript string is script text, repinned",
-           page=ONTAG_JS_PAGE, headers=repinned(ONTAG_JS_PAGE, "script"))
-scope_case("P5 a handler-bearing tag in a page comment fails closed", expected="on* handler",
-           page=PAGE.replace("</body>", "<!-- <b onclick> -->\n</body>", 1))
-# The on* literal-accounting message: this case, an allowlisted <a> in a comment, pins its count
-# wording beside rule 2's comment finding. Whether the message can fire with no other finding is
-# not established here (a quoted attribute value can also hide a real tag from the literal scan),
-# so no case claims either way.
-scope_case("P5 the on* accounting message, beside the comment refusal",
-           expected="literal on* attribute names in tags and this gate accounts for 0",
-           page=PAGE.replace("</body>", "<!-- <a onclick> -->\n</body>", 1))
-
-# Round 3 of #352 (codex finding): fake markup inside inert text made literal_on_attrs() read a tag
-# that a browser never sees and swallow a real handler after it as a quoted value, while html.parser
-# missed the handler inside SVG <title>, so both counts were 0. Three rules that ask html.parser
-# nothing now refuse it: (1) a context-free scan for a valued `on...=` outside the pinned blocks,
-# (2) inert text holding a `<`, and (3) the foreign-content elements html.parser reads as HTML.
-ON_TEXT = "outside the inline <style> and <script> blocks"
-CROSSINGS = (("comment", '<!-- <b title=" -->', "has a comment whose text"),
-             ("CDATA section", '<![CDATA[ <b title=" ]]>', "has a CDATA section whose text"),
-             ("bogus declaration", '<!thing <b title=">', "has a <! declaration whose text"),
-             ("bogus processing instruction", '<?thing <b title=">', "has a <? declaration whose text"),
-             ("textarea crossing", '<textarea><b title="</textarea>', "has a <textarea> whose content"),
-             ("title crossing", '<title><b title="</title>', "has a <title> whose content"),
-             ("noscript crossing", '<noscript><b title="</noscript>', "has a <noscript> whose content"),
-             ("xmp crossing", '<xmp><b title="</xmp>', "has a <xmp> whose content"))
-HANDLER_FORMS = (("valued", "onclick=alert(1)"), ("valueless", "onclick"))
-for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
-    # The reproduction exactly as filed, before the first </svg>, then each crossing before </body>.
-    for form, handler in HANDLER_FORMS:
-        scope_case(f"#352 r3 codex reproduction, {form}, on {page_name}",
-                   expected="has a comment whose text",
-                   page={page_name: base.replace(
-                       "</svg>", f'<!-- <b title=" -->\n<title><div {handler}>x</div></title>\n'
-                                 f'<!-- " -->\n</svg>', 1)})
-        for what, opener, expected in CROSSINGS:
-            scope_case(f"#352 r3 {what} swallowing a {form} handler on {page_name}",
-                       expected=expected,
-                       page={page_name: base.replace(
-                           "</body>", f"{opener}\n<svg><title><div {handler}>x</div></title></svg>\n"
-                                      f'<!-- " -->\n</body>', 1)})
-    # Rule 1 alone: text a browser does not wire up, but which this gate cannot tell from a handler.
-    for what, fragment in (("in prose", "<p>x onclick=alert(1)</p>"),
-                           ("as prose `one = two`", "<p>one = two</p>"),
-                           ("in a comment without a <", "<!-- onclick=x -->"),
-                           ("in an attribute value", '<p title="a ONLOAD = b">x</p>'),
-                           ("hyphenated, in prose", '<p>on-click="x"</p>')):
-        scope_case(f"#352 r3 rule 1: handler-like text {what} on {page_name}", expected=ON_TEXT,
-                   page={page_name: base.replace("</body>", fragment + "\n</body>", 1)})
-    # Rule 2 alone: inert text holding a `<`, no handler anywhere.
-    for what, fragment, expected in (
-            ("comment", "<!-- a <b> c -->", "has a comment whose text"),
-            ("CDATA section", "<![CDATA[ a <b> c ]]>", "has a CDATA section whose text"),
-            ("declaration", "<!thing a <b>", "has a <! declaration whose text"),
-            ("processing instruction", "<?thing a <b>", "has a <? declaration whose text"),
-            ("second doctype", "<!doctype <b>", "has a <! declaration whose text")) + tuple(
-            (f"<{el}>", f"<{el.upper() if el == 'iframe' else el}>a <b>c</{el}>",
-             f"has a <{el}> whose content") for el in (
-                "textarea", "title", "xmp", "noscript", "plaintext", "noembed", "noframes",
-                "iframe")):
-        scope_case(f"#352 r3 rule 2: {what} holding a < on {page_name}", expected=expected,
-                   page={page_name: base.replace("</body>", fragment + "\n</body>", 1)})
-    # Rule 3 alone: plain-text divergent elements inside the real inline <svg>, and <math>.
-    for element in ("title", "TITLE", "desc", "foreignObject", "FOREIGNOBJECT", "style", "Script"):
-        scope_case(f"#352 r3 rule 3: <{element}> inside the inline <svg> on {page_name}",
-                   expected=SVG_REFUSAL,
-                   page={page_name: base.replace(
-                       "</svg>", f"<{element}>plain</{element}>\n    </svg>", 1)})
-    scope_case(f"#352 r3 rule 3: <desc> in a nested <svg> after an inner </svg> on {page_name}",
-               expected=SVG_REFUSAL,
-               page={page_name: base.replace(
-                   "</svg>", "<svg><path/></svg><desc>plain</desc>\n    </svg>", 1)})
-    for element in ("math", "MATH"):
-        scope_case(f"#352 r3 rule 3: <{element}> on {page_name}", expected="has a <math> element",
-                   page={page_name: base.replace(
-                       "</body>", f"<{element}><mi>x</mi></{element}>\n</body>", 1)})
-    # False-positive guards: plain inert text passes, and a <title> element outside <svg> passes.
-    scope_case(f"#352 r3 a comment holding plain on-word text on {page_name} passes",
-               page={page_name: base.replace(
-                   "</body>", "<!-- only one on duty; see _headers -->\n</body>", 1)})
-    scope_case(f"#352 r3 a <title> holding plain text on {page_name} passes",
-               page={page_name: re.sub(r"<title>[^<]*</title>", "<title>Only one, on call</title>",
-                                       base, count=1)})
-    # Round 5 of #352: once a pass, now refused, since neither element is in the page allowlist.
-    scope_case(f"#352 r3 a <noscript> and a <textarea> holding plain text on {page_name}, refused "
-               f"by the allowlist", expected="element <noscript> is not in the page allowlist",
-               page={page_name: base.replace(
-                   "</body>", "<noscript>on duty</noscript><textarea>one, on</textarea>\n</body>", 1)})
-
-# Round 4 of #352 (codex finding): a malformed end tag (`</` and no letter) is a bogus comment to a
-# browser, which this gate's literal tag reading does not model (html.parser, at the Python this runs
-# on, does, but it reads a <style> or <script> inside <svg> as raw text where a browser still reads
-# markup), so `</ x </svg>` hid an </svg> from a browser and closed the SVG region here, and a
-# stylesheet or script wrapped in that <svg> became SVG content holding a live <a onclick> while this
-# gate hashed it as the pinned block. Every reproduction, repinned so only the new rule can refuse
-# it, on both pages; then the rule alone, in page text.
-MALFORMED = "has a malformed end tag"
-BOGUS_PREFIXES = (("space and letter", "</ x </svg>"), ("digit", "</1 </svg>"),
-                  ("tab", "</\t</svg>"), ("bang", "</! </svg>"))
-for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
-    for prefix_name, prefix in BOGUS_PREFIXES:
-        for form, handler in HANDLER_FORMS:
-            wrapped = base.replace("<style>", f"<svg>{prefix}<style>\n/* <a {handler}>x</a> */\n", 1
-                                   ).replace("</style>", "</style></svg>", 1)
-            scope_case(f"#352 r4 stylesheet wrapped after {prefix_name} bogus comment, {form}, on "
-                       f"{page_name}", expected=MALFORMED, page={page_name: wrapped},
-                       headers=repinned(wrapped, "style", base_page=base))
-    for what, fragment in (("</>", "</>"), ("</ and a space", "</ p>"), ("</ and a digit", "</1>"),
-                           ("</!", "</!x>"), ("</ and a tab", "</\tp>")):
-        scope_case(f"#352 r4 rule 4: {what} in page text on {page_name}", expected=MALFORMED,
-                   page={page_name: base.replace("</body>", f"<p>a{fragment}b</p>\n</body>", 1)})
-for form, handler in HANDLER_FORMS:
-    wrapped = PAGE.replace("<script>", f"<svg></ x </svg><script>\n// <a {handler}>x</a>\n", 1
-                           ).replace("</script>", "</script></svg>", 1)
-    scope_case(f"#352 r4 script wrapped after a bogus comment, {form}, on index.html",
-               expected=MALFORMED, page=wrapped, headers=repinned(wrapped, "script"))
-scope_case("#352 r4 rule 4: `</` inside the pinned index script, repinned", expected=MALFORMED,
-           page=PAGE.replace("(function () {", "(function () {\n  var s = '</ x';", 1),
-           headers=repinned(PAGE.replace("(function () {", "(function () {\n  var s = '</ x';", 1),
-                            "script"))
-
-# Round 5 of #352 (codex finding): a <frameset> around the pinned stylesheet made a browser drop the
-# <style> and build a <frame onload> from what html.parser hashed as its body, and
-# <select><style><input><a onclick> did the same through select parsing; every rule above passed.
-# The gate now allows only the elements the real pages use. Each reproduction is repinned to the
-# text html.parser hashes, so only the allowlist can refuse it.
-ALLOWLIST = "is not in the page allowlist"
-for page_name, base in (("index.html", PAGE), ("404.html", PAGE_404)):
-    for form, attr in (("valued", 'onload="window.__qa352=1"'), ("valueless", "onload")):
-        wrapped = base.replace("<style>", f"<frameset><style>\n<frame {attr}>\n", 1
-                               ).replace("</style>", "</style></frameset>", 1)
-        scope_case(f"#352 r5 frameset around the stylesheet, {form} <frame onload>, on {page_name}",
-                   expected="element <frameset> " + ALLOWLIST, page={page_name: wrapped},
-                   headers=repinned(wrapped, "style", base_page=base))
-    for form, handler in HANDLER_FORMS:
-        wrapped = base.replace("<style>", f"<select><style>\n<input><a {handler}>\n", 1
-                               ).replace("</style>", "</style></select>", 1)
-        scope_case(f"#352 r5 select around the stylesheet, {form} <a onclick>, on {page_name}",
-                   expected="element <select> " + ALLOWLIST, page={page_name: wrapped},
-                   headers=repinned(wrapped, "style", base_page=base))
-    for element in ("frameset", "frame", "select", "template", "math", "iframe", "object", "embed",
-                    "noscript", "textarea", "xmp", "plaintext", "noembed", "noframes",
-                    "foreignObject", "desc", "input", "b", "table", "form", "image", "isindex"):
-        scope_case(f"#352 r5 allowlist: <{element}> on {page_name}",
-                   expected=f"element <{element.lower()}> " + ALLOWLIST,
-                   page={page_name: base.replace("</body>", f"<{element}></{element}>\n</body>", 1)})
-    scope_case(f"#352 r5 allowlist: mixed-case <FrameSet> on {page_name}",
-               expected="element <frameset> " + ALLOWLIST,
-               page={page_name: base.replace("</body>", "<FrameSet>\n</body>", 1)})
-    scope_case(f"#352 r5 allowlist: an end tag alone, </select>, on {page_name}",
-               expected="element <select> " + ALLOWLIST,
-               page={page_name: base.replace("</body>", "</select>\n</body>", 1)})
-    scope_case(f"#352 r5 allowlist: <frameset> inside a comment on {page_name}, read context-free",
-               expected="element <frameset> " + ALLOWLIST,
-               page={page_name: base.replace("</body>", "<!-- <frameset> -->\n</body>", 1)})
-    scope_case(f"#352 r5 allowed elements in any case on {page_name} pass",
-               page={page_name: base.replace(
-                   "</body>", "<P>x <SPAN>y</SPAN> <Code>z</Code></P>\n</body>", 1)})
-    # Rule 2 behind the allowlist: each inert context holding only an allowlisted name, so the
-    # allowlist passes it and rule 2 alone refuses it.
-    for what, fragment, expected in (
-            ("comment", "<!-- a <p> c -->", "has a comment whose text"),
-            ("CDATA section", "<![CDATA[ a <p> c ]]>", "has a CDATA section whose text"),
-            ("declaration", "<!thing a <p>", "has a <! declaration whose text"),
-            ("processing instruction", "<?thing a <p>", "has a <? declaration whose text"),
-            ("<title>", "<title>a <p>c</title>", "has a <title> whose content")):
-        scope_case(f"#352 r5 rule 2 alone: {what} holding an allowlisted <p> on {page_name}",
-                   expected=expected,
-                   page={page_name: base.replace("</body>", fragment + "\n</body>", 1)})
-FRAMESET_JS_PAGE = PAGE.replace("(function () {", '(function () {\n  var tpl = "<frameset>";', 1)
-scope_case("#352 r5 allowlist: <frameset> inside the pinned index script, repinned",
-           expected="element <frameset> " + ALLOWLIST, page=FRAMESET_JS_PAGE,
-           headers=repinned(FRAMESET_JS_PAGE, "script"))
-
 
 def file_link(d):
     (d / "site" / "linked.svg").symlink_to("favicon.svg")
 
 
-def listed_page_link(d):
+def page_link(d):
     (d / "site" / "index.html").rename(d / "saved-index")
     (d / "site" / "index.html").symlink_to("../saved-index")
 
@@ -979,7 +574,7 @@ def regular_root(d):
     (d / "site").write_bytes(b"")
 
 
-for desc, setup in (("file symlink", file_link), ("listed HTML page symlink", listed_page_link),
+for desc, setup in (("file symlink", file_link), ("HTML page symlink", page_link),
                     ("external directory symlink", directory_link), ("site root symlink", root_link),
                     ("dangling symlink", lambda d: (d / "site" / "missing.svg").symlink_to("absent")),
                     ("symlink loop", lambda d: (d / "site" / "loop").symlink_to("loop"))):
@@ -989,152 +584,7 @@ scope_case("FIFO named .svg, never opened", expected="not a regular file",
 scope_case("missing site root", expected="cannot inspect site entry", setup=missing_root)
 scope_case("regular file as site root", expected="is not a directory", setup=regular_root)
 
-CASES += tuple(SCOPE_CASES)
-
-# A15 (the owner's decision of 2026-11-03): until promotion the live policy, the real site/_headers,
-# permits the live pages' inline blocks with 'unsafe-inline' and pins no hash. Each case runs against
-# LIVE_HEADERS or a mutation of it: the policy passes, it passes edited blocks without a repin, every
-# source or pin beyond it fails, and every other refusal still holds under it.
-LIVE_CASES = []
-PERMITTED = "0 pinned by hash and 3 permitted by the temporary 'unsafe-inline'"
-OUTSIDE = "outside the temporary live policy"
-
-
-def live_case(desc, page=None, headers=None, expected=None, must_fail=True, **args):
-    desc = "A15 live policy: " + desc
-    if desc in EXTRA_ARGS:
-        raise KeyError(f"duplicate A15 case {desc!r}")
-    if headers is not None and headers == LIVE_HEADERS:
-        raise AssertionError(f"{desc}: the headers mutation did not change site/_headers")
-    LIVE_CASES.append((desc, page, LIVE_HEADERS if headers is None else headers, must_fail,
-                       expected))
-    EXTRA_ARGS[desc] = args
-
-
-for directive in ("script-src 'self'", "style-src 'self'"):
-    if directive not in LIVE_HEADERS:
-        raise AssertionError(f"site/_headers no longer carries {directive!r}; update the A15 cases")
-live_case("the real site/_headers with the real pages", expected=PERMITTED, must_fail=False)
-live_case("edited blocks on both pages need no repin",
-          page={"index.html": SCRIPT_PAGE.replace(":root", "/* an edit */\n    :root", 1),
-                "404.html": E404},
-          expected=PERMITTED, must_fail=False)
-live_case("keywords and hosts in upper case, which CSP3 matches case-insensitively",
-          # Count 2: the live /* policy's 2 'unsafe-inline' come first; the /draft/* policy is held
-          # to its exact text, so it keeps its own spelling.
-          headers=LIVE_HEADERS.replace("'unsafe-inline'", "'UNSAFE-INLINE'", 2)
-          .replace("https://ajax.cloudflare.com", "HTTPS://AJAX.CLOUDFLARE.COM", 1),
-          expected=PERMITTED, must_fail=False)
-live_case("live script-src beside a correct hash-pinned style-src",
-          headers=LIVE_HEADERS.replace("style-src 'self' 'unsafe-inline'",
-                                       f"style-src {STYLE_PIN} {STYLE_404_PIN}", 1),
-          expected="2 pinned by hash and 1 permitted", must_fail=False)
-live_case("live script-src beside a hash-pinned style-src whose block was edited",
-          page=PAGE.replace(":root", "/* an edit */\n    :root", 1),
-          headers=LIVE_HEADERS.replace("style-src 'self' 'unsafe-inline'",
-                                       f"style-src {STYLE_PIN} {STYLE_404_PIN}", 1),
-          expected="style-src lacks the hash")
-live_case("a hash beside 'unsafe-inline' in script-src, which makes a browser ignore it",
-          headers=LIVE_HEADERS.replace("script-src 'self'", f"script-src {SCRIPT_PIN} 'self'", 1),
-          expected="script-src carries 'unsafe-inline' beside 'sha256-")
-live_case("a sha384 hash beside 'unsafe-inline' in style-src",
-          headers=LIVE_HEADERS.replace(
-              "style-src 'self'", f"style-src 'sha384-{alt_pin(PAGE, 'style', hashlib.sha384)}' "
-                                  "'self'", 1),
-          expected="style-src carries 'unsafe-inline' beside 'sha384-")
-live_case("a nonce beside 'unsafe-inline' in style-src",
-          headers=LIVE_HEADERS.replace("style-src 'self'", "style-src 'nonce-abc' 'self'", 1),
-          expected="beside 'nonce-abc'")
-live_case("a hash beside 'unsafe-inline' in script-src names the JavaScript Detections loader",
-          headers=LIVE_HEADERS.replace("script-src 'self'", f"script-src {SCRIPT_PIN} 'self'", 1),
-          expected="runs only the inline <script> elements its hashes or nonces cover and "
-                   "refuses every other one, Cloudflare's injected JavaScript Detections loader "
-                   "included")
-live_case("a hash beside 'unsafe-inline' in style-src names the effect on inline styles",
-          headers=LIVE_HEADERS.replace("style-src 'self'", f"style-src {STYLE_PIN} 'self'", 1),
-          expected="so it applies only the inline <style> blocks its hashes or nonces cover "
-                   "and refuses every other one;")
-for kind, extra in (("script-src", "https://cdn.example.com"), ("script-src", "'strict-dynamic'"),
-                    ("script-src", "'unsafe-eval'"), ("script-src", "'unsafe-hashes'"),
-                    ("script-src", "https:"), ("script-src", "*"),
-                    ("script-src", "http://static.cloudflareinsights.com"),
-                    ("style-src", "https://static.cloudflareinsights.com"),
-                    ("style-src", "'unsafe-hashes'"), ("style-src", "data:")):
-    live_case(f"{extra} added to {kind}",
-              headers=LIVE_HEADERS.replace(f"{kind} 'self'", f"{kind} 'self' {extra}", 1),
-              expected=f"{kind} carries 'unsafe-inline' {OUTSIDE}")
-live_case("'unsafe-inline' in default-src with no script-src or style-src",
-          headers="/*\n  Content-Security-Policy: default-src 'self' 'unsafe-inline'; "
-                  "img-src 'self'\n",
-          expected="default-src carries 'unsafe-inline' " + OUTSIDE)
-live_case("'unsafe-inline' in style-src-elem, which governs before style-src",
-          headers=LIVE_HEADERS.replace("; font-src", "; style-src-elem 'self' 'unsafe-inline'; "
-                                                     "font-src", 1),
-          expected="style-src-elem carries 'unsafe-inline' " + OUTSIDE)
-live_case("script-src-elem 'none' beside the live script-src",
-          headers=LIVE_HEADERS.replace("; font-src", "; script-src-elem 'none'; font-src", 1),
-          expected="script-src-elem lacks the hash")
-live_case("a valued on* handler on index's body",
-          page=PAGE.replace("<body", '<body onload="x"', 1), expected=ON_TEXT)
-live_case("a valueless on* handler on index's body", page=PAGE.replace("<body", "<body onload", 1),
-          expected=ON_RULE)
-live_case("an on* handler on the 404 page's body",
-          page={"404.html": PAGE_404.replace("<body", "<body onclick", 1)},
-          expected="carries an on* handler attribute (onclick)")
-live_case("a style= attribute", page=PAGE.replace("<body", '<body style="color:red"', 1),
-          expected="This gate refuses every style= attribute on a page, whatever the site's "
-                   "style-src or style-src-attr would let a browser do with it")
-# Round 2 codex reproductions: an attribute directive overrides the element directive's fallback,
-# so the finding must not claim what a browser does with the attribute.
-live_case("style-src-attr 'none' beside the live policy, and a style= attribute",
-          page=PAGE.replace("<body", '<body style="color:red"', 1),
-          headers=LIVE_HEADERS.replace("; font-src", "; style-src-attr 'none'; font-src", 1),
-          expected="This gate refuses every style= attribute on a page, whatever the site's "
-                   "style-src or style-src-attr would let a browser do with it")
-live_case("script-src-attr 'none' beside the live policy, and an on* handler on the 404 page",
-          page={"404.html": PAGE_404.replace("<body", "<body onclick", 1)},
-          headers=LIVE_HEADERS.replace("; font-src", "; script-src-attr 'none'; font-src", 1),
-          expected="carries an on* handler attribute (onclick). This gate " + ON_RULE)
-live_case("an SVG style element, refused whatever style-src allows",
-          expected="refuses one whatever the site's style-src allows",
-          extra_files={"assets/probe.svg": svg("<style>path{fill:red}</style>")})
-live_case("an SVG style attribute, refused whatever style-src allows",
-          expected="refuses one whatever the site's style-src allows",
-          extra_files={"assets/probe.svg": svg('<path style="fill:red"/>')})
-live_case("an element outside the allowlist",
-          page=PAGE.replace("</body>", "<frameset></frameset>\n</body>", 1),
-          expected="element <frameset> is not in the page allowlist")
-live_case("a second inline <style>",
-          page=PAGE.replace("</style>", "</style>\n<style>h1{color:red}</style>", 1),
-          expected="models exactly one")
-live_case("a <script> added to the script-free 404 page", page={"404.html": SCRIPT_ON_404},
-          expected="models exactly 0")
-live_case("a <style> smuggled through <svg><title>",
-          page=PAGE.replace("</svg>", "<title><style>p{color:red}</style></title>\n    </svg>", 1),
-          expected="openers")
-# #1181's 2 /draft/* cases as #1181 wrote them, against the real file with its /draft/* block
-# removed, so they keep their original single-rule expectations.
-LIVE_NO_DRAFT = LIVE_HEADERS[:LIVE_HEADERS.index("\n# The staged template")] + "\n"
-live_case("a second CSP under a /draft/* rule",
-          headers=LIVE_NO_DRAFT + "\n/draft/*\n  Content-Security-Policy: default-src 'none'\n",
-          expected="exactly one Content-Security-Policy")
-live_case("the live CSP detached under a /draft/* rule",
-          headers=LIVE_NO_DRAFT + "\n/draft/*\n  ! Content-Security-Policy\n", expected="detaches")
-# The same 2 rules added beside the real file's modelled /draft/* rule: a /draft/* rule that is not
-# the modelled one is an ordinary rule, so the one-policy model refuses its CSP line the same way.
-live_case("a second CSP under a second /draft/* rule",
-          headers=LIVE_HEADERS + "\n/draft/*\n  Content-Security-Policy: default-src 'none'\n",
-          expected="exactly one Content-Security-Policy")
-live_case("the live CSP detached under a second /draft/* rule",
-          headers=LIVE_HEADERS + "\n/draft/*\n  ! Content-Security-Policy\n", expected="detaches")
-live_case("a comma splitting the live policy",
-          headers=LIVE_HEADERS.replace("style-src ", "style-src 'none', style-src ", 1),
-          expected="comma")
-live_case("an SVG carrying a script", expected="script element",
-          extra_files={"assets/probe.svg": svg("<script/>")})
-live_case("an unlisted page", expected="not in this gate's page list",
-          extra_files={"extra.html": '<!doctype html>\n<meta charset="utf-8">\n'})
-CASES += tuple(LIVE_CASES)
+CASES += SCOPE_CASES
 
 
 def io_failure_cases():
@@ -1169,239 +619,6 @@ def io_failure_cases():
     return failures, len(cases)
 
 
-# THE STAGED DRAFT (the owner's decisions of 2026-11-02 and 2026-11-03): the generated For AI
-# assistants page, which loads copy.js, stands in for every draft page. Each case puts it under
-# site/draft/ with 1 change and runs the real gate against the real site/_headers (LIVE_HEADERS),
-# which carries the A15 live policy and the 1 modelled /draft/* rule.
-DRAFT_PAGE = (ROOT / "site" / "draft" / "for-ai" / "index.html").read_bytes().decode("utf-8")
-DRAFT_AT = "draft/for-ai/index.html"
-DRAFT_BLOCK = LIVE_HEADERS[LIVE_HEADERS.index("\n# The staged template"):]
-NO_DRAFT_RULE = LIVE_HEADERS.replace(DRAFT_BLOCK, "\n")
-DRAFT_POLICY_TEXT = DRAFT_BLOCK.split("  Content-Security-Policy: ", 1)[1].split("\n", 1)[0]
-COPY_JS = '<script src="/draft/assets/baseline/copy.js" defer></script>'
-
-
-def draft_edit(old, new):
-    if old not in DRAFT_PAGE:
-        raise AssertionError(f"draft mutation {old!r} no longer matches the draft page")
-    return {DRAFT_AT: DRAFT_PAGE.replace(old, new, 1)}
-
-
-DRAFT_CASES = [
-    ("the generated draft page under the /draft/* rule", None, LIVE_HEADERS, {DRAFT_AT: DRAFT_PAGE}, False,
-     "1 draft page(s)"),
-    ("no draft page and no /draft/* rule", None, NO_DRAFT_RULE, None, False, "0 draft page(s)"),
-    ("an inline script on a draft page", None, LIVE_HEADERS,
-     draft_edit("</head>", "<script>alert(1)</script>\n</head>"), True, "<script> elements"),
-    ("a baseline script without defer", None, LIVE_HEADERS,
-     draft_edit(COPY_JS, '<script src="/draft/assets/baseline/copy.js"></script>'), True,
-     "<script> elements"),
-    ("a script from another host", None, LIVE_HEADERS,
-     draft_edit(COPY_JS, '<script src="https://cdn.example.net/x.js" defer></script>'), True,
-     "<script> elements"),
-    ("a baseline script with a body", None, LIVE_HEADERS,
-     draft_edit(COPY_JS, COPY_JS.replace("></script>", ">alert(1)</script>")), True,
-     "<script> elements"),
-    ("an inline style block on a draft page", None, LIVE_HEADERS,
-     draft_edit("</head>", "<style>p{}</style>\n</head>"), True, "<style> elements"),
-    ("a style= attribute on a draft page", None, LIVE_HEADERS,
-     draft_edit('<p class="meta">', '<p class="meta" style="color:red">'), True, "style="),
-    ("an on* handler on a draft page", None, LIVE_HEADERS,
-     draft_edit('<p class="meta">', '<p class="meta" onclick="x()">'), True, "on*"),
-    ("an element outside the draft allowlist", None, LIVE_HEADERS,
-     draft_edit('<p class="meta">', '<dl></dl><p class="meta">'), True, "element <dl>"),
-    ("a template element on a live page, which keeps the 28-element list",
-     PAGE.replace("<main", "<ul></ul><main", 1), LIVE_HEADERS, None, True, "element <ul>"),
-    ("a draft page with no /draft/* rule", None, NO_DRAFT_RULE, {DRAFT_AT: DRAFT_PAGE}, True,
-     "no /draft/* rule"),
-    ("a /draft/* rule that widens the draft policy", None,
-     LIVE_HEADERS.replace("style-src 'self';", "style-src 'self' 'unsafe-inline';", 1), {DRAFT_AT: DRAFT_PAGE},
-     True, "shared draft policy"),
-    ("a /draft/* rule that sets without detaching", None,
-     LIVE_HEADERS.replace("  ! Content-Security-Policy\n", "", 1), {DRAFT_AT: DRAFT_PAGE}, True,
-     "shared draft policy"),
-    ("a /draft/* rule that only detaches", None,
-     LIVE_HEADERS.replace("  Content-Security-Policy: " + DRAFT_POLICY_TEXT + "\n", "", 1),
-     {DRAFT_AT: DRAFT_PAGE}, True, "shared draft policy"),
-    ("a second /draft/* rule", None, LIVE_HEADERS + DRAFT_BLOCK, {DRAFT_AT: DRAFT_PAGE}, True,
-     "2 /draft/* rules"),
-    ("a CSP under a deeper /draft/ rule, which the live model still refuses", None,
-     LIVE_HEADERS + "\n/draft/x/*\n  Content-Security-Policy: style-src 'none'\n", {DRAFT_AT: DRAFT_PAGE},
-     True, "exactly one Content-Security-Policy"),
-    ("a detach under a deeper /draft/ rule", None,
-     LIVE_HEADERS + "\n/draft/x/*\n  ! Content-Security-Policy\n", {DRAFT_AT: DRAFT_PAGE}, True, "detaches"),
-    # QA round 1 of #1182: the draft allowlist is what the generator emits, the /draft/* rule's
-    # lines are pinned, and no other rule reaching /draft/ may set or detach a header.
-    ("an inline <svg> on a draft page, outside the generator's elements", None, LIVE_HEADERS,
-     draft_edit('<p class="meta">', '<svg><a xlink:href="javascript:x()"><rect/></a></svg><p class="meta">'),
-     True, "element <svg>"),
-    ("a <details> on a draft page, which the generator never emits", None, LIVE_HEADERS,
-     draft_edit('<p class="meta">', '<details><summary>x</summary></details><p class="meta">'),
-     True, "element <details>"),
-    ("a draft page named .HTM, checked as a draft page", None, LIVE_HEADERS,
-     {"draft/for-ai/index.HTM": DRAFT_PAGE}, False, "1 draft page(s)"),
-    ("a page under site/foo/draft/, which is not the draft and stays unlisted", None, LIVE_HEADERS,
-     {DRAFT_AT: DRAFT_PAGE, "foo/draft/x.html": DRAFT_PAGE}, True, "not in this gate's page list"),
-    ("a /draft/* rule that also detaches Permissions-Policy", None,
-     LIVE_HEADERS.replace("  X-Robots-Tag: noindex\n", "  X-Robots-Tag: noindex\n  ! Permissions-Policy\n", 1),
-     {DRAFT_AT: DRAFT_PAGE}, True, "holds exactly these lines"),
-    ("a /draft/* rule without its X-Robots-Tag", None,
-     LIVE_HEADERS.replace("  X-Robots-Tag: noindex\n", "", 1), {DRAFT_AT: DRAFT_PAGE}, True,
-     "holds exactly these lines"),
-    ("a deeper /draft/ rule detaching X-Robots-Tag", None,
-     LIVE_HEADERS + "\n/draft/x/*\n  ! X-Robots-Tag\n", {DRAFT_AT: DRAFT_PAGE}, True,
-     "can match /draft or a path under /draft/"),
-    ("a placeholder rule that matches a draft page and sets a header", None,
-     LIVE_HEADERS + "\n/:dir/for-ai/*\n  Access-Control-Allow-Origin: *\n", {DRAFT_AT: DRAFT_PAGE}, True,
-     "can match /draft or a path under /draft/"),
-    ("an absolute-URL rule on this site's host that reaches the draft", None,
-     LIVE_HEADERS + "\nhttps://secureconfig.ai/draft/*\n  X-Frame-Options: SAMEORIGIN\n", {DRAFT_AT: DRAFT_PAGE},
-     True, "can match /draft or a path under /draft/"),
-    ("a rule with an unrelated header on another path", None,
-     LIVE_HEADERS + "\n/guides/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False, "1 draft page(s)"),
-    ("an absolute-URL rule on another host", None,
-     LIVE_HEADERS + "\nhttps://other.example/draft/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False,
-     "1 draft page(s)"),
-]
-# QA round 2 of #1182: a rule reaches the draft by its literal prefix, not by sampled paths, so a
-# rule for 1 folder, 1 asset, an unprobed subtree or /draft itself is refused like a splat.
-for _rule in ("/draft/checklist/", "/draft/assets/baseline/copy.js", "/draft/unprobed/*", "/draft",
-              "/:x/checklist/", "/d*", "/DRAFT/guides/"):
-    DRAFT_CASES.append((f"the rule {_rule} detaching X-Robots-Tag", None,
-                        LIVE_HEADERS + f"\n{_rule}\n  ! X-Robots-Tag\n", {DRAFT_AT: DRAFT_PAGE}, True,
-                        f"rule {_rule} can match /draft or a path under /draft/"))
-DRAFT_CASES += [
-    ("a /drafts/* rule, which cannot match the draft", None,
-     LIVE_HEADERS + "\n/drafts/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False, "1 draft page(s)"),
-    ("X-Robots-Tag in the live /* rule, which reaches every draft page", None,
-     LIVE_HEADERS.replace("  Cross-Origin-Opener-Policy: same-origin\n",
-                          "  Cross-Origin-Opener-Policy: same-origin\n  X-Robots-Tag: all\n", 1),
-     {DRAFT_AT: DRAFT_PAGE}, True, "rule /* sets or detaches X-Robots-Tag"),
-    ("a rule with a percent escape, outside the modelled syntax", None,
-     LIVE_HEADERS + "\n/%64raft/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, True,
-     "outside the rule syntax this gate models"),
-]
-
-# The LOW fixes for the gate's explanations (TODO rows from #1181). Each case must fail, carry every
-# wanted clause, and not carry the unwanted one, the old clause where it claimed more than the
-# trigger: (description, page, headers, extra files, wanted clauses, unwanted clause or None).
-NUL_OUTSIDE = ("contains a NUL byte outside any inline block, where this gate does not model what a "
-               "browser's tokenizer does with one, so it refuses every one")
-NUL_INSIDE = ("contains a NUL byte in the text of an inline <style> or <script>, which a browser's "
-              "tokenizer replaces with U+FFFD")
-COMMENT_RULE = ("This gate refuses every `<!--` in an inline script, harmless or not, because `<!--` "
-                "opens HTML's script-data escape states and this gate does not model them")
-HARMLESS_COMMENT_PAGE = PAGE.replace("(function () {", "(function () {\n  // a harmless <!-- here", 1)
-NOT_A_SOURCE = "a token this gate reads as a hash or nonce source though it is not one in CSP3's grammar"
-IGNORES = "A browser ignores 'unsafe-inline' in a directive that carries a hash or nonce source"
-SCRIPT_ADVICE = "Move the behaviour into the inline <script>"
-NO_SCRIPT_ADVICE = "This page's declared shape allows no inline <script>, so remove the handler"
-WORDING_CASES = [
-    ("a NUL byte outside any inline block", PAGE.replace("</body>", "\x00</body>", 1), None, None,
-     (NUL_OUTSIDE,), "the block text it reads"),
-    ("a NUL byte in index's stylesheet", PAGE.replace(":root", "\x00:root", 1), None, None,
-     (NUL_INSIDE,), "outside any inline block"),
-    ("a NUL byte in the 404 stylesheet", {"404.html": PAGE_404.replace("<style>", "<style>\x00", 1)},
-     None, None, (NUL_INSIDE,), "outside any inline block"),
-    ("a NUL byte in a block and one outside",
-     PAGE.replace(":root", "\x00:root", 1).replace("</body>", "\x00</body>", 1), None, None,
-     (NUL_INSIDE, NUL_OUTSIDE), None),
-    ("a harmless <!-- in the pinned script, repinned", HARMLESS_COMMENT_PAGE,
-     repinned(HARMLESS_COMMENT_PAGE, "script"), None,
-     (COMMENT_RULE, "so it cannot tell whether a browser ends the script at the </script> this "
-                    "parser does"), "a browser reads to a later </script>"),
-    ("'nonce-!' beside 'unsafe-inline' in style-src", None,
-     LIVE_HEADERS.replace("style-src 'self'", "style-src 'nonce-!' 'self'", 1), None,
-     ("style-src carries 'unsafe-inline' beside 'nonce-!', " + NOT_A_SOURCE,), "A browser ignores"),
-    ("an empty 'sha256-' beside 'unsafe-inline' in script-src", None,
-     LIVE_HEADERS.replace("script-src 'self'", "script-src 'sha256-' 'self'", 1), None,
-     ("script-src carries 'unsafe-inline' beside 'sha256-', " + NOT_A_SOURCE,), "A browser ignores"),
-    ("'nonce-!' and then a valid nonce, which a browser reads as one", None,
-     LIVE_HEADERS.replace("style-src 'self'", "style-src 'nonce-!' 'nonce-abc' 'self'", 1), None,
-     ("beside 'nonce-abc', a hash or nonce source. " + IGNORES,), NOT_A_SOURCE),
-    ("a valid hash beside 'unsafe-inline' in script-src", None,
-     LIVE_HEADERS.replace("script-src 'self'", f"script-src {SCRIPT_PIN} 'self'", 1), None,
-     (f"beside {SCRIPT_PIN}, a hash or nonce source. " + IGNORES,), NOT_A_SOURCE),
-    ("the on* accounting when the literal scan finds more",
-     PAGE.replace("</body>", "<!-- <a onclick> -->\n</body>", 1), None, None,
-     ("accounts for 0 on* handler attributes; the literal scan found more, so one may be an "
-      "attribute html.parser did not report",), None),
-    ("the on* accounting when the literal scan misses a tag html.parser reports",
-     PAGE.replace("</body>", '<!-- <a title=" -->\n<a onclick>x</a>\n<!-- " -->\n</body>', 1), None,
-     None, ("accounts for 1 on* handler attributes; html.parser reported more, so the literal scan "
-            "missed one",), "html.parser did not report"),
-    ("a valued handler on the script-free 404 page",
-     {"404.html": PAGE_404.replace("<body", '<body onload="x"', 1)}, None, None,
-     (NO_SCRIPT_ADVICE + ", or reword the text",), SCRIPT_ADVICE),
-    ("a valueless handler on the script-free 404 page",
-     {"404.html": PAGE_404.replace("<body", "<body onclick", 1)}, None, None,
-     ("never an attribute. " + NO_SCRIPT_ADVICE,), SCRIPT_ADVICE),
-    ("a valued handler on index, whose shape allows a script",
-     PAGE.replace("<body", '<body onload="x"', 1), None, None,
-     (SCRIPT_ADVICE + ", or reword the text",), NO_SCRIPT_ADVICE),
-    ("a valueless handler on index, whose shape allows a script",
-     PAGE.replace("<body", "<body onclick", 1), None, None,
-     ("never an attribute. " + SCRIPT_ADVICE,), NO_SCRIPT_ADVICE),
-    ("a valued handler on a draft page, whose shape allows no inline script", None, LIVE_HEADERS,
-     draft_edit('<p class="meta">', '<p class="meta" onclick="x()">'),
-     (NO_SCRIPT_ADVICE + ", or reword the text",), SCRIPT_ADVICE),
-]
-# The reworded docstring and comment clauses, (new, old): the gate's source must carry each new
-# clause and none of the old ones.
-SOURCE_CLAUSES = (("`script-src` is hash-only and this gate pins no attribute",
-                   "no hash covers an attribute"),
-                  ("an `</svg>` or the end of an inline block", "the end of a pinned block"),
-                  ("a style attribute smuggled through <svg><title> is invisible to html.parser",
-                   "applies it and CSP-checks it"),
-                  ("outside every inline block this gate does not model what a",
-                   "turns into U+FFFD before hashing and this would not."))
-
-# THE BASE PATH (the Architect's rule of 2026-11-03): the site is staged under the gate's draft root
-# now and promoted to / later. Each base is built with scripts/build-site.py --base and --out, and
-# each page goes where that base serves it under site/, as build-site.py's default --out does
-# (site/ and the base without its leading /). The staged base is read from the gate's DRAFT.
-_spec = importlib.util.spec_from_file_location("csp_gate_constants", TOOLS / "check_csp_hashes.py")
-GATE = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(GATE)
-STAGED_BASE = "/" + GATE.DRAFT.relative_to(GATE.SITE).as_posix() + "/"
-SHAPES = {path.relative_to(GATE.SITE).as_posix(): shape for path, shape in GATE.PAGES}
-
-
-def base_path_runs():
-    """(failures, runs): a valued handler on the generated home and 404 pages at each base must get
-    the advice of the declared shape where the page sits, a live page's from PAGES and a draft
-    page's (no inline script) otherwise."""
-    failures, runs = [], 0
-    for base in (STAGED_BASE, "/"):
-        d = Path(tempfile.mkdtemp())
-        try:
-            r = subprocess.run([sys.executable, "-I", "-B", str(ROOT / "scripts" / "build-site.py"),
-                                "--base", base, "--out", str(d)],
-                               capture_output=True, text=True, timeout=120)
-            if r.returncode != 0:
-                failures.append(f"base {base}: build-site.py failed: {(r.stdout + r.stderr)!r}")
-                continue
-            for name in ("index.html", "404.html"):
-                planted = (d / name).read_text(encoding="utf-8").replace(
-                    "<body>", '<body onclick="x()">', 1)
-                rel = base.lstrip("/") + name
-                shape = SHAPES.get(rel, {"style": 0, "script": 0})
-                want, other = ((SCRIPT_ADVICE, NO_SCRIPT_ADVICE) if shape["script"]
-                               else (NO_SCRIPT_ADVICE, SCRIPT_ADVICE))
-                if "/" in rel:
-                    rc, out = run_against(headers=LIVE_HEADERS, extra_files={rel: planted})
-                else:
-                    rc, out = run_against({rel: planted}, LIVE_HEADERS)
-                runs += 1
-                if (rc != 1 or f"site/{rel}:" not in out or f"{want}, or reword the text" not in out
-                        or other in out):
-                    failures.append(f"base {base}: a handler on site/{rel} did not get the advice "
-                                    f"{want!r} alone: rc={rc}, {out!r}")
-        finally:
-            shutil.rmtree(d, ignore_errors=True)
-    return failures, runs
-
-
 def main() -> int:
     failures, io_case_count = io_failure_cases()
     for desc, page, headers, must_fail, expected in CASES:
@@ -1416,48 +633,21 @@ def main() -> int:
         if "Traceback (most recent call last):" in out:
             failures.append(f"{desc}: the gate crashed: {out!r}")
         if not must_fail and (FAIL_LINE.search(out) or not OK_LINE.search(out)):
-            failures.append(f"{desc}: a pass must print one ok line and no FAIL line: {out!r}")
+            failures.append(f"{desc}: a pass must print an ok line and no FAIL line: {out!r}")
         if must_fail and not FAIL_LINE.search(out):
             failures.append(f"{desc}: a refusal must print a FAIL line: {out!r}")
 
-    # The repinned cases only mean something if their repin actually moved the hash.
-    for page, tag, base, desc in ((COMMENT_PAGE, "style", PAGE, "the <!-- in stylesheet text"),
-                                  (STRING_PAGE, "script", PAGE, "the <style> in a JavaScript string"),
-                                  (CRLF_PAGE, "style", PAGE, "the CRLF"),
-                                  (E404, "style", PAGE_404, "the 404 stylesheet edit"),
-                                  (ONJS_PAGE, "script", PAGE, "the handler text in the index script"),
-                                  (ONCSS_PAGE, "style", PAGE, "the handler text in the index stylesheet"),
-                                  (ONTAG_JS_PAGE, "script", PAGE, "the handler tag in the index script")):
-        if body_hash(page, tag) == body_hash(base, tag):
-            failures.append(
-                f"{desc} case no longer discriminates: the edit did not change the raw "
-                f"<{tag}> text, so the gate would answer the same with the defect restored")
-
     # A finding has to name the line a reader can go to, on each page it can fire on.
-    rc, out = run_against(PAGE.replace("<body", '<body style="color:red"', 1))
-    want = PAGE[:PAGE.index("<body")].count("\n") + 1
+    rc, out = run_against(edited(PAGE, "<body>", '<body style="color:red">'))
+    want = PAGE[:PAGE.index("<body>")].count("\n") + 1
     if f"site/index.html:{want}" not in out:
-        failures.append(f"the style= finding does not name the right line on index: <body> is on "
-                        f"line {want}. It said: {out!r}")
-    if "<body" in PAGE_404:
-        rc, out = run_against({"404.html": PAGE_404.replace("<body", '<body style="color:red"', 1)})
-        want = PAGE_404[:PAGE_404.index("<body")].count("\n") + 1
-        if f"site/404.html:{want}" not in out:
-            failures.append(f"the style= finding does not name the right line on 404: <body> is on "
-                            f"line {want}. It said: {out!r}")
-
-    # P5: the on* finding names its line too, on each page it can fire on.
-    rc, out = run_against(PAGE.replace("<body", '<body onload="x"', 1))
-    want = PAGE[:PAGE.index("<body")].count("\n") + 1
-    if f"site/index.html:{want}" not in out:
-        failures.append(f"the on* finding does not name the right line on index: <body> is on "
-                        f"line {want}. It said: {out!r}")
-    if "<body" in PAGE_404:
-        rc, out = run_against({"404.html": PAGE_404.replace("<body", '<body onload="x"', 1)})
-        want = PAGE_404[:PAGE_404.index("<body")].count("\n") + 1
-        if f"site/404.html:{want}" not in out:
-            failures.append(f"the on* finding does not name the right line on 404: <body> is on "
-                            f"line {want}. It said: {out!r}")
+        failures.append(f"the style= finding does not name the right line on the home page: <body> "
+                        f"is on line {want}. It said: {out!r}")
+    rc, out = run_against({"404.html": edited(PAGE_404, "<body>", '<body onload="x">')})
+    want = PAGE_404[:PAGE_404.index("<body>")].count("\n") + 1
+    if f"site/404.html:{want}" not in out:
+        failures.append(f"the on* finding does not name the right line on the 404 page: <body> is "
+                        f"on line {want}. It said: {out!r}")
 
     # Row 3.18: every pass case above would also pass a gate that never looked at an SVG, so prove
     # the inspection ran: the happy path counts the real favicon, and a second SVG raises the count.
@@ -1470,51 +660,21 @@ def main() -> int:
     rc, out = run_against(extra_files={"img/.svg": FAVICON})
     if rc != 0 or "2 SVG document(s)" not in out:
         failures.append(f"row 3.18: a dotfile named .svg was not counted as an SVG: {out!r}")
-
-    # THE STAGED DRAFT: a real generated draft page under the /draft/* rule, and each refusal the
-    # draft model adds or keeps.
-    for desc, page, headers, extra, must_fail, expected in DRAFT_CASES:
-        rc, out = run_against(page, headers, extra_files=extra)
-        if rc != (1 if must_fail else 0):
-            failures.append(f"draft: {desc}: expected the gate to {'fail' if must_fail else 'pass'}, "
-                            f"it did not ({out!r})")
-        elif expected not in out:
-            failures.append(f"draft: {desc}: expected {expected!r} in {out!r}")
-        if "Traceback (most recent call last):" in out:
-            failures.append(f"draft: {desc}: the gate crashed: {out!r}")
-
-    # Relocating index's script onto the 404 page must fail BOTH pages in the model phase.
-    rc, out = run_against({"index.html": NOSCRIPT_INDEX, "404.html": SCRIPT_ON_404})
-    if "site/index.html" not in out or "site/404.html" not in out:
-        failures.append(f"moving the script did not fault both pages: {out!r}")
-
-    # The LOW fixes for the gate's explanations: each message clause, then each source clause.
-    for desc, page, headers, extra, wanted, unwanted in WORDING_CASES:
-        rc, out = run_against(page, headers, extra_files=extra)
-        if rc != 1:
-            failures.append(f"wording: {desc}: expected the gate to fail, it did not ({out!r})")
-        for want in wanted:
-            if want not in out:
-                failures.append(f"wording: {desc}: expected {want!r} in {out!r}")
-        if unwanted is not None and unwanted in out:
-            failures.append(f"wording: {desc}: {unwanted!r} is still in {out!r}")
-    source = (TOOLS / "check_csp_hashes.py").read_text(encoding="utf-8")
-    for new, old in SOURCE_CLAUSES:
-        if new not in source or old in source:
-            failures.append(f"wording: the gate's source must carry {new!r} and not {old!r}")
-    base_failures, base_runs = base_path_runs()
-    failures += base_failures
+    # And prove the page count follows the pages: a fifth page raises it.
+    rc, out = run_against(extra_files={
+        "extra/index.html": '<!doctype html>\n<meta charset="utf-8">\n<p>x</p>\n'})
+    if rc != 0 or "5 page(s) under site" not in out:
+        failures.append(f"a fifth page was not counted as a page: {out!r}")
 
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {LEGACY_CASE_COUNT} recorded cases for the CSP hash gate across six review rounds, "
+    model_cases = len(CASES) - len(SCOPE_CASES)
+    print(f"  ok    {model_cases} template page-model and shared-policy cases, "
           f"{len(SCOPE_CASES)} row 3.18 and P5 document, page and filesystem cases, "
-          f"{len(LIVE_CASES)} cases for the temporary A15 live policy, "
-          f"{len(DRAFT_CASES)} staged-draft cases, {len(WORDING_CASES)} explanation-wording cases "
-          f"with {len(SOURCE_CLAUSES)} source clauses, {base_runs} base-path runs at "
-          f"{STAGED_BASE} and /, and {io_case_count} injected I/O failures")
+          f"and {io_case_count} injected I/O failures; the docstring records the hash-model, A15 "
+          f"and /draft/* case groups that retired at promotion and why")
     return 0
 
 

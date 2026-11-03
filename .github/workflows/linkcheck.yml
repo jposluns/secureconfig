@@ -102,6 +102,12 @@ jobs:
             --exclude '127\.0\.0\.1'
             './*.md'
             './site/index.html'
+            './site/guides/index.html'
+            './site/for-ai/index.html'
+            './site/for-humans/index.html'
+            './site/checklist/index.html'
+            './site/disclosure/index.html'
+            './site/license/index.html'
             './site/llms.txt'
 
       - name: Report link results and fail on dead links

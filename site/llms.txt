@@ -153,3 +153,9 @@
 
 - [Repository](https://github.com/jposluns/secureconfig): source for all guides and this site
 - [Contributing](https://raw.githubusercontent.com/jposluns/secureconfig/main/CONTRIBUTING.md): scope and the bar for new guides
+- [Guides](https://secureconfig.ai/guides/): the deployment exposure guides by category, from certificates to AI infrastructure, each a Markdown file read in the repository or fetched raw
+- [For AI assistants](https://secureconfig.ai/for-ai/): the rules an AI assistant applies to every service it configures, generates, or reviews, and the pattern to fetch each guide raw
+- [For humans](https://secureconfig.ai/for-humans/): ready-made tasks to copy and paste into your AI assistant: secure the project, review the AI stack, add single sign-on, and more
+- [Checklist](https://secureconfig.ai/checklist/): the checks to run before reporting completion, each with its command or method, and every result recorded as pass, fail, untested, or not applicable
+- [Disclosure](https://secureconfig.ai/disclosure/): what the project claims, the limit of each claim, and the evidence for both, from how the guides are sourced to what the site loads
+- [Licence](https://secureconfig.ai/license/): published under CC0 1.0 Universal, with exceptions that include the AIQT Guardrails material, the template's fonts, and the footer's marks

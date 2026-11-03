@@ -1,27 +1,35 @@
 #!/usr/bin/env python3
-"""Build the secureconfig.ai pages on the shared site template (baseline 1.5.0).
+"""Build the secureconfig.ai pages on the shared site template (baseline 1.5.1).
 
 Usage:
-  python3 -I -B scripts/build-site.py                 write the pages under site/draft/
+  python3 -I -B scripts/build-site.py                 write the pages under site/
   python3 -I -B scripts/build-site.py --check         build in memory and compare; write nothing
   python3 -I -B scripts/build-site.py --list-inputs   print the files the build reads
-  python3 -I -B scripts/build-site.py --base / --out site   the build after promotion
+  python3 -I -B scripts/build-site.py --base /draft/ --out site/draft   the staging form
 
 Every page is generated from this repository's sources with the markup of the baseline's reference
 pages (SPECIFICATION.md section 7): README.md for the guide index, the 10 rules and the checklist
 count; site-src/content.json for the page copy, each entry with its source; and
 tools/version_basis_guides.txt for 1 count on the Disclosure page. Counts are computed, so a new
 guide or rule makes `--check` report the pages stale. Internal links and assets take the base path
-(`/draft/` while staging, `/` after promotion); the only internal links that do not are the 2 live
-files the draft links directly, /llms.txt and /llms-full.txt.
+(`/` since promotion; `/draft/` builds the staging form). The "Draft review" page at draft/
+always carries its own canonical URL, its description, the link-preview tags and a robots
+noindex (as auditthis.ai's /draft/ page does), and no other page links it; at the root base every
+other page is indexable except the 404 page, and each indexable page carries its description, its
+canonical URL and the Open Graph (og:site_name after og:type) and Twitter link-preview tags with
+the card at images/secureconfig-card.png (as on auditthis.ai).
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
 with a body, an `on*` attribute, or "what this is" framing (SPECIFICATION.md section 12). It does
 not write the copied baseline files under assets/baseline/ (scripts/copy-baseline.py does).
-`--check` also fails on any file under the output folder that is neither a page it writes, nor
-under assets/baseline/, nor the optional assets/site.css, a page being a .html or .htm file in any
-case, as the CSP gate names one.
+`--check` compares every page it writes with the file on disk, byte for byte, and also fails on
+an extra page under the output folder that it does not write (a page being a .html or .htm file
+in any case, as the CSP gate names one), outside assets/baseline/. At base `/` that is all it
+checks: the root also holds the published files (llms.txt, robots.txt, _headers, images), so a
+non-page file passes `--check` there and is left to the CSP and self-containment gates. At
+`/draft/` (any base other than `/`) it also fails on any file that is neither a page it writes,
+nor under assets/baseline/, nor the optional assets/site.css.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error.
 Standard library only. No network.
@@ -40,15 +48,15 @@ from check_csp_hashes import STYLE_ATTR, VALUED_HANDLER, name_suffix  # noqa: E4
 CONTENT = Path("site-src") / "content.json"
 README = Path("README.md")
 VERSIONED = Path("tools") / "version_basis_guides.txt"
-LIVE_INDEX = Path("site") / "index.html"
 COPIED = "assets/baseline/"  # the copied template files, which this build does not write
 SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline README), hand-written
 REPO = "https://github.com/jposluns/secureconfig"
 BLOB = REPO + "/blob/main/"
-# The live files the draft links directly (owner's decision 5, 2026-11-03); removed at promotion,
-# when they sit beside the pages at the same root.
-LIVE_FILES = ("/llms.txt", "/llms-full.txt")
+ORIGIN = "https://secureconfig.ai"
 LOGO_ALT = "A terminal window with a padlock and a small shield"
+# The link-preview card the live home page carried before promotion (1200 by 630 PNG).
+CARD = ORIGIN + "/images/secureconfig-card.png"
+CARD_ALT = "SecureConfig.ai: The secure option at every decision. TLS, identity, MFA, secrets, network."
 NEWTAB = '<span class="vh"> (opens in a new tab)</span>'
 # The site's own pages, then GitHub last (the owner's template note of 2026-11-03): Disclosure and
 # Licence are linked from the landing page's "About this project" region, not the top bar.
@@ -88,6 +96,7 @@ class Builder:
         if not (base.startswith("/") and base.endswith("/")):
             raise SourceError(f"--base must start and end with /, not {base!r}")
         self.base = base
+        self.staged = base != "/"  # a staged build is noindex everywhere; the root build is not
         self.root = root
         self.read_sources()
 
@@ -156,20 +165,9 @@ class Builder:
             if row["quote"] not in item:
                 raise SourceError(f"checklist row {i}: its quote {row['quote']!r} is not in "
                                   f"{README} checklist item {i}")
-        # While the live page exists, the task prompts must be the live page's, word for word.
-        if (self.root / LIVE_INDEX).is_file():
-            live = self.read(LIVE_INDEX)
-            for t in tasks:
-                if f'<pre id="{t["id"]}">{t["prompt"]}</pre>' not in live:
-                    raise SourceError(f"task {t['id']} differs from its prompt in {LIVE_INDEX}")
-                if f"<h3>{t['title']}</h3>" not in live:
-                    raise SourceError(f"task {t['id']} title differs from {LIVE_INDEX}")
 
     def inputs(self):
-        out = [CONTENT, README, VERSIONED]
-        if (self.root / LIVE_INDEX).is_file():
-            out.append(LIVE_INDEX)
-        return [p.as_posix() for p in out]
+        return [p.as_posix() for p in (CONTENT, README, VERSIONED)]
 
     # ---- inline text ----
     def n(self, text):
@@ -184,9 +182,6 @@ class Builder:
         if target.startswith("#"):
             return target, False
         if target.startswith("/"):
-            path = target.split("#", 1)[0]
-            if path in LIVE_FILES:
-                return target, False
             return self.base + target[1:], False
         return BLOB + target, True
 
@@ -220,20 +215,45 @@ class Builder:
         return "".join(out)
 
     # ---- page parts ----
-    def head(self, title, scripts=(), noindex=True):
+    def indexable(self, key, path):
+        """The head of an indexable page: at the root, its description, canonical URL and link
+        previews; a staged build is noindex everywhere and carries none of them."""
+        if self.staged:
+            return {"noindex": True}
+        return {"noindex": False, "description": self.n(self.c[key]["description"]["text"]),
+                "canonical": f"{ORIGIN}/{path}", "preview": True}
+
+    def head(self, title, scripts=(), noindex=True, description=None, canonical=None, preview=False):
         b = self.base
         parts = ["<!doctype html>", '<html lang="en" class="site-secureconfig">', "<head>",
                  '<meta charset="utf-8">',
                  '<meta name="viewport" content="width=device-width, initial-scale=1">']
         if noindex:
             parts.append('<meta name="robots" content="noindex, nofollow">')
-        parts += [f"<title>{esc(title)} | SecureConfig.ai</title>",
-                  f'<link rel="icon" href="{b}assets/baseline/logos/secureconfig-favicon.svg" '
+        parts.append(f"<title>{esc(title)} | SecureConfig.ai</title>")
+        if description is not None:
+            parts.append(f'<meta name="description" content="{attr(description)}">')
+        if preview:
+            # The link-preview tags auditthis.ai carries on each indexable page and on its /draft/
+            # page, after the description; og:site_name follows og:type, as auditthis.ai orders it.
+            full = f"{title} | SecureConfig.ai"
+            og = (("og:type", "website"), ("og:site_name", "SecureConfig.ai"), ("og:url", canonical),
+                  ("og:title", full),
+                  ("og:description", description), ("og:image", CARD), ("og:image:type", "image/png"),
+                  ("og:image:width", "1200"), ("og:image:height", "630"), ("og:image:alt", CARD_ALT))
+            tw = (("twitter:card", "summary_large_image"), ("twitter:title", full),
+                  ("twitter:description", description), ("twitter:image", CARD),
+                  ("twitter:image:alt", CARD_ALT))
+            parts += [f'<meta property="{k}" content="{attr(v)}">' for k, v in og]
+            parts += [f'<meta name="{k}" content="{attr(v)}">' for k, v in tw]
+        parts += [f'<link rel="icon" href="{b}assets/baseline/logos/secureconfig-favicon.svg" '
                   f'type="image/svg+xml">',
                   f'<link rel="apple-touch-icon" href="{b}assets/baseline/logos/secureconfig-touch.png">',
                   f'<link rel="stylesheet" href="{b}assets/baseline/fonts.css">',
                   f'<link rel="stylesheet" href="{b}assets/baseline/palettes.css">',
                   f'<link rel="stylesheet" href="{b}assets/baseline/baseline.css">']
+        if canonical is not None:
+            parts.append(f'<link rel="canonical" href="{attr(canonical)}">')
         parts += [f'<script src="{b}assets/baseline/{s}" defer></script>' for s in scripts]
         parts += ["</head>", "<body>", '<a class="skip" href="#main-content">Skip to content</a>']
         return "\n".join(parts)
@@ -284,9 +304,10 @@ class Builder:
                 f'<p class="vh" id="copy-status" role="status" aria-live="polite"></p>\n'
                 f"</body>\n</html>\n")
 
-    def page(self, title, current, main, scripts=(), noindex=True):
-        return (self.head(title, scripts, noindex) + "\n" + self.mast(current) + "\n"
-                + '<main id="main-content">\n' + main + "\n</main>\n" + self.footer())
+    def page(self, title, current, main, scripts=(), noindex=True, description=None, canonical=None,
+             preview=False):
+        return (self.head(title, scripts, noindex, description, canonical, preview) + "\n" + self.mast(current)
+                + "\n" + '<main id="main-content">\n' + main + "\n</main>\n" + self.footer())
 
     def logo(self):
         return f'<img class="rail-logo" src="{self.base}assets/baseline/logos/secureconfig.svg" alt="{LOGO_ALT}">'
@@ -342,7 +363,7 @@ class Builder:
                 f'<p class="value">{self.inline(h["value"]["text"])}</p></div></div>'
                 f'<div class="region"><p class="lbl">About this project</p><div>'
                 f'<p class="about">{about}</p></div></div></div>')
-        return self.page("Home", "", main, noindex=self.base != "/")
+        return self.page("Home", "", main, **self.indexable("home", ""))
 
     def guides(self):
         g = self.c["guides"]
@@ -368,7 +389,8 @@ class Builder:
         body += ['<p class="lbl sec">Reference</p>', '<h2 id="reference">Reference files</h2>',
                  f'<div class="wide"><ul class="plan">\n{refs}\n</ul></div>', self.next_block(g["next"])]
         title = f'{k["guides"]} guides in {k["categories"]} categories'
-        return self.page("Guides", "guides/", self.doc("Guide index", title, self.rail(), body))
+        return self.page("Guides", "guides/", self.doc("Guide index", title, self.rail(), body),
+                         **self.indexable("guides", "guides/"))
 
     def for_ai(self):
         a = self.c["for_ai"]
@@ -385,7 +407,7 @@ class Builder:
                 f'<p>{self.inline(a["files"]["text"])}</p>', self.next_block(a["next"])]
         return self.page("For AI assistants", "for-ai/",
                          self.doc("For AI assistants", a["h1"]["text"], self.rail(), body),
-                         scripts=("copy.js",))
+                         scripts=("copy.js",), **self.indexable("for_ai", "for-ai/"))
 
     def for_humans(self):
         f = self.c["for_humans"]
@@ -402,7 +424,7 @@ class Builder:
         rail = self.rail([(f"task-{i}", t["title"]) for i, t in enumerate(tasks, 1)])
         return self.page("For humans", "for-humans/",
                          self.doc("For humans", "Ready-made tasks for your assistant", rail, body),
-                         scripts=("copy.js", "rail.js"))
+                         scripts=("copy.js", "rail.js"), **self.indexable("for_humans", "for-humans/"))
 
     def checklist(self):
         c = self.c["checklist"]
@@ -423,7 +445,7 @@ class Builder:
                 f'<p>{self.inline(c["sources"]["text"])}</p>', self.next_block(c["next"])]
         return self.page("Checklist", "checklist/",
                          self.doc("Verification checklist", f"{n} checks before reporting completion",
-                                  self.rail(), body))
+                                  self.rail(), body), **self.indexable("checklist", "checklist/"))
 
     def disclosure(self):
         d = self.c["disclosure"]
@@ -438,7 +460,7 @@ class Builder:
                  self.next_block(d["next"])]
         rail = self.rail([(e["id"], e["title"]) for e in d["entries"]])
         return self.page("Disclosure", "disclosure/", self.doc("Disclosure", "Disclosure", rail, body),
-                         scripts=("rail.js",))
+                         scripts=("rail.js",), **self.indexable("disclosure", "disclosure/"))
 
     def license(self):
         lic = self.c["license"]
@@ -459,18 +481,32 @@ class Builder:
                 "".join(summary), f'<p>{esc(lic["governs"]["text"])}</p>',
                 '<p class="lbl accent blk">Note</p>',
                 f'<div class="callout"><p>{esc(lic["note"]["text"])}</p></div>', self.next_block(lic["next"])]
-        return self.page("Licence", "license/", self.doc("Licence", "CC0 1.0 Universal", self.rail(), body))
+        return self.page("Licence", "license/", self.doc("Licence", "CC0 1.0 Universal", self.rail(), body),
+                         **self.indexable("license", "license/"))
 
     def notfound(self):
         nf = self.c["notfound"]
         body = [f'<p class="lead">{self.inline(nf["lead"]["text"])}</p>', self.next_block(nf["next"])]
         return self.page("Page not found", "", self.doc("404", "That page is not here.", self.rail(), body))
 
+    def draft(self):
+        # The "Draft review" page at /draft/ (the owner's instruction of 2026-11-03, like
+        # auditthis.ai's): always noindex, its own canonical, description and link previews, in no
+        # index or top bar, and linked from no page. While a rebuild is staged it is replaced by
+        # the staged tree.
+        dr = self.c["draft"]
+        body = [f'<p class="lead">{self.inline(dr["lead"]["text"])}</p>', self.next_block(dr["next"])]
+        return self.page("Draft review", "",
+                         self.doc(dr["label"]["text"], dr["h1"]["text"], self.rail(), body),
+                         description=dr["description"]["text"], canonical=f"{ORIGIN}/draft/",
+                         preview=True)
+
     def build(self):
         pages = {"index.html": self.home(), "guides/index.html": self.guides(),
                  "for-ai/index.html": self.for_ai(), "for-humans/index.html": self.for_humans(),
                  "checklist/index.html": self.checklist(), "disclosure/index.html": self.disclosure(),
-                 "license/index.html": self.license(), "404.html": self.notfound()}
+                 "license/index.html": self.license(), "404.html": self.notfound(),
+                 "draft/index.html": self.draft()}
         for name, text in pages.items():
             refuse(name, text)
         return pages
@@ -505,7 +541,7 @@ def refuse(name, text):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--base", default="/draft/")
+    ap.add_argument("--base", default="/")
     ap.add_argument("--out", type=Path)
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--list-inputs", action="store_true")

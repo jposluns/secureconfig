@@ -5,9 +5,9 @@
 # integrity gates that must hold for what is deployed, and fails the build (so Pages keeps serving
 # the previous deployment) on any failure:
 #   - the copied site template files match .baseline/pin.toml;
-#   - the pages under site/draft/ match a fresh build of their sources;
-#   - the draft stays noindex, out of the live indexes and inside /draft/;
-#   - every page's inline blocks and the site/_headers policies pass the CSP gate;
+#   - the pages under site/ match a fresh build of their sources at the root;
+#   - the site is self-contained and only the /draft/ review page and the 404 are noindex;
+#   - every page fits the template page model and site/_headers carries exactly the shared policy;
 #   - site/.well-known/security.txt carries the owner's fields.
 # It needs bash and Python 3.11 or later (tomllib), and no network.
 set -euo pipefail
