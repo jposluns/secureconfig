@@ -1232,7 +1232,12 @@ else
   bad "test_secrets_scan.py failed"
 fi
 
-echo "== site CSP pins every inline block by hash =="
+echo "== site CSP pins every inline block by hash, or until promotion permits it =="
+# Until promotion (the owner's decision A15 of 2026-11-03) the live policy in site/_headers pins no
+# hash and permits the live pages' inline blocks with 'unsafe-inline', so that Cloudflare's
+# JavaScript Detections loader runs; tools/check_csp_hashes.py accepts that policy and none
+# wider, keeps every other refusal below, and records in its docstring that the acceptance is
+# temporary. Under the hash model the gate otherwise enforces, the paragraph below holds.
 # The CSP in site/_headers names the sha256 of each inline <script> and <style> in every page
 # tools/check_csp_hashes.py lists (the same gate refuses an on* handler on a page, refuses XHTML,
 # compressed SVG and symbolic links under site/, and fails any SVG carrying a <script>, an on*
@@ -1279,6 +1284,43 @@ else
   bad "test_csp_hashes.py exited non-zero without reporting a result"
   printf '%s\n' "$csp_tests" | sed 's/^/          /'
 fi
+
+echo "== site/.well-known/security.txt carries the owner's six fields =="
+# W3 (the owner's decision of 2026-11-03): the repository serves security.txt and Cloudflare's own
+# security.txt feature is off, so a wrong contact or policy URL would ship with nothing to say so.
+# tools/check_security_txt.py compares the file with the six fields and values it records. It reads
+# no network and no clock, so whether the live domain serves the file, and whether Expires has
+# passed, are not checked here. The self-test runs first, so what runs against the file is the
+# shipped gate.
+for security_txt_check in test_security_txt.py check_security_txt.py; do
+  if security_txt=$(python3 -I -B "tools/$security_txt_check" 2>&1); then
+    printf '%s\n' "$security_txt"
+    if grep -q '^  FAIL  ' <<< "$security_txt" || ! grep -q '^  ok    ' <<< "$security_txt"; then
+      bad "$security_txt_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$security_txt"
+    bad "$security_txt_check failed"
+  fi
+done
+
+echo "== site/sitemap.xml lists the live pages and robots.txt names it =="
+# W4 (the owner's decision A6 of 2026-11-03): sitemap.xml lists every indexable live page with a
+# lastmod and no /draft/ page, and robots.txt carries one Sitemap line. tools/check_sitemap.py
+# parses the sitemap with expat and maps each loc to its page under site/. It reads no git
+# history, so a lastmod left stale by a later page edit is a review matter. The self-test runs
+# first, so what runs against the files is the shipped gate.
+for sitemap_check in test_sitemap.py check_sitemap.py; do
+  if sitemap=$(python3 -I -B "tools/$sitemap_check" 2>&1); then
+    printf '%s\n' "$sitemap"
+    if grep -q '^  FAIL  ' <<< "$sitemap" || ! grep -q '^  ok    ' <<< "$sitemap"; then
+      bad "$sitemap_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$sitemap"
+    bad "$sitemap_check failed"
+  fi
+done
 
 echo "== workflow actions are pinned to full commit SHAs =="
 # Row 3.17 (#348) pinned every workflow `uses:` to a full commit SHA with a `# vX.Y.Z` comment naming

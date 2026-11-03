@@ -1,8 +1,6 @@
-# Strict-Transport-Security records the value the live site serves (observed 2026-10-29); the maintainer identifies it as Cloudflare's zone default HSTS setting. Change the Cloudflare zone setting as well as this file to change the served value.
+# Cloudflare sends X-Content-Type-Options and Referrer-Policy itself and Strict-Transport-Security from the zone's HSTS setting, so this file does not set them. Until promotion the policy permits the live pages' inline blocks with 'unsafe-inline' and pins no hash; tools/check_csp_hashes.py records why.
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'sha256-I1zuPgqEquLha5tI5kiqKwV3vTLM9JnO/VJXx4DH0uM='; style-src 'sha256-wzfql3YJmhQ8BhIH8cC8wWKO3DaNBTGD2ufoRZbGqaE=' 'sha256-d4kg4Sfdnu4Kz1h3LKPdX2+MAnffQj89SFcz4QEChuE='; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
-  Strict-Transport-Security: max-age=15552000; includeSubDomains; preload
-  X-Content-Type-Options: nosniff
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-inline' https://ajax.cloudflare.com https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Frame-Options: DENY
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Permissions-Policy: accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(), display-capture=(), fullscreen=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin

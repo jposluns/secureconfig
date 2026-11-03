@@ -1,10 +1,34 @@
 #!/usr/bin/env python3
-"""Check that every inline block in each listed site page is pinned by hash in the site/_headers CSP.
+"""Check that every inline block in each listed site page is pinned by hash in the site/_headers CSP,
+or, until promotion, permitted by the live policy's temporary `'unsafe-inline'`.
 
 WHY: the site drops `'unsafe-inline'` and pins every inline stylesheet and script by hash. A hash
 is exact, so editing a block without repinning it produces a page whose style or script the browser
 silently refuses. Nothing said so, and the page is the first thing a security-minded reader
 inspects.
+
+TEMPORARY `'unsafe-inline'`, UNTIL PROMOTION (the owner's decision A15 of 2026-11-03, which
+explicitly authorizes relaxing this gate for it). Cloudflare's JavaScript Detections injects an
+inline loader into the pages it serves, and a browser ignores `'unsafe-inline'` in a directive that
+also carries a hash or a nonce, so while the live pages were pinned by hash the loader was blocked.
+Until the template pages replace the live ones at promotion, the live policy in `site/_headers`
+pins no hash and permits the live pages' inline blocks with `'unsafe-inline'`. This gate accepts
+that and nothing wider: a chosen directive may carry `'unsafe-inline'` only if it is `script-src`
+with every source in LIVE_INLINE_SOURCES["script"] (`'self'`, `'unsafe-inline'`,
+`https://ajax.cloudflare.com`, `https://static.cloudflareinsights.com`) or `style-src` with every
+source in LIVE_INLINE_SOURCES["style"] (`'self'`, `'unsafe-inline'`), compared ASCII
+case-insensitively, and never beside a hash, a nonce or any other source, `'strict-dynamic'` and
+`'unsafe-hashes'` included. Every inline block of an accepted kind then counts as permitted
+instead of being matched against a pin; a directive without `'unsafe-inline'` is held to the hash
+model below as before. Every other check stands: exactly one CSP, under `/*`; each page's declared
+block shape; the refused contexts; the element allowlist; the `on*` and `style=` refusals; the SVG
+rules; and the walk of `site/`. Those refusals are now this gate's own rule and no longer a
+description of what a browser refuses: under `'unsafe-inline'` a browser runs an `on*` handler and
+applies a `style=` attribute, so a finding message below that says a browser refuses one silently
+holds for the hash model only. The acceptance is temporary and is removed at promotion, when the
+live inline blocks leave the site. The shared template policy keeps `script-src 'unsafe-inline'`
+for JavaScript Detections, so what this gate accepts for it after promotion is decided with the
+template page model, not carried over from this allowance.
 
 THIS GATE COVERS A KNOWN LIST OF PAGES, NOT ONE. `site/_headers` serves a single Content-Security-
 Policy over the whole site, so its `style-src`/`script-src` are a UNION of every page's block hashes.
@@ -206,9 +230,10 @@ single header VALUE is more than one policy when it contains a comma, and a brow
 a comma is refused. A header name prefixed with `!` DETACHES it: `! Content-Security-Policy` removes
 the policy, which has no colon and so once passed silently.
 
-WHAT IT DOES NOT PROVE: that the CSP is otherwise sound, or that the hashed content is safe.
-`script-src` is hash-only with no `'self'`, so the first external script or stylesheet anyone adds is
-blocked by the browser and no gate here says so.
+WHAT IT DOES NOT PROVE: that the CSP is otherwise sound, or that the hashed or permitted content is
+safe. It reads no `src` or `href`, so whether the policy allows a page's external scripts,
+stylesheets, images or connections is not checked here, and an external resource the policy does
+not allow is blocked by the browser with no gate here saying so.
 """
 import base64
 import hashlib
@@ -266,6 +291,14 @@ ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstu
 CHARSET = re.compile(r"charset\s*=", re.I)
 META_UTF8 = '<meta charset="utf-8">'
 CSP = "content-security-policy"
+# TEMPORARY, until promotion (A15): the one directive per kind that may carry 'unsafe-inline', and
+# every source allowed in it, lower case. See TEMPORARY 'unsafe-inline' in the docstring.
+UNSAFE_INLINE = "'unsafe-inline'"
+LIVE_INLINE_SOURCES = {
+    "script": ("script-src", frozenset(("'self'", UNSAFE_INLINE, "https://ajax.cloudflare.com",
+                                        "https://static.cloudflareinsights.com"))),
+    "style": ("style-src", frozenset(("'self'", UNSAFE_INLINE))),
+}
 # CSP3 allows sha256, sha384 and sha512, and matches the algorithm name case-insensitively.
 ALGORITHMS = (("sha256", hashlib.sha256), ("sha384", hashlib.sha384), ("sha512", hashlib.sha512))
 # Row 3.18: suffixes refused under site/ in any case, with the reason a reader sees. See THE REST OF
@@ -874,9 +907,10 @@ def main() -> int:
             # First occurrence wins, per CSP3.
             directives.setdefault(parts[0].lower(), parts)
 
-    findings, verified = [], 0
+    findings, verified, permitted = [], 0, 0
     used = {}
     used_pins = {}
+    permitted_kinds = set()
     for tag, names in KINDS:
         # Resolve each kind's directive once, whether or not any listed page carries that kind: a CSP
         # that fails to constrain a kind at all should never be blessed by this gate.
@@ -886,12 +920,25 @@ def main() -> int:
             findings.append(f"the Content-Security-Policy has no {names[1]} directive, and neither "
                             f"{names[0]} nor {names[2]} to fall back to")
             continue
-        if "'unsafe-inline'" in directives[chosen]:
-            findings.append(
-                f"{chosen} carries 'unsafe-inline', which permits any inline <{tag}> including one "
-                f"injected into the page. A browser ignores it while a hash is present, so this is "
-                f"not broken today; it is one edit from permitting everything, and this site's whole "
-                f"claim is that it does not need it")
+        sources = directives[chosen][1:]
+        if UNSAFE_INLINE in (s.lower() for s in sources):
+            # TEMPORARY, until promotion (A15): see TEMPORARY 'unsafe-inline' in the docstring.
+            directive, allowed = LIVE_INLINE_SOURCES[tag]
+            pins = [s for s in sources if is_hash_pin(s) or s.lower().startswith("'nonce-")]
+            if pins:
+                findings.append(
+                    f"{chosen} carries 'unsafe-inline' beside {pins[0]}. A browser ignores "
+                    f"'unsafe-inline' in a directive that carries a hash or a nonce, so it allows "
+                    f"only the pinned inline <{tag}> blocks and refuses every other one, Cloudflare's "
+                    f"injected JavaScript Detections loader included; until promotion the live "
+                    f"policy carries 'unsafe-inline' with no hash or nonce")
+            elif chosen != directive or not {s.lower() for s in sources} <= allowed:
+                findings.append(
+                    f"{chosen} carries 'unsafe-inline' outside the temporary live policy this gate "
+                    f"accepts until promotion: only {directive} may carry it, beside no source but "
+                    f"{', '.join(sorted(allowed - {UNSAFE_INLINE}))}")
+            else:
+                permitted_kinds.add(tag)
 
     for path, shape in PAGES:
         page = parsed[path]
@@ -899,6 +946,9 @@ def main() -> int:
             chosen = used[tag]
             for body in page.bodies(tag):
                 if chosen is None:
+                    continue
+                if tag in permitted_kinds:
+                    permitted += 1
                     continue
                 present = {normalize_pin(token) for token in directives[chosen]}
                 matched = pin_tokens(body) & present
@@ -915,11 +965,16 @@ def main() -> int:
                 f"or a style-src-attr directive carrying 'unsafe-hashes' and the attribute's own "
                 f"hash, which this gate does not check")
         for tag, name, line in sorted(set(page.on_attrs)):
+            if "script" in permitted_kinds:
+                why = ("While the temporary 'unsafe-inline' is in script-src a browser runs it, so "
+                       "this gate's refusal is what keeps it off the page; move the behaviour into "
+                       "the inline <script> (P5)")
+            else:
+                why = ("A CSP hash covers an element's text, never an attribute, and script-src "
+                       "here is hash-only, so a browser refuses the handler silently; move the "
+                       "behaviour into the inline <script> and repin it (P5)")
             findings.append(
-                f"<{tag}> at {path}:{line} carries an on* handler attribute ({name}). A CSP hash "
-                f"covers an element's text, never an attribute, and script-src here is hash-only, so "
-                f"a browser refuses the handler silently; move the behaviour into the inline "
-                f"<script> and repin it (P5)")
+                f"<{tag}> at {path}:{line} carries an on* handler attribute ({name}). {why}")
 
     # Orphan pins (row 3.15): a hash left in a gate-selected directive that no listed block uses.
     # Not a fail-open (an orphan cannot make a real block go unhashed), but a stale pin is dead
@@ -933,17 +988,22 @@ def main() -> int:
                             f"any listed page uses; remove the stale pin")
 
     declared_total = sum(n for _, shape in PAGES for n in shape.values())
-    if not findings and verified != declared_total:
-        findings.append(f"internal accounting error: verified {verified} inline blocks but the page "
-                        f"shapes declare {declared_total}")
+    if not findings and verified + permitted != declared_total:
+        findings.append(f"internal accounting error: verified {verified} and permitted {permitted} "
+                        f"inline blocks but the page shapes declare {declared_total}")
 
     if findings:
         for f in findings:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {verified} inline blocks across {len(PAGES)} pages are pinned by hash in the "
-          f"{HEADERS} CSP with no on* handler, and {inspected} SVG document(s) under {SITE} carry "
-          f"no <script>, on* handler, javascript: URL or inline style")
+    if permitted:
+        covered = (f"{verified + permitted} inline blocks across {len(PAGES)} pages are covered, "
+                   f"{verified} pinned by hash and {permitted} permitted by the temporary "
+                   f"'unsafe-inline' (until promotion), in the")
+    else:
+        covered = f"{verified} inline blocks across {len(PAGES)} pages are pinned by hash in the"
+    print(f"  ok    {covered} {HEADERS} CSP with no on* handler, and {inspected} SVG document(s) "
+          f"under {SITE} carry no <script>, on* handler, javascript: URL or inline style")
     return 0
 
 
