@@ -47,11 +47,12 @@ PART 1, KEPT OUT OF SEARCH:
     whitespace-delimited word whole (less the same trailing punctuation) and each token in it, so a
     quote or a bracket inside a URL (`https://secureconfig.ai/a'b/../../draft/`) cannot split this
     site's host off from the rest. Of those it reads only the SITE TOKENS, failing closed: any that
-    holds this site's host anywhere once folded, an http or https URL on this site or a pages.dev
-    host (after any run of slashes, with a host that is not plain ASCII counted as this site's),
-    and a bare same-site path, one that starts with `/` once every leading scheme-like prefix
-    other than `http:` and `https:` is removed (so `see:/draft/` is read as the path `/draft/`, not
-    as the host `draft`, and `ftp://example.net/draft/` as the path `//example.net/draft/`). A site
+    holds this site's host anywhere once folded; any whose host after a scheme-like prefix, of any
+    scheme, and any run of slashes is this site's or a pages.dev host, a host that is not plain
+    ASCII counting as this site's (so `ftp:foo.pages.dev/draft/` is one); and a bare same-site
+    path, one that starts with `/` once every leading scheme-like prefix other than `http:` and
+    `https:` is removed (so `see:/draft/` is also read as the path `/draft/`, and
+    `ftp://example.net/draft/` as the path `//example.net/draft/`). A site
     token is refused on the 2 limits above or when it names a draft path segment; any token, site
     token or not, is refused when it is still changing after MAX_DECODES (32) rounds of
     percent-decoding. Each word gives at most 1 finding. A whole-file rule would refuse those
@@ -316,16 +317,20 @@ def full_tokens(text):
 
 
 def site_token(folded):
-    """True for a folded llms-full.txt token that holds this site's host anywhere, is an http or
-    https URL on this site or a pages.dev host (a host that is not plain ASCII counts as this
+    """True for a folded llms-full.txt token that holds this site's host anywhere, names this site
+    or a pages.dev host after a scheme-like prefix (a host that is not plain ASCII counts as this
     site's), or is a bare same-site path: one that starts with `/` once every leading scheme-like
-    prefix other than `http:` and `https:` is removed, so `see:/draft/` is the path `/draft/`."""
+    prefix other than `http:` and `https:` is removed, so `see:/draft/` is the path `/draft/`.
+    Both readings of a prefix count, failing closed, so `ftp:foo.pages.dev/draft/` is a site token
+    too."""
     if SITE_HOST in folded:
         return True
     while m := SCHEME_HOST.match(folded):
+        host = re.sub(r":[0-9]*$", "", m.group(2).rsplit("@", 1)[-1]).rstrip(".")
+        if not host.isascii() or site_host(host):
+            return True
         if m.group(1) in ("http", "https"):
-            host = re.sub(r":[0-9]*$", "", m.group(2).rsplit("@", 1)[-1]).rstrip(".")
-            return not host.isascii() or site_host(host)
+            return False
         folded = folded[m.end(1) + 1:]
     return folded.startswith("/")
 

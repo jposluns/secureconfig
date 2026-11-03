@@ -16,8 +16,9 @@ file name they load, such as scripts/copy-baseline.py):
     token, or in the source text between 2 tokens, which is where a line continuation sits), a `#`
     comment in a replacement field, or a line break in a replacement field of a single-quoted
     f-string. The source text between 2 tokens is read from the file's lines as the tokenizer
-    reads them, broken only after `\\n` (`str.splitlines` also breaks at `\\x0b`, `\\x0c`,
-    `\\x1c` to `\\x1e`, U+0085, U+2028 and U+2029, which would shift every later row).
+    reads them, broken only after `\\n` (`str.splitlines` also breaks at `\\r` and `\\r\\n`, and at
+    `\\x0b`, `\\x0c`, `\\x1c` to `\\x1e`, U+0085, U+2028 and U+2029, any of which but `\\r\\n`
+    would shift every later row).
 
 Before the files, it runs its own cases (SELF_CASES): each of those 4 forms is refused, the
 backslash both in a string and as a line continuation (the continuation also after a line

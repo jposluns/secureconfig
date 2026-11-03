@@ -24,7 +24,9 @@ host, that hold the host anywhere (percent-encoded too), or that carry a scheme-
 than http or https (`see:/draft/`, 2 prefixes, inside brackets, and `ftp://`), a token that is no
 site token still changing after 32 rounds, and guards that a mail address on this site,
 `/drafts-archive` and `/draft-` paths behind a prefix, a quoted IETF draft, a quoted repository
-path and a control character in another host's URL pass.
+path and a control character in another host's URL pass. QA round 1 of #1184 added 2 tokens the
+base gate refused by the host after a slashless prefix other than http or https, a Pages alias
+(`ftp:foo.pages.dev/draft/`) and a non-ASCII host (`see:example。net/draft/`).
 
 Beside the cases: 3 cases read fold's still-changing flag directly, and the base-path checks build
 the pages with scripts/build-site.py into a scratch folder, once with check_draft.BASE (the staged
@@ -357,6 +359,13 @@ CASES = [
      "8 draft pages", 0),
     ("llms-full.txt naming another host's URL with a tab reference, which is no site token",
      write("site/llms-full.txt", "See https://example.net/a&#9;b for it.\n"), "8 draft pages", 0),
+    # QA round 1 of #1184: the host after a slashless prefix other than http or https still counts.
+    ("llms-full.txt naming the draft on a Pages host behind a slashless ftp: prefix",
+     write("site/llms-full.txt", "See ftp:foo.pages.dev/draft/ for it.\n"),
+     "names a draft path segment on this site in 'ftp:foo.pages.dev/draft/'", 1),
+    ("llms-full.txt naming the draft on a non-ASCII host behind a prose prefix",
+     write("site/llms-full.txt", "See see:example。net/draft/ for it.\n"),
+     "names a draft path segment on this site in 'see:example。net/draft/'", 1),
     ("the pristine draft", None, "8 draft pages", 0),
 ]
 

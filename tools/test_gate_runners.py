@@ -14,7 +14,9 @@ checks what it prints and whether it set fail=1:
     line or not.
 
 PAGES-BUILD.SH: the script is copied into a scratch tree and run with bash, with a stand-in python3
-first on PATH that records each call and runs nothing. The gates are read from the script (every
+first on PATH that records each call and runs no gate. It runs the script's own `-c` version check
+with this interpreter and sys.version_info set to the version it reports (3.10.12 or 3.11.5), so
+an inverted or wrong comparison fails the cases below. The gates are read from the script (every
 `python3 -I -B <file>.py` call outside a comment, wherever it sits on its line, so a gate behind a
 condition is still expected to run), so the cases hold when promotion edits that list:
   - a python3 that reports 3.10: exit 1, the message naming Python 3.11 on standard error, and no
@@ -46,12 +48,13 @@ RUN_GATE = re.compile(r"^run_gate\(\) \{\n.*?^\}$", re.M | re.S)
 # A gate call: `python3 -I -B`, a .py file and its arguments, up to a shell operator or line end.
 GATE = re.compile(r"python3 -I -B ([\w./-]+\.py(?: [^\s;&|)]+)*)")
 PASSED = "Pages build check passed."
-# The stand-in python3: it records its arguments, answers the version check and --version from
-# STANDIN_MEETS and STANDIN_VERSION, and fails the 1 gate named by STANDIN_FAIL.
+# The stand-in python3: it records its arguments, runs the script's `-c` version check with this
+# interpreter and sys.version_info set to STANDIN_VERSION, answers --version from STANDIN_VERSION,
+# and fails the 1 gate named by STANDIN_FAIL.
 STANDIN = """#!/usr/bin/env bash
 printf '%s\\n' "$*" >> "$STANDIN_LOG"
 case "$1" in
-  -c) if [ "$STANDIN_MEETS" = 1 ]; then exit 0; fi; exit 1 ;;
+  -c) exec "$STANDIN_PYTHON" -I -B -c 'import sys; sys.version_info = tuple(map(int, sys.argv[1].split("."))); exec(sys.argv[2])' "$STANDIN_VERSION" "$2" ;;
   --version) printf 'Python %s\\n' "$STANDIN_VERSION"; exit 0 ;;
 esac
 if [ "$*" = "$STANDIN_FAIL" ]; then
@@ -125,7 +128,7 @@ def promoted(text):
                   text, flags=re.M)
 
 
-def build(script_text, version, meets, fail=""):
+def build(script_text, version, fail=""):
     """Run a copy of pages-build.sh with the stand-in python3: (exit, stdout, stderr, calls)."""
     d = Path(tempfile.mkdtemp())
     try:
@@ -138,7 +141,7 @@ def build(script_text, version, meets, fail=""):
         log = d / "calls.log"
         log.write_text("", encoding="utf-8")
         env = dict(os.environ, PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
-                   STANDIN_LOG=str(log), STANDIN_VERSION=version, STANDIN_MEETS=meets,
+                   STANDIN_LOG=str(log), STANDIN_VERSION=version, STANDIN_PYTHON=sys.executable,
                    STANDIN_FAIL=fail)
         r = subprocess.run(["bash", str(d / "scripts" / "pages-build.sh")], capture_output=True,
                            text=True, timeout=60, env=env)
@@ -169,14 +172,14 @@ def pages_build_failures():
         if not gates:
             failures.append(f"pages-build.sh, {name}: no `python3 -I -B` gate call was found")
             continue
-        rc, out, err, calls = build(text, "3.10.12", "0")
+        rc, out, err, calls = build(text, "3.10.12")
         count += 1
         if (rc != 1 or "python3 is Python 3.10.12" not in err or "Python 3.11 or later" not in err
                 or not version_check(calls) or calls[1:] != ["--version"] or PASSED in out):
             failures.append(f"pages-build.sh, {name}, with a python3 that reports 3.10 should stop "
                             f"before any gate: exit {rc}, calls {calls!r}, stdout {out!r}, "
                             f"stderr {err!r}")
-        rc, out, err, calls = build(text, "3.11.5", "1")
+        rc, out, err, calls = build(text, "3.11.5")
         count += 1
         if (rc != 0 or not version_check(calls) or calls[1:] != gates
                 or out.rstrip("\n").split("\n")[-1] != PASSED):
@@ -184,7 +187,7 @@ def pages_build_failures():
                             f"check and then the gates {gates!r} in order: exit {rc}, calls "
                             f"{calls!r}, stdout {out!r}, stderr {err!r}")
         for i, gate in enumerate(gates):
-            rc, out, err, calls = build(text, "3.11.5", "1", fail=gate)
+            rc, out, err, calls = build(text, "3.11.5", fail=gate)
             count += 1
             if rc == 0 or not version_check(calls) or calls[1:] != gates[:i + 1] or PASSED in out:
                 failures.append(f"pages-build.sh, {name}, with {gate!r} failing should stop there "
