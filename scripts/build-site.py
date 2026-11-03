@@ -17,10 +17,11 @@ files the draft links directly, /llms.txt and /llms-full.txt.
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
-with a body, an `on*` attribute, or "what this is" framing (SPECIFICATION.md section 12). It does not write the copied baseline
-files under assets/baseline/ (scripts/copy-baseline.py does). `--check` also fails on any file under
-the output folder that is neither a page it writes, nor under assets/baseline/, nor the optional
-assets/site.css, a page being a .html or .htm file in any case, as the CSP gate names one.
+with a body, an `on*` attribute, or "what this is" framing (SPECIFICATION.md section 12). It does
+not write the copied baseline files under assets/baseline/ (scripts/copy-baseline.py does).
+`--check` also fails on any file under the output folder that is neither a page it writes, nor
+under assets/baseline/, nor the optional assets/site.css, a page being a .html or .htm file in any
+case, as the CSP gate names one.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error.
 Standard library only. No network.

@@ -218,8 +218,9 @@ owner's decision; that rule is read only for the draft, and everything above sti
 pages and every other rule. A `/draft/*` rule with any other lines is an ordinary rule. Any rule other
 than `/*` and the modelled one whose path pattern can match `/draft` or a path under `/draft/` may set
 or detach no header except a Content-Security-Policy (refused above by the one-policy model), `/*` may
-not carry X-Robots-Tag, and a rule outside the modelled syntax is refused. The draft's own 404 page (site/draft/404.html) is served for missing
-paths under /draft/, so this rule governs it there. The exception goes at promotion.
+not carry X-Robots-Tag, and a rule outside the modelled syntax is refused. The draft's own 404
+page (site/draft/404.html) is served for missing paths under /draft/, so this rule governs it
+there. The exception goes at promotion.
 
 WHAT IT STILL DOES NOT COVER, stated rather than left to be found: a document embedded with `srcdoc`
 inherits a page's CSP, and nothing here looks inside one; a `javascript:` URL on an HTML page is not
@@ -794,10 +795,9 @@ def rule_reaches(rule):
     path is `/draft` or starts with `/draft/`. Otherwise its literal prefix is its text before the
     first `*` splat or `:placeholder`, and the rule can reach the draft when `/draft/` starts with
     that prefix (`/`, `/d`, `/draft`), or the prefix is `/draft` or starts with `/draft/`. Both are
-    compared without case. An absolute-URL rule is read by its
-    path unless its host is plainly another site's (neither this site, a pages.dev host, nor a
-    pattern). No path is sampled, so a rule for 1 page, 1 asset or 1 folder is caught as surely as a
-    splat.
+    compared without case. An absolute-URL rule is read by its path unless its host is plainly
+    another site's (neither this site, a pages.dev host, nor a pattern). No path is sampled, so a
+    rule for 1 page, 1 asset or 1 folder is caught as surely as a splat.
     """
     path = rule
     if "://" in rule:

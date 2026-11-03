@@ -20,15 +20,26 @@ PART 1, KEPT OUT OF SEARCH:
   - site/_redirects does not exist while site/draft/ holds pages: a missing draft path gets the
     draft's 404 page, never a redirect, and a redirect could serve the draft at a live URL that
     the `/draft/*` noindex rule does not match (the owner's rule);
-  - site/llms.txt, site/robots.txt and site/sitemap.xml name no `/draft` path, site/llms-full.txt
-    names no `secureconfig.ai/draft` URL (host-anchored, because the bundle quotes vendor URLs
-    such as IETF drafts, and ending where `draft` does, so a following `.`, `,`, `;` or backtick
-    still counts), and no live page links, loads or refreshes to a same-site path under /draft:
-    each live page's URL attributes and meta refresh targets are read with html.parser, which
-    decodes entities, cleaned as a browser cleans them (tabs and newlines removed, a backslash
-    read as a slash), resolved against the page's own URL with urljoin, percent-decoded and
-    stripped of dot segments, so a relative `draft/`, `\\draft/` and `/x/%2e%2e/draft/` are caught.
-    A live URL with a host that is not plain ASCII is treated as same-site.
+  - no live page and no published index names a `draft` path segment. This does not emulate
+    browser URL parsing, which three review rounds showed cannot be matched spelling by spelling;
+    it is a conservative rule over a FOLDED form of each value: HTML entities decoded (by
+    html.parser on pages, by html.unescape in the index files), percent-decoding applied until the
+    text stops changing, `\\` read as `/`, and the result case-folded. A folded value is refused when
+    it holds `draft` as a whole path segment: at its start or after a `/`, and followed by its end,
+    `/`, `?`, `#`, `;` or a character that cannot appear in a URL. So `draft-ietf-...` and
+    `/drafts-archive` pass, while `https:////secureconfig.ai/draft/`, `/x/%2e%2e/draft/`,
+    `%252fdraft` and `\\draft/` fail, whatever the scheme, slashes or host;
+  - on a live page (site/**/*.html or .htm outside site/draft/) the rule reads every URL-bearing
+    attribute that the draft scan reads (below), and any `http-equiv` attribute, refresh included,
+    is refused outright, as on draft pages;
+  - in site/llms.txt, site/robots.txt and site/sitemap.xml the rule reads every token that holds a
+    `/` (a token runs between whitespace, quotes, angle brackets, brackets and backticks, and
+    loses any trailing `.`, `,`, `;`, `:`, `!` or `?`, which end a sentence rather than a URL);
+  - in site/llms-full.txt, which carries every guide's external references and README's own
+    repository paths such as `site/draft/assets/baseline/`, the rule reads only the tokens that are
+    URLs on this site or a pages.dev host (after any scheme and any run of slashes, with a host
+    that is not plain ASCII counted as this site's), tokens that start with this site's host, and
+    bare same-site paths starting with `/`; a whole-file rule would refuse those repository paths.
 
 PART 2, SELF-CONTAINED:
   - every URL a draft page carries, in any attribute whose name ends in `href` or `src` (so
@@ -62,11 +73,12 @@ rewritten for the root. Exit 0 ok, 1 on a finding, 2 on a read error.
 Usage: python3 -I -B tools/check_draft.py [--root <repository root>]
 """
 import argparse
+import html
 import re
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote, urljoin, urlsplit
+from urllib.parse import unquote, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_csp_hashes import name_suffix  # noqa: E402  (the CSP gate's page-name rule)
@@ -74,7 +86,6 @@ from check_csp_hashes import name_suffix  # noqa: E402  (the CSP gate's page-nam
 DRAFT = Path("site") / "draft"
 BASE = "/draft/"
 SITE_HOST = "secureconfig.ai"
-ORIGIN = f"https://{SITE_HOST}/"
 # Live files the draft links directly, by the owner's decision of 2026-11-03. Removed at promotion.
 LIVE_EXCEPTIONS = {"/llms.txt", "/llms-full.txt"}
 NEWTAB = "(opens in a new tab)"
@@ -84,7 +95,13 @@ URL_LISTS = {"srcset", "imagesrcset"}
 URL_NAMES = {"formaction", "action", "ping", "poster", "background"}
 BAD_URL_CHARS = re.compile(r"[\x00-\x20\x7f\\]")
 AUTHORITY = re.compile(r"(?i)^https?://[^/?#\\\s]")
-LLMS_FULL_DRAFT = re.compile(r"(?i)(?:www\.)?secureconfig\.ai\.?(?::\d+)?/draft(?![\w-])")
+# A `draft` path segment in a folded value: at its start or after `/`, then its end, `/`, `?`, `#`,
+# `;` or a character that cannot appear in a URL (see the docstring).
+DRAFT_SEGMENT = re.compile(r"(?:^|/)draft(?=$|[/?#;]|[^a-z0-9._~%!$&'()*+,=:@-])")
+# A token of an index file: text between whitespace, quotes, angle brackets, brackets, braces,
+# pipes and backticks.
+TOKEN = re.compile(r"[^\s<>\"'`()\[\]{}|]+")
+SCHEME_HOST = re.compile(r"^[a-z][a-z0-9+.-]*:/*([^/?#]*)")
 # site.css: the whole permitted grammar (comments removed first).
 DECL = r"\s*--(?:sw|logo-inset)\s*:\s*\d+(?:\.\d+)?\s*"
 RULE = rf"\s*[^{{}};@\\]+\{{{DECL}(?:;{DECL})*;?\s*\}}"
@@ -117,7 +134,6 @@ class Page(HTMLParser):
         self.urls = []          # (line, attribute, value)
         self.robots = []        # (line, content)
         self.http_equiv = []    # line
-        self.refresh = []       # (line, URL) of each meta refresh
         self.newtab = []        # (line, text)
         self._open = []
 
@@ -142,10 +158,6 @@ class Page(HTMLParser):
             a.setdefault(k, v or "")
         if "http-equiv" in names:
             self.http_equiv.append(line)
-            if a.get("http-equiv", "").strip().lower() == "refresh":
-                target = re.search(r"(?i)url\s*=\s*['\"]?([^'\"]*)", a.get("content", ""))
-                if target:
-                    self.refresh.append((line, target.group(1).strip()))
         if tag == "meta" and a.get("name", "").strip().lower() == "robots":
             self.robots.append((line, a.get("content", "")))
         if tag == "a":
@@ -220,36 +232,39 @@ def check_url(root, value):
     return None
 
 
-def remove_dot_segments(path):
-    """RFC 3986 section 5.2.4, as a browser applies it to a path."""
-    out = []
-    for segment in path.split("/"):
-        if segment == "..":
-            if len(out) > 1:
-                out.pop()
-        elif segment != ".":
-            out.append(segment)
-    if path.endswith(("/.", "/..")):
-        out.append("")
-    return "/".join(out) or "/"
+def fold(value, entities=False):
+    """The folded form the draft-segment rule reads: entities decoded (where asked), percent-decoding
+    applied until the text stops changing, a backslash read as a slash, and the result case-folded."""
+    if entities:
+        value = html.unescape(value)
+    for _ in range(16):
+        decoded = unquote(value)
+        if decoded == value:
+            break
+        value = decoded
+    return value.replace("\\", "/").casefold()
 
 
-def live_draft_path(page_url, value):
-    """The lower-cased path under /draft that a live page's URL reaches on this site, or None.
+def names_draft(value, entities=False):
+    """True when the folded value holds `draft` as a whole path segment."""
+    return bool(DRAFT_SEGMENT.search(fold(value, entities)))
 
-    The value is read as a browser reads it: tabs, newlines and leading or trailing spaces and
-    controls removed, a backslash taken as a slash, resolved against the page's own URL, then the
-    path percent-decoded and its dot segments removed, so `\\draft/` and `/x/%2e%2e/draft/` count.
-    """
-    cleaned = re.sub(r"[\t\n\r]", "", value).strip("\x00\x20" + "".join(map(chr, range(1, 32))))
-    target = urlsplit(urljoin(page_url, cleaned.replace("\\", "/")))
-    if target.scheme and target.scheme.lower() not in ("http", "https"):
-        return None
-    host = unquote(target.hostname or "")
-    if host and host.isascii() and not site_host(host):
-        return None
-    path = remove_dot_segments(unquote(target.path)).lower()
-    return path if path == "/draft" or path.startswith("/draft/") else None
+
+def tokens(text):
+    """The tokens of an index file, each stripped of trailing sentence punctuation (`.`, `,`, `;`,
+    `:`, `!`, `?`), so `secureconfig.ai/draft.` at the end of a sentence still ends at `draft`."""
+    return [t.rstrip(".,;:!?") for t in TOKEN.findall(text)]
+
+
+def site_token(folded):
+    """True for a folded llms-full.txt token that is a URL on this site or a pages.dev host (a host
+    that is not plain ASCII counts as this site's), starts with this site's host, or is a bare
+    same-site path."""
+    m = SCHEME_HOST.match(folded)
+    if m:
+        host = re.sub(r":[0-9]*$", "", m.group(1).rsplit("@", 1)[-1]).rstrip(".")
+        return not host.isascii() or site_host(host)
+    return folded.startswith(("/", SITE_HOST, "www." + SITE_HOST))
 
 
 def css_unescape(text):
@@ -307,24 +322,30 @@ def check(root):
                         "live URL the /draft/* noindex rule does not match")
     for index in ("llms.txt", "robots.txt", "sitemap.xml"):
         path = root / "site" / index
-        if path.is_file() and "/draft" in path.read_text(encoding="utf-8"):
-            findings.append(f"site/{index} names a /draft path; the draft stays out of every index")
+        if path.is_file():
+            for token in tokens(path.read_text(encoding="utf-8")):
+                if "/" in token and names_draft(token, entities=True):
+                    findings.append(f"site/{index} names a draft path segment in {token!r}; the "
+                                    f"draft stays out of every index")
     full = root / "site" / "llms-full.txt"
-    if full.is_file() and LLMS_FULL_DRAFT.search(full.read_text(encoding="utf-8")):
-        findings.append("site/llms-full.txt names a secureconfig.ai/draft URL; the draft stays out "
-                        "of every index")
+    if full.is_file():
+        for token in tokens(full.read_text(encoding="utf-8")):
+            folded = fold(token, entities=True)
+            if site_token(folded) and DRAFT_SEGMENT.search(folded):
+                findings.append(f"site/llms-full.txt names a draft path segment on this site in "
+                                f"{token!r}; the draft stays out of every index")
     for page in page_files(root / "site"):
         rel = page.relative_to(root)
         if DRAFT in rel.parents:
             continue
-        url = urljoin(ORIGIN, rel.relative_to("site").as_posix())
         parsed = parse(page.read_text(encoding="utf-8"))
-        targets = parsed.urls + [(line, "http-equiv refresh", value) for line, value in parsed.refresh]
-        for line, name, value in targets:
-            path = live_draft_path(url, value)
-            if path:
-                findings.append(f"{rel}:{line}: is a live page and its {name}={value!r} reaches "
-                                f"{path}, under /draft")
+        for line in parsed.http_equiv:
+            findings.append(f"{rel}:{line}: is a live page and carries http-equiv, which can refresh "
+                            f"or redirect without a link; the gate refuses it on every page")
+        for line, name, value in parsed.urls:
+            if names_draft(value):
+                findings.append(f"{rel}:{line}: is a live page and its {name}={value!r} names a "
+                                f"draft path segment once folded ({fold(value)!r})")
     assets = (root / DRAFT / "assets").resolve()
     css_files = sorted(p for p in (root / DRAFT).rglob("*") if p.is_file() and name_suffix(p.name) == ".css")
     for css in css_files:
@@ -370,7 +391,8 @@ def main(argv=None):
         return 1
     print(f"  ok    {n} draft pages carry noindex and link only inside {BASE}, to the "
           f"{len(LIVE_EXCEPTIONS)} recorded live files, or off-site; the /draft/* rule sends "
-          f"X-Robots-Tag: noindex; no _redirects, live page or index reaches /draft")
+          f"X-Robots-Tag: noindex; there is no _redirects, and no live page or published index "
+          f"names a draft path segment")
     return 0
 
 

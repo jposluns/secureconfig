@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Cases for scripts/build-site.py: its refusals, its base path, and its --check mode.
 
-The refusals are SPECIFICATION section 12's: a page carrying a dash character (U+2010 to U+2015, U+2212), an inline style or
-style= attribute, an inline script, an on* attribute or "what this is" framing is never written.
-Each is planted in a real generated page and must be refused, while the page as generated passes.
+The refusals are SPECIFICATION section 12's: a page carrying a dash character (U+2010 to
+U+2015, U+2212), an inline style or style= attribute, an inline script, an on* attribute or "what
+this is" framing is never written. Each is planted in a real generated page and must be refused,
+while the page as generated passes.
 The base path must reach every internal link and asset at /draft/ and at /, and --check must
 report a one-byte change, an extra page (.html or .htm in any case), a stray file outside
 assets/baseline/ and a missing page in a build it did not write.
