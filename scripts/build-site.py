@@ -13,18 +13,23 @@ count; site-src/content.json for the page copy, each entry with its source; and
 tools/version_basis_guides.txt for 1 count on the Disclosure page. Counts are computed, so a new
 guide or rule makes `--check` report the pages stale. Internal links and assets take the base path
 (`/` since promotion; `/draft/` builds the staging form). The "Draft review" page at draft/
-always carries its own canonical URL, its description and a robots noindex, and no other page
-links it; at the root base every other page is indexable except the 404 page, and each indexable
-page carries its description, its canonical URL and the Open Graph and Twitter link-preview tags
-with the card at images/secureconfig-card.png (as on auditthis.ai).
+always carries its own canonical URL, its description, the link-preview tags and a robots
+noindex (as auditthis.ai's /draft/ page does), and no other page links it; at the root base every
+other page is indexable except the 404 page, and each indexable page carries its description, its
+canonical URL and the Open Graph (og:site_name after og:type) and Twitter link-preview tags with
+the card at images/secureconfig-card.png (as on auditthis.ai).
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
 with a body, an `on*` attribute, or "what this is" framing (SPECIFICATION.md section 12). It does
 not write the copied baseline files under assets/baseline/ (scripts/copy-baseline.py does).
-`--check` also fails on any file under the output folder that is neither a page it writes, nor
-under assets/baseline/, nor the optional assets/site.css, a page being a .html or .htm file in any
-case, as the CSP gate names one.
+`--check` compares every page it writes with the file on disk, byte for byte, and also fails on
+an extra page under the output folder that it does not write (a page being a .html or .htm file
+in any case, as the CSP gate names one), outside assets/baseline/. At base `/` that is all it
+checks: the root also holds the published files (llms.txt, robots.txt, _headers, images), so a
+non-page file passes `--check` there and is left to the CSP and self-containment gates. At
+`/draft/` (any base other than `/`) it also fails on any file that is neither a page it writes,
+nor under assets/baseline/, nor the optional assets/site.css.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error.
 Standard library only. No network.
@@ -229,9 +234,11 @@ class Builder:
         if description is not None:
             parts.append(f'<meta name="description" content="{attr(description)}">')
         if preview:
-            # The link-preview tags auditthis.ai carries on each indexable page, after the description.
+            # The link-preview tags auditthis.ai carries on each indexable page and on its /draft/
+            # page, after the description; og:site_name follows og:type, as auditthis.ai orders it.
             full = f"{title} | SecureConfig.ai"
-            og = (("og:type", "website"), ("og:url", canonical), ("og:title", full),
+            og = (("og:type", "website"), ("og:site_name", "SecureConfig.ai"), ("og:url", canonical),
+                  ("og:title", full),
                   ("og:description", description), ("og:image", CARD), ("og:image:type", "image/png"),
                   ("og:image:width", "1200"), ("og:image:height", "630"), ("og:image:alt", CARD_ALT))
             tw = (("twitter:card", "summary_large_image"), ("twitter:title", full),
@@ -484,13 +491,15 @@ class Builder:
 
     def draft(self):
         # The "Draft review" page at /draft/ (the owner's instruction of 2026-11-03, like
-        # auditthis.ai's): always noindex, its own canonical and description, in no index or top
-        # bar, and linked from no page. While a rebuild is staged it is replaced by the staged tree.
+        # auditthis.ai's): always noindex, its own canonical, description and link previews, in no
+        # index or top bar, and linked from no page. While a rebuild is staged it is replaced by
+        # the staged tree.
         dr = self.c["draft"]
         body = [f'<p class="lead">{self.inline(dr["lead"]["text"])}</p>', self.next_block(dr["next"])]
         return self.page("Draft review", "",
                          self.doc(dr["label"]["text"], dr["h1"]["text"], self.rail(), body),
-                         description=dr["description"]["text"], canonical=f"{ORIGIN}/draft/")
+                         description=dr["description"]["text"], canonical=f"{ORIGIN}/draft/",
+                         preview=True)
 
     def build(self):
         pages = {"index.html": self.home(), "guides/index.html": self.guides(),

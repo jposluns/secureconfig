@@ -1087,7 +1087,7 @@ done
 
 echo "== site copy buttons =="
 # Every copy button names the <pre> it copies from; a dangling data-copy is a silently dead button.
-# Every page under site/ is read, the staged draft's included; each finding names its page.
+# Every .html page under site/ is read, the /draft/ review page and the 404 included; each finding names its page.
 if missing_copy=$(python3 - <<'PY'
 import re, sys
 from pathlib import Path

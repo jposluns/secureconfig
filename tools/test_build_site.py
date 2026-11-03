@@ -8,9 +8,11 @@ while the page as generated passes.
 The base path must reach every internal link and asset at / (the default since promotion) and at
 /draft/ (the staging form). At the root, every page is indexable except the 404 page and the
 /draft/ review page, which carry the noindex meta; a staged build is noindex everywhere. The
-review page carries its canonical and description at every base, and no other page names /draft/.
-At the root each indexable page carries its description, the link-preview tags and its canonical
-in the template's head order; the 404 page, the review page and a staged build carry no previews.
+review page carries its canonical, description and link previews at every base (as auditthis.ai's
+/draft/ page does), and no other page names /draft/. At the root each indexable page and the
+review page carry their description, the link-preview tags (og:site_name after og:type) and their
+canonical in the template's head order; the 404 page and a staged build's other pages carry no
+previews.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
 page at any base; a stray file outside assets/baseline/ is refused in a staged build and allowed
 at the root, where the published files (llms.txt, robots.txt, _headers) sit beside the pages.
@@ -95,8 +97,8 @@ def main():
                     failures.append(f"base {base}: {name} lacks {needle}")
 
     # At the root, only the 404 page and the /draft/ review page are noindex; a staged build is
-    # noindex everywhere. The review page carries its canonical and description at every base, and
-    # no other page names /draft/ (its canonical is the one /draft/ spelling at the root).
+    # noindex everywhere. The review page carries its canonical, description and link previews at
+    # every base, and no other page names /draft/.
     for name, text in pages.items():
         hidden = name in ("404.html", "draft/index.html")
         if (ROBOTS_META in text) is not hidden:
@@ -111,24 +113,29 @@ def main():
         for needle in ('<link rel="canonical" href="https://secureconfig.ai/draft/">',
                        '<meta name="description" content="The path where new versions of '
                        'secureconfig.ai are staged for review before they are published.">',
+                       '<meta property="og:url" content="https://secureconfig.ai/draft/">',
+                       '<meta property="og:title" content="Draft review | SecureConfig.ai">',
+                       '<meta name="twitter:title" content="Draft review | SecureConfig.ai">',
                        "<h1>Draft review</h1>", '<p class="lbl first">Drafts</p>'):
             if needle not in review:
                 failures.append(f"base {base}: the review page lacks {needle}")
 
-    # At the root each indexable page carries its description, then the link previews, then the
-    # icons and stylesheets, then its canonical URL; the 404 page, the review page and a staged
-    # build carry no link previews, and only the review page a canonical or description.
+    # At the root each indexable page and the review page carry their description, then the link
+    # previews (og:site_name after og:type, as auditthis.ai orders it), then the icons and
+    # stylesheets, then their canonical URL; the 404 page carries no link previews, canonical or
+    # description, and a staged build's other pages no link previews or canonical.
     for name, text in pages.items():
         head = text.split("</head>", 1)[0]
-        if name in ("404.html", "draft/index.html"):
+        if name == "404.html":
             if 'property="og:' in head or 'name="twitter:' in head:
                 failures.append(f"base /: {name} carries link-preview tags")
-            if name == "404.html" and ('rel="canonical"' in head or 'name="description"' in head):
+            if 'rel="canonical"' in head or 'name="description"' in head:
                 failures.append("base /: 404.html carries a canonical or a description")
             continue
         url = build_site.ORIGIN + "/" + name[:-len("index.html")]
         needles = ("</title>", '<meta name="description" content="',
                    '<meta property="og:type" content="website">',
+                   '<meta property="og:site_name" content="SecureConfig.ai">',
                    f'<meta property="og:url" content="{url}">', '<meta property="og:title" content="',
                    '<meta property="og:description" content="',
                    f'<meta property="og:image" content="{build_site.CARD}">',
@@ -228,7 +235,8 @@ def main():
             print(f"  FAIL  {f}")
         return 1
     print(f"  ok    {len(plants)} planted refusals, the base path at / and /draft/ with the root's "
-          f"indexability, link previews and canonicals and the review page's canonical, and --check on a changed, an extra .html "
+          f"indexability, link previews and canonicals and the review page's canonical and link "
+          f"previews, and --check on a changed, an extra .html "
           f"and .HTM page, a missing page, a root-base non-page file, and the staged strays")
     return 0
 

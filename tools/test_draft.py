@@ -7,17 +7,20 @@ with a message naming the defect; each passing case makes a change the gate must
 pristine copy among them). A mutation that no longer applies RAISES, so a page edit cannot turn a
 case into a pristine run.
 
-The staged-era cases retired with the staging they policed: the folded draft-segment rule over
-live pages and the published indexes, the /draft/* header rule, the fold's fail-closed limits and
-the llms-full.txt token reading all guarded a /draft/ tree that no longer exists, and
-segment_rule, fold and their cases went with them. What carried over is retargeted to the
-generated pages at the root: the robots-meta reading (now on the /draft/ review page and the 404,
-with every other page carrying none), every URL-shape refusal (a browser-normalized host, a
-trailing-dot, upper-case, percent-encoded or non-ASCII host, a Pages alias, https:/// and
-scheme-relative spellings, a backslash, whitespace, javascript:), the URL attributes beyond href
-and src, http-equiv, the new-tab hint, the Disclosure and Licence link rule, site/_redirects, CSS
-@import and url() containment and the site.css grammar. New at the root: a root-relative link must
-name a file under site/, the review page's canonical has its own rule, and no page links /draft/.
+The staged-era /draft/* header rule retired with the staging it policed. What carried over is
+retargeted to the generated pages at the root: the robots-meta reading (now on the /draft/ review
+page and the 404, with every other page carrying none), every URL-shape refusal (a
+browser-normalized host, a trailing-dot, upper-case, percent-encoded or non-ASCII host, a Pages
+alias, https:/// and scheme-relative spellings, a backslash, whitespace, javascript:), the URL
+attributes beyond href and src, http-equiv, the new-tab hint, site/_redirects, CSS @import and
+url() containment and the site.css grammar. New at the root: a root-relative link must name a file
+under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable pages and the
+review page, none on the 404); the "no page links /draft/" and Disclosure and Licence rules compare
+the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
+percent-encoded letter or a fragment does not get past them; and site/llms.txt, site/llms-full.txt
+and site/robots.txt are refused when a URL or path token names the draft segment in any of the
+spellings `/draft/`, `/Draft/`, `/%64raft/` or `https://secureconfig.ai/draft`, while prose that
+merely says "draft" is accepted.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -74,9 +77,36 @@ STRAY = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<ti
          '</head>\n<body><a href="/nowhere/">gone</a></body>\n</html>\n')
 
 
+def append(rel, text):
+    """text added at the end of an existing file."""
+    def mutate(d):
+        path = d / rel
+        if not path.is_file():
+            raise AssertionError(f"mutation target {rel} does not exist")
+        path.write_text(path.read_text(encoding="utf-8") + text, encoding="utf-8")
+    return mutate
+
+
 def link(value):
     """The home page's first /guides/ link pointed at value."""
     return edit(HOME, START, f'href="{value}"')
+
+
+def guides_link(value):
+    """A link to value planted in the Guides page's top bar, before its For AI assistants link."""
+    return edit(GUIDES, '<a href="/for-ai/">', f'<a href="{value}">x</a><a href="/for-ai/">')
+
+
+# Each spelling of the /draft/ path planted in each published index (PART 3 of the gate).
+DRAFT_SPELLINGS = ("/draft/", "/Draft/", "/%64raft/", "https://secureconfig.ai/draft")
+INDEX_LINES = {
+    "site/llms.txt": "- [Review]({}): the next version\n",
+    "site/llms-full.txt": "The next version is staged at {} for review.\n",
+    "site/robots.txt": "Disallow: {}\n",
+}
+INDEX_CASES = [(f"{rel[5:]} naming {spelling}", append(rel, line.format(spelling)),
+                "names the /draft/ path", 1)
+               for rel, line in INDEX_LINES.items() for spelling in DRAFT_SPELLINGS]
 
 
 # (description, mutation, expected text, expected exit)
@@ -155,18 +185,51 @@ CASES = [
     ("an inner page linking the Licence page",
      edit(GUIDES, '<a href="/for-ai/">', '<a href="/license/">Licence</a><a href="/for-ai/">'),
      "only the landing page", 1),
+    ("an inner page linking the Disclosure page through a dot segment, a query and a fragment",
+     guides_link("/guides/../disclosure/index.html?x#y"), "only the landing page", 1),
+    ("an inner page linking the Licence page with a percent-encoded letter",
+     guides_link("/%6cicense/"), "only the landing page", 1),
     ("a page linking the /draft/ review page",
      edit(HOME, '<a class="start"', '<a href="/draft/">drafts</a><a class="start"'),
      "no page links the /draft/ review page", 1),
+    ("a link to /draft/ with a query", link("/draft/?x"), "no page links the /draft/ review page", 1),
+    ("a link to /draft/ with an extra slash", link("/draft//"),
+     "no page links the /draft/ review page", 1),
+    ("a link to /draft/ through a dot segment", link("/guides/../draft/"),
+     "no page links the /draft/ review page", 1),
+    ("a link to /draft/ through a percent-encoded dot segment", link("/guides/%2e%2e/draft/"),
+     "no page links the /draft/ review page", 1),
+    ("a link to /draft/ with a percent-encoded letter", link("/%64raft/"),
+     "no page links the /draft/ review page", 1),
+    ("a link to /draft/index.html with a fragment", link("/draft/index.html#a"),
+     "no page links the /draft/ review page", 1),
     ("the review page's canonical on another host",
      edit(REVIEW, 'href="https://secureconfig.ai/draft/"', 'href="https://example.net/draft/"'),
-     "is not an absolute https://secureconfig.ai URL", 1),
+     "is not this page's own URL", 1),
     ("the review page's canonical naming a missing path",
      edit(REVIEW, 'href="https://secureconfig.ai/draft/"', 'href="https://secureconfig.ai/nowhere/"'),
-     "is not an absolute https://secureconfig.ai URL", 1),
+     "is not this page's own URL", 1),
     ("a canonical over plain HTTP",
      edit(REVIEW, 'href="https://secureconfig.ai/draft/"', 'href="http://secureconfig.ai/draft/"'),
-     "is not an absolute https://secureconfig.ai URL", 1),
+     "is not this page's own URL", 1),
+    ("the review page's canonical resolving to another page, the home page",
+     edit(REVIEW, 'href="https://secureconfig.ai/draft/"', 'href="https://secureconfig.ai/"'),
+     "the canonical 'https://secureconfig.ai/' is not this page's own URL", 1),
+    ("an indexable page without its canonical",
+     edit(GUIDES, '<link rel="canonical" href="https://secureconfig.ai/guides/">\n', ""),
+     "site/guides/index.html must carry exactly 1 canonical", 1),
+    ("an indexable page with a second canonical, also its own URL",
+     edit(HOME, '<link rel="canonical" href="https://secureconfig.ai/">',
+          '<link rel="canonical" href="https://secureconfig.ai/">\n'
+          '<link rel="canonical" href="https://secureconfig.ai/">'),
+     "site/index.html must carry exactly 1 canonical", 1),
+    ("a canonical on the 404 page",
+     edit(P404, "</head>", '<link rel="canonical" href="https://secureconfig.ai/404.html">\n</head>'),
+     "the 404 page carries none", 1),
+    *INDEX_CASES,
+    ("llms-full.txt prose that merely says draft",
+     append("site/llms-full.txt", "Write a draft of the policy first; the Draft review comes "
+            "later, and draft-ietf-oauth and drafts are words, not paths.\n"), OK_LINE, 0),
     ("a stylesheet url() outside site/assets/",
      write("site/assets/site.css", ".statement { --sw: 14; }\n.x { background: url(/logo.svg); }\n"),
      "is not a relative path", 1),
@@ -249,8 +312,9 @@ def main():
             print(f"  FAIL  {f}")
         return 1
     refusals = sum(1 for case in CASES if case[3])
-    print(f"  ok    {len(CASES)} self-containment and indexability cases at the root ({refusals} "
-          f"refusals and {len(CASES) - refusals} accepted changes, the pristine site among them), "
+    print(f"  ok    {len(CASES)} self-containment, indexability and published-index cases at the "
+          f"root ({refusals} refusals and {len(CASES) - refusals} accepted changes, the pristine "
+          f"site among them), "
           f"and 2 generated-page cases (a Unicode host refused, a site.css accepted by the build "
           f"and the gate)")
     return 0
