@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
 """Cases for check_sitemap.py: the real files pass, and each defect it names fails.
 
-Each case copies the real gate into a throwaway tree with the real site/index.html, site/404.html,
-site/robots.txt and site/sitemap.xml, applies one change, and runs the gate as a subprocess, so
-what is under test is the shipped entry point. A must-fail case names a substring its finding must
-carry; every case checks the exit status, the ok line on a pass and a FAIL line on a refusal.
+Each case copies the real gate and the modules it imports (check_draft.py, check_csp_hashes.py)
+into a throwaway tree with the real site/index.html, site/404.html, site/robots.txt and
+site/sitemap.xml, applies one change, and runs the gate as a subprocess, so what is under test is
+the shipped entry point. A must-fail case names a substring its finding must carry; every case
+checks the exit status, the ok line on a pass and a FAIL line on a refusal.
+
+Each run sets the BASE line of the copied check_draft.py, so the cases hold whichever base the
+shipped file names. CASES run at base /draft/, the staged site. ROOT_CASES run at base /, the
+value check_draft.py's docstring names for promotion, where the draft rules are off. One case at
+each base writes the pages of scripts/build-site.py, under site/draft/ at /draft/ and with
+`--base / --out <tree>/site` at /, the promoted form.
 """
 import re
 import shutil
@@ -16,6 +23,10 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 SITE = ROOT / "site"
+BUILD = ROOT / "scripts" / "build-site.py"
+GATES = ("check_sitemap.py", "check_draft.py", "check_csp_hashes.py")
+# The line of check_draft.py that sets the base path, which each run sets to its own base.
+BASE_LINE = re.compile(r'^BASE = "[^"\n]*"$', re.M)
 REAL = {name: (SITE / name).read_bytes() for name in
         ("index.html", "404.html", "robots.txt", "sitemap.xml")}
 SITEMAP = REAL["sitemap.xml"].decode("utf-8")
@@ -38,12 +49,18 @@ def with_entry(path, lastmod=LASTMOD):
     return SITEMAP.replace("</urlset>", entry(path, lastmod) + "</urlset>", 1)
 
 
-def run(files=None, setup=None):
+def run(files=None, setup=None, base="/draft/"):
     """Run the real gate against the real files with `files` (name: str, bytes or None) applied."""
     d = Path(tempfile.mkdtemp())
     try:
         (d / "tools").mkdir()
-        shutil.copy(TOOLS / "check_sitemap.py", d / "tools" / "check_sitemap.py")
+        for gate in GATES:
+            shutil.copy(TOOLS / gate, d / "tools" / gate)
+        draft = d / "tools" / "check_draft.py"
+        text, count = BASE_LINE.subn(f'BASE = "{base}"', draft.read_text(encoding="utf-8"))
+        if count != 1:
+            return None, f"check_draft.py holds {count} BASE lines; this test sets exactly 1"
+        draft.write_text(text, encoding="utf-8")
         (d / "site").mkdir()
         merged = dict(REAL)
         merged.update(files or {})
@@ -67,11 +84,23 @@ def symlinked(d):
     (d / "site" / "sitemap.xml").symlink_to("real.xml")
 
 
+def built(base, out):
+    """A setup that writes the pages of scripts/build-site.py for `base` under `out` in the tree."""
+    def setup(d):
+        r = subprocess.run([sys.executable, "-I", "-B", str(BUILD), "--base", base,
+                            "--out", str(d / out)], capture_output=True, text=True, timeout=120)
+        if r.returncode:
+            raise RuntimeError(f"build-site.py --base {base} failed: {r.stdout + r.stderr}")
+    return setup
+
+
 # (description, files, setup, expected substring for a refusal or None for a pass)
 CASES = [
     ("the real files", None, None, None),
     ("a /draft/ tree with its own index pages, left out of the sitemap",
      {"draft/index.html": INDEXABLE, "draft/guides/index.html": INDEXABLE}, None, None),
+    ("the draft build of scripts/build-site.py under site/draft/, left out of the sitemap", None,
+     built("/draft/", "site/draft"), None),
     ("a second live folder page, listed",
      {"guides/index.html": INDEXABLE, "sitemap.xml": with_entry("/guides/")}, None, None),
     ("a listed folder page whose robots meta carries noindex, nofollow",
@@ -160,15 +189,28 @@ CASES = [
     ("no robots.txt", {"robots.txt": None}, None, "site/robots.txt is missing"),
 ]
 
+# The same shape as CASES, run at base / (after promotion).
+ROOT_CASES = [
+    ("the real files", None, None, None),
+    ("the promoted build of scripts/build-site.py at the root, its indexable pages listed", None,
+     built("/", "site"), None),
+    ("a site/draft/ folder page, a live page at the root base, left out",
+     {"draft/index.html": INDEXABLE}, None, "does not list https://secureconfig.ai/draft/"),
+    ("a /draft/ loc at the root base, naming its folder page",
+     {"draft/index.html": INDEXABLE, "sitemap.xml": with_entry("/draft/")}, None, None),
+]
+
 
 def main() -> int:
     failures = []
-    for desc, files, setup, expected in CASES:
+    for (desc, files, setup, expected), base in (
+            [(case, "/draft/") for case in CASES] + [(case, "/") for case in ROOT_CASES]):
+        desc = desc if base == "/draft/" else f"base /: {desc}"
         for name, content in (files or {}).items():
             if name in REAL and content is not None and (
                     content if isinstance(content, bytes) else content.encode("utf-8")) == REAL[name]:
                 failures.append(f"{desc}: the mutation of {name} did not change the real file")
-        rc, out = run(files, setup)
+        rc, out = run(files, setup, base)
         if rc != (0 if expected is None else 1):
             failures.append(f"{desc}: expected the gate to {'pass' if expected is None else 'fail'}"
                             f", exit {rc}: {out!r}")
@@ -184,7 +226,8 @@ def main() -> int:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {len(CASES)} recorded cases for the sitemap gate")
+    print(f"  ok    {len(CASES) + len(ROOT_CASES)} recorded cases for the sitemap gate, "
+          f"{len(ROOT_CASES)} of them at base /")
     return 0
 
 

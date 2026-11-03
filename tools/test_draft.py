@@ -19,6 +19,22 @@ and sitemap.xml cases, and guards that IETF drafts, `/drafts-archive`, this repo
 fail-closed limits (a tab, newline or carriage return inside `draft`, a leading or trailing space,
 a leading newline, and a value still changing after 32 rounds of percent-decoding, beside 1 that
 resolves in 17) and robots.txt's `*` and `$` wildcards, with `/draft-` and `/drafts` still passing.
+The LOW rows from rounds 4 and 5 added llms-full.txt tokens that a quote splits off this site's
+host, that hold the host anywhere (percent-encoded too), or that carry a scheme-like prefix other
+than http or https (`see:/draft/`, 2 prefixes, inside brackets, and `ftp://`), a token that is no
+site token still changing after 32 rounds, and guards that a mail address on this site,
+`/drafts-archive` and `/draft-` paths behind a prefix, a quoted IETF draft, a quoted repository
+path and a control character in another host's URL pass. QA round 1 of #1184 added 2 tokens the
+base gate refused by the host after a slashless prefix other than http or https, a Pages alias
+(`ftp:foo.pages.dev/draft/`) and a non-ASCII host (`see:example。net/draft/`).
+
+Beside the cases: 3 cases read fold's still-changing flag directly, and the base-path checks build
+the pages with scripts/build-site.py into a scratch folder, once with check_draft.BASE (the staged
+form) and once with `--base /` (the promoted form). Every root-relative URL a page carries is
+written to llms-full.txt as a bare path, as a URL on this site and behind `see:`: the gate refuses
+exactly the forms of the staged URLs under the base (not the 2 live files) and accepts every form
+of the promoted build's URLs. segment_rule(`/`) matches none of them, so the draft-segment rules
+switch off at the root.
 """
 import shutil
 import subprocess
@@ -28,6 +44,9 @@ from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
+sys.path.insert(0, str(TOOLS))
+import check_draft  # noqa: E402  (BASE, SITE_HOST, fold, segment_rule and the page parser)
+
 LIVE = ("_headers", "llms.txt", "robots.txt", "sitemap.xml", "index.html", "404.html")
 
 
@@ -303,6 +322,50 @@ CASES = [
      append("site/robots.txt", "\nAllow: /draft$\n"), "site/robots.txt names a draft path segment", 1),
     ("robots.txt naming /draft- and /drafts paths, which are no draft path segment",
      append("site/robots.txt", "\nDisallow: /draft-ietf-x\nDisallow: /drafts\n"), "8 draft pages", 0),
+    # QA rounds 4 and 5 of #1182: llms-full.txt tokens split by a quote or read through a prefix.
+    ("llms-full.txt naming the draft after a quote inside a URL on this site",
+     write("site/llms-full.txt", "See https://secureconfig.ai/a'b/../../draft/ for the draft.\n"),
+     "names a draft path segment on this site in \"https://secureconfig.ai/a'b/../../draft/\"", 1),
+    ("llms-full.txt naming the draft behind a prose prefix read as a scheme",
+     write("site/llms-full.txt", "The staged site, see:/draft/, is not indexed.\n"),
+     "names a draft path segment on this site in 'see:/draft/'", 1),
+    ("llms-full.txt naming the draft behind 2 scheme-like prefixes",
+     write("site/llms-full.txt", "See note:see:/draft/ for it.\n"),
+     "names a draft path segment on this site in 'note:see:/draft/'", 1),
+    ("llms-full.txt naming the draft behind a prose prefix inside brackets",
+     write("site/llms-full.txt", "The staged site (see:/draft/) is not indexed.\n"),
+     "names a draft path segment on this site in 'see:/draft/'", 1),
+    ("llms-full.txt naming this site's host inside another host's URL, beside a draft segment",
+     write("site/llms-full.txt", "See https://example.net/?u=secureconfig.ai/draft/ for it.\n"),
+     "names a draft path segment on this site", 1),
+    ("llms-full.txt naming this site's percent-encoded host inside another host's URL",
+     write("site/llms-full.txt", "See https://example.net/secureconfig%2Eai/draft/ for it.\n"),
+     "names a draft path segment on this site", 1),
+    ("llms-full.txt naming a draft path through another scheme, read as a bare path",
+     write("site/llms-full.txt", "See ftp://example.net/draft/ for it.\n"),
+     "names a draft path segment on this site in 'ftp://example.net/draft/'", 1),
+    ("llms-full.txt naming another host's URL still changing after 32 rounds of percent-decoding",
+     write("site/llms-full.txt", "See https://example.net/%25" + "25" * 40 + "41 for it.\n"),
+     "is still changing after 32 rounds of percent-decoding", 1),
+    ("llms-full.txt naming this site's host in a mail address and /drafts-archive behind a prefix",
+     write("site/llms-full.txt", "Write to mailto:security@secureconfig.ai or see:/drafts-archive.\n"),
+     "8 draft pages", 0),
+    ("llms-full.txt quoting an IETF draft behind a prefix, and a /draft- path behind one",
+     write("site/llms-full.txt",
+           "Read 'see:https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/' and see:/draft-notes.\n"),
+     "8 draft pages", 0),
+    ("llms-full.txt quoting this repository's site/draft/ folder",
+     write("site/llms-full.txt", "Run cp -r 'site/draft/assets/' \"site/draft/x/\" now.\n"),
+     "8 draft pages", 0),
+    ("llms-full.txt naming another host's URL with a tab reference, which is no site token",
+     write("site/llms-full.txt", "See https://example.net/a&#9;b for it.\n"), "8 draft pages", 0),
+    # QA round 1 of #1184: the host after a slashless prefix other than http or https still counts.
+    ("llms-full.txt naming the draft on a Pages host behind a slashless ftp: prefix",
+     write("site/llms-full.txt", "See ftp:foo.pages.dev/draft/ for it.\n"),
+     "names a draft path segment on this site in 'ftp:foo.pages.dev/draft/'", 1),
+    ("llms-full.txt naming the draft on a non-ASCII host behind a prose prefix",
+     write("site/llms-full.txt", "See see:example。net/draft/ for it.\n"),
+     "names a draft path segment on this site in 'see:example。net/draft/'", 1),
     ("the pristine draft", None, "8 draft pages", 0),
 ]
 
@@ -335,8 +398,80 @@ def generated(edit_content, extra=None):
         shutil.rmtree(d, ignore_errors=True)
 
 
-def main():
+def built_urls(base):
+    """The root-relative URLs on the pages scripts/build-site.py writes with --base base, into a
+    scratch folder."""
+    d = Path(tempfile.mkdtemp())
+    try:
+        r = subprocess.run([sys.executable, "-I", "-B", str(ROOT / "scripts" / "build-site.py"),
+                            "--base", base, "--out", str(d / "out")],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode:
+            raise AssertionError(f"build-site.py --base {base} exited {r.returncode}: "
+                                 f"{(r.stdout + r.stderr).strip()!r}")
+        urls = set()
+        for page in check_draft.page_files(d / "out"):
+            for _, _, value in check_draft.parse(page.read_text(encoding="utf-8")).urls:
+                if value.startswith("/") and not value.startswith("//"):
+                    urls.add(value)
+        return sorted(urls)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def forms(url):
+    """A root-relative URL as llms-full.txt could name it: bare, on this site, behind `see:`."""
+    return [url, f"https://{check_draft.SITE_HOST}{url}", f"see:{url}"]
+
+
+def base_path_failures():
+    """The staged build's same-site URLs are each refused in llms-full.txt, the promoted build's
+    are all accepted, and segment_rule(`/`) matches none of them."""
     failures = []
+    staged, promoted = built_urls(check_draft.BASE), built_urls("/")
+    under = [u for u in staged if u.startswith(check_draft.BASE)]
+    if not under or not promoted:
+        failures.append(f"base paths: the builds carried {len(under)} URLs under "
+                        f"{check_draft.BASE} and {len(promoted)} at /; each needs at least 1")
+    tokens = [f for u in staged for f in forms(u)]
+    rc, out = run(write("site/llms-full.txt", "\n".join(tokens) + "\n"))
+    named = [t for t in tokens if f"on this site in {t!r};" in out]
+    want = [f for u in under for f in forms(u)]
+    if rc != 1 or named != want:
+        failures.append(f"base {check_draft.BASE}: llms-full.txt should refuse exactly the "
+                        f"{len(want)} forms of the URLs under the base; exit {rc}, refused "
+                        f"{named!r}: {out!r}")
+    rc, out = run(write("site/llms-full.txt", "\n".join(f for u in promoted for f in forms(u)) + "\n"))
+    if rc != 0 or "8 draft pages" not in out:
+        failures.append(f"base /: llms-full.txt naming the promoted build's URLs should pass; "
+                        f"exit {rc}: {out!r}")
+    root_rule = check_draft.segment_rule("/")
+    matched = [f for u in staged + promoted for f in forms(u)
+               if root_rule.search(check_draft.fold(f, entities=True)[0])]
+    if matched:
+        failures.append(f"base /: segment_rule('/') should match nothing; it matched {matched!r}")
+    if check_draft.segment_rule(check_draft.BASE).pattern != check_draft.DRAFT_SEGMENT.pattern:
+        failures.append("DRAFT_SEGMENT is not segment_rule(BASE)")
+    return failures
+
+
+def fold_flag_failures():
+    """fold flags a value still changing after MAX_DECODES rounds, and only that value: 1 that
+    settles in 17 rounds has no reason, and 1 with a tab has a reason but no flag."""
+    # (value, still changing, has a reason)
+    cases = (("/%25" + "25" * 40 + "64raft/", True, True), ("/%25" + "25" * 15 + "64raft/", False, False),
+             ("/dr&#9;aft/", False, True))
+    failures = []
+    for value, changing_want, why_want in cases:
+        _, why, changing = check_draft.fold(value, entities=True)
+        if changing is not changing_want or (why is not None) is not why_want:
+            failures.append(f"fold({value!r}): still changing {changing}, reason {why!r}; "
+                            f"expected still changing {changing_want}, a reason {why_want}")
+    return failures
+
+
+def main():
+    failures = fold_flag_failures() + base_path_failures()
     for desc, mutate, expected, want in CASES:
         rc, out = run(mutate)
         if rc != want:
@@ -366,8 +501,9 @@ def main():
         return 1
     refusals = sum(1 for case in CASES if case[3])
     print(f"  ok    {len(CASES)} draft noindex and self-containment cases ({refusals} refusals and "
-          f"{len(CASES) - refusals} accepted changes, the pristine draft among them), and 2 "
-          f"generated-page cases (a Unicode host refused, a site.css accepted by the build and the gate)")
+          f"{len(CASES) - refusals} accepted changes, the pristine draft among them), 2 "
+          f"generated-page cases (a Unicode host refused, a site.css accepted by the build and the "
+          f"gate), 3 fold-flag cases, and the base-path checks at {check_draft.BASE} and /")
     return 0
 
 

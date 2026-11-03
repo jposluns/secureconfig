@@ -18,22 +18,33 @@ WHAT IT CHECKS:
     no other element, no attribute and no text outside `loc` and `lastmod` but whitespace;
   - every `loc` is `https://secureconfig.ai` and a path, with no query, fragment, `..`, `.` or
     empty segment and no percent sign, that is `/` or ends with `/`, so it names the folder page
-    `site/<path>index.html`. That page exists as a regular file, is not under /draft/, and carries
-    no robots meta tag whose content includes `noindex` or `none` (which means `noindex,
-    nofollow`), each read as one comma-separated token in any case. No `loc` is listed twice;
+    `site/<path>index.html` (page_of). That page exists as a regular file, is not under the
+    draft's base path while the site is staged, and carries no robots meta tag whose content
+    includes `noindex` or `none` (which means `noindex, nofollow`), each read as one
+    comma-separated token in any case. No `loc` is listed twice;
   - every `lastmod` is a calendar date written YYYY-MM-DD;
-  - every indexable live page is listed: each `index.html` under site/ outside site/draft/ with no
-    robots `noindex` or `none`. Any other `.html` outside site/draft/ must carry `noindex` or
-    `none` (site/404.html carries `noindex`), because this gate maps only folder pages to URLs;
+  - every indexable live page is listed: each `index.html` under site/, outside the draft tree
+    while the site is staged, with no robots `noindex` or `none`. Any other `.html` there must
+    carry `noindex` or `none` (site/404.html carries `noindex`), because this gate maps only
+    folder pages to URLs;
   - site/robots.txt carries exactly one Sitemap line (the field name in any case), and it is
     `Sitemap: https://secureconfig.ai/sitemap.xml`.
 
-WHAT IT DOES NOT CHECK: that a `lastmod` is the date the page last changed. Its source is the
-page's last change in git history (`git log -1 --format=%cs -- <page>`) when the sitemap was
-written, and this gate reads no history, so an edit to a listed page leaves its `lastmod` stale
-until a reviewer updates it. It does not check how a host or crawler treats either file, or the
-protocol's size limits, which one URL is far inside. The robots `noindex` reading is a lexical
-scan of `<meta>` tags with html.parser, not a browser's reading of the page.
+THE BASE PATH: the draft tree (DRAFT, site/draft) and its base path (BASE, /draft/) are imported
+from tools/check_draft.py, so this gate keeps no copy of its own. The site is staged while BASE is
+not `/`. When promotion sets BASE to `/`, the two draft rules above switch off: no `loc` is
+refused as a draft page, and every page under site/ is a live page. That needs no edit here only
+while tools/check_draft.py stays importable with BASE = "/". If that gate is retired or rewritten
+and DRAFT and BASE move, the import below must name their new home, still with BASE = "/"; until
+it does, this gate and tools/check_sitemap_lastmod.py fail at import.
+
+WHAT IT DOES NOT CHECK: that a `lastmod` is the date the page last changed. That needs git
+history, and this gate reads none, so it runs the same with or without a repository;
+tools/check_sitemap_lastmod.py compares each `lastmod` with `git log -1 --format=%cs -- <page>`
+for the page that page_of maps its `loc` to. This gate does not check how a host or crawler
+treats either file, or the protocol's size limits, which one URL is far inside. The robots
+`noindex` reading is a lexical scan of `<meta>` tags with html.parser, not a browser's reading of
+the page.
 
 Exit 0 with one ok line, or 1 with one FAIL line per finding.
 """
@@ -46,10 +57,14 @@ from html.parser import HTMLParser
 from pathlib import Path
 from xml.parsers import expat
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from check_draft import BASE, DRAFT  # noqa: E402  (the draft tree and its base path)
+
 SITE = Path("site")
 SITEMAP = SITE / "sitemap.xml"
 ROBOTS = SITE / "robots.txt"
-DRAFT = SITE / "draft"
+# The draft rules hold only while the site is staged below the root.
+STAGED = BASE != "/"
 ORIGIN = "https://secureconfig.ai"
 SITEMAP_URL = f"{ORIGIN}/sitemap.xml"
 NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -159,12 +174,29 @@ def parse_sitemap(text):
     return entries, findings
 
 
+def page_of(loc):
+    """(page, None) for a loc in the one URL form this gate maps, else (None, the reason).
+
+    `https://secureconfig.ai/` maps to site/index.html and `https://secureconfig.ai/<path>/` to
+    site/<path>/index.html, relative to the root, at any depth. While the site is staged, a loc
+    under BASE maps to no page. Whether the page exists is not checked here.
+    """
+    path = loc[len(ORIGIN):] if loc.startswith(ORIGIN + "/") else None
+    if path is None or not FOLDER_PATH.fullmatch(path):
+        return None, (f"loc {loc!r} is not {ORIGIN} and a folder path ending with /, "
+                      f"the only URL form this gate maps to a page")
+    if STAGED and path.startswith(BASE):
+        return None, f"loc {loc!r} is a {BASE} page, which stays out of search"
+    return (SITE / path.strip("/") / "index.html" if path != "/" else SITE / "index.html"), None
+
+
 def live_pages(root):
-    """(folder page paths relative to root, other HTML paths), outside site/draft/, no links followed."""
+    """(folder page paths, other HTML paths) relative to root, skipping DRAFT while staged; no
+    links followed."""
     folders, others = [], []
     for current, dirs, files in os.walk(root / SITE):
         here = Path(current).relative_to(root)
-        dirs[:] = sorted(d for d in dirs if here / d != DRAFT)
+        dirs[:] = sorted(d for d in dirs if not (STAGED and here / d == DRAFT))
         for f in sorted(files):
             if f.lower().endswith((".html", ".htm")):
                 (folders if f == "index.html" else others).append(here / f)
@@ -201,19 +233,14 @@ def check(root):
             valid_date = False
         if not valid_date:
             findings.append(f"{line}: lastmod {lastmod!r} is not a calendar date written YYYY-MM-DD")
-        path = loc[len(ORIGIN):] if loc.startswith(ORIGIN + "/") else None
-        if path is None or not FOLDER_PATH.fullmatch(path):
-            findings.append(f"{line}: loc {loc!r} is not {ORIGIN} and a folder path ending with /, "
-                            f"the only URL form this gate maps to a page")
-            continue
-        if path == "/draft/" or path.startswith("/draft/"):
-            findings.append(f"{line}: loc {loc!r} is a /draft/ page, which stays out of search")
+        page, reason = page_of(loc)
+        if reason:
+            findings.append(f"{line}: {reason}")
             continue
         if loc in listed:
             findings.append(f"{line}: loc {loc!r} is listed more than once")
             continue
         listed.add(loc)
-        page = SITE / path.strip("/") / "index.html" if path != "/" else SITE / "index.html"
         reason = regular(root, page)
         if reason:
             findings.append(f"{line}: loc {loc!r} names {page}, but {reason}")
@@ -268,8 +295,9 @@ def main() -> int:
         for finding in findings:
             print(f"  FAIL  {finding}")
         return 1
+    draft = f" and none under {BASE}" if STAGED else ""
     print(f"  ok    {SITEMAP} lists all {count} indexable live page(s), each existing with a "
-          f"lastmod and none under /draft/, and {ROBOTS} names it in one Sitemap line")
+          f"lastmod{draft}, and {ROBOTS} names it in one Sitemap line")
     return 0
 
 

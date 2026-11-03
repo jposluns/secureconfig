@@ -15,13 +15,18 @@ file name they load, such as scripts/copy-baseline.py):
     3-quote delimiter for a triple-quoted one), a backslash anywhere in a replacement field (in a
     token, or in the source text between 2 tokens, which is where a line continuation sits), a `#`
     comment in a replacement field, or a line break in a replacement field of a single-quoted
-    f-string.
+    f-string. The source text between 2 tokens is read from the file's lines as the tokenizer
+    reads them, broken only after `\\n` (`str.splitlines` also breaks at `\\r` and `\\r\\n`, and at
+    `\\x0b`, `\\x0c`, `\\x1c` to `\\x1e`, U+0085, U+2028 and U+2029, any of which but `\\r\\n`
+    would shift every later row).
 
 Before the files, it runs its own cases (SELF_CASES): each of those 4 forms is refused, the
-backslash both in a string and as a line continuation, while a
-double-quoted key inside a triple-double-quoted f-string, a single-quoted key inside a
-double-quoted f-string, a line break inside a triple-quoted f-string's field and a backslash in
-literal text pass.
+backslash both in a string and as a line continuation (the continuation also after a line
+holding a form feed), while a double-quoted key inside a triple-double-quoted f-string, a
+single-quoted key inside a double-quoted f-string, a line break inside a triple-quoted f-string's
+field (also after a form feed, below a line of backslashes), a backslash in literal text, and
+literal backslashes beside escaped `{{` and `}}` (on 1 line, across a backslash-newline, and in a
+triple-quoted f-string) pass.
 
 WHAT IT DOES NOT PROVE: that the files run on 3.11. `feature_version` is a best-effort grammar check,
 the tokenizer used is this interpreter's, nothing checks that every standard-library name the files
@@ -71,7 +76,8 @@ def delimiter(token_text):
 def pep701_forms(text):
     """(line, form) for each Python 3.12-only f-string form in text; see the docstring."""
     out, stack, prev = [], [], None
-    lines = text.splitlines(keepends=True)
+    # The rows the tokenizer counts: broken only after \n, unlike str.splitlines.
+    lines = io.StringIO(text).readlines()
 
     def between(start, end):
         """The source text between 2 token positions (rows 1-based, columns 0-based)."""
@@ -126,6 +132,13 @@ SELF_CASES = (
     ("x = {'a': 1}\ny = f\"{x['a']}\"\n", None),
     ('x = 1\ny = f"""{x\n+ 1}"""\n', None),
     ('x = 1\ny = f"a\\n{x}b"\n', None),
+    # A form feed before an f-string: str.splitlines rows would read the line above.
+    ('x = 1\n\x0cy = "\\\\\\\\\\\\\\\\"\nz = f"""{x\n+ 1}"""\n', None),
+    ('x = 1\n\x0cy = 2\nz = f"""{x + \\\n1}"""\n', "backslash"),
+    # Literal backslashes beside escaped braces, which the tokenizer splits into pieces.
+    ('x = 1\ny = f"{x}{{\\\\}}{x}"\n', None),
+    ('x = 1\ny = f"a{{\\\n}}\\\\{x}"\n', None),
+    ('x = 1\ny = f"""{{\\\n{x}}}\\\\"""\n', None),
 )
 
 

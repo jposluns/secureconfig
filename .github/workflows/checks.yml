@@ -72,7 +72,9 @@ jobs:
       # trailing comment names the release each SHA was taken from; bump the two together.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
-          fetch-depth: 0   # the changelog-coverage gate reads the merge history
+          # The changelog-coverage gate reads the merge history, and the sitemap lastmod gate dates
+          # each listed page by its last commit; both fail closed on a shallow clone.
+          fetch-depth: 0
           # No gate pushes or fetches, so the token is not left in .git/config for later steps.
           persist-credentials: false
       # The gate suite parses HTML with html.parser, whose rawtext edge behaviour has shifted
