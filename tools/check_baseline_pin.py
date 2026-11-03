@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that the copied site template files match their pin in .baseline/pin.toml.
 
-WHY: the draft site publishes the shared template's runtime files (stylesheets, fonts, the copy
+WHY: the site publishes the shared template's runtime files (stylesheets, fonts, the copy
 script, logos and marks) copied byte for byte from a published baseline version. A copied file
 that is edited, replaced or added to stops being the version every family site shares, and nothing
 in a diff of a minified stylesheet or a font says so. This gate fails if any file under the copy
@@ -11,7 +11,7 @@ WHAT IT CHECKS, offline, with the standard library only:
 
   - .baseline/pin.toml parses as TOML and carries a `version`, an `upstream` URL, the package's
     `sha256sums_sha256`, and a `[files]` table mapping each copied file's path, relative to
-    site/draft/ and so starting with assets/baseline/ (the baseline README's form), to a
+    site/ and so starting with assets/baseline/ (the baseline README's form), to a
     64-character SHA-256;
   - every pinned path is a plain relative path inside the copy folder (no `..`, no absolute path,
     no backslash);
@@ -27,7 +27,7 @@ WHAT IT CHECKS, offline, with the standard library only:
 
 WHAT IT DOES NOT PROVE: that the pin is the published version. scripts/copy-baseline.py checks the
 package's SHA256SUMS against the published digest at copy time; this gate checks that nothing has
-changed since. It also says nothing about a site/draft/assets/site.css, which would be the site's own file.
+changed since. It also says nothing about a site/assets/site.css, which would be the site's own file.
 
 Exit 0 when every file matches, 1 on a finding, 2 when the pin or the folder cannot be read.
 Usage: python3 -I -B tools/check_baseline_pin.py [--root <repository root>]
@@ -42,7 +42,7 @@ import tomllib
 from pathlib import Path, PurePosixPath
 
 PIN = Path(".baseline") / "pin.toml"
-DEST = "site/draft/assets/baseline"
+DEST = "site/assets/baseline"
 KEY_PREFIX = "assets/baseline/"
 HEX64 = re.compile(r"[0-9a-f]{64}")
 
@@ -96,7 +96,7 @@ def check(root):
     if not isinstance(keyed, dict) or not keyed:
         findings.append(f"{PIN} has no [files] table")
         keyed = {}
-    # Keys are paths relative to site/draft/ (the baseline README's form), so each starts with
+    # Keys are paths relative to site/ (the baseline README's form), so each starts with
     # assets/baseline/; the checks below read them relative to the copy folder.
     files = {}
     for key, digest in keyed.items():

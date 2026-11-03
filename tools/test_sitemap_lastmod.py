@@ -11,9 +11,9 @@ and the substrings its finding must carry; a pass must print one ok line and no 
 
 Each run sets the BASE line of the fixture's copy of check_draft.py to the case's base, so the
 cases hold whichever base the shipped file names. The base-path cases take their pages from
-scripts/build-site.py. At base /draft/ the draft build sits under site/draft/, unlisted and
-undated, beside a live root page. At base /, the value check_draft.py's docstring names for
-promotion, the promoted build (`--base / --out <fixture>/site`) puts the template pages at the
+scripts/build-site.py. At base /draft/ the staged build sits under site/draft/, unlisted and
+undated, beside a live root page. At base /, the shipped value since promotion, the promoted
+build (`--base / --out <fixture>/site`) puts the template pages at the
 root, where the sitemap lists all of its folder pages and each is dated by its own file. One case
 also runs check_sitemap.py on the stale fixture, which it accepts, so the staleness is caught only
 by this gate.
@@ -326,11 +326,15 @@ def promoted_subpage_current(tmp):
 
 
 def promoted_draft_loc(tmp):
+    # At base / a /draft/ loc is an ordinary path; the promoted build writes the review page at
+    # site/draft/index.html (committed 2026-10-08 here), so a wrong lastmod on it is a mismatch
+    # like any other. promote() already lists it with the right date; this lists it again, stale.
     repo = promote(tmp)
     text = (repo.root / "site" / "sitemap.xml").read_text(encoding="utf-8")
-    repo.commit("2026-10-09T12:00:00+00:00", {"site/sitemap.xml": text.replace(
-        "</urlset>", "  <url>\n    <loc>https://secureconfig.ai/draft/</loc>\n"
-        "    <lastmod>2026-10-06</lastmod>\n  </url>\n</urlset>")})
+    old = "/draft/</loc>\n    <lastmod>2026-10-08</lastmod>"
+    assert text.count(old) == 1, text
+    repo.commit("2026-10-09T12:00:00+00:00",
+                {"site/sitemap.xml": text.replace(old, old.replace("2026-10-08", "2026-10-06"))})
     return repo.root
 
 
@@ -383,8 +387,9 @@ CASES = [
       "set the lastmod of https://secureconfig.ai/guides/ to 2026-10-10")),
     ("base /: a promoted subpage edited later, with its lastmod", promoted_subpage_current, "/",
      0, ()),
-    ("base /: a /draft/ loc is an ordinary path, naming a page promotion removed",
-     promoted_draft_loc, "/", 1, ("site/draft/index.html is missing",)),
+    ("base /: a /draft/ loc is an ordinary path, dated by the review page like any other",
+     promoted_draft_loc, "/", 1,
+     ("site/draft/index.html last changed", "on 2026-10-08", "its lastmod is '2026-10-06'")),
 ]
 
 

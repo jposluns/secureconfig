@@ -18,17 +18,16 @@ first on PATH that records each call and runs no gate. It runs the script's own 
 with this interpreter and sys.version_info set to the version it reports (3.10.12 or 3.11.5), so
 an inverted or wrong comparison fails the cases below. The gates are read from the script (every
 `python3 -I -B <file>.py` call outside a comment, wherever it sits on its line, so a gate behind a
-condition is still expected to run), so the cases hold when promotion edits that list:
+condition is still expected to run), so the cases hold when the script's gate list changes:
   - a python3 that reports 3.10: exit 1, the message naming Python 3.11 on standard error, and no
     gate run (only the version check and `python3 --version` are called);
   - a python3 that reports 3.11: the version check, then every gate in the script's order, each
     once, then exit 0 and "Pages build check passed.";
   - each gate in turn exiting 1: the build exits non-zero at that gate, runs no later gate, and does
     not print the passed line.
-Every case runs on the committed script (base /draft/) and on a promoted form at / derived from
-it: the check_draft.py line removed (check_draft.py's docstring retires that gate at promotion)
-and `--base / --out site` added to the build-site.py --check line unless it names a base already.
-Once the committed script is in that form, it runs once.
+The committed script is the promoted root form (promotion made `/` build-site.py's default base
+and rewrote tools/check_draft.py for the root), so each case runs on it once; the staged form and
+the derived promoted variant this test once ran retired with the staging.
 
 Nothing here runs a real gate; tools/run_all_checks.sh runs those. Exit 0 ok, 1 on a finding.
 """
@@ -120,14 +119,6 @@ def run_gate_failures():
     return failures
 
 
-def promoted(text):
-    """pages-build.sh as it reads at the root: no check_draft.py line, and build-site.py --check
-    given `--base / --out site` unless it names a base already."""
-    text = re.sub(r"^python3 [^\n]*tools/check_draft\.py[^\n]*\n", "", text, flags=re.M)
-    return re.sub(r"^(python3 -I -B scripts/build-site\.py --check)$", r"\1 --base / --out site",
-                  text, flags=re.M)
-
-
 def build(script_text, version, fail=""):
     """Run a copy of pages-build.sh with the stand-in python3: (exit, stdout, stderr, calls)."""
     d = Path(tempfile.mkdtemp())
@@ -165,8 +156,6 @@ def pages_build_failures():
     failures, count = [], 0
     committed = BUILD.read_text(encoding="utf-8")
     forms = {"the committed script": committed}
-    if promoted(committed) != committed:  # once promoted, the committed script is the root form
-        forms["its promoted form at /"] = promoted(committed)
     for name, text in forms.items():
         gates = gates_of(text)
         if not gates:

@@ -1,6 +1,7 @@
 {
-  "_about": "Page copy for scripts/build-site.py. Inline syntax: [text](url) is a link (a URL starting with / is internal and takes the base path, except the live files /llms.txt and /llms-full.txt; a relative path names a file in the repository on GitHub; http and https are external and open in a new tab), `text` is code, *text* is emphasis. Counts in {braces} are computed by the generator from README.md and this file. Every entry carries the source of its facts. Dedicated to the public domain under CC0 1.0.",
+  "_about": "Page copy for scripts/build-site.py. Inline syntax: [text](url) is a link (a URL starting with / is internal and takes the base path; a relative path names a file in the repository on GitHub; http and https are external and open in a new tab), `text` is code, *text* is emphasis. Counts in {braces} are computed by the generator from README.md and this file. Every entry carries the source of its facts. Dedicated to the public domain under CC0 1.0.",
   "home": {
+    "description": {"text": "Deployment exposure guides for AI-assisted projects: TLS, identity, MFA, secrets, and network controls for web apps, AI infrastructure, and the services behind them.", "source": "The live home page's description meta before promotion (site/index.html line 7 at 6a9501b2), verbatim"},
     "kicker": {"text": "Encryption, identity, access, exposure, AI.", "source": "Owner-approved mockup home.html (prompt line 20)"},
     "statement": {"text": "The secure option *at every decision.*", "source": "Owner-approved mockup home.html (prompt line 20)"},
     "intro": {"text": "AI assistants can ship services on plain HTTP, leave admin consoles and AI tools on default credentials, and keep default settings unless told otherwise. SecureConfig gives your assistant short, copy-ready guides that make the secure option the default at each deployment decision. Guides include checks your assistant runs and reports, including what it could not verify.", "source": "Owner-approved mockup home.html; 'Each guide ends with checks' changed to 'Guides include checks' (owner decision 2, 2026-11-03, and QA round 1 of #1182): guides end with Common mistakes and Sources after Verify (nginx.md lines 146, 316, 323), and common-mistakes.md carries no Verify section of its own (CONTRIBUTING.md rule 2); 'without a login' changed to 'on default credentials' (owner, baseline SPECIFICATION 1.3 section 2, 'SecureConfig introduction')"},
@@ -15,6 +16,7 @@
     "about": {"links": ["[Disclosure](/disclosure/)", "[Licence](/license/)", "[Privacy](https://posluns.ca/privacy/)", "[Security](https://posluns.ca/security/)"], "source": "Baseline 1.3.1 SPECIFICATION section 7.24 and reference/landing.html; the owner's template note of 2026-11-03"}
   },
   "guides": {
+    "description": {"text": "{guides} deployment exposure guides in {categories} categories, from certificates to AI infrastructure, each a Markdown file read in the repository or fetched raw.", "source": "The home tile for this page; this page's meta ('Every guide is a Markdown file in the repository, read on GitHub or fetched raw') and scope ('The guides cover deployment exposure'); counts computed from README.md Guide index; worded without ' on ', which the build's on* refusal reads inside a tag"},
     "meta": {"text": "Every guide is a Markdown file in the repository, read on GitHub or fetched raw by an assistant. Jump to a category, then open a guide; most guides record the sources checked and, where known, the exact versions.", "source": "README.md lines 13 and 48; site/index.html line 304"},
     "scope": {"text": "The guides cover deployment exposure: TLS, human and machine authentication, MFA, access restrictions, secrets, and inbound and outbound network access, from first deployment through teardown. General application security, including injection, deserialization, and business logic flaws, belongs to the OWASP resources linked throughout the guides. Each guide stays in the repository on GitHub; this site holds the index, the rules for assistants, the tasks, and the checklist.", "source": "README.md lines 31 and 255"},
     "figures": {"source": "Counts computed from README.md Guide index and Verification checklist"},
@@ -28,6 +30,7 @@
     "next": {"line": "The {rules} rules an assistant applies with these guides.", "text": "Rules for AI assistants", "href": "/for-ai/", "source": "README.md Instructions for AI development assistants"}
   },
   "for_ai": {
+    "description": {"text": "The {rules} rules an AI assistant applies to every service it configures, generates, or reviews, and the pattern to fetch each guide raw.", "source": "This page's meta ('configuring, generating, or reviewing a service, apply these {rules} rules') and fetch line ('Fetch a guide raw from this pattern'); the home tile for this page; count from README.md Instructions for AI development assistants"},
     "h1": {"text": "Rules for AI development assistants", "source": "README.md heading 'Instructions for AI development assistants'"},
     "meta": {"text": "If you are an AI assistant configuring, generating, or reviewing a service, apply these {rules} rules. Start with [README.md](README.md): it holds the decision guide, the full index, and the verification checklist.", "source": "README.md line 35; site/index.html line 305"},
     "note": {"text": "This page speaks to AI assistants. If you are human, the fastest path is the [ready-made tasks](/for-humans/): copy one and paste it into your assistant.", "source": "site/index.html line 287"},
@@ -42,6 +45,7 @@
     "next": {"line": "Rule {rules} points here: {checks} checks to run before reporting completion.", "text": "The verification checklist", "href": "/checklist/", "source": "README.md rule 10"}
   },
   "for_humans": {
+    "description": {"text": "{tasks} ready-made tasks to copy and paste into your AI assistant: secure the project, review the AI stack, add single sign-on, and more.", "source": "This page's meta ('Copy a task and paste it into your AI assistant') and task titles; the home tile for this page; count computed from the tasks below"},
     "meta": {"text": "Copy a task and paste it into your AI assistant. Each task names the repository it draws on; {checklist_tasks} of them run the README verification checklist, and {approval_tasks} ask for your approval before any change.", "source": "The task texts below (site/index.html lines 312-344); the counts are computed from them"},
     "tasks": [
       {"id": "secure-text", "title": "Secure or audit this project", "prompt": "Secure this project using the guides at https://github.com/jposluns/secureconfig (see https://secureconfig.ai). Audit it first: list every listening service with its TLS and authentication state, and report the gaps as a table. Propose the fix for each gap per the matching guide (TLS on every endpoint, strong authentication, MFA where viable, and no secrets in the repository) and wait for my approval before changing anything. After approval, apply the fixes, run the README verification checklist, and report anything you could not test.", "source": "site/index.html lines 311-313"},
@@ -54,6 +58,7 @@
     "next": {"line": "Or go straight to the guide for your stack.", "text": "Browse the guides", "href": "/guides/", "source": "Mockup for-humans.html; README.md line 28"}
   },
   "checklist": {
+    "description": {"text": "{checks} checks to run before reporting completion, each with its command or method, and every result recorded as pass, fail, untested, or not applicable.", "source": "The home tile for this page ('with the command or method for each'); this page's meta ('Record each result as pass, fail, untested, or not applicable'); count from README.md Verification checklist"},
     "meta": {"text": "Run the applicable checks and the Verify steps in every selected guide, in a fresh shell such as one started with `bash --norc --noprofile -i`. Replace `REPLACE_WITH_YOUR_HOST` with your own host before running anything. Record each result as pass, fail, untested, or not applicable, with evidence or a reason.", "source": "README.md line 235"},
     "scope": {"text": "The README marks every checklist item REASONED: each rests on its cited sources and records that it was not run against a deployment. Items 1 to 4 record local syntax checks and stub runs only. Item 8 names tools rather than a command and sets no pass threshold.", "source": "README.md lines 237-247"},
     "rule": {"text": "Report a control as verified only for the checks that passed, and report every item you could not test instead of asserting that it passed.", "source": "README.md line 235 and rule 10 (line 46)"},
@@ -74,6 +79,7 @@
     "next": {"line": "The ready-made tasks that change your project end by running this checklist.", "text": "Copy a ready-made task", "href": "/for-humans/", "source": "Tasks 1 to 4 (site/index.html lines 312-331)"}
   },
   "disclosure": {
+    "description": {"text": "What the project claims, the limit of each claim, and the evidence for both, from how the guides are sourced to what the site loads.", "source": "This page's meta ('what the project claims, the limit of each claim, and the evidence for both') and its first and sixth entry titles"},
     "meta": {"text": "This page sets out what the project claims, the limit of each claim, and the evidence for both. Each entry covers 1 thing the project does: the claim and its limitation stand side by side, each pointing to the evidence.", "source": "Owner's site prompt line 29; reference/disclosure.html line 23"},
     "entries": [
       {"id": "d-1", "title": "How the guides are sourced",
@@ -126,6 +132,7 @@
     "next": {"text": "Home", "href": "/", "source": "reference/disclosure.html line 42"}
   },
   "license": {
+    "description": {"text": "SecureConfig.ai is published under CC0 1.0 Universal, with exceptions that include the AIQT Guardrails material, the template's fonts, and the footer's marks.", "source": "This page's meta ('SecureConfig.ai is published under CC0 1.0 Universal, with the exceptions listed below') and parts 1 to 3"},
     "meta": {"text": "SecureConfig.ai is published under CC0 1.0 Universal, with the exceptions listed below. The licence text is the authority; this page summarizes it.", "source": "LICENSE line 3; reference/license.html line 20"},
     "scope": {"text": "The guides, the configuration samples, and the site are dedicated to the public domain. Read [the licence file](https://github.com/jposluns/secureconfig/blob/main/LICENSE) in the repository, or [the canonical licence text](https://creativecommons.org/publicdomain/zero/1.0/).", "source": "README.md line 259"},
     "parts": [
@@ -152,7 +159,14 @@
     "next": {"line": "Or read the repository on [GitHub](https://github.com/jposluns/secureconfig).", "text": "Home", "href": "/", "source": "reference/license.html line 33"}
   },
   "notfound": {
-    "lead": {"text": "The guide index, the rules for AI assistants, the ready-made tasks and the checklist are linked from the bar above.", "source": "The top bar of every draft page; mockup 404.html"},
+    "lead": {"text": "The guide index, the rules for AI assistants, the ready-made tasks and the checklist are linked from the bar above.", "source": "The top bar of every page; mockup 404.html"},
     "next": {"text": "Home", "href": "/", "source": "SPECIFICATION section 7.17"}
+  },
+  "draft": {
+    "label": {"text": "Drafts", "source": "auditthis.ai/draft/ as served on 2026-11-03 (the owner's instruction: a similar page)"},
+    "h1": {"text": "Draft review", "source": "auditthis.ai/draft/ as served on 2026-11-03"},
+    "lead": {"text": "This path holds new versions of the site for review before they are published. Nothing is staged here now; the published site is at the home page.", "source": "auditthis.ai/draft/ as served on 2026-11-03; baseline SPECIFICATION section 4.1"},
+    "description": {"text": "The path where new versions of secureconfig.ai are staged for review before they are published.", "source": "auditthis.ai/draft/ description meta, with this site's name"},
+    "next": {"text": "Home", "href": "/", "source": "auditthis.ai/draft/ Next block"}
   }
 }
