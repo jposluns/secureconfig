@@ -236,9 +236,9 @@ CASES = (
     ("an edited stylesheet nobody repinned",
      PAGE.replace(":root", "/* an edit */\n    :root", 1), None, True, "lacks the hash"),
     ("an edited inline script nobody repinned", SCRIPT_PAGE, None, True, "lacks the hash"),
-    ("a style= attribute, which no hash can ever cover",
+    ("a style= attribute, which no pin this gate checks can cover",
      PAGE.replace("<body", '<body style="color:red"', 1), None, True,
-     "a CSP hash covers an element's text, never an attribute, so no pin here could cover one"),
+     "this gate pins only an element's text, never an attribute"),
     ("'unsafe-inline' coming back",
      None, re.sub(r"style-src '[^']*'", "style-src 'unsafe-inline'", HEADERS, count=1), True,
      "'unsafe-inline'"),
@@ -386,7 +386,7 @@ CASES = (
      {"404.html": PAGE_404.replace("<style>", "<style>\x00", 1)}, None, True, "NUL byte"),
     ("a style= attribute on the 404 page's body",
      {"404.html": PAGE_404.replace("<body", '<body style="color:red"', 1)}, None, True,
-     "a CSP hash covers an element's text, never an attribute, so no pin here could cover one"),
+     "this gate pins only an element's text, never an attribute"),
     ("a <STYLE> smuggled through <svg><title> on the 404 page",
      {"404.html": SVG_TITLE_STYLE_404}, None, True, "openers"),
     ("a <script> smuggled through <svg><title> on the script-free 404 page",
@@ -746,10 +746,10 @@ scope_case("P5 a handler-bearing tag in a JavaScript string is script text, repi
            page=ONTAG_JS_PAGE, headers=repinned(ONTAG_JS_PAGE, "script"))
 scope_case("P5 a handler-bearing tag in a page comment fails closed", expected="on* handler",
            page=PAGE.replace("</body>", "<!-- <b onclick> -->\n</body>", 1))
-# The on* literal-accounting message fires only beside another refusal: every place html.parser
-# misses a tag (a comment, CDATA, a declaration, raw text, SVG integration points) is also refused
-# by rule 2 or 3, which is why the docstring calls the accounting defense in depth. This case, an
-# allowlisted <a> in a comment, pins its wording beside rule 2's comment finding.
+# The on* literal-accounting message: this case, an allowlisted <a> in a comment, pins its count
+# wording beside rule 2's comment finding. Whether the message can fire with no other finding is
+# not established here (a quoted attribute value can also hide a real tag from the literal scan),
+# so no case claims either way.
 scope_case("P5 the on* accounting message, beside the comment refusal",
            expected="literal on* attribute names in tags and this gate accounts for 0",
            page=PAGE.replace("</body>", "<!-- <a onclick> -->\n</body>", 1))
