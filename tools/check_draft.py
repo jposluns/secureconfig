@@ -28,10 +28,11 @@ PART 1, KEPT OUT OF SEARCH:
     before any segment is read, failing closed: one that holds an ASCII control character (U+0000
     to U+001F, U+007F) or a space anywhere once entities are decoded, which a browser may strip
     from a URL; and one still changing after MAX_DECODES (32) rounds of percent-decoding. A folded
-    value is refused when it holds `draft` as a whole path segment: at its start or after a `/`,
-    and followed by its end, `/`, `?`, `#`, `;`, `*`, `$` or a character that cannot appear in a
-    URL (`*` and `$` end it because robots.txt reads them as wildcards, so `Disallow: /draft*` and
-    `Allow: /draft$` name the draft). So `draft-ietf-...` and `/drafts-archive` pass, while
+    value is refused when it holds `draft` (the base path BASE without its outer slashes, read by
+    segment_rule) as a whole path segment: at its start or after a `/`, and followed by its end,
+    `/`, `?`, `#`, `;`, `*`, `$` or a character that cannot appear in a URL (`*` and `$` end it
+    because robots.txt reads them as wildcards, so `Disallow: /draft*` and `Allow: /draft$` name
+    the draft). So `draft-ietf-...` and `/drafts-archive` pass, while
     `https:////secureconfig.ai/draft/`, `/x/%2e%2e/draft/`, `%252fdraft` and `\\draft/` fail,
     whatever the scheme, slashes or host;
   - on a live page (site/**/*.html or .htm outside site/draft/) the rule reads every URL-bearing
@@ -42,10 +43,20 @@ PART 1, KEPT OUT OF SEARCH:
     backticks, and loses any trailing `.`, `,`, `;`, `:`, `!` or `?`, which end a sentence rather
     than a URL);
   - in site/llms-full.txt, which carries every guide's external references and README's own
-    repository paths such as `site/draft/assets/baseline/`, the rule reads only the tokens that are
-    URLs on this site or a pages.dev host (after any scheme and any run of slashes, with a host
-    that is not plain ASCII counted as this site's), tokens that start with this site's host, and
-    bare same-site paths starting with `/`; a whole-file rule would refuse those repository paths.
+    repository paths such as `site/draft/assets/baseline/`, the rule reads as tokens each
+    whitespace-delimited word whole (less the same trailing punctuation) and each token in it, so a
+    quote or a bracket inside a URL (`https://secureconfig.ai/a'b/../../draft/`) cannot split this
+    site's host off from the rest. Of those it reads only the SITE TOKENS, failing closed: any that
+    holds this site's host anywhere once folded; any whose host after a scheme-like prefix, of any
+    scheme, and any run of slashes is this site's or a pages.dev host, a host that is not plain
+    ASCII counting as this site's (so `ftp:foo.pages.dev/draft/` is one); and a bare same-site
+    path, one that starts with `/` once every leading scheme-like prefix other than `http:` and
+    `https:` is removed (so `see:/draft/` is also read as the path `/draft/`, and
+    `ftp://example.net/draft/` as the path `//example.net/draft/`). A site
+    token is refused on the 2 limits above or when it names a draft path segment; any token, site
+    token or not, is refused when it is still changing after MAX_DECODES (32) rounds of
+    percent-decoding. Each word gives at most 1 finding. A whole-file rule would refuse those
+    repository paths.
 
 PART 2, SELF-CONTAINED:
   - every URL a draft page carries, in any attribute whose name ends in `href` or `src` (so
@@ -75,7 +86,8 @@ PART 2, SELF-CONTAINED:
 
 AT PROMOTION: the base path becomes `/`, LIVE_EXCEPTIONS is emptied (the files then sit beside the
 pages), part 1's draft rules are removed with the /draft/ noindex, and this gate is retired or
-rewritten for the root. Exit 0 ok, 1 on a finding, 2 on a read error.
+rewritten for the root. segment_rule(`/`) matches nothing, so the draft-segment rules refuse no
+path once BASE is `/`. Exit 0 ok, 1 on a finding, 2 on a read error.
 Usage: python3 -I -B tools/check_draft.py [--root <repository root>]
 """
 import argparse
@@ -101,13 +113,25 @@ URL_LISTS = {"srcset", "imagesrcset"}
 URL_NAMES = {"formaction", "action", "ping", "poster", "background"}
 BAD_URL_CHARS = re.compile(r"[\x00-\x20\x7f\\]")
 AUTHORITY = re.compile(r"(?i)^https?://[^/?#\\\s]")
-# A `draft` path segment in a folded value: at its start or after `/`, then its end, `/`, `?`, `#`,
-# `;`, `*`, `$` (robots.txt wildcards) or a character that cannot appear in a URL (see the docstring).
-DRAFT_SEGMENT = re.compile(r"(?:^|/)draft(?=$|[/?#;*$]|[^a-z0-9._~%!&'()+,=:@-])")
+
+
+def segment_rule(base):
+    """The base path's name (`draft` for /draft/) as a path segment in a folded value: at its start
+    or after `/`, then its end, `/`, `?`, `#`, `;`, `*`, `$` (robots.txt wildcards) or a character
+    that cannot appear in a URL (see the docstring). At the root `/` there is no name, and the rule
+    matches nothing."""
+    name = base.strip("/").casefold()
+    if not name:
+        return re.compile(r"(?!)")
+    return re.compile(rf"(?:^|/){re.escape(name)}(?=$|[/?#;*$]|[^a-z0-9._~%!&'()+,=:@-])")
+
+
+DRAFT_SEGMENT = segment_rule(BASE)
 # A token of an index file: text between whitespace, quotes, angle brackets, brackets, braces,
 # pipes and backticks.
 TOKEN = re.compile(r"[^\s<>\"'`()\[\]{}|]+")
-SCHEME_HOST = re.compile(r"^[a-z][a-z0-9+.-]*:/*([^/?#]*)")
+# A scheme-like prefix and the host after it and any run of slashes.
+SCHEME_HOST = re.compile(r"^([a-z][a-z0-9+.-]*):/*([^/?#]*)")
 # Fail-closed limits of the fold: an ASCII control character or a space anywhere in a value once
 # entities are decoded, and a value still changing after this many rounds of percent-decoding.
 CONTROL_OR_SPACE = re.compile(r"[\x00-\x20\x7f]")
@@ -243,31 +267,34 @@ def check_url(root, value):
 
 
 def fold(value, entities=False):
-    """(folded form, reason it is refused or None) for the draft-segment rule: entities decoded (where
-    asked), percent-decoding applied until the text stops changing, a backslash read as a slash, and
-    the result case-folded. The reason is set when the entity-decoded value holds an ASCII control
-    character or a space, or is still changing after MAX_DECODES rounds of percent-decoding."""
+    """(folded form, reason it is refused or None, still changing) for the draft-segment rule:
+    entities decoded (where asked), percent-decoding applied until the text stops changing, a
+    backslash read as a slash, and the result case-folded. The reason is set when the entity-decoded
+    value holds an ASCII control character or a space, or is still changing after MAX_DECODES rounds
+    of percent-decoding; the last item is True in that second case alone."""
     if entities:
         value = html.unescape(value)
     why = None
     if CONTROL_OR_SPACE.search(value):
         why = ("contains an ASCII control character or a space, which a browser may strip from a "
                "URL; the gate refuses it")
+    changing = False
     for _ in range(MAX_DECODES):
         decoded = unquote(value)
         if decoded == value:
             break
         value = decoded
     else:
-        if unquote(value) != value:
+        changing = unquote(value) != value
+        if changing:
             why = (f"is still changing after {MAX_DECODES} rounds of percent-decoding; the gate "
                    f"refuses it")
-    return value.replace("\\", "/").casefold(), why
+    return value.replace("\\", "/").casefold(), why, changing
 
 
 def draft_finding(value, entities=False):
     """Why a value is refused by the draft-segment rule (see fold), or None."""
-    folded, why = fold(value, entities)
+    folded, why, _ = fold(value, entities)
     if why:
         return why
     if DRAFT_SEGMENT.search(folded):
@@ -281,15 +308,31 @@ def tokens(text):
     return [t.rstrip(".,;:!?") for t in TOKEN.findall(text)]
 
 
+def full_tokens(text):
+    """For each whitespace-delimited word of llms-full.txt, the word itself (less trailing sentence
+    punctuation) and then its tokens, once each, so a quote or bracket inside a word cannot split
+    this site's host off from the path after it."""
+    for word in text.split():
+        yield list(dict.fromkeys([word.rstrip(".,;:!?")] + tokens(word)))
+
+
 def site_token(folded):
-    """True for a folded llms-full.txt token that is a URL on this site or a pages.dev host (a host
-    that is not plain ASCII counts as this site's), starts with this site's host, or is a bare
-    same-site path."""
-    m = SCHEME_HOST.match(folded)
-    if m:
-        host = re.sub(r":[0-9]*$", "", m.group(1).rsplit("@", 1)[-1]).rstrip(".")
-        return not host.isascii() or site_host(host)
-    return folded.startswith(("/", SITE_HOST, "www." + SITE_HOST))
+    """True for a folded llms-full.txt token that holds this site's host anywhere, names this site
+    or a pages.dev host after a scheme-like prefix (a host that is not plain ASCII counts as this
+    site's), or is a bare same-site path: one that starts with `/` once every leading scheme-like
+    prefix other than `http:` and `https:` is removed, so `see:/draft/` is the path `/draft/`.
+    Both readings of a prefix count, failing closed, so `ftp:foo.pages.dev/draft/` is a site token
+    too."""
+    if SITE_HOST in folded:
+        return True
+    while m := SCHEME_HOST.match(folded):
+        host = re.sub(r":[0-9]*$", "", m.group(2).rsplit("@", 1)[-1]).rstrip(".")
+        if not host.isascii() or site_host(host):
+            return True
+        if m.group(1) in ("http", "https"):
+            return False
+        folded = folded[m.end(1) + 1:]
+    return folded.startswith("/")
 
 
 def css_unescape(text):
@@ -351,7 +394,7 @@ def check(root):
             for token in tokens(path.read_text(encoding="utf-8")):
                 if "/" not in token:
                     continue
-                folded, why = fold(token, entities=True)
+                folded, why, _ = fold(token, entities=True)
                 if why:
                     findings.append(f"site/{index}: the token {token!r} {why}")
                 elif DRAFT_SEGMENT.search(folded):
@@ -359,13 +402,18 @@ def check(root):
                                     f"draft stays out of every index")
     full = root / "site" / "llms-full.txt"
     if full.is_file():
-        for token in tokens(full.read_text(encoding="utf-8")):
-            folded, why = fold(token, entities=True)
-            if why and (site_token(folded) or "rounds of percent-decoding" in why):
-                findings.append(f"site/llms-full.txt: the token {token!r} {why}")
-            elif site_token(folded) and DRAFT_SEGMENT.search(folded):
-                findings.append(f"site/llms-full.txt names a draft path segment on this site in "
-                                f"{token!r}; the draft stays out of every index")
+        for word in full_tokens(full.read_text(encoding="utf-8")):
+            # 1 finding per word: its whole form, then its tokens.
+            for token in word:
+                folded, why, changing = fold(token, entities=True)
+                site = site_token(folded)
+                if why and (site or changing):
+                    findings.append(f"site/llms-full.txt: the token {token!r} {why}")
+                    break
+                if site and DRAFT_SEGMENT.search(folded):
+                    findings.append(f"site/llms-full.txt names a draft path segment on this site in "
+                                    f"{token!r}; the draft stays out of every index")
+                    break
     for page in page_files(root / "site"):
         rel = page.relative_to(root)
         if DRAFT in rel.parents:
