@@ -5,17 +5,17 @@
 # package's SHA256SUMS. Never edit a copied file. A new baseline version is 1 pull request that
 # reruns the copy script and commits the copied files and this pin together.
 
-version = "1.3.1"
-upstream = "https://posluns.ca/baseline/1.3.1/"
-archive_sha256 = "0b769629a17f974bca21def045a94ef4751e591440ca44f1d14d7789987052d9"
-sha256sums_sha256 = "64dc26f31a3f191a5e5ba299b7991936af23716ecf770ad1bae69070957c97d5"
+version = "1.4.1"
+upstream = "https://posluns.ca/baseline/1.4.1/"
+archive_sha256 = "1bba8c486b3050a737ddcba4dd36b5ea4199d42e4e7ff61d93998cf0439f03eb"
+sha256sums_sha256 = "a08d0d37cd5634daec2049d0f614a566f950b93b1a797d58b7c254bf4881a60c"
 copied = "2026-11-03"
 
 # Paths are relative to site/draft/.
 [files]
 "assets/baseline/LICENSE" = "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
 "assets/baseline/NOTICE.md" = "08b26141bb2ecf0f4cd76e599c21f888fc71c4b3ab7ba769e954f6eea37ac7f3"
-"assets/baseline/baseline.css" = "9d8e4d5307af49f607e89bcb3ac32a80d25f9e86253572b65559cd35cd4e16e9"
+"assets/baseline/baseline.css" = "8af38c8d65033c376475a3c65bcd90496010dd5a396c24aaa08d222d31619490"
 "assets/baseline/copy.js" = "9bf99b50471889b768c795af5a4f84f526cecf7622a1f1265ca3d088b31339a4"
 "assets/baseline/fonts.css" = "a309a8ff4026a67fb5d10dea2c02e5b9ea2c1b32d4b18d7892015e038397396a"
 "assets/baseline/fonts/dancing-script-LICENSE.txt" = "c02c0002d3bbd41a16933c162888c400469c7029f1362ca9d60d5ed20ea7d157"
