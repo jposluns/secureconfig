@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cases for scripts/build-site.py: its refusals, its base path, and its --check mode.
 
-The refusals are SPECIFICATION section 12's: a page carrying an en or em dash, an inline style or
+The refusals are SPECIFICATION section 12's: a page carrying a dash character (U+2010 to U+2015, U+2212), an inline style or
 style= attribute, an inline script, an on* attribute or "what this is" framing is never written.
 Each is planted in a real generated page and must be refused, while the page as generated passes.
 The base path must reach every internal link and asset at /draft/ and at /, and --check must
@@ -49,8 +49,12 @@ def main():
         ("a section rail without rail.js",
          rail_page.replace('<script src="/draft/assets/baseline/rail.js" defer></script>\n', "", 1),
          "without rail.js"),
-        ("an en dash", home.replace("Start here", "Start–here", 1), "en or em dash"),
-        ("an em dash", home.replace("Start here", "Start—here", 1), "en or em dash"),
+        ("an en dash", home.replace("Start here", "Start–here", 1), "dash character"),
+        ("an em dash", home.replace("Start here", "Start—here", 1), "dash character"),
+        ("a hyphen character U+2010", home.replace("Start here", "Start‐here", 1), "dash character"),
+        ("a figure dash", home.replace("Start here", "Start‒here", 1), "dash character"),
+        ("a horizontal bar", home.replace("Start here", "Start―here", 1), "dash character"),
+        ("a minus sign", home.replace("Start here", "Start−here", 1), "dash character"),
         ("a style block", home.replace("</head>", "<style>p{}</style></head>", 1), "inline style"),
         ("a style= attribute", home.replace('<p class="intro">', '<p class="intro" style="x">', 1),
          "inline style"),
@@ -131,6 +135,16 @@ def main():
         if rc != 0:
             failures.append(f"--check refused a file under assets/baseline/, which the pin gate "
                             f"owns: {text!r}")
+        # QA round 2: the optional assets/site.css (baseline README) is allowed beside the pages;
+        # tools/check_draft.py holds its grammar.
+        (out / "assets" / "site.css").write_text(".statement { --sw: 13.9; }\n", encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 0:
+            failures.append(f"--check refused assets/site.css, which the baseline allows: {text!r}")
+        (out / "assets" / "other.css").write_text("p{}", encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "assets/other.css is neither" not in text:
+            failures.append(f"--check accepted assets/other.css beside site.css: {text!r}")
         shutil.rmtree(out / "assets")
         (out / "404.html").unlink()
         rc, text = run("--check", "--out", str(out))
@@ -148,7 +162,7 @@ def main():
             print(f"  FAIL  {f}")
         return 1
     print(f"  ok    {len(plants)} planted refusals, the base path at /draft/ and /, and --check on a "
-          f"changed, an extra .html and .HTM page, a stray file and a missing page")
+          f"changed, an extra .html and .HTM page, a stray file, an allowed site.css and a missing page")
     return 0
 
 

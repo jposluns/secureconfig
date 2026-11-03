@@ -215,7 +215,10 @@ PAGES, carry no inline block at all (their scripts are same-origin baseline file
 under the draft element allowlist. One `/draft/*` rule may detach the live policy and set the shared
 draft policy, exactly DRAFT_POLICY, which carries `'unsafe-inline'` and Cloudflare's hosts by the
 owner's decision; that rule is read only for the draft, and everything above still holds for the live
-pages and every other rule. The draft's own 404 page (site/draft/404.html) is served for missing
+pages and every other rule. A `/draft/*` rule with any other lines is an ordinary rule. Any rule other
+than `/*` and the modelled one whose path pattern can match `/draft` or a path under `/draft/` may set
+or detach no header except a Content-Security-Policy (refused above by the one-policy model), `/*` may
+not carry X-Robots-Tag, and a rule outside the modelled syntax is refused. The draft's own 404 page (site/draft/404.html) is served for missing
 paths under /draft/, so this rule governs it there. The exception goes at promotion.
 
 WHAT IT STILL DOES NOT COVER, stated rather than left to be found: a document embedded with `srcdoc`
@@ -307,9 +310,11 @@ PAGE_ELEMENTS = frozenset((
 # (no SVG family and no `style`), so an element the generator never writes is refused even where the
 # draft policy's 'unsafe-inline' would run what it carries. The draft is governed by 1 `/draft/*`
 # rule whose lines are exactly DRAFT_RULE_LINES (the detach, the shared 6-site draft policy and the
-# noindex), and no other rule that can match a path under /draft/ may set or detach any header. At
-# promotion these constants, the live model's hashes and the 28-element list go together; see the
-# PR that adds them.
+# noindex). Any other rule whose path pattern can match /draft or a path under /draft/, read from its
+# literal prefix (rule_reaches), may set or detach no header but a Content-Security-Policy, which the
+# one-policy model refuses with its own messages; `/*` may not carry X-Robots-Tag; and a rule outside
+# RULE_SYNTAX is refused. At promotion these constants, the live model's hashes and the 28-element
+# list go together; see the PR that adds them.
 DRAFT = Path("site") / "draft"
 DRAFT_RULE = "/draft/*"
 DRAFT_POLICY = ("default-src 'none'; script-src 'self' 'unsafe-inline' https://ajax.cloudflare.com "
@@ -323,9 +328,10 @@ DRAFT_ELEMENTS = frozenset((
     "footer", "section", "div", "span", "p", "h1", "h2", "h3", "em", "strong", "small", "code",
     "pre", "button", "img", "ul", "ol", "li", "table", "caption", "thead", "tbody", "tr", "th",
     "td"))
-# Paths under /draft/ that a header rule is tested against, besides every draft page's own URL.
-DRAFT_PROBES = ["/draft/", "/draft/x", "/draft/x/", "/draft/x/y", "/draft/404.html",
-                "/draft/assets/baseline/baseline.css", "/draft/no-such-path"]
+# The `_headers` rule syntax the draft model reads: an optional http(s)://host (letters, digits, dots,
+# hyphens, `*` and `:placeholder`), then a path of unreserved characters, `*` splats and
+# `:placeholder` segments. Anything else (a percent escape, a query, whitespace) is refused.
+RULE_SYNTAX = re.compile(r"(?:https?://[A-Za-z0-9.*:-]+)?/[A-Za-z0-9._~!$&'()+,;=@:*/-]*")
 DRAFT_SCRIPT = re.compile(r'<script src="/draft/assets/baseline/[a-z]+\.js" defer></script>')
 TAG_NAME = re.compile(r"</?([A-Za-z][^\t\n\f />]*)")
 ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
@@ -742,36 +748,56 @@ def draft_rule_findings(blocks, drafts):
     """Reasons the header rules are outside the draft model: at most 1 `/draft/*` rule, its lines
     exactly DRAFT_RULE_LINES, the rule present whenever site/draft/ holds a page, and no other rule
     that can match a path under /draft/ setting or detaching any header other than a CSP."""
-    rules = [lines for rule, lines in blocks if rule == DRAFT_RULE]
-    if len(rules) > 1:
-        return [f"{HEADERS} has {len(rules)} {DRAFT_RULE} rules, and this gate models 1"]
+    exact = [rule for rule, lines in blocks if is_draft_rule(rule, lines)]
+    if len(exact) > 1:
+        return [f"{HEADERS} has {len(exact)} {DRAFT_RULE} rules holding the draft policy, and this "
+                f"gate models 1"]
     out = []
-    if not rules and drafts:
-        out.append(f"{HEADERS} has no {DRAFT_RULE} rule, so the {len(drafts)} draft page(s) under "
-                   f"{DRAFT} are served under the live policy, which this gate does not check them "
-                   f"against")
-    if rules and rules[0] != DRAFT_RULE_LINES:
-        out.append(f"the {DRAFT_RULE} rule in {HEADERS} must hold exactly these lines: the detach of "
-                   f"the live Content-Security-Policy, the shared draft policy ({DRAFT_POLICY}) and "
-                   f"X-Robots-Tag: noindex, and no other header; it has {rules[0]!r}")
-    # Any other rule that can match a draft URL and sets or detaches a header (Content-Security-Policy
-    # lines are left to the one-policy model below, which refuses them with its own message).
-    probes = DRAFT_PROBES + ["/" + p.relative_to(SITE).as_posix() for p in drafts]
+    if not exact and drafts:
+        out.append(f"{HEADERS} has no {DRAFT_RULE} rule that holds exactly these lines: the detach "
+                   f"of the live Content-Security-Policy, the shared draft policy ({DRAFT_POLICY}) "
+                   f"and X-Robots-Tag: noindex, so the {len(drafts)} draft page(s) under {DRAFT} are "
+                   f"not served under it")
     for rule, lines in blocks:
-        if rule in ("/*", DRAFT_RULE) or not rule_reaches(rule, probes):
+        if is_draft_rule(rule, lines):
             continue
-        others = [line for line in lines if line.lstrip("!").split(":", 1)[0].strip().lower() != CSP]
-        if others:
-            out.append(f"{HEADERS} rule {rule} can match a path under /draft/ and sets or detaches "
-                       f"{others[0]!r}; only the {DRAFT_RULE} rule may set headers for the draft")
+        if not RULE_SYNTAX.fullmatch(rule):
+            out.append(f"{HEADERS} rule {rule!r} is outside the rule syntax this gate models (a path "
+                       f"of literal segments, `*` splats and `:placeholder` segments, optionally after "
+                       f"http(s)://host), so whether it reaches the draft cannot be told")
+            continue
+        names = [line.lstrip("!").split(":", 1)[0].strip().lower() for line in lines]
+        if rule == "/*":
+            if "x-robots-tag" in names:
+                out.append(f"{HEADERS} rule /* sets or detaches X-Robots-Tag, which also reaches every "
+                           f"draft page; only the {DRAFT_RULE} rule sends it")
+            continue
+        # Content-Security-Policy lines are left to the one-policy model below, which refuses them
+        # with its own messages; every other header on a rule that can reach the draft is refused.
+        others = [line for line, name in zip(lines, names) if name != CSP]
+        if others and rule_reaches(rule):
+            out.append(f"{HEADERS} rule {rule} can match /draft or a path under /draft/ and sets or "
+                       f"detaches {others[0]!r}; only the {DRAFT_RULE} rule may set headers for the "
+                       f"draft")
     return out
 
 
-def rule_reaches(rule, probes):
-    """True when a `_headers` rule's pattern matches any probe path under /draft/.
+def is_draft_rule(rule, lines):
+    """The 1 modelled `/draft/*` rule: that exact path and exactly DRAFT_RULE_LINES."""
+    return rule == DRAFT_RULE and lines == DRAFT_RULE_LINES
 
-    A splat `*` matches anything and a `:placeholder` 1 path segment, as Cloudflare documents. An
-    absolute-URL rule is read by its path unless its host is plainly another site's.
+
+def rule_reaches(rule):
+    """True when a `_headers` rule's path pattern can match `/draft` or any path under `/draft/`.
+
+    A rule with no splat or placeholder matches only its own path, so it reaches the draft when that
+    path is `/draft` or starts with `/draft/`. Otherwise its literal prefix is its text before the
+    first `*` splat or `:placeholder`, and the rule can reach the draft when `/draft/` starts with
+    that prefix (`/`, `/d`, `/draft`), or the prefix is `/draft` or starts with `/draft/`. Both are
+    compared without case. An absolute-URL rule is read by its
+    path unless its host is plainly another site's (neither this site, a pages.dev host, nor a
+    pattern). No path is sampled, so a rule for 1 page, 1 asset or 1 folder is caught as surely as a
+    splat.
     """
     path = rule
     if "://" in rule:
@@ -780,9 +806,13 @@ def rule_reaches(rule, probes):
         if not ("secureconfig.ai" in host or "pages.dev" in host or "*" in host or ":" in host):
             return False
         path = "/" + rest
-    pattern = "".join(".*" if part == "*" else "[^/]+" if part.startswith(":") else re.escape(part)
-                      for part in re.split(r"(\*|:[A-Za-z]\w*)", path) if part)
-    return any(re.fullmatch(pattern, probe) for probe in probes)
+    m = re.search(r"\*|:[A-Za-z]", path)
+    if not m:
+        # A rule with no splat or placeholder matches its own path only.
+        literal = path.lower()
+        return literal == "/draft" or literal.startswith("/draft/")
+    prefix = path[:m.start()].lower()
+    return "/draft/".startswith(prefix) or prefix == "/draft" or prefix.startswith("/draft/")
 
 
 def all_rule_blocks(headers_text):
@@ -1003,7 +1033,7 @@ def main() -> int:
             print(f"  FAIL  {why}")
         return 1
     # The 1 modelled /draft/* rule governs the draft pages only; the live model below reads the rest.
-    blocks = [(rule, lines) for rule, lines in blocks if rule != DRAFT_RULE]
+    blocks = [(rule, lines) for rule, lines in blocks if not is_draft_rule(rule, lines)]
     detached = [rule for rule, lines in blocks for line in lines
                 if line.startswith("!") and line[1:].split(":", 1)[0].strip().lower() == CSP]
     if detached:

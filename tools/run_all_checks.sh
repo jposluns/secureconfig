@@ -1295,6 +1295,9 @@ echo "== the site draft stays out of search and inside /draft/ =="
 run_gate test_draft.py python3 -I -B tools/test_draft.py
 run_gate check_draft.py python3 -I -B tools/check_draft.py
 
+echo "== the Pages build check's Python files parse as Python 3.11 =="
+run_gate test_pages_build.py python3 -I -B tools/test_pages_build.py
+
 echo "== site CSP pins every inline block by hash, or until promotion permits it =="
 # Until promotion (the owner's decision A15 of 2026-11-03) the live policy in site/_headers pins no
 # hash and permits the live pages' inline blocks with 'unsafe-inline', so that Cloudflare's

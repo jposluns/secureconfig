@@ -12,8 +12,9 @@ checks too.
 
 PART 1, KEPT OUT OF SEARCH:
   - every draft page carries exactly 1 robots meta element, read by html.parser (so a commented-out
-    one does not count, and attribute case and quoting do not matter), whose content is
-    `noindex, nofollow` (case and spacing aside);
+    one does not count, attribute case and quoting do not matter, and of duplicate attributes
+    the first counts, as in a browser), whose content is `noindex, nofollow` (case and spacing
+    aside);
   - site/_headers has exactly 1 `/draft/*` rule and it sends `X-Robots-Tag: noindex` exactly once
     (the CSP gate pins that rule's other lines);
   - site/_redirects does not exist while site/draft/ holds pages: a missing draft path gets the
@@ -21,13 +22,18 @@ PART 1, KEPT OUT OF SEARCH:
     the `/draft/*` noindex rule does not match (the owner's rule);
   - site/llms.txt, site/robots.txt and site/sitemap.xml name no `/draft` path, site/llms-full.txt
     names no `secureconfig.ai/draft` URL (host-anchored, because the bundle quotes vendor URLs
-    such as IETF drafts), and no live page links or loads a same-site path under /draft: each
-    live page's URL attributes are read with html.parser, which decodes entities, and resolved
-    against the page's own URL with urljoin, so a relative `draft/` is caught too.
+    such as IETF drafts, and ending where `draft` does, so a following `.`, `,`, `;` or backtick
+    still counts), and no live page links, loads or refreshes to a same-site path under /draft:
+    each live page's URL attributes and meta refresh targets are read with html.parser, which
+    decodes entities, cleaned as a browser cleans them (tabs and newlines removed, a backslash
+    read as a slash), resolved against the page's own URL with urljoin, percent-decoded and
+    stripped of dot segments, so a relative `draft/`, `\\draft/` and `/x/%2e%2e/draft/` are caught.
+    A live URL with a host that is not plain ASCII is treated as same-site.
 
 PART 2, SELF-CONTAINED:
   - every URL a draft page carries, in any attribute whose name ends in `href` or `src` (so
-    `xlink:href` too) and in `srcset`, `imagesrcset`, `formaction`, `action`, `ping` and `poster`,
+    `xlink:href` too) and in `srcset`, `imagesrcset`, `formaction`, `action`, `ping`, `poster` and
+    `background`,
     is an in-page `#` anchor, a root-relative path under the base path that names a file under
     site/draft/ (a folder path names its index.html), one of the recorded live exceptions
     (LIVE_EXCEPTIONS, the owner's decision of 2026-11-03), or an absolute http(s) URL with a
@@ -35,14 +41,18 @@ PART 2, SELF-CONTAINED:
   - refused, because a browser normalizes them onto a host the check above does not see: any
     whitespace, control character or backslash in a URL; `https:///host` and other spellings
     without a host right after `//`; and this site's host in any case, with a trailing dot or
-    percent-encoded; a `pages.dev` host (the Pages project's own aliases) is refused too;
+    percent-encoded; a host that is not plain ASCII after percent-decoding (fullwidth letters,
+    U+3002 and the other forms IDNA maps onto ASCII); a `pages.dev` host (the Pages project's own
+    aliases) is refused too. An external http(s) link to another host is allowed by design: only
+    same-site links must stay under /draft/;
   - any `http-equiv` attribute is refused (a refresh would navigate away without a link);
   - every link that opens a new tab carries the visually hidden "(opens in a new tab)";
   - only the landing page, the Disclosure page and the Licence page link the Disclosure and Licence
     pages (the owner's template note of 2026-11-03: they left the top bar);
   - no stylesheet under site/draft/ carries `@import` in any spelling (CSS escapes decoded), every
     `url(` in one is relative and resolves to a file inside site/draft/assets/, and a
-    site/draft/assets/site.css, where one exists, matches the whole permitted grammar: rules (at
+    site/draft/assets/site.css, where one exists (scripts/build-site.py --check allows that 1
+    file beside the pages and the copied files), matches the whole permitted grammar: rules (at
     the top level or inside `@media (prefers-color-scheme: dark|light)`) whose only declarations
     set `--sw` or `--logo-inset` to a number (baseline README, "Per-site constants").
 
@@ -71,10 +81,10 @@ NEWTAB = "(opens in a new tab)"
 URL_FN = re.compile(r"url\(\s*(['\"]?)([^'\")]*)\1\s*\)", re.I)
 ABOUT_PAGES = {"index.html", "disclosure/index.html", "license/index.html"}
 URL_LISTS = {"srcset", "imagesrcset"}
-URL_NAMES = {"formaction", "action", "ping", "poster"}
+URL_NAMES = {"formaction", "action", "ping", "poster", "background"}
 BAD_URL_CHARS = re.compile(r"[\x00-\x20\x7f\\]")
 AUTHORITY = re.compile(r"(?i)^https?://[^/?#\\\s]")
-LLMS_FULL_DRAFT = re.compile(r"(?i)(?:www\.)?secureconfig\.ai\.?(?::\d+)?/draft(?:[/?#\s)\]>\"']|$)")
+LLMS_FULL_DRAFT = re.compile(r"(?i)(?:www\.)?secureconfig\.ai\.?(?::\d+)?/draft(?![\w-])")
 # site.css: the whole permitted grammar (comments removed first).
 DECL = r"\s*--(?:sw|logo-inset)\s*:\s*\d+(?:\.\d+)?\s*"
 RULE = rf"\s*[^{{}};@\\]+\{{{DECL}(?:;{DECL})*;?\s*\}}"
@@ -107,6 +117,7 @@ class Page(HTMLParser):
         self.urls = []          # (line, attribute, value)
         self.robots = []        # (line, content)
         self.http_equiv = []    # line
+        self.refresh = []       # (line, URL) of each meta refresh
         self.newtab = []        # (line, text)
         self._open = []
 
@@ -125,9 +136,16 @@ class Page(HTMLParser):
                     self.urls.append((line, k, part))
             elif k.endswith("href") or k.endswith("src") or k in URL_NAMES:
                 self.urls.append((line, k, v))
+        # A browser keeps the first of duplicate attributes, so this reads them the same way.
+        a = {}
+        for k, v in attrs:
+            a.setdefault(k, v or "")
         if "http-equiv" in names:
             self.http_equiv.append(line)
-        a = {k: (v or "") for k, v in attrs}
+            if a.get("http-equiv", "").strip().lower() == "refresh":
+                target = re.search(r"(?i)url\s*=\s*['\"]?([^'\"]*)", a.get("content", ""))
+                if target:
+                    self.refresh.append((line, target.group(1).strip()))
         if tag == "meta" and a.get("name", "").strip().lower() == "robots":
             self.robots.append((line, a.get("content", "")))
         if tag == "a":
@@ -182,7 +200,11 @@ def check_url(root, value):
         if not AUTHORITY.match(value):
             return ("has no host right after //, a form a browser normalizes onto another host "
                     "(`https:///secureconfig.ai/` opens secureconfig.ai)")
-        if site_host(parts.hostname):
+        host = unquote(parts.hostname or "")
+        if not host.isascii():
+            return ("has a host that is not plain ASCII, which a browser maps onto another host "
+                    "(`secureconfig。ai` and fullwidth letters open secureconfig.ai)")
+        if site_host(host):
             return "is an absolute URL on this site's own host, which reaches the live pages"
         return None
     if value.startswith("//"):
@@ -196,6 +218,38 @@ def check_url(root, value):
     if not resolves(root, value):
         return "names no file under site/draft/"
     return None
+
+
+def remove_dot_segments(path):
+    """RFC 3986 section 5.2.4, as a browser applies it to a path."""
+    out = []
+    for segment in path.split("/"):
+        if segment == "..":
+            if len(out) > 1:
+                out.pop()
+        elif segment != ".":
+            out.append(segment)
+    if path.endswith(("/.", "/..")):
+        out.append("")
+    return "/".join(out) or "/"
+
+
+def live_draft_path(page_url, value):
+    """The lower-cased path under /draft that a live page's URL reaches on this site, or None.
+
+    The value is read as a browser reads it: tabs, newlines and leading or trailing spaces and
+    controls removed, a backslash taken as a slash, resolved against the page's own URL, then the
+    path percent-decoded and its dot segments removed, so `\\draft/` and `/x/%2e%2e/draft/` count.
+    """
+    cleaned = re.sub(r"[\t\n\r]", "", value).strip("\x00\x20" + "".join(map(chr, range(1, 32))))
+    target = urlsplit(urljoin(page_url, cleaned.replace("\\", "/")))
+    if target.scheme and target.scheme.lower() not in ("http", "https"):
+        return None
+    host = unquote(target.hostname or "")
+    if host and host.isascii() and not site_host(host):
+        return None
+    path = remove_dot_segments(unquote(target.path)).lower()
+    return path if path == "/draft" or path.startswith("/draft/") else None
 
 
 def css_unescape(text):
@@ -265,13 +319,10 @@ def check(root):
             continue
         url = urljoin(ORIGIN, rel.relative_to("site").as_posix())
         parsed = parse(page.read_text(encoding="utf-8"))
-        for line, name, value in parsed.urls:
-            target = urlsplit(urljoin(url, value.strip()))
-            if target.scheme and target.scheme.lower() not in ("http", "https"):
-                continue
-            path = unquote(target.path).lower()
-            if (not target.hostname or site_host(target.hostname)) and (
-                    path == "/draft" or path.startswith("/draft/")):
+        targets = parsed.urls + [(line, "http-equiv refresh", value) for line, value in parsed.refresh]
+        for line, name, value in targets:
+            path = live_draft_path(url, value)
+            if path:
                 findings.append(f"{rel}:{line}: is a live page and its {name}={value!r} reaches "
                                 f"{path}, under /draft")
     assets = (root / DRAFT / "assets").resolve()

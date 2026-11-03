@@ -15,12 +15,12 @@ guide or rule makes `--check` report the pages stale. Internal links and assets 
 (`/draft/` while staging, `/` after promotion); the only internal links that do not are the 2 live
 files the draft links directly, /llms.txt and /llms-full.txt.
 
-The build refuses to write, and `--check` fails, when a page would contain an en or em dash, an
-inline style or `style=` attribute, a `<script>` without `src` or with a body, an `on*` attribute,
-or "what this is" framing (SPECIFICATION.md section 12). It does not write the copied baseline
+The build refuses to write, and `--check` fails, when a page would contain a dash character
+(U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
+with a body, an `on*` attribute, or "what this is" framing (SPECIFICATION.md section 12). It does not write the copied baseline
 files under assets/baseline/ (scripts/copy-baseline.py does). `--check` also fails on any file under
-the output folder that is neither a page it writes nor under assets/baseline/, a page being a .html
-or .htm file in any case, as the CSP gate names one.
+the output folder that is neither a page it writes, nor under assets/baseline/, nor the optional
+assets/site.css, a page being a .html or .htm file in any case, as the CSP gate names one.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error.
 Standard library only. No network.
@@ -41,6 +41,7 @@ README = Path("README.md")
 VERSIONED = Path("tools") / "version_basis_guides.txt"
 LIVE_INDEX = Path("site") / "index.html"
 COPIED = "assets/baseline/"  # the copied template files, which this build does not write
+SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline README), hand-written
 REPO = "https://github.com/jposluns/secureconfig"
 BLOB = REPO + "/blob/main/"
 # The live files the draft links directly (owner's decision 5, 2026-11-03); removed at promotion,
@@ -57,7 +58,10 @@ FAMILY = (("secureconfig", "SecureConfig", None), ("opfiles", "OPFiles", "https:
           ("cleanlanguage", "CleanLanguage", "https://cleanlanguage.ai/"),
           ("aiqt", "AIQT", "https://aiqt.ai/"), ("grclibrary", "GRCLibrary", "https://grclibrary.ai/"))
 INLINE = re.compile(r"`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)|\*([^*]+)\*|(https?://[^\s)]+[^\s).,;:])")
-DASHES = ("–", "—")
+# Every dash the writing rules exclude: hyphen and non-breaking hyphen (U+2010, U+2011), figure dash,
+# en and em dash (U+2012 to U+2014), horizontal bar (U+2015) and the minus sign (U+2212), which the
+# pages never need (quantities use digits and words). README and content.json carry none of them.
+DASHES = tuple(chr(c) for c in range(0x2010, 0x2016)) + ("\u2212",)
 SCRIPT_TAG = re.compile(r"<script\b([^>]*)>(.*?)</script>", re.I | re.S)
 FRAMING = re.compile(r"what\s+this\s+is", re.I)
 
@@ -475,7 +479,7 @@ def refuse(name, text):
     """Raise Refused when a page carries what SPECIFICATION section 12 forbids."""
     why = []
     if any(d in text for d in DASHES):
-        why.append("an en or em dash")
+        why.append("a dash character (U+2010 to U+2015 or U+2212)")
     if re.search(r"<style\b", text, re.I) or STYLE_ATTR.search(text):
         why.append("an inline style or style= attribute")
     for m in SCRIPT_TAG.finditer(text):
@@ -531,14 +535,16 @@ def main(argv=None):
             except OSError as exc:
                 print(f"  FAIL  cannot read {path}: {exc}")
                 return 2
-        # Every file under the output folder is a page this build writes, or a copied template file
-        # under assets/baseline/ (scripts/copy-baseline.py, pinned by tools/check_baseline_pin.py).
-        # A page is .html or .htm in any case, read as the CSP gate reads one (name_suffix). At the
-        # root after promotion the folder also holds the live files, so only pages are compared.
+        # Every file under the output folder is a page this build writes, a copied template file
+        # under assets/baseline/ (scripts/copy-baseline.py, pinned by tools/check_baseline_pin.py),
+        # or the optional assets/site.css that the baseline README allows for the 2 per-site
+        # constants (its grammar is held by tools/check_draft.py). A page is .html or .htm in any
+        # case, read as the CSP gate reads one (name_suffix). At the root after promotion the folder
+        # also holds the live files, so only pages are compared.
         if out.is_dir():
             for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
-                if rel in pages or rel.startswith(COPIED):
+                if rel in pages or rel.startswith(COPIED) or rel == SITE_CSS:
                     continue
                 if name_suffix(path.name) in (".html", ".htm"):
                     problems.append(f"{rel} is not a page this build writes")

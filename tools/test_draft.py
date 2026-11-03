@@ -8,7 +8,10 @@ page edit cannot turn a case into a pristine run. The cases added in QA round 1 
 bypasses that review found: a browser-normalized host, a trailing-dot or upper-case host, URL
 attributes beyond href and src, http-equiv, CSS @import, the site.css grammar, robots meta elements
 read as elements, .htm pages, site/_redirects, relative and entity-encoded live links to the draft,
-and site/llms-full.txt.
+and site/llms-full.txt. Round 2 added non-ASCII hosts (including 1 written in content.json and
+generated), first-wins duplicate attributes, `background`, live links through a backslash, an
+encoded dot segment and a meta refresh, llms-full.txt URLs followed by punctuation, and a site.css
+that the build's --check and this gate both accept.
 """
 import shutil
 import subprocess
@@ -175,8 +178,72 @@ CASES = [
     ("an inner page linking the Licence page",
      edit(GUIDES, '<a href="/draft/for-ai/">', '<a href="/draft/license/">Licence</a><a href="/draft/for-ai/">'),
      "only the landing page", 1),
+    # QA round 2 of #1182.
+    ("an ideographic full stop in the site's host", link("https://secureconfig\u3002ai/"),
+     "not plain ASCII", 1),
+    ("fullwidth letters in the site's host", link("https://\uff53\uff45\uff43\uff55\uff52\uff45config.ai/"),
+     "not plain ASCII", 1),
+    ("a percent-encoded non-ASCII host", link("https://secureconfig%E3%80%82ai/"), "not plain ASCII", 1),
+    ("a duplicate name attribute on a second robots meta, the first being robots",
+     edit(HOME, META, META + '<meta name="robots" name="x" content="index, follow">'),
+     "exactly 1 robots meta", 1),
+    ("a background attribute on the live root",
+     edit(HOME, "<a class=\"start\"", '<table background="/bg.png"></table><a class="start"'),
+     "background='/bg.png' is outside the base path", 1),
+    ("a live page linking the draft with a backslash",
+     edit("site/index.html", "</footer>", '<a href="\\draft/">draft</a></footer>'),
+     "reaches /draft/", 1),
+    ("a live page linking the draft through an encoded dot segment",
+     edit("site/index.html", "</footer>", '<a href="/x/%2e%2e/draft/">draft</a></footer>'),
+     "reaches /draft/", 1),
+    ("a live page refreshing to the draft",
+     edit("site/404.html", "</head>", '<meta http-equiv="refresh" content="0;url=/draft/">\n</head>'),
+     "http-equiv refresh='/draft/' reaches /draft/", 1),
+    ("llms-full.txt naming the draft before a full stop",
+     write("site/llms-full.txt", "The new site is at https://secureconfig.ai/draft.\n"),
+     "names a secureconfig.ai/draft URL", 1),
+    ("llms-full.txt naming the draft before a comma",
+     write("site/llms-full.txt", "See secureconfig.ai/draft, then the guides.\n"),
+     "names a secureconfig.ai/draft URL", 1),
+    ("llms-full.txt naming the draft before a semicolon",
+     write("site/llms-full.txt", "See secureconfig.ai/draft; then the guides.\n"),
+     "names a secureconfig.ai/draft URL", 1),
+    ("llms-full.txt naming the draft before a backtick",
+     write("site/llms-full.txt", "Open `https://secureconfig.ai/draft` to review.\n"),
+     "names a secureconfig.ai/draft URL", 1),
+    ("llms-full.txt naming a /drafts path, which is not the draft",
+     write("site/llms-full.txt", "See https://secureconfig.ai/drafts-archive for history.\n"),
+     "8 draft pages", 0),
     ("the pristine draft", None, "8 draft pages", 0),
 ]
+
+
+def generated(edit_content, extra=None):
+    """Build the draft from a scratch copy of its sources with 1 content edit, then run
+    build-site.py --check and check_draft.py on it: the source-to-generated-page path."""
+    d = Path(tempfile.mkdtemp())
+    try:
+        for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/check_draft.py",
+                    "site-src/content.json", "README.md", "tools/version_basis_guides.txt"):
+            (d / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / rel, d / rel)
+        shutil.copytree(ROOT / "site" / "draft" / "assets", d / "site" / "draft" / "assets")
+        for name in LIVE:
+            if (ROOT / "site" / name).is_file():
+                shutil.copyfile(ROOT / "site" / name, d / "site" / name)
+        if edit_content:
+            edit("site-src/content.json", *edit_content)(d)
+        if extra:
+            extra(d)
+        out = []
+        for cmd in (["scripts/build-site.py"], ["scripts/build-site.py", "--check"],
+                    ["tools/check_draft.py", "--root", str(d)]):
+            r = subprocess.run([sys.executable, "-I", "-B", str(d / cmd[0]), *cmd[1:]],
+                               capture_output=True, text=True, timeout=120)
+            out.append((r.returncode, (r.stdout + r.stderr).strip()))
+        return out
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
 
 
 def main():
@@ -189,13 +256,29 @@ def main():
             failures.append(f"{desc}: expected the output to contain {expected!r}: {out!r}")
         if "Traceback (most recent call last):" in out:
             failures.append(f"{desc}: the gate crashed: {out!r}")
+    # Source to generated page: a Unicode host written in content.json is generated, passes the
+    # build's own --check, and is refused by this gate.
+    (b, bout), (c, cout), (g, gout) = generated(
+        ('"start": {"text": "Browse the guides", "href": "/guides/"',
+         '"start": {"text": "Browse the guides", "href": "https://secureconfig。ai/"'))
+    if b or c or g != 1 or "not plain ASCII" not in gout:
+        failures.append(f"a Unicode host from content.json was not refused on the generated page: "
+                        f"build {b} {bout!r}, check {c} {cout!r}, gate {g} {gout!r}")
+    # The optional site.css (baseline README) is accepted by the build's --check and by this gate.
+    css = ".site-secureconfig .statement { --sw: 13.9; }\n"
+    (b, bout), (c, cout), (g, gout) = generated(
+        None, lambda d: (d / "site/draft/assets/site.css").write_text(css, encoding="utf-8"))
+    if b or c or g:
+        failures.append(f"a site.css setting only --sw was refused: build {b} {bout!r}, check {c} "
+                        f"{cout!r}, gate {g} {gout!r}")
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
     refusals = sum(1 for case in CASES if case[3])
     print(f"  ok    {len(CASES)} draft noindex and self-containment cases ({refusals} refusals and "
-          f"{len(CASES) - refusals} accepted changes, the pristine draft among them)")
+          f"{len(CASES) - refusals} accepted changes, the pristine draft among them), and 2 "
+          f"generated-page cases (a Unicode host refused, a site.css accepted by the build and the gate)")
     return 0
 
 

@@ -107,7 +107,12 @@ cases that append a `/draft/*` rule now append a second one, and are refused as 
 `<details>` fail), a `.HTM` draft page, a `site/foo/draft/` page that stays unlisted, the `/draft/*`
 rule's 3 pinned lines (an extra detach or a missing noindex fails), and other rules that can match a
 draft URL (a deeper rule, a placeholder rule and an absolute-URL rule on this host fail when they
-carry any header; an unrelated path or another host passes).
+carry any header; an unrelated path or another host passes). Round 2 replaced sampled paths with
+the rule's literal prefix: a folder rule, an asset rule, an unprobed subtree, `/draft` itself, a
+placeholder, a short splat and an upper-case path each fail with `! X-Robots-Tag`, `/drafts/*`
+passes, X-Robots-Tag in `/*` fails and a rule with a percent escape is refused as unmodelled. #1181's
+2 original `/draft/*` A15 cases run again against the real file with its `/draft/*` block removed,
+with their original expectations, beside the same rules added to the full file.
 """
 import base64
 import contextlib
@@ -1095,14 +1100,21 @@ live_case("a <script> added to the script-free 404 page", page={"404.html": SCRI
 live_case("a <style> smuggled through <svg><title>",
           page=PAGE.replace("</svg>", "<title><style>p{color:red}</style></title>\n    </svg>", 1),
           expected="openers")
-# The real file carries the 1 /draft/* rule the draft model accepts, so an appended /draft/* rule is
-# a second one, refused before the live model reads the rest; a single rule's shape is held by the
-# staged-draft cases below.
+# #1181's 2 /draft/* cases as #1181 wrote them, against the real file with its /draft/* block
+# removed, so they keep their original single-rule expectations.
+LIVE_NO_DRAFT = LIVE_HEADERS[:LIVE_HEADERS.index("\n# The staged template")] + "\n"
+live_case("a second CSP under a /draft/* rule",
+          headers=LIVE_NO_DRAFT + "\n/draft/*\n  Content-Security-Policy: default-src 'none'\n",
+          expected="exactly one Content-Security-Policy")
+live_case("the live CSP detached under a /draft/* rule",
+          headers=LIVE_NO_DRAFT + "\n/draft/*\n  ! Content-Security-Policy\n", expected="detaches")
+# The same 2 rules added beside the real file's modelled /draft/* rule: a /draft/* rule that is not
+# the modelled one is an ordinary rule, so the one-policy model refuses its CSP line the same way.
 live_case("a second CSP under a second /draft/* rule",
           headers=LIVE_HEADERS + "\n/draft/*\n  Content-Security-Policy: default-src 'none'\n",
-          expected="2 /draft/* rules")
+          expected="exactly one Content-Security-Policy")
 live_case("the live CSP detached under a second /draft/* rule",
-          headers=LIVE_HEADERS + "\n/draft/*\n  ! Content-Security-Policy\n", expected="2 /draft/* rules")
+          headers=LIVE_HEADERS + "\n/draft/*\n  ! Content-Security-Policy\n", expected="detaches")
 live_case("a comma splitting the live policy",
           headers=LIVE_HEADERS.replace("style-src ", "style-src 'none', style-src ", 1),
           expected="comma")
@@ -1220,24 +1232,42 @@ DRAFT_CASES = [
      {DRAFT_AT: DRAFT_PAGE, "foo/draft/x.html": DRAFT_PAGE}, True, "not in this gate's page list"),
     ("a /draft/* rule that also detaches Permissions-Policy", None,
      LIVE_HEADERS.replace("  X-Robots-Tag: noindex\n", "  X-Robots-Tag: noindex\n  ! Permissions-Policy\n", 1),
-     {DRAFT_AT: DRAFT_PAGE}, True, "must hold exactly these lines"),
+     {DRAFT_AT: DRAFT_PAGE}, True, "holds exactly these lines"),
     ("a /draft/* rule without its X-Robots-Tag", None,
      LIVE_HEADERS.replace("  X-Robots-Tag: noindex\n", "", 1), {DRAFT_AT: DRAFT_PAGE}, True,
-     "must hold exactly these lines"),
+     "holds exactly these lines"),
     ("a deeper /draft/ rule detaching X-Robots-Tag", None,
      LIVE_HEADERS + "\n/draft/x/*\n  ! X-Robots-Tag\n", {DRAFT_AT: DRAFT_PAGE}, True,
-     "can match a path under /draft/"),
+     "can match /draft or a path under /draft/"),
     ("a placeholder rule that matches a draft page and sets a header", None,
      LIVE_HEADERS + "\n/:dir/for-ai/*\n  Access-Control-Allow-Origin: *\n", {DRAFT_AT: DRAFT_PAGE}, True,
-     "can match a path under /draft/"),
+     "can match /draft or a path under /draft/"),
     ("an absolute-URL rule on this site's host that reaches the draft", None,
      LIVE_HEADERS + "\nhttps://secureconfig.ai/draft/*\n  X-Frame-Options: SAMEORIGIN\n", {DRAFT_AT: DRAFT_PAGE},
-     True, "can match a path under /draft/"),
+     True, "can match /draft or a path under /draft/"),
     ("a rule with an unrelated header on another path", None,
      LIVE_HEADERS + "\n/guides/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False, "1 draft page(s)"),
     ("an absolute-URL rule on another host", None,
      LIVE_HEADERS + "\nhttps://other.example/draft/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False,
      "1 draft page(s)"),
+]
+# QA round 2 of #1182: a rule reaches the draft by its literal prefix, not by sampled paths, so a
+# rule for 1 folder, 1 asset, an unprobed subtree or /draft itself is refused like a splat.
+for _rule in ("/draft/checklist/", "/draft/assets/baseline/copy.js", "/draft/unprobed/*", "/draft",
+              "/:x/checklist/", "/d*", "/DRAFT/guides/"):
+    DRAFT_CASES.append((f"the rule {_rule} detaching X-Robots-Tag", None,
+                        LIVE_HEADERS + f"\n{_rule}\n  ! X-Robots-Tag\n", {DRAFT_AT: DRAFT_PAGE}, True,
+                        f"rule {_rule} can match /draft or a path under /draft/"))
+DRAFT_CASES += [
+    ("a /drafts/* rule, which cannot match the draft", None,
+     LIVE_HEADERS + "\n/drafts/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False, "1 draft page(s)"),
+    ("X-Robots-Tag in the live /* rule, which reaches every draft page", None,
+     LIVE_HEADERS.replace("  Cross-Origin-Opener-Policy: same-origin\n",
+                          "  Cross-Origin-Opener-Policy: same-origin\n  X-Robots-Tag: all\n", 1),
+     {DRAFT_AT: DRAFT_PAGE}, True, "rule /* sets or detaches X-Robots-Tag"),
+    ("a rule with a percent escape, outside the modelled syntax", None,
+     LIVE_HEADERS + "\n/%64raft/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, True,
+     "outside the rule syntax this gate models"),
 ]
 
 
