@@ -12,11 +12,13 @@ file name they load, such as scripts/copy-baseline.py):
   - it uses none of the f-string forms that Python 3.12 (PEP 701) added and that
     `feature_version` does not catch: a string literal in a replacement field that reuses an
     enclosing f-string's delimiter (its quote character for a single-quoted f-string, the same
-    3-quote delimiter for a triple-quoted one), a backslash anywhere in a replacement field, a `#`
+    3-quote delimiter for a triple-quoted one), a backslash anywhere in a replacement field (in a
+    token, or in the source text between 2 tokens, which is where a line continuation sits), a `#`
     comment in a replacement field, or a line break in a replacement field of a single-quoted
     f-string.
 
-Before the files, it runs its own cases (SELF_CASES): each of those 4 forms is refused, while a
+Before the files, it runs its own cases (SELF_CASES): each of those 4 forms is refused, the
+backslash both in a string and as a line continuation, while a
 double-quoted key inside a triple-double-quoted f-string, a single-quoted key inside a
 double-quoted f-string, a line break inside a triple-quoted f-string's field and a backslash in
 literal text pass.
@@ -68,13 +70,28 @@ def delimiter(token_text):
 
 def pep701_forms(text):
     """(line, form) for each Python 3.12-only f-string form in text; see the docstring."""
-    out, stack = [], []
+    out, stack, prev = [], [], None
+    lines = text.splitlines(keepends=True)
+
+    def between(start, end):
+        """The source text between 2 token positions (rows 1-based, columns 0-based)."""
+        (r1, c1), (r2, c2) = start, end
+        if r1 == r2:
+            return lines[r1 - 1][c1:c2]
+        return lines[r1 - 1][c1:] + "".join(lines[r1:r2 - 1]) + lines[r2 - 1][:c2]
+
     for tok in tokenize.generate_tokens(io.StringIO(text).readline):
         if not stack:
             if tok.type == tokenize.FSTRING_START:
                 stack.append(delimiter(tok.string))
+            prev = tok
             continue
         line = tok.start[0]
+        # A backslash between 2 tokens inside an f-string is a line continuation in a replacement
+        # field, which produces no token of its own.
+        if prev is not None and "\\" in between(prev.end, tok.start):
+            out.append((line, "a backslash in a replacement field"))
+        prev = tok
         if tok.type == tokenize.FSTRING_END:
             stack.pop()
         elif tok.type == tokenize.FSTRING_MIDDLE:
@@ -104,6 +121,7 @@ SELF_CASES = (
     ("y = f\"{'\\\\n'.join([])}\"\n", "backslash"),
     ('x = 1\ny = f"""{x  # note\n}"""\n', "comment"),
     ('x = 1\ny = f"{x\n+ 1}"\n', "line break"),
+    ('x = 1\ny = f"""{x + \\\n1}"""\n', "backslash"),
     ('x = {"a": 1}\ny = f"""{x["a"]}"""\n', None),
     ("x = {'a': 1}\ny = f\"{x['a']}\"\n", None),
     ('x = 1\ny = f"""{x\n+ 1}"""\n', None),

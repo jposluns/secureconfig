@@ -24,17 +24,23 @@ PART 1, KEPT OUT OF SEARCH:
     browser URL parsing, which three review rounds showed cannot be matched spelling by spelling;
     it is a conservative rule over a FOLDED form of each value: HTML entities decoded (by
     html.parser on pages, by html.unescape in the index files), percent-decoding applied until the
-    text stops changing, `\\` read as `/`, and the result case-folded. A folded value is refused when
-    it holds `draft` as a whole path segment: at its start or after a `/`, and followed by its end,
-    `/`, `?`, `#`, `;` or a character that cannot appear in a URL. So `draft-ietf-...` and
-    `/drafts-archive` pass, while `https:////secureconfig.ai/draft/`, `/x/%2e%2e/draft/`,
-    `%252fdraft` and `\\draft/` fail, whatever the scheme, slashes or host;
+    text stops changing, `\\` read as `/`, and the result case-folded. Two values are refused
+    before any segment is read, failing closed: one that holds an ASCII control character (U+0000
+    to U+001F, U+007F) or a space anywhere once entities are decoded, which a browser may strip
+    from a URL; and one still changing after MAX_DECODES (32) rounds of percent-decoding. A folded
+    value is refused when it holds `draft` as a whole path segment: at its start or after a `/`,
+    and followed by its end, `/`, `?`, `#`, `;`, `*`, `$` or a character that cannot appear in a
+    URL (`*` and `$` end it because robots.txt reads them as wildcards, so `Disallow: /draft*` and
+    `Allow: /draft$` name the draft). So `draft-ietf-...` and `/drafts-archive` pass, while
+    `https:////secureconfig.ai/draft/`, `/x/%2e%2e/draft/`, `%252fdraft` and `\\draft/` fail,
+    whatever the scheme, slashes or host;
   - on a live page (site/**/*.html or .htm outside site/draft/) the rule reads every URL-bearing
     attribute that the draft scan reads (below), and any `http-equiv` attribute, refresh included,
     is refused outright, as on draft pages;
   - in site/llms.txt, site/robots.txt and site/sitemap.xml the rule reads every token that holds a
-    `/` (a token runs between whitespace, quotes, angle brackets, brackets and backticks, and
-    loses any trailing `.`, `,`, `;`, `:`, `!` or `?`, which end a sentence rather than a URL);
+    `/` (a token runs between whitespace, quotes, angle brackets, brackets, braces, pipes and
+    backticks, and loses any trailing `.`, `,`, `;`, `:`, `!` or `?`, which end a sentence rather
+    than a URL);
   - in site/llms-full.txt, which carries every guide's external references and README's own
     repository paths such as `site/draft/assets/baseline/`, the rule reads only the tokens that are
     URLs on this site or a pages.dev host (after any scheme and any run of slashes, with a host
@@ -96,12 +102,16 @@ URL_NAMES = {"formaction", "action", "ping", "poster", "background"}
 BAD_URL_CHARS = re.compile(r"[\x00-\x20\x7f\\]")
 AUTHORITY = re.compile(r"(?i)^https?://[^/?#\\\s]")
 # A `draft` path segment in a folded value: at its start or after `/`, then its end, `/`, `?`, `#`,
-# `;` or a character that cannot appear in a URL (see the docstring).
-DRAFT_SEGMENT = re.compile(r"(?:^|/)draft(?=$|[/?#;]|[^a-z0-9._~%!$&'()*+,=:@-])")
+# `;`, `*`, `$` (robots.txt wildcards) or a character that cannot appear in a URL (see the docstring).
+DRAFT_SEGMENT = re.compile(r"(?:^|/)draft(?=$|[/?#;*$]|[^a-z0-9._~%!&'()+,=:@-])")
 # A token of an index file: text between whitespace, quotes, angle brackets, brackets, braces,
 # pipes and backticks.
 TOKEN = re.compile(r"[^\s<>\"'`()\[\]{}|]+")
 SCHEME_HOST = re.compile(r"^[a-z][a-z0-9+.-]*:/*([^/?#]*)")
+# Fail-closed limits of the fold: an ASCII control character or a space anywhere in a value once
+# entities are decoded, and a value still changing after this many rounds of percent-decoding.
+CONTROL_OR_SPACE = re.compile(r"[\x00-\x20\x7f]")
+MAX_DECODES = 32
 # site.css: the whole permitted grammar (comments removed first).
 DECL = r"\s*--(?:sw|logo-inset)\s*:\s*\d+(?:\.\d+)?\s*"
 RULE = rf"\s*[^{{}};@\\]+\{{{DECL}(?:;{DECL})*;?\s*\}}"
@@ -233,21 +243,36 @@ def check_url(root, value):
 
 
 def fold(value, entities=False):
-    """The folded form the draft-segment rule reads: entities decoded (where asked), percent-decoding
-    applied until the text stops changing, a backslash read as a slash, and the result case-folded."""
+    """(folded form, reason it is refused or None) for the draft-segment rule: entities decoded (where
+    asked), percent-decoding applied until the text stops changing, a backslash read as a slash, and
+    the result case-folded. The reason is set when the entity-decoded value holds an ASCII control
+    character or a space, or is still changing after MAX_DECODES rounds of percent-decoding."""
     if entities:
         value = html.unescape(value)
-    for _ in range(16):
+    why = None
+    if CONTROL_OR_SPACE.search(value):
+        why = ("contains an ASCII control character or a space, which a browser may strip from a "
+               "URL; the gate refuses it")
+    for _ in range(MAX_DECODES):
         decoded = unquote(value)
         if decoded == value:
             break
         value = decoded
-    return value.replace("\\", "/").casefold()
+    else:
+        if unquote(value) != value:
+            why = (f"is still changing after {MAX_DECODES} rounds of percent-decoding; the gate "
+                   f"refuses it")
+    return value.replace("\\", "/").casefold(), why
 
 
-def names_draft(value, entities=False):
-    """True when the folded value holds `draft` as a whole path segment."""
-    return bool(DRAFT_SEGMENT.search(fold(value, entities)))
+def draft_finding(value, entities=False):
+    """Why a value is refused by the draft-segment rule (see fold), or None."""
+    folded, why = fold(value, entities)
+    if why:
+        return why
+    if DRAFT_SEGMENT.search(folded):
+        return f"names a draft path segment once folded ({folded!r})"
+    return None
 
 
 def tokens(text):
@@ -324,14 +349,21 @@ def check(root):
         path = root / "site" / index
         if path.is_file():
             for token in tokens(path.read_text(encoding="utf-8")):
-                if "/" in token and names_draft(token, entities=True):
+                if "/" not in token:
+                    continue
+                folded, why = fold(token, entities=True)
+                if why:
+                    findings.append(f"site/{index}: the token {token!r} {why}")
+                elif DRAFT_SEGMENT.search(folded):
                     findings.append(f"site/{index} names a draft path segment in {token!r}; the "
                                     f"draft stays out of every index")
     full = root / "site" / "llms-full.txt"
     if full.is_file():
         for token in tokens(full.read_text(encoding="utf-8")):
-            folded = fold(token, entities=True)
-            if site_token(folded) and DRAFT_SEGMENT.search(folded):
+            folded, why = fold(token, entities=True)
+            if why and (site_token(folded) or "rounds of percent-decoding" in why):
+                findings.append(f"site/llms-full.txt: the token {token!r} {why}")
+            elif site_token(folded) and DRAFT_SEGMENT.search(folded):
                 findings.append(f"site/llms-full.txt names a draft path segment on this site in "
                                 f"{token!r}; the draft stays out of every index")
     for page in page_files(root / "site"):
@@ -343,9 +375,9 @@ def check(root):
             findings.append(f"{rel}:{line}: is a live page and carries http-equiv, which can refresh "
                             f"or redirect without a link; the gate refuses it on every page")
         for line, name, value in parsed.urls:
-            if names_draft(value):
-                findings.append(f"{rel}:{line}: is a live page and its {name}={value!r} names a "
-                                f"draft path segment once folded ({fold(value)!r})")
+            why = draft_finding(value)
+            if why:
+                findings.append(f"{rel}:{line}: is a live page and its {name}={value!r} {why}")
     assets = (root / DRAFT / "assets").resolve()
     css_files = sorted(p for p in (root / DRAFT).rglob("*") if p.is_file() and name_suffix(p.name) == ".css")
     for css in css_files:

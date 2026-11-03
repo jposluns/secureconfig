@@ -15,7 +15,10 @@ that the build's --check and this gate both accept. Round 3 replaced URL emulati
 in the index files with the folded draft-segment rule, and added extra-slash, doubly encoded,
 dot-segment and other-host spellings, refreshes without `url=` (refused as http-equiv), robots.txt
 and sitemap.xml cases, and guards that IETF drafts, `/drafts-archive`, this repository's
-`site/draft/` folder and other hosts' paths in llms-full.txt pass.
+`site/draft/` folder and other hosts' paths in llms-full.txt pass. Round 4 added the fold's
+fail-closed limits (a tab, newline or carriage return inside `draft`, a leading or trailing space,
+a leading newline, and a value still changing after 32 rounds of percent-decoding, beside 1 that
+resolves in 17) and robots.txt's `*` and `$` wildcards, with `/draft-` and `/drafts` still passing.
 """
 import shutil
 import subprocess
@@ -266,6 +269,40 @@ CASES = [
     ("sitemap.xml naming the draft through an entity",
      edit("site/sitemap.xml", "</urlset>", "<url><loc>https://secureconfig.ai/&#100;raft/</loc></url></urlset>"),
      "site/sitemap.xml names a draft path segment", 1),
+    # QA round 4 of #1182: fail-closed limits of the fold, and robots.txt wildcards.
+    ("a live link with a tab character reference inside draft",
+     edit("site/index.html", "</footer>", '<a href="/dr&#9;aft/">d</a></footer>'),
+     "contains an ASCII control character or a space", 1),
+    ("a live link with a newline character reference inside draft",
+     edit("site/index.html", "</footer>", '<a href="/dr&#10;aft/">d</a></footer>'),
+     "contains an ASCII control character or a space", 1),
+    ("a live link with a carriage-return character reference inside draft",
+     edit("site/index.html", "</footer>", '<a href="/dr&#13;aft/">d</a></footer>'),
+     "contains an ASCII control character or a space", 1),
+    ("a live link with a leading space",
+     edit("site/index.html", "</footer>", '<a href=" draft/">d</a></footer>'),
+     "contains an ASCII control character or a space", 1),
+    ("a live link with a trailing space",
+     edit("site/index.html", "</footer>", '<a href="/guides/ ">d</a></footer>'),
+     "contains an ASCII control character or a space", 1),
+    ("a live link with a leading newline character reference",
+     edit("site/index.html", "</footer>", '<a href="&#10;draft/">d</a></footer>'),
+     "contains an ASCII control character or a space", 1),
+    ("a sitemap URL with a tab character reference inside draft",
+     edit("site/sitemap.xml", "</urlset>", "<url><loc>https://secureconfig.ai/dr&#9;aft/</loc></url></urlset>"),
+     "contains an ASCII control character or a space", 1),
+    ("a live link that needs 17 rounds of percent-decoding to read /draft/",
+     edit("site/index.html", "</footer>", '<a href="/' + "%25" + "25" * 15 + '64raft/">d</a></footer>'),
+     "names a draft path segment once folded ('/draft/')", 1),
+    ("a live link still changing after 32 rounds of percent-decoding",
+     edit("site/index.html", "</footer>", '<a href="/' + "%25" + "25" * 40 + '64raft/">d</a></footer>'),
+     "is still changing after 32 rounds of percent-decoding", 1),
+    ("robots.txt disallowing /draft* with a wildcard",
+     append("site/robots.txt", "\nDisallow: /draft*\n"), "site/robots.txt names a draft path segment", 1),
+    ("robots.txt allowing /draft$ with an end anchor",
+     append("site/robots.txt", "\nAllow: /draft$\n"), "site/robots.txt names a draft path segment", 1),
+    ("robots.txt naming /draft- and /drafts paths, which are no draft path segment",
+     append("site/robots.txt", "\nDisallow: /draft-ietf-x\nDisallow: /drafts\n"), "8 draft pages", 0),
     ("the pristine draft", None, "8 draft pages", 0),
 ]
 
