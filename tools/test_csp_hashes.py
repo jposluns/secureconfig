@@ -92,6 +92,27 @@ shape the file had before, so each case still tests the hash model it was writte
 string it edits unchanged. The A15 cases, counted separately, run against the real file: it passes,
 it passes edited blocks without a repin, each hash, nonce or source beyond the accepted ones fails,
 and the shape, allowlist, handler, style, SVG and one-policy refusals still fail under it.
+
+The staged draft (the owner's decisions of 2026-11-02 and 2026-11-03) added a page model for
+site/draft/ and 1 `/draft/*` rule. Its cases, counted separately, run the generated For AI
+assistants page under site/draft/ against the real site/_headers (LIVE_HEADERS), which carries
+both the A15 live policy and the `/draft/*` rule: it passes as generated; an inline script, a baseline script
+written any other way, an inline style block, a `style=` attribute, an `on*` handler and an element
+outside the draft allowlist each fail; a template element on a live page still fails the 28-element
+list; and the `/draft/*` rule fails when it is missing while a draft page exists, widens or does not
+detach the policy, only detaches, or is repeated, while a deeper `/draft/x/*` rule is still
+refused by the live model. With the real file carrying the 1 modelled `/draft/*` rule, the 2 A15
+cases that append a `/draft/*` rule now append a second one, and are refused as that. QA round 1 of
+#1182 added cases for the draft allowlist as exactly the generator's elements (an `<svg>` and a
+`<details>` fail), a `.HTM` draft page, a `site/foo/draft/` page that stays unlisted, the `/draft/*`
+rule's 3 pinned lines (an extra detach or a missing noindex fails), and other rules that can match a
+draft URL (a deeper rule, a placeholder rule and an absolute-URL rule on this host fail when they
+carry any header; an unrelated path or another host passes). Round 2 replaced sampled paths with
+the rule's literal prefix: a folder rule, an asset rule, an unprobed subtree, `/draft` itself, a
+placeholder, a short splat and an upper-case path each fail with `! X-Robots-Tag`, `/drafts/*`
+passes, X-Robots-Tag in `/*` fails and a rule with a percent escape is refused as unmodelled. #1181's
+2 original `/draft/*` A15 cases run again against the real file with its `/draft/*` block removed,
+with their original expectations, beside the same rules added to the full file.
 """
 import base64
 import contextlib
@@ -987,7 +1008,9 @@ live_case("edited blocks on both pages need no repin",
                 "404.html": E404},
           expected=PERMITTED, must_fail=False)
 live_case("keywords and hosts in upper case, which CSP3 matches case-insensitively",
-          headers=LIVE_HEADERS.replace("'unsafe-inline'", "'UNSAFE-INLINE'")
+          # Count 2: the live /* policy's 2 'unsafe-inline' come first; the /draft/* policy is held
+          # to its exact text, so it keeps its own spelling.
+          headers=LIVE_HEADERS.replace("'unsafe-inline'", "'UNSAFE-INLINE'", 2)
           .replace("https://ajax.cloudflare.com", "HTTPS://AJAX.CLOUDFLARE.COM", 1),
           expected=PERMITTED, must_fail=False)
 live_case("live script-src beside a correct hash-pinned style-src",
@@ -1077,10 +1100,20 @@ live_case("a <script> added to the script-free 404 page", page={"404.html": SCRI
 live_case("a <style> smuggled through <svg><title>",
           page=PAGE.replace("</svg>", "<title><style>p{color:red}</style></title>\n    </svg>", 1),
           expected="openers")
+# #1181's 2 /draft/* cases as #1181 wrote them, against the real file with its /draft/* block
+# removed, so they keep their original single-rule expectations.
+LIVE_NO_DRAFT = LIVE_HEADERS[:LIVE_HEADERS.index("\n# The staged template")] + "\n"
 live_case("a second CSP under a /draft/* rule",
-          headers=LIVE_HEADERS + "\n/draft/*\n  Content-Security-Policy: default-src 'none'\n",
+          headers=LIVE_NO_DRAFT + "\n/draft/*\n  Content-Security-Policy: default-src 'none'\n",
           expected="exactly one Content-Security-Policy")
 live_case("the live CSP detached under a /draft/* rule",
+          headers=LIVE_NO_DRAFT + "\n/draft/*\n  ! Content-Security-Policy\n", expected="detaches")
+# The same 2 rules added beside the real file's modelled /draft/* rule: a /draft/* rule that is not
+# the modelled one is an ordinary rule, so the one-policy model refuses its CSP line the same way.
+live_case("a second CSP under a second /draft/* rule",
+          headers=LIVE_HEADERS + "\n/draft/*\n  Content-Security-Policy: default-src 'none'\n",
+          expected="exactly one Content-Security-Policy")
+live_case("the live CSP detached under a second /draft/* rule",
           headers=LIVE_HEADERS + "\n/draft/*\n  ! Content-Security-Policy\n", expected="detaches")
 live_case("a comma splitting the live policy",
           headers=LIVE_HEADERS.replace("style-src ", "style-src 'none', style-src ", 1),
@@ -1122,6 +1155,120 @@ def io_failure_cases():
             failures.append(f"row 3.18: an injected {method} failure did not fail closed: "
                             f"rc={rc}, {text!r}")
     return failures, len(cases)
+
+
+# THE STAGED DRAFT (the owner's decisions of 2026-11-02 and 2026-11-03): the generated For AI
+# assistants page, which loads copy.js, stands in for every draft page. Each case puts it under
+# site/draft/ with 1 change and runs the real gate against the real site/_headers (LIVE_HEADERS),
+# which carries the A15 live policy and the 1 modelled /draft/* rule.
+DRAFT_PAGE = (ROOT / "site" / "draft" / "for-ai" / "index.html").read_bytes().decode("utf-8")
+DRAFT_AT = "draft/for-ai/index.html"
+DRAFT_BLOCK = LIVE_HEADERS[LIVE_HEADERS.index("\n# The staged template"):]
+NO_DRAFT_RULE = LIVE_HEADERS.replace(DRAFT_BLOCK, "\n")
+DRAFT_POLICY_TEXT = DRAFT_BLOCK.split("  Content-Security-Policy: ", 1)[1].split("\n", 1)[0]
+COPY_JS = '<script src="/draft/assets/baseline/copy.js" defer></script>'
+
+
+def draft_edit(old, new):
+    if old not in DRAFT_PAGE:
+        raise AssertionError(f"draft mutation {old!r} no longer matches the draft page")
+    return {DRAFT_AT: DRAFT_PAGE.replace(old, new, 1)}
+
+
+DRAFT_CASES = [
+    ("the generated draft page under the /draft/* rule", None, LIVE_HEADERS, {DRAFT_AT: DRAFT_PAGE}, False,
+     "1 draft page(s)"),
+    ("no draft page and no /draft/* rule", None, NO_DRAFT_RULE, None, False, "0 draft page(s)"),
+    ("an inline script on a draft page", None, LIVE_HEADERS,
+     draft_edit("</head>", "<script>alert(1)</script>\n</head>"), True, "<script> elements"),
+    ("a baseline script without defer", None, LIVE_HEADERS,
+     draft_edit(COPY_JS, '<script src="/draft/assets/baseline/copy.js"></script>'), True,
+     "<script> elements"),
+    ("a script from another host", None, LIVE_HEADERS,
+     draft_edit(COPY_JS, '<script src="https://cdn.example.net/x.js" defer></script>'), True,
+     "<script> elements"),
+    ("a baseline script with a body", None, LIVE_HEADERS,
+     draft_edit(COPY_JS, COPY_JS.replace("></script>", ">alert(1)</script>")), True,
+     "<script> elements"),
+    ("an inline style block on a draft page", None, LIVE_HEADERS,
+     draft_edit("</head>", "<style>p{}</style>\n</head>"), True, "<style> elements"),
+    ("a style= attribute on a draft page", None, LIVE_HEADERS,
+     draft_edit('<p class="meta">', '<p class="meta" style="color:red">'), True, "style="),
+    ("an on* handler on a draft page", None, LIVE_HEADERS,
+     draft_edit('<p class="meta">', '<p class="meta" onclick="x()">'), True, "on*"),
+    ("an element outside the draft allowlist", None, LIVE_HEADERS,
+     draft_edit('<p class="meta">', '<dl></dl><p class="meta">'), True, "element <dl>"),
+    ("a template element on a live page, which keeps the 28-element list",
+     PAGE.replace("<main", "<ul></ul><main", 1), LIVE_HEADERS, None, True, "element <ul>"),
+    ("a draft page with no /draft/* rule", None, NO_DRAFT_RULE, {DRAFT_AT: DRAFT_PAGE}, True,
+     "no /draft/* rule"),
+    ("a /draft/* rule that widens the draft policy", None,
+     LIVE_HEADERS.replace("style-src 'self';", "style-src 'self' 'unsafe-inline';", 1), {DRAFT_AT: DRAFT_PAGE},
+     True, "shared draft policy"),
+    ("a /draft/* rule that sets without detaching", None,
+     LIVE_HEADERS.replace("  ! Content-Security-Policy\n", "", 1), {DRAFT_AT: DRAFT_PAGE}, True,
+     "shared draft policy"),
+    ("a /draft/* rule that only detaches", None,
+     LIVE_HEADERS.replace("  Content-Security-Policy: " + DRAFT_POLICY_TEXT + "\n", "", 1),
+     {DRAFT_AT: DRAFT_PAGE}, True, "shared draft policy"),
+    ("a second /draft/* rule", None, LIVE_HEADERS + DRAFT_BLOCK, {DRAFT_AT: DRAFT_PAGE}, True,
+     "2 /draft/* rules"),
+    ("a CSP under a deeper /draft/ rule, which the live model still refuses", None,
+     LIVE_HEADERS + "\n/draft/x/*\n  Content-Security-Policy: style-src 'none'\n", {DRAFT_AT: DRAFT_PAGE},
+     True, "exactly one Content-Security-Policy"),
+    ("a detach under a deeper /draft/ rule", None,
+     LIVE_HEADERS + "\n/draft/x/*\n  ! Content-Security-Policy\n", {DRAFT_AT: DRAFT_PAGE}, True, "detaches"),
+    # QA round 1 of #1182: the draft allowlist is what the generator emits, the /draft/* rule's
+    # lines are pinned, and no other rule reaching /draft/ may set or detach a header.
+    ("an inline <svg> on a draft page, outside the generator's elements", None, LIVE_HEADERS,
+     draft_edit('<p class="meta">', '<svg><a xlink:href="javascript:x()"><rect/></a></svg><p class="meta">'),
+     True, "element <svg>"),
+    ("a <details> on a draft page, which the generator never emits", None, LIVE_HEADERS,
+     draft_edit('<p class="meta">', '<details><summary>x</summary></details><p class="meta">'),
+     True, "element <details>"),
+    ("a draft page named .HTM, checked as a draft page", None, LIVE_HEADERS,
+     {"draft/for-ai/index.HTM": DRAFT_PAGE}, False, "1 draft page(s)"),
+    ("a page under site/foo/draft/, which is not the draft and stays unlisted", None, LIVE_HEADERS,
+     {DRAFT_AT: DRAFT_PAGE, "foo/draft/x.html": DRAFT_PAGE}, True, "not in this gate's page list"),
+    ("a /draft/* rule that also detaches Permissions-Policy", None,
+     LIVE_HEADERS.replace("  X-Robots-Tag: noindex\n", "  X-Robots-Tag: noindex\n  ! Permissions-Policy\n", 1),
+     {DRAFT_AT: DRAFT_PAGE}, True, "holds exactly these lines"),
+    ("a /draft/* rule without its X-Robots-Tag", None,
+     LIVE_HEADERS.replace("  X-Robots-Tag: noindex\n", "", 1), {DRAFT_AT: DRAFT_PAGE}, True,
+     "holds exactly these lines"),
+    ("a deeper /draft/ rule detaching X-Robots-Tag", None,
+     LIVE_HEADERS + "\n/draft/x/*\n  ! X-Robots-Tag\n", {DRAFT_AT: DRAFT_PAGE}, True,
+     "can match /draft or a path under /draft/"),
+    ("a placeholder rule that matches a draft page and sets a header", None,
+     LIVE_HEADERS + "\n/:dir/for-ai/*\n  Access-Control-Allow-Origin: *\n", {DRAFT_AT: DRAFT_PAGE}, True,
+     "can match /draft or a path under /draft/"),
+    ("an absolute-URL rule on this site's host that reaches the draft", None,
+     LIVE_HEADERS + "\nhttps://secureconfig.ai/draft/*\n  X-Frame-Options: SAMEORIGIN\n", {DRAFT_AT: DRAFT_PAGE},
+     True, "can match /draft or a path under /draft/"),
+    ("a rule with an unrelated header on another path", None,
+     LIVE_HEADERS + "\n/guides/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False, "1 draft page(s)"),
+    ("an absolute-URL rule on another host", None,
+     LIVE_HEADERS + "\nhttps://other.example/draft/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False,
+     "1 draft page(s)"),
+]
+# QA round 2 of #1182: a rule reaches the draft by its literal prefix, not by sampled paths, so a
+# rule for 1 folder, 1 asset, an unprobed subtree or /draft itself is refused like a splat.
+for _rule in ("/draft/checklist/", "/draft/assets/baseline/copy.js", "/draft/unprobed/*", "/draft",
+              "/:x/checklist/", "/d*", "/DRAFT/guides/"):
+    DRAFT_CASES.append((f"the rule {_rule} detaching X-Robots-Tag", None,
+                        LIVE_HEADERS + f"\n{_rule}\n  ! X-Robots-Tag\n", {DRAFT_AT: DRAFT_PAGE}, True,
+                        f"rule {_rule} can match /draft or a path under /draft/"))
+DRAFT_CASES += [
+    ("a /drafts/* rule, which cannot match the draft", None,
+     LIVE_HEADERS + "\n/drafts/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False, "1 draft page(s)"),
+    ("X-Robots-Tag in the live /* rule, which reaches every draft page", None,
+     LIVE_HEADERS.replace("  Cross-Origin-Opener-Policy: same-origin\n",
+                          "  Cross-Origin-Opener-Policy: same-origin\n  X-Robots-Tag: all\n", 1),
+     {DRAFT_AT: DRAFT_PAGE}, True, "rule /* sets or detaches X-Robots-Tag"),
+    ("a rule with a percent escape, outside the modelled syntax", None,
+     LIVE_HEADERS + "\n/%64raft/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, True,
+     "outside the rule syntax this gate models"),
+]
 
 
 def main() -> int:
@@ -1193,6 +1340,18 @@ def main() -> int:
     if rc != 0 or "2 SVG document(s)" not in out:
         failures.append(f"row 3.18: a dotfile named .svg was not counted as an SVG: {out!r}")
 
+    # THE STAGED DRAFT: a real generated draft page under the /draft/* rule, and each refusal the
+    # draft model adds or keeps.
+    for desc, page, headers, extra, must_fail, expected in DRAFT_CASES:
+        rc, out = run_against(page, headers, extra_files=extra)
+        if rc != (1 if must_fail else 0):
+            failures.append(f"draft: {desc}: expected the gate to {'fail' if must_fail else 'pass'}, "
+                            f"it did not ({out!r})")
+        elif expected not in out:
+            failures.append(f"draft: {desc}: expected {expected!r} in {out!r}")
+        if "Traceback (most recent call last):" in out:
+            failures.append(f"draft: {desc}: the gate crashed: {out!r}")
+
     # Relocating index's script onto the 404 page must fail BOTH pages in the model phase.
     rc, out = run_against({"index.html": NOSCRIPT_INDEX, "404.html": SCRIPT_ON_404})
     if "site/index.html" not in out or "site/404.html" not in out:
@@ -1204,8 +1363,8 @@ def main() -> int:
         return 1
     print(f"  ok    {LEGACY_CASE_COUNT} recorded cases for the CSP hash gate across six review rounds, "
           f"{len(SCOPE_CASES)} row 3.18 and P5 document, page and filesystem cases, "
-          f"{len(LIVE_CASES)} cases for the temporary A15 live policy, and "
-          f"{io_case_count} injected I/O failures")
+          f"{len(LIVE_CASES)} cases for the temporary A15 live policy, "
+          f"{len(DRAFT_CASES)} staged-draft cases, and {io_case_count} injected I/O failures")
     return 0
 
 

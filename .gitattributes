@@ -8,3 +8,9 @@ site/_headers text eol=lf
 # The claim-length gate splits its baseline on LF alone and refuses a CR in any line, so a CRLF
 # checkout would fail it on every entry. Keep the baseline LF in the index and in every checkout.
 tools/claim_length_baseline.txt text eol=lf
+
+# The copied site template files are pinned by SHA-256 in .baseline/pin.toml, so no checkout may
+# rewrite their bytes; the generated draft pages are compared byte for byte by
+# scripts/build-site.py --check, so they stay LF.
+site/draft/assets/baseline/** -text
+site/draft/**/*.html text eol=lf

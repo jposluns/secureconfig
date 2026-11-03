@@ -18,9 +18,9 @@ This repository gives an AI assistant the security steps to apply and a way to b
 
 ## The maintainer
 
-Jeff Posluns has spent more than 30 years in technology and security and wants to help keep the world and its information more secure. He built this library from that experience and uses his own AI tooling to keep expanding and updating it, with automated checks so it keeps its accuracy as it grows. Everything here is free, and all of it except the AIQT Guardrails material listed in `.aiqt/PIN` is in the public domain.
+Jeff Posluns has spent more than 30 years in technology and security and wants to help keep the world and its information more secure. He built this library from that experience and uses his own AI tooling to keep expanding and updating it, with automated checks so it keeps its accuracy as it grows. Everything here is free, and all of it except the AIQT Guardrails material listed in `.aiqt/PIN` and the site template's fonts and third-party marks is in the public domain.
 
-The guides are dedicated to the public domain under CC0; the one exception, the AIQT Guardrails material listed in `.aiqt/PIN` (vendored files and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), is licensed under the Apache License 2.0 (see [Licence](#licence)).
+The guides are dedicated to the public domain under CC0. The exceptions are the AIQT Guardrails material listed in `.aiqt/PIN` (vendored files and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), which is licensed under the Apache License 2.0, and the site template's fonts and GitHub, LinkedIn and ORCID marks (see [Licence](#licence)).
 
 ## Use it
 
@@ -256,4 +256,4 @@ Scope: deployment exposure, including TLS, human and machine authentication, MFA
 
 ## Licence
 
-Everything in this repository (the guides, the configuration samples, and the site) is dedicated to the public domain under [CC0 1.0 Universal](LICENSE). Copy and reuse it freely; no attribution is required. The one exception is the AIQT Guardrails material that [`.aiqt/PIN`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/PIN) lists (the files vendored under `.aiqt/` and `tools/`, and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), which is licensed under the Apache License 2.0 (see [`.aiqt/LICENSE`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/LICENSE) and [`.aiqt/NOTICE`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/NOTICE)).
+Everything in this repository (the guides, the configuration samples, and the site) is dedicated to the public domain under [CC0 1.0 Universal](LICENSE), with the exceptions below, which [NOTICE](NOTICE) records. Copy and reuse it freely; no attribution is required. The site template's 4 fonts, under `site/draft/assets/baseline/fonts/`, are licensed by their authors under the SIL Open Font License 1.1, and its GitHub, LinkedIn and ORCID marks, under `site/draft/assets/baseline/marks/`, are their owners' trademarks, used under their owners' terms and outside the CC0 grant. The other exception is the AIQT Guardrails material that [`.aiqt/PIN`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/PIN) lists (the files vendored under `.aiqt/` and `tools/`, and the AIQT sections adapted into `CLAUDE.md` and `AGENTS.md`), which is licensed under the Apache License 2.0 (see [`.aiqt/LICENSE`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/LICENSE) and [`.aiqt/NOTICE`](https://github.com/jposluns/secureconfig/blob/main/.aiqt/NOTICE)).

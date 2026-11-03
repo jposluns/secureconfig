@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" class="site-secureconfig">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Disclosure | SecureConfig.ai</title>
+<link rel="icon" href="/draft/assets/baseline/logos/secureconfig-favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/draft/assets/baseline/logos/secureconfig-touch.png">
+<link rel="stylesheet" href="/draft/assets/baseline/fonts.css">
+<link rel="stylesheet" href="/draft/assets/baseline/palettes.css">
+<link rel="stylesheet" href="/draft/assets/baseline/baseline.css">
+<script src="/draft/assets/baseline/rail.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main-content">Skip to content</a>
+<header class="mast"><a class="brand" href="/draft/"><span class="name">SecureConfig<span class="tld">.ai</span></span><span class="rule" aria-hidden="true"></span></a><nav class="nav" aria-label="Site"><a href="/draft/guides/">Guides</a><a href="/draft/for-ai/">For AI assistants</a><a href="/draft/for-humans/">For humans</a><a href="/draft/checklist/">Checklist</a><a href="https://github.com/jposluns/secureconfig" target="_blank" rel="noopener noreferrer">GitHub<span class="vh"> (opens in a new tab)</span></a></nav></header>
+<main id="main-content">
+<div class="wrap"><div class="doc"><p class="lbl first">Disclosure</p>
+<h1>Disclosure</h1>
+<nav class="rail" aria-label="On this page"><img class="rail-logo" src="/draft/assets/baseline/logos/secureconfig.svg" alt="A terminal window with a padlock and a small shield"><p class="lbl">On this page</p><ol><li><a href="#d-1">How the guides are sourced</a></li><li><a href="#d-2">What a Verify step rests on</a></li><li><a href="#d-3">The verification checklist</a></li><li><a href="#d-4">Versions and dates</a></li><li><a href="#d-5">Scope</a></li><li><a href="#d-6">What the site loads</a></li><li><a href="#d-7">What ships as code</a></li><li><a href="#d-8">Automated checks</a></li><li><a href="#d-9">Licence</a></li></ol></nav>
+<p class="meta">This page sets out what the project claims, the limit of each claim, and the evidence for both. Each entry covers 1 thing the project does: the claim and its limitation stand side by side, each pointing to the evidence.</p>
+<p class="lbl sec">Entry 1</p>
+<h2 id="d-1">How the guides are sourced</h2>
+<p><strong>Claim:</strong> The contribution rules require every configuration line, flag, or variable name in a guide to come from the vendor's documentation, with that page linked in the guide's dated Sources section. Where a tool has no native control, the guide says so and gives a fronting-layer pattern instead of inventing an option.</p>
+<p><strong>Limitation:</strong> Tracing each line to its source is an authoring and review duty. The guide-shape gate checks that a guide has a Verify section and dated Sources; it cannot check that a line matches the page it cites.</p>
+<p><strong>Evidence:</strong> <a href="https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md#what-a-guide-needs" target="_blank" rel="noopener noreferrer">What a guide needs<span class="vh"> (opens in a new tab)</span></a> <a href="https://github.com/jposluns/secureconfig/blob/main/tools/check_guide_shape.py" target="_blank" rel="noopener noreferrer">The guide-shape gate<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl sec">Entry 2</p>
+<h2 id="d-2">What a Verify step rests on</h2>
+<p><strong>Claim:</strong> Verify steps declare DEMONSTRATED, meaning the check ran against both the exposed and the fixed state, or REASONED, meaning it is derived from cited vendor behaviour. A reasoned step is never presented as verified.</p>
+<p><strong>Limitation:</strong> The marking gate checks that a declaration exists, not that the demonstration occurred or that the reasoning holds; that is checked in review. Older steps still being brought in line are listed in a baseline file.</p>
+<p><strong>Evidence:</strong> <a href="https://github.com/jposluns/secureconfig/blob/main/README.md#the-gap-and-the-standard" target="_blank" rel="noopener noreferrer">The gap and the standard<span class="vh"> (opens in a new tab)</span></a> <a href="https://github.com/jposluns/secureconfig/blob/main/tools/verify_marking_baseline.txt" target="_blank" rel="noopener noreferrer">The marking baseline<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl sec">Entry 3</p>
+<h2 id="d-3">The verification checklist</h2>
+<p><strong>Claim:</strong> The checklist sets out 11 checks to run before reporting completion, with each result recorded as pass, fail, untested, or not applicable, and a control reported as verified only for the checks that passed.</p>
+<p><strong>Limitation:</strong> Every item is REASONED and records that it was not run against a deployment. Items 1 to 4 record local syntax checks and stub runs only, and item 8 names tools without a command or a pass threshold.</p>
+<p><strong>Evidence:</strong> <a href="/draft/checklist/">The checklist</a> <a href="https://github.com/jposluns/secureconfig/blob/main/README.sources.md" target="_blank" rel="noopener noreferrer">Its sources<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl sec">Entry 4</p>
+<h2 id="d-4">Versions and dates</h2>
+<p><strong>Claim:</strong> Most guides carry machine-readable front matter recording the sources checked and, where known, the exact versions. Guides date their sources in a section titled with the month and year they were checked; common-mistakes.md, a checklist that links to the fixes, carries none of its own.</p>
+<p><strong>Limitation:</strong> Versions are recorded where known; 100 of the 102 guides are listed for the version-basis check. Vendor behaviour can change after the checked date.</p>
+<p><strong>Evidence:</strong> <a href="https://github.com/jposluns/secureconfig/blob/main/tools/version_basis_guides.txt" target="_blank" rel="noopener noreferrer">The version-basis list<span class="vh"> (opens in a new tab)</span></a> <a href="https://github.com/jposluns/secureconfig/blob/main/tools/version_basis.py" target="_blank" rel="noopener noreferrer">The version-basis check<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl sec">Entry 5</p>
+<h2 id="d-5">Scope</h2>
+<p><strong>Claim:</strong> The guides cover deployment exposure: TLS, human and machine authentication, MFA, access restrictions, secrets, and inbound and outbound network access, from first deployment through teardown.</p>
+<p><strong>Limitation:</strong> General application security, such as injection, deserialization, and business logic flaws, is out of scope and left to the OWASP resources the guides link; LLM application risks such as prompt injection are covered by the OWASP Top 10 for LLM Applications.</p>
+<p><strong>Evidence:</strong> <a href="https://github.com/jposluns/secureconfig/blob/main/README.md#scope-and-currency" target="_blank" rel="noopener noreferrer">Scope and currency<span class="vh"> (opens in a new tab)</span></a> <a href="https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md#scope" target="_blank" rel="noopener noreferrer">Contribution scope<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl sec">Entry 6</p>
+<h2 id="d-6">What the site loads</h2>
+<p><strong>Claim:</strong> These pages load only files from this site: 3 stylesheets, the template's fonts, logos and marks, and 2 scripts: 1 reveals the copy buttons on 2 pages, and 1 marks the section the reader is on in the contents list on 2 pages. The pages' own code sets no cookies, and the site's gates refuse inline script, inline style, and event-handler attributes in its pages.</p>
+<p><strong>Limitation:</strong> Cloudflare, which serves the site, can add its own scripts. The draft's Content-Security-Policy allows Cloudflare's script and analytics hosts and inline scripts for its JavaScript Detections, by the owner's decision of 3 November 2026.</p>
+<p><strong>Evidence:</strong> <a href="https://github.com/jposluns/secureconfig/blob/main/site/_headers" target="_blank" rel="noopener noreferrer">The headers file<span class="vh"> (opens in a new tab)</span></a> <a href="https://github.com/jposluns/secureconfig/blob/main/tools/check_csp_hashes.py" target="_blank" rel="noopener noreferrer">The page gate<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl sec">Entry 7</p>
+<h2 id="d-7">What ships as code</h2>
+<p><strong>Claim:</strong> The guides are documentation. The code that ships is the Agent Plugin under plugin/ and the helper scripts under tools/ and scripts/; the site adds the template's copy and rail scripts.</p>
+<p><strong>Limitation:</strong> A correction lands on main through the normal pull-request and gate process, so an installed plugin bundle or a copied guide must be refreshed against main to pick it up.</p>
+<p><strong>Evidence:</strong> <a href="https://github.com/jposluns/secureconfig/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">The security policy<span class="vh"> (opens in a new tab)</span></a> <a href="https://github.com/jposluns/secureconfig/tree/main/plugin" target="_blank" rel="noopener noreferrer">The plugin<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl sec">Entry 8</p>
+<h2 id="d-8">Automated checks</h2>
+<p><strong>Claim:</strong> Every gate in the suite is deterministic and offline, and the suite is the required status check on main, so no change merges with a failing gate.</p>
+<p><strong>Limitation:</strong> The gates check the structure of the guides; whether a demonstration ran or a reasoned step is justified is checked in review. External links are swept weekly by an advisory job that does not block a merge.</p>
+<p><strong>Evidence:</strong> <a href="https://github.com/jposluns/secureconfig/blob/main/tools/run_all_checks.sh" target="_blank" rel="noopener noreferrer">The gate suite<span class="vh"> (opens in a new tab)</span></a> <a href="https://github.com/jposluns/secureconfig/blob/main/.github/workflows/checks.yml" target="_blank" rel="noopener noreferrer">The CI workflow<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl sec">Entry 9</p>
+<h2 id="d-9">Licence</h2>
+<p><strong>Claim:</strong> The guides, the configuration samples, and the site are dedicated to the public domain under CC0 1.0 Universal.</p>
+<p><strong>Limitation:</strong> The AIQT Guardrails material listed in .aiqt/PIN is under the Apache License 2.0. The site template's fonts are under the SIL Open Font License 1.1, and the GitHub, LinkedIn and ORCID marks are their owners' trademarks, used under their owners' terms.</p>
+<p><strong>Evidence:</strong> <a href="/draft/license/">The licence page</a> <a href="https://github.com/jposluns/secureconfig/blob/main/NOTICE" target="_blank" rel="noopener noreferrer">The notice file<span class="vh"> (opens in a new tab)</span></a></p>
+<p class="lbl blk">Security</p>
+<p>To report a security vulnerability, see <a href="https://posluns.ca/security/" target="_blank" rel="noopener noreferrer">the vulnerability disclosure policy<span class="vh"> (opens in a new tab)</span></a>. The privacy policy that covers this site and the other 5 is at <a href="https://posluns.ca/privacy/" target="_blank" rel="noopener noreferrer">posluns.ca/privacy<span class="vh"> (opens in a new tab)</span></a>.</p>
+<div class="next"><p class="lbl">Next</p><a class="start" href="/draft/">Home <span class="arrow" aria-hidden="true">&rarr;</span></a></div>
+</div></div>
+</main>
+<footer class="family wrap"><div class="bar"><ul class="cards rainbow" aria-label="The 6 project sites"><li class="slice slice-1"><a class="card" href="/draft/" aria-current="page"><img src="/draft/assets/baseline/logos/secureconfig.svg" alt=""><span class="cname">SecureConfig<span class="tld">.ai</span></span><span class="vh"> (this site)</span></a></li><li class="slice slice-2"><a class="card" href="https://opfiles.ai/" target="_blank" rel="noopener noreferrer"><img src="/draft/assets/baseline/logos/opfiles.svg" alt=""><span class="cname">OPFiles<span class="tld">.ai</span></span><span class="vh"> (opens in a new tab)</span></a></li><li class="slice slice-3"><a class="card" href="https://auditthis.ai/" target="_blank" rel="noopener noreferrer"><img src="/draft/assets/baseline/logos/auditthis.svg" alt=""><span class="cname">AuditThis<span class="tld">.ai</span></span><span class="vh"> (opens in a new tab)</span></a></li><li class="slice slice-4"><a class="card" href="https://cleanlanguage.ai/" target="_blank" rel="noopener noreferrer"><img src="/draft/assets/baseline/logos/cleanlanguage.svg" alt=""><span class="cname">CleanLanguage<span class="tld">.ai</span></span><span class="vh"> (opens in a new tab)</span></a></li><li class="slice slice-5"><a class="card" href="https://aiqt.ai/" target="_blank" rel="noopener noreferrer"><img src="/draft/assets/baseline/logos/aiqt.svg" alt=""><span class="cname">AIQT<span class="tld">.ai</span></span><span class="vh"> (opens in a new tab)</span></a></li><li class="slice slice-6"><a class="card" href="https://grclibrary.ai/" target="_blank" rel="noopener noreferrer"><img src="/draft/assets/baseline/logos/grclibrary.svg" alt=""><span class="cname">GRCLibrary<span class="tld">.ai</span></span><span class="vh"> (opens in a new tab)</span></a></li></ul><ul class="tail" aria-label="Jeff Posluns elsewhere"><li class="tile tile-1"><a class="card" href="https://github.com/jposluns" target="_blank" rel="noopener noreferrer"><img class="only-light" src="/draft/assets/baseline/marks/github-invertocat-black.svg" alt=""><img class="only-dark" src="/draft/assets/baseline/marks/github-invertocat-white.svg" alt=""><span class="cname vh">GitHub</span><span class="vh"> (opens in a new tab)</span></a></li><li class="tile tile-2"><a class="card" href="https://www.linkedin.com/in/jposluns/" target="_blank" rel="noopener noreferrer"><img src="/draft/assets/baseline/marks/linkedin-in-bug.png" alt=""><span class="cname vh">LinkedIn</span><span class="vh"> (opens in a new tab)</span></a></li><li class="tile tile-3"><a class="card" href="https://orcid.org/0009-0000-7775-2233" target="_blank" rel="noopener noreferrer"><img src="/draft/assets/baseline/marks/orcid-id.svg" alt=""><span class="cname vh">ORCID</span><span class="vh"> (opens in a new tab)</span></a></li></ul><div class="tile sigtile"><a class="sig" href="https://posluns.ca/" target="_blank" rel="noopener noreferrer" aria-label="A Jeff at Posluns dot ca project: posluns.ca (opens in a new tab)"><span class="pre">A </span>Jeff<span class="gold">@</span>Posluns<span class="gold">.ca</span><span class="post"> Project</span></a></div></div></footer>
+<p class="vh" id="copy-status" role="status" aria-live="polite"></p>
+</body>
+</html>
