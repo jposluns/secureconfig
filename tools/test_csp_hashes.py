@@ -748,7 +748,7 @@ scope_case("P5 a handler-bearing tag in a page comment fails closed", expected="
 # missed the handler inside SVG <title>, so both counts were 0. Three rules that ask html.parser
 # nothing now refuse it: (1) a context-free scan for a valued `on...=` outside the pinned blocks,
 # (2) inert text holding a `<`, and (3) the foreign-content elements html.parser reads as HTML.
-ON_TEXT = "outside the hash-pinned blocks"
+ON_TEXT = "outside the inline <style> and <script> blocks"
 CROSSINGS = (("comment", '<!-- <b title=" -->', "has a comment whose text"),
              ("CDATA section", '<![CDATA[ <b title=" ]]>', "has a CDATA section whose text"),
              ("bogus declaration", '<!thing <b title=">', "has a <! declaration whose text"),
@@ -999,6 +999,14 @@ live_case("a sha384 hash beside 'unsafe-inline' in style-src",
 live_case("a nonce beside 'unsafe-inline' in style-src",
           headers=LIVE_HEADERS.replace("style-src 'self'", "style-src 'nonce-abc' 'self'", 1),
           expected="beside 'nonce-abc'")
+live_case("a hash beside 'unsafe-inline' in script-src names the JavaScript Detections loader",
+          headers=LIVE_HEADERS.replace("script-src 'self'", f"script-src {SCRIPT_PIN} 'self'", 1),
+          expected="refuses every other inline script and on* handler, Cloudflare's injected "
+                   "JavaScript Detections loader included")
+live_case("a hash beside 'unsafe-inline' in style-src names the effect on inline styles",
+          headers=LIVE_HEADERS.replace("style-src 'self'", f"style-src {STYLE_PIN} 'self'", 1),
+          expected="applies only the pinned inline <style> blocks and refuses every other inline "
+                   "<style> block and every style= attribute;")
 for kind, extra in (("script-src", "https://cdn.example.com"), ("script-src", "'strict-dynamic'"),
                     ("script-src", "'unsafe-eval'"), ("script-src", "'unsafe-hashes'"),
                     ("script-src", "https:"), ("script-src", "*"),
@@ -1020,13 +1028,20 @@ live_case("script-src-elem 'none' beside the live script-src",
           headers=LIVE_HEADERS.replace("; font-src", "; script-src-elem 'none'; font-src", 1),
           expected="script-src-elem lacks the hash")
 live_case("a valued on* handler on index's body",
-          page=PAGE.replace("<body", '<body onload="x"', 1), expected="outside the hash-pinned blocks")
+          page=PAGE.replace("<body", '<body onload="x"', 1), expected=ON_TEXT)
 live_case("a valueless on* handler on index's body", page=PAGE.replace("<body", "<body onload", 1),
           expected="a browser runs it")
 live_case("an on* handler on the 404 page's body",
-          page={"404.html": PAGE_404.replace("<body", "<body onclick", 1)}, expected="site/404.html")
+          page={"404.html": PAGE_404.replace("<body", "<body onclick", 1)},
+          expected="carries an on* handler attribute (onclick)")
 live_case("a style= attribute", page=PAGE.replace("<body", '<body style="color:red"', 1),
-          expected="style= attribute")
+          expected="while the temporary 'unsafe-inline' is in style-src a browser applies it")
+live_case("an SVG style element, refused whatever style-src allows",
+          expected="refuses one whatever the site's style-src allows",
+          extra_files={"assets/probe.svg": svg("<style>path{fill:red}</style>")})
+live_case("an SVG style attribute, refused whatever style-src allows",
+          expected="refuses one whatever the site's style-src allows",
+          extra_files={"assets/probe.svg": svg('<path style="fill:red"/>')})
 live_case("an element outside the allowlist",
           page=PAGE.replace("</body>", "<frameset></frameset>\n</body>", 1),
           expected="element <frameset> is not in the page allowlist")

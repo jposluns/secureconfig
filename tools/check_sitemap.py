@@ -19,10 +19,11 @@ WHAT IT CHECKS:
   - every `loc` is `https://secureconfig.ai` and a path, with no query, fragment, `..`, `.` or
     empty segment and no percent sign, that is `/` or ends with `/`, so it names the folder page
     `site/<path>index.html`. That page exists as a regular file, is not under /draft/, and carries
-    no robots meta tag whose content includes `noindex`. No `loc` is listed twice;
+    no robots meta tag whose content includes `noindex` or `none` (which means `noindex,
+    nofollow`), each read as one comma-separated token in any case. No `loc` is listed twice;
   - every `lastmod` is a calendar date written YYYY-MM-DD;
   - every indexable live page is listed: each `index.html` under site/ outside site/draft/ with no
-    robots `noindex`. Any other `.html` outside site/draft/ must carry `noindex` (site/404.html
+    robots `noindex` or `none`. Any other `.html` outside site/draft/ must carry `noindex` (site/404.html
     does), because this gate maps only folder pages to URLs;
   - site/robots.txt carries exactly one Sitemap line (the field name in any case), and it is
     `Sitemap: https://secureconfig.ai/sitemap.xml`.
@@ -75,11 +76,12 @@ class Robots(HTMLParser):
 
 
 def noindex(path):
-    """True when the page carries a robots meta tag whose content includes noindex."""
+    """True when the page carries a robots meta tag whose content includes noindex or none."""
     parser = Robots()
     parser.feed(path.read_bytes().decode("utf-8"))
     parser.close()
-    return any("noindex" in [t.strip().lower() for t in c.split(",")] for c in parser.contents)
+    return any({"noindex", "none"} & {t.strip().lower() for t in c.split(",")}
+               for c in parser.contents)
 
 
 def regular(root, rel):
@@ -219,7 +221,7 @@ def check(root):
             try:
                 if noindex(root / page):
                     findings.append(f"{line}: loc {loc!r} names {page}, which carries a robots "
-                                    f"noindex, so it must not be in the sitemap")
+                                    f"noindex or none, so it must not be in the sitemap")
             except (OSError, UnicodeError) as exc:
                 findings.append(f"cannot read {page} as UTF-8: {exc}")
 

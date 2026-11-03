@@ -18,7 +18,7 @@ no vulnerability details, and the maintainer will follow up.
 
 You can also report by email to jeff@posluns.ca, the contact that
 <https://secureconfig.ai/.well-known/security.txt> publishes. The maintainer's vulnerability
-disclosure policy is at <https://posluns.ca/security/>, and that file names
+disclosure policy is at <https://posluns.ca/security/>, and security.txt names
 <https://posluns.ca/security/pgp-key.txt> as the key for an encrypted report.
 
 Helpful things to include: the affected guide, script, or file; the exact commit; what a reader or a
