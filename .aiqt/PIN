@@ -31,7 +31,8 @@
 #   material under the Apache License 2.0 (.aiqt/LICENSE,
 #   .aiqt/NOTICE). This pin was re-pinned on 2026-09-25 because the earlier pin predates the pack's move to
 #   Apache-2.0 (at upstream eeba6d1). The rest of this repository is CC0, apart from the site template's
-#   fonts and third-party marks that NOTICE records; README, CONTRIBUTING, SECURITY and
+#   fonts (SIL Open Font License 1.1) and its GitHub, LinkedIn and ORCID marks (their owners'
+#   trademarks), which NOTICE records; README, CONTRIBUTING, SECURITY and
 #   CLAUDE.md/AGENTS.md name this exception. The local patch carries a "LOCAL PATCH" notice in the file
 #   (Apache-2.0 section 4(b)).
 #

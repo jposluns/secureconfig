@@ -18,7 +18,9 @@ files the draft links directly, /llms.txt and /llms-full.txt.
 The build refuses to write, and `--check` fails, when a page would contain an en or em dash, an
 inline style or `style=` attribute, a `<script>` without `src` or with a body, an `on*` attribute,
 or "what this is" framing (SPECIFICATION.md section 12). It does not write the copied baseline
-files under assets/baseline/ (scripts/copy-baseline.py does).
+files under assets/baseline/ (scripts/copy-baseline.py does). `--check` also fails on any file under
+the output folder that is neither a page it writes nor under assets/baseline/, a page being a .html
+or .htm file in any case, as the CSP gate names one.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error.
 Standard library only. No network.
@@ -32,12 +34,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from check_csp_hashes import STYLE_ATTR, VALUED_HANDLER  # noqa: E402  (shared refusal patterns)
+from check_csp_hashes import STYLE_ATTR, VALUED_HANDLER, name_suffix  # noqa: E402  (shared rules)
 
 CONTENT = Path("site-src") / "content.json"
 README = Path("README.md")
 VERSIONED = Path("tools") / "version_basis_guides.txt"
 LIVE_INDEX = Path("site") / "index.html"
+COPIED = "assets/baseline/"  # the copied template files, which this build does not write
 REPO = "https://github.com/jposluns/secureconfig"
 BLOB = REPO + "/blob/main/"
 # The live files the draft links directly (owner's decision 5, 2026-11-03); removed at promotion,
@@ -385,7 +388,7 @@ class Builder:
         tasks = f["tasks"]
         body = [f'<p class="meta">{self.inline(f["meta"]["text"])}</p>',
                 '<p class="lbl blk">At a glance</p>',
-                self.figures(((k["tasks"], "tasks"), (k["checklist_tasks"], "end with the checklist"),
+                self.figures(((k["tasks"], "tasks"), (k["checklist_tasks"], "run the checklist"),
                               (k["approval_tasks"], "wait for your approval")))]
         for i, t in enumerate(tasks, 1):
             body += [f'<p class="lbl sec">Task {i}</p>', f'<h2 id="task-{i}">{esc(t["title"])}</h2>',
@@ -528,11 +531,20 @@ def main(argv=None):
             except OSError as exc:
                 print(f"  FAIL  cannot read {path}: {exc}")
                 return 2
+        # Every file under the output folder is a page this build writes, or a copied template file
+        # under assets/baseline/ (scripts/copy-baseline.py, pinned by tools/check_baseline_pin.py).
+        # A page is .html or .htm in any case, read as the CSP gate reads one (name_suffix). At the
+        # root after promotion the folder also holds the live files, so only pages are compared.
         if out.is_dir():
-            for path in sorted(out.rglob("*.html")):
+            for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
-                if rel not in pages and not rel.startswith("assets/"):
+                if rel in pages or rel.startswith(COPIED):
+                    continue
+                if name_suffix(path.name) in (".html", ".htm"):
                     problems.append(f"{rel} is not a page this build writes")
+                elif args.base != "/":
+                    problems.append(f"{rel} is neither a page this build writes nor a copied "
+                                    f"template file under {COPIED}")
         if problems:
             for p in problems:
                 print(f"  FAIL  {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}/{p}; "

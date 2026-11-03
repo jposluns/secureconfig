@@ -1259,8 +1259,8 @@ fi
 
 # The staged template rebuild under site/draft/ (baseline SPECIFICATION section 4.1). Each gate runs
 # after its self-test, so a gate that stopped catching its cases cannot report a pass; the draft is
-# checked fresh before the CSP gate reads its pages. A gate that exits 0 while printing a FAIL line,
-# or crashes, is a failure.
+# checked fresh before the CSP gate reads its pages. A gate that exits 0 while printing a FAIL line
+# or without printing an ok line, or that crashes, is a failure.
 run_gate() {
   local label=$1 out
   shift
@@ -1268,6 +1268,8 @@ run_gate() {
     printf '%s\n' "$out"
     if grep -q '^  FAIL  ' <<< "$out"; then
       bad "$label printed findings but exited 0"
+    elif ! grep -q '^  ok    ' <<< "$out"; then
+      bad "$label exited 0 without an ok line"
     fi
   elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$out"; then
     bad "$label crashed"

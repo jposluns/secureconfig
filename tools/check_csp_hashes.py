@@ -303,20 +303,29 @@ PAGE_ELEMENTS = frozenset((
 # site/draft/ is a draft page, listed by the walk rather than in PAGES. A draft page carries NO
 # inline block at all: its only scripts are same-origin baseline files, written exactly as
 # `<script src="/draft/assets/baseline/<name>.js" defer></script>`, and every other refusal above
-# applies to it unchanged. Its element allowlist is the live one plus the elements the template
-# emits on this site (the owner's list), because a draft page has no pinned block for a misparsed
-# element to reach. The draft is governed by 1 `/draft/*` rule that detaches the live policy and
-# sets DRAFT_POLICY, the shared 6-site draft policy, exactly. At promotion these constants, the
-# live model's hashes and the 28-element list go together; see the PR that adds them.
+# applies to it unchanged. Its element allowlist is exactly the elements scripts/build-site.py emits
+# (no SVG family and no `style`), so an element the generator never writes is refused even where the
+# draft policy's 'unsafe-inline' would run what it carries. The draft is governed by 1 `/draft/*`
+# rule whose lines are exactly DRAFT_RULE_LINES (the detach, the shared 6-site draft policy and the
+# noindex), and no other rule that can match a path under /draft/ may set or detach any header. At
+# promotion these constants, the live model's hashes and the 28-element list go together; see the
+# PR that adds them.
 DRAFT = Path("site") / "draft"
 DRAFT_RULE = "/draft/*"
 DRAFT_POLICY = ("default-src 'none'; script-src 'self' 'unsafe-inline' https://ajax.cloudflare.com "
                 "https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; "
                 "style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; "
                 "form-action 'none'; frame-ancestors 'none'")
-DRAFT_ELEMENTS = PAGE_ELEMENTS | frozenset((
-    "ul", "ol", "li", "table", "caption", "thead", "tbody", "tr", "th", "td", "details", "summary",
-    "img", "strong", "em", "small", "code", "pre", "button", "section", "nav"))
+DRAFT_RULE_LINES = ["! Content-Security-Policy", f"Content-Security-Policy: {DRAFT_POLICY}",
+                    "X-Robots-Tag: noindex"]
+DRAFT_ELEMENTS = frozenset((
+    "html", "head", "meta", "title", "link", "script", "body", "a", "header", "nav", "main",
+    "footer", "section", "div", "span", "p", "h1", "h2", "h3", "em", "strong", "small", "code",
+    "pre", "button", "img", "ul", "ol", "li", "table", "caption", "thead", "tbody", "tr", "th",
+    "td"))
+# Paths under /draft/ that a header rule is tested against, besides every draft page's own URL.
+DRAFT_PROBES = ["/draft/", "/draft/x", "/draft/x/", "/draft/x/y", "/draft/404.html",
+                "/draft/assets/baseline/baseline.css", "/draft/no-such-path"]
 DRAFT_SCRIPT = re.compile(r'<script src="/draft/assets/baseline/[a-z]+\.js" defer></script>')
 TAG_NAME = re.compile(r"</?([A-Za-z][^\t\n\f />]*)")
 ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
@@ -730,24 +739,50 @@ def draft_page_findings(path, html):
 
 
 def draft_rule_findings(blocks, drafts):
-    """Reasons the `/draft/*` rule is outside the draft model: at most 1 such rule, its only
-    Content-Security-Policy lines a detach and then DRAFT_POLICY exactly, and the rule present
-    whenever site/draft/ holds a page."""
+    """Reasons the header rules are outside the draft model: at most 1 `/draft/*` rule, its lines
+    exactly DRAFT_RULE_LINES, the rule present whenever site/draft/ holds a page, and no other rule
+    that can match a path under /draft/ setting or detaching any header other than a CSP."""
     rules = [lines for rule, lines in blocks if rule == DRAFT_RULE]
     if len(rules) > 1:
         return [f"{HEADERS} has {len(rules)} {DRAFT_RULE} rules, and this gate models 1"]
-    if not rules:
-        return ([f"{HEADERS} has no {DRAFT_RULE} rule, so the {len(drafts)} draft page(s) under "
-                 f"{DRAFT} are served under the live policy, which this gate does not check them "
-                 f"against"] if drafts else [])
-    csp = [line for line in rules[0]
-           if line.lstrip("!").split(":", 1)[0].strip().lower() == CSP]
-    want = ["! Content-Security-Policy", f"Content-Security-Policy: {DRAFT_POLICY}"]
-    if csp != want:
-        return [f"the {DRAFT_RULE} rule in {HEADERS} must detach the live Content-Security-Policy "
-                f"and then set exactly the shared draft policy ({DRAFT_POLICY}), and nothing else "
-                f"about Content-Security-Policy; it has {csp!r}"]
-    return []
+    out = []
+    if not rules and drafts:
+        out.append(f"{HEADERS} has no {DRAFT_RULE} rule, so the {len(drafts)} draft page(s) under "
+                   f"{DRAFT} are served under the live policy, which this gate does not check them "
+                   f"against")
+    if rules and rules[0] != DRAFT_RULE_LINES:
+        out.append(f"the {DRAFT_RULE} rule in {HEADERS} must hold exactly these lines: the detach of "
+                   f"the live Content-Security-Policy, the shared draft policy ({DRAFT_POLICY}) and "
+                   f"X-Robots-Tag: noindex, and no other header; it has {rules[0]!r}")
+    # Any other rule that can match a draft URL and sets or detaches a header (Content-Security-Policy
+    # lines are left to the one-policy model below, which refuses them with its own message).
+    probes = DRAFT_PROBES + ["/" + p.relative_to(SITE).as_posix() for p in drafts]
+    for rule, lines in blocks:
+        if rule in ("/*", DRAFT_RULE) or not rule_reaches(rule, probes):
+            continue
+        others = [line for line in lines if line.lstrip("!").split(":", 1)[0].strip().lower() != CSP]
+        if others:
+            out.append(f"{HEADERS} rule {rule} can match a path under /draft/ and sets or detaches "
+                       f"{others[0]!r}; only the {DRAFT_RULE} rule may set headers for the draft")
+    return out
+
+
+def rule_reaches(rule, probes):
+    """True when a `_headers` rule's pattern matches any probe path under /draft/.
+
+    A splat `*` matches anything and a `:placeholder` 1 path segment, as Cloudflare documents. An
+    absolute-URL rule is read by its path unless its host is plainly another site's.
+    """
+    path = rule
+    if "://" in rule:
+        host, _, rest = rule.split("://", 1)[1].partition("/")
+        host = host.lower().rstrip(".")
+        if not ("secureconfig.ai" in host or "pages.dev" in host or "*" in host or ":" in host):
+            return False
+        path = "/" + rest
+    pattern = "".join(".*" if part == "*" else "[^/]+" if part.startswith(":") else re.escape(part)
+                      for part in re.split(r"(\*|:[A-Za-z]\w*)", path) if part)
+    return any(re.fullmatch(pattern, probe) for probe in probes)
 
 
 def all_rule_blocks(headers_text):

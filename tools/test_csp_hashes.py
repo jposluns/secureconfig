@@ -102,7 +102,12 @@ outside the draft allowlist each fail; a template element on a live page still f
 list; and the `/draft/*` rule fails when it is missing while a draft page exists, widens or does not
 detach the policy, only detaches, or is repeated, while a deeper `/draft/x/*` rule is still
 refused by the live model. With the real file carrying the 1 modelled `/draft/*` rule, the 2 A15
-cases that append a `/draft/*` rule now append a second one, and are refused as that.
+cases that append a `/draft/*` rule now append a second one, and are refused as that. QA round 1 of
+#1182 added cases for the draft allowlist as exactly the generator's elements (an `<svg>` and a
+`<details>` fail), a `.HTM` draft page, a `site/foo/draft/` page that stays unlisted, the `/draft/*`
+rule's 3 pinned lines (an extra detach or a missing noindex fails), and other rules that can match a
+draft URL (a deeper rule, a placeholder rule and an absolute-URL rule on this host fail when they
+carry any header; an unrelated path or another host passes).
 """
 import base64
 import contextlib
@@ -1201,6 +1206,38 @@ DRAFT_CASES = [
      True, "exactly one Content-Security-Policy"),
     ("a detach under a deeper /draft/ rule", None,
      LIVE_HEADERS + "\n/draft/x/*\n  ! Content-Security-Policy\n", {DRAFT_AT: DRAFT_PAGE}, True, "detaches"),
+    # QA round 1 of #1182: the draft allowlist is what the generator emits, the /draft/* rule's
+    # lines are pinned, and no other rule reaching /draft/ may set or detach a header.
+    ("an inline <svg> on a draft page, outside the generator's elements", None, LIVE_HEADERS,
+     draft_edit('<p class="meta">', '<svg><a xlink:href="javascript:x()"><rect/></a></svg><p class="meta">'),
+     True, "element <svg>"),
+    ("a <details> on a draft page, which the generator never emits", None, LIVE_HEADERS,
+     draft_edit('<p class="meta">', '<details><summary>x</summary></details><p class="meta">'),
+     True, "element <details>"),
+    ("a draft page named .HTM, checked as a draft page", None, LIVE_HEADERS,
+     {"draft/for-ai/index.HTM": DRAFT_PAGE}, False, "1 draft page(s)"),
+    ("a page under site/foo/draft/, which is not the draft and stays unlisted", None, LIVE_HEADERS,
+     {DRAFT_AT: DRAFT_PAGE, "foo/draft/x.html": DRAFT_PAGE}, True, "not in this gate's page list"),
+    ("a /draft/* rule that also detaches Permissions-Policy", None,
+     LIVE_HEADERS.replace("  X-Robots-Tag: noindex\n", "  X-Robots-Tag: noindex\n  ! Permissions-Policy\n", 1),
+     {DRAFT_AT: DRAFT_PAGE}, True, "must hold exactly these lines"),
+    ("a /draft/* rule without its X-Robots-Tag", None,
+     LIVE_HEADERS.replace("  X-Robots-Tag: noindex\n", "", 1), {DRAFT_AT: DRAFT_PAGE}, True,
+     "must hold exactly these lines"),
+    ("a deeper /draft/ rule detaching X-Robots-Tag", None,
+     LIVE_HEADERS + "\n/draft/x/*\n  ! X-Robots-Tag\n", {DRAFT_AT: DRAFT_PAGE}, True,
+     "can match a path under /draft/"),
+    ("a placeholder rule that matches a draft page and sets a header", None,
+     LIVE_HEADERS + "\n/:dir/for-ai/*\n  Access-Control-Allow-Origin: *\n", {DRAFT_AT: DRAFT_PAGE}, True,
+     "can match a path under /draft/"),
+    ("an absolute-URL rule on this site's host that reaches the draft", None,
+     LIVE_HEADERS + "\nhttps://secureconfig.ai/draft/*\n  X-Frame-Options: SAMEORIGIN\n", {DRAFT_AT: DRAFT_PAGE},
+     True, "can match a path under /draft/"),
+    ("a rule with an unrelated header on another path", None,
+     LIVE_HEADERS + "\n/guides/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False, "1 draft page(s)"),
+    ("an absolute-URL rule on another host", None,
+     LIVE_HEADERS + "\nhttps://other.example/draft/*\n  X-Unrelated: 1\n", {DRAFT_AT: DRAFT_PAGE}, False,
+     "1 draft page(s)"),
 ]
 
 

@@ -5,7 +5,8 @@ The refusals are SPECIFICATION section 12's: a page carrying an en or em dash, a
 style= attribute, an inline script, an on* attribute or "what this is" framing is never written.
 Each is planted in a real generated page and must be refused, while the page as generated passes.
 The base path must reach every internal link and asset at /draft/ and at /, and --check must
-report a one-byte change, an extra page and a missing page in a build it did not write.
+report a one-byte change, an extra page (.html or .htm in any case), a stray file outside
+assets/baseline/ and a missing page in a build it did not write.
 """
 import importlib.util
 import shutil
@@ -111,6 +112,26 @@ def main():
         if rc != 1 or "extra/index.html is not a page this build writes" not in text:
             failures.append(f"--check missed an extra page: {text!r}")
         shutil.rmtree(out / "extra")
+        # QA round 1 of #1182: a page is .html or .htm in any case, and only assets/baseline/ may
+        # hold files this build does not write.
+        (out / "Extra.HTM").write_text("<p>x</p>", encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "Extra.HTM is not a page this build writes" not in text:
+            failures.append(f"--check missed an extra .HTM page: {text!r}")
+        (out / "Extra.HTM").unlink()
+        (out / "assets").mkdir()
+        (out / "assets" / "live.css").write_text("p{}", encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "assets/live.css is neither a page this build writes" not in text:
+            failures.append(f"--check missed a stray file outside assets/baseline/: {text!r}")
+        (out / "assets" / "live.css").unlink()
+        (out / "assets" / "baseline").mkdir()
+        (out / "assets" / "baseline" / "baseline.css").write_text("p{}", encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 0:
+            failures.append(f"--check refused a file under assets/baseline/, which the pin gate "
+                            f"owns: {text!r}")
+        shutil.rmtree(out / "assets")
         (out / "404.html").unlink()
         rc, text = run("--check", "--out", str(out))
         if rc != 1 or "404.html is missing" not in text:
@@ -127,7 +148,7 @@ def main():
             print(f"  FAIL  {f}")
         return 1
     print(f"  ok    {len(plants)} planted refusals, the base path at /draft/ and /, and --check on a "
-          f"changed, an extra and a missing page")
+          f"changed, an extra .html and .HTM page, a stray file and a missing page")
     return 0
 
 
