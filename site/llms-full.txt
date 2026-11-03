@@ -13,7 +13,7 @@
 
 Keep the world and its information more secure, one deployment at a time.
 
-Security guides your AI assistant can follow, verify, and be honest about.
+Security guides that tell your AI assistant what to apply, how to verify the result, and how to report what passed, what failed, and what it could not test.
 
 ## What this is
 
@@ -25,7 +25,7 @@ Publicly reachable services keep shipping with the gap on the deployment surface
 
 ## Built for AI assistants
 
-This repository gives an AI assistant the security steps to apply and a way to be honest about what it verified. The guides are written for machine consumption: stable raw URLs, a machine-readable index at [secureconfig.ai/llms.txt](https://secureconfig.ai/llms.txt), every guide in one file at [secureconfig.ai/llms-full.txt](https://secureconfig.ai/llms-full.txt), baseline rules an assistant can apply directly (next section), a decision guide mapping deployments to guides, and a verification checklist that requires reporting what could not be tested rather than asserting a pass.
+This repository gives an AI assistant the security steps to apply and a way to report what it verified, what failed, and what it could not test. The guides are written for machine consumption: stable raw URLs, a machine-readable index at [secureconfig.ai/llms.txt](https://secureconfig.ai/llms.txt), every guide in one file at [secureconfig.ai/llms-full.txt](https://secureconfig.ai/llms-full.txt), baseline rules an assistant can apply directly (next section), a decision guide mapping deployments to guides, and a verification checklist that requires reporting what could not be tested rather than asserting a pass.
 
 ## The maintainer
 
