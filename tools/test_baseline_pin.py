@@ -91,16 +91,16 @@ CASES = [
      edit_pin('"assets/baseline/copy.js" = "', '"assets/baseline/copy.js" = "x'), 1, "not a SHA-256"),
     ("a pin key outside assets/baseline/", edit_pin('"assets/baseline/copy.js" =', '"copy.js" ='), 1,
      "is not under assets/baseline/"),
-    ("a pin with no version", edit_pin('version = "1.4.1"', 'release = "1.4.1"'), 1,
+    ("a pin with no version", edit_pin('version = "1.5.0"', 'release = "1.5.0"'), 1,
      "no version"),
     ("a pin that is not TOML", edit_pin("[files]", "[files"), 1, "not valid TOML"),
     # QA round 1 of #1182: the pin must be the copy script's, and excluded material stays out.
     ("a pin at another version than the copy script's",
-     lambda d: (edit_pin('version = "1.4.1"', 'version = "1.3.1"')(d),
-                edit_pin("/baseline/1.4.1/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.4.1"),
-    ("an upstream URL for another version", edit_pin("/baseline/1.4.1/", "/baseline/1.3.1/"), 1,
-     "is not the URL of version 1.4.1"),
-    ("another archive digest", edit_pin('archive_sha256 = "1', 'archive_sha256 = "0'), 1,
+     lambda d: (edit_pin('version = "1.5.0"', 'version = "1.3.1"')(d),
+                edit_pin("/baseline/1.5.0/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.5.0"),
+    ("an upstream URL for another version", edit_pin("/baseline/1.5.0/", "/baseline/1.3.1/"), 1,
+     "is not the URL of version 1.5.0"),
+    ("another archive digest", edit_pin('archive_sha256 = "d', 'archive_sha256 = "0'), 1,
      "archive_sha256 is"),
     ("a copied, pinned file outside the copy script's list",
      pinned("extra.js", b"(function(){})();\n"), 1, "not in scripts/copy-baseline.py's RUNTIME list"),
@@ -114,7 +114,7 @@ CASES = [
     ("a RUNTIME file neither copied nor pinned",
      lambda d: (edit_pin_line('"assets/baseline/rail.js" =')(d), (d / DEST / "rail.js").unlink()), 1,
      "does not pin rail.js"),
-    ("the pristine copy", None, 0, "match baseline 1.4.1"),
+    ("the pristine copy", None, 0, "match baseline 1.5.0"),
 ]
 
 
