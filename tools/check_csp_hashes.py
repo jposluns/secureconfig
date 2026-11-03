@@ -26,7 +26,7 @@ block shape; the refused contexts; the element allowlist; the `on*` and `style=`
 rules; and the walk of `site/`. Those refusals are now this gate's own rule and no longer a
 description of what a browser refuses: under `'unsafe-inline'`, and with no `script-src-attr` or
 `style-src-attr` saying otherwise, a browser runs an `on*` handler and applies a `style=`
-attribute. What a finding reports is that this gate refuses the page under that rule; the
+attribute. What a finding reports is that this gate refuses what the finding names; the
 explanation a message adds is the usual reason for the rule, written for the typical input, and
 can be narrower than every input that triggers it. The design notes below, written for the hash
 model, describe that model. The acceptance is temporary and is removed at promotion, when the live
@@ -647,7 +647,7 @@ def simple_enough(path, page, html, shape):
     if total != len(page.on_attrs) + in_body:
         out.append(f"the page {path} contains {total} literal on* attribute names in tags and this "
                    f"gate accounts for {len(page.on_attrs) + in_body} on* handler attributes; the "
-                   f"counts differ, so one may be an attribute this gate did not see (inside <svg> "
+                   f"counts differ, so one may be an attribute html.parser did not report (inside <svg> "
                    f"or <title>, for example), and this gate refuses every on* handler on a page "
                    f"(P5)")
     for script in page.bodies("script"):
