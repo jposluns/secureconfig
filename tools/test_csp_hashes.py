@@ -41,6 +41,14 @@ case group was kept, retargeted or dropped as follows, with the reason:
     with <!-- and -->, a <style> in a JavaScript string) dropped with the blocks they lived in; a
     page has no inline block for such text to sit in, and any <style> opener is refused outright.
 
+BASELINE 1.6.0 CASES. The light and dark switch (SPECIFICATION 7.33) brings 1 script without defer
+and 2 inline SVG glyphs. The head script passes only as the generator writes it, once, in <head>
+before the first stylesheet; each other spelling (attribute order, defer, async, a type, a body,
+another file, host or base path), each other place and a second copy has its own refusal. The
+glyphs pass as generated; a title, desc, script, style, foreignObject, use, animate or g inside
+one, a style= or on* attribute on one, and any attribute outside the glyphs' presentation
+attributes are refused.
+
 HEADER CASES. site/_headers must carry exactly the shared template policy under the bare /*:
 widened, reordered, comma-split, duplicated, detached, path-scoped or host-scoped policies fail,
 as does any X-Robots-Tag; a comment between the rule and its headers passes, as Cloudflare allows.
@@ -68,6 +76,12 @@ REVIEW = (ROOT / "site" / "draft" / "index.html").read_bytes().decode("utf-8")
 HEADERS = (ROOT / "site" / "_headers").read_text(encoding="utf-8")
 FAVICON = (ROOT / "site" / "favicon.svg").read_bytes()
 COPY_JS = '<script src="/assets/baseline/copy.js" defer></script>'
+# Baseline 1.6.0: the 1 head script without defer, and the first stylesheet it must precede.
+SCHEME_JS = '<script data-cfasync="false" src="/assets/baseline/scheme.js"></script>'
+FONTS_CSS = '<link rel="stylesheet" href="/assets/baseline/fonts.css">'
+# The switch's first glyph opening tag, as the generator writes it.
+MOON = '<svg class="moon" viewBox="0 0 24 24"'
+HEAD_PLACE = "is not in <head> before the first stylesheet"
 # The default fixture pages: the generated home and 404, a page that loads a baseline script, and
 # the /draft/ review page.
 FIXTURE = {"index.html": PAGE, "404.html": PAGE_404, "for-ai/index.html": SCRIPTED,
@@ -167,6 +181,57 @@ CASES = [
      {"for-ai/index.html": edited(SCRIPTED, COPY_JS,
                                   '<script src="/draft/assets/baseline/copy.js" defer></script>')},
      None, True, "<script> elements"),
+
+    # THE 1 HEAD SCRIPT (baseline 1.6.0, SPECIFICATION 7.33): accepted exactly as the generator
+    # writes it, in <head> before the first stylesheet, once; every other non-defer script refused.
+    ("src before data-cfasync on the head script",
+     edited(PAGE, SCHEME_JS, '<script src="/assets/baseline/scheme.js" data-cfasync="false"></script>'),
+     None, True, "<script> elements"),
+    ("the head script without data-cfasync",
+     edited(PAGE, SCHEME_JS, '<script src="/assets/baseline/scheme.js"></script>'), None, True,
+     "<script> elements"),
+    ("the head script with data-cfasync=\"true\"",
+     edited(PAGE, SCHEME_JS, SCHEME_JS.replace('"false"', '"true"')), None, True,
+     "<script> elements"),
+    ("the head script with defer",
+     edited(PAGE, SCHEME_JS, SCHEME_JS.replace("></script>", " defer></script>")), None, True,
+     "<script> elements"),
+    ("the head script with async",
+     edited(PAGE, SCHEME_JS, SCHEME_JS.replace("></script>", " async></script>")), None, True,
+     "<script> elements"),
+    ("the head script with a type",
+     edited(PAGE, SCHEME_JS, SCHEME_JS.replace("<script ", '<script type="module" ')), None, True,
+     "<script> elements"),
+    ("the head script with a body",
+     edited(PAGE, SCHEME_JS, SCHEME_JS.replace("></script>", ">alert(1)</script>")), None, True,
+     "<script> elements"),
+    ("another baseline file in the head script's form",
+     edited(PAGE, SCHEME_JS, SCHEME_JS.replace("scheme.js", "copy.js")), None, True,
+     "<script> elements"),
+    ("the head script from another host",
+     edited(PAGE, SCHEME_JS, SCHEME_JS.replace("/assets/", "https://cdn.example.net/assets/")),
+     None, True, "<script> elements"),
+    ("the head script still written with the staged /draft/ path",
+     edited(PAGE, SCHEME_JS, SCHEME_JS.replace("/assets/", "/draft/assets/")), None, True,
+     "<script> elements"),
+    ("the head script after the first stylesheet",
+     edited(edited(PAGE, SCHEME_JS + "\n", ""), FONTS_CSS, FONTS_CSS + "\n" + SCHEME_JS), None,
+     True, HEAD_PLACE),
+    ("the head script after the first stylesheet on the 404 page names the page",
+     {"404.html": edited(edited(PAGE_404, SCHEME_JS + "\n", ""), FONTS_CSS,
+                         FONTS_CSS + "\n" + SCHEME_JS)}, None, True, "site/404.html:"),
+    ("the head script in <body>",
+     edited(edited(PAGE, SCHEME_JS + "\n", ""), "</body>", SCHEME_JS + "\n</body>"), None, True,
+     HEAD_PLACE),
+    ("the head script loaded twice",
+     edited(PAGE, SCHEME_JS, SCHEME_JS + "\n" + SCHEME_JS), None, True, "more than once"),
+    ("the head script in <head> and again in <body>",
+     edited(PAGE, "</body>", SCHEME_JS + "\n</body>"), None, True, "more than once"),
+    ("the head script in <head> and again without data-cfasync",
+     edited(PAGE, SCHEME_JS, SCHEME_JS + '\n<script src="/assets/baseline/scheme.js"></script>'),
+     None, True, "<script> elements"),
+    ("a page without the head script still fits the model (build-site.py --check holds it)",
+     edited(PAGE, SCHEME_JS + "\n", ""), None, False, OK_PAGES),
     ("a self-closing <style/>",
      edited(PAGE, "</head>", "<style/>\n</head>"), None, True, "self-closing"),
     ("a charset declaration this gate does not obey",
@@ -197,12 +262,54 @@ CASES = [
     ("data-onload= is not a handler",
      edited(PAGE, "</body>", '<p data-onload="x" data-on>x</p>\n</body>'), None, False, OK_PAGES),
 
-    # THE ELEMENT ALLOWLIST (round 5 of #352): every tag name, read context-free. An inline <svg>
-    # is itself outside the template's elements, so every <svg>-smuggling reproduction of rounds 2
-    # to 5 is refused here first.
-    ("an inline <svg>, outside the generator's elements",
+    # THE ELEMENT ALLOWLIST (round 5 of #352): every tag name, read context-free. From baseline
+    # 1.6.0 the switch's glyphs bring `svg`, `path` and `circle` into the list and no other SVG
+    # element, so the <svg>-smuggling reproductions of rounds 2 to 5 are refused by rule 3 and by
+    # the allowlist's refusal of what they carry.
+    ("a <title><style> smuggled into an inline <svg>",
      edited(PAGE, "</body>", '<svg><title><style>p{}</style></title></svg>\n</body>'), None, True,
-     "element <svg> " + ALLOWLIST),
+     SVG_REFUSAL),
+    ("a <title><style> smuggled into an inline <svg> names the <style>",
+     edited(PAGE, "</body>", '<svg><title><style>p{}</style></title></svg>\n</body>'), None, True,
+     "element <style> " + ALLOWLIST),
+    ("a <title> added to the switch's glyph",
+     edited(PAGE, '<path d="M20.5', '<title>Moon</title><path d="M20.5'), None, True, SVG_REFUSAL),
+    ("a <desc> added to the switch's glyph",
+     edited(PAGE, '<path d="M20.5', '<desc>x</desc><path d="M20.5'), None, True, SVG_REFUSAL),
+    ("a <script> inside the switch's glyph",
+     edited(PAGE, '<path d="M20.5', '<script>alert(1)</script><path d="M20.5'), None, True,
+     SVG_REFUSAL),
+    ("a <style> inside the switch's glyph",
+     edited(PAGE, '<path d="M20.5', '<style>p{}</style><path d="M20.5'), None, True, SVG_REFUSAL),
+    ("a <foreignObject> inside the switch's glyph",
+     edited(PAGE, '<path d="M20.5', '<foreignObject></foreignObject><path d="M20.5'), None, True,
+     "element <foreignobject> " + ALLOWLIST),
+    ("a <use> inside the switch's glyph",
+     edited(PAGE, '<path d="M20.5', '<use href="#x"/><path d="M20.5'), None, True,
+     "element <use> " + ALLOWLIST),
+    ("an <animate> inside the switch's glyph",
+     edited(PAGE, '<path d="M20.5', '<animate attributeName="d"/><path d="M20.5'), None, True,
+     "element <animate> " + ALLOWLIST),
+    ("a <g> around the switch's path",
+     edited(PAGE, '<path d="M20.5', '<g></g><path d="M20.5'), None, True,
+     "element <g> " + ALLOWLIST),
+    ("a style= attribute on the switch's glyph",
+     edited(PAGE, MOON, MOON + ' style="fill:red"'), None, True,
+     "This gate refuses every style= attribute on a page"),
+    ("an onload handler on the switch's glyph",
+     edited(PAGE, MOON, MOON + ' onload="x()"'), None, True, ON_TEXT),
+    ("a valueless onclick on the switch's path",
+     edited(PAGE, '<path d="M20.5', '<path onclick d="M20.5'), None, True, ON_RULE),
+    ("an href on the switch's glyph, outside its presentation attributes",
+     edited(PAGE, MOON, MOON + ' href="#x"'), None, True, "carries the attribute href"),
+    ("a transform on the switch's circle, outside its presentation attributes",
+     edited(PAGE, '<circle cx="12"', '<circle transform="scale(2)" cx="12"'), None, True,
+     "carries the attribute transform"),
+    ("an xmlns:xlink on the switch's glyph, outside its presentation attributes",
+     edited(PAGE, MOON, MOON + ' xmlns:xlink="http://www.w3.org/1999/xlink"'), None, True,
+     "carries the attribute xmlns:xlink"),
+    ("the switch's glyphs as generated, in any case of the tag names, pass",
+     PAGE.replace("<svg ", "<SVG ").replace("</svg>", "</SVG>"), None, False, OK_PAGES),
     ("a <details>, which the generator never emits",
      edited(PAGE, "</body>", "<details><summary>x</summary></details>\n</body>"), None, True,
      "element <details> " + ALLOWLIST),

@@ -29,6 +29,10 @@ The committed script is the promoted root form (promotion made `/` build-site.py
 and rewrote tools/check_draft.py for the root), so each case runs on it once; the staged form and
 the derived promoted variant this test once ran retired with the staging.
 
+THE PALETTE GATE (baseline 1.6.0, mandatory on every site): both runners must carry the exact call
+PALETTE_CALL outside a comment, pages-build.sh right after the pin gate that holds the copied gate
+to its pin, so that the cases above run it in order and a failure there stops the deploy.
+
 Nothing here runs a real gate; tools/run_all_checks.sh runs those. Exit 0 ok, 1 on a finding.
 """
 import os
@@ -47,6 +51,11 @@ RUN_GATE = re.compile(r"^run_gate\(\) \{\n.*?^\}$", re.M | re.S)
 # A gate call: `python3 -I -B`, a .py file and its arguments, up to a shell operator or line end.
 GATE = re.compile(r"python3 -I -B ([\w./-]+\.py(?: [^\s;&|)]+)*)")
 PASSED = "Pages build check passed."
+# The palette gate's call in both runners (secureconfig.ai has no site-palette.css), and the gate
+# that pages-build.sh runs just before it.
+PALETTE_CALL = ("python3 -I -B .baseline/check_palette.py --site secureconfig "
+                "--palettes site/assets/baseline/palettes.css")
+PIN_GATE = "-I -B tools/check_baseline_pin.py"
 # The stand-in python3: it records its arguments, runs the script's `-c` version check with this
 # interpreter and sys.version_info set to STANDIN_VERSION, answers --version from STANDIN_VERSION,
 # and fails the 1 gate named by STANDIN_FAIL.
@@ -184,17 +193,36 @@ def pages_build_failures():
     return failures, count, list(forms)
 
 
+def palette_gate_failures():
+    """Both runners carry PALETTE_CALL outside a comment; pages-build.sh right after the pin gate."""
+    failures = []
+    for path in (BUILD, SUITE):
+        lines = [line for line in path.read_text(encoding="utf-8").splitlines()
+                 if not line.lstrip().startswith("#")]
+        if not any(PALETTE_CALL in line for line in lines):
+            failures.append(f"{path.relative_to(ROOT)} does not run the palette gate as "
+                            f"{PALETTE_CALL!r}")
+    gates = gates_of(BUILD.read_text(encoding="utf-8"))
+    want = PALETTE_CALL[len("python3 "):]
+    if want in gates and (PIN_GATE not in gates or gates.index(want) != gates.index(PIN_GATE) + 1):
+        failures.append(f"scripts/pages-build.sh runs the palette gate, but not right after "
+                        f"{PIN_GATE}, the gate that holds it to its pin: {gates!r}")
+    return failures
+
+
 def main():
     failures = run_gate_failures()
     build_failures, build_cases, forms = pages_build_failures()
     failures += build_failures
+    failures += palette_gate_failures()
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
     print(f"  ok    {len(RUN_GATE_CASES)} run_gate cases and {build_cases} pages-build.sh cases "
           f"(Python 3.10 refused before any gate; with 3.11, every gate in order, and each gate's "
-          f"failure stopping the build, in {' and '.join(forms)})")
+          f"failure stopping the build, in {' and '.join(forms)}), and the palette gate in both "
+          f"runners")
     return 0
 
 

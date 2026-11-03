@@ -5,7 +5,8 @@ Every failing case starts from a copy of the real pin and the real copied files,
 and asserts that the gate exits 1 with a message naming the defect; the pristine copy must pass.
 A case whose change no longer applies RAISES, so a renamed file cannot turn a case into a run of
 the pristine tree. The cases added in QA round 1 of #1182 hold the pin to the copy script's version,
-digests and RUNTIME list, and keep excluded template material out whether pinned or not.
+digests and RUNTIME list, and keep excluded template material out whether pinned or not. The
+baseline 1.6.0 cases hold .baseline/check_palette.py, the copied palette gate, to its pin.
 """
 import hashlib
 import os
@@ -19,6 +20,7 @@ TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
+PALETTE_GATE = Path(".baseline") / "check_palette.py"
 
 
 def run(mutate=None):
@@ -27,6 +29,7 @@ def run(mutate=None):
         shutil.copytree(ROOT / DEST, d / DEST)
         (d / PIN).parent.mkdir(parents=True)
         shutil.copyfile(ROOT / PIN, d / PIN)
+        shutil.copyfile(ROOT / PALETTE_GATE, d / PALETTE_GATE)
         if mutate is not None:
             mutate(d)
         r = subprocess.run([sys.executable, "-I", "-B", str(TOOLS / "check_baseline_pin.py"),
@@ -54,6 +57,18 @@ def one_byte(d):
 
 def link(d):
     os.symlink("baseline.css", d / DEST / "linked.css")
+
+
+def palette_gate_byte(d):
+    target = d / PALETTE_GATE
+    data = bytearray(target.read_bytes())
+    data[-1] ^= 1
+    target.write_bytes(bytes(data))
+
+
+def palette_gate_link(d):
+    (d / PALETTE_GATE).rename(d / ".baseline" / "saved.py")
+    os.symlink("saved.py", d / PALETTE_GATE)
 
 
 def pinned(name, data):
@@ -91,16 +106,16 @@ CASES = [
      edit_pin('"assets/baseline/copy.js" = "', '"assets/baseline/copy.js" = "x'), 1, "not a SHA-256"),
     ("a pin key outside assets/baseline/", edit_pin('"assets/baseline/copy.js" =', '"copy.js" ='), 1,
      "is not under assets/baseline/"),
-    ("a pin with no version", edit_pin('version = "1.5.1"', 'release = "1.5.1"'), 1,
+    ("a pin with no version", edit_pin('version = "1.6.0"', 'release = "1.6.0"'), 1,
      "no version"),
     ("a pin that is not TOML", edit_pin("[files]", "[files"), 1, "not valid TOML"),
     # QA round 1 of #1182: the pin must be the copy script's, and excluded material stays out.
     ("a pin at another version than the copy script's",
-     lambda d: (edit_pin('version = "1.5.1"', 'version = "1.3.1"')(d),
-                edit_pin("/baseline/1.5.1/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.5.1"),
-    ("an upstream URL for another version", edit_pin("/baseline/1.5.1/", "/baseline/1.3.1/"), 1,
-     "is not the URL of version 1.5.1"),
-    ("another archive digest", edit_pin('archive_sha256 = "8', 'archive_sha256 = "0'), 1,
+     lambda d: (edit_pin('version = "1.6.0"', 'version = "1.3.1"')(d),
+                edit_pin("/baseline/1.6.0/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.6.0"),
+    ("an upstream URL for another version", edit_pin("/baseline/1.6.0/", "/baseline/1.3.1/"), 1,
+     "is not the URL of version 1.6.0"),
+    ("another archive digest", edit_pin('archive_sha256 = "d', 'archive_sha256 = "0'), 1,
      "archive_sha256 is"),
     ("a copied, pinned file outside the copy script's list",
      pinned("extra.js", b"(function(){})();\n"), 1, "not in scripts/copy-baseline.py's RUNTIME list"),
@@ -114,7 +129,19 @@ CASES = [
     ("a RUNTIME file neither copied nor pinned",
      lambda d: (edit_pin_line('"assets/baseline/rail.js" =')(d), (d / DEST / "rail.js").unlink()), 1,
      "does not pin rail.js"),
-    ("the pristine copy", None, 0, "match baseline 1.5.1"),
+    # Baseline 1.6.0: the palette gate is copied to .baseline/ and pinned by its repository path.
+    ("one byte changed in .baseline/check_palette.py", palette_gate_byte, 1,
+     ".baseline/check_palette.py differs from its pin"),
+    ("the palette gate deleted", lambda d: (d / PALETTE_GATE).unlink(), 1,
+     ".baseline/check_palette.py is pinned but missing"),
+    ("the palette gate replaced by a symbolic link", palette_gate_link, 1,
+     ".baseline/check_palette.py is pinned but is not a regular file"),
+    ("the palette gate's pin line removed", edit_pin_line('".baseline/check_palette.py" ='), 1,
+     "does not pin .baseline/check_palette.py"),
+    ("another .baseline/ file pinned",
+     edit_pin('".baseline/check_palette.py" =', '".baseline/other.py" ='), 1,
+     "is not under assets/baseline/"),
+    ("the pristine copy", None, 0, "match baseline 1.6.0"),
 ]
 
 
