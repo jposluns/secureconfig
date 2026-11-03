@@ -6,7 +6,9 @@ and asserts that the gate exits 1 with a message naming the defect; the pristine
 A case whose change no longer applies RAISES, so a renamed file cannot turn a case into a run of
 the pristine tree. The cases added in QA round 1 of #1182 hold the pin to the copy script's version,
 digests and RUNTIME list, and keep excluded template material out whether pinned or not. The
-baseline 1.6.0 cases hold .baseline/check_palette.py, the copied palette gate, to its pin.
+baseline 1.6.0 cases hold .baseline/check_palette.py, the copied palette gate, to its pin. The cases
+added in QA round 1 of #1190 refuse a .baseline/ that is a symbolic link or not a directory, a
+pin.toml that is a link, and any other entry in .baseline/ (a file, a subdirectory, a link).
 """
 import hashlib
 import os
@@ -69,6 +71,25 @@ def palette_gate_byte(d):
 def palette_gate_link(d):
     (d / PALETTE_GATE).rename(d / ".baseline" / "saved.py")
     os.symlink("saved.py", d / PALETTE_GATE)
+
+
+def baseline_link(d):
+    (d / ".baseline").rename(d / "real-baseline")
+    os.symlink("real-baseline", d / ".baseline", target_is_directory=True)
+
+
+def pin_link(d):
+    (d / PIN).rename(d / ".baseline" / "saved.toml")
+    os.symlink("saved.toml", d / PIN)
+
+
+def baseline_extra(name, data=b"x\n"):
+    """Write another file into .baseline/, in a subdirectory as named."""
+    def mutate(d):
+        target = d / ".baseline" / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+    return mutate
 
 
 def pinned(name, data):
@@ -141,6 +162,25 @@ CASES = [
     ("another .baseline/ file pinned",
      edit_pin('".baseline/check_palette.py" =', '".baseline/other.py" ='), 1,
      "is not under assets/baseline/"),
+    # QA round 1 of #1190: .baseline/ is a real directory holding only the pin and the build tool.
+    (".baseline/ replaced by a symbolic link to a good copy", baseline_link, 1,
+     ".baseline is a symbolic link"),
+    (".baseline/ replaced by a file", lambda d: (shutil.rmtree(d / ".baseline"),
+                                                (d / ".baseline").write_text("x", encoding="utf-8")),
+     1, ".baseline is not a directory"),
+    ("pin.toml replaced by a symbolic link", pin_link, 1, ".baseline/pin.toml is not a regular file"),
+    ("another file in .baseline/", baseline_extra("notes.txt"), 1,
+     ".baseline/notes.txt is not .baseline/pin.toml or a pinned build tool"),
+    ("a second copy of the palette gate in .baseline/",
+     baseline_extra("check_palette_old.py", (ROOT / PALETTE_GATE).read_bytes()), 1,
+     ".baseline/check_palette_old.py is not"),
+    ("a subdirectory with a file in .baseline/", baseline_extra("sub/check_palette.py"), 1,
+     ".baseline/sub/check_palette.py is not"),
+    ("a __pycache__ folder in .baseline/",
+     baseline_extra("__pycache__/check_palette.cpython-311.pyc"), 1, ".baseline/__pycache__ is not"),
+    ("a symbolic link in .baseline/",
+     lambda d: os.symlink("check_palette.py", d / ".baseline" / "palette.py"), 1,
+     ".baseline/palette.py is not"),
     ("the pristine copy", None, 0, "match baseline 1.6.0"),
 ]
 

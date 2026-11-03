@@ -20,6 +20,9 @@ WHAT IT CHECKS, offline, with the standard library only:
   - every pinned file exists as a regular file and hashes to its pin;
   - every entry under the destination is a regular file or directory (no symbolic link, which the
     walk never follows) and every file is pinned exactly once;
+  - .baseline/ is a real directory, never a symbolic link, checked before the pin is read through
+    it, and holds nothing but pin.toml and the pinned build tools, each a regular file: any other
+    entry, a subdirectory included, is refused;
   - the pin is the copy script's: its version, its upstream URL for that version and its 2
     provenance digests equal scripts/copy-baseline.py's VERSION, ARCHIVE_SHA256 and SUMS_SHA256,
     and the pinned set is exactly that script's RUNTIME list and BUILD_TOOLS;
@@ -82,6 +85,17 @@ def walk(folder):
 
 def check(root):
     """(exit status, lines to print)."""
+    # .baseline/ itself is read over lstat before anything is read through it, so a link in its
+    # place is refused rather than followed.
+    try:
+        mode = (root / PIN.parent).lstat().st_mode
+    except OSError as exc:
+        return 2, [f"  FAIL  cannot read {PIN.parent}: {exc}"]
+    if stat.S_ISLNK(mode):
+        return 1, [f"  FAIL  {PIN.parent} is a symbolic link; it must be a real directory holding "
+                   f"only {PIN.name} and the pinned build tools"]
+    if not stat.S_ISDIR(mode):
+        return 1, [f"  FAIL  {PIN.parent} is not a directory"]
     try:
         pin = tomllib.loads((root / PIN).read_text(encoding="utf-8"))
     except (OSError, UnicodeError) as exc:
@@ -159,6 +173,21 @@ def check(root):
         if actual != digest:
             findings.append(f"{path} differs from its pin (sha256 {actual}, pinned {digest}); a "
                             f"copied baseline file must never be edited")
+    # .baseline/ holds pin.toml and the pinned build tools, and nothing else.
+    folder = PIN.parent.as_posix()
+    try:
+        held = walk(root / PIN.parent)
+    except OSError as exc:
+        return 2, [f"  FAIL  cannot walk {folder}: {exc}"]
+    for name, mode in held:
+        path = f"{folder}/{name}"
+        if path == PIN.as_posix():
+            if not stat.S_ISREG(mode):
+                findings.append(f"{PIN} is not a regular file")
+        elif path not in tools:
+            findings.append(f"{path} is not {PIN} or a pinned build tool "
+                            f"({', '.join(sorted(tools)) or 'none pinned'}), and {folder}/ holds "
+                            f"nothing else")
     dest = root / DEST
     for name, digest in sorted(files.items()):
         pure = PurePosixPath(name)

@@ -31,7 +31,22 @@ the derived promoted variant this test once ran retired with the staging.
 
 THE PALETTE GATE (baseline 1.6.0, mandatory on every site): both runners must carry the exact call
 PALETTE_CALL outside a comment, pages-build.sh right after the pin gate that holds the copied gate
-to its pin, so that the cases above run it in order and a failure there stops the deploy.
+to its pin, so that the cases above run it in order and a failure there stops the deploy; a
+pages-build.sh in which the call is not read as a gate is a finding too.
+
+THE PALETTE BLOCK of tools/run_all_checks.sh, which holds the palette gate to its own RESULT line
+rather than through run_gate: the block (from `if palette=$(` to its `fi`) and the ok and bad
+helpers are read out of the file and run with bash, with python3 replaced by a stand-in that
+records its arguments and runs a stand-in gate body. Each case checks the call it made, what it
+prints and whether it set fail=1:
+  - an exit 0 with `RESULT: pass (1 site, 0 failing checks)` passes with the block's ok line;
+  - an exit 0 with a FAIL in the tables, with no RESULT line, or with a malformed or other RESULT
+    line fails ("exited 0 without a clean RESULT: pass line");
+  - a failing gate, exit 1 with a `RESULT: fail ` line, fails ("found a palette failure") and
+    prints the gate's output;
+  - a crash, a non-zero exit with a traceback or an `...Error: ` line, fails as a crash;
+  - a non-zero exit with no RESULT line, a malformed one or a pass line fails ("exited non-zero
+    without reporting a result").
 
 Nothing here runs a real gate; tools/run_all_checks.sh runs those. Exit 0 ok, 1 on a finding.
 """
@@ -56,6 +71,47 @@ PASSED = "Pages build check passed."
 PALETTE_CALL = ("python3 -I -B .baseline/check_palette.py --site secureconfig "
                 "--palettes site/assets/baseline/palettes.css")
 PIN_GATE = "-I -B tools/check_baseline_pin.py"
+# The palette block of tools/run_all_checks.sh, from its call to its `fi`.
+PALETTE_BLOCK = re.compile(r"^if palette=\$\(python3 .*?^fi$", re.M | re.S)
+PALETTE_OK = "  ok    check_palette.py: the secureconfig palette passes in both schemes"
+PALETTE_PASS = "RESULT: pass (1 site, 0 failing checks)"
+PALETTE_NOT_CLEAN = "  FAIL  check_palette.py exited 0 without a clean RESULT: pass line"
+PALETTE_NO_RESULT = "  FAIL  check_palette.py exited non-zero without reporting a result"
+# (stand-in gate body, fail=1 expected, texts the output must hold, texts it must not hold)
+PALETTE_CASES = (
+    (f"printf '  site  4.60:1  needs 4.5\\n{PALETTE_PASS}\\n'", False,
+     [PALETTE_OK, "  site  4.60:1  needs 4.5"], ["FAIL"]),
+    (f"printf '  site  4.10:1  needs 4.5  FAIL\\n{PALETTE_PASS}\\n'", True, [PALETTE_NOT_CLEAN],
+     [PALETTE_OK]),
+    ("printf '  site  4.60:1  needs 4.5\\n'", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
+    ("true", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
+    ("printf 'RESULT: pass\\n'", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
+    ("printf 'RESULT: pass (2 sites, 0 failing checks)\\n'", True, [PALETTE_NOT_CLEAN],
+     [PALETTE_OK]),
+    (f"printf '{PALETTE_PASS} \\n'", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
+    (f"printf '  {PALETTE_PASS}\\n'", True, [PALETTE_NOT_CLEAN], [PALETTE_OK]),
+    ("printf 'RESULT: fail (1 site, 1 failing check)\\n'", True, [PALETTE_NOT_CLEAN],
+     [PALETTE_OK]),
+    ("printf '  site  4.10:1  needs 4.5  FAIL\\nRESULT: fail (1 site, 1 failing check)\\n'; exit 1",
+     True, ["  site  4.10:1  needs 4.5  FAIL", "  FAIL  check_palette.py found a palette failure"],
+     [PALETTE_OK, "crashed", "without reporting"]),
+    ("printf 'RESULT: fail (the input could not be checked)\\n'; exit 1", True,
+     ["  FAIL  check_palette.py found a palette failure"], [PALETTE_OK, "crashed"]),
+    ("printf 'Traceback (most recent call last):\\n  File \"x\", line 1\\nKeyError: 1\\n'; exit 1",
+     True, ["  FAIL  check_palette.py crashed; the palette is unverified"],
+     [PALETTE_OK, "found a palette failure"]),
+    ("printf 'RESULT: fail (1 site, 1 failing check)\\nValueError: bad\\n'; exit 1", True,
+     ["  FAIL  check_palette.py crashed; the palette is unverified"],
+     [PALETTE_OK, "found a palette failure"]),
+    ("printf 'RESULT:fail (1 site, 1 failing check)\\n'; exit 1", True, [PALETTE_NO_RESULT],
+     [PALETTE_OK, "found a palette failure"]),
+    ("printf 'RESULT: failed\\n'; exit 1", True, [PALETTE_NO_RESULT],
+     [PALETTE_OK, "found a palette failure"]),
+    ("printf '  RESULT: fail (1 site, 1 failing check)\\n'; exit 1", True, [PALETTE_NO_RESULT],
+     [PALETTE_OK, "found a palette failure"]),
+    (f"printf '{PALETTE_PASS}\\n'; exit 1", True, [PALETTE_NO_RESULT], [PALETTE_OK]),
+    ("exit 2", True, [PALETTE_NO_RESULT], [PALETTE_OK]),
+)
 # The stand-in python3: it records its arguments, runs the script's `-c` version check with this
 # interpreter and sys.version_info set to STANDIN_VERSION, answers --version from STANDIN_VERSION,
 # and fails the 1 gate named by STANDIN_FAIL.
@@ -204,9 +260,63 @@ def palette_gate_failures():
                             f"{PALETTE_CALL!r}")
     gates = gates_of(BUILD.read_text(encoding="utf-8"))
     want = PALETTE_CALL[len("python3 "):]
-    if want in gates and (PIN_GATE not in gates or gates.index(want) != gates.index(PIN_GATE) + 1):
+    if want not in gates:
+        failures.append(f"scripts/pages-build.sh: the palette call is not read as a gate, so the "
+                        f"cases above do not run it: {gates!r}")
+    elif PIN_GATE not in gates or gates.index(want) != gates.index(PIN_GATE) + 1:
         failures.append(f"scripts/pages-build.sh runs the palette gate, but not right after "
                         f"{PIN_GATE}, the gate that holds it to its pin: {gates!r}")
+    return failures
+
+
+def palette_block_source():
+    """The ok and bad helpers and the palette block, read out of tools/run_all_checks.sh."""
+    text = SUITE.read_text(encoding="utf-8")
+    helpers = HELPER.findall(text)
+    blocks = PALETTE_BLOCK.findall(text)
+    if len(helpers) != 2 or len(blocks) != 1 or PALETTE_CALL not in blocks[0]:
+        raise LookupError(f"tools/run_all_checks.sh no longer holds the ok and bad helpers and 1 "
+                          f"palette block running {PALETTE_CALL!r} in the shape this test reads "
+                          f"({len(helpers)} helpers, {len(blocks)} palette blocks)")
+    return "\n".join(helpers) + "\n" + blocks[0] + "\n"
+
+
+def palette_block_failures():
+    """Run the palette block of tools/run_all_checks.sh on each of PALETTE_CASES."""
+    try:
+        source = palette_block_source()
+    except (OSError, LookupError) as exc:
+        return [f"palette block: {exc}"]
+    standin = 'python3() { printf \'%s\\n\' "$*" >> "$STANDIN_LOG"; bash -c "$STANDIN_GATE"; }\n'
+    script = "fail=0\n" + standin + source + 'printf "fail=%s\\n" "$fail"\n'
+    want_call = [PALETTE_CALL[len("python3 "):]]
+    failures = []
+    d = Path(tempfile.mkdtemp())
+    try:
+        log = d / "calls.log"
+        for gate, want_fail, needs, refuses in PALETTE_CASES:
+            log.write_text("", encoding="utf-8")
+            r = subprocess.run(["bash", "-c", script], capture_output=True, text=True, timeout=60,
+                               env=dict(os.environ, STANDIN_GATE=gate, STANDIN_LOG=str(log)))
+            out = r.stdout + r.stderr
+            lines = out.rstrip("\n").split("\n")
+            calls = log.read_text(encoding="utf-8").splitlines()
+            if r.returncode or lines[-1] not in ("fail=0", "fail=1"):
+                failures.append(f"palette block on {gate!r}: the harness exited {r.returncode}: "
+                                f"{out!r}")
+            elif (lines[-1] == "fail=1") is not want_fail:
+                failures.append(f"palette block on {gate!r}: expected fail={int(want_fail)}: "
+                                f"{out!r}")
+            if calls != want_call:
+                failures.append(f"palette block on {gate!r}: expected the 1 call {want_call!r}, "
+                                f"got {calls!r}")
+            missing = [n for n in needs if n not in out]
+            present = [n for n in refuses if n in out]
+            if missing or present:
+                failures.append(f"palette block on {gate!r}: the output lacks {missing!r} or holds "
+                                f"{present!r}: {out!r}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     return failures
 
 
@@ -215,14 +325,16 @@ def main():
     build_failures, build_cases, forms = pages_build_failures()
     failures += build_failures
     failures += palette_gate_failures()
+    failures += palette_block_failures()
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
     print(f"  ok    {len(RUN_GATE_CASES)} run_gate cases and {build_cases} pages-build.sh cases "
           f"(Python 3.10 refused before any gate; with 3.11, every gate in order, and each gate's "
-          f"failure stopping the build, in {' and '.join(forms)}), and the palette gate in both "
-          f"runners")
+          f"failure stopping the build, in {' and '.join(forms)}), the palette gate in both "
+          f"runners, and {len(PALETTE_CASES)} cases of run_all_checks.sh's palette block (a pass, "
+          f"a failing gate, a crash and malformed RESULT lines)")
     return 0
 
 
