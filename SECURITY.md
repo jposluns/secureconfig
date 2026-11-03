@@ -13,8 +13,13 @@ GitHub adds you to that advisory as a collaborator, so the discussion stays betw
 maintainers. Please do not open a public issue for a security report.
 
 Private reporting has to be enabled on the repository for that button to appear. If it is not there,
-open a regular issue asking only for a private security contact, with no vulnerability details, and
-the maintainer will follow up.
+report by email as below, or open a regular issue asking only for a private security contact, with
+no vulnerability details, and the maintainer will follow up.
+
+You can also report by email to jeff@posluns.ca, the contact that
+<https://secureconfig.ai/.well-known/security.txt> publishes. The maintainer's vulnerability
+disclosure policy is at <https://posluns.ca/security/>, and security.txt names
+<https://posluns.ca/security/pgp-key.txt> as the key for an encrypted report.
 
 Helpful things to include: the affected guide, script, or file; the exact commit; what a reader or a
 running system would do wrong as a result; and how you confirmed it. A proof of concept helps, but a

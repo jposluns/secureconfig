@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
 
+Sitemap: https://secureconfig.ai/sitemap.xml
+
 # Machine-readable guide index for AI assistants:
 # https://secureconfig.ai/llms.txt
 # All guides in one file:

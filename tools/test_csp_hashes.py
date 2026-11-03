@@ -83,6 +83,15 @@ elements in any case, and, so that rule 2 stays tested behind the allowlist, eac
 holding only an allowlisted `<p>`. Two earlier cases changed: the `<noscript>`/`<textarea>` plain-text guard, once
 a pass, is now refused by the allowlist, and the handler-bearing tag in the pinned script string is
 an `<a>` rather than a `<b>`, so that it still passes.
+
+The owner's decision A15 of 2026-11-03 moved the live site/_headers, until promotion, to a policy
+that pins no hash and permits the live pages' inline blocks with `'unsafe-inline'`, and the gate
+accepts it as TEMPORARY 'unsafe-inline' in its docstring sets out. Every case above therefore no
+longer reads site/_headers: HEADERS is a fixture rebuilt from the real pages in the hash-pinned
+shape the file had before, so each case still tests the hash model it was written for, with every
+string it edits unchanged. The A15 cases, counted separately, run against the real file: it passes,
+it passes edited blocks without a repin, each hash, nonce or source beyond the accepted ones fails,
+and the shape, allowlist, handler, style, SVG and one-policy refusals still fail under it.
 """
 import base64
 import contextlib
@@ -102,7 +111,9 @@ TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 PAGE = (ROOT / "site" / "index.html").read_bytes().decode("utf-8")
 PAGE_404 = (ROOT / "site" / "404.html").read_bytes().decode("utf-8")
-HEADERS = (ROOT / "site" / "_headers").read_text(encoding="utf-8")
+# The real site/_headers, which until promotion carries the temporary live policy; the cases above the
+# A15 ones below run against HEADERS, the hash-pinned fixture built from the real pages further down.
+LIVE_HEADERS = (ROOT / "site" / "_headers").read_text(encoding="utf-8")
 FAVICON = (ROOT / "site" / "favicon.svg").read_bytes()
 
 
@@ -185,6 +196,13 @@ def alt_pin(page, tag, fn):
 STYLE_PIN = f"'sha256-{body_hash(PAGE, 'style')}'"
 SCRIPT_PIN = f"'sha256-{body_hash(PAGE, 'script')}'"
 STYLE_404_PIN = f"'sha256-{body_hash(PAGE_404, 'style')}'"
+# The hash-pinned policy the site served before A15, rebuilt from the real pages, so every case of the
+# six review rounds and of row 3.18 and P5 still tests the hash model it was written for.
+HEADERS = ("/*\n"
+           f"  Content-Security-Policy: default-src 'none'; script-src {SCRIPT_PIN}; style-src "
+           f"{STYLE_PIN} {STYLE_404_PIN}; img-src 'self'; base-uri 'none'; form-action 'none'; "
+           "frame-ancestors 'none'\n"
+           "  X-Frame-Options: DENY\n")
 
 COMMENTY = "/* <!-- keep this --> */\n    :root"
 STRINGY = "(function () {\n  var tpl = \"<style>h1{color:red}</style>\";"
@@ -213,12 +231,14 @@ ORPHAN = "'sha256-" + "A" * 43 + "='"
 
 # (description, page, headers, must_fail, expected substring or None)
 CASES = (
-    ("the site as it stands, now three blocks across two pages", None, None, False, None),
+    ("the real pages under the hash-pinned policy, three blocks across two pages", None, None, False,
+     None),
     ("an edited stylesheet nobody repinned",
      PAGE.replace(":root", "/* an edit */\n    :root", 1), None, True, "lacks the hash"),
     ("an edited inline script nobody repinned", SCRIPT_PAGE, None, True, "lacks the hash"),
-    ("a style= attribute, which no hash can ever cover",
-     PAGE.replace("<body", '<body style="color:red"', 1), None, True, "style= attribute"),
+    ("a style= attribute, which no pin this gate checks can cover",
+     PAGE.replace("<body", '<body style="color:red"', 1), None, True,
+     "this gate pins only an element's text, never an attribute"),
     ("'unsafe-inline' coming back",
      None, re.sub(r"style-src '[^']*'", "style-src 'unsafe-inline'", HEADERS, count=1), True,
      "'unsafe-inline'"),
@@ -366,7 +386,7 @@ CASES = (
      {"404.html": PAGE_404.replace("<style>", "<style>\x00", 1)}, None, True, "NUL byte"),
     ("a style= attribute on the 404 page's body",
      {"404.html": PAGE_404.replace("<body", '<body style="color:red"', 1)}, None, True,
-     "style= attribute"),
+     "this gate pins only an element's text, never an attribute"),
     ("a <STYLE> smuggled through <svg><title> on the 404 page",
      {"404.html": SVG_TITLE_STYLE_404}, None, True, "openers"),
     ("a <script> smuggled through <svg><title> on the script-free 404 page",
@@ -660,6 +680,9 @@ for name in ("probe.svg.gz", "probe.html.br", "probe.svg.zst", "probe.SVG.GZ", "
 scope_case("a directory named assets.gz", expected=COMPRESSED,
            setup=lambda d: (d / "site" / "assets.gz").mkdir())
 
+# The wording every page on* finding shares, whatever the policy.
+ON_RULE = ("refuses every on* handler on a page (P5), whatever the site's script-src or "
+           "script-src-attr would let a browser do with it")
 # P5 (3): an on* handler attribute on an HTML page, structural and literal, on both pages.
 ONJS_PAGE = PAGE.replace("(function () {", "(function () {\n  document.body.onload = null;", 1)
 ONCSS_PAGE = PAGE.replace(":root", "/* onclick= here is stylesheet text */\n    :root", 1)
@@ -667,7 +690,7 @@ scope_case("P5 page handler on index's body", expected="on* handler",
            page=PAGE.replace("<body", '<body onload="init()"', 1))
 scope_case("P5 upper-case page handler on the 404 page names the page", expected="site/404.html",
            page={"404.html": PAGE_404.replace("<body", "<body ONCLICK=go", 1)})
-scope_case("P5 valueless page handler", expected="on* handler",
+scope_case("P5 valueless page handler", expected=ON_RULE,
            page=PAGE.replace("<body", "<body onclick", 1))
 scope_case("P5 page handler with a spaced =", expected="on* handler",
            page=PAGE.replace("<body", "<body onload = 'x'", 1))
@@ -723,13 +746,20 @@ scope_case("P5 a handler-bearing tag in a JavaScript string is script text, repi
            page=ONTAG_JS_PAGE, headers=repinned(ONTAG_JS_PAGE, "script"))
 scope_case("P5 a handler-bearing tag in a page comment fails closed", expected="on* handler",
            page=PAGE.replace("</body>", "<!-- <b onclick> -->\n</body>", 1))
+# The on* literal-accounting message: this case, an allowlisted <a> in a comment, pins its count
+# wording beside rule 2's comment finding. Whether the message can fire with no other finding is
+# not established here (a quoted attribute value can also hide a real tag from the literal scan),
+# so no case claims either way.
+scope_case("P5 the on* accounting message, beside the comment refusal",
+           expected="literal on* attribute names in tags and this gate accounts for 0",
+           page=PAGE.replace("</body>", "<!-- <a onclick> -->\n</body>", 1))
 
 # Round 3 of #352 (codex finding): fake markup inside inert text made literal_on_attrs() read a tag
 # that a browser never sees and swallow a real handler after it as a quoted value, while html.parser
 # missed the handler inside SVG <title>, so both counts were 0. Three rules that ask html.parser
 # nothing now refuse it: (1) a context-free scan for a valued `on...=` outside the pinned blocks,
 # (2) inert text holding a `<`, and (3) the foreign-content elements html.parser reads as HTML.
-ON_TEXT = "outside the hash-pinned blocks"
+ON_TEXT = "outside the inline <style> and <script> blocks"
 CROSSINGS = (("comment", '<!-- <b title=" -->', "has a comment whose text"),
              ("CDATA section", '<![CDATA[ <b title=" ]]>', "has a CDATA section whose text"),
              ("bogus declaration", '<!thing <b title=">', "has a <! declaration whose text"),
@@ -928,6 +958,139 @@ scope_case("regular file as site root", expected="is not a directory", setup=reg
 
 CASES += tuple(SCOPE_CASES)
 
+# A15 (the owner's decision of 2026-11-03): until promotion the live policy, the real site/_headers,
+# permits the live pages' inline blocks with 'unsafe-inline' and pins no hash. Each case runs against
+# LIVE_HEADERS or a mutation of it: the policy passes, it passes edited blocks without a repin, every
+# source or pin beyond it fails, and every other refusal still holds under it.
+LIVE_CASES = []
+PERMITTED = "0 pinned by hash and 3 permitted by the temporary 'unsafe-inline'"
+OUTSIDE = "outside the temporary live policy"
+
+
+def live_case(desc, page=None, headers=None, expected=None, must_fail=True, **args):
+    desc = "A15 live policy: " + desc
+    if desc in EXTRA_ARGS:
+        raise KeyError(f"duplicate A15 case {desc!r}")
+    if headers is not None and headers == LIVE_HEADERS:
+        raise AssertionError(f"{desc}: the headers mutation did not change site/_headers")
+    LIVE_CASES.append((desc, page, LIVE_HEADERS if headers is None else headers, must_fail,
+                       expected))
+    EXTRA_ARGS[desc] = args
+
+
+for directive in ("script-src 'self'", "style-src 'self'"):
+    if directive not in LIVE_HEADERS:
+        raise AssertionError(f"site/_headers no longer carries {directive!r}; update the A15 cases")
+live_case("the real site/_headers with the real pages", expected=PERMITTED, must_fail=False)
+live_case("edited blocks on both pages need no repin",
+          page={"index.html": SCRIPT_PAGE.replace(":root", "/* an edit */\n    :root", 1),
+                "404.html": E404},
+          expected=PERMITTED, must_fail=False)
+live_case("keywords and hosts in upper case, which CSP3 matches case-insensitively",
+          headers=LIVE_HEADERS.replace("'unsafe-inline'", "'UNSAFE-INLINE'")
+          .replace("https://ajax.cloudflare.com", "HTTPS://AJAX.CLOUDFLARE.COM", 1),
+          expected=PERMITTED, must_fail=False)
+live_case("live script-src beside a correct hash-pinned style-src",
+          headers=LIVE_HEADERS.replace("style-src 'self' 'unsafe-inline'",
+                                       f"style-src {STYLE_PIN} {STYLE_404_PIN}", 1),
+          expected="2 pinned by hash and 1 permitted", must_fail=False)
+live_case("live script-src beside a hash-pinned style-src whose block was edited",
+          page=PAGE.replace(":root", "/* an edit */\n    :root", 1),
+          headers=LIVE_HEADERS.replace("style-src 'self' 'unsafe-inline'",
+                                       f"style-src {STYLE_PIN} {STYLE_404_PIN}", 1),
+          expected="style-src lacks the hash")
+live_case("a hash beside 'unsafe-inline' in script-src, which makes a browser ignore it",
+          headers=LIVE_HEADERS.replace("script-src 'self'", f"script-src {SCRIPT_PIN} 'self'", 1),
+          expected="script-src carries 'unsafe-inline' beside 'sha256-")
+live_case("a sha384 hash beside 'unsafe-inline' in style-src",
+          headers=LIVE_HEADERS.replace(
+              "style-src 'self'", f"style-src 'sha384-{alt_pin(PAGE, 'style', hashlib.sha384)}' "
+                                  "'self'", 1),
+          expected="style-src carries 'unsafe-inline' beside 'sha384-")
+live_case("a nonce beside 'unsafe-inline' in style-src",
+          headers=LIVE_HEADERS.replace("style-src 'self'", "style-src 'nonce-abc' 'self'", 1),
+          expected="beside 'nonce-abc'")
+live_case("a hash beside 'unsafe-inline' in script-src names the JavaScript Detections loader",
+          headers=LIVE_HEADERS.replace("script-src 'self'", f"script-src {SCRIPT_PIN} 'self'", 1),
+          expected="runs only the inline <script> elements its hashes or nonces cover and "
+                   "refuses every other one, Cloudflare's injected JavaScript Detections loader "
+                   "included")
+live_case("a hash beside 'unsafe-inline' in style-src names the effect on inline styles",
+          headers=LIVE_HEADERS.replace("style-src 'self'", f"style-src {STYLE_PIN} 'self'", 1),
+          expected="so it applies only the inline <style> blocks its hashes or nonces cover "
+                   "and refuses every other one;")
+for kind, extra in (("script-src", "https://cdn.example.com"), ("script-src", "'strict-dynamic'"),
+                    ("script-src", "'unsafe-eval'"), ("script-src", "'unsafe-hashes'"),
+                    ("script-src", "https:"), ("script-src", "*"),
+                    ("script-src", "http://static.cloudflareinsights.com"),
+                    ("style-src", "https://static.cloudflareinsights.com"),
+                    ("style-src", "'unsafe-hashes'"), ("style-src", "data:")):
+    live_case(f"{extra} added to {kind}",
+              headers=LIVE_HEADERS.replace(f"{kind} 'self'", f"{kind} 'self' {extra}", 1),
+              expected=f"{kind} carries 'unsafe-inline' {OUTSIDE}")
+live_case("'unsafe-inline' in default-src with no script-src or style-src",
+          headers="/*\n  Content-Security-Policy: default-src 'self' 'unsafe-inline'; "
+                  "img-src 'self'\n",
+          expected="default-src carries 'unsafe-inline' " + OUTSIDE)
+live_case("'unsafe-inline' in style-src-elem, which governs before style-src",
+          headers=LIVE_HEADERS.replace("; font-src", "; style-src-elem 'self' 'unsafe-inline'; "
+                                                     "font-src", 1),
+          expected="style-src-elem carries 'unsafe-inline' " + OUTSIDE)
+live_case("script-src-elem 'none' beside the live script-src",
+          headers=LIVE_HEADERS.replace("; font-src", "; script-src-elem 'none'; font-src", 1),
+          expected="script-src-elem lacks the hash")
+live_case("a valued on* handler on index's body",
+          page=PAGE.replace("<body", '<body onload="x"', 1), expected=ON_TEXT)
+live_case("a valueless on* handler on index's body", page=PAGE.replace("<body", "<body onload", 1),
+          expected=ON_RULE)
+live_case("an on* handler on the 404 page's body",
+          page={"404.html": PAGE_404.replace("<body", "<body onclick", 1)},
+          expected="carries an on* handler attribute (onclick)")
+live_case("a style= attribute", page=PAGE.replace("<body", '<body style="color:red"', 1),
+          expected="This gate refuses every style= attribute on a page, whatever the site's "
+                   "style-src or style-src-attr would let a browser do with it")
+# Round 2 codex reproductions: an attribute directive overrides the element directive's fallback,
+# so the finding must not claim what a browser does with the attribute.
+live_case("style-src-attr 'none' beside the live policy, and a style= attribute",
+          page=PAGE.replace("<body", '<body style="color:red"', 1),
+          headers=LIVE_HEADERS.replace("; font-src", "; style-src-attr 'none'; font-src", 1),
+          expected="This gate refuses every style= attribute on a page, whatever the site's "
+                   "style-src or style-src-attr would let a browser do with it")
+live_case("script-src-attr 'none' beside the live policy, and an on* handler on the 404 page",
+          page={"404.html": PAGE_404.replace("<body", "<body onclick", 1)},
+          headers=LIVE_HEADERS.replace("; font-src", "; script-src-attr 'none'; font-src", 1),
+          expected="carries an on* handler attribute (onclick). This gate " + ON_RULE)
+live_case("an SVG style element, refused whatever style-src allows",
+          expected="refuses one whatever the site's style-src allows",
+          extra_files={"assets/probe.svg": svg("<style>path{fill:red}</style>")})
+live_case("an SVG style attribute, refused whatever style-src allows",
+          expected="refuses one whatever the site's style-src allows",
+          extra_files={"assets/probe.svg": svg('<path style="fill:red"/>')})
+live_case("an element outside the allowlist",
+          page=PAGE.replace("</body>", "<frameset></frameset>\n</body>", 1),
+          expected="element <frameset> is not in the page allowlist")
+live_case("a second inline <style>",
+          page=PAGE.replace("</style>", "</style>\n<style>h1{color:red}</style>", 1),
+          expected="models exactly one")
+live_case("a <script> added to the script-free 404 page", page={"404.html": SCRIPT_ON_404},
+          expected="models exactly 0")
+live_case("a <style> smuggled through <svg><title>",
+          page=PAGE.replace("</svg>", "<title><style>p{color:red}</style></title>\n    </svg>", 1),
+          expected="openers")
+live_case("a second CSP under a /draft/* rule",
+          headers=LIVE_HEADERS + "\n/draft/*\n  Content-Security-Policy: default-src 'none'\n",
+          expected="exactly one Content-Security-Policy")
+live_case("the live CSP detached under a /draft/* rule",
+          headers=LIVE_HEADERS + "\n/draft/*\n  ! Content-Security-Policy\n", expected="detaches")
+live_case("a comma splitting the live policy",
+          headers=LIVE_HEADERS.replace("style-src ", "style-src 'none', style-src ", 1),
+          expected="comma")
+live_case("an SVG carrying a script", expected="script element",
+          extra_files={"assets/probe.svg": svg("<script/>")})
+live_case("an unlisted page", expected="not in this gate's page list",
+          extra_files={"extra.html": '<!doctype html>\n<meta charset="utf-8">\n'})
+CASES += tuple(LIVE_CASES)
+
 
 def io_failure_cases():
     """Run the gate in-process with one Path method made to raise, and require a FAIL for each.
@@ -1040,7 +1203,8 @@ def main() -> int:
             print(f"  FAIL  {f}")
         return 1
     print(f"  ok    {LEGACY_CASE_COUNT} recorded cases for the CSP hash gate across six review rounds, "
-          f"{len(SCOPE_CASES)} row 3.18 and P5 document, page and filesystem cases, and "
+          f"{len(SCOPE_CASES)} row 3.18 and P5 document, page and filesystem cases, "
+          f"{len(LIVE_CASES)} cases for the temporary A15 live policy, and "
           f"{io_case_count} injected I/O failures")
     return 0
 

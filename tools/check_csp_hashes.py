@@ -1,10 +1,38 @@
 #!/usr/bin/env python3
-"""Check that every inline block in each listed site page is pinned by hash in the site/_headers CSP.
+"""Check that every inline block in each listed site page is pinned by hash in the site/_headers CSP,
+or, until promotion, permitted by the live policy's temporary `'unsafe-inline'`.
 
-WHY: the site drops `'unsafe-inline'` and pins every inline stylesheet and script by hash. A hash
-is exact, so editing a block without repinning it produces a page whose style or script the browser
+WHY: under its hash model the site carries no `'unsafe-inline'` and pins every inline stylesheet
+and script by hash; until promotion it carries the live policy below instead. A hash is exact, so
+editing a block without repinning it produces a page whose style or script the browser
 silently refuses. Nothing said so, and the page is the first thing a security-minded reader
 inspects.
+
+TEMPORARY `'unsafe-inline'`, UNTIL PROMOTION (the owner's decision A15 of 2026-11-03, which
+explicitly authorizes relaxing this gate for it). Cloudflare's JavaScript Detections injects an
+inline loader into the pages it serves, and a browser ignores `'unsafe-inline'` in a directive that
+also carries a hash or a nonce, so while the live pages were pinned by hash the loader was blocked.
+Until the template pages replace the live ones at promotion, the live policy in `site/_headers`
+pins no hash and permits the live pages' inline blocks with `'unsafe-inline'`. This gate accepts
+`'unsafe-inline'` only as follows: a chosen directive may carry `'unsafe-inline'` only if it is
+`script-src` with every source in LIVE_INLINE_SOURCES["script"] (`'self'`, `'unsafe-inline'`,
+`https://ajax.cloudflare.com`, `https://static.cloudflareinsights.com`) or `style-src` with every
+source in LIVE_INLINE_SOURCES["style"] (`'self'`, `'unsafe-inline'`), compared ASCII
+case-insensitively, and never beside a hash, a nonce or any other source, `'strict-dynamic'` and
+`'unsafe-hashes'` included. Every inline block of an accepted kind then counts as permitted
+instead of being matched against a pin; a directive without `'unsafe-inline'` is held to the hash
+model below as before. Every other check stands: exactly one CSP, under `/*`; each page's declared
+block shape; the refused contexts; the element allowlist; the `on*` and `style=` refusals; the SVG
+rules; and the walk of `site/`. Those refusals are now this gate's own rule and no longer a
+description of what a browser refuses: under `'unsafe-inline'`, and with no `script-src-attr` or
+`style-src-attr` saying otherwise, a browser runs an `on*` handler and applies a `style=`
+attribute. What a finding reports is that this gate refuses what the finding names; the
+explanation a message adds is the usual reason for the rule, written for the typical input, and
+can be narrower than every input that triggers it. The design notes below, written for the hash
+model, describe that model. The acceptance is temporary and is removed at promotion, when the live
+inline blocks leave the site. The shared template policy keeps `script-src 'unsafe-inline'`
+for JavaScript Detections, so what this gate accepts for it after promotion is decided with the
+template page model, not carried over from this allowance.
 
 THIS GATE COVERS A KNOWN LIST OF PAGES, NOT ONE. `site/_headers` serves a single Content-Security-
 Policy over the whole site, so its `style-src`/`script-src` are a UNION of every page's block hashes.
@@ -206,9 +234,10 @@ single header VALUE is more than one policy when it contains a comma, and a brow
 a comma is refused. A header name prefixed with `!` DETACHES it: `! Content-Security-Policy` removes
 the policy, which has no colon and so once passed silently.
 
-WHAT IT DOES NOT PROVE: that the CSP is otherwise sound, or that the hashed content is safe.
-`script-src` is hash-only with no `'self'`, so the first external script or stylesheet anyone adds is
-blocked by the browser and no gate here says so.
+WHAT IT DOES NOT PROVE: that the CSP is otherwise sound, or that the hashed or permitted content is
+safe. It reads no `src` or `href`, so whether the policy allows a page's external scripts,
+stylesheets, images or connections is not checked here, and an external resource the policy does
+not allow is blocked by the browser with no gate here saying so.
 """
 import base64
 import hashlib
@@ -266,6 +295,14 @@ ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstu
 CHARSET = re.compile(r"charset\s*=", re.I)
 META_UTF8 = '<meta charset="utf-8">'
 CSP = "content-security-policy"
+# TEMPORARY, until promotion (A15): the one directive per kind that may carry 'unsafe-inline', and
+# every source allowed in it, lower case. See TEMPORARY 'unsafe-inline' in the docstring.
+UNSAFE_INLINE = "'unsafe-inline'"
+LIVE_INLINE_SOURCES = {
+    "script": ("script-src", frozenset(("'self'", UNSAFE_INLINE, "https://ajax.cloudflare.com",
+                                        "https://static.cloudflareinsights.com"))),
+    "style": ("style-src", frozenset(("'self'", UNSAFE_INLINE))),
+}
 # CSP3 allows sha256, sha384 and sha512, and matches the algorithm name case-insensitively.
 ALGORITHMS = (("sha256", hashlib.sha256), ("sha384", hashlib.sha384), ("sha512", hashlib.sha512))
 # Row 3.18: suffixes refused under site/ in any case, with the reason a reader sees. See THE REST OF
@@ -423,12 +460,13 @@ def outside_blocks(html, page):
 
 
 def valued_handlers(path, text):
-    """Rule 1 of REFUSED CONTEXTS: every `on...=` outside the pinned blocks, whatever its context."""
+    """Rule 1 of REFUSED CONTEXTS: every `on...=` outside the inline blocks, whatever its context."""
     return [f"{path}:{line_of(text, m.start())} contains `{m.group().strip()}` outside the "
-            f"hash-pinned blocks, which is an on* handler attribute or text this gate cannot tell "
-            f"from one, since it reads no HTML context; script-src is hash-only and no hash covers "
-            f"an attribute, so a browser refuses a handler silently. Move the behaviour into the "
-            f"inline <script>, or reword the text"
+            f"inline <style> and <script> blocks, which is an on* handler attribute or text this "
+            f"gate cannot tell from one, since it reads no HTML context; this gate refuses every "
+            f"on* handler on a page (P5), whatever the site's script-src or script-src-attr would "
+            f"let a browser do with it. Move the behaviour into the inline <script>, or reword "
+            f"the text"
             for m in VALUED_HANDLER.finditer(text)]
 
 
@@ -474,7 +512,7 @@ def unlisted_elements(path, html):
             out.append(f"{path}:{line_of(html, m.start())}: element <{name}> is not in the page "
                        f"allowlist. This gate knows how html.parser and a browser parse only the "
                        f"elements the site already uses; another one (a <frameset>, a <select>) can "
-                       f"change what a browser makes of a pinned block, so extending the list is a "
+                       f"change what a browser makes of an inline block, so extending the list is a "
                        f"reviewed change to the gate, not a page edit")
     return out
 
@@ -487,9 +525,9 @@ def malformed_end_tags(path, html):
             f"is text, and inside script or style data, RCDATA or an attribute value it stays "
             f"text), and this gate's literal tag reading does not, so the text one swallows "
             f"(an </svg>, or "
-            f"the end of a pinned block) is read differently here and there. Telling the harmless "
+            f"the end of an inline block) is read differently here and there. Telling the harmless "
             f"ones apart needs context this gate does not model, so it refuses every one, even "
-            f"inside a pinned <style> or <script>"
+            f"inside an inline <style> or <script>"
             for m in MALFORMED_END.finditer(html)]
 
 
@@ -554,22 +592,25 @@ def simple_enough(path, page, html, shape):
     out = []
     for tag, line in page.self_closing:
         out.append(f"the <{tag}> at {path}:{line} is written self-closing. html.parser reads that as "
-                   f"an empty element and a browser reads to the real </{tag}>, so the hash here "
-                   f"would be the hash of nothing; write it with a separate closing tag")
+                   f"an empty element and a browser reads to the real </{tag}>, so the block text "
+                   f"this gate reads, its accounting and any pin over it would not match what a "
+                   f"browser reads; write it with a separate closing tag")
     if CHARSET.search(html.replace(META_UTF8, "", 1)) or META_UTF8 not in html:
         out.append(f"{path} does not declare exactly one {META_UTF8}, and this gate always decodes "
-                   f"UTF-8; a different declared charset would make a browser decode other bytes and "
-                   f"hash a different stylesheet")
+                   f"UTF-8; a different declared charset would make a browser decode other bytes, "
+                   f"so the block text this gate reads and any pin over it would not match a "
+                   f"browser's")
     if "\x00" in html:
         out.append(f"{path} contains a NUL byte, which a browser's tokenizer replaces with U+FFFD "
-                   f"before hashing and this gate would not")
+                   f"and this gate would not, so the block text it reads and any pin over it would "
+                   f"not match a browser's")
     for tag in ("style", "script"):
         bodies = page.bodies(tag)
         if len(bodies) != shape[tag]:
             if shape[tag] == 1:
                 out.append(f"the page {path} has {len(bodies)} <{tag}> elements and this gate models "
-                           f"exactly one; pinning more than one by hash needs a gate that knows which "
-                           f"is which")
+                           f"exactly one; telling more than one apart, for its accounting or for a "
+                           f"pin, needs a gate that knows which is which")
             else:
                 out.append(f"the page {path} has {len(bodies)} <{tag}> elements and this gate models "
                            f"exactly {shape[tag]} <{tag}> for this page, which is declared to carry "
@@ -596,22 +637,25 @@ def simple_enough(path, page, html, shape):
     if len(STYLE_ATTR.findall(html)) != len(page.style_attrs) + in_body:
         out.append(f"the page {path} contains literal `style=` text this gate cannot account for; a "
                    f"style attribute the parser did not report, such as one inside <svg> or <title>, "
-                   f"is still applied and still CSP-checked by a browser")
+                   f"may still reach a browser as an attribute, and this gate refuses every style= "
+                   f"attribute on a page")
     # The same accounting for an event-handler attribute (P5): a handler smuggled through
-    # <svg><title> is invisible to html.parser and wired up by a browser, which then refuses it under
-    # the hash-only script-src, silently.
+    # <svg><title> is invisible to html.parser and may still reach a browser as an attribute; this
+    # gate refuses it either way.
     in_body = sum(literal_on_attrs(b) for tag in ("style", "script") for b in page.bodies(tag))
     total = literal_on_attrs(html)
     if total != len(page.on_attrs) + in_body:
         out.append(f"the page {path} contains {total} literal on* attribute names in tags and this "
-                   f"gate accounts for {len(page.on_attrs) + in_body} on* handler attributes; one "
-                   f"the parser did not report, such as one inside <svg> or <title>, is still wired "
-                   f"up by a browser and refused by the hash-only script-src")
+                   f"gate accounts for {len(page.on_attrs) + in_body} on* handler attributes; the "
+                   f"counts differ, so one may be an attribute html.parser did not report (inside <svg> "
+                   f"or <title>, for example), and this gate refuses every on* handler on a page "
+                   f"(P5)")
     for script in page.bodies("script"):
         if "<!--" in script:
             out.append(f"the inline <script> in {path} contains `<!--`, which opens HTML's script-data "
                        f"escape states; a browser reads to a later </script> than this parser does, "
-                       f"so the hash here would not be the hash there")
+                       f"so the block text this gate reads, its accounting and any pin over it "
+                       f"would not match what a browser runs")
             break
     # Every literal opener has to be one of the declared elements or text inside one of them. This is
     # what catches an element the parser never reported: a <style> or <script> inside <svg><title> is
@@ -694,8 +738,9 @@ def check_svg(path, display):
                             f"document under {SITE} must carry no script (row 3.18)")
         elif local == "style":
             findings.append(f"{where}: SVG contains a style element (<{name}>), and an SVG "
-                            f"document under {SITE} must carry no inline style: the site's "
-                            f"style-src pins page blocks by hash and covers no SVG (P5)")
+                            f"document under {SITE} must carry no inline style: this gate models "
+                            f"no SVG stylesheet and refuses one whatever the site's style-src "
+                            f"allows (P5)")
         for attr in sorted(attrs):
             local = local_name(attr)
             if local.startswith("on"):
@@ -703,8 +748,9 @@ def check_svg(path, display):
                                 f"SVG document under {SITE} must carry none (row 3.18)")
             elif local == "style":
                 findings.append(f"{where}: SVG contains a style attribute ({attr}) on <{name}>, "
-                                f"and an SVG document under {SITE} must carry no inline style: the "
-                                f"site's style-src pins page blocks by hash and covers no SVG (P5)")
+                                f"and an SVG document under {SITE} must carry no inline style: this "
+                                f"gate models no SVG style attribute and refuses one whatever the "
+                                f"site's style-src allows (P5)")
             if is_javascript_url(attrs[attr]):
                 findings.append(f"{where}: SVG carries a javascript: URL in {attr} on <{name}>, "
                                 f"and an SVG document under {SITE} must carry none, whether in an "
@@ -787,7 +833,7 @@ def inspect_site(root, pages):
         if suffix in (".html", ".htm") and path not in listed:
             findings.append(f"{display} is served under the site's /* CSP but is not in "
                             f"this gate's page list; add it with its inline-block shape, or this gate "
-                            f"cannot prove its blocks are pinned")
+                            f"cannot check its inline blocks")
         elif suffix == ".svg":
             inspected += 1
             findings += check_svg(path, display)
@@ -874,9 +920,10 @@ def main() -> int:
             # First occurrence wins, per CSP3.
             directives.setdefault(parts[0].lower(), parts)
 
-    findings, verified = [], 0
+    findings, verified, permitted = [], 0, 0
     used = {}
     used_pins = {}
+    permitted_kinds = set()
     for tag, names in KINDS:
         # Resolve each kind's directive once, whether or not any listed page carries that kind: a CSP
         # that fails to constrain a kind at all should never be blessed by this gate.
@@ -886,12 +933,31 @@ def main() -> int:
             findings.append(f"the Content-Security-Policy has no {names[1]} directive, and neither "
                             f"{names[0]} nor {names[2]} to fall back to")
             continue
-        if "'unsafe-inline'" in directives[chosen]:
-            findings.append(
-                f"{chosen} carries 'unsafe-inline', which permits any inline <{tag}> including one "
-                f"injected into the page. A browser ignores it while a hash is present, so this is "
-                f"not broken today; it is one edit from permitting everything, and this site's whole "
-                f"claim is that it does not need it")
+        sources = directives[chosen][1:]
+        if UNSAFE_INLINE in (s.lower() for s in sources):
+            # TEMPORARY, until promotion (A15): see TEMPORARY 'unsafe-inline' in the docstring.
+            directive, allowed = LIVE_INLINE_SOURCES[tag]
+            pins = [s for s in sources if is_hash_pin(s) or s.lower().startswith("'nonce-")]
+            if pins:
+                if tag == "script":
+                    effect = ("it runs only the inline <script> elements its hashes or nonces "
+                              "cover and refuses every other one, Cloudflare's injected JavaScript "
+                              "Detections loader included")
+                else:
+                    effect = ("it applies only the inline <style> blocks its hashes or nonces "
+                              "cover and refuses every other one")
+                findings.append(
+                    f"{chosen} carries 'unsafe-inline' beside {pins[0]}. A browser ignores "
+                    f"'unsafe-inline' in a directive that carries a hash or a nonce, so {effect}; "
+                    f"until promotion the live policy carries 'unsafe-inline' with no hash or "
+                    f"nonce")
+            elif chosen != directive or not {s.lower() for s in sources} <= allowed:
+                findings.append(
+                    f"{chosen} carries 'unsafe-inline' outside the temporary live policy this gate "
+                    f"accepts until promotion: only {directive} may carry it, beside no source but "
+                    f"{', '.join(sorted(allowed - {UNSAFE_INLINE}))}")
+            else:
+                permitted_kinds.add(tag)
 
     for path, shape in PAGES:
         page = parsed[path]
@@ -899,6 +965,9 @@ def main() -> int:
             chosen = used[tag]
             for body in page.bodies(tag):
                 if chosen is None:
+                    continue
+                if tag in permitted_kinds:
+                    permitted += 1
                     continue
                 present = {normalize_pin(token) for token in directives[chosen]}
                 matched = pin_tokens(body) & present
@@ -908,18 +977,21 @@ def main() -> int:
                 else:
                     findings.append(f"{chosen} lacks the hash of the inline <{tag}> in {path} "
                                     f"(sha256-{sha256_b64(body)})")
+        # These two refusals are this gate's own rule, stated without describing what a browser
+        # would do, because that depends on style-src-attr and script-src-attr, which it does not
+        # resolve.
         for tag, line in sorted(set(page.style_attrs)):
             findings.append(
-                f"<{tag}> at {path}:{line} carries a style= attribute. A CSP hash covers an "
-                f"element's text, never an attribute, so it needs the rule moved into the stylesheet, "
-                f"or a style-src-attr directive carrying 'unsafe-hashes' and the attribute's own "
-                f"hash, which this gate does not check")
+                f"<{tag}> at {path}:{line} carries a style= attribute. This gate refuses every "
+                f"style= attribute on a page, whatever the site's style-src or style-src-attr would "
+                f"let a browser do with it; this gate pins only an element's text, never an "
+                f"attribute. Move the rule into the stylesheet")
         for tag, name, line in sorted(set(page.on_attrs)):
             findings.append(
-                f"<{tag}> at {path}:{line} carries an on* handler attribute ({name}). A CSP hash "
-                f"covers an element's text, never an attribute, and script-src here is hash-only, so "
-                f"a browser refuses the handler silently; move the behaviour into the inline "
-                f"<script> and repin it (P5)")
+                f"<{tag}> at {path}:{line} carries an on* handler attribute ({name}). This gate "
+                f"refuses every on* handler on a page (P5), whatever the site's script-src or "
+                f"script-src-attr would let a browser do with it; this gate pins only an element's "
+                f"text, never an attribute. Move the behaviour into the inline <script>")
 
     # Orphan pins (row 3.15): a hash left in a gate-selected directive that no listed block uses.
     # Not a fail-open (an orphan cannot make a real block go unhashed), but a stale pin is dead
@@ -933,17 +1005,22 @@ def main() -> int:
                             f"any listed page uses; remove the stale pin")
 
     declared_total = sum(n for _, shape in PAGES for n in shape.values())
-    if not findings and verified != declared_total:
-        findings.append(f"internal accounting error: verified {verified} inline blocks but the page "
-                        f"shapes declare {declared_total}")
+    if not findings and verified + permitted != declared_total:
+        findings.append(f"internal accounting error: verified {verified} and permitted {permitted} "
+                        f"inline blocks but the page shapes declare {declared_total}")
 
     if findings:
         for f in findings:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {verified} inline blocks across {len(PAGES)} pages are pinned by hash in the "
-          f"{HEADERS} CSP with no on* handler, and {inspected} SVG document(s) under {SITE} carry "
-          f"no <script>, on* handler, javascript: URL or inline style")
+    if permitted:
+        covered = (f"{verified + permitted} inline blocks across {len(PAGES)} pages are covered, "
+                   f"{verified} pinned by hash and {permitted} permitted by the temporary "
+                   f"'unsafe-inline' (until promotion), in the")
+    else:
+        covered = f"{verified} inline blocks across {len(PAGES)} pages are pinned by hash in the"
+    print(f"  ok    {covered} {HEADERS} CSP with no on* handler, and {inspected} SVG document(s) "
+          f"under {SITE} carry no <script>, on* handler, javascript: URL or inline style")
     return 0
 
 

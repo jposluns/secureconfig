@@ -6,6 +6,7 @@
   <title>secureconfig.ai</title>
   <meta name="description" content="Deployment exposure guides for AI-assisted projects: TLS, identity, MFA, secrets, and network controls for web apps, AI infrastructure, and the services behind them.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="canonical" href="https://secureconfig.ai/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SecureConfig.ai">
@@ -351,7 +352,7 @@
 </main>
 </div>
 
-<!-- Changing this script requires recomputing the sha256 hash in _headers (Content-Security-Policy script-src). -->
+<!-- Until promotion the live CSP permits this script with 'unsafe-inline' and pins no hash; tools/check_csp_hashes.py records why. -->
 <script>
 (function () {
   if (!navigator.clipboard) { return; }
