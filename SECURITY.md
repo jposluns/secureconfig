@@ -5,7 +5,8 @@ under CC0 (the AIQT Guardrails material listed in `.aiqt/PIN` is Apache-2.0, the
 fonts are under the SIL Open Font License 1.1, and its GitHub, LinkedIn and ORCID marks are their
 owners' trademarks, as `NOTICE` records). The guides are
 documentation; the code that ships is the Agent Plugin under `plugin/` and
-the helper scripts under `tools/` and `scripts/`.
+the helper scripts under `tools/` and `scripts/`, and the site serves the
+template's copy, rail and scheme scripts from `site/assets/baseline/`.
 
 ## Reporting a vulnerability
 

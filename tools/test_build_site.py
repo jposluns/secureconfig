@@ -13,6 +13,10 @@ review page carries its canonical, description and link previews at every base (
 review page carry their description, the link-preview tags (og:site_name after og:type) and their
 canonical in the template's head order; the 404 page and a staged build's other pages carry no
 previews.
+Every page, the 404 and the review page included, at both bases, carries the light and dark switch
+of baseline 1.6.0 (SPECIFICATION 7.33) exactly as the reference pages write it, once, as the last
+child of the top bar after its nav, and loads scheme.js once, right after the touch icon and
+before the first stylesheet, with data-cfasync="false" before src and no defer or async.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
 page at any base; a stray file outside assets/baseline/ is refused in a staged build and allowed
 at the root, where the published files (llms.txt, robots.txt, _headers) sit beside the pages.
@@ -31,6 +35,18 @@ spec = importlib.util.spec_from_file_location("build_site", SCRIPT)
 build_site = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build_site)
 ROBOTS_META = '<meta name="robots" content="noindex, nofollow">'
+# The switch as baseline 1.6.0's reference pages write it (reference/404.html, line 18), copied
+# here by hand so that a drift in the generator's copy is caught.
+REFERENCE_SWITCH = (
+    '<button class="scheme" type="button" data-scheme-toggle aria-pressed="false" hidden><svg '
+    'class="moon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" '
+    'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" '
+    'focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>'
+    '<svg class="sun" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" '
+    'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" '
+    'focusable="false"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 '
+    '12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>'
+    '</svg><span class="vh">Dark mode</span></button>')
 
 
 def refused(text):
@@ -96,6 +112,21 @@ def main():
                 if needle not in text:
                     failures.append(f"base {base}: {name} lacks {needle}")
 
+    # Baseline 1.6.0 (SPECIFICATION 7.33): the switch on every page, the 404 and the review page
+    # included, as the last child of the top bar, and scheme.js between the touch icon and the
+    # first stylesheet, without defer or async.
+    for base, built in (("/draft/", staged_pages), ("/", pages)):
+        script = f'<script data-cfasync="false" src="{base}assets/baseline/scheme.js"></script>'
+        head = (f'secureconfig-touch.png">\n{script}\n'
+                f'<link rel="stylesheet" href="{base}assets/baseline/fonts.css">\n')
+        for name, text in built.items():
+            if text.count(REFERENCE_SWITCH) != 1 or f"</nav>{REFERENCE_SWITCH}</header>" not in text:
+                failures.append(f"base {base}: {name} does not carry the reference switch exactly "
+                                f"once as the last child of header.mast, after nav.nav")
+            if text.count("scheme.js") != 1 or text.count(head) != 1:
+                failures.append(f"base {base}: {name} does not load scheme.js once, after the touch "
+                                f"icon and before the first stylesheet, as {script}")
+
     # At the root, only the 404 page and the /draft/ review page are noindex; a staged build is
     # noindex everywhere. The review page carries its canonical, description and link previews at
     # every base, and no other page names /draft/.
@@ -147,6 +178,7 @@ def main():
                    '<meta name="twitter:title" content="', '<meta name="twitter:description" content="',
                    f'<meta name="twitter:image" content="{build_site.CARD}">',
                    '<meta name="twitter:image:alt" content="', '<link rel="icon" ',
+                   '<script data-cfasync="false" src="/assets/baseline/scheme.js"></script>',
                    '<link rel="stylesheet" href="/assets/baseline/baseline.css">',
                    f'<link rel="canonical" href="{url}">')
         at = [head.find(n) for n in needles]
@@ -236,7 +268,8 @@ def main():
         return 1
     print(f"  ok    {len(plants)} planted refusals, the base path at / and /draft/ with the root's "
           f"indexability, link previews and canonicals and the review page's canonical and link "
-          f"previews, and --check on a changed, an extra .html "
+          f"previews, the light and dark switch and scheme.js on every page at both bases, and "
+          f"--check on a changed, an extra .html "
           f"and .HTM page, a missing page, a root-base non-page file, and the staged strays")
     return 0
 

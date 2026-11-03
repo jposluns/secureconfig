@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the secureconfig.ai pages on the shared site template (baseline 1.5.1).
+"""Build the secureconfig.ai pages on the shared site template (baseline 1.6.1).
 
 Usage:
   python3 -I -B scripts/build-site.py                 write the pages under site/
@@ -17,7 +17,10 @@ always carries its own canonical URL, its description, the link-preview tags and
 noindex (as auditthis.ai's /draft/ page does), and no other page links it; at the root base every
 other page is indexable except the 404 page, and each indexable page carries its description, its
 canonical URL and the Open Graph (og:site_name after og:type) and Twitter link-preview tags with
-the card at images/secureconfig-card.png (as on auditthis.ai).
+the card at images/secureconfig-card.png (as on auditthis.ai). Every page, the 404 and the review
+page included, carries the light and dark switch as the last child of the top bar, after its
+`nav`, and loads scheme.js in `<head>` before the stylesheets, without `defer` or `async`
+(SPECIFICATION.md section 7.33).
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
@@ -58,6 +61,17 @@ LOGO_ALT = "A terminal window with a padlock and a small shield"
 CARD = ORIGIN + "/images/secureconfig-card.png"
 CARD_ALT = "SecureConfig.ai: The secure option at every decision. TLS, identity, MFA, secrets, network."
 NEWTAB = '<span class="vh"> (opens in a new tab)</span>'
+# The light and dark switch of SPECIFICATION 7.33, as the baseline's reference pages write it: the
+# 2 glyphs in inline SVG with presentation attributes only, hidden until scheme.js reveals it.
+GLYPH = ('viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" '
+         'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" '
+         'focusable="false"')
+SWITCH = ('<button class="scheme" type="button" data-scheme-toggle aria-pressed="false" hidden>'
+          f'<svg class="moon" {GLYPH}><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 '
+          '10.7 10.7z"/></svg>'
+          f'<svg class="sun" {GLYPH}><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 '
+          '19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 '
+          '6.9l1.6-1.6"/></svg><span class="vh">Dark mode</span></button>')
 # The site's own pages, then GitHub last (the owner's template note of 2026-11-03): Disclosure and
 # Licence are linked from the landing page's "About this project" region, not the top bar.
 NAV = (("Guides", "guides/"), ("For AI assistants", "for-ai/"), ("For humans", "for-humans/"),
@@ -249,6 +263,9 @@ class Builder:
         parts += [f'<link rel="icon" href="{b}assets/baseline/logos/secureconfig-favicon.svg" '
                   f'type="image/svg+xml">',
                   f'<link rel="apple-touch-icon" href="{b}assets/baseline/logos/secureconfig-touch.png">',
+                  # SPECIFICATION 7.33: before the stylesheets and without defer, so a stored scheme
+                  # applies before the first paint; data-cfasync before src, for Rocket Loader.
+                  f'<script data-cfasync="false" src="{b}assets/baseline/scheme.js"></script>',
                   f'<link rel="stylesheet" href="{b}assets/baseline/fonts.css">',
                   f'<link rel="stylesheet" href="{b}assets/baseline/palettes.css">',
                   f'<link rel="stylesheet" href="{b}assets/baseline/baseline.css">']
@@ -267,7 +284,7 @@ class Builder:
         items.append(f'<a href="{REPO}" target="_blank" rel="noopener noreferrer">GitHub{NEWTAB}</a>')
         return (f'<header class="mast"><a class="brand" href="{b}"><span class="name">SecureConfig'
                 f'<span class="tld">.ai</span></span><span class="rule" aria-hidden="true"></span>'
-                f'</a><nav class="nav" aria-label="Site">{"".join(items)}</nav></header>')
+                f'</a><nav class="nav" aria-label="Site">{"".join(items)}</nav>{SWITCH}</header>')
 
     def footer(self):
         b = self.base
@@ -456,7 +473,10 @@ class Builder:
                      f'<p><strong>Claim:</strong> {self.inline(e["claim"])}</p>',
                      f'<p><strong>Limitation:</strong> {self.inline(e["limitation"])}</p>',
                      f"<p><strong>Evidence:</strong> {ev}</p>"]
-        body += ['<p class="lbl blk">Security</p>', f'<p>{self.inline(d["security"]["text"])}</p>',
+        # SPECIFICATION 7.20 from 1.6.0: "Your browser" (what the light and dark switch stores)
+        # comes before the Security paragraph.
+        body += ['<p class="lbl blk">Your browser</p>', f'<p>{self.inline(d["browser"]["text"])}</p>',
+                 '<p class="lbl blk">Security</p>', f'<p>{self.inline(d["security"]["text"])}</p>',
                  self.next_block(d["next"])]
         rail = self.rail([(e["id"], e["title"]) for e in d["entries"]])
         return self.page("Disclosure", "disclosure/", self.doc("Disclosure", "Disclosure", rail, body),

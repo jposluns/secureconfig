@@ -5,8 +5,9 @@ offline check can tell.
 scripts/pages-build.sh is the Cloudflare Pages build command, and Cloudflare's build images
 document Python 3.11.5 (v2) and 3.13.3 (v3). No 3.11 interpreter is available where this suite
 runs, so this test checks what it can offline. For every script pages-build.sh runs with
-`python3`, and every repository module those scripts import (by `import`, `from ... import`, or a
-file name they load, such as scripts/copy-baseline.py):
+`python3`, the template's palette gate .baseline/check_palette.py among them (baseline 1.6.0,
+whose absence from the script is itself a finding), and every repository module those scripts
+import (by `import`, `from ... import`, or a file name they load, such as scripts/copy-baseline.py):
 
   - the file parses with `ast.parse(..., feature_version=(3, 11))`;
   - it uses none of the f-string forms that Python 3.12 (PEP 701) added and that
@@ -43,6 +44,8 @@ ROOT = Path(__file__).resolve().parents[1]
 BUILD = ROOT / "scripts" / "pages-build.sh"
 RUN = re.compile(r"^\s*python3\s+(?:-\S+\s+)*([\w./-]+\.py)\b", re.M)
 FILE_NAME = re.compile(r"^[\w-]+\.py$")
+# The copied template gate the build must run (baseline 1.6.0, SPECIFICATION section 4 item 3).
+PALETTE_GATE = ROOT / ".baseline" / "check_palette.py"
 
 
 def local(name):
@@ -156,9 +159,13 @@ def self_test():
 def main():
     failures, seen = self_test(), set()
     pending = [ROOT / rel for rel in RUN.findall(BUILD.read_text(encoding="utf-8"))]
-    if len(pending) < 5:
+    if len(pending) < 6:
         failures.append(f"{BUILD.relative_to(ROOT)} runs {len(pending)} Python files; this test "
-                        f"expects at least the 5 gates it documents")
+                        f"expects at least the 6 gates it documents")
+    if PALETTE_GATE not in pending:
+        failures.append(f"{BUILD.relative_to(ROOT)} does not run "
+                        f"{PALETTE_GATE.relative_to(ROOT)}, the palette gate baseline 1.6.0 makes "
+                        f"mandatory in the build")
     while pending:
         path = pending.pop()
         if path in seen:

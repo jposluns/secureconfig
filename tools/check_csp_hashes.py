@@ -7,10 +7,25 @@ THE MODEL, SINCE PROMOTION (the owner's approval of 2026-11-03; baseline SPECIFI
 template, and a template page carries NO inline code at all:
 
   - no inline <style> and no inline <script>: a page's only scripts are same-origin baseline
-    files, written exactly as the generator writes them,
-    `<script src="/assets/baseline/<name>.js" defer></script>` (BASELINE_SCRIPT), which are taken
-    out of the text (their lines kept) before the rest is held to a shape of 0 <style> and 0
-    <script>;
+    files, written exactly as the generator writes them, under 2 rules:
+      1. THE SCHEME.JS HEAD SCRIPT (baseline 1.6.0, SPECIFICATION 7.33), read on the page as
+         written. The exact line
+         `<script data-cfasync="false" src="/assets/baseline/scheme.js"></script>` (HEAD_SCRIPT)
+         occurs exactly once on every page, as a line of its own, and html.parser reads it as a
+         start tag inside <head>: after the `<head>` start tag and before `</head>`, with only the
+         doctype, whitespace and `<html>` before `<head>`, and only whitespace and `meta`, `title`
+         and `link` elements before it in the head. No `link` before it has a rel which, with its
+         character references decoded and case-folded, holds the token `stylesheet` anywhere in its
+         whitespace-separated token list. Any other occurrence of `scheme.js`, in any case, is
+         refused: as raw text, in any attribute (character references decoded), in a script
+         deferred or not, in the body or inside <svg>;
+      2. THE DEFERRED BASELINE SCRIPTS: `<script src="/assets/baseline/<name>.js" defer></script>`
+         (BASELINE_SCRIPT), for any <name> of ASCII lower-case letters other than `scheme`, so
+         scheme.js is never accepted in this form.
+    Rule 1's line and each rule 2 match are taken out of the text (their lines kept) before the
+    rest is held to a shape of 0 <style> and 0 <script>, so every other script, deferred or not,
+    is refused. Rule 1 and the SVG CONTENT rule below read the page before anything is taken out,
+    so a script that rule 2 would take out is still refused inside <svg>;
   - no style= attribute and no on* handler attribute anywhere, structural and literal: the
     structural read is html.parser's, and a literal `style=` or on* attribute name in tag context
     that the parser did not report (one smuggled through markup the parser misreads) is refused by
@@ -27,7 +42,8 @@ one shared policy governs every page. What stayed is everything that still appli
 
 REFUSED CONTEXTS AND THE ELEMENT ALLOWLIST (rounds 3 to 5 of #352, kept whole). html.parser and a
 browser can disagree about where markup starts, and 5 review rounds showed that disagreement
-hiding a live element or handler. So, with the baseline script tags removed:
+hiding a live element or handler. So, with the baseline script tags removed (rule 5 excepted,
+which reads the page as written):
 
   1. every match of VALUED_HANDLER, `(?i)(?<![\\w-])on[\\w-]*\\s*=`, anywhere, is a finding: an
      on* handler with a value, or text this gate cannot tell from one;
@@ -36,15 +52,28 @@ hiding a live element or handler. So, with the baseline script tags removed:
      `plaintext`, `noembed`, `noframes` or `iframe` element whose first `<` after its start tag
      does not begin its own end tag;
   3. foreign content html.parser reads as HTML is a finding: any `<math>`, and inside `<svg>` any
-     `title`, `desc`, `foreignObject`, `style` or `script` (an inline `<svg>` itself is already
-     outside PAGE_ELEMENTS on this site's pages);
+     `title`, `desc`, `foreignObject`, `style` or `script` (of the SVG family PAGE_ELEMENTS
+     admits only `svg`, `path` and `circle`, the switch's 2 glyphs, so the others are refused by
+     the allowlist too);
   4. a malformed end tag, `</` not followed by an ASCII letter, anywhere, is a finding: in the
      tokenizer's data state a browser reads most such sequences as a bogus comment to the next `>`,
      which this gate's literal tag reading does not model;
+  5. SVG CONTENT (baseline 1.6.0), read on the page as written, before either script rule takes
+     anything out: inside an inline <svg>, the only elements are `path` and `circle`. Every
+     `<svg` start tag deepens the context and every `</svg` leaves it, read as rule 3 reads them,
+     and every other start or end tag inside it is a finding: an `a`, `g`, `script` (a deferred
+     baseline script included), `foreignObject`, `use`, `image`, `style`, `title`, another `svg`
+     or any other name. Every attribute on an `svg`, `path` or `circle` must be one the switch's
+     glyphs carry (SVG_ATTRIBUTES): the presentation and geometry attributes `viewBox`, `width`,
+     `height`, `fill`, `stroke`, `stroke-width`, `stroke-linecap`, `stroke-linejoin`, `d`, `cx`,
+     `cy` and `r`, plus `class`, `aria-hidden` and `focusable`, so a glyph cannot carry an href,
+     an animation target or any other attribute the switch does not need;
   - the ELEMENT ALLOWLIST (round 5): every `<` or `</` and an ASCII letter anywhere in the page,
     comments and attribute values included, names an element that must be in PAGE_ELEMENTS. An
     unlisted name is a finding even where a browser would read it as text; that is the
-    conservative direction.
+    conservative direction. The switch's glyphs carry no style= or on* attribute, so they pass
+    those rules unchanged: the rules read every element, SVG included, and refuse a style= or on*
+    attribute on a glyph as on any element.
 
 These refusals are this gate's own rule: whatever the policy's script-src, script-src-attr,
 style-src or style-src-attr would let a browser do with an attribute, this gate refuses it. What
@@ -94,7 +123,7 @@ WHAT IT HASHES: nothing, since promotion. Pages are still read as a browser's to
 the text a browser parses.
 
 WHAT IT DOES NOT PROVE: that the policy is otherwise sound, or that the same-origin scripts are
-safe. It reads no `src` or `href` targets beyond the baseline-script form, so whether the policy
+safe. It reads no `src` or `href` targets beyond the baseline-script forms, so whether the policy
 allows a page's external resources is not checked here. A document embedded with `srcdoc` inherits
 a page's CSP and nothing here looks inside one; a `javascript:` URL on an HTML page is not checked
 (P5 named SVG URLs and page on* attributes, not page URLs). Compression is recognised by suffix
@@ -114,10 +143,20 @@ SHARED_POLICY = ("default-src 'none'; script-src 'self' 'unsafe-inline' https://
                  "https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; "
                  "style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; "
                  "form-action 'none'; frame-ancestors 'none'")
-# The one script form a page may carry: a same-origin baseline file, written exactly as
-# scripts/build-site.py writes it. Each match is taken out of the text before the page is held to
-# a shape of 0 <style> and 0 <script>.
-BASELINE_SCRIPT = re.compile(r'<script src="/assets/baseline/[a-z]+\.js" defer></script>')
+# Rule 2 of the page's scripts: a deferred same-origin baseline file, written exactly as
+# scripts/build-site.py writes it, any file but scheme.js. Each match is taken out of the text
+# before the page is held to a shape of 0 <style> and 0 <script>.
+BASELINE_SCRIPT = re.compile(
+    r'<script src="/assets/baseline/(?!scheme\.js")[a-z]+\.js" defer></script>')
+# Rule 1, baseline 1.6.0 (SPECIFICATION 7.33): the 1 script a page loads without defer, in <head>
+# before the stylesheets, so a stored scheme applies before the first paint. Its line is required
+# exactly once and is taken out of the text only when it is where rule 1 puts it; any other
+# `scheme.js` (SCHEME_NAME) is refused. See the docstring.
+HEAD_SCRIPT = '<script data-cfasync="false" src="/assets/baseline/scheme.js"></script>'
+SCHEME_NAME = re.compile(r"scheme\.js", re.I)
+# The rel token rule 1 refuses on a link before the head script.
+STYLESHEET = "stylesheet"
+ASCII_SPACE = "\t\n\f\r "
 OPENER = re.compile(r"<(style|script)\b", re.I)
 STYLE_ATTR = re.compile(r"\bstyle\s*=", re.I)
 # P5: the literal handler accounting reads a tag roughly as HTML's tokenizer reads one IN THE DATA
@@ -141,15 +180,26 @@ INERT_OPEN = re.compile(r"<(" + "|".join(INERT) + r")(?=[\t\n\f />])", re.I)
 ANY_TAG = re.compile(r"<(/?)([A-Za-z][^\t\n\f />]*)")
 SVG_DIVERGENT = ("title", "desc", "foreignobject", "style", "script")
 MALFORMED_END = re.compile(r"</(?![A-Za-z])")
-# The ELEMENT ALLOWLIST: exactly the elements scripts/build-site.py emits (no SVG family and no
-# `style`), so an element the generator never writes is refused even where the shared policy's
+# The ELEMENT ALLOWLIST: exactly the elements scripts/build-site.py emits (no `style`, and of the
+# SVG family only `svg`, `path` and `circle`, the light and dark switch's 2 glyphs from baseline
+# 1.6.0), so an element the generator never writes is refused even where the shared policy's
 # 'unsafe-inline' would let a browser run what it carries. Extending the list is a reviewed change
 # to the gate; see ELEMENT ALLOWLIST in the docstring.
 PAGE_ELEMENTS = frozenset((
     "html", "head", "meta", "title", "link", "script", "body", "a", "header", "nav", "main",
     "footer", "section", "div", "span", "p", "h1", "h2", "h3", "em", "strong", "small", "code",
     "pre", "button", "img", "ul", "ol", "li", "table", "caption", "thead", "tbody", "tr", "th",
-    "td"))
+    "td", "svg", "path", "circle"))
+# The attributes the switch's glyphs carry (SPECIFICATION 7.33): presentation and geometry
+# attributes, plus `class` and the 2 that hide a glyph from assistive technology, `aria-hidden`
+# and `focusable`. Any other attribute on `svg`, `path` or `circle` is refused, so a glyph cannot
+# grow an href, an animation target or a style.
+SVG_ELEMENTS = frozenset(("svg", "path", "circle"))
+# Rule 5 of REFUSED CONTEXTS: the only elements inside an inline <svg>.
+SVG_CHILDREN = frozenset(("path", "circle"))
+SVG_ATTRIBUTES = frozenset((
+    "class", "viewbox", "width", "height", "fill", "stroke", "stroke-width", "stroke-linecap",
+    "stroke-linejoin", "aria-hidden", "focusable", "d", "cx", "cy", "r"))
 TAG_NAME = re.compile(r"</?([A-Za-z][^\t\n\f />]*)")
 ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 CHARSET = re.compile(r"charset\s*=", re.I)
@@ -191,6 +241,7 @@ class Inline(HTMLParser):
         self.attrs = {"script": [], "style": []}
         self.style_attrs = []
         self.on_attrs = []
+        self.svg_attrs = []
         self.self_closing = []
         self._open = None
 
@@ -200,6 +251,8 @@ class Inline(HTMLParser):
         for k, _ in attrs:
             if k.lower().startswith("on"):
                 self.on_attrs.append((tag, k.lower(), self.getpos()[0]))
+            if tag in SVG_ELEMENTS and k.lower() not in SVG_ATTRIBUTES:
+                self.svg_attrs.append((tag, k.lower(), self.getpos()[0]))
         if tag in ("script", "style"):
             self._open = tag
             self.blocks[tag].append([])
@@ -223,6 +276,45 @@ class Inline(HTMLParser):
 
     def bodies(self, tag):
         return ["".join(parts) for parts in self.blocks[tag]]
+
+
+class Tokens(HTMLParser):
+    """The page's token stream as html.parser reads it, for rule 1 of the page's scripts: each
+    token is (kind, name or text, attributes, line, column, start-tag text), with character
+    references decoded in attribute values and text."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.tokens = []
+
+    def _add(self, kind, name, attrs=()):
+        line, column = self.getpos()
+        text = self.get_starttag_text() if kind in ("start", "startend") else None
+        self.tokens.append((kind, name, list(attrs), line, column, text))
+
+    def handle_starttag(self, tag, attrs):
+        self._add("start", tag, attrs)
+
+    def handle_startendtag(self, tag, attrs):
+        self._add("startend", tag, attrs)
+
+    def handle_endtag(self, tag):
+        self._add("end", tag)
+
+    def handle_data(self, data):
+        self._add("data", data)
+
+    def handle_comment(self, data):
+        self._add("comment", data)
+
+    def handle_decl(self, decl):
+        self._add("decl", decl)
+
+    def handle_pi(self, data):
+        self._add("other", data)
+
+    def unknown_decl(self, data):
+        self._add("other", data)
 
 
 def normalized(data: bytes) -> str:
@@ -386,6 +478,23 @@ def foreign_divergences(path, text):
     return out
 
 
+def svg_contents(path, html):
+    """Rule 5 of REFUSED CONTEXTS: inside an inline <svg>, read on the page as written, only `path`
+    and `circle`. The SVG context is tracked as foreign_divergences() tracks it."""
+    out, depth, pos = [], 0, 0
+    while m := ANY_TAG.search(html, pos):
+        pos = tag_end(html, m.end())
+        closing, name = m.group(1), m.group(2).translate(ASCII_LOWER)
+        if depth and name not in SVG_CHILDREN and not (closing and name == "svg"):
+            out.append(f"{path}:{line_of(html, m.start())}: <{closing}{name}> is inside an inline "
+                       f"<svg>, where this gate admits only <path> and <circle>, the switch's "
+                       f"glyphs (baseline SPECIFICATION 7.33); every other element there, a "
+                       f"baseline script included, is refused")
+        if name == "svg":
+            depth = max(0, depth - 1) if closing else depth + 1
+    return out
+
+
 def parse_page(html):
     """Parsed inline blocks and style attributes. Lenient by design; simple_enough refuses."""
     p = Inline()
@@ -494,16 +603,143 @@ def site_pages(root):
                   if p.is_file() and name_suffix(p.name) in (".html", ".htm"))
 
 
+def describe(token):
+    """A token of Tokens, named for a finding."""
+    kind, name = token[0], token[1]
+    if kind in ("start", "startend"):
+        return f"a <{name}>"
+    if kind == "end":
+        return f"a </{name}>"
+    if kind == "data":
+        return "text"
+    return {"comment": "a comment", "decl": f"a <!{name}>"}.get(kind, "a markup declaration")
+
+
+def head_misplacement(tokens, index):
+    """Why the start tag tokens[index] is not where rule 1 accepts the head script, or None.
+
+    Before it, html.parser must read only the doctype, whitespace and `<html>`, then `<head>`, then
+    only whitespace and meta, title (with its text) and link elements, and no link whose rel,
+    decoded and case-folded, holds the token `stylesheet`.
+    """
+    in_head = in_title = False
+    for token in tokens[:index]:
+        kind, name, attrs = token[0], token[1], token[2]
+        if in_title:
+            if kind == "end" and name == "title":
+                in_title = False
+            elif kind != "data":
+                return f"{describe(token)} comes before it inside <title>"
+            continue
+        if kind == "data" and not name.strip(ASCII_SPACE):
+            continue
+        if not in_head:
+            if (kind == "decl" and name.translate(ASCII_LOWER) == "doctype html"
+                    or kind == "start" and name == "html"):
+                continue
+            if kind == "start" and name == "head":
+                in_head = True
+                continue
+            return f"{describe(token)} comes before <head>"
+        if kind in ("start", "startend") and name in ("meta", "link"):
+            if name == "link" and any(key == "rel" and value is not None
+                                      and STYLESHEET in value.casefold().split()
+                                      for key, value in attrs):
+                return "a link whose rel holds the token stylesheet comes before it"
+            continue
+        if kind == "start" and name == "title":
+            in_title = True
+            continue
+        if kind == "end" and name == "head":
+            return "it is after </head>"
+        return f"{describe(token)} comes before it in <head>"
+    if not in_head:
+        return "there is no <head> before it"
+    if in_title:
+        return "it is inside <title>"
+    return None
+
+
+def scheme_script(path, html):
+    """(html with the accepted HEAD_SCRIPT line emptied, findings): rule 1 of the page's scripts,
+    read on the page as written. See the docstring.
+
+    The line is emptied only when there is no finding; otherwise it stays, and the 0-<script>
+    shape refuses it again.
+    """
+    lines = html.split("\n")
+    at = [i for i, line in enumerate(lines) if line == HEAD_SCRIPT]
+    parser = Tokens()
+    parser.feed(html)
+    parser.close()
+    tokens = parser.tokens
+    out, accepted, span = [], None, (0, 0)
+    if not at:
+        out.append(f"{path} does not carry the scheme.js head line, {HEAD_SCRIPT}, as a line of its "
+                   f"own. This gate requires it exactly once on every page (baseline "
+                   f"SPECIFICATION 7.33)")
+    elif len(at) > 1:
+        out.append(f"{path}:{at[1] + 1}: the scheme.js script is loaded more than once ({len(at)} "
+                   f"copies of its line). This gate accepts exactly 1 (baseline SPECIFICATION 7.33)")
+    else:
+        line = at[0] + 1
+        start = sum(len(text) + 1 for text in lines[:at[0]])
+        span = (start, start + len(HEAD_SCRIPT))
+        opening = HEAD_SCRIPT[:-len("</script>")]
+        found = [i for i, t in enumerate(tokens)
+                 if t[0] == "start" and t[1] == "script" and t[3] == line and t[4] == 0
+                 and t[5] == opening]
+        why = (head_misplacement(tokens, found[0]) if found
+               else "html.parser does not read it as a start tag there")
+        if why:
+            out.append(f"{path}:{line}: the scheme.js script is not in <head> before the first "
+                       f"stylesheet: {why}. This gate accepts that 1 script without defer only as "
+                       f"a start tag in <head> after nothing but meta, title and link elements, "
+                       f"before every stylesheet link (baseline SPECIFICATION 7.33), where it "
+                       f"applies a stored scheme before the first paint")
+        else:
+            accepted = tokens[found[0]]
+    # Any other scheme.js, raw or with its character references decoded, is refused.
+    elsewhere = {line_of(html, m.start()) for m in SCHEME_NAME.finditer(html)
+                 if not (span[0] <= m.start() < span[1])}
+    for token in tokens:
+        if token is accepted:
+            continue
+        texts = [value for _, value in token[2] if value is not None] + [token[1]]
+        if any("scheme.js" in text.casefold() for text in texts):
+            elsewhere.add(token[3])
+    # A copy of the line itself is refused above, as a second copy or by its place.
+    elsewhere -= {i + 1 for i in at}
+    for line in sorted(elsewhere):
+        out.append(f"{path}:{line}: scheme.js appears outside the 1 head line this gate accepts. "
+                   f"This gate refuses every other occurrence of scheme.js, as text, in any "
+                   f"attribute or in a script deferred or not, in the body or inside <svg> "
+                   f"(baseline SPECIFICATION 7.33)")
+    if out:
+        return html, out
+    lines[at[0]] = ""
+    return "\n".join(lines), []
+
+
 def page_findings(path, html):
     """Reasons a page is outside the template page model. See the docstring.
 
-    Each same-origin baseline script, written exactly as BASELINE_SCRIPT, is taken out of the text
-    (its line is kept), and what remains must carry no `<style>` and no `<script>` at all, under
-    every rule simple_enough() applies and the template element allowlist.
+    Rule 1 of the page's scripts (scheme_script) and SVG CONTENT (svg_contents) read the page as
+    written. Then the accepted scheme.js line and each deferred baseline script written exactly as
+    BASELINE_SCRIPT are taken out of the text (their lines are kept), and what remains must carry
+    no `<style>` and no `<script>` at all, under every rule simple_enough() applies and the
+    template element allowlist.
     """
-    rest = BASELINE_SCRIPT.sub("", html)
+    rest, out = scheme_script(path, html)
+    out += svg_contents(path, html)
+    rest = BASELINE_SCRIPT.sub("", rest)
     page = parse_page(rest)
-    out = simple_enough(path, page, rest, {"style": 0, "script": 0}, PAGE_ELEMENTS)
+    out += simple_enough(path, page, rest, {"style": 0, "script": 0}, PAGE_ELEMENTS)
+    for tag, name, line in sorted(set(page.svg_attrs)):
+        out.append(f"<{tag}> at {path}:{line} carries the attribute {name}, which is not one of the "
+                   f"attributes the switch's glyphs carry (baseline SPECIFICATION 7.33: their "
+                   f"presentation and geometry attributes, plus class, aria-hidden and focusable); "
+                   f"this gate admits inline SVG with those attributes only")
     for tag, line in sorted(set(page.style_attrs)):
         out.append(f"<{tag}> at {path}:{line} carries a style= attribute. This gate refuses every "
                    f"style= attribute on a page, whatever the site's style-src or style-src-attr "
@@ -765,9 +1001,9 @@ def main() -> int:
         return 1
 
     print(f"  ok    {len(pages)} page(s) under {SITE} carry no inline block, style= attribute or "
-          f"on* handler, load scripts only as the generator's same-origin baseline form, and use "
-          f"only the template's elements; {inspected} SVG document(s) carry no <script>, on* "
-          f"handler, javascript: URL or inline style")
+          f"on* handler, load scripts only as the generator's same-origin baseline forms (deferred, "
+          f"and the 1 scheme.js head script), and use only the template's elements; {inspected} "
+          f"SVG document(s) carry no <script>, on* handler, javascript: URL or inline style")
     print(f"  ok    {HEADERS} serves exactly the shared template policy (SPECIFICATION section 9) "
           f"under the 1 /* rule, with no other Content-Security-Policy, no detach and no "
           f"X-Robots-Tag")
