@@ -57,22 +57,21 @@ PART 2, SELF-CONTAINED:
     `@media (prefers-color-scheme: dark|light)`) whose only declarations set `--sw` or
     `--logo-inset` to a number (baseline README, "Per-site constants").
 
-PART 3, THE PUBLISHED INDEXES (site/llms.txt, site/llms-full.txt, site/robots.txt):
-  - none of them names the /draft/ path. Each file is cut into tokens at whitespace and at the
-    characters ( ) [ ] < > " ' and the backtick, so a Markdown link or an autolink yields its URL.
-    Only 2 kinds of token are read, and every other token is prose and accepted (the word "draft",
-    "Draft review" or "draft-ietf-..." in the guide corpus is never refused):
-      * a URL token: it starts with `http://` or `https://` in any case and its host, after
-        percent-decoding, NFKC folding, U+3002 and U+FF61 read as `.`, case folding and a
-        trailing `.` removed, is this site's host or a Pages alias (site_host() below); a URL on
-        another host is accepted whatever its path;
-      * a path token: it starts with `/` (so `//host/draft/` is read as a path too).
-    Of a URL token its path is read, of a path token the whole token; the query and fragment are
-    cut and trailing `. , ; : ! ?` removed. The text is then percent-decoded repeatedly (up to 8
-    rounds), and at every round, with backslashes read as `/` and case folded, it is split at `/`;
-    a segment equal to `draft` refuses the token. So `/draft/`, `/Draft/`, `/%64raft/`,
-    `/guides/../draft/`, `Disallow: /draft` and `https://secureconfig.ai/draft` are refused, while
-    `/drafts/`, `/draft.html` and `https://example.net/draft/` are not.
+PART 3, THE PUBLISHED INDEXES (site/llms.txt, site/llms-full.txt, site/robots.txt and
+site/.well-known/security.txt): none of them refers to the /draft/ review page. The rule is
+fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellings:
+  - each line is normalized: percent-decoded repeatedly until stable (at most 8 rounds; a line
+    still changing after 8 is refused), case folded, and every `\\` read as `/`;
+  - site/llms.txt, site/robots.txt and site/.well-known/security.txt are hand-written indexes that
+    never need the word, so any `draft` anywhere in their normalized text is refused;
+  - site/llms-full.txt, the generated guide corpus, uses "draft" in prose and in `draft-ietf-...`
+    names, so there a normalized line is refused when it matches `/draft(?![a-z0-9_-])`,
+    `(?<![a-z0-9_-])draft/` or `\\]\\(\\s*(?:\\./)?draft\\s*\\)` (the last read across a line end
+    too, as a Markdown link may break there). So `/draft/`, `./draft/`, `[x](draft)`,
+    `secureconfig.ai/draft/`, `%2Fdraft%2F`, `\\draft\\` and `/draft.html` are refused, while
+    "drafting", "the draft's", "draft-ietf-oauth-v2" and
+    `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2/` are accepted.
+  Each finding names the file and the line.
 
 Exit 0 ok, 1 on a finding, 2 on a read error.
 Usage: python3 -I -B tools/check_draft.py [--root <repository root>]
@@ -80,7 +79,7 @@ Usage: python3 -I -B tools/check_draft.py [--root <repository root>]
 import argparse
 import re
 import sys
-import unicodedata
+from bisect import bisect_right
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -105,10 +104,12 @@ REVIEW_PAGE = "draft/index.html"
 INDEXABLE = ("index.html", "guides/index.html", "for-ai/index.html", "for-humans/index.html",
              "checklist/index.html", "disclosure/index.html", "license/index.html")
 NOTFOUND = "404.html"
-# The published indexes that must not name the /draft/ path (PART 3).
-INDEXES = ("llms.txt", "llms-full.txt", "robots.txt")
-INDEX_TOKEN_SPLIT = re.compile(r"[\s()\[\]<>\"'`]+")
-INDEX_URL = re.compile(r"(?i)^https?://")
+# The published indexes (PART 3): the hand-written ones refuse the word, the guide corpus refuses
+# each form of the draft path, both read after normalized().
+STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
+CORPUS_INDEX = "llms-full.txt"
+DRAFT_WORD = re.compile(r"draft")
+DRAFT_REF = re.compile(r"/draft(?![a-z0-9_-])|(?<![a-z0-9_-])draft/|\]\(\s*(?:\./)?draft\s*\)")
 DECODE_ROUNDS = 8
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
 # must not carry at all.
@@ -230,34 +231,48 @@ def resolves(root, path):
     return target is not None and target.is_file()
 
 
-def names_draft(token):
-    """True when an index token (PART 3) is a URL on this site, or a path, naming the /draft/
-    segment after percent-decoding and case folding."""
-    if INDEX_URL.match(token):
-        parts = urlsplit(token)
-        host = unicodedata.normalize("NFKC", unquote(parts.netloc.rsplit("@", 1)[-1]))
-        host = host.replace("。", ".").replace("｡", ".").split(":", 1)[0]
-        if not parts.netloc:
-            # `https:///secureconfig.ai/draft/`: no host after //, which a browser opens on the
-            # host that follows, so the whole remainder is read as a path.
-            text = token.split(":", 1)[1]
-        elif not site_host(host.casefold()):
-            return False
-        else:
-            text = parts.path
-    elif token.startswith("/"):
-        text = token
+def normalized(line):
+    """A published-index line (PART 3) percent-decoded until stable, case folded and with `\\`
+    read as `/`, or None when it still changes after DECODE_ROUNDS rounds."""
+    for _ in range(DECODE_ROUNDS + 1):
+        decoded = unquote(line)
+        if decoded == line:
+            return line.casefold().replace("\\", "/")
+        line = decoded
+    return None
+
+
+def index_findings(name, text):
+    """The PART 3 findings for 1 published index under site/, each naming the file and line."""
+    findings = []
+    norm, starts, at = [], [], 0
+    for n, line in enumerate(text.splitlines(), 1):
+        line = normalized(line)
+        if line is None:
+            findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses a line still "
+                            f"percent-encoded after {DECODE_ROUNDS} decoding rounds; the /draft/ "
+                            f"review page stays out of every published index")
+            line = ""
+        starts.append(at)
+        norm.append(line)
+        at += len(line) + 1
+    # Matched on the joined text, so a Markdown link broken across a line end is still read; a
+    # match is reported on the line it starts on.
+    joined = "\n".join(norm)
+    if name in STRICT_INDEXES:
+        pattern, why = DRAFT_WORD, "this hand-written index never carries the word draft"
     else:
-        return False
-    text = text.split("#", 1)[0].split("?", 1)[0].rstrip(".,;:!?")
-    for _ in range(DECODE_ROUNDS):
-        if "draft" in text.replace("\\", "/").casefold().split("/"):
-            return True
-        decoded = unquote(text)
-        if decoded == text:
-            return False
-        text = decoded
-    return "draft" in text.replace("\\", "/").casefold().split("/")
+        pattern, why = DRAFT_REF, "a reference to the draft path"
+    seen = set()
+    for m in pattern.finditer(joined):
+        n = bisect_right(starts, m.start())
+        if n in seen:
+            continue
+        seen.add(n)
+        excerpt = joined[max(0, m.start() - 20):m.end() + 20]
+        findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses {excerpt!r} ({why}); "
+                        f"the /draft/ review page stays out of every published index")
+    return findings
 
 
 def own_url(page_rel):
@@ -368,16 +383,11 @@ def check(root):
     if (root / "site" / "_redirects").exists():
         findings.append("site/_redirects exists; a missing path gets the 404 page with status 404, "
                         "never a redirect (the owner's rule)")
-    # PART 3: the published indexes do not name the /draft/ path.
-    for name in INDEXES:
+    # PART 3: the published indexes do not refer to the /draft/ review page (fail-closed).
+    for name in (*STRICT_INDEXES, CORPUS_INDEX):
         path = root / SITE / name
-        if not path.is_file():
-            continue
-        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            for token in INDEX_TOKEN_SPLIT.split(line):
-                if token and names_draft(token):
-                    findings.append(f"{SITE}/{name}:{n}: names the /draft/ path ({token!r}); the "
-                                    f"review page stays out of every published index")
+        if path.is_file():
+            findings.extend(index_findings(name, path.read_text(encoding="utf-8")))
     assets = (root / SITE / "assets").resolve()
     css_files = sorted(p for p in (root / SITE).rglob("*") if p.is_file() and name_suffix(p.name) == ".css")
     for css in css_files:

@@ -17,10 +17,13 @@ url() containment and the site.css grammar. New at the root: a root-relative lin
 under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable pages and the
 review page, none on the 404); the "no page links /draft/" and Disclosure and Licence rules compare
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
-percent-encoded letter or a fragment does not get past them; and site/llms.txt, site/llms-full.txt
-and site/robots.txt are refused when a URL or path token names the draft segment in any of the
-spellings `/draft/`, `/Draft/`, `/%64raft/` or `https://secureconfig.ai/draft`, while prose that
-merely says "draft" is accepted.
+percent-encoded letter or a fragment does not get past them; and the published indexes are read
+by a fail-closed rule after percent-decoding, case folding and `\\` read as `/`: site/llms.txt,
+site/robots.txt and site/.well-known/security.txt are refused for any `draft` (relative, Disallow,
+bold, host-only, www, href=, backslash, 1-slash and .html spellings among the cases), and
+site/llms-full.txt for each form of the draft path, while its prose ("drafting", "the draft's",
+"draft-ietf-oauth-v2" and a datatracker draft URL) is accepted. Each refusal names the file and
+line.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -97,6 +100,14 @@ def guides_link(value):
     return edit(GUIDES, '<a href="/for-ai/">', f'<a href="{value}">x</a><a href="/for-ai/">')
 
 
+def refused_at(rel):
+    """The start of the gate's PART 3 finding for a line appended to rel: its file and line."""
+    text = (ROOT / rel).read_text(encoding="utf-8")
+    if not text.endswith("\n"):
+        raise AssertionError(f"{rel} does not end with a newline, so an appended line joins its last")
+    return f"{rel}:{len(text.splitlines()) + 1}: the published-index rule refuses"
+
+
 # Each spelling of the /draft/ path planted in each published index (PART 3 of the gate).
 DRAFT_SPELLINGS = ("/draft/", "/Draft/", "/%64raft/", "https://secureconfig.ai/draft")
 INDEX_LINES = {
@@ -104,9 +115,43 @@ INDEX_LINES = {
     "site/llms-full.txt": "The next version is staged at {} for review.\n",
     "site/robots.txt": "Disallow: {}\n",
 }
+# The spellings the token rule missed, and the corpus forms of the fail-closed rule.
+REFUSED_LINES = {
+    "site/llms.txt": (
+        "- [Review](draft/): the next version\n",
+        "- [Review](./draft/): the next version\n",
+        "Disallow:/draft/\n",
+        "- **https://secureconfig.ai/draft/**: the next version\n",
+        "- The next version: secureconfig.ai/draft/\n",
+        "- The next version: www.secureconfig.ai/draft/\n",
+        "- <a href=/draft/>Review</a>\n",
+        "- The next version: https:\\\\secureconfig.ai\\draft\\\n",
+        "- The next version: https:/secureconfig.ai/draft/\n",
+        "- [Review](/draft.html): the next version\n",
+        "- Draft review: the next version\n",
+    ),
+    "site/robots.txt": ("Disallow: draft/\n", "Disallow:/draft/\n", "Disallow: \\draft\\\n"),
+    "site/.well-known/security.txt": ("Policy: https://secureconfig.ai/draft/\n",),
+    "site/llms-full.txt": (
+        "The next version is staged at ./draft/ for review.\n",
+        "The next version is staged [x](draft) for review.\n",
+        "The next version is staged at secureconfig.ai/draft/ for review.\n",
+        "The next version is staged at %2Fdraft%2F for review.\n",
+        "The next version is staged at /draft.html for review.\n",
+    ),
+}
 INDEX_CASES = [(f"{rel[5:]} naming {spelling}", append(rel, line.format(spelling)),
-                "names the /draft/ path", 1)
+                refused_at(rel), 1)
                for rel, line in INDEX_LINES.items() for spelling in DRAFT_SPELLINGS]
+INDEX_CASES += [(f"{rel[5:]} carrying {line.strip()!r}", append(rel, line), refused_at(rel), 1)
+                for rel, lines in REFUSED_LINES.items() for line in lines]
+# Guide-corpus prose and draft-ietf names that the llms-full.txt rule accepts.
+CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
+                "Read the draft's scope before the policy.\n",
+                "OAuth 2.1 is still draft-ietf-oauth-v2.\n",
+                "OAuth 2.1: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2/\n")
+INDEX_CASES += [(f"llms-full.txt prose {line.strip()!r}", append("site/llms-full.txt", line),
+                 OK_LINE, 0) for line in CORPUS_PROSE]
 
 
 # (description, mutation, expected text, expected exit)
