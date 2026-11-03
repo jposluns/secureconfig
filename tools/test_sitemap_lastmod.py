@@ -365,7 +365,7 @@ CASES = [
      ()),
     ("a staged page edit dated another day", staged_edit(False), "/draft/", 1,
      ("site/index.html has a change that is not committed", "must be today's UTC date",
-      "its lastmod is '2026-10-01'", "a commit made on a later UTC day fails CI")),
+      "its lastmod is '2026-10-01'", "after committing, CI fails if the recorded committer date differs from the lastmod")),
     ("a sitemap with no url", empty_sitemap, "/draft/", 1, ("lists no <url>",)),
     ("a loc this gate cannot map to a page", unmapped, "/draft/", 1,
      ("the only URL form this gate maps to a page", "cannot be dated")),

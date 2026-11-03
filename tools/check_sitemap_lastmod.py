@@ -23,8 +23,10 @@ WHAT IT CHECKS, reading only local git objects and the working tree:
   - a page that git status shows as changed (staged, unstaged or untracked) has no commit date
     yet, so its `lastmod` must be today's date in UTC, the date its commit gets when made today
     in UTC. This project runs the suite on the staged tree before committing, so that run passes
-    for an edited page. A commit made on a later UTC day than the run, or recorded in an offset
-    whose date differs, gets another date, and CI fails until the `lastmod` is set to it. The
+    for an edited page. After the commit, CI applies the `%cs` rule: if the recorded committer
+    date (in the committer's own offset) differs from the `lastmod`, for example because the
+    commit was made on a later day or in an offset whose date differs, CI fails until the
+    `lastmod` is set to it. The
     check reads git's own status, so a file a contributor marked assume-unchanged or skip-worktree
     shows no change and is dated as committed; that deliberate mark is outside this check;
   - for a page with no such change, the `lastmod` equals `git log -1 --format=%cs -- <page>`: the
@@ -143,8 +145,8 @@ def check(root):
                 findings.append(f"{line}: {page} has a change that is not committed ({status!r}), "
                                 f"so its lastmod must be today's UTC date, {today}, the date its "
                                 f"commit gets when made today in UTC, but its lastmod is "
-                                f"{lastmod!r}; a commit made on a later UTC day fails CI until "
-                                f"the lastmod is set to that day")
+                                f"{lastmod!r}; after committing, CI fails if the recorded "
+                                f"committer date differs from the lastmod")
             continue
         last = git(root, "log", "-1", "--format=%h %cs", "--", page.as_posix()).split()
         if len(last) != 2:
