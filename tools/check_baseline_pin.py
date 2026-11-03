@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
 """Check that the copied site template files match their pin in .baseline/pin.toml.
 
-WHY: the site publishes the shared template's runtime files (stylesheets, fonts, the copy
-script, logos and marks) copied byte for byte from a published baseline version. A copied file
-that is edited, replaced or added to stops being the version every family site shares, and nothing
-in a diff of a minified stylesheet or a font says so. This gate fails if any file under the copy
-folder differs from its pinned SHA-256.
+WHY: the site publishes the shared template's runtime files (stylesheets, fonts, scripts, logos
+and marks) copied byte for byte from a published baseline version, and runs the template's
+palette gate from a pinned copy. A copied file that is edited, replaced or added to stops being
+the version every family site shares, and nothing in a diff of a minified stylesheet or a font
+says so. This gate fails if any copied file differs from its pinned SHA-256.
 
 WHAT IT CHECKS, offline, with the standard library only:
 
   - .baseline/pin.toml parses as TOML and carries a `version`, an `upstream` URL, the package's
     `sha256sums_sha256`, and a `[files]` table mapping each copied file's path, relative to
     site/ and so starting with assets/baseline/ (the baseline README's form), to a
-    64-character SHA-256;
+    64-character SHA-256; the only other keys are the repository paths of the build tools the
+    copy script copies outside the served tree (BUILD_TOOLS: .baseline/check_palette.py, from
+    baseline 1.6.0), each pinned, a regular file (never a link) and hashing to its pin;
   - every pinned path is a plain relative path inside the copy folder (no `..`, no absolute path,
     no backslash);
   - every pinned file exists as a regular file and hashes to its pin;
   - every entry under the destination is a regular file or directory (no symbolic link, which the
     walk never follows) and every file is pinned exactly once;
+  - .baseline/ is a real directory, never a symbolic link, checked before the pin is read through
+    it, and holds nothing but pin.toml and the pinned build tools, each a regular file: any other
+    entry, a subdirectory included, is refused;
   - the pin is the copy script's: its version, its upstream URL for that version and its 2
     provenance digests equal scripts/copy-baseline.py's VERSION, ARCHIVE_SHA256 and SUMS_SHA256,
-    and the pinned set is exactly that script's RUNTIME list;
+    and the pinned set is exactly that script's RUNTIME list and BUILD_TOOLS;
   - nothing pinned or present is material the baseline README keeps out of a site's copy:
     reference/, tools/, gen_palettes.py, contrast-report.txt, SHA256SUMS and the documents
     (every .md other than NOTICE.md and marks/NOTICE.md).
@@ -80,6 +85,17 @@ def walk(folder):
 
 def check(root):
     """(exit status, lines to print)."""
+    # .baseline/ itself is read over lstat before anything is read through it, so a link in its
+    # place is refused rather than followed.
+    try:
+        mode = (root / PIN.parent).lstat().st_mode
+    except OSError as exc:
+        return 2, [f"  FAIL  cannot read {PIN.parent}: {exc}"]
+    if stat.S_ISLNK(mode):
+        return 1, [f"  FAIL  {PIN.parent} is a symbolic link; it must be a real directory holding "
+                   f"only {PIN.name} and the pinned build tools"]
+    if not stat.S_ISDIR(mode):
+        return 1, [f"  FAIL  {PIN.parent} is not a directory"]
     try:
         pin = tomllib.loads((root / PIN).read_text(encoding="utf-8"))
     except (OSError, UnicodeError) as exc:
@@ -97,16 +113,23 @@ def check(root):
         findings.append(f"{PIN} has no [files] table")
         keyed = {}
     # Keys are paths relative to site/ (the baseline README's form), so each starts with
-    # assets/baseline/; the checks below read them relative to the copy folder.
-    files = {}
+    # assets/baseline/; the checks below read them relative to the copy folder. The build tools
+    # the copy script copies outside the served tree are keyed by their repository paths.
+    copy = copy_script()
+    tool_paths = set(copy.BUILD_TOOLS.values())
+    files, tools = {}, {}
     for key, digest in keyed.items():
+        if key in tool_paths:
+            tools[key] = digest
+            continue
         if not key.startswith(KEY_PREFIX):
-            findings.append(f"{PIN} pins {key!r}, which is not under {KEY_PREFIX}")
+            findings.append(f"{PIN} pins {key!r}, which is not under {KEY_PREFIX} and is not a "
+                            f"build tool scripts/copy-baseline.py copies "
+                            f"({', '.join(sorted(tool_paths))})")
             continue
         files[key[len(KEY_PREFIX):]] = digest
     # The pin must be the copy script's: the same version and provenance, and exactly its RUNTIME
     # list, so a file the script never copies (a reference page, a tool) cannot be pinned in.
-    copy = copy_script()
     if pin.get("version") != copy.VERSION:
         findings.append(f"{PIN} names version {pin.get('version')!r}; scripts/copy-baseline.py "
                         f"copies {copy.VERSION}")
@@ -125,6 +148,46 @@ def check(root):
             findings.append(f"{PIN} pins {name}, which is not in scripts/copy-baseline.py's RUNTIME list")
     for name in sorted(set(copy.RUNTIME) - set(files)):
         findings.append(f"{PIN} does not pin {name}, which scripts/copy-baseline.py copies")
+    for path in sorted(tool_paths - set(tools)):
+        findings.append(f"{PIN} does not pin {path}, which scripts/copy-baseline.py copies")
+    # A build tool is never served, so it sits outside site/; it is read over lstat, so a link in
+    # its place is refused rather than followed.
+    for path, digest in sorted(tools.items()):
+        if not isinstance(digest, str) or not HEX64.fullmatch(digest):
+            findings.append(f"{PIN} pins {path} to {digest!r}, which is not a SHA-256 hex digest")
+            continue
+        try:
+            mode = (root / path).lstat().st_mode
+        except FileNotFoundError:
+            findings.append(f"{path} is pinned but missing")
+            continue
+        except OSError as exc:
+            return 2, [f"  FAIL  cannot read {path}: {exc}"]
+        if not stat.S_ISREG(mode):
+            findings.append(f"{path} is pinned but is not a regular file")
+            continue
+        try:
+            actual = hashlib.sha256((root / path).read_bytes()).hexdigest()
+        except OSError as exc:
+            return 2, [f"  FAIL  cannot read {path}: {exc}"]
+        if actual != digest:
+            findings.append(f"{path} differs from its pin (sha256 {actual}, pinned {digest}); a "
+                            f"copied baseline file must never be edited")
+    # .baseline/ holds pin.toml and the pinned build tools, and nothing else.
+    folder = PIN.parent.as_posix()
+    try:
+        held = walk(root / PIN.parent)
+    except OSError as exc:
+        return 2, [f"  FAIL  cannot walk {folder}: {exc}"]
+    for name, mode in held:
+        path = f"{folder}/{name}"
+        if path == PIN.as_posix():
+            if not stat.S_ISREG(mode):
+                findings.append(f"{PIN} is not a regular file")
+        elif path not in tools:
+            findings.append(f"{path} is not {PIN} or a pinned build tool "
+                            f"({', '.join(sorted(tools)) or 'none pinned'}), and {folder}/ holds "
+                            f"nothing else")
     dest = root / DEST
     for name, digest in sorted(files.items()):
         pure = PurePosixPath(name)
@@ -179,8 +242,8 @@ def check(root):
             findings.append(f"{DEST}/{name} is not a regular file or directory")
     if findings:
         return 1, [f"  FAIL  {f}" for f in findings]
-    return 0, [f"  ok    {len(files)} files under {DEST} match baseline {pin['version']} as "
-               f"pinned in {PIN}"]
+    return 0, [f"  ok    {len(files)} files under {DEST} and {len(tools)} build tool "
+               f"({', '.join(sorted(tools))}) match baseline {pin['version']} as pinned in {PIN}"]
 
 
 def main(argv=None):

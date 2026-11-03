@@ -1290,6 +1290,28 @@ echo "== the copied site template files match their pin =="
 run_gate test_baseline_pin.py python3 -I -B tools/test_baseline_pin.py
 run_gate check_baseline_pin.py python3 -I -B tools/check_baseline_pin.py
 
+echo "== the site palette passes the template's contrast gate =="
+# From baseline 1.6.0 the palette gate is mandatory on every site (SPECIFICATION section 4 item 3).
+# .baseline/check_palette.py is the template's own file, copied and pinned (the gate above holds it
+# to its pin), so it prints its contrast tables and a RESULT line rather than an ok line, and
+# run_gate's ok-line rule does not fit it. Its contract is its exit code (baseline 1.6.1 README):
+# 0 pass, 1 fail or unreadable input, 2 usage error. This decides by the exit code only, never by
+# the wording of the printed lines, and prints the gate's output in every case; any code other than
+# 0 fails, a crash (1) or a signal included. secureconfig.ai has no site-palette.css.
+# scripts/pages-build.sh runs the same call under set -e.
+if palette=$(python3 -I -B .baseline/check_palette.py --site secureconfig --palettes site/assets/baseline/palettes.css 2>&1); then
+  printf '%s\n' "$palette"
+  ok "check_palette.py: the secureconfig palette passes in both schemes"
+else
+  palette_rc=$?
+  printf '%s\n' "$palette"
+  case "$palette_rc" in
+    1) bad "check_palette.py exited 1: a palette check failed or its input could not be read" ;;
+    2) bad "check_palette.py exited 2, a usage error; the palette is unverified" ;;
+    *) bad "check_palette.py exited $palette_rc, an unexpected error; the palette is unverified" ;;
+  esac
+fi
+
 echo "== the site pages are a fresh build of their sources =="
 run_gate test_build_site.py python3 -I -B tools/test_build_site.py
 run_gate "build-site.py --check" python3 -I -B scripts/build-site.py --check
@@ -1304,7 +1326,8 @@ run_gate test_pages_build.py python3 -I -B tools/test_pages_build.py
 echo "== every site page fits the template page model and the CSP is the shared policy =="
 # Since promotion tools/check_csp_hashes.py holds every page under site/ to the template page
 # model: no inline <style> or <script> at all (a page's scripts are the generator's same-origin
-# baseline form), no style= attribute, no on* handler, only the template's elements; and it
+# baseline forms: deferred files, and from baseline 1.6.0 the 1 scheme.js head script), no style=
+# attribute, no on* handler, only the template's elements; and it
 # requires site/_headers to carry exactly the shared template policy of baseline SPECIFICATION
 # section 9, under /* alone, with no second policy, no detach and no X-Robots-Tag. The same gate
 # refuses XHTML, compressed SVG and symbolic links under site/, and fails any SVG carrying a

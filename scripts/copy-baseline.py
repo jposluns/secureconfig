@@ -6,10 +6,11 @@ Usage: python3 -I -B scripts/copy-baseline.py --from <unpacked baseline version 
 The folder is a verified copy of https://posluns.ca/baseline/<version>/ (its SHA256SUMS checked
 against the published digest before this runs). This script checks every file it copies against
 that SHA256SUMS, refuses on any mismatch, copies only the runtime and licence files the site
-publishes (RUNTIME below) byte for byte into site/assets/baseline/, and writes
-.baseline/pin.toml with the version and each copied file's SHA-256. tools/check_baseline_pin.py
-then fails if a copied file ever differs from the pin. Never edit a copied file: a new baseline
-version is 1 pull request that reruns this script and commits the result.
+publishes (RUNTIME below) byte for byte into site/assets/baseline/ and the build tools the site
+runs but never serves (BUILD_TOOLS below) into .baseline/, and writes .baseline/pin.toml with the
+version and each copied file's SHA-256. tools/check_baseline_pin.py then fails if a copied file
+ever differs from the pin. Never edit a copied file: a new baseline version is 1 pull request that
+reruns this script and commits the result.
 
 Standard library only. No network.
 """
@@ -22,20 +23,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
-VERSION = "1.5.1"
+VERSION = "1.6.1"
 UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # The archive's digest in https://posluns.ca/baseline/SHA256SUMS, and the digest of the version's
-# SHA256SUMS in https://posluns.dev/hashes.txt (the template note of 2026-11-03).
-ARCHIVE_SHA256 = "8d20f70612d524789ed0d7fc3fe269551413da8f29495dbafa06d8e0b9b0778e"
-SUMS_SHA256 = "65a62b3aaac4bc6addc33eec71f4685b71b1bd88db0d7f7e382e5755beac37a1"
+# SHA256SUMS in https://posluns.dev/hashes.txt (the template owner's 1.6.1 notice of 2026-11-03).
+ARCHIVE_SHA256 = "e14f950a151a9c2b2d6c7e58d96fd5a41360dd4698835b3c3feef3de2e672474"
+SUMS_SHA256 = "774784943c6c97768af5956ad299c06390273e1455a2e6a1214300cc4c516c4e"
 # Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
 # The runtime and licence files the site publishes. The reference pages, tools/measure.js,
-# gen_palettes.py, the documentation and the scripts no page loads (select.js, search.js) are not
-# copied.
+# gen_palettes.py, site-palette.example.css, the documentation and the scripts no page loads
+# (select.js, search.js, matrix.js) are not copied. Every page loads scheme.js (baseline 1.6.0).
 RUNTIME = (
     "LICENSE", "NOTICE.md",
-    "baseline.css", "palettes.css", "fonts.css", "copy.js", "rail.js",
+    "baseline.css", "palettes.css", "fonts.css", "copy.js", "rail.js", "scheme.js",
     "fonts/dancing-script-LICENSE.txt", "fonts/dancing-script-latin-wght-normal.woff2",
     "fonts/jetbrains-mono-LICENSE.txt", "fonts/jetbrains-mono-latin-wght-italic.woff2",
     "fonts/jetbrains-mono-latin-wght-normal.woff2",
@@ -50,13 +51,16 @@ RUNTIME = (
     "marks/NOTICE.md", "marks/github-invertocat-black.svg", "marks/github-invertocat-white.svg",
     "marks/linkedin-in-bug.png", "marks/orcid-id.svg",
 )
+# The build tools the site copies and pins but never serves, package path to repository path; the
+# pin keys them by the repository path, as the baseline README shows (SPECIFICATION section 4).
+BUILD_TOOLS = {"tools/check_palette.py": ".baseline/check_palette.py"}
 HEADER = """\
 # Shared site template baseline pin, read by tools/check_baseline_pin.py.
 #
-# The files under site/assets/baseline/ are copied byte for byte from the baseline package
-# at the upstream URL below by scripts/copy-baseline.py, which checked each one against the
-# package's SHA256SUMS. Never edit a copied file. A new baseline version is 1 pull request that
-# reruns the copy script and commits the copied files and this pin together.
+# The files under site/assets/baseline/ and .baseline/check_palette.py are copied byte for byte
+# from the baseline package at the upstream URL below by scripts/copy-baseline.py, which checked
+# each one against the package's SHA256SUMS. Never edit a copied file. A new baseline version is
+# 1 pull request that reruns the copy script and commits the copied files and this pin together.
 """
 
 
@@ -85,7 +89,7 @@ def main(argv=None):
         return 1
     sums = read_sums(src)
     pins = {}
-    for name in RUNTIME:
+    for name in (*RUNTIME, *BUILD_TOOLS):
         if name not in sums:
             print(f"  FAIL  {name} is not listed in the package's SHA256SUMS")
             return 1
@@ -100,13 +104,21 @@ def main(argv=None):
         target = dest / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src / name, target)
+    for name, repo_path in BUILD_TOOLS.items():
+        target = ROOT / repo_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src / name, target)
     lines = [HEADER, f'version = "{VERSION}"', f'upstream = "{UPSTREAM}"',
              f'archive_sha256 = "{ARCHIVE_SHA256}"', f'sha256sums_sha256 = "{SUMS_SHA256}"',
-             f'copied = "{args.date}"', "", "# Paths are relative to site/.", "[files]"]
-    lines += [f'"{KEY_PREFIX}{name}" = "{pins[name]}"' for name in sorted(pins)]
+             f'copied = "{args.date}"', "",
+             "# Paths under assets/baseline/ are relative to site/; the build tools' paths are",
+             "# relative to the repository root.", "[files]"]
+    lines += [f'"{KEY_PREFIX}{name}" = "{pins[name]}"' for name in sorted(RUNTIME)]
+    lines += [f'"{BUILD_TOOLS[name]}" = "{pins[name]}"' for name in sorted(BUILD_TOOLS)]
     (ROOT / PIN).parent.mkdir(parents=True, exist_ok=True)
     (ROOT / PIN).write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"  ok    copied {len(pins)} files into {DEST} and wrote {PIN}")
+    print(f"  ok    copied {len(RUNTIME)} files into {DEST} and {len(BUILD_TOOLS)} build tool into "
+          f".baseline/, and wrote {PIN}")
     return 0
 
 
