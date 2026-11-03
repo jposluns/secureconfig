@@ -116,8 +116,9 @@ PALETTE_CASES = (
     # a real interpreter (exit 1) and a gate killed by a signal (128 + 9).
     (f"printf 'usage: check_palette.py\\n{PALETTE_PASS}\\n'; exit 2", True,
      ["usage: check_palette.py", PALETTE_USAGE], [PALETTE_OK]),
-    ("printf 'x\\n'; exit 3", True,
-     ["  FAIL  check_palette.py exited 3, an unexpected error; the palette is unverified"],
+    ("printf 'palette-exit-3-output\\n'; exit 3", True,
+     ["palette-exit-3-output",
+      "  FAIL  check_palette.py exited 3, an unexpected error; the palette is unverified"],
      [PALETTE_OK]),
     ("python3 -I -c 'raise KeyError(1)'", True, ["Traceback (most recent call last):", PALETTE_FAILED],
      [PALETTE_OK]),
