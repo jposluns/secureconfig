@@ -20,19 +20,23 @@ the resolved target file, so a query, an extra slash, a dot segment (plain or pe
 percent-encoded letter or a fragment does not get past them; and the published indexes are read
 by a fail-closed rule after percent-decoding and character-reference decoding (at most 8 rounds),
 NFKC, case folding, `\\` read as `/` and tab and CR deleted: site/llms.txt, site/robots.txt and
-site/.well-known/security.txt are refused for any `draft` (relative, Disallow, bold, host-only,
-www, href=, backslash, 1-slash, .html, character-reference and tab spellings among the cases), and
-site/llms-full.txt for each form of the draft path (character references, bare Markdown link
-destinations, reference definitions, HTML attribute values, a link broken across a line end, a
-link broken inside a blockquote, a reference definition whose destination is on the next line,
-whose label spans 2 lines, or that sits in a blockquote or a list item, a tab, LF or CR inside
-the path, `http:draft` and `https:draft`, each URL attribute beyond href, src, action, formaction,
-content and url, a meta refresh URL without `url=`, and cases for forms b, d, e and f that only
-that form catches), while its prose ("drafting", "the draft's", "draft-ietf-oauth-v2-1" and a
-datatracker draft URL) is accepted. A 9-times percent-encoded path exceeds the round limit and is
-refused. Each refusal names the file and the line its match starts on, counted by `\\n` only (a
-U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a
-reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and write
+site/.well-known/security.txt are refused for any literal `draft` (relative, Disallow, bold,
+host-only, www, href=, backslash, 1-slash, .html, character-reference and tab spellings among the
+cases) and accept "Raft consensus and Raft logs", and site/llms-full.txt for each form of the
+draft path (character references, bare Markdown link destinations, reference definitions, HTML
+attribute values, a link broken across a line end, a link broken inside a blockquote, a reference
+definition whose destination is on the next line, whose label spans 2 lines, or that sits in a
+blockquote or a list item, a tab or CR inside the path, an LF inside each URL attribute value, a
+Markdown link destination and a `<...>` reference definition destination, `http:draft` and
+`https:draft`, the URL attributes data, cite, poster, ping, background, longdesc, srcset and
+imagesrcset, a meta refresh destination in each spelling, and cases for forms b, d, e, f and g
+that only that form catches), while its prose ("drafting", "drafted", "a draft.", "the draft's",
+"draft / final", "and Raft", "Choose draft" wrapped before "/ final wording.",
+"draft-ietf-oauth-v2-1", a datatracker draft URL, a description meta saying "draft" and a host
+named draft) is accepted. A 9-times percent-encoded path exceeds the round limit and is refused.
+Each refusal names the file and the line its match starts on, counted by `\\n` only (a U+2028 or
+a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a reference on
+line 2 as line 2). The edit, append, prepend and crlf mutations read and write
 bytes, so they translate no newline. A second robots meta whose first name attribute is robots
 is read by that first name, as a browser reads it.
 
@@ -190,19 +194,28 @@ REFUSED_LINES = {
         "The next version is staged at \\draft\\ for review.\n",
         # 8 times percent-encoded: decoded within the round limit, then refused by its form.
         "The next version is staged at %" + "25" * 7 + "2Fdraft%" + "25" * 7 + "2F for review.\n",
-        # A tab, LF or CR inside the path, which a browser deletes from a URL: as a character
-        # reference, and as the character itself in a Markdown destination or an attribute value.
+        # A tab or CR inside the path, which a browser deletes from a URL and the gate deletes
+        # everywhere: as a character reference, and as the character itself.
         "The next version is staged at /dr&#9;aft/ for review.\n",
         "The next version is staged at /dr&#13;aft/ for review.\n",
         "The next version is staged [x](</dr\taft/>) for review.\n",
         "The next version is staged at /dr\raft/ for review.\n",
+        # An LF inside a URL context, which the gate deletes there only: in an attribute value
+        # (written as a character reference or as the LF itself), in a Markdown link destination
+        # (MARKDOWN_FORMS has the `<...>` reference definition destinations), with the
+        # whitespace around it.
         '<a href="/dr&#10;aft/">Review</a>\n',
         '<a href="/dr\naft/">Review</a>\n',
         '<a href="dr\naft">Review</a>\n',
         '<a href="/\ndraft">Review</a>\n',
+        "<a href='/dr \n  aft/'>Review</a>\n",
+        "The next version is staged [x](/dr\naft/) for review.\n",
+        "The next version is staged [x](/dr  \n  aft/) for review.\n",
+        "The next version is staged [x](<./dr\naft>) for review.\n",
         # A same-scheme URL without //.
         "The next version is staged at http:draft for review.\n",
-        # The URL attributes beyond href, src, action, formaction, content and url.
+        # The URL attributes beyond href, src, action, formaction and url. xlink:href is not new:
+        # the earlier `\bhref` already refused it, and its case stays.
         '<img srcset="draft 1x" alt="">\n',
         '<link rel="preload" as="image" imagesrcset="a.png 1x, draft 2x">\n',
         '<object data="draft"></object>\n',
@@ -212,13 +225,27 @@ REFUSED_LINES = {
         '<table background="draft"></table>\n',
         '<img longdesc="draft" alt="">\n',
         '<svg><a xlink:href="draft"></a></svg>\n',
-        # A meta refresh URL without url=.
+        # A meta refresh destination (form g): after the delay and ; or , an optional url= and
+        # an optional quote, on a tag whose http-equiv is refresh, quoted or not, in any case
+        # and in any attribute order.
         '<meta http-equiv="refresh" content="0;draft">\n',
         '<meta http-equiv="refresh" content="0; ./draft">\n',
+        "<meta http-equiv=\"refresh\" content=\"0;'draft'\">\n",
+        "<meta http-equiv=\"refresh\" content=\"0; url='./draft'\">\n",
+        '<meta http-equiv="refresh" content="0,draft">\n',
+        "<meta http-equiv='refresh' content='5; url=\"draft/\"'>\n",
+        '<META HTTP-EQUIV=Refresh CONTENT=0;draft>\n',
+        '<meta content="0;draft" http-equiv="refresh">\n',
+        '<meta title="a > b" http-equiv="refresh" content="0;draft">\n',
     ),
 }
-# The llms-full.txt cases that only 1 corpus form catches (DRAFT_REFS a to f in the gate), each
-# with that form's letter and how many lines below the first appended line its match starts;
+# Each URL attribute with an LF inside its quoted value (the gate's URL contexts); xlink:href is
+# read through `\bhref`, as it was before.
+URL_ATTRS = ("href", "src", "action", "formaction", "url", "data", "cite", "poster", "background",
+             "longdesc", "xlink:href", "srcset", "imagesrcset", "ping")
+REFUSED_LINES["site/llms-full.txt"] += tuple(f'<x {a}="/dr\naft/">\n' for a in URL_ATTRS)
+# The llms-full.txt cases that only 1 corpus form catches (a to g in the gate's corpus_matches),
+# each with that form's letter and how many lines below the first appended line its match starts;
 # main() asserts that no other form matches. The reference definition follows a blank line, so it
 # is a definition and not a paragraph continuation.
 SINGLE_FORM = (
@@ -227,17 +254,21 @@ SINGLE_FORM = (
     ('The next version is staged <a href="draft">here</a>.\n', "e", 0),
     ('<img srcset="a.png 1x, draft 2x" alt="">\n', "e", 0),
     ("The next version is staged at https:draft for review.\n", "f", 0),
+    ("<meta http-equiv=\"refresh\" content=\"0;'draft'\">\n", "g", 0),
 )
 # Ordinary Markdown that forms c and d read across a line end or a blockquote or list marker, each
 # with how many lines below the first appended line its match starts: a reference definition (after
 # a blank line) whose destination is on the next line, whose label spans 2 lines, or that sits in a
-# blockquote or a list item, and an inline link broken inside a blockquote.
+# blockquote or a list item, an inline link broken inside a blockquote, and a `<...>` reference
+# definition destination with an LF inside it, which the gate deletes there.
 MARKDOWN_FORMS = (
     ("\n[review]:\n  draft\n", 1),
     ("\n[review\nnotes]: draft\n", 2),
     ("\n> [review]: draft\n", 1),
     ("\n- [review]: draft\n", 1),
     ("> The next version is staged [x](\n> draft) for review.\n", 0),
+    ("\n[review]: <dr\naft>\n", 1),
+    ("\n[review]: </dr\naft/>\n", 1),
 )
 INDEX_CASES = [(f"{rel[5:]} naming {spelling}", append(rel, line.format(spelling)),
                 refused_at(rel), 1)
@@ -271,9 +302,22 @@ CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
                 "OAuth 2.1 is still draft-ietf-oauth-v2-1.\n",
                 "OAuth 2.1: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/\n",
                 "[draft-ietf-oauth-v2-1]: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/\n",
-                "[Drafting notes](/guides/)\n")
+                "[Drafting notes](/guides/)\n",
+                # Prose wrapped at a slash keeps its line end, as it is in no URL context.
+                "Choose draft\n/ final wording.\n",
+                "Mark each section draft / final before the review.\n",
+                "The policy was drafted last week.\n",
+                "Start from a draft.\n",
+                "Keep the gRPC and Raft ports closed.\n",
+                # A content value is read only on a refresh tag.
+                '<meta name="description" content="This is a draft.">\n',
+                # A host named draft, which form f no longer reads and form a skips after `://`.
+                "A host example: https://draft.example/\n")
 INDEX_CASES += [(f"llms-full.txt prose {line.strip()!r}", append("site/llms-full.txt", line),
                  OK_LINE, 0) for line in CORPUS_PROSE]
+# The hand-written indexes refuse only the literal word.
+INDEX_CASES += [("llms.txt prose 'Raft consensus and Raft logs'",
+                 append("site/llms.txt", "- Raft consensus and Raft logs\n"), OK_LINE, 0)]
 
 
 # (description, mutation, expected text, expected exit)
@@ -464,9 +508,9 @@ def main():
             failures.append(f"{desc}: the gate crashed: {out!r}")
     # Each SINGLE_FORM line is caught by its own corpus form and by no other.
     sys.path.insert(0, str(TOOLS))
-    from check_draft import DRAFT_REFS, normalized
+    from check_draft import corpus_matches, normalized
     for line, form, _ in SINGLE_FORM:
-        forms = "".join(f for f, p in zip("abcdef", DRAFT_REFS) if p.search(normalized(line)))
+        forms = "".join(sorted({f for _, f, _ in corpus_matches(normalized(line))}))
         if forms != form:
             failures.append(f"{line.strip()!r}: expected only form {form} to match, got {forms!r}")
     # Source to generated page: a Unicode host written in content.json is generated, passes the

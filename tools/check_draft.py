@@ -63,44 +63,61 @@ fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellin
   - the whole file text is normalized: the round { percent-decode; `html.unescape` } repeats until
     the text stops changing, at most 8 rounds (text still changing in a 9th round is refused);
     then Unicode NFKC, case folding, every `\\` read as `/`, and every ASCII tab and CR deleted
-    (a browser deletes tab, LF and CR from a URL; LF stays, as it ends a line, and the patterns
-    below read it instead). The text is normalized piece by piece between its `\\n`s and the
-    pieces joined with `\\n` again, which is the same text, as no step reads across a `\\n`; so a
-    match maps to the original line it starts on;
-  - in the patterns below, W is the word with any whitespace run between its letters,
-    `d\\s*r\\s*a\\s*f\\s*t`; P is any `./` prefix with an LF run after each `.` and `/`,
-    `(?:\\.\\n*/\\n*)*`; and E is `(?![a-z0-9_-])`. Beside a `/` of the path only an LF run is
-    read (`\\n*`), since a wider run there would read prose such as `draft / final`. So
-    `/dr<LF>aft/`, `/<LF>draft` and `./<LF>draft` are read as the path a browser opens;
+    (a browser deletes both from a URL, and neither occurs inside an English word). The text is
+    normalized piece by piece between its `\\n`s and the pieces joined with `\\n` again, which is
+    the same text, as no step reads across a `\\n`; so a match maps to the original line it
+    starts on;
   - site/llms.txt, site/robots.txt and site/.well-known/security.txt are hand-written indexes that
-    never need the word, so any match of W anywhere in their normalized text is refused;
+    never need the word, so any literal `draft` anywhere in their normalized text is refused (and
+    "Raft consensus and Raft logs" is not);
   - site/llms-full.txt, the generated guide corpus, uses "draft" in prose and in `draft-ietf-...`
-    names, so there each match of any of these on the normalized text is refused (each read
-    across a line end too, as a Markdown link may break there):
-      a. `/\\n*` W E;
-      b. `(?<![a-z0-9_-])` W `\\n*/`;
+    names. A browser also deletes LF from a URL, so first, inside each URL context and nowhere
+    else, every LF run together with the whitespace around it (`\\s*\\n\\s*`) is deleted. The URL
+    contexts are the quoted value (`"..."` or `'...'`) of a URL attribute,
+    `\\b(?:href|src|action|formaction|url|data|cite|poster|background|longdesc|srcset|imagesrcset|ping)\\s*=\\s*`
+    (`xlink:href` matches through `\\bhref`; an unquoted value ends at whitespace, so it holds no
+    LF); a Markdown link destination, from `](` to the first `)` after it; and the destination of
+    a reference definition written `]: <...>`, from its `<` to the first `>` (written without
+    `<`, a destination ends at whitespace, so it holds no LF). Prose keeps its line ends, so
+    "Choose draft<LF>/ final wording." is accepted, and `<a href="/dr<LF>aft/">` and
+    `[x](/dr<LF>aft/)` are read as `/draft/`. Then, with P any `./` prefix, `(?:\\./)*`, and E the
+    end of the word, `(?![a-z0-9_-])`, each match of any of these is refused:
+      a. `(?<!:/)/draft` E (not right after `://`, where `draft` is a host name);
+      b. `(?<![a-z0-9_-])draft/`;
       c. a Markdown link destination whose first segment is `draft`, with any whitespace, line
-         ends and blockquote `>` markers before it or its `<`: `\\]\\([\\s>]*<?[\\s>]*` P W E;
+         ends and blockquote `>` markers before it or its `<`: `\\]\\([\\s>]*<?[\\s>]*` P `draft` E;
       d. a reference definition, with no line-start anchor, so its label may span lines and it
          may sit in a blockquote or a list item, and with any whitespace, line ends and
          blockquote `>` markers before its destination or its `<`, so the destination may be on
-         the next line: `\\]:[\\s>]*<?[\\s>]*` P W E;
+         the next line: `\\]:[\\s>]*<?[\\s>]*` P `draft` E;
       e. an HTML attribute value that is 1 URL, which `xlink:href` matches through `\\bhref`:
          `\\b(?:href|src|action|formaction|url|data|cite|poster|background|longdesc)\\s*=\\s*["']?\\s*`
-         P W E; or any item of a list value, so any `srcset` candidate, any `ping` URL and a meta
-         refresh URL without `url=` count:
-         `\\b(?:srcset|imagesrcset|ping|content)\\s*=\\s*(?:"(?:[^"]*[\\s,;])?|'(?:[^']*[\\s,;])?|(?:[^\\s"'<>]*[,;])?)\\s*`
-         P W E;
-      f. a same-scheme URL, which a browser resolves against the page whether or not `//`
-         follows the scheme: `https?:[/\\n]*` P W E (so a host named `draft` is refused too).
-    So `/draft/`, `./draft/`, `[x](draft)`, `[x](<draft>)`, `[x](draft#top)`, `[x]: draft`,
-    `> [x]: draft`, `- [x]: draft`, `href="draft"`, `srcset="a.png 1x, draft 2x"`,
-    `content="0; ./draft"`, `https:draft`, `secureconfig.ai/draft/`, `%2Fdraft%2F`,
-    `/&#100;raft/`, `/dr&#9;aft/`, `\\draft\\` and `/draft.html` are refused, while "drafting",
-    "the draft's", "draft-ietf-oauth-v2-1" and
+         P `draft` E; or any item of a list value, so any `srcset` candidate and any `ping` URL
+         count:
+         `\\b(?:srcset|imagesrcset|ping)\\s*=\\s*(?:"(?:[^"]*[\\s,])?|'(?:[^']*[\\s,])?|(?:[^\\s"'<>]*,)?)\\s*`
+         P `draft` E;
+      f. a same-scheme URL without `//`, which a browser resolves against the page:
+         `https?:(?!/)` P `draft` E (so `https:draft` is refused, and a host named `draft`, as in
+         `https://draft.example/`, is not);
+      g. a meta refresh destination: in a tag (from `<` and a letter to the first `>` outside
+         quotes) that carries `http-equiv` equal to `refresh`, quoted or not,
+         `\\bhttp-equiv\\s*=\\s*(?:"refresh"|'refresh'|refresh(?![^\\s>]))`, the value of each
+         `content` attribute, quoted or not, that matches from its start
+         `\\s*[\\d.]*\\s*[;,]\\s*(?:url=)?["']?` P `draft` E: after the delay and `;` or `,`, an
+         optional `url=` and an optional quote, a destination whose first path segment is
+         `draft`. No other `content` value is read.
+    So `/draft/`, `./draft/`, `[x](draft)`, `[x](<draft>)`, `[x](draft#top)`, `[x](/dr<LF>aft/)`,
+    `[x]: draft`, `> [x]: draft`, `- [x]: draft`, `href="draft"`, `<a href="/dr<LF>aft/">`,
+    `srcset="a.png 1x, draft 2x"`, `<meta http-equiv="refresh" content="0;'draft'">` and, on
+    such a tag, `content="0; url='./draft'"` and `content="0,draft"`, `https:draft`,
+    `secureconfig.ai/draft/`, `%2Fdraft%2F`, `/&#100;raft/`, `/dr&#9;aft/`, `\\draft\\` and
+    `/draft.html` are refused, while "drafting", "drafted", "a draft.", "the draft's",
+    "draft / final", "and Raft", "Choose draft<LF>/ final wording.", "draft-ietf-oauth-v2-1",
+    `<meta name="description" content="This is a draft.">`, `https://draft.example/` and
     `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are accepted.
-  Each finding names the file and the line, counting `\\n` only (a U+2028 or a `\\r` ends no line),
-  and the file is read without newline translation.
+  Each finding names the file and the line its match starts on (for form g, the line its
+  `content` value starts on), counting `\\n` only (a U+2028 or a `\\r` ends no line), and the
+  file is read without newline translation.
 
 Exit 0 ok, 1 on a finding, 2 on a read error.
 Usage: python3 -I -B tools/check_draft.py [--root <repository root>]
@@ -139,22 +156,32 @@ NOTFOUND = "404.html"
 # each form of the draft path, both read after normalized().
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
 CORPUS_INDEX = "llms-full.txt"
-# W, P and E of the docstring: the word with any whitespace run between its letters, any `./`
-# prefix with an LF run after each `.` and `/`, and the end of the word.
-W = r"d\s*r\s*a\s*f\s*t"
-P = r"(?:\.\n*/\n*)*"
+# P and E of the docstring: any `./` prefix and the end of the word.
+P = r"(?:\./)*"
 E = r"(?![a-z0-9_-])"
-DRAFT_WORD = re.compile(W)
-# The corpus forms a to f of the docstring, each matched on its own.
+DRAFT_WORD = re.compile(r"draft")
+# The corpus forms a to f of the docstring, each matched on its own; form g is refresh_matches().
 DRAFT_REFS = (
-    re.compile(rf"/\n*{W}{E}"),
-    re.compile(rf"(?<![a-z0-9_-]){W}\n*/"),
-    re.compile(rf"\]\([\s>]*<?[\s>]*{P}{W}{E}"),
-    re.compile(rf"\]:[\s>]*<?[\s>]*{P}{W}{E}"),
-    re.compile(rf"""\b(?:href|src|action|formaction|url|data|cite|poster|background|longdesc)\s*=\s*["']?\s*{P}{W}{E}"""
-               rf"""|\b(?:srcset|imagesrcset|ping|content)\s*=\s*(?:"(?:[^"]*[\s,;])?|'(?:[^']*[\s,;])?|(?:[^\s"'<>]*[,;])?)\s*{P}{W}{E}"""),
-    re.compile(rf"https?:[/\n]*{P}{W}{E}"),
+    re.compile(rf"(?<!:/)/draft{E}"),
+    re.compile(r"(?<![a-z0-9_-])draft/"),
+    re.compile(rf"\]\([\s>]*<?[\s>]*{P}draft{E}"),
+    re.compile(rf"\]:[\s>]*<?[\s>]*{P}draft{E}"),
+    re.compile(rf"""\b(?:href|src|action|formaction|url|data|cite|poster|background|longdesc)\s*=\s*["']?\s*{P}draft{E}"""
+               rf"""|\b(?:srcset|imagesrcset|ping)\s*=\s*(?:"(?:[^"]*[\s,])?|'(?:[^']*[\s,])?|(?:[^\s"'<>]*,)?)\s*{P}draft{E}"""),
+    re.compile(rf"https?:(?!/){P}draft{E}"),
 )
+# The URL contexts whose LF runs are deleted before the corpus forms are matched: a quoted URL
+# attribute value, a Markdown link destination and a `<...>` reference definition destination.
+URL_CONTEXT = re.compile(
+    r"""\b(?:href|src|action|formaction|url|data|cite|poster|background|longdesc|srcset|imagesrcset|ping)\s*=\s*(?:"([^"]*)"|'([^']*)')"""
+    r"|\]\(([^)]*)\)|\]:[\s>]*<([^>]*)>")
+LF_RUN = re.compile(r"\s*\n\s*")
+# Form g: a tag (quotes may hold `>`), its http-equiv refresh, each content value and the
+# refresh destination read from the start of that value.
+TAG = re.compile(r"""<[a-z](?:[^<>"']|"[^"]*"|'[^']*')*>""")
+REFRESH = re.compile(r"""\bhttp-equiv\s*=\s*(?:"refresh"|'refresh'|refresh(?![^\s>]))""")
+CONTENT = re.compile(r"""\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]*))""")
+REFRESH_URL = re.compile(rf"""\s*[\d.]*\s*[;,]\s*(?:url=)?["']?{P}draft{E}""")
 DECODE_ROUNDS = 8
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
 # must not carry at all.
@@ -289,6 +316,48 @@ def normalized(text):
     return None
 
 
+def folded(text):
+    """Normalized llms-full.txt text with every LF run, and the whitespace around it, deleted inside
+    each URL_CONTEXT (a browser deletes LF from a URL), and a function mapping an offset in the
+    result back to its offset in text."""
+    pieces, at, marks, gone = [], 0, [], []
+    for m in URL_CONTEXT.finditer(text):
+        start, end = next(m.span(g) for g in range(1, 5) if m.group(g) is not None)
+        for run in LF_RUN.finditer(text, start, end):
+            pieces.append(text[at:run.start()])
+            at = run.end()
+            gone.append((gone[-1] if gone else 0) + run.end() - run.start())
+            marks.append(at - gone[-1])
+    pieces.append(text[at:])
+
+    def original(offset):
+        i = bisect_right(marks, offset)
+        return offset + (gone[i - 1] if i else 0)
+    return "".join(pieces), original
+
+
+def refresh_matches(text):
+    """Form g: each draft destination in a content value of a tag whose http-equiv is refresh."""
+    for tag in TAG.finditer(text):
+        if not REFRESH.search(tag.group()):
+            continue
+        for c in CONTENT.finditer(text, tag.start(), tag.end()):
+            start, end = next(c.span(g) for g in range(1, 4) if c.group(g) is not None)
+            m = REFRESH_URL.match(text, start, end)
+            if m:
+                yield m
+
+
+def corpus_matches(text):
+    """(start, form, excerpt) for each match of the corpus forms a to g on normalized
+    llms-full.txt text, read after folded(); start is the match's offset in text."""
+    text, original = folded(text)
+    found = [(f, m) for f, p in zip("abcdef", DRAFT_REFS) for m in p.finditer(text)]
+    found += [("g", m) for m in refresh_matches(text)]
+    return sorted((original(m.start()), f, text[max(0, m.start() - 20):m.end() + 20])
+                  for f, m in found)
+
+
 def index_findings(name, text):
     """The PART 3 findings for 1 published index under site/, each naming the file and line."""
     findings = []
@@ -310,17 +379,18 @@ def index_findings(name, text):
     # match is reported on the original line it starts on.
     joined = "\n".join(norm)
     if name in STRICT_INDEXES:
-        patterns, why = (DRAFT_WORD,), "this hand-written index never carries the word draft"
+        why = "this hand-written index never carries the word draft"
+        matches = [(m.start(), "", joined[max(0, m.start() - 20):m.end() + 20])
+                   for m in DRAFT_WORD.finditer(joined)]
     else:
-        patterns, why = DRAFT_REFS, "a reference to the draft path"
-    matches = sorted((m.start(), m.end()) for p in patterns for m in p.finditer(joined))
+        why = "a reference to the draft path"
+        matches = corpus_matches(joined)
     seen = set()
-    for start, end in matches:
+    for start, _, excerpt in matches:
         n = bisect_right(starts, start)
         if n in seen:
             continue
         seen.add(n)
-        excerpt = joined[max(0, start - 20):end + 20]
         findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses {excerpt!r} ({why}); "
                         f"the /draft/ review page stays out of every published index")
     return findings
