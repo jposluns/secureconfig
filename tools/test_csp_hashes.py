@@ -113,11 +113,23 @@ placeholder, a short splat and an upper-case path each fail with `! X-Robots-Tag
 passes, X-Robots-Tag in `/*` fails and a rule with a percent escape is refused as unmodelled. #1181's
 2 original `/draft/*` A15 cases run again against the real file with its `/draft/*` block removed,
 with their original expectations, beside the same rules added to the full file.
+
+The LOW fixes for the gate's explanations (TODO rows from #1181) made 4 messages exact to their
+triggers and changed no refusal. Their cases, counted separately, pin each new clause and, where the
+old clause claimed more than its trigger, its absence: a NUL outside any inline block, inside one, and
+both; a harmless `<!--` in the pinned script, worded as the gate's rule; a token that only begins like
+a hash or nonce (`'nonce-!'`, `'sha256-'`), which no longer claims what a browser does, beside a valid
+nonce or hash, which still does; the on* accounting in both directions; and the on* advice on each
+page by its declared shape. The base-path runs build the template pages with scripts/build-site.py
+at the gate's draft root and at /, put each page where that base serves it under site/, and require
+the advice of that location's declared shape. A source check pins the reworded docstring and comment
+clauses.
 """
 import base64
 import contextlib
 import gzip
 import hashlib
+import importlib.util
 import io
 import os
 import re
@@ -1270,6 +1282,125 @@ DRAFT_CASES += [
      "outside the rule syntax this gate models"),
 ]
 
+# The LOW fixes for the gate's explanations (TODO rows from #1181). Each case must fail, carry every
+# wanted clause, and not carry the unwanted one, the old clause where it claimed more than the
+# trigger: (description, page, headers, extra files, wanted clauses, unwanted clause or None).
+NUL_OUTSIDE = ("contains a NUL byte outside any inline block, where this gate does not model what a "
+               "browser's tokenizer does with one, so it refuses every one")
+NUL_INSIDE = ("contains a NUL byte in the text of an inline <style> or <script>, which a browser's "
+              "tokenizer replaces with U+FFFD")
+COMMENT_RULE = ("This gate refuses every `<!--` in an inline script, harmless or not, because `<!--` "
+                "opens HTML's script-data escape states and this gate does not model them")
+HARMLESS_COMMENT_PAGE = PAGE.replace("(function () {", "(function () {\n  // a harmless <!-- here", 1)
+NOT_A_SOURCE = "a token this gate reads as a hash or nonce source though it is not one in CSP3's grammar"
+IGNORES = "A browser ignores 'unsafe-inline' in a directive that carries a hash or nonce source"
+SCRIPT_ADVICE = "Move the behaviour into the inline <script>"
+NO_SCRIPT_ADVICE = "This page's declared shape allows no inline <script>, so remove the handler"
+WORDING_CASES = [
+    ("a NUL byte outside any inline block", PAGE.replace("</body>", "\x00</body>", 1), None, None,
+     (NUL_OUTSIDE,), "the block text it reads"),
+    ("a NUL byte in index's stylesheet", PAGE.replace(":root", "\x00:root", 1), None, None,
+     (NUL_INSIDE,), "outside any inline block"),
+    ("a NUL byte in the 404 stylesheet", {"404.html": PAGE_404.replace("<style>", "<style>\x00", 1)},
+     None, None, (NUL_INSIDE,), "outside any inline block"),
+    ("a NUL byte in a block and one outside",
+     PAGE.replace(":root", "\x00:root", 1).replace("</body>", "\x00</body>", 1), None, None,
+     (NUL_INSIDE, NUL_OUTSIDE), None),
+    ("a harmless <!-- in the pinned script, repinned", HARMLESS_COMMENT_PAGE,
+     repinned(HARMLESS_COMMENT_PAGE, "script"), None,
+     (COMMENT_RULE, "so it cannot tell whether a browser ends the script at the </script> this "
+                    "parser does"), "a browser reads to a later </script>"),
+    ("'nonce-!' beside 'unsafe-inline' in style-src", None,
+     LIVE_HEADERS.replace("style-src 'self'", "style-src 'nonce-!' 'self'", 1), None,
+     ("style-src carries 'unsafe-inline' beside 'nonce-!', " + NOT_A_SOURCE,), "A browser ignores"),
+    ("an empty 'sha256-' beside 'unsafe-inline' in script-src", None,
+     LIVE_HEADERS.replace("script-src 'self'", "script-src 'sha256-' 'self'", 1), None,
+     ("script-src carries 'unsafe-inline' beside 'sha256-', " + NOT_A_SOURCE,), "A browser ignores"),
+    ("'nonce-!' and then a valid nonce, which a browser reads as one", None,
+     LIVE_HEADERS.replace("style-src 'self'", "style-src 'nonce-!' 'nonce-abc' 'self'", 1), None,
+     ("beside 'nonce-abc', a hash or nonce source. " + IGNORES,), NOT_A_SOURCE),
+    ("a valid hash beside 'unsafe-inline' in script-src", None,
+     LIVE_HEADERS.replace("script-src 'self'", f"script-src {SCRIPT_PIN} 'self'", 1), None,
+     (f"beside {SCRIPT_PIN}, a hash or nonce source. " + IGNORES,), NOT_A_SOURCE),
+    ("the on* accounting when the literal scan finds more",
+     PAGE.replace("</body>", "<!-- <a onclick> -->\n</body>", 1), None, None,
+     ("accounts for 0 on* handler attributes; the literal scan found more, so one may be an "
+      "attribute html.parser did not report",), None),
+    ("the on* accounting when the literal scan misses a tag html.parser reports",
+     PAGE.replace("</body>", '<!-- <a title=" -->\n<a onclick>x</a>\n<!-- " -->\n</body>', 1), None,
+     None, ("accounts for 1 on* handler attributes; html.parser reported more, so the literal scan "
+            "missed one",), "html.parser did not report"),
+    ("a valued handler on the script-free 404 page",
+     {"404.html": PAGE_404.replace("<body", '<body onload="x"', 1)}, None, None,
+     (NO_SCRIPT_ADVICE + ", or reword the text",), SCRIPT_ADVICE),
+    ("a valueless handler on the script-free 404 page",
+     {"404.html": PAGE_404.replace("<body", "<body onclick", 1)}, None, None,
+     ("never an attribute. " + NO_SCRIPT_ADVICE,), SCRIPT_ADVICE),
+    ("a valued handler on index, whose shape allows a script",
+     PAGE.replace("<body", '<body onload="x"', 1), None, None,
+     (SCRIPT_ADVICE + ", or reword the text",), NO_SCRIPT_ADVICE),
+    ("a valueless handler on index, whose shape allows a script",
+     PAGE.replace("<body", "<body onclick", 1), None, None,
+     ("never an attribute. " + SCRIPT_ADVICE,), NO_SCRIPT_ADVICE),
+    ("a valued handler on a draft page, whose shape allows no inline script", None, LIVE_HEADERS,
+     draft_edit('<p class="meta">', '<p class="meta" onclick="x()">'),
+     (NO_SCRIPT_ADVICE + ", or reword the text",), SCRIPT_ADVICE),
+]
+# The reworded docstring and comment clauses, (new, old): the gate's source must carry each new
+# clause and none of the old ones.
+SOURCE_CLAUSES = (("`script-src` is hash-only and this gate pins no attribute",
+                   "no hash covers an attribute"),
+                  ("an `</svg>` or the end of an inline block", "the end of a pinned block"),
+                  ("a style attribute smuggled through <svg><title> is invisible to html.parser",
+                   "applies it and CSP-checks it"),
+                  ("outside every inline block this gate does not model what a",
+                   "turns into U+FFFD before hashing and this would not."))
+
+# THE BASE PATH (the Architect's rule of 2026-11-03): the site is staged under the gate's draft root
+# now and promoted to / later. Each base is built with scripts/build-site.py --base and --out, and
+# each page goes where that base serves it under site/, as build-site.py's default --out does
+# (site/ and the base without its leading /). The staged base is read from the gate's DRAFT.
+_spec = importlib.util.spec_from_file_location("csp_gate_constants", TOOLS / "check_csp_hashes.py")
+GATE = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(GATE)
+STAGED_BASE = "/" + GATE.DRAFT.relative_to(GATE.SITE).as_posix() + "/"
+SHAPES = {path.relative_to(GATE.SITE).as_posix(): shape for path, shape in GATE.PAGES}
+
+
+def base_path_runs():
+    """(failures, runs): a valued handler on the generated home and 404 pages at each base must get
+    the advice of the declared shape where the page sits, a live page's from PAGES and a draft
+    page's (no inline script) otherwise."""
+    failures, runs = [], 0
+    for base in (STAGED_BASE, "/"):
+        d = Path(tempfile.mkdtemp())
+        try:
+            r = subprocess.run([sys.executable, "-I", "-B", str(ROOT / "scripts" / "build-site.py"),
+                                "--base", base, "--out", str(d)],
+                               capture_output=True, text=True, timeout=120)
+            if r.returncode != 0:
+                failures.append(f"base {base}: build-site.py failed: {(r.stdout + r.stderr)!r}")
+                continue
+            for name in ("index.html", "404.html"):
+                planted = (d / name).read_text(encoding="utf-8").replace(
+                    "<body>", '<body onclick="x()">', 1)
+                rel = base.lstrip("/") + name
+                shape = SHAPES.get(rel, {"style": 0, "script": 0})
+                want, other = ((SCRIPT_ADVICE, NO_SCRIPT_ADVICE) if shape["script"]
+                               else (NO_SCRIPT_ADVICE, SCRIPT_ADVICE))
+                if "/" in rel:
+                    rc, out = run_against(headers=LIVE_HEADERS, extra_files={rel: planted})
+                else:
+                    rc, out = run_against({rel: planted}, LIVE_HEADERS)
+                runs += 1
+                if (rc != 1 or f"site/{rel}:" not in out or f"{want}, or reword the text" not in out
+                        or other in out):
+                    failures.append(f"base {base}: a handler on site/{rel} did not get the advice "
+                                    f"{want!r} alone: rc={rc}, {out!r}")
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+    return failures, runs
+
 
 def main() -> int:
     failures, io_case_count = io_failure_cases()
@@ -1357,6 +1488,23 @@ def main() -> int:
     if "site/index.html" not in out or "site/404.html" not in out:
         failures.append(f"moving the script did not fault both pages: {out!r}")
 
+    # The LOW fixes for the gate's explanations: each message clause, then each source clause.
+    for desc, page, headers, extra, wanted, unwanted in WORDING_CASES:
+        rc, out = run_against(page, headers, extra_files=extra)
+        if rc != 1:
+            failures.append(f"wording: {desc}: expected the gate to fail, it did not ({out!r})")
+        for want in wanted:
+            if want not in out:
+                failures.append(f"wording: {desc}: expected {want!r} in {out!r}")
+        if unwanted is not None and unwanted in out:
+            failures.append(f"wording: {desc}: {unwanted!r} is still in {out!r}")
+    source = (TOOLS / "check_csp_hashes.py").read_text(encoding="utf-8")
+    for new, old in SOURCE_CLAUSES:
+        if new not in source or old in source:
+            failures.append(f"wording: the gate's source must carry {new!r} and not {old!r}")
+    base_failures, base_runs = base_path_runs()
+    failures += base_failures
+
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
@@ -1364,7 +1512,9 @@ def main() -> int:
     print(f"  ok    {LEGACY_CASE_COUNT} recorded cases for the CSP hash gate across six review rounds, "
           f"{len(SCOPE_CASES)} row 3.18 and P5 document, page and filesystem cases, "
           f"{len(LIVE_CASES)} cases for the temporary A15 live policy, "
-          f"{len(DRAFT_CASES)} staged-draft cases, and {io_case_count} injected I/O failures")
+          f"{len(DRAFT_CASES)} staged-draft cases, {len(WORDING_CASES)} explanation-wording cases "
+          f"with {len(SOURCE_CLAUSES)} source clauses, {base_runs} base-path runs at "
+          f"{STAGED_BASE} and /, and {io_case_count} injected I/O failures")
     return 0
 
 

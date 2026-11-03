@@ -1260,7 +1260,8 @@ fi
 # The staged template rebuild under site/draft/ (baseline SPECIFICATION section 4.1). Each gate runs
 # after its self-test, so a gate that stopped catching its cases cannot report a pass; the draft is
 # checked fresh before the CSP gate reads its pages. A gate that exits 0 while printing a FAIL line
-# or without printing an ok line, or that crashes, is a failure.
+# or without printing an ok line, or that crashes, is a failure. tools/test_gate_runners.py reads
+# this function out of this file and runs it on stand-in gates (the next section).
 run_gate() {
   local label=$1 out
   shift
@@ -1282,6 +1283,22 @@ run_gate() {
     printf '%s\n' "$out" | sed 's/^/          /'
   fi
 }
+
+echo "== run_gate and scripts/pages-build.sh still fail closed =="
+# tools/test_gate_runners.py runs run_gate, read out of this file, on stand-in gates, and runs
+# scripts/pages-build.sh, as committed and in its promoted form at /, with a stand-in python3 that
+# reports 3.10 or 3.11; its docstring lists the cases. It runs no real gate. It is checked here
+# directly rather than through run_gate, so a broken run_gate cannot pass its own test.
+if gate_runners=$(python3 -I -B tools/test_gate_runners.py 2>&1); then
+  printf '%s\n' "$gate_runners"
+  if grep -q '^  FAIL  ' <<< "$gate_runners" ||
+     ! grep -qE '^  ok    [0-9]+ run_gate cases and [0-9]+ pages-build\.sh cases ' <<< "$gate_runners"; then
+    bad "test_gate_runners.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$gate_runners"
+  bad "test_gate_runners.py failed"
+fi
 
 echo "== the copied site template files match their pin =="
 run_gate test_baseline_pin.py python3 -I -B tools/test_baseline_pin.py
