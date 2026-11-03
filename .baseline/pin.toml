@@ -1,0 +1,48 @@
+# Shared site template baseline pin, read by tools/check_baseline_pin.py.
+#
+# The files under site/draft/assets/baseline/ are copied byte for byte from the baseline package
+# at the upstream URL below by scripts/copy-baseline.py, which checked each one against the
+# package's SHA256SUMS. Never edit a copied file. A new baseline version is 1 pull request that
+# reruns the copy script and commits the copied files and this pin together.
+
+version = "1.3.1"
+upstream = "https://posluns.ca/baseline/1.3.1/"
+archive_sha256 = "0b769629a17f974bca21def045a94ef4751e591440ca44f1d14d7789987052d9"
+sha256sums_sha256 = "64dc26f31a3f191a5e5ba299b7991936af23716ecf770ad1bae69070957c97d5"
+copied = "2026-11-03"
+
+# Paths are relative to site/draft/.
+[files]
+"assets/baseline/LICENSE" = "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+"assets/baseline/NOTICE.md" = "08b26141bb2ecf0f4cd76e599c21f888fc71c4b3ab7ba769e954f6eea37ac7f3"
+"assets/baseline/baseline.css" = "9d8e4d5307af49f607e89bcb3ac32a80d25f9e86253572b65559cd35cd4e16e9"
+"assets/baseline/copy.js" = "9bf99b50471889b768c795af5a4f84f526cecf7622a1f1265ca3d088b31339a4"
+"assets/baseline/fonts.css" = "a309a8ff4026a67fb5d10dea2c02e5b9ea2c1b32d4b18d7892015e038397396a"
+"assets/baseline/fonts/dancing-script-LICENSE.txt" = "c02c0002d3bbd41a16933c162888c400469c7029f1362ca9d60d5ed20ea7d157"
+"assets/baseline/fonts/dancing-script-latin-wght-normal.woff2" = "51acdc0e009e1d84cca6b654c4218275d8ee33dd243f3df25f7412a824a78d99"
+"assets/baseline/fonts/jetbrains-mono-LICENSE.txt" = "403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b"
+"assets/baseline/fonts/jetbrains-mono-latin-wght-italic.woff2" = "a8afa085e9ca5e53434e2ee918ba6b65c7dd4dda56509976b36591478c99d62e"
+"assets/baseline/fonts/jetbrains-mono-latin-wght-normal.woff2" = "18be452724bfdc236c074ca94a249a7f41a86752c7d04ab258ce9ed5651f6a7e"
+"assets/baseline/fonts/newsreader-LICENSE.txt" = "26028ec4e13b650065fa525a09532176f8a668b76ff849ea01c564a7480f91e7"
+"assets/baseline/fonts/newsreader-latin-wght-italic.woff2" = "48bc8861b9b2ca9300747cad4fd6a3b4ac3028d364df00bd1b72097baa75e509"
+"assets/baseline/fonts/newsreader-latin-wght-normal.woff2" = "62981321d9a3cc7a61a73792729043703fd6112da86e8ec848bb57f088578757"
+"assets/baseline/fonts/public-sans-LICENSE.txt" = "705a497c781f6463ff819abb513bb495f3fb05256f1d20321e3275813c0bafa5"
+"assets/baseline/fonts/public-sans-latin-wght-italic.woff2" = "16dc93252adb78785ae56a6465494f73b604b39817760ea92bd4046521bb5a35"
+"assets/baseline/fonts/public-sans-latin-wght-normal.woff2" = "5ed4d31c988e73b258894244f209069ebe77dc7e564861954b21198b6de90d68"
+"assets/baseline/logos/aiqt.svg" = "66ab34a8a0c03ef260e73cec128f53a714183cd8ba3c675969e9a04feb222781"
+"assets/baseline/logos/auditthis.svg" = "0f2fb19cd2917e8d39e57c08172987bbc72ca0597a096d892aaed44ff5374572"
+"assets/baseline/logos/cleanlanguage.svg" = "285c37c1d77bc24206e31c3eb99837a79ba79f6c16b4ccbd7470f1fbfc58f985"
+"assets/baseline/logos/grclibrary.svg" = "8ad4d338a68ce7afc781c02be91ee7e87ce464d44d0ed56eb10d5cddf80b45f8"
+"assets/baseline/logos/opfiles.svg" = "f294e493b3ad949b72e8f25500a507fa8f47e41f58247904f44b0434637d4f0c"
+"assets/baseline/logos/secureconfig-card.svg" = "21f74d06b216d72d1e8d483a444d3e439847ede8e523427c147ba2ba59cd553e"
+"assets/baseline/logos/secureconfig-favicon.svg" = "526ca1f3606625306c4876bf8fe6ba5af86e87f622729cf003ef60949e26ccbd"
+"assets/baseline/logos/secureconfig-mono.svg" = "5fd490079642b41ab12863bc1692e5481a737cc4f8f764319dd31f13a2037b86"
+"assets/baseline/logos/secureconfig-touch.png" = "5897da9f6f9a556358584faee1d33b210a96de56b7ef6177d32a5bd940f0c0c7"
+"assets/baseline/logos/secureconfig.svg" = "a74c1604acb4032e763afe0cf0a9ed9b4e5f4bdb76790d24a3de16a48eda5c1b"
+"assets/baseline/marks/NOTICE.md" = "b39a747fb9f73ec9373bd2329060af372e14185fcdc7f91fa67ea2cda3b6dd20"
+"assets/baseline/marks/github-invertocat-black.svg" = "693d7abe6f899646cc2e96856723b45e95f71885a54910b2749f6decdf7e1ee1"
+"assets/baseline/marks/github-invertocat-white.svg" = "ccd84c89b1056345608fc3489357f8acc7397e49a3cdc2d418b6c8016911d47b"
+"assets/baseline/marks/linkedin-in-bug.png" = "3c0149f26168b5fe0f43e68664abe40341a6443b3cd435d18a73e12f64f8b600"
+"assets/baseline/marks/orcid-id.svg" = "195be086656233fc1a0089086d9190d28dc6abce39c2290612d1893233e1f166"
+"assets/baseline/palettes.css" = "c67ffe38a93d266150a0bd82ce141fb6e8b544ff6a8d210f70b3d84032650bf7"
+"assets/baseline/rail.js" = "36535faf2df8637e694ff2a57af982b9c67c9f410f80d4dfceb193c4f2d601ca"

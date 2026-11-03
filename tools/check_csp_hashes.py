@@ -209,6 +209,15 @@ gate requires exactly ONE Content-Security-Policy across the whole `_headers` fi
 it would leave every other host uncovered), and refuses any other rule that sets or detaches Content-Security-Policy anywhere (a rule
 carrying only unrelated headers is fine).
 
+THE ONE EXCEPTION, THE STAGED DRAFT (the owner's decisions of 2026-11-02 and 2026-11-03). Pages under
+`site/draft/` are the template rebuild staged for review. They are found by the walk, not listed in
+PAGES, carry no inline block at all (their scripts are same-origin baseline files), and are checked
+under the draft element allowlist. One `/draft/*` rule may detach the live policy and set the shared
+draft policy, exactly DRAFT_POLICY, which carries `'unsafe-inline'` and Cloudflare's hosts by the
+owner's decision; that rule is read only for the draft, and everything above still holds for the live
+pages and every other rule. The draft's own 404 page (site/draft/404.html) is served for missing
+paths under /draft/, so this rule governs it there. The exception goes at promotion.
+
 WHAT IT STILL DOES NOT COVER, stated rather than left to be found: a document embedded with `srcdoc`
 inherits a page's CSP, and nothing here looks inside one; a `javascript:` URL on an HTML page is not
 checked (P5 named SVG URLs and page `on*` attributes, not page URLs). The SVG check is a structural
@@ -290,6 +299,25 @@ PAGE_ELEMENTS = frozenset((
     "html", "head", "meta", "title", "link", "style", "body", "div", "header", "nav", "main",
     "footer", "h1", "h2", "h3", "p", "a", "span", "code", "pre", "button", "ol", "li", "script",
     "svg", "circle", "path", "rect"))
+# THE STAGED DRAFT (the owner's decisions of 2026-11-02 and 2026-11-03). Every .html under
+# site/draft/ is a draft page, listed by the walk rather than in PAGES. A draft page carries NO
+# inline block at all: its only scripts are same-origin baseline files, written exactly as
+# `<script src="/draft/assets/baseline/<name>.js" defer></script>`, and every other refusal above
+# applies to it unchanged. Its element allowlist is the live one plus the elements the template
+# emits on this site (the owner's list), because a draft page has no pinned block for a misparsed
+# element to reach. The draft is governed by 1 `/draft/*` rule that detaches the live policy and
+# sets DRAFT_POLICY, the shared 6-site draft policy, exactly. At promotion these constants, the
+# live model's hashes and the 28-element list go together; see the PR that adds them.
+DRAFT = Path("site") / "draft"
+DRAFT_RULE = "/draft/*"
+DRAFT_POLICY = ("default-src 'none'; script-src 'self' 'unsafe-inline' https://ajax.cloudflare.com "
+                "https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; "
+                "style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; "
+                "form-action 'none'; frame-ancestors 'none'")
+DRAFT_ELEMENTS = PAGE_ELEMENTS | frozenset((
+    "ul", "ol", "li", "table", "caption", "thead", "tbody", "tr", "th", "td", "details", "summary",
+    "img", "strong", "em", "small", "code", "pre", "button", "section", "nav"))
+DRAFT_SCRIPT = re.compile(r'<script src="/draft/assets/baseline/[a-z]+\.js" defer></script>')
 TAG_NAME = re.compile(r"</?([A-Za-z][^\t\n\f />]*)")
 ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 CHARSET = re.compile(r"charset\s*=", re.I)
@@ -501,13 +529,14 @@ def unmodelled_contexts(path, text):
     return out
 
 
-def unlisted_elements(path, html):
+def unlisted_elements(path, html, elements=PAGE_ELEMENTS):
     """ELEMENT ALLOWLIST: every `<` or `</` and an ASCII letter anywhere in the page, pinned bodies and
-    attribute values included, names an element that must be in PAGE_ELEMENTS."""
+    attribute values included, names an element that must be in PAGE_ELEMENTS (DRAFT_ELEMENTS for a
+    draft page)."""
     out, seen = [], set()
     for m in TAG_NAME.finditer(html):
         name = m.group(1).translate(ASCII_LOWER)
-        if name not in PAGE_ELEMENTS and name not in seen:
+        if name not in elements and name not in seen:
             seen.add(name)
             out.append(f"{path}:{line_of(html, m.start())}: element <{name}> is not in the page "
                        f"allowlist. This gate knows how html.parser and a browser parse only the "
@@ -587,7 +616,7 @@ def guard_config(pages):
     return out
 
 
-def simple_enough(path, page, html, shape):
+def simple_enough(path, page, html, shape, elements=PAGE_ELEMENTS):
     """Reasons this page is outside the shape the gate can hash. See the docstring."""
     out = []
     for tag, line in page.self_closing:
@@ -628,7 +657,7 @@ def simple_enough(path, page, html, shape):
     out += unmodelled_contexts(path, outside)
     out += foreign_divergences(path, outside)
     out += malformed_end_tags(path, html)
-    out += unlisted_elements(path, html)
+    out += unlisted_elements(path, html, elements)
     # A literal `style=` the parser never reported is the same blind spot as an unreported element:
     # html.parser swallows <title> content as RCDATA, so an attribute smuggled through <svg><title>
     # was invisible while a browser applies it and CSP-checks it.
@@ -669,6 +698,56 @@ def simple_enough(path, page, html, shape):
                    f"accounts for {expected}; one of them is somewhere the parser did not report an "
                    f"element, such as inside <svg>, <title> or a comment, and a browser may well run it")
     return out
+
+
+def draft_pages(root):
+    """Every `.html` or `.htm` (any case) under site/draft/, as a path relative to root. The walk in
+    inspect_site() has already refused any link, so a plain rglob sees only real entries."""
+    base = root / DRAFT
+    if not base.is_dir():
+        return []
+    return sorted(p.relative_to(root) for p in base.rglob("*")
+                  if p.is_file() and name_suffix(p.name) in (".html", ".htm"))
+
+
+def draft_page_findings(path, html):
+    """Reasons a draft page is outside the draft model. See THE STAGED DRAFT above PAGE_ELEMENTS.
+
+    Each same-origin baseline script, written exactly as DRAFT_SCRIPT, is taken out of the text
+    (its line is kept), and what remains must carry no `<style>` and no `<script>` at all, under
+    every rule simple_enough() applies to a live page and the draft element allowlist.
+    """
+    rest = DRAFT_SCRIPT.sub("", html)
+    page = parse_page(rest)
+    out = simple_enough(path, page, rest, {"style": 0, "script": 0}, DRAFT_ELEMENTS)
+    for tag, line in sorted(set(page.style_attrs)):
+        out.append(f"<{tag}> at {path}:{line} carries a style= attribute, and a draft page carries "
+                   f"no inline style; move the rule into a stylesheet")
+    for tag, name, line in sorted(set(page.on_attrs)):
+        out.append(f"<{tag}> at {path}:{line} carries an on* handler attribute ({name}), and a "
+                   f"draft page carries no inline script; use a same-origin script file")
+    return out
+
+
+def draft_rule_findings(blocks, drafts):
+    """Reasons the `/draft/*` rule is outside the draft model: at most 1 such rule, its only
+    Content-Security-Policy lines a detach and then DRAFT_POLICY exactly, and the rule present
+    whenever site/draft/ holds a page."""
+    rules = [lines for rule, lines in blocks if rule == DRAFT_RULE]
+    if len(rules) > 1:
+        return [f"{HEADERS} has {len(rules)} {DRAFT_RULE} rules, and this gate models 1"]
+    if not rules:
+        return ([f"{HEADERS} has no {DRAFT_RULE} rule, so the {len(drafts)} draft page(s) under "
+                 f"{DRAFT} are served under the live policy, which this gate does not check them "
+                 f"against"] if drafts else [])
+    csp = [line for line in rules[0]
+           if line.lstrip("!").split(":", 1)[0].strip().lower() == CSP]
+    want = ["! Content-Security-Policy", f"Content-Security-Policy: {DRAFT_POLICY}"]
+    if csp != want:
+        return [f"the {DRAFT_RULE} rule in {HEADERS} must detach the live Content-Security-Policy "
+                f"and then set exactly the shared draft policy ({DRAFT_POLICY}), and nothing else "
+                f"about Content-Security-Policy; it has {csp!r}"]
+    return []
 
 
 def all_rule_blocks(headers_text):
@@ -830,7 +909,7 @@ def inspect_site(root, pages):
                             f"device) are outside this gate's site model; a read could block or "
                             f"return anything")
             continue
-        if suffix in (".html", ".htm") and path not in listed:
+        if suffix in (".html", ".htm") and path not in listed and root / DRAFT not in path.parents:
             findings.append(f"{display} is served under the site's /* CSP but is not in "
                             f"this gate's page list; add it with its inline-block shape, or this gate "
                             f"cannot check its inline blocks")
@@ -865,6 +944,12 @@ def main() -> int:
         page = parse_page(html)
         reasons += simple_enough(path, page, html, shape)
         parsed[path] = page
+    drafts = draft_pages(root)
+    for path in drafts:
+        try:
+            reasons += draft_page_findings(path, normalized((root / path).read_bytes()))
+        except Exception as exc:
+            reasons.append(f"could not read {path}: {exc}")
     if reasons:
         for why in reasons:
             print(f"  FAIL  {why}")
@@ -877,6 +962,13 @@ def main() -> int:
         return 1
 
     blocks = all_rule_blocks(headers_text)
+    draft_rule = draft_rule_findings(blocks, drafts)
+    if draft_rule:
+        for why in draft_rule:
+            print(f"  FAIL  {why}")
+        return 1
+    # The 1 modelled /draft/* rule governs the draft pages only; the live model below reads the rest.
+    blocks = [(rule, lines) for rule, lines in blocks if rule != DRAFT_RULE]
     detached = [rule for rule, lines in blocks for line in lines
                 if line.startswith("!") and line[1:].split(":", 1)[0].strip().lower() == CSP]
     if detached:
@@ -1021,6 +1113,8 @@ def main() -> int:
         covered = f"{verified} inline blocks across {len(PAGES)} pages are pinned by hash in the"
     print(f"  ok    {covered} {HEADERS} CSP with no on* handler, and {inspected} SVG document(s) "
           f"under {SITE} carry no <script>, on* handler, javascript: URL or inline style")
+    print(f"  ok    {len(drafts)} draft page(s) under {DRAFT} carry no inline block or on* handler "
+          f"and use only the template's elements, under the {DRAFT_RULE} draft policy")
     return 0
 
 

@@ -241,6 +241,18 @@
         "tools/_verify_sections.py",
         "CHANGELOG.md"
       ]
+    },
+    {
+      "kind": "directory",
+      "target": "site/draft",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt",
+        "site/index.html"
+      ]
     }
   ]
 }
