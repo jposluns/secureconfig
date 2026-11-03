@@ -60,25 +60,39 @@ PART 2, SELF-CONTAINED:
 PART 3, THE PUBLISHED INDEXES (site/llms.txt, site/llms-full.txt, site/robots.txt and
 site/.well-known/security.txt): none of them refers to the /draft/ review page. The rule is
 fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellings:
-  - each line is normalized: percent-decoded repeatedly until stable (at most 8 rounds; a line
-    still changing after 8 is refused), case folded, and every `\\` read as `/`;
+  - the whole file text is normalized: the round { percent-decode; `html.unescape` } repeats until
+    the text stops changing, at most 8 rounds (text still changing in a 9th round is refused);
+    then Unicode NFKC, case folding, and every `\\` read as `/`. The text is normalized piece by
+    piece between its `\\n`s and the pieces joined with `\\n` again, which is the same text, as no
+    step reads across a `\\n`; so a match maps to the original line it starts on;
   - site/llms.txt, site/robots.txt and site/.well-known/security.txt are hand-written indexes that
     never need the word, so any `draft` anywhere in their normalized text is refused;
   - site/llms-full.txt, the generated guide corpus, uses "draft" in prose and in `draft-ietf-...`
-    names, so there a normalized line is refused when it matches `/draft(?![a-z0-9_-])`,
-    `(?<![a-z0-9_-])draft/` or `\\]\\(\\s*(?:\\./)?draft\\s*\\)` (the last read across a line end
-    too, as a Markdown link may break there). So `/draft/`, `./draft/`, `[x](draft)`,
-    `secureconfig.ai/draft/`, `%2Fdraft%2F`, `\\draft\\` and `/draft.html` are refused, while
-    "drafting", "the draft's", "draft-ietf-oauth-v2" and
-    `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2/` are accepted.
-  Each finding names the file and the line.
+    names, so there each match of any of these on the normalized text is refused (each read
+    across a line end too, as a Markdown link may break there):
+      a. `/draft(?![a-z0-9_-])`;
+      b. `(?<![a-z0-9_-])draft/`;
+      c. a Markdown link destination whose first segment is `draft`:
+         `\\]\\(\\s*<?\\s*(?:\\./)*draft(?![a-z0-9_-])`;
+      d. a reference definition:
+         `(?m)^[ \\t]{0,3}\\[[^\\]\\n]+\\]:[ \\t]*<?[ \\t]*(?:\\./)*draft(?![a-z0-9_-])`;
+      e. an HTML attribute value:
+         `\\b(?:href|src|action|formaction|content|url)\\s*=\\s*["']?\\s*(?:\\./)*draft(?![a-z0-9_-])`.
+    So `/draft/`, `./draft/`, `[x](draft)`, `[x](<draft>)`, `[x](draft#top)`, `[x]: draft`,
+    `href="draft"`, `secureconfig.ai/draft/`, `%2Fdraft%2F`, `/&#100;raft/`, `\\draft\\` and
+    `/draft.html` are refused, while "drafting", "the draft's", "draft-ietf-oauth-v2-1" and
+    `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are accepted.
+  Each finding names the file and the line, counting `\\n` only (a U+2028 or a `\\r` ends no line),
+  and the file is read without newline translation.
 
 Exit 0 ok, 1 on a finding, 2 on a read error.
 Usage: python3 -I -B tools/check_draft.py [--root <repository root>]
 """
 import argparse
+import html
 import re
 import sys
+import unicodedata
 from bisect import bisect_right
 from html.parser import HTMLParser
 from pathlib import Path
@@ -109,7 +123,14 @@ NOTFOUND = "404.html"
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
 CORPUS_INDEX = "llms-full.txt"
 DRAFT_WORD = re.compile(r"draft")
-DRAFT_REF = re.compile(r"/draft(?![a-z0-9_-])|(?<![a-z0-9_-])draft/|\]\(\s*(?:\./)?draft\s*\)")
+# The corpus forms a to e of the docstring, each matched on its own.
+DRAFT_REFS = (
+    re.compile(r"/draft(?![a-z0-9_-])"),
+    re.compile(r"(?<![a-z0-9_-])draft/"),
+    re.compile(r"\]\(\s*<?\s*(?:\./)*draft(?![a-z0-9_-])"),
+    re.compile(r"(?m)^[ \t]{0,3}\[[^\]\n]+\]:[ \t]*<?[ \t]*(?:\./)*draft(?![a-z0-9_-])"),
+    re.compile(r"""\b(?:href|src|action|formaction|content|url)\s*=\s*["']?\s*(?:\./)*draft(?![a-z0-9_-])"""),
+)
 DECODE_ROUNDS = 8
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
 # must not carry at all.
@@ -231,14 +252,15 @@ def resolves(root, path):
     return target is not None and target.is_file()
 
 
-def normalized(line):
-    """A published-index line (PART 3) percent-decoded until stable, case folded and with `\\`
-    read as `/`, or None when it still changes after DECODE_ROUNDS rounds."""
+def normalized(text):
+    """Published-index text (PART 3) put through { percent-decode; html.unescape } until stable,
+    then NFKC, case folded and with `\\` read as `/`, or None when it still changes in round
+    DECODE_ROUNDS + 1."""
     for _ in range(DECODE_ROUNDS + 1):
-        decoded = unquote(line)
-        if decoded == line:
-            return line.casefold().replace("\\", "/")
-        line = decoded
+        decoded = html.unescape(unquote(text))
+        if decoded == text:
+            return unicodedata.normalize("NFKC", text).casefold().replace("\\", "/")
+        text = decoded
     return None
 
 
@@ -246,30 +268,34 @@ def index_findings(name, text):
     """The PART 3 findings for 1 published index under site/, each naming the file and line."""
     findings = []
     norm, starts, at = [], [], 0
-    for n, line in enumerate(text.splitlines(), 1):
+    # Lines end at `\n` only. No normalization step reads across a `\n`, so normalizing each piece
+    # and joining them with `\n` gives the whole text's normalization, with each piece's start.
+    for n, line in enumerate(text.split("\n"), 1):
         line = normalized(line)
         if line is None:
             findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses a line still "
-                            f"percent-encoded after {DECODE_ROUNDS} decoding rounds; the /draft/ "
-                            f"review page stays out of every published index")
+                            f"changing after {DECODE_ROUNDS} rounds of percent-decoding and "
+                            f"character-reference decoding; the /draft/ review page stays out of "
+                            f"every published index")
             line = ""
         starts.append(at)
         norm.append(line)
         at += len(line) + 1
     # Matched on the joined text, so a Markdown link broken across a line end is still read; a
-    # match is reported on the line it starts on.
+    # match is reported on the original line it starts on.
     joined = "\n".join(norm)
     if name in STRICT_INDEXES:
-        pattern, why = DRAFT_WORD, "this hand-written index never carries the word draft"
+        patterns, why = (DRAFT_WORD,), "this hand-written index never carries the word draft"
     else:
-        pattern, why = DRAFT_REF, "a reference to the draft path"
+        patterns, why = DRAFT_REFS, "a reference to the draft path"
+    matches = sorted((m.start(), m.end()) for p in patterns for m in p.finditer(joined))
     seen = set()
-    for m in pattern.finditer(joined):
-        n = bisect_right(starts, m.start())
+    for start, end in matches:
+        n = bisect_right(starts, start)
         if n in seen:
             continue
         seen.add(n)
-        excerpt = joined[max(0, m.start() - 20):m.end() + 20]
+        excerpt = joined[max(0, start - 20):end + 20]
         findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses {excerpt!r} ({why}); "
                         f"the /draft/ review page stays out of every published index")
     return findings
@@ -387,7 +413,7 @@ def check(root):
     for name in (*STRICT_INDEXES, CORPUS_INDEX):
         path = root / SITE / name
         if path.is_file():
-            findings.extend(index_findings(name, path.read_text(encoding="utf-8")))
+            findings.extend(index_findings(name, path.read_bytes().decode("utf-8")))
     assets = (root / SITE / "assets").resolve()
     css_files = sorted(p for p in (root / SITE).rglob("*") if p.is_file() and name_suffix(p.name) == ".css")
     for css in css_files:

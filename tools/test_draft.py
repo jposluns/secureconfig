@@ -18,12 +18,16 @@ under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable 
 review page, none on the 404); the "no page links /draft/" and Disclosure and Licence rules compare
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
 percent-encoded letter or a fragment does not get past them; and the published indexes are read
-by a fail-closed rule after percent-decoding, case folding and `\\` read as `/`: site/llms.txt,
-site/robots.txt and site/.well-known/security.txt are refused for any `draft` (relative, Disallow,
-bold, host-only, www, href=, backslash, 1-slash and .html spellings among the cases), and
-site/llms-full.txt for each form of the draft path, while its prose ("drafting", "the draft's",
-"draft-ietf-oauth-v2" and a datatracker draft URL) is accepted. Each refusal names the file and
-line.
+by a fail-closed rule after percent-decoding and character-reference decoding (at most 8 rounds),
+NFKC, case folding and `\\` read as `/`: site/llms.txt, site/robots.txt and
+site/.well-known/security.txt are refused for any `draft` (relative, Disallow, bold, host-only,
+www, href=, backslash, 1-slash, .html and character-reference spellings among the cases), and
+site/llms-full.txt for each form of the draft path (character references, bare Markdown link
+destinations, reference definitions, HTML attribute values, a link broken across a line end, and
+1 case for each form only it catches), while its prose ("drafting", "the draft's",
+"draft-ietf-oauth-v2-1" and a datatracker draft URL) is accepted. A 9-times percent-encoded path
+exceeds the round limit and is refused. Each refusal names the file and line, counted by `\\n`
+only (a U+2028 ends no line).
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -100,12 +104,24 @@ def guides_link(value):
     return edit(GUIDES, '<a href="/for-ai/">', f'<a href="{value}">x</a><a href="/for-ai/">')
 
 
+def prepend(rel, text):
+    """text added at the start of an existing file."""
+    def mutate(d):
+        path = d / rel
+        if not path.is_file():
+            raise AssertionError(f"mutation target {rel} does not exist")
+        path.write_text(text + path.read_text(encoding="utf-8"), encoding="utf-8")
+    return mutate
+
+
 def refused_at(rel):
-    """The start of the gate's PART 3 finding for a line appended to rel: its file and line."""
-    text = (ROOT / rel).read_text(encoding="utf-8")
+    """The start of the gate's PART 3 finding for a line appended to rel: its file and line, with
+    lines counted by `\\n` only, as the gate counts them."""
+    text = (ROOT / rel).read_bytes().decode("utf-8")
     if not text.endswith("\n"):
         raise AssertionError(f"{rel} does not end with a newline, so an appended line joins its last")
-    return f"{rel}:{len(text.splitlines()) + 1}: the published-index rule refuses"
+    n = text.count("\n") + 1
+    return f"{rel}:{n}: the published-index rule refuses"
 
 
 # Each spelling of the /draft/ path planted in each published index (PART 3 of the gate).
@@ -129,6 +145,8 @@ REFUSED_LINES = {
         "- The next version: https:/secureconfig.ai/draft/\n",
         "- [Review](/draft.html): the next version\n",
         "- Draft review: the next version\n",
+        "- [Review](/&#100;raft/): the next version\n",
+        "- The next version: dr&#97;ft/\n",
     ),
     "site/robots.txt": ("Disallow: draft/\n", "Disallow:/draft/\n", "Disallow: \\draft\\\n"),
     "site/.well-known/security.txt": ("Policy: https://secureconfig.ai/draft/\n",),
@@ -138,18 +156,49 @@ REFUSED_LINES = {
         "The next version is staged at secureconfig.ai/draft/ for review.\n",
         "The next version is staged at %2Fdraft%2F for review.\n",
         "The next version is staged at /draft.html for review.\n",
+        "The next version is staged [Review](/&#100;raft/) for review.\n",
+        "The next version is staged at dr&#97;ft/ for review.\n",
+        "The next version is staged [Review](draft \"Draft review\") for review.\n",
+        "The next version is staged [Review](<draft>) for review.\n",
+        "The next version is staged [Review](draft#top) for review.\n",
+        "The next version is staged [Review](draft?review=1) for review.\n",
+        "The next version is staged [Review](draft.html) for review.\n",
+        "The next version is staged [x](\ndraft) for review.\n",
+        "The next version is staged at \\draft\\ for review.\n",
+        # 8 times percent-encoded: decoded within the round limit, then refused by its form.
+        "The next version is staged at %" + "25" * 7 + "2Fdraft%" + "25" * 7 + "2F for review.\n",
     ),
 }
+# The llms-full.txt cases that only 1 corpus form catches (DRAFT_REFS a to e in the gate), each
+# with that form's letter; main() asserts that no other form matches.
+SINGLE_FORM = (
+    ("The next version: see draft/notes for review.\n", "b"),
+    ("[review]: draft\n", "d"),
+    ('The next version is staged <a href="draft">here</a>.\n', "e"),
+)
+REFUSED_LINES["site/llms-full.txt"] += tuple(line for line, _ in SINGLE_FORM)
 INDEX_CASES = [(f"{rel[5:]} naming {spelling}", append(rel, line.format(spelling)),
                 refused_at(rel), 1)
                for rel, line in INDEX_LINES.items() for spelling in DRAFT_SPELLINGS]
 INDEX_CASES += [(f"{rel[5:]} carrying {line.strip()!r}", append(rel, line), refused_at(rel), 1)
                 for rel, lines in REFUSED_LINES.items() for line in lines]
+# 9 times percent-encoded: still changing after the 8-round limit, so refused as such.
+NINE = "%" + "25" * 8 + "2F"
+INDEX_CASES += [("llms-full.txt carrying /draft/ percent-encoded 9 times",
+                 append("site/llms-full.txt", f"The next version is staged at {NINE}draft{NINE}.\n"),
+                 refused_at("site/llms-full.txt") + " a line still changing after 8 rounds", 1)]
+# A U+2028 before the reference on line 1 ends no line, so the finding names line 1.
+INDEX_CASES += [("llms-full.txt line 1 carrying a U+2028 before /draft/",
+                 prepend("site/llms-full.txt",
+                         "Staged:\N{LINE SEPARATOR}the next version is at /draft/.\n"),
+                 "site/llms-full.txt:1: the published-index rule refuses", 1)]
 # Guide-corpus prose and draft-ietf names that the llms-full.txt rule accepts.
 CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
                 "Read the draft's scope before the policy.\n",
-                "OAuth 2.1 is still draft-ietf-oauth-v2.\n",
-                "OAuth 2.1: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2/\n")
+                "OAuth 2.1 is still draft-ietf-oauth-v2-1.\n",
+                "OAuth 2.1: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2/\n",
+                "[draft-ietf-oauth-v2-1]: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/\n",
+                "[Drafting notes](/guides/)\n")
 INDEX_CASES += [(f"llms-full.txt prose {line.strip()!r}", append("site/llms-full.txt", line),
                  OK_LINE, 0) for line in CORPUS_PROSE]
 
@@ -337,6 +386,13 @@ def main():
             failures.append(f"{desc}: expected the output to contain {expected!r}: {out!r}")
         if "Traceback (most recent call last):" in out:
             failures.append(f"{desc}: the gate crashed: {out!r}")
+    # Each SINGLE_FORM line is caught by its own corpus form and by no other.
+    sys.path.insert(0, str(TOOLS))
+    from check_draft import DRAFT_REFS, normalized
+    for line, form in SINGLE_FORM:
+        forms = "".join(f for f, p in zip("abcde", DRAFT_REFS) if p.search(normalized(line)))
+        if forms != form:
+            failures.append(f"{line.strip()!r}: expected only form {form} to match, got {forms!r}")
     # Source to generated page: a Unicode host written in content.json is generated, passes the
     # build's own --check, and is refused by this gate.
     (b, bout), (c, cout), (g, gout) = generated(
