@@ -6,8 +6,9 @@ site/_headers text eol=lf
 # checkout would fail it on every entry. Keep the baseline LF in the index and in every checkout.
 tools/claim_length_baseline.txt text eol=lf
 
-# The copied site template files are pinned by SHA-256 in .baseline/pin.toml, so no checkout may
-# rewrite their bytes; the generated pages are compared byte for byte by
-# scripts/build-site.py --check, so they stay LF.
+# The copied site template files, and the build tools copied to .baseline/, are pinned by SHA-256
+# in .baseline/pin.toml, so no checkout may rewrite their bytes; the generated pages are compared
+# byte for byte by scripts/build-site.py --check, so they stay LF.
 site/assets/baseline/** -text
+.baseline/** -text
 site/**/*.html text eol=lf

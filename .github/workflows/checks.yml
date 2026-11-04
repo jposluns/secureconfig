@@ -64,12 +64,15 @@ concurrency:
 jobs:
   # The gate suite this job runs is offline: no gate in tools/run_all_checks.sh reaches the
   # network. This job is not. Before the suite starts, the runner fetches the repository and the
-  # two pinned actions below, setup-python installs Python 3.14, and the shellcheck step
-  # downloads a release asset, so an outage at GitHub or in any of those downloads can fail this
-  # required check with no change in the repository. That is the tradeoff accepted for these pins:
-  # the actions are pinned by commit SHA, shellcheck by version and SHA-256, and Python to an exact
-  # release that is asserted before the suite (setup-python installs its own build of it, whose
-  # bytes are not checked here; the runner image is not fixed), and a failure here is loud.
+  # two pinned actions below, setup-python installs Python 3.14, the shellcheck step downloads a
+  # release asset, and the playwright step downloads playwright from the npm registry, Chromium
+  # from Playwright's download hosts and Chromium's system libraries with apt, so an outage at
+  # GitHub or in any of those downloads can fail this required check with no change in the
+  # repository. That is the tradeoff accepted for these pins: the actions are pinned by commit SHA,
+  # shellcheck by version and SHA-256, playwright by version and npm integrity hash, and Python to
+  # an exact release that is asserted before the suite (setup-python installs its own build of it,
+  # whose bytes are not checked here; the runner image is not fixed), and a failure here is loud.
+  # Chromium's download is not checked against a digest (see the playwright step).
   gates:
     # Skipped on a draft pull request only; see the note above `on:`.
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
@@ -165,6 +168,54 @@ jobs:
           python3 -m pip install --require-hashes --only-binary :all: -r tools/requirements-gates.txt
       - name: Assert markdown-it-py 4.2.0 and the locked runtime closure
         run: python3 -I -B tools/check_verify_marking.py --assert-parser
+      # The overflow gate runs .baseline/check_overflow.js, which needs node and playwright with its
+      # Chromium. No action pins Node here, because no setup-node commit SHA had been read from a
+      # source this change could cite, so the gate runs on the runner image's own node, which
+      # floats with the image; this step asserts it is 20 or later, as playwright 1.64.1's
+      # package.json requires ("engines": {"node": ">=20"}).
+      - name: Assert the runner's node can run playwright 1.64.1
+        run: |
+          set -euo pipefail
+          if ! got="$(node --version 2>&1)"; then
+            echo "::error::node --version failed: '$got'"
+            exit 1
+          fi
+          major="${got#v}"
+          major="${major%%.*}"
+          case "$major" in
+            ''|*[!0-9]*)
+              echo "::error::node reports '$got', which is not vMAJOR.MINOR.PATCH"
+              exit 1
+              ;;
+          esac
+          if [ "$major" -lt 20 ]; then
+            echo "::error::node reports '$got'; playwright 1.64.1 needs node 20 or later"
+            exit 1
+          fi
+          echo "node $got at $(command -v node), npm $(npm --version)"
+      # tools/overflow/package-lock.json pins playwright 1.64.1 and playwright-core 1.64.1 by npm
+      # integrity hash, and `npm ci` refuses a tarball that does not match it; --ignore-scripts runs
+      # no install script. Both are installed in a copy under the runner's temporary folder, so no
+      # node_modules lands in the checkout, where the secrets scan reads every file. Chromium comes
+      # from `playwright install`, whose download playwright-core 1.64.1 checks only for an HTTP
+      # 200 and, when the response is not chunked, a byte count equal to its Content-Length, not
+      # against any digest; --with-deps also installs Chromium's system libraries with apt.
+      - name: Install the pinned playwright and its Chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/overflow/browsers
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/overflow"
+          mkdir -p "$dir"
+          cp tools/overflow/package.json tools/overflow/package-lock.json "$dir/"
+          cd "$dir"
+          npm ci --ignore-scripts
+          got="$(node -p 'require("./node_modules/playwright/package.json").version')"
+          if [ "$got" != 1.64.1 ]; then
+            echo "::error::npm ci installed playwright '$got', not 1.64.1"
+            exit 1
+          fi
+          npx playwright install --with-deps chromium
       # On a pull request, only the sections its changes affect run: the paths changed since the
       # base commit, a rename listed as both of its paths, go to tools/select_gates.py, which names
       # the sections, and both lists are printed; only the five root project records and the
@@ -175,10 +226,15 @@ jobs:
       # --sections adds llms-full and plugin to a list that names generated-committed. If the
       # changed paths cannot be listed, every section runs. The weekly schedule and a manual run
       # run the whole suite with no argument, which is the only run that ends with "All gates
-      # passed.".
+      # passed.". NODE_PATH and PLAYWRIGHT_BROWSERS_PATH point the overflow gate at the playwright
+      # installed above, and SECURECONFIG_REQUIRE_OVERFLOW=1 makes a missing node or playwright a
+      # failure there rather than the SKIP a local run prints.
       - name: Run the gate suite
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          NODE_PATH: ${{ runner.temp }}/overflow/node_modules
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/overflow/browsers
+          SECURECONFIG_REQUIRE_OVERFLOW: "1"
         run: |
           set -euo pipefail
           if [ "$GITHUB_EVENT_NAME" != pull_request ]; then

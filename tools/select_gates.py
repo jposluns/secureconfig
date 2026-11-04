@@ -70,9 +70,9 @@ ANY_PATH = ("secrets", "local-links", "llms-full-links")
 MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "prose-conventions",
             "shell-blocks", "bracket-ranges", "pinned-citations", "placeholders", "aiqt-baseline")
 # The generated site and what checks or builds it, site/llms.txt and site/llms-full.txt included.
-SITE = ("copy-buttons", "baseline-pin", "palette", "site-build", "site-draft", "pages-build",
-        "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories", "llms-full",
-        "generated-committed", "prose-conventions", "aiqt-baseline")
+SITE = ("copy-buttons", "baseline-pin", "palette", "overflow", "site-build", "site-draft",
+        "pages-build", "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories",
+        "llms-full", "generated-committed", "prose-conventions", "aiqt-baseline")
 # The only name endings, in any case, that make a file under site/ or site-src/ content.
 SITE_CONTENT = (".html", ".css", ".json", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".ico",
                 ".woff2", ".txt", ".xml")
