@@ -84,13 +84,15 @@ faces the internet, so an invented flag or a stale default is a security defect,
 names the suite's sections from the paths changed since the base commit. Only content is scoped,
 through an allowlist that fails closed. A file under `site/` or `site-src/` whose name ends, in
 any case, in `.html`, `.css`, `.json`, `.svg`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.ico`,
-`.woff2`, `.txt` or `.xml` and is not `_headers` or `_redirects`, and the root project records
-`CHANGELOG.md`, `TODO.md`, `DONE.md`, `DECISIONS.md` and `PENDING-DECISIONS.md`, run their mapped
-sections. A `CHANGELOG.md` change also selects `version-basis`, `llms-full`, `plugin` and
-`generated-committed`, and any selection containing `generated-committed` also contains
-`llms-full` and `plugin`. Every other file under `site/` or `site-src/` (`_headers`, which holds
-the CSP, `_redirects`, scripts, Markdown, YAML such as `action.yml`, unknown types and files
-without a suffix) runs the whole suite. So does any other changed path: every guide,
+`.woff2`, `.txt` or `.xml` and is not `_headers`, `_redirects` or a requirements file, and the
+root project records `CHANGELOG.md`, `TODO.md`, `DONE.md`, `DECISIONS.md` and
+`PENDING-DECISIONS.md`, run their mapped sections. A `CHANGELOG.md` change also selects
+`version-basis`, `llms-full`, `plugin` and `generated-committed`, and
+`tools/run_all_checks.sh --sections` adds `llms-full` and `plugin` to any list that names
+`generated-committed`, as its `# depends:` line says. Every other file under `site/` or
+`site-src/` (`_headers`, which holds the CSP, `_redirects`, requirements files, scripts,
+Markdown, YAML such as `action.yml`, unknown types and files without a suffix) runs the whole
+suite. So does any other changed path: every guide,
 `README.md`, `controls-reference.md`, `plugin/`, every file under `tools/`, `scripts/`,
 `.baseline/`, `.aiqt/` and `.github/`, any requirements file, `CLAUDE.md`, `AGENTS.md`,
 `CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`, `LICENSE`, `VERSION` and any path the map does not

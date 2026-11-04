@@ -61,6 +61,9 @@ what the output holds and lacks, and the stand-in's calls:
     line, never "All gates passed.";
   - two names given out of order run in the file's order;
   - a selected gate that fails exits 1 with "One or more gates failed.";
+  - generated-committed alone also runs llms-full and plugin, which its `# depends:` line names,
+    says it added them, and runs both bundle builds (stand-ins that record their call) before
+    its own calls; with plugin named, only llms-full is added; llms-full alone adds nothing;
   - an unknown name, alone, beside a known one or in another letter case, an empty name (a
     trailing comma or an empty list), a missing list, a misspelled option and an extra argument
     are each refused with status 2 before any heading prints or the stand-in is called;
@@ -210,11 +213,24 @@ if [ "$*" = "$STANDIN_FAIL" ]; then
 fi
 printf '  ok    gate parser preflight: stand-in\\n'
 """
+# The stand-in bundle builds, which record their call in the same log and change nothing, so the
+# llms-full and plugin sections pass on the stand-in tree's files.
+BUILD_STANDINS = {"build-llms-full.sh": "printf 'build-llms-full.sh\\n' >> \"$STANDIN_LOG\"\n",
+                  "build-plugin.sh": "printf 'build-plugin.sh\\n' >> \"$STANDIN_LOG\"\n"}
 WALKER = "== shared walker scans tracked files only =="
 SECRETS_TESTS = "== secrets scan fails closed on read errors =="
+LLMS_FULL = "== llms-full.txt is current =="
+PLUGIN = "== the plugin bundle is current =="
+GENERATED = "== the committed generated files match a fresh build of the commit =="
+LLMS_LINKS = "== llms-full.txt links are absolute"
 PREFLIGHT_CALL = "-I -B tools/check_parser_pin.py"
 WALKER_CALL = "-B tools/test_walk.py"
 SECRETS_CALL = "-I -B tools/test_secrets_scan.py"
+# generated-committed's self-test and gate, after the two builds its clean-tree skip relies on.
+GENERATED_CALLS = ["build-llms-full.sh", "build-plugin.sh",
+                   "-I -B tools/test_generated_committed.py",
+                   "-I -B tools/check_generated_committed.py"]
+ADDED = "Sections added: "
 USAGE = "usage: tools/run_all_checks.sh [--sections NAME[,NAME...]]"
 REFUSED = "which is not a section of tools/run_all_checks.sh; no gate ran"
 CHARACTER = "which holds a character other than a letter, a digit or a hyphen; no gate ran"
@@ -229,6 +245,18 @@ SECTIONS_CASES = (
      ["All gates passed.", "  FAIL  "], [PREFLIGHT_CALL, WALKER_CALL, SECRETS_CALL], ""),
     (["--sections", "walker"], 1, [WALKER, "  FAIL  test_walk.py failed", "One or more gates failed."],
      ["All selected gates passed"], [PREFLIGHT_CALL, WALKER_CALL], WALKER_CALL),
+    # generated-committed's `# depends:` line adds llms-full and plugin, in the file's order.
+    (["--sections", "generated-committed"], 0,
+     [f"{ADDED}llms-full,plugin, which a named section depends on", LLMS_FULL, PLUGIN, GENERATED,
+      "All selected gates passed (generated-committed,llms-full,plugin); the other sections "
+      "did not run."],
+     ["All gates passed.", "  FAIL  ", LLMS_LINKS], [PREFLIGHT_CALL, *GENERATED_CALLS], ""),
+    (["--sections", "plugin,generated-committed"], 0,
+     [f"{ADDED}llms-full, which", LLMS_FULL, PLUGIN, GENERATED,
+      "All selected gates passed (plugin,generated-committed,llms-full)"],
+     ["All gates passed.", "  FAIL  ", LLMS_LINKS], [PREFLIGHT_CALL, *GENERATED_CALLS], ""),
+    (["--sections", "llms-full"], 0, [LLMS_FULL, "All selected gates passed (llms-full)"],
+     [ADDED, PLUGIN, GENERATED, "  FAIL  "], [PREFLIGHT_CALL, "build-llms-full.sh"], ""),
     (["--sections", "no-such-section"], 2, [f"  FAIL  --sections names 'no-such-section', {REFUSED}"],
      ["== "], [], ""),
     (["--sections", "walker,no-such-section"], 2, [f"names 'no-such-section', {REFUSED}"],
@@ -265,9 +293,13 @@ def sections_failures():
                         f"section, found {len(end)}")
     d = Path(tempfile.mkdtemp())
     try:
-        (d / "tools").mkdir()
-        (d / "bin").mkdir()
+        for sub in ("tools", "bin", "scripts", "site", "plugin"):
+            (d / sub).mkdir()
         (d / "tools" / "run_all_checks.sh").write_text(text, encoding="utf-8")
+        for name, body in BUILD_STANDINS.items():
+            (d / "scripts" / name).write_text(body, encoding="utf-8")
+        (d / "site" / "llms-full.txt").write_text("bundle\n", encoding="utf-8")
+        (d / "plugin" / "plugin.json").write_text("{}\n", encoding="utf-8")
         standin = d / "bin" / "python3"
         standin.write_text(SECTIONS_STANDIN, encoding="utf-8")
         standin.chmod(0o755)
@@ -482,7 +514,8 @@ def main():
           f"by the exit code only: 0 passes, 1, 2, any other code and a crash fail, and an "
           f"exit 1 with a traceback line is reported as a crash), and "
           f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
-          f"after the preflight, in the file's order; an unknown or empty name, or one holding "
+          f"and those they depend on after the preflight, in the file's order; an unknown or "
+          f"empty name, or one holding "
           f"anything but letters, digits and hyphens, refused before any gate)")
     return 0
 

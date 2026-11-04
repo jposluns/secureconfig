@@ -9,6 +9,14 @@ against real history, real `git archive` output and a real `git worktree`, not a
 The stub suite stands in for the gate suite and prints its pass line, a FAIL, a SKIP or
 nothing, as each case needs.
 
+The target's workflow trigger is read in each form of the `on` key the check accepts (a quoted
+key, a block mapping or sequence, a one-line flow sequence or mapping, one name, CRLF line
+endings), with and without workflow_dispatch, and each body is the one for its trigger. A
+missing workflow, one that is not UTF-8, and each layout it cannot read with confidence (no `on`
+key, two, a flow collection over two lines, an alias, an anchor, a merge key, a tab, a trigger
+indented less than the first, sequence items beside mapping keys, a sequence at the key's own
+indent) cannot be checked: exit 2, naming the file, and no release directory.
+
 A release is built with --build and then checked, as the procedure does. Each refusal has a
 passing twin that differs only in its defect: the two clean releases below, a first one and a
 later one, are the twins, and each finding case changes one thing about them. Every case runs
@@ -78,6 +86,66 @@ PUSH_BODY = ("has no `workflow_dispatch` trigger, so before the release was cut 
              "to `main` started")
 CONFIRMED = ("succeeded on exactly the target commit. These are the publisher's confirmations; "
              "the offline release check records the id and does not verify them.")
+UNREAD = "  FAIL  cannot check the release candidate: .github/workflows/checks.yml"
+
+
+def workflow(on):
+    """A workflow with this `on` key, before a job named like the trigger, which is not one."""
+    return f"name: Checks\n{on}\npermissions:\n  contents: read\njobs:\n  workflow_dispatch:\n"
+
+
+# (case, the target's workflow, the body it gets): each form of the `on` key the check reads,
+# with workflow_dispatch and without it.
+TRIGGER_FORMS = (
+    ("a quoted \"on\" key over a block mapping",
+     workflow('"on":\n  pull_request:\n  workflow_dispatch:\n'), DISPATCH_BODY),
+    ("a single-quoted 'on' key over a block mapping",
+     workflow("'on':\n  push:\n    branches: [main]\n  workflow_dispatch: {}\n"), DISPATCH_BODY),
+    ("a quoted workflow_dispatch key", workflow('on:\n  "workflow_dispatch":\n  push:\n'),
+     DISPATCH_BODY),
+    ("a block sequence", workflow("on:\n  - push\n  - workflow_dispatch  # by hand\n"),
+     DISPATCH_BODY),
+    ("a flow sequence", workflow("on: [push, workflow_dispatch]\n"), DISPATCH_BODY),
+    ("a flow sequence of quoted names under a quoted key, with a comment",
+     workflow("\"on\": [\"push\", 'workflow_dispatch']  # triggers\n"), DISPATCH_BODY),
+    ("a flow mapping", workflow("on: {push: {branches: [main]}, workflow_dispatch: {}}\n"),
+     DISPATCH_BODY),
+    ("a flow mapping written as JSON",
+     workflow('"on": {"pull_request": {"types": ["opened"]}, "workflow_dispatch": {}}\n'),
+     DISPATCH_BODY),
+    ("one name", workflow("on: workflow_dispatch\n"), DISPATCH_BODY),
+    ("CRLF line endings", DISPATCH_WORKFLOW.replace("\n", "\r\n"), DISPATCH_BODY),
+    ("a flow sequence without it", workflow("on: [push, pull_request]\n"), PUSH_BODY),
+    ("a quoted key over a flow mapping without it", workflow('"on": {push: {branches: [main]}}\n'),
+     PUSH_BODY),
+    ("a block sequence without it", workflow("on:\n  - push\n  - pull_request\n"), PUSH_BODY),
+)
+# (case, the target's workflow or None for none, a text the refusal holds): each layout the check
+# cannot read with confidence, which it refuses rather than taking for a missing trigger.
+TRIGGER_REFUSALS = (
+    ("a target without the workflow", None, "is missing at the target"),
+    ("a workflow that is not UTF-8", b"name: Checks\non:\n  workflow_dispatch:\n# \xff\n",
+     "codec can't decode"),
+    ("a workflow with no `on` key", "name: Checks\njobs:\n  gates:\n",
+     "0 top-level `on` keys"),
+    ("a workflow written as one flow mapping",
+     '{"name": "Checks", "on": ["workflow_dispatch"]}\n', "0 top-level `on` keys"),
+    ("two `on` keys", workflow("on: [push]\n'on':\n  workflow_dispatch:\n"),
+     "2 top-level `on` keys"),
+    ("a flow sequence over two lines", workflow("on: [push,\n  workflow_dispatch]\n"),
+     "does not close on its line"),
+    ("an alias", workflow("on: *triggers\n"), "is not a trigger name"),
+    ("an anchor", workflow("on: &triggers\n  workflow_dispatch:\n"), "is not a trigger name"),
+    ("a merge key", workflow("on:\n  <<: *base\n  push:\n"), "is not a trigger name"),
+    ("a trigger indented with a tab", workflow("on:\n\tworkflow_dispatch:\n"),
+     "indented with a tab"),
+    ("a trigger indented less than the first", workflow("on:\n    push:\n  workflow_dispatch:\n"),
+     "indented less than the first trigger"),
+    ("sequence items beside mapping keys", workflow("on:\n  - push\n  workflow_dispatch:\n"),
+     "mixes sequence items and mapping keys"),
+    ("a sequence at the key's own indent", workflow("on:\n- workflow_dispatch\n"),
+     "has nothing under it"),
+)
 
 # (pull request, UTC committer time, the date heading its entry sits under). #12 and #13 share
 # 2026-10-03, so #13 is the last merge of that day and #12 is not.
@@ -132,7 +200,11 @@ def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plu
     root.mkdir(parents=True)
     git(root, "init", "-q")
     write(root, "tools/run_all_checks.sh", suite)
-    write(root, ".github/workflows/checks.yml", workflow)
+    if isinstance(workflow, bytes):
+        (root / ".github" / "workflows").mkdir(parents=True)
+        (root / ".github" / "workflows" / "checks.yml").write_bytes(workflow)
+    elif workflow is not None:
+        write(root, ".github/workflows/checks.yml", workflow)
     write(root, "VERSION", "1.0.9\n")
     write(root, "plugin/plugin.json", '{\n  "name": "fixture",\n  "version": "1.0.9"\n}\n')
     write(root, "plugin/SKILL.md", "fixture skill\n")
@@ -426,6 +498,25 @@ def cases(tmp):
     body = (older / "body.md").read_text(encoding="utf-8")
     expect("its body states the push run on main as the publisher's confirmation",
            (0, body), 0, PUSH_BODY, CONFIRMED, absent=("release-check/", "event is"))
+
+    # How the trigger is read: each form of the `on` key, built with --build, gets the body for
+    # its trigger, and each layout the check cannot read is refused before anything is written.
+    for name, text, wanted in TRIGGER_FORMS:
+        repo = tmp / f"trigger{COUNT[0]}"
+        c = build(repo, workflow=text)
+        out = tmp / f"trigger-out{COUNT[0]}"
+        code, said = gate(repo, c[11], "v1.0.11", None, out, "--build")
+        body = (out / "body.md").read_text(encoding="utf-8") if code == 0 else ""
+        other = PUSH_BODY if wanted == DISPATCH_BODY else DISPATCH_BODY
+        expect(f"{name} gets the body for its trigger", (code, said + body), 0, OK, wanted,
+               absent=(other, "FAIL"))
+    for name, text, needle in TRIGGER_REFUSALS:
+        repo = tmp / f"unread{COUNT[0]}"
+        c = build(repo, workflow=text)
+        out = tmp / f"unread-out{COUNT[0]}"
+        code, said = gate(repo, c[11], "v1.0.11", None, out, "--build")
+        expect(f"{name} cannot be checked", (code, said + ("" if out.exists() else "no dir")), 2,
+               UNREAD, needle, "no dir", absent=(OK,))
 
     # A shallow clone cannot show the history, so it fails closed rather than passing.
     shallow = tmp / "shallow"

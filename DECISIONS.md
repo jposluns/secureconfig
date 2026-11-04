@@ -28,12 +28,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   fourth ruling reads it as "Code is not content." Its effect (applied by #1194): on a pull request,
   `tools/select_gates.py` scopes only content, through an allowlist that fails closed. Scoped are a file under `site/` or `site-src/`
   whose name ends, in any case, in `.html`, `.css`, `.json`, `.svg`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.ico`,
-  `.woff2`, `.txt` or `.xml` and is not `_headers` or `_redirects`, and the root project records `CHANGELOG.md`,
-  `TODO.md`, `DONE.md`, `DECISIONS.md` and `PENDING-DECISIONS.md`, which run the
-  sections of `tools/run_all_checks.sh` that read them. A `CHANGELOG.md` change also selects `version-basis`, `llms-full`, `plugin` and `generated-committed`,
-  and any selection containing `generated-committed` also contains `llms-full` and `plugin`. Every other file under
-  `site/` or `site-src/` (`_headers`, which holds the CSP, `_redirects`, scripts, Markdown, YAML such as
-  `action.yml`, unknown types and files without a suffix) runs every section. So does any other changed path, a guide, `README.md`,
+  `.woff2`, `.txt` or `.xml` and is not `_headers`, `_redirects` or a requirements file. So are the root project records
+  `CHANGELOG.md`, `TODO.md`, `DONE.md`, `DECISIONS.md` and `PENDING-DECISIONS.md`; each scoped path runs the
+  sections of `tools/run_all_checks.sh` that read it. A `CHANGELOG.md` change also selects `version-basis`, `llms-full`, `plugin` and `generated-committed`,
+  and `tools/run_all_checks.sh --sections` adds `llms-full` and `plugin` to any list that names `generated-committed`,
+  as its `# depends:` line says. Every other file under `site/` or `site-src/` (`_headers`, which holds the CSP,
+  `_redirects`, requirements files, scripts, Markdown, YAML such as `action.yml`, unknown types and files without a
+  suffix) runs every section. So does any other changed path, a guide, `README.md`,
   `controls-reference.md`, `plugin/`, a file under `tools/`, `scripts/`, `.baseline/`, `.aiqt/` or `.github/`, a
   requirements file or an unmapped path. `.github/workflows/checks.yml` no longer
   runs on a push to `main`; the whole suite runs weekly and on demand (`workflow_dispatch`). A release now requires

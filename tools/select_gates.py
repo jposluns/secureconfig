@@ -35,9 +35,12 @@ CHANGELOG.md also feeds version-basis, llms-full, plugin and generated-committed
 tools/version_basis.py reads its newest dated heading, and both bundle builds run that check and
 list it as an input.
 
-DEPENDS: generated-committed skips its own rebuild on a clean tree because the llms-full and
+DEPENDS: a section that relies on others has a `# depends: NAME: NEED...` line in the suite, the
+one place the table is written; the suite's --sections reads the same lines and adds the needs
+itself. generated-committed skips its own rebuild on a clean tree because the llms-full and
 plugin sections before it already rebuilt HEAD, so a selection that holds generated-committed
-also holds llms-full and plugin.
+also holds llms-full and plugin. A `# depends:` line in any other shape stops the selection
+with exit 2, like an unreadable suite.
 
 FAIL SAFE: every section runs when the list is empty, when a path matches no pattern (a file under
 site/ or site-src/ outside the allowlist included), and when a path matches an ALL pattern (a
@@ -55,6 +58,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SUITE = ROOT / "tools" / "run_all_checks.sh"
 SECTION = re.compile(r"^# section: ([a-z0-9-]+)$", re.M)
+# A section's needs: `# depends: NAME: NEED NEED...`, read by the suite's --sections too.
+DEPENDS_LINE = re.compile(r"# depends: ([a-z0-9-]+): ([a-z0-9-]+(?: [a-z0-9-]+)*)")
 
 ALL = "ALL"
 # Every scoped path: the secrets scan reads every file, and the two link gates resolve links to
@@ -70,8 +75,6 @@ SITE = ("copy-buttons", "baseline-pin", "palette", "site-build", "site-draft", "
 # The only name endings, in any case, that make a file under site/ or site-src/ content.
 SITE_CONTENT = (".html", ".css", ".json", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".ico",
                 ".woff2", ".txt", ".xml")
-# A section that relies on others having run before it in the same selection.
-DEPENDS = {"generated-committed": ("llms-full", "plugin")}
 
 MAP = (
     # Fail safe: a requirements file at any depth, site/ included, pins packages the gates run on.
@@ -132,6 +135,18 @@ def suite_sections(text):
     return SECTION.findall(text)
 
 
+def suite_depends(text):
+    """Each section's needs from the suite's `# depends:` lines; ValueError for a line in any
+    other shape or a section named twice."""
+    depends = {}
+    for line in re.findall(r"^# depends:.*$", text, re.M):
+        match = DEPENDS_LINE.fullmatch(line)
+        if not match or match[1] in depends:
+            raise ValueError(f"{line!r} is not `# depends: NAME: NEED...` for a new NAME")
+        depends[match[1]] = tuple(match[2].split(" "))
+    return depends
+
+
 def sections_for(path):
     """(pattern, sections) for one changed path; (None, ALL) when no pattern matches it."""
     for pattern, compiled, sections in COMPILED:
@@ -140,8 +155,9 @@ def sections_for(path):
     return None, ALL
 
 
-def select(paths, names):
-    """The sections to run for these changed paths, in suite order, and one note per path."""
+def select(paths, names, depends):
+    """The sections to run for these changed paths, in suite order, and one note per path;
+    depends is suite_depends of the suite."""
     paths = [p for p in paths if p]
     if not paths:
         return list(names), ["no changed paths: every section"]
@@ -153,7 +169,7 @@ def select(paths, names):
             return list(names), notes + [f"{path}: {why}: every section"]
         chosen.update(sections)
         notes.append(f"{path}: {', '.join(n for n in names if n in sections)}")
-    for section, needs in DEPENDS.items():
+    for section, needs in depends.items():
         if section in chosen:
             chosen.update(needs)
     stale = sorted(chosen - set(names))
@@ -165,14 +181,15 @@ def select(paths, names):
 
 def main():
     try:
-        names = suite_sections(SUITE.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError) as exc:
+        text = SUITE.read_text(encoding="utf-8")
+        names, depends = suite_sections(text), suite_depends(text)
+    except (OSError, ValueError) as exc:
         print(f"  FAIL  cannot read {SUITE.relative_to(ROOT)}: {exc}", file=sys.stderr)
         return 2
     if not names:
         print(f"  FAIL  {SUITE.relative_to(ROOT)} has no `# section: NAME` lines", file=sys.stderr)
         return 2
-    chosen, notes = select(sys.stdin.read().split("\n"), names)
+    chosen, notes = select(sys.stdin.read().split("\n"), names, depends)
     for note in notes:
         print(f"select_gates: {note}", file=sys.stderr)
     print("\n".join(chosen))

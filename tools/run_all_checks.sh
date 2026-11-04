@@ -16,15 +16,23 @@
 # and names every section when the pull request changes any path other than the root project
 # records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md and the files
 # under site/ or site-src/ whose names end, in any case, in .html, .css, .json, .svg, .png, .jpg,
-# .jpeg, .webp, .ico, .woff2, .txt or .xml and are not _headers or _redirects. A selection that
-# holds generated-committed also holds llms-full and plugin, whose rebuilds it relies on. A
-# section is everything from its `# section: NAME` line to the next such line or to
-# `# end of sections`. What comes before the first section (the helpers, run_gate and the parser
-# preflight) and the summary after the last one run either way. A name holding anything but
-# letters, digits and hyphens (a newline included), or that is not a section here, is refused
-# with status 2 before any gate runs. The named sections are cut out of this file's text, not
-# wrapped in a condition, so each section's heading and body are the same in both runs and the
-# tests that cut a block out of this file still find it.
+# .jpeg, .webp, .ico, .woff2, .txt or .xml and are not _headers, _redirects or a requirements
+# file. A section that relies on others has a `# depends: NAME: NEED...` line below, which
+# tools/select_gates.py reads too: when the list names it, --sections adds each NEED the list
+# lacks, in this file's order, and says so, so a selection that holds generated-committed always
+# runs llms-full and plugin, whose rebuilds it relies on. A section is everything from its
+# `# section: NAME` line to the next such line or to `# end of sections`. What comes before the
+# first section (the helpers, run_gate and the parser preflight) and the summary after the last
+# one run either way. A name holding anything but letters, digits and hyphens (a newline
+# included), or that is not a section here, is refused with status 2 before any gate runs, and so
+# is a `# depends:` line not shaped `NAME: NEED...` or, for a named section, needing a name that
+# is not a section here. The named sections are cut out of this file's text, not wrapped in a
+# condition, so each section's heading and body are the same in both runs and the tests that cut
+# a block out of this file still find it.
+#
+# generated-committed skips its own rebuild on a clean tree because the llms-full and plugin
+# sections before it already rebuilt HEAD.
+# depends: generated-committed: llms-full plugin
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
@@ -51,8 +59,34 @@ if [ "$#" -gt 0 ]; then
       exit 2
     fi
   done
+  # What a named section relies on, from the `# depends:` lines above, added in this file's order.
+  needed=" "
+  while read -r line; do
+    case $line in
+      [a-z0-9]*': '[a-z0-9]*) ;;
+      *)
+        printf "  FAIL  the '# depends: %s' line of tools/run_all_checks.sh is not 'NAME: NEED...'; no gate ran\n" "$line"
+        exit 2 ;;
+    esac
+    case ",$2," in
+      *",${line%%: *},"*) needed+="${line#*: } " ;;
+    esac
+  done < <(sed -n 's/^# depends: //p' tools/run_all_checks.sh)
+  while read -r need; do
+    if [ -n "$need" ] && ! grep -qxF -- "$need" <<< "$known"; then
+      printf "  FAIL  a '# depends:' line of tools/run_all_checks.sh needs '%s', which is not a section of it; no gate ran\n" "$need"
+      exit 2
+    fi
+  done < <(tr ' ' '\n' <<< "$needed")
+  added=""
+  while read -r name; do
+    case $needed in *" $name "*) ;; *) continue ;; esac
+    case ",$2," in *",$name,"*) continue ;; esac
+    added+=",$name"
+  done <<< "$known"
+  list=$2$added
   # This file with only the named sections, and selected_sections set for the summary.
-  if ! script=$(awk -v want=",$2," -v list="$2" '
+  if ! script=$(awk -v want=",$list," -v list="$list" '
       /^# section: / {
         if (!started) { print "selected_sections=" list; started = 1 }
         inside = 1; keep = index(want, "," substr($0, 12) ",") > 0
@@ -63,7 +97,10 @@ if [ "$#" -gt 0 ]; then
     printf '  FAIL  could not cut the named sections out of tools/run_all_checks.sh; no gate ran\n'
     exit 2
   fi
-  printf 'Sections selected: %s\n' "$2"
+  if [ -n "$added" ]; then
+    printf 'Sections added: %s, which a named section depends on\n' "${added#,}"
+  fi
+  printf 'Sections selected: %s\n' "$list"
   # A fresh bash sources the cut copy with this file as its $0 and no arguments, so the cd above
   # lands in the same tree and the copy runs straight through.
   bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3<<< "$script"
@@ -272,8 +309,9 @@ echo "== the committed generated files match a fresh build of the commit =="
 # exports HEAD with git archive on every run and checks the committed plugin.json version against
 # the committed VERSION. Unless git status shows the working tree is HEAD with no change, in which
 # case the gates above already rebuilt HEAD, it also runs the same two builds in the export and
-# compares; that skip relies on the llms-full and plugin sections, which tools/select_gates.py
-# selects whenever it selects this one. The self-test runs first, so what runs is the shipped gate.
+# compares; that skip relies on the llms-full and plugin sections, which --sections adds whenever
+# it names this one (the `# depends:` line at the top). The self-test runs first, so what runs is
+# the shipped gate.
 for generated_check in test_generated_committed.py check_generated_committed.py; do
   if generated_committed=$(python3 -I -B "tools/$generated_check" 2>&1); then
     printf '%s\n' "$generated_committed"

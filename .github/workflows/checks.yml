@@ -28,13 +28,14 @@ name: Checks
 # reads the paths changed since the base commit and names the sections, and the step prints both
 # lists. Only content is scoped, through an allowlist that fails closed: a file under site/ or
 # site-src/ whose name ends, in any case, in .html, .css, .json, .svg, .png, .jpg, .jpeg, .webp,
-# .ico, .woff2, .txt or .xml and is not _headers or _redirects, and the root project records
-# CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md, run their mapped
-# sections. A CHANGELOG.md change also selects version-basis, llms-full, plugin and
-# generated-committed, and any selection containing generated-committed also contains llms-full
-# and plugin. Every other file under site/ or site-src/ (_headers, which holds the CSP,
-# _redirects, scripts, Markdown, YAML such as action.yml, unknown types and files without a
-# suffix) runs every section, and so does any other changed path: every guide, README.md,
+# .ico, .woff2, .txt or .xml and is not _headers, _redirects or a requirements file, and the
+# root project records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md, run
+# their mapped sections. A CHANGELOG.md change also selects version-basis, llms-full, plugin and
+# generated-committed, and tools/run_all_checks.sh --sections adds llms-full and plugin to any
+# list that names generated-committed, as its `# depends:` line says. Every other file under
+# site/ or site-src/ (_headers, which holds the CSP, _redirects, requirements files, scripts,
+# Markdown, YAML such as action.yml, unknown types and files without a suffix) runs every
+# section, and so does any other changed path: every guide, README.md,
 # controls-reference.md, plugin/, every file under tools/, scripts/, .baseline/, .aiqt/ and
 # .github/, any requirements file, CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE,
 # LICENSE, VERSION and any path the selector's map does not name; so does an empty list. No run
@@ -168,12 +169,13 @@ jobs:
       # base commit, a rename listed as both of its paths, go to tools/select_gates.py, which names
       # the sections, and both lists are printed; only the five root project records and the
       # files under site/ or site-src/ whose names end, in any case, in .html, .css, .json, .svg,
-      # .png, .jpg, .jpeg, .webp, .ico, .woff2, .txt or .xml and are not _headers or _redirects
-      # are scoped, and any other path selects every section. A CHANGELOG.md change also selects
-      # version-basis, llms-full, plugin and generated-committed, and a selection containing
-      # generated-committed also contains llms-full and plugin. If the changed paths cannot be
-      # listed, every section runs. The weekly schedule and a manual run run the whole suite with
-      # no argument, which is the only run that ends with "All gates passed.".
+      # .png, .jpg, .jpeg, .webp, .ico, .woff2, .txt or .xml and are not _headers, _redirects or
+      # a requirements file are scoped, and any other path selects every section. A CHANGELOG.md
+      # change also selects version-basis, llms-full, plugin and generated-committed, and
+      # --sections adds llms-full and plugin to a list that names generated-committed. If the
+      # changed paths cannot be listed, every section runs. The weekly schedule and a manual run
+      # run the whole suite with no argument, which is the only run that ends with "All gates
+      # passed.".
       - name: Run the gate suite
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}

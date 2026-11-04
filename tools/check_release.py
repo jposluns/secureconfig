@@ -58,7 +58,12 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
 
 WHAT IT CANNOT CHECK: anything about the online `gates` run, since it does not reach the network.
 It reads only whether `.github/workflows/checks.yml` at the target has a workflow_dispatch
-trigger, and the body names the run the publisher had to confirm. With the trigger, no run starts
+trigger, and the body names the run the publisher had to confirm. It reads the triggers under the
+top-level `on` key, written plain or quoted, as a block mapping or sequence under `on:`, a
+one-line flow sequence or mapping (`on: [push, workflow_dispatch]`,
+`on: {workflow_dispatch: {}}`) or one name. A workflow that is missing or not UTF-8, or whose
+`on` key is absent, repeated or in any other form, is a candidate it cannot check (exit 2,
+naming the file), never a target without the trigger. With the trigger, no run starts
 on a push to `main`, and workflow_dispatch runs on a branch or tag, not on a bare commit, so the
 publisher pushes a temporary branch `release-check/v<VERSION>` at the target, starts the workflow
 on that branch, confirms that the run's event is workflow_dispatch, that its branch is
@@ -121,8 +126,19 @@ TAG_SHAPE = re.compile(r"v1\.0\.([0-9]+)")
 FULL_ID = re.compile(r"[0-9a-f]{40}")
 RUN_ID = re.compile(r"[0-9]+")
 WORKFLOW = ".github/workflows/checks.yml"
-# A workflow_dispatch key indented under the workflow's top-level `on:` block.
-DISPATCH = re.compile(r"^on:\n(?:(?:[ \t#].*)?\n)*?[ \t]+workflow_dispatch:", re.M)
+# A trigger name, plain or in double or single quotes.
+NAME = r"[A-Za-z_][A-Za-z0-9_-]*"
+EVENT = rf"""(?:({NAME})|"({NAME})"|'({NAME})')"""
+EVENT_NAME = re.compile(EVENT)
+# The workflow's top-level `on` key, plain or quoted, and what follows it on its line.
+ON_KEY = re.compile(r"""(?:on|"on"|'on')[ \t]*:(?:[ \t]+(.*))?""")
+# A trigger under a block `on:`, as a mapping key or a sequence item.
+BLOCK_KEY = re.compile(EVENT + r"[ \t]*:(?:[ \t].*)?")
+BLOCK_ITEM = re.compile(r"-(?:[ \t]+(.*))?")
+# An entry of a one-line flow mapping: a key alone or with a value; a quoted key may meet its
+# colon, as JSON writes it.
+FLOW_KEY = re.compile(rf"""(?:({NAME})[ \t]*(?::(?:[ \t].*)?)?|"({NAME})"[ \t]*(?::.*)?"""
+                      rf"""|'({NAME})'[ \t]*(?::.*)?)""")
 
 
 class CannotCheck(Exception):
@@ -169,11 +185,122 @@ def at_target(root, target, path):
     return git(root, "show", f"{target}:{path}", binary=True)
 
 
+def named(match, text):
+    """The trigger name a match of EVENT, BLOCK_KEY or FLOW_KEY holds; ValueError for none."""
+    if not match:
+        raise ValueError(f"{text!r} is not a trigger name this check reads")
+    return next(group for group in match.groups()[:3] if group is not None)
+
+
+def uncommented(value):
+    """value without a trailing comment, a `#` at its start or after a space or tab outside
+    quotes; ValueError for a quote left open."""
+    quote = None
+    for i, ch in enumerate(value):
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "#" and (i == 0 or value[i - 1] in " \t"):
+            return value[:i].rstrip()
+    if quote:
+        raise ValueError(f"{value!r} leaves a quote open")
+    return value.rstrip()
+
+
+def flow_entries(value):
+    """The entries of a flow sequence or mapping that opens and closes on its one line, split at
+    its own commas, outside nested brackets and quotes; ValueError for any other shape."""
+    closers = {"[": "]", "{": "}"}
+    stack, quote, entries, start = [], None, [], 1
+    for i, ch in enumerate(value):
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch in closers:
+            stack.append(closers[ch])
+        elif ch in "]}":
+            if not stack or stack.pop() != ch:
+                raise ValueError(f"{value!r} closes a bracket it did not open")
+            if not stack:
+                if i != len(value) - 1:
+                    raise ValueError(f"{value!r} goes on after its closing {ch}")
+                entries.append(value[start:i])
+        elif ch == "," and len(stack) == 1:
+            entries.append(value[start:i])
+            start = i + 1
+    if quote or stack:
+        raise ValueError(f"{value!r} does not close on its line")
+    entries = [entry.strip() for entry in entries]
+    if entries and not entries[-1]:
+        entries.pop()
+    if not entries or not all(entries):
+        raise ValueError(f"{value!r} has an empty entry or none")
+    return entries
+
+
+def triggers(text):
+    """The trigger names under a workflow's top-level `on` key, plain or quoted: a block mapping
+    or sequence under it, a one-line flow sequence or mapping, or one name. ValueError when the
+    key is missing or repeated, or its value is in any other form, so an unread layout is never
+    taken for a missing trigger."""
+    lines = re.split(r"\r\n|\r|\n", text.removeprefix("\N{ZERO WIDTH NO-BREAK SPACE}"))
+    top = [i for i, line in enumerate(lines) if line[:1] not in ("", " ", "\t", "#")]
+    keys = [i for i in top if ON_KEY.fullmatch(lines[i])]
+    if len(keys) != 1:
+        raise ValueError(f"it has {len(keys)} top-level `on` keys in a form this check reads, "
+                         "not 1")
+    start = keys[0]
+    value = uncommented(ON_KEY.fullmatch(lines[start])[1] or "")
+    if value.startswith("["):
+        return [named(EVENT_NAME.fullmatch(entry), entry) for entry in flow_entries(value)]
+    if value.startswith("{"):
+        return [named(FLOW_KEY.fullmatch(entry), entry) for entry in flow_entries(value)]
+    if value:
+        return [named(EVENT_NAME.fullmatch(value), value)]
+    end = next((i for i in top if i > start), len(lines))
+    body = [line for line in lines[start + 1:end]
+            if line.strip() and not line.lstrip(" \t").startswith("#")]
+    if not body:
+        raise ValueError("its `on:` has nothing under it")
+    indent = len(body[0]) - len(body[0].lstrip(" "))
+    names, kinds = [], set()
+    for line in body:
+        depth = len(line) - len(line.lstrip(" "))
+        if "\t" in line[:len(line) - len(line.lstrip(" \t"))]:
+            raise ValueError(f"{line!r} under `on:` is indented with a tab")
+        if depth < indent:
+            raise ValueError(f"{line!r} under `on:` is indented less than the first trigger")
+        if depth > indent:
+            continue
+        item = BLOCK_ITEM.fullmatch(line[depth:])
+        if item:
+            kinds.add("sequence")
+            entry = uncommented(item[1] or "")
+            names.append(named(EVENT_NAME.fullmatch(entry), entry))
+        else:
+            kinds.add("mapping")
+            names.append(named(BLOCK_KEY.fullmatch(line[depth:]), line.strip()))
+    if len(kinds) > 1:
+        raise ValueError("its `on:` mixes sequence items and mapping keys")
+    return names
+
+
 def dispatchable(root, target):
-    """Whether the target's .github/workflows/checks.yml has a workflow_dispatch trigger."""
+    """Whether the target's .github/workflows/checks.yml lists workflow_dispatch among its
+    triggers. CannotCheck when the file is missing, is not UTF-8, or its `on` key cannot be read
+    with confidence, rather than reading any of those as no trigger."""
     if not succeeds(root, "cat-file", "-e", f"{target}:{WORKFLOW}"):
-        return False
-    return bool(DISPATCH.search(at_target(root, target, WORKFLOW).decode("utf-8", "replace")))
+        raise CannotCheck(f"{WORKFLOW} is missing at the target, so which run of the suite the "
+                          "publisher must confirm cannot be read")
+    try:
+        return "workflow_dispatch" in triggers(at_target(root, target, WORKFLOW).decode("utf-8"))
+    except ValueError as exc:
+        raise CannotCheck(f"{WORKFLOW} at the target cannot be read with confidence, so which "
+                          f"run of the suite the publisher must confirm is unknown: {exc}") from exc
 
 
 def release_tags(root):

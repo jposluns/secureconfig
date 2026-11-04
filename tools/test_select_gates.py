@@ -10,7 +10,10 @@ case, and each of the root project records CHANGELOG.md (with version-basis, llm
 generated-committed), TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md. A list of scoped
 paths, mixed, selects the union of their sections in the suite's order, and never every section.
 Every scoped selection that holds generated-committed holds llms-full and plugin, and so does a
-map entry that names generated-committed alone.
+map entry that names generated-committed alone. The needs come from the suite's `# depends:`
+lines, which tools/run_all_checks.sh --sections reads too: they are exactly
+generated-committed's llms-full and plugin, each a section of the suite, and a line in another
+shape, or a second line for one section, is refused.
 
 EVERY SECTION: each kind of path that is not scoped content selects every section, through the
 pattern the case names or through no pattern: under site/ or site-src/, every file outside the
@@ -52,6 +55,7 @@ import select_gates as sg  # noqa: E402
 
 SUITE_TEXT = sg.SUITE.read_text(encoding="utf-8")
 NAMES = sg.suite_sections(SUITE_TEXT)
+DEPENDS = sg.suite_depends(SUITE_TEXT)
 NOT_A_GUIDE = re.search(r"    (CONTRIBUTING\.md\|.*?)\) return 0", SUITE_TEXT)[1].split("|")
 RECORDS = ("CHANGELOG.md", "TODO.md", "DONE.md", "DECISIONS.md", "PENDING-DECISIONS.md")
 ANY = ("secrets", "local-links", "llms-full-links")
@@ -194,13 +198,13 @@ EVERY = (
 def check_cases(failures):
     count = 0
     for kind, path, want in SCOPED:
-        chosen, notes = sg.select([path], NAMES)
+        chosen, notes = sg.select([path], NAMES, DEPENDS)
         count += 1
         if sorted(chosen) != sorted(set(want)) or notes[-1].endswith("every section"):
             failures.append(f"{kind} ({path}) should select exactly {sorted(set(want))!r}: "
                             f"{chosen!r}, {notes!r}")
     for paths in SCOPED_LISTS:
-        chosen, notes = sg.select(paths, NAMES)
+        chosen, notes = sg.select(paths, NAMES, DEPENDS)
         union = {n for p in paths for _, path, want in SCOPED if path == p for n in want}
         count += 1
         if chosen != [n for n in NAMES if n in union] or chosen == NAMES:
@@ -208,7 +212,7 @@ def check_cases(failures):
                             f"order: {chosen!r}, {notes!r}")
     # generated-committed skips its rebuild on a clean tree because llms-full and plugin ran.
     for paths in [[path] for _, path, _ in SCOPED] + list(SCOPED_LISTS):
-        chosen, _ = sg.select(paths, NAMES)
+        chosen, _ = sg.select(paths, NAMES, DEPENDS)
         count += 1
         if "generated-committed" in chosen and not {"llms-full", "plugin"} <= set(chosen):
             failures.append(f"{paths!r} selects generated-committed without llms-full and "
@@ -217,7 +221,7 @@ def check_cases(failures):
     alone = ("generated-committed",)
     sg.COMPILED = (("x.md", sg.pattern_re("x.md", alone), alone),)
     try:
-        chosen, _ = sg.select(["x.md"], NAMES)
+        chosen, _ = sg.select(["x.md"], NAMES, DEPENDS)
     finally:
         sg.COMPILED = saved
     count += 1
@@ -225,7 +229,7 @@ def check_cases(failures):
         failures.append(f"a map entry naming generated-committed alone should also select "
                         f"llms-full and plugin: {chosen!r}")
     for kind, paths, pattern in EVERY:
-        chosen, notes = sg.select(paths, NAMES)
+        chosen, notes = sg.select(paths, NAMES, DEPENDS)
         count += 1
         if chosen != NAMES or not notes[-1].endswith("every section"):
             failures.append(f"{kind} ({paths!r}) should select every section: {chosen!r}, "
@@ -264,6 +268,26 @@ def check_map(failures):
     if len(markers) != len(NAMES):
         failures.append(f"a `# section:` line is not `# section: NAME`: "
                         f"{[m for m in markers if not sg.SECTION.fullmatch(m)]!r}")
+    count += 1
+    if DEPENDS != {"generated-committed": ("llms-full", "plugin")}:
+        failures.append(f"the suite's `# depends:` lines should give generated-committed exactly "
+                        f"llms-full and plugin: {DEPENDS!r}")
+    needs = {n for section, wanted in DEPENDS.items() for n in (section, *wanted)}
+    count += 1
+    if needs - set(NAMES):
+        failures.append(f"a `# depends:` line names sections the suite does not have: "
+                        f"{sorted(needs - set(NAMES))!r}")
+    for text in ("# depends: generated-committed llms-full plugin\n",
+                 "# depends: generated-committed: llms-full, plugin\n",
+                 "# depends: generated-committed:\n",
+                 "# depends: a: b\n# depends: a: c\n"):
+        count += 1
+        try:
+            sg.suite_depends(text)
+        except ValueError:
+            continue
+        failures.append(f"a `# depends:` line in another shape, or a second one for a section, "
+                        f"should be refused: {text!r}")
     count += 1
     if SUITE_TEXT.count("\n# end of sections\n") != 1:
         failures.append("tools/run_all_checks.sh does not have exactly 1 `# end of sections` line")
@@ -306,12 +330,12 @@ def check_map(failures):
     if not other:
         failures.append("every file under site/ is allowed content, so the refusal cases reach "
                         "nothing in this checkout")
-    chosen, _ = sg.select(["site/index.html", "CHANGELOG.md"], NAMES)
+    chosen, _ = sg.select(["site/index.html", "CHANGELOG.md"], NAMES, DEPENDS)
     count += 1
     if chosen != [n for n in NAMES if n in set(chosen)]:
         failures.append(f"the selection is not in the suite's order: {chosen!r}")
     short = [n for n in NAMES if n != "changelog-format"]
-    chosen, notes = sg.select(["CHANGELOG.md"], short)
+    chosen, notes = sg.select(["CHANGELOG.md"], short, DEPENDS)
     count += 1
     if chosen != short or "does not have" not in notes[-1]:
         failures.append(f"a map naming a section the suite lacks should select every section: "
@@ -321,7 +345,7 @@ def check_map(failures):
 
 def check_command(failures):
     count = 0
-    for stdin, want in (("site/index.html\n", sg.select(["site/index.html"], NAMES)[0]),
+    for stdin, want in (("site/index.html\n", sg.select(["site/index.html"], NAMES, DEPENDS)[0]),
                         ("site/_headers\n", NAMES), ("site/assets/baseline/scheme.js\n", NAMES),
                         ("site/assets/APP.MJS\n", NAMES), ("site-src/notes.js\n", NAMES),
                         ("mfa.md\n", NAMES),
