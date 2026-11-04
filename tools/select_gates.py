@@ -78,8 +78,9 @@ SITE_CONTENT = (".html", ".css", ".json", ".svg", ".png", ".jpg", ".jpeg", ".web
                 ".woff2", ".txt", ".xml")
 
 MAP = (
-    # Fail safe: a requirements file at any depth, site/ included, pins packages the gates run on.
-    ("**/requirements*", ALL),
+    # Fail safe: a requirements file at any depth, site/ included, pins packages the gates run on;
+    # any name containing "requirements" (dev-requirements.txt included) counts.
+    ("**/*requirements*", ALL),
     # The CSP and the other served headers, and the redirects, at any depth.
     ("**/_headers", ALL),
     ("**/_redirects", ALL),

@@ -100,7 +100,7 @@ name; so does an empty change. The whole suite also runs weekly and on demand
 (`workflow_dispatch`), not on a push to `main`, and a release requires a successful
 `workflow_dispatch` run of it on the target, so a release targets the merge of #1194 or a
 later one. A local run can do either: with no argument the suite runs every section, and with
-`--sections NAME[,NAME...]` only the named ones, refusing an unknown name or one holding
+`--sections NAME[,NAME...]` the named ones and their prerequisites, refusing an unknown name or one holding
 anything but letters, digits and hyphens.
 Every gate in it is deterministic and offline: no gate reaches the
 network, so no outside service can change a gate's answer. The `gates` job that runs it is not

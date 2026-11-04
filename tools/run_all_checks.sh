@@ -11,7 +11,7 @@
 # Usage: tools/run_all_checks.sh [--sections NAME[,NAME...]]   (runs from any directory)
 #
 # With no argument every section runs. That is the whole-corpus run, which CI makes weekly and on
-# demand, and only it ends with "All gates passed.". With --sections, only the named sections run,
+# demand, and only it ends with "All gates passed.". With --sections, the named sections and their prerequisites run,
 # in this file's order; on a pull request tools/select_gates.py names them from the changed paths,
 # and names every section when the pull request changes any path other than the root project
 # records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md and the files
@@ -85,7 +85,8 @@ if [ "$#" -gt 0 ]; then
     added+=",$name"
   done <<< "$known"
   list=$2$added
-  # This file with only the named sections, and selected_sections set for the summary.
+  # This file with only the selected sections (the named ones and their prerequisites), and
+  # selected_sections set for the summary.
   if ! script=$(awk -v want=",$list," -v list="$list" '
       /^# section: / {
         if (!started) { print "selected_sections=" list; started = 1 }

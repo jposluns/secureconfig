@@ -81,7 +81,7 @@ def is_site_content(path):
     name = path.rsplit("/", 1)[-1]
     return (path.startswith(("site/", "site-src/")) and name.lower().endswith(SITE_CONTENT)
             and name not in ("_headers", "_redirects")
-            and not name.lower().startswith("requirements"))
+            and "requirements" not in name.lower())
 
 
 # (scoped kind, changed path, the exact sections its selection must be)
@@ -162,7 +162,7 @@ EVERY = (
     ("a shared helper", ["tools/_markdown.py"], None),
     ("a version-basis list", ["tools/version_basis_guides.txt"], None),
     ("a tools fixture", ["tools/fixtures/lychee.json"], None),
-    ("the gate requirements", ["tools/requirements-gates.txt"], "**/requirements*"),
+    ("the gate requirements", ["tools/requirements-gates.txt"], "**/*requirements*"),
     ("the site builder", ["scripts/build-site.py"], None),
     ("the pages build", ["scripts/pages-build.sh"], None),
     ("Markdown under scripts/", ["scripts/card/TAGS.md"], None),
@@ -172,8 +172,9 @@ EVERY = (
     ("an AIQT hook", [".aiqt/hooks/hooks.json"], None),
     ("a workflow", [".github/workflows/checks.yml"], None),
     ("a new file under .github", [".github/dependabot.yml"], None),
-    ("a root requirements file", ["requirements.txt"], "**/requirements*"),
-    ("a requirements file under site/", ["site/requirements.txt"], "**/requirements*"),
+    ("a root requirements file", ["requirements.txt"], "**/*requirements*"),
+    ("a requirements file under site/", ["site/requirements.txt"], "**/*requirements*"),
+    ("a dev-requirements file under site-src/", ["site-src/dev-requirements.txt"], "**/*requirements*"),
     ("CLAUDE.md", ["CLAUDE.md"], None),
     ("AGENTS.md", ["AGENTS.md"], None),
     ("CONTRIBUTING.md", ["CONTRIBUTING.md"], None),
