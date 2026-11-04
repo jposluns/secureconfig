@@ -11,4 +11,6 @@ Site template: the shared site template (baseline 1.8.0, https://posluns.ca/base
 
 In this repository the template's assets/baseline/ folder is site/assets/baseline/, copied
 unchanged and pinned in .baseline/pin.toml. The template's palette gate, tools/check_palette.py,
-is copied unchanged to .baseline/check_palette.py and pinned there; it is not served.
+is copied unchanged to .baseline/check_palette.py and pinned there; it is not served. The
+template's overflow check, tools/check_overflow.js, is copied unchanged to
+.baseline/check_overflow.js and pinned there; it is not served either.

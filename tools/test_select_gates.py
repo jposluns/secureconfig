@@ -59,9 +59,9 @@ DEPENDS = sg.suite_depends(SUITE_TEXT)
 NOT_A_GUIDE = re.search(r"    (CONTRIBUTING\.md\|.*?)\) return 0", SUITE_TEXT)[1].split("|")
 RECORDS = ("CHANGELOG.md", "TODO.md", "DONE.md", "DECISIONS.md", "PENDING-DECISIONS.md")
 ANY = ("secrets", "local-links", "llms-full-links")
-SITE = ("copy-buttons", "baseline-pin", "palette", "site-build", "site-draft", "pages-build",
-        "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories", "llms-full",
-        "plugin", "generated-committed", "prose-conventions", "aiqt-baseline") + ANY
+SITE = ("copy-buttons", "baseline-pin", "palette", "overflow", "site-build", "site-draft",
+        "pages-build", "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories",
+        "llms-full", "plugin", "generated-committed", "prose-conventions", "aiqt-baseline") + ANY
 MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "prose-conventions",
             "shell-blocks", "bracket-ranges", "pinned-citations", "placeholders",
             "aiqt-baseline") + ANY
@@ -168,6 +168,9 @@ EVERY = (
     ("Markdown under scripts/", ["scripts/card/TAGS.md"], None),
     ("the baseline pin", [".baseline/pin.toml"], None),
     ("a baseline gate", [".baseline/check_palette.py"], None),
+    ("the baseline overflow check", [".baseline/check_overflow.js"], None),
+    ("the overflow check's npm manifest", ["tools/overflow/package.json"], None),
+    ("the overflow check's npm lock", ["tools/overflow/package-lock.json"], None),
     ("the gensrc record", [".aiqt/gensrc.json"], None),
     ("an AIQT hook", [".aiqt/hooks/hooks.json"], None),
     ("a workflow", [".github/workflows/checks.yml"], None),

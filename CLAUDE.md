@@ -104,14 +104,23 @@ later one. A local run can do either: with no argument the suite runs every sect
 anything but letters, digits and hyphens.
 Every gate in it is deterministic and offline: no gate reaches the
 network, so no outside service can change a gate's answer. The `gates` job that runs it is not
-offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python
-and a SHA-256-verified shellcheck, so an outage at GitHub or in those downloads can fail the check
-with no change in this repository. Run the suite before pushing. A local run lints with whatever
-shellcheck is on PATH and skips the lint, without failing, when none is installed; CI installs the
-pinned version and asserts it before the suite runs, so a local green predicts CI only when the
-shell-block gate's pass line names that version. The suite also compares local Python with CI's
-pinned `PYTHON_VERSION`: a mismatch or unavailable comparison prints an advisory SKIP,
-never a failure, because `html.parser` behaviour can differ between releases.
+offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python,
+a SHA-256-verified shellcheck, and playwright 1.64.1, locked by npm integrity hash, with its
+Chromium, whose download is not checked against a digest, so an outage at GitHub or in those
+downloads can fail the check with no change in this repository. Run the suite before pushing. A
+local run lints with whatever shellcheck is on PATH and skips the lint, without failing, when none
+is installed; CI installs the pinned version and asserts it before the suite runs, so a local
+green predicts CI only when the shell-block gate's pass line names that version. The `overflow`
+section serves `site/` on 127.0.0.1 and runs the template's `.baseline/check_overflow.js` on every
+generated page that answers 200, failing a page that scrolls sideways at 320, 360, 390 or 1512 px
+in either scheme; the check refuses every other origin, so it reaches no network. It needs node
+and playwright with its Chromium: set `NODE_PATH` to the `node_modules` folder holding playwright
+and `PLAYWRIGHT_BROWSERS_PATH` to the folder holding its Chromium. A local run without them prints
+a SKIP, never a failure; CI installs the pinned playwright and sets
+`SECURECONFIG_REQUIRE_OVERFLOW=1`, under which a missing node or playwright fails. The suite also
+compares local Python with CI's pinned `PYTHON_VERSION`: a mismatch or unavailable comparison
+prints an advisory SKIP, never a failure, because `html.parser` behaviour can differ between
+releases.
 A matching release prints an ok line. Before any other gate, the suite checks that its `python3`,
 run as `python3 -I -B`, imports the markdown-it-py version that `tools/requirements-gates.txt`
 pins and has the installed version that lock pins for every package in it, markdown-it-py and

@@ -3,9 +3,9 @@
 
 WHY: the site publishes the shared template's runtime files (stylesheets, fonts, scripts, logos
 and marks) copied byte for byte from a published baseline version, and runs the template's
-palette gate from a pinned copy. A copied file that is edited, replaced or added to stops being
-the version every family site shares, and nothing in a diff of a minified stylesheet or a font
-says so. This gate fails if any copied file differs from its pinned SHA-256.
+palette gate and overflow check from pinned copies. A copied file that is edited, replaced or
+added to stops being the version every family site shares, and nothing in a diff of a minified
+stylesheet or a font says so. This gate fails if any copied file differs from its pinned SHA-256.
 
 WHAT IT CHECKS, offline, with the standard library only:
 
@@ -14,7 +14,8 @@ WHAT IT CHECKS, offline, with the standard library only:
     site/ and so starting with assets/baseline/ (the baseline README's form), to a
     64-character SHA-256; the only other keys are the repository paths of the build tools the
     copy script copies outside the served tree (BUILD_TOOLS: .baseline/check_palette.py, from
-    baseline 1.6.0), each pinned, a regular file (never a link) and hashing to its pin;
+    baseline 1.6.0, and .baseline/check_overflow.js, from baseline 1.8.0), each pinned, a regular
+    file (never a link) and hashing to its pin;
   - every pinned path is a plain relative path inside the copy folder (no `..`, no absolute path,
     no backslash);
   - every pinned file exists as a regular file and hashes to its pin;
@@ -242,7 +243,7 @@ def check(root):
             findings.append(f"{DEST}/{name} is not a regular file or directory")
     if findings:
         return 1, [f"  FAIL  {f}" for f in findings]
-    return 0, [f"  ok    {len(files)} files under {DEST} and {len(tools)} build tool "
+    return 0, [f"  ok    {len(files)} files under {DEST} and {len(tools)} build tools "
                f"({', '.join(sorted(tools))}) match baseline {pin['version']} as pinned in {PIN}"]
 
 

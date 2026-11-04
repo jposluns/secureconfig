@@ -4,8 +4,8 @@
 # Every gate here is deterministic and offline: no gate reaches the network, so no
 # vendor outage or rate limit can change a gate's answer. The CI job that runs this
 # suite is not offline: .github/workflows/checks.yml fetches its pinned actions,
-# Python and shellcheck before the suite starts, and an outage there can fail the
-# job. External link rot is caught separately by the weekly lychee sweep, which
+# Python, shellcheck, and playwright with its Chromium before the suite starts, and
+# an outage there can fail the job. External link rot is caught separately by the weekly lychee sweep, which
 # stays advisory so that a site being down cannot block a merge.
 #
 # Usage: tools/run_all_checks.sh [--sections NAME[,NAME...]]   (runs from any directory)
@@ -1481,6 +1481,101 @@ else
       ;;
     2) bad "check_palette.py exited 2, a usage error; the palette is unverified" ;;
     *) bad "check_palette.py exited $palette_rc, an unexpected error; the palette is unverified" ;;
+  esac
+fi
+
+# section: overflow
+echo "== no site page scrolls sideways at the template's widths =="
+# Baseline 1.8.0's overflow check (SPECIFICATION section 4 item 3, recommended there), a gate here
+# by the maintainer's ruling of 2026-11-04. .baseline/check_overflow.js is the template's own file,
+# copied and pinned like the palette gate, and its contract is its exit code: 0 pass, 1 a failing
+# case or a page it could not load, 2 a usage error; this decides by the exit code only, as the
+# palette block does, and any other code fails. It loads each page in headless Chromium at its
+# default widths (320, 360, 390 and 1512 px) in both schemes and refuses every request to an origin
+# other than --base, so with site/ served on 127.0.0.1 it reaches no network. It needs node and the
+# playwright package with its Chromium, installed before the suite: put playwright's node_modules
+# folder on NODE_PATH and its browsers folder on PLAYWRIGHT_BROWSERS_PATH. When node cannot
+# resolve playwright, a local run prints a SKIP and passes; CI installs the pinned playwright from
+# tools/overflow/ and sets SECURECONFIG_REQUIRE_OVERFLOW=1, under which that is a failure.
+# The pages, the one place they are listed: every generated page that answers 200, the review page
+# included; 404.html is the not-found page and is not listed. A generated index.html the list does
+# not name fails, so a new section page cannot go unchecked.
+overflow_pages=(/ /checklist/ /disclosure/ /draft/ /for-ai/ /for-humans/ /guides/ /license/)
+overflow_unlisted=""
+for overflow_page in site/index.html site/*/index.html; do
+  overflow_path=${overflow_page#site}
+  case " ${overflow_pages[*]} " in
+    *" ${overflow_path%index.html} "*) ;;
+    *) overflow_unlisted+=" $overflow_page" ;;
+  esac
+done
+if [ -n "$overflow_unlisted" ]; then
+  bad "the overflow check's page list does not name the generated page(s)$overflow_unlisted"
+fi
+# The subshell below prints a line starting with this, and exits 3, when the check never started.
+overflow_no_start="overflow: check_overflow.js did not start:"
+if ! command -v node >/dev/null 2>&1 || ! node -e 'require.resolve("playwright")' >/dev/null 2>&1; then
+  if [ "${SECURECONFIG_REQUIRE_OVERFLOW:-}" = 1 ]; then
+    bad "check_overflow.js needs node and the playwright package, and node or playwright was not found while SECURECONFIG_REQUIRE_OVERFLOW=1; the pages are unverified"
+  else
+    printf '  SKIP  node or the playwright package was not found; overflow check not run. To run it, set NODE_PATH to the node_modules folder holding playwright and PLAYWRIGHT_BROWSERS_PATH to the folder holding its Chromium\n'
+  fi
+elif overflow=$(
+    # A subshell, so its EXIT trap stops the server, by the PID started here, on every way out of
+    # it, and the EXIT trap of the suite stays as it was. Port 0 lets the kernel pick a free port,
+    # which -u makes http.server print at once; the loop waits until the server answers.
+    exec 2>&1
+    if ! overflow_log=$(mktemp); then
+      printf '%s mktemp could not create the server log\n' "$overflow_no_start"
+      exit 3
+    fi
+    overflow_pid=""
+    trap 'if [ -n "$overflow_pid" ]; then kill "$overflow_pid" 2>/dev/null; wait "$overflow_pid" 2>/dev/null; fi; rm -f "$overflow_log"' EXIT
+    trap 'exit 129' HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    python3 -I -B -u -m http.server 0 --bind 127.0.0.1 --directory site > "$overflow_log" 2>&1 &
+    overflow_pid=$!
+    overflow_port=""
+    overflow_status=""
+    for _ in $(seq 100); do
+      if ! kill -0 "$overflow_pid" 2>/dev/null; then
+        break
+      fi
+      if [ -z "$overflow_port" ]; then
+        overflow_port=$(sed -n 's/^Serving HTTP on 127\.0\.0\.1 port \([0-9][0-9]*\) .*/\1/p' "$overflow_log")
+      fi
+      if [ -n "$overflow_port" ] &&
+         { printf 'HEAD / HTTP/1.0\r\n\r\n' >&9 && IFS= read -r -t 5 overflow_status <&9; } 2>/dev/null 9<> "/dev/tcp/127.0.0.1/$overflow_port"; then
+        case $overflow_status in
+          'HTTP/1.'?' 200 '*) break ;;
+        esac
+      fi
+      overflow_status=""
+      sleep 0.1
+    done
+    if [ -z "$overflow_status" ]; then
+      printf '%s the local server for site/ did not answer in time; the end of its output:\n' "$overflow_no_start"
+      tail -n 20 "$overflow_log" | sed 's/^/          /'
+      exit 3
+    fi
+    node .baseline/check_overflow.js --base "http://127.0.0.1:$overflow_port" "${overflow_pages[@]}"
+  ); then
+  printf '%s\n' "$overflow"
+  ok "check_overflow.js: the ${#overflow_pages[@]} site pages pass at every default width in both schemes"
+else
+  overflow_rc=$?
+  printf '%s\n' "$overflow"
+  case "$overflow_rc" in
+    1) bad "check_overflow.js exited 1: a page scrolls sideways, has a table box past the window edge, throws a script error or answers with an HTTP error, or the check could not load a page or run" ;;
+    2) bad "check_overflow.js exited 2, a usage error; the pages are unverified" ;;
+    *)
+      if [ "$overflow_rc" = 3 ] && grep -qF -- "$overflow_no_start" <<< "$overflow"; then
+        bad "check_overflow.js did not start, as the lines above say; the pages are unverified"
+      else
+        bad "check_overflow.js exited $overflow_rc, an unexpected error; the pages are unverified"
+      fi
+      ;;
   esac
 fi
 
