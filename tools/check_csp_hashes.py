@@ -17,8 +17,12 @@ template, and a template page carries NO inline code at all:
          and `link` elements before it in the head. No `link` before it has a rel which, with its
          character references decoded and case-folded, holds the token `stylesheet` anywhere in its
          whitespace-separated token list. Any other occurrence of `scheme.js`, in any case, is
-         refused: as raw text, in any attribute (character references decoded), in a script
-         deferred or not, in the body or inside <svg>;
+         refused: as raw text, in any attribute or text (character references decoded, then read
+         as a URL: every ASCII tab and newline removed and percent-encoding decoded, both repeated
+         until nothing changes), in a script deferred or not, in the body or inside <svg>. Only
+         the text and start tag of a copy of the line are excused from that search, because a
+         copy is refused as a second copy or by its place; any other token on its line, such as
+         the text after it, is searched like the rest;
       2. THE DEFERRED BASELINE SCRIPTS: `<script src="/assets/baseline/<name>.js" defer></script>`
          (BASELINE_SCRIPT), for any <name> of ASCII lower-case letters other than `scheme`, so
          scheme.js is never accepted in this form.
@@ -116,7 +120,12 @@ the indented lines under it; `#` is a comment; `! Name` DETACHES a header. This 
     never relies on: no page carries an inline block for it to permit. A comma, which would make
     the value more than one policy, gets its own message;
   - no rule sets or detaches X-Robots-Tag: the /draft/ review page carries its own robots meta,
-    and a header-level noindex would silently deindex whatever its rule matches.
+    and a header-level noindex would silently deindex whatever its rule matches;
+  - section 9's other headers (PINNED_HEADERS): X-Frame-Options, Permissions-Policy and
+    Cross-Origin-Opener-Policy are each set exactly once across the whole file, under the bare
+    `/*` rule, to exactly section 9's value, and no rule detaches one;
+  - no rule sets or detaches a header Cloudflare sends itself (CLOUDFLARE_HEADERS):
+    X-Content-Type-Options, Referrer-Policy or Strict-Transport-Security.
 
 WHAT IT HASHES: nothing, since promotion. Pages are still read as a browser's tokenizer sees them
 (bytes decoded as UTF-8 with CRLF and lone CR normalized to LF), so the text every rule reads is
@@ -143,6 +152,16 @@ SHARED_POLICY = ("default-src 'none'; script-src 'self' 'unsafe-inline' https://
                  "https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; "
                  "style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; "
                  "form-action 'none'; frame-ancestors 'none'")
+# Section 9's other headers on /*, by lower-cased name: (the name as written, the exact value).
+PINNED_HEADERS = {
+    "x-frame-options": ("X-Frame-Options", "DENY"),
+    "permissions-policy": ("Permissions-Policy", (
+        "accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(), "
+        "display-capture=(), fullscreen=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), "
+        "microphone=(), midi=(), payment=(), serial=(), usb=()")),
+    "cross-origin-opener-policy": ("Cross-Origin-Opener-Policy", "same-origin")}
+# Section 9: the headers Cloudflare sends itself, never set or detached in _headers.
+CLOUDFLARE_HEADERS = ("x-content-type-options", "referrer-policy", "strict-transport-security")
 # Rule 2 of the page's scripts: a deferred same-origin baseline file, written exactly as
 # scripts/build-site.py writes it, any file but scheme.js. Each match is taken out of the text
 # before the page is held to a shape of 0 <style> and 0 <script>.
@@ -154,6 +173,10 @@ BASELINE_SCRIPT = re.compile(
 # `scheme.js` (SCHEME_NAME) is refused. See the docstring.
 HEAD_SCRIPT = '<script data-cfasync="false" src="/assets/baseline/scheme.js"></script>'
 SCHEME_NAME = re.compile(r"scheme\.js", re.I)
+# A URL parser removes every ASCII tab and newline from a URL, and a host decodes percent-encoding
+# before it maps a path to a file, so rule 1 reads each decoded text as a URL too (as_url).
+URL_TAB_NEWLINE = re.compile(r"[\t\n\r]")
+PERCENT_ESCAPE = re.compile(r"%([0-9A-Fa-f]{2})")
 # The rel token rule 1 refuses on a link before the head script.
 STYLESHEET = "stylesheet"
 ASCII_SPACE = "\t\n\f\r "
@@ -660,6 +683,16 @@ def head_misplacement(tokens, index):
     return None
 
 
+def as_url(text):
+    """`text` read as a URL reaches a file: every ASCII tab and newline removed and each `%XX`
+    decoded, both repeated until nothing changes, a superset of 1 URL parse and 1 host decode."""
+    while True:
+        out = PERCENT_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)), URL_TAB_NEWLINE.sub("", text))
+        if out == text:
+            return out
+        text = out
+
+
 def scheme_script(path, html):
     """(html with the accepted HEAD_SCRIPT line emptied, findings): rule 1 of the page's scripts,
     read on the page as written. See the docstring.
@@ -669,11 +702,13 @@ def scheme_script(path, html):
     """
     lines = html.split("\n")
     at = [i for i, line in enumerate(lines) if line == HEAD_SCRIPT]
+    copies = {i + 1 for i in at}
+    opening = HEAD_SCRIPT[:-len("</script>")]
     parser = Tokens()
     parser.feed(html)
     parser.close()
     tokens = parser.tokens
-    out, accepted, span = [], None, (0, 0)
+    out = []
     if not at:
         out.append(f"{path} does not carry the scheme.js head line, {HEAD_SCRIPT}, as a line of its "
                    f"own. This gate requires it exactly once on every page (baseline "
@@ -683,9 +718,6 @@ def scheme_script(path, html):
                    f"copies of its line). This gate accepts exactly 1 (baseline SPECIFICATION 7.33)")
     else:
         line = at[0] + 1
-        start = sum(len(text) + 1 for text in lines[:at[0]])
-        span = (start, start + len(HEAD_SCRIPT))
-        opening = HEAD_SCRIPT[:-len("</script>")]
         found = [i for i, t in enumerate(tokens)
                  if t[0] == "start" and t[1] == "script" and t[3] == line and t[4] == 0
                  and t[5] == opening]
@@ -697,19 +729,17 @@ def scheme_script(path, html):
                        f"a start tag in <head> after nothing but meta, title and link elements, "
                        f"before every stylesheet link (baseline SPECIFICATION 7.33), where it "
                        f"applies a stored scheme before the first paint")
-        else:
-            accepted = tokens[found[0]]
-    # Any other scheme.js, raw or with its character references decoded, is refused.
-    elsewhere = {line_of(html, m.start()) for m in SCHEME_NAME.finditer(html)
-                 if not (span[0] <= m.start() < span[1])}
+    # Any other scheme.js, raw, or with its character references decoded and read as a URL, is
+    # refused. A copy of the line itself is refused above, as a second copy or by its place, so only
+    # its own text and its start tag are excused here; any other token on its line is searched.
+    elsewhere = {n for n in (line_of(html, m.start()) for m in SCHEME_NAME.finditer(html))
+                 if n not in copies}
     for token in tokens:
-        if token is accepted:
+        if token[0] == "start" and token[3] in copies and token[4] == 0 and token[5] == opening:
             continue
         texts = [value for _, value in token[2] if value is not None] + [token[1]]
-        if any("scheme.js" in text.casefold() for text in texts):
+        if any("scheme.js" in as_url(text).casefold() for text in texts):
             elsewhere.add(token[3])
-    # A copy of the line itself is refused above, as a second copy or by its place.
-    elsewhere -= {i + 1 for i in at}
     for line in sorted(elsewhere):
         out.append(f"{path}:{line}: scheme.js appears outside the 1 head line this gate accepts. "
                    f"This gate refuses every other occurrence of scheme.js, as text, in any "
@@ -773,9 +803,23 @@ def all_rule_blocks(headers_text):
     return out
 
 
+def header_values(blocks, key):
+    """(rule, value) for every line in `blocks` that sets the header named `key` (lower case)."""
+    out = []
+    for rule, lines in blocks:
+        for line in lines:
+            if line.startswith("!"):
+                continue
+            name, sep, value = line.partition(":")
+            if sep and name.strip().lower() == key:
+                out.append((rule, value.strip()))
+    return out
+
+
 def header_findings(headers_text):
     """Reasons site/_headers is outside the model: one CSP, under the bare /*, exactly the shared
-    policy; no detach; no X-Robots-Tag anywhere."""
+    policy; no detach; no X-Robots-Tag anywhere; each PINNED_HEADERS header once, under the bare
+    /*, exactly section 9's value, never detached; no CLOUDFLARE_HEADERS header anywhere."""
     blocks = all_rule_blocks(headers_text)
     out = []
     for rule, lines in blocks:
@@ -788,14 +832,30 @@ def header_findings(headers_text):
                 out.append(f"{HEADERS} rule {rule} sets or detaches X-Robots-Tag, which reaches "
                            f"every page its rule matches; the /draft/ review page carries its own "
                            f"robots meta, and this gate models no header-level noindex")
-    csps = []
-    for rule, lines in blocks:
-        for line in lines:
-            if line.startswith("!"):
-                continue
-            name, sep, value = line.partition(":")
-            if sep and name.strip().lower() == CSP:
-                csps.append((rule, value.strip()))
+            elif name in CLOUDFLARE_HEADERS:
+                out.append(f"{HEADERS} rule {rule} sets or detaches {name}, which Cloudflare "
+                           f"sends itself (baseline SPECIFICATION section 9: never set "
+                           f"X-Content-Type-Options, Referrer-Policy or Strict-Transport-Security "
+                           f"in _headers); remove the line")
+            elif line.startswith("!") and name in PINNED_HEADERS:
+                out.append(f"{HEADERS} detaches {PINNED_HEADERS[name][0]} under {rule}, so a page "
+                           f"served under that rule goes without the header baseline SPECIFICATION "
+                           f"section 9 sets on every page")
+    for key, (shown, value) in PINNED_HEADERS.items():
+        sets = header_values(blocks, key)
+        if len(sets) != 1:
+            where = f" ({', '.join(rule for rule, _ in sets)})" if sets else ""
+            out.append(f"{HEADERS} sets {shown} {len(sets)} times{where}, and this gate requires "
+                       f"exactly one, `{shown}: {value}` under /* (baseline SPECIFICATION "
+                       f"section 9)")
+        elif sets[0][0] != "/*":
+            out.append(f"{HEADERS} sets {shown} under the rule {sets[0][0]}, which is not the /* "
+                       f"rule this gate requires; a narrower rule leaves the other pages and the "
+                       f"404 page without it")
+        elif sets[0][1] != value:
+            out.append(f"{HEADERS} sets {shown} under /* to {sets[0][1]}, and this gate requires "
+                       f"exactly baseline SPECIFICATION section 9's value: {value}")
+    csps = header_values(blocks, CSP)
     if not csps:
         out.append(f"no Content-Security-Policy header anywhere in {HEADERS}; the pages are served "
                    f"without one")
@@ -1006,7 +1066,9 @@ def main() -> int:
           f"SVG document(s) carry no <script>, on* handler, javascript: URL or inline style")
     print(f"  ok    {HEADERS} serves exactly the shared template policy (SPECIFICATION section 9) "
           f"under the 1 /* rule, with no other Content-Security-Policy, no detach and no "
-          f"X-Robots-Tag")
+          f"X-Robots-Tag, and section 9's X-Frame-Options, Permissions-Policy and "
+          f"Cross-Origin-Opener-Policy once each under /*, with none of the headers Cloudflare "
+          f"sends itself")
     return 0
 
 
