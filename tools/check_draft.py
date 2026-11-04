@@ -62,16 +62,20 @@ site/.well-known/security.txt): none of them refers to the /draft/ review page. 
 fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellings:
   - the whole file text is normalized: the round { percent-decode; `html.unescape` } repeats until
     the text stops changing, at most 8 rounds (text still changing in a 9th round is refused);
-    then Unicode NFKC, case folding, every `\\` read as `/`, and every ASCII tab and CR deleted
-    (a browser deletes both from a URL, and neither occurs inside an English word; the `\\n`s
-    stay). The text is normalized piece by piece between its `\\n`s and the pieces joined with
-    `\\n` again, which is the same text, as no step reads across a `\\n`; so a match maps to the
-    original line it starts on;
+    then Unicode NFKC, case folding and every `\\` read as `/`. That gives the KEPT text, and the
+    kept text with every ASCII tab and CR deleted gives the DELETED text (a browser deletes both
+    from a URL; the `\\n`s stay). Each text is normalized piece by piece between its `\\n`s and
+    the pieces joined with `\\n` again, which is the same text, as no step reads across a `\\n`;
+    so a match maps to the original line it starts on;
   - site/llms.txt, site/robots.txt and site/.well-known/security.txt are hand-written indexes that
-    never need the word, so any literal `draft` anywhere in their normalized text is refused;
+    never need the word, so any literal `draft` anywhere in their deleted text is refused (deleting
+    only joins characters, so the deleted text holds every `draft` the kept text holds);
   - site/llms-full.txt, the generated guide corpus, uses "draft" in prose and in `draft-ietf-...`
-    names, so there each match of any of these on the normalized text is refused (each read
-    across a line end too, as a Markdown link may break there):
+    names, so there each match of any of these, on the kept text and on the deleted text, is
+    refused, and a line matched in either is reported once (each read across a line end too, as a
+    Markdown link may break there). The kept text keeps a tab or CR that alone separates a word
+    from the path, which deleting would join to it; the deleted text joins a path a tab or CR
+    splits:
       a. `/draft(?![a-z0-9_-])`;
       b. `(?<![a-z0-9_-])draft/`;
       c. a Markdown link destination whose first segment is `draft`, with any whitespace, line
@@ -85,10 +89,11 @@ fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellin
          `\\b(?:href|src|action|formaction|content|url)\\s*=\\s*["']?\\s*(?:\\./)*draft(?![a-z0-9_-])`.
     So `/draft/`, `./draft/`, `[x](draft)`, `[x](<draft>)`, `[x](draft#top)`, `[x]: draft`,
     `> [x]: draft`, `- [x]: draft`, `href="draft"`, `secureconfig.ai/draft/`, `%2Fdraft%2F`,
-    `/&#100;raft/`, `/dr&#9;aft/`, `/dr&#13;aft/`, `\\draft\\` and `/draft.html` are refused,
-    while "drafting", "drafted", "a draft.", "the draft's", "draft / final", "and Raft",
-    "draft-ietf-oauth-v2-1" and `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are
-    accepted.
+    `/&#100;raft/`, `/dr&#9;aft/`, `/dr&#13;aft/`, a raw CR inside `/draft/`, a tab alone between
+    `/draft` and "for", between "see" and `draft/`, and between `<a` and `href="draft"`,
+    `\\draft\\` and `/draft.html` are refused, while "drafting", "drafted", "a draft.",
+    "the draft's", "draft / final", "and Raft", "draft-ietf-oauth-v2-1" and
+    `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are accepted.
   Each finding names the file and the line, counting `\\n` only (a U+2028 or a `\\r` ends no line),
   and the file is read without newline translation.
 
@@ -261,23 +266,27 @@ def resolves(root, path):
 
 def normalized(text):
     """Published-index text (PART 3) put through { percent-decode; html.unescape } until stable,
-    then NFKC, case folded, with `\\` read as `/` and with every tab and CR deleted (a browser
-    deletes them from a URL), or None when it still changes in round DECODE_ROUNDS + 1."""
+    then NFKC, case folded and with `\\` read as `/` (the kept text), or None when it still
+    changes in round DECODE_ROUNDS + 1."""
     for _ in range(DECODE_ROUNDS + 1):
         decoded = html.unescape(unquote(text))
         if decoded == text:
-            text = unicodedata.normalize("NFKC", text).casefold().replace("\\", "/")
-            return text.replace("\t", "").replace("\r", "")
+            return unicodedata.normalize("NFKC", text).casefold().replace("\\", "/")
         text = decoded
     return None
+
+
+def deleted(text):
+    """The kept text with every tab and CR deleted (a browser deletes them from a URL)."""
+    return text.replace("\t", "").replace("\r", "")
 
 
 def index_findings(name, text):
     """The PART 3 findings for 1 published index under site/, each naming the file and line."""
     findings = []
-    norm, starts, at = [], [], 0
+    kept = []
     # Lines end at `\n` only. No normalization step reads across a `\n`, so normalizing each piece
-    # and joining them with `\n` gives the whole text's normalization, with each piece's start.
+    # and joining them with `\n` gives the whole text's normalization.
     for n, line in enumerate(text.split("\n"), 1):
         line = normalized(line)
         if line is None:
@@ -286,24 +295,27 @@ def index_findings(name, text):
                             f"character-reference decoding; the /draft/ review page stays out of "
                             f"every published index")
             line = ""
-        starts.append(at)
-        norm.append(line)
-        at += len(line) + 1
-    # Matched on the joined text, so a Markdown link broken across a line end is still read; a
-    # match is reported on the original line it starts on.
-    joined = "\n".join(norm)
+        kept.append(line)
+    # The literal word is read on the deleted text only, which holds every `draft` the kept text
+    # holds; the corpus forms on both, as deleting a tab or CR may join a word to the path.
     if name in STRICT_INDEXES:
+        texts = ([deleted(line) for line in kept],)
         patterns, why = (DRAFT_WORD,), "this hand-written index never carries the word draft"
     else:
+        texts = (kept, [deleted(line) for line in kept])
         patterns, why = DRAFT_REFS, "a reference to the draft path"
-    matches = sorted((m.start(), m.end()) for p in patterns for m in p.finditer(joined))
-    seen = set()
-    for start, end in matches:
-        n = bisect_right(starts, start)
-        if n in seen:
-            continue
-        seen.add(n)
-        excerpt = joined[max(0, start - 20):end + 20]
+    # Matched on the joined text, so a Markdown link broken across a line end is still read; a
+    # match is reported on the original line it starts on, once whichever text it is found in.
+    excerpts = {}
+    for norm in texts:
+        starts, at = [], 0
+        for line in norm:
+            starts.append(at)
+            at += len(line) + 1
+        joined = "\n".join(norm)
+        for start, end in sorted((m.start(), m.end()) for p in patterns for m in p.finditer(joined)):
+            excerpts.setdefault(bisect_right(starts, start), joined[max(0, start - 20):end + 20])
+    for n, excerpt in sorted(excerpts.items()):
         findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses {excerpt!r} ({why}); "
                         f"the /draft/ review page stays out of every published index")
     return findings

@@ -19,23 +19,25 @@ review page, none on the 404); the "no page links /draft/" and Disclosure and Li
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
 percent-encoded letter or a fragment does not get past them; and the published indexes are read
 by a fail-closed rule after percent-decoding and character-reference decoding (at most 8 rounds),
-NFKC, case folding, `\\` read as `/` and tab and CR deleted: site/llms.txt, site/robots.txt and
-site/.well-known/security.txt are refused for any literal `draft` (relative, Disallow, bold,
-host-only, www, href=, backslash, 1-slash, .html, character-reference, tab and CR spellings among
-the cases) and accept "Raft consensus and Raft logs", and site/llms-full.txt for each form of the
-draft path (character references, a tab or CR character reference inside the path, bare Markdown
-link destinations, reference definitions, HTML attribute values, a link broken across a line end,
-a link broken inside a blockquote, a reference definition whose destination is on the next line,
-whose label spans 2 lines, or that sits in a blockquote or a list item, and 1 case each for forms
-b, d and e that only that form catches), while its prose ("drafting", "drafted", "a draft.",
-"the draft's", "draft / final", "and Raft", "Choose draft" wrapped before "/ final wording." in
-the text and in a link title, "draft-ietf-oauth-v2-1", a datatracker draft URL and a description
-meta saying "draft") is accepted. A 9-times percent-encoded path exceeds the round limit and is
-refused. Each refusal names the file and line, counted by `\\n` only (a U+2028 or a `\\r` ends no
-line, and llms-full.txt written with `\\r\\n` line endings reports a reference on line 2 as
-line 2). The edit, append, prepend and crlf mutations read and write bytes, so they translate no
-newline. A second robots meta whose first name attribute is robots is read by that first name, as
-a browser reads it.
+NFKC, case folding and `\\` read as `/`: site/llms.txt, site/robots.txt and
+site/.well-known/security.txt are refused for any literal `draft` once tabs and CRs are deleted
+(relative, Disallow, bold, host-only, www, href=, backslash, 1-slash, .html, character-reference,
+tab and CR spellings and a raw CR inside the path among the cases) and accept "Raft consensus and
+Raft logs", and site/llms-full.txt for each form of the draft path, matched with tabs and CRs kept
+and with them deleted (character references, a tab or CR character reference or a raw CR inside
+the path, a tab as the only separator between a word and the reference for forms a, b and e, bare
+Markdown link destinations, reference definitions, HTML attribute values, a link broken across a
+line end, a link broken inside a blockquote, a reference definition whose destination is on the
+next line, whose label spans 2 lines, or that sits in a blockquote or a list item, and 1 case each
+for forms b, d and e that only that form catches), while its prose ("drafting", "drafted",
+"a draft.", "the draft's", "draft / final", "and Raft", "Choose draft" wrapped before
+"/ final wording." in the text and in a link title, "draft-ietf-oauth-v2-1", a datatracker draft
+URL and a description meta saying "draft") is accepted. A 9-times percent-encoded path exceeds
+the round limit and is refused. Each refusal names the file and line, counted by `\\n` only (a
+U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a
+reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and write
+bytes, so they translate no newline. A second robots meta whose first name attribute is robots is
+read by that first name, as a browser reads it.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -173,6 +175,8 @@ REFUSED_LINES = {
         # A tab or CR inside the path, which a browser deletes from a URL and the gate deletes.
         "- [Review](/dr&#9;aft/): the next version\n",
         "- [Review](/dr&#13;aft/): the next version\n",
+        # A raw CR inside the path, which ends no line.
+        "- [Review](/dr\raft/): the next version\n",
     ),
     "site/robots.txt": ("Disallow: draft/\n", "Disallow:/draft/\n", "Disallow: \\draft\\\n"),
     "site/.well-known/security.txt": ("Policy: https://secureconfig.ai/draft/\n",),
@@ -196,6 +200,13 @@ REFUSED_LINES = {
         # A tab or CR inside the path, which a browser deletes from a URL and the gate deletes.
         "The next version is staged at /dr&#9;aft/ for review.\n",
         "The next version is staged at /dr&#13;aft/ for review.\n",
+        # A raw CR inside the path, which ends no line.
+        "The next version is staged at /dr\raft/ for review.\n",
+        # A tab as the only separator between a word and the reference, which forms a, b and e
+        # read on the text with tabs kept (deleting the tab would join them).
+        "The next version is staged at https://secureconfig.ai/draft\tfor review.\n",
+        "The next version: see\tdraft/notes for review.\n",
+        'The next version is staged <a\thref="draft">here</a>.\n',
     ),
 }
 # The llms-full.txt cases that only 1 corpus form catches (DRAFT_REFS a to e in the gate), each
