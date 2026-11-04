@@ -501,7 +501,10 @@ link to `CHANGELOG.md` at the tag.
    `.claude/settings.json`, and the suite's advisory line saying the local `python3` differs
    from CI's pinned `PYTHON_VERSION`. So it needs shellcheck installed, though not CI's pinned
    release, and not CI's Python release: CI's pinned shellcheck, like its Python, is covered by
-   the online `gates` check of step 3 on the target. The pass line names the shellcheck version
+   the online `gates` check of step 3 on the target. The overflow section's SKIP is refused too,
+   so a release run also needs node 20 or later and playwright 1.64.1 with its Chromium, with
+   `NODE_PATH` set to the `node_modules` folder holding playwright and `PLAYWRIGHT_BROWSERS_PATH`
+   to the folder holding its Chromium. The pass line names the shellcheck version
    the suite reported, says so when that Python line was printed, and always says the online
    `gates` result is recorded, not verified.
 6. Create the release as a draft once the offline release check and the online `gates` check
