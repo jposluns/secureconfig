@@ -20,16 +20,24 @@ the resolved target file, so a query, an extra slash, a dot segment (plain or pe
 percent-encoded letter or a fragment does not get past them; and the published indexes are read
 by a fail-closed rule after percent-decoding and character-reference decoding (at most 8 rounds),
 NFKC, case folding and `\\` read as `/`: site/llms.txt, site/robots.txt and
-site/.well-known/security.txt are refused for any `draft` (relative, Disallow, bold, host-only,
-www, href=, backslash, 1-slash, .html and character-reference spellings among the cases), and
-site/llms-full.txt for each form of the draft path (character references, bare Markdown link
-destinations, reference definitions, HTML attribute values, a link broken across a line end, a
-link broken inside a blockquote, a reference definition whose destination is on the next line,
-whose label spans 2 lines, or that sits in a blockquote or a list item, and 1 case each for forms
-b, d and e that only that form catches), while its prose ("drafting", "the draft's",
-"draft-ietf-oauth-v2-1" and a datatracker draft URL) is accepted. A 9-times percent-encoded path
-exceeds the round limit and is refused. Each refusal names the file and line, counted by `\\n`
-only (a U+2028 ends no line).
+site/.well-known/security.txt are refused for any literal `draft` once tabs and CRs are deleted
+(relative, Disallow, bold, host-only, www, href=, backslash, 1-slash, .html, character-reference,
+tab and CR spellings and a raw CR inside the path among the cases) and accept "Raft consensus and
+Raft logs", and site/llms-full.txt for each form of the draft path, matched with tabs and CRs kept
+and with them deleted (character references, a tab or CR character reference or a raw CR inside
+the path, a tab as the only separator between a word and the reference for forms a, b and e, bare
+Markdown link destinations, reference definitions, HTML attribute values, a link broken across a
+line end, a link broken inside a blockquote, a reference definition whose destination is on the
+next line, whose label spans 2 lines, or that sits in a blockquote or a list item, and 1 case each
+for forms b, d and e that only that form catches), while its prose ("drafting", "drafted",
+"a draft.", "the draft's", "draft / final", "and Raft", "Choose draft" wrapped before
+"/ final wording." in the text and in a link title, "draft-ietf-oauth-v2-1", a datatracker draft
+URL and a description meta saying "draft") is accepted. A 9-times percent-encoded path exceeds
+the round limit and is refused. Each refusal names the file and line, counted by `\\n` only (a
+U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a
+reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and write
+bytes, so they translate no newline. A second robots meta whose first name attribute is robots is
+read by that first name, as a browser reads it.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -59,12 +67,13 @@ def run(mutate=None):
 
 
 def edit(rel, old, new):
+    """The first old in rel replaced with new, read and written as bytes (no newline translation)."""
     def mutate(d):
         path = d / rel
-        text = path.read_text(encoding="utf-8")
-        if old not in text:
+        data, old_b = path.read_bytes(), old.encode("utf-8")
+        if old_b not in data:
             raise AssertionError(f"mutation {old!r} no longer matches {rel}")
-        path.write_text(text.replace(old, new, 1), encoding="utf-8")
+        path.write_bytes(data.replace(old_b, new.encode("utf-8"), 1))
     return mutate
 
 
@@ -87,12 +96,12 @@ STRAY = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<ti
 
 
 def append(rel, text):
-    """text added at the end of an existing file."""
+    """text added at the end of an existing file, read and written as bytes."""
     def mutate(d):
         path = d / rel
         if not path.is_file():
             raise AssertionError(f"mutation target {rel} does not exist")
-        path.write_text(path.read_text(encoding="utf-8") + text, encoding="utf-8")
+        path.write_bytes(path.read_bytes() + text.encode("utf-8"))
     return mutate
 
 
@@ -107,12 +116,25 @@ def guides_link(value):
 
 
 def prepend(rel, text):
-    """text added at the start of an existing file."""
+    """text added at the start of an existing file, read and written as bytes."""
     def mutate(d):
         path = d / rel
         if not path.is_file():
             raise AssertionError(f"mutation target {rel} does not exist")
-        path.write_text(text + path.read_text(encoding="utf-8"), encoding="utf-8")
+        path.write_bytes(text.encode("utf-8") + path.read_bytes())
+    return mutate
+
+
+def crlf(rel, second):
+    """rel with every line ending written `\\r\\n` and second inserted as its line 2."""
+    def mutate(d):
+        path = d / rel
+        data = path.read_bytes()
+        lines = data.split(b"\n")
+        if len(lines) < 2 or b"\r" in data:
+            raise AssertionError(f"{rel} has fewer than 2 lines or already carries a CR")
+        lines.insert(1, second.encode("utf-8"))
+        path.write_bytes(b"\r\n".join(lines))
     return mutate
 
 
@@ -150,6 +172,11 @@ REFUSED_LINES = {
         "- Draft review: the next version\n",
         "- [Review](/&#100;raft/): the next version\n",
         "- The next version: dr&#97;ft/\n",
+        # A tab or CR inside the path, which a browser deletes from a URL and the gate deletes.
+        "- [Review](/dr&#9;aft/): the next version\n",
+        "- [Review](/dr&#13;aft/): the next version\n",
+        # A raw CR inside the path, which ends no line.
+        "- [Review](/dr\raft/): the next version\n",
     ),
     "site/robots.txt": ("Disallow: draft/\n", "Disallow:/draft/\n", "Disallow: \\draft\\\n"),
     "site/.well-known/security.txt": ("Policy: https://secureconfig.ai/draft/\n",),
@@ -170,6 +197,16 @@ REFUSED_LINES = {
         "The next version is staged at \\draft\\ for review.\n",
         # 8 times percent-encoded: decoded within the round limit, then refused by its form.
         "The next version is staged at %" + "25" * 7 + "2Fdraft%" + "25" * 7 + "2F for review.\n",
+        # A tab or CR inside the path, which a browser deletes from a URL and the gate deletes.
+        "The next version is staged at /dr&#9;aft/ for review.\n",
+        "The next version is staged at /dr&#13;aft/ for review.\n",
+        # A raw CR inside the path, which ends no line.
+        "The next version is staged at /dr\raft/ for review.\n",
+        # A tab as the only separator between a word and the reference, which forms a, b and e
+        # read on the text with tabs kept (deleting the tab would join them).
+        "The next version is staged at https://secureconfig.ai/draft\tfor review.\n",
+        "The next version: see\tdraft/notes for review.\n",
+        'The next version is staged <a\thref="draft">here</a>.\n',
     ),
 }
 # The llms-full.txt cases that only 1 corpus form catches (DRAFT_REFS a to e in the gate), each
@@ -210,15 +247,36 @@ INDEX_CASES += [("llms-full.txt line 1 carrying a U+2028 before /draft/",
                  prepend("site/llms-full.txt",
                          "Staged:\N{LINE SEPARATOR}the next version is at /draft/.\n"),
                  "site/llms-full.txt:1: the published-index rule refuses", 1)]
+# `\r\n` line endings throughout: a `\r` ends no line, so a reference on line 2 is reported there,
+# and the corpus written that way is still accepted.
+INDEX_CASES += [("llms-full.txt with \\r\\n line endings and /draft/ on line 2",
+                 crlf("site/llms-full.txt", "The next version is staged at /draft/ for review."),
+                 "site/llms-full.txt:2: the published-index rule refuses", 1),
+                ("llms-full.txt with \\r\\n line endings",
+                 crlf("site/llms-full.txt", "Keep drafting the policy until it is reviewed."),
+                 OK_LINE, 0)]
 # Guide-corpus prose and draft-ietf names that the llms-full.txt rule accepts.
 CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
                 "Read the draft's scope before the policy.\n",
                 "OAuth 2.1 is still draft-ietf-oauth-v2-1.\n",
                 "OAuth 2.1: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/\n",
                 "[draft-ietf-oauth-v2-1]: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/\n",
-                "[Drafting notes](/guides/)\n")
+                "[Drafting notes](/guides/)\n",
+                # Prose that names no path: wrapped at a slash (here and in the link title last),
+                # spaced around a slash, inflected, at a sentence end, the word Raft, and a
+                # description meta.
+                "Choose draft\n/ final wording.\n",
+                "Mark each section draft / final before the review.\n",
+                "The policy was drafted last week.\n",
+                "Start from a draft.\n",
+                "Keep the gRPC and Raft ports closed.\n",
+                '<meta name="description" content="This is a draft.">\n',
+                '[x](/guide "Choose draft\n/ final wording.")\n')
 INDEX_CASES += [(f"llms-full.txt prose {line.strip()!r}", append("site/llms-full.txt", line),
                  OK_LINE, 0) for line in CORPUS_PROSE]
+# The hand-written indexes refuse only the literal word.
+INDEX_CASES += [("llms.txt prose 'Raft consensus and Raft logs'",
+                 append("site/llms.txt", "- Raft consensus and Raft logs\n"), OK_LINE, 0)]
 
 
 # (description, mutation, expected text, expected exit)
@@ -231,6 +289,9 @@ CASES = [
      "must carry exactly 1 robots meta", 1),
     ("a second robots meta on the review page, single-quoted, allowing indexing",
      edit(REVIEW, META, META + "<meta name='ROBOTS' content='index, follow'>"),
+     "must carry exactly 1 robots meta", 1),
+    ("a duplicate name attribute on a second robots meta on the review page, the first being robots",
+     edit(REVIEW, META, META + '<meta name="robots" name="x" content="index, follow">'),
      "must carry exactly 1 robots meta", 1),
     ("the review page's robots meta in upper case with other spacing",
      edit(REVIEW, META, '<META NAME="Robots" CONTENT="NOINDEX,NOFOLLOW">'), OK_LINE, 0),
