@@ -44196,8 +44196,9 @@ each default to an empty value (`#[arg(default_value_os = "")]`), their parsers 
 (`Ok(Targets::All)`), and under `--deny-all` each allow getter returns `Targets::All` for that list, while each
 deny getter denies nothing unless you name targets in its list. That runtime result is not established by a
 run. So pass explicit `--allow-http` and `--allow-rpc` lists of the routes and RPC
-methods you use, `/health`, `/signin`, `/signup` and `/sql` included where needed. The HTTP protocol page says a
-denied `health` route answers `403`, which the Verify block's health check reports as inconclusive.
+methods you use, giving routes by name without a slash, such as `health`, `signin`, `signup` and `sql`. The
+HTTP protocol page says a denied `health` route answers `403`, which the Verify block's health check reports
+as inconclusive.
 
 v4.0.0 also fixes these capability bypasses, each affecting versions below 4.0.0 and patched in 4.0.0:
 
@@ -44439,7 +44440,7 @@ Claims (full source mapping in the JSON block below):
 - capability-advisories (REASONED; advisories, docs): v4.0.0 fixes capability bypasses affecting versions below 4.0.0: GHSA-5w6j-qm42-4rc2, GHSA-fq69-wr4w-v3gm and GHSA-q83r-f38r-rwvj; the 4.0 release page lists 23 advisories, of which this guide names 15 and counts 8.
 - tls (REASONED; docs): web-crt and web-key provide native HTTPS; SurrealDB documents TLS termination at a load balancer or reverse proxy, and reaching the instance only over a tailnet is this guide's own suggestion.
 - mfa (REASONED; docs): Whether SurrealDB v4.0.0 has a native second factor is not established, as no page read addresses one; require IdP or administrative-gateway MFA and prevent direct-origin bypass.
-- verify-inventory (REASONED; docs, pinned): Inventory 8000 on loopback/private addresses; at v4.0.0 a /health 200 means the route is allowed, the memory guard has not stayed engaged for its configured period (a check that can be disabled) and storage answers, not authentication or finished startup; /status is liveness and /ready follows startup and any configured heartbeat budget.
+- verify-inventory (REASONED; docs, pinned): Inventory 8000 on loopback/private addresses; at v4.0.0 a /health 200 means the route is allowed, the memory-health failure condition was not met (the check is disabled, or the guard has not stayed engaged for its configured period) and storage answers, not authentication or finished startup; /status is liveness and /ready follows startup and any configured heartbeat budget.
 - verify-auth (REASONED; docs): Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.
 - verify-auth-limits (REASONED; docs): Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.
 - verify-origin (REASONED; docs): Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.
@@ -44450,7 +44451,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "2cf82c7a6981fcc5264ba9938588509182e6e4c38e1f632e20fab3085e3a2518",
+  "body_sha256": "03cf12ab77f1015f9c4a90206b1d7b2ce48b8be3c334e92b57b411d7250fd4e1",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",
@@ -44607,7 +44608,7 @@ Claims (full source mapping in the JSON block below):
     "capability-advisories": {"text": "v4.0.0 fixes capability bypasses affecting versions below 4.0.0: GHSA-5w6j-qm42-4rc2, GHSA-fq69-wr4w-v3gm and GHSA-q83r-f38r-rwvj; the 4.0 release page lists 23 advisories, of which this guide names 15 and counts 8.", "components": ["advisories", "docs"], "sources": ["advisories:s28cd26dc0103", "advisories:sad31e9ec665b", "advisories:s9c8e76544223", "docs:sac0752ff1726"], "status": "REASONED"},
     "tls": {"text": "web-crt and web-key provide native HTTPS; SurrealDB documents TLS termination at a load balancer or reverse proxy, and reaching the instance only over a tailnet is this guide's own suggestion.", "components": ["docs"], "sources": ["docs:s2eb33a763ea4", "docs:sae73137661aa"], "status": "REASONED"},
     "mfa": {"text": "Whether SurrealDB v4.0.0 has a native second factor is not established, as no page read addresses one; require IdP or administrative-gateway MFA and prevent direct-origin bypass.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sae73137661aa"], "status": "REASONED"},
-    "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; at v4.0.0 a /health 200 means the route is allowed, the memory guard has not stayed engaged for its configured period (a check that can be disabled) and storage answers, not authentication or finished startup; /status is liveness and /ready follows startup and any configured heartbeat budget.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "docs:scc00d3d3618d", "pinned:s538897c5bacc", "pinned:s67ee52a23e57"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; at v4.0.0 a /health 200 means the route is allowed, the memory-health failure condition was not met (the check is disabled, or the guard has not stayed engaged for its configured period) and storage answers, not authentication or finished startup; /status is liveness and /ready follows startup and any configured heartbeat budget.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "docs:scc00d3d3618d", "pinned:s538897c5bacc", "pinned:s67ee52a23e57"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
     "verify-auth-limits": {"text": "Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
     "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [2]},
