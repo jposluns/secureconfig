@@ -13,16 +13,18 @@
 # With no argument every section runs. That is the whole-corpus run, which CI makes weekly and on
 # demand, and only it ends with "All gates passed.". With --sections, only the named sections run,
 # in this file's order; on a pull request tools/select_gates.py names them from the changed paths,
-# and names every section when the pull request changes any path outside site/**, site-src/**
-# and the root project records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and
-# PENDING-DECISIONS.md, or the code under site/ (a _headers or _redirects file at any depth, and
-# every .js, .mjs, .cjs or .map file in any case). A section is everything from its
-# `# section: NAME` line to the next such line or to `# end of sections`. What comes before the
-# first section (the helpers, run_gate and the parser preflight) and the summary after the last
-# one run either way. A name that is not a section here is refused with status 2 before any gate
-# runs. The named sections are cut out of this file's text, not wrapped in a condition, so each
-# section's heading and body are the same in both runs and the tests that cut a block out of this
-# file still find it.
+# and names every section when the pull request changes any path other than the root project
+# records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md and the files
+# under site/ or site-src/ whose names end, in any case, in .html, .css, .json, .svg, .png, .jpg,
+# .jpeg, .webp, .ico, .woff2, .txt or .xml and are not _headers or _redirects. A selection that
+# holds generated-committed also holds llms-full and plugin, whose rebuilds it relies on. A
+# section is everything from its `# section: NAME` line to the next such line or to
+# `# end of sections`. What comes before the first section (the helpers, run_gate and the parser
+# preflight) and the summary after the last one run either way. A name holding anything but
+# letters, digits and hyphens (a newline included), or that is not a section here, is refused
+# with status 2 before any gate runs. The named sections are cut out of this file's text, not
+# wrapped in a condition, so each section's heading and body are the same in both runs and the
+# tests that cut a block out of this file still find it.
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
@@ -38,6 +40,12 @@ if [ "$#" -gt 0 ]; then
   while [ -n "$rest" ]; do
     name=${rest%%,*}
     rest=${rest#*,}
+    # grep reads a newline in its pattern as a second pattern, so only these characters pass.
+    case $name in
+      *[!A-Za-z0-9-]*)
+        printf "  FAIL  --sections names '%s', which holds a character other than a letter, a digit or a hyphen; no gate ran\n" "$name"
+        exit 2 ;;
+    esac
     if [ -z "$name" ] || ! grep -qxF -- "$name" <<< "$known"; then
       printf "  FAIL  --sections names '%s', which is not a section of tools/run_all_checks.sh; no gate ran\n" "$name"
       exit 2
@@ -264,7 +272,8 @@ echo "== the committed generated files match a fresh build of the commit =="
 # exports HEAD with git archive on every run and checks the committed plugin.json version against
 # the committed VERSION. Unless git status shows the working tree is HEAD with no change, in which
 # case the gates above already rebuilt HEAD, it also runs the same two builds in the export and
-# compares. The self-test runs first, so what runs is the shipped gate.
+# compares; that skip relies on the llms-full and plugin sections, which tools/select_gates.py
+# selects whenever it selects this one. The self-test runs first, so what runs is the shipped gate.
 for generated_check in test_generated_committed.py check_generated_committed.py; do
   if generated_committed=$(python3 -I -B "tools/$generated_check" 2>&1); then
     printf '%s\n' "$generated_committed"

@@ -3,35 +3,41 @@
 
 SCOPED: each case is a changed path of one scoped kind and the exact sections its selection must
 be, written out here rather than read from the selector: a page, a page source, a served asset
-that is not a script, a palette, site/llms.txt, a name that only begins like a script's, a name
-that only ends like `_headers`, a script under site-src/, and each of the root project records
-CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md. A list of scoped paths,
-mixed, selects the union of their sections in the suite's order, and never every section.
+that is not a script, a palette, site/llms.txt, a name that only begins like a script's, an
+`.html`, a `.css` and a `.json` file under site-src/, a page named in upper case, a file under
+site/ and one under site-src/ for each allowed ending (SITE_CONTENT, written out here) in upper
+case, and each of the root project records CHANGELOG.md (with version-basis, llms-full, plugin and
+generated-committed), TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md. A list of scoped
+paths, mixed, selects the union of their sections in the suite's order, and never every section.
+Every scoped selection that holds generated-committed holds llms-full and plugin, and so does a
+map entry that names generated-committed alone.
 
 EVERY SECTION: each kind of path that is not scoped content selects every section, through the
-pattern the case names or through no pattern: the code under site/ (a `_headers` file, the CSP,
-or a `_redirects` file at any depth, nested ones included; a file ending in `.js`, `.mjs`, `.cjs`
-or `.map` at any depth, in any case, `.JS` and `.js.map` included), a guide (a new one included),
-README.md, controls-reference.md, a file under plugin/, tools/, scripts/, .baseline/, .aiqt/ and
-.github/, a requirements file at any depth (one under site/ included), CLAUDE.md, AGENTS.md,
-CONTRIBUTING.md, SECURITY.md, README.sources.md, NOTICE, LICENSE, VERSION, a guide request, an
-unmapped path, a path git quotes, an empty list and a list of blank lines; so do scoped content
-beside any of them and a map naming a section the suite does not have.
+pattern the case names or through no pattern: under site/ or site-src/, every file outside the
+allowlist (a `_headers` file, the CSP, or a `_redirects` file at any depth, nested ones, ones
+under site-src/ and a `_headers` file at the root included; a script or source map at any depth,
+in any case, `.JS` and `.js.map` included; site-src/notes.js, site-src/action.yml,
+site-src/guide.md, a name with no suffix, an allowed ending followed by more text), a guide (a
+new one included), README.md,
+controls-reference.md, a file under plugin/, tools/, scripts/, .baseline/, .aiqt/ and .github/, a
+requirements file at any depth (one under site/ included), CLAUDE.md, AGENTS.md, CONTRIBUTING.md,
+SECURITY.md, README.sources.md, NOTICE, LICENSE, VERSION, a guide request, an unmapped path, a
+path git quotes, an empty list and a list of blank lines; so do scoped content beside any of them
+and a map naming a section the suite does not have.
 
 THE MAP AND THE CHECKOUT: every pattern in the selector's MAP is the first match of at least one
 case path, so a pattern added without a case is a finding; every section MAP names is a
 `# section: NAME` line of tools/run_all_checks.sh; no section name is used twice; the root
 Markdown the suite's not_a_guide list names maps as a project record only for the five records;
 every other root Markdown file in this checkout and every file under plugin/, tools/, scripts/,
-.baseline/, .aiqt/ and .github/ selects every section; every file under site/ that is code
-(named `_headers` or `_redirects`, or ending in `.js`, `.mjs`, `.cjs` or `.map` in any case)
-selects every section, and there is at least one; and every other file under site/ and every
-file under site-src/ is scoped.
+.baseline/, .aiqt/ and .github/ selects every section; every file under site/ and site-src/ is
+scoped exactly when it is allowed content (its name ends in an allowed ending in any case, and is
+not `_headers`, `_redirects` or a requirements file), and at least one file under site/ is not.
 
 THE COMMAND: `printf 'site/index.html\\n' | python3 tools/select_gates.py` exits 0 and prints the
 site selection, one name per line; `site/_headers`, `site/assets/baseline/scheme.js`,
-`site/assets/APP.MJS`, `mfa.md`, `tools/check_sitemap.py` and empty input each print every
-section.
+`site/assets/APP.MJS`, `site-src/notes.js`, `mfa.md`, `tools/check_sitemap.py` and empty input
+each print every section.
 
 Nothing here reads git history or the network. Exit 0 ok, 1 on a finding.
 """
@@ -51,38 +57,47 @@ RECORDS = ("CHANGELOG.md", "TODO.md", "DONE.md", "DECISIONS.md", "PENDING-DECISI
 ANY = ("secrets", "local-links", "llms-full-links")
 SITE = ("copy-buttons", "baseline-pin", "palette", "site-build", "site-draft", "pages-build",
         "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories", "llms-full",
-        "generated-committed", "prose-conventions", "aiqt-baseline") + ANY
+        "plugin", "generated-committed", "prose-conventions", "aiqt-baseline") + ANY
 MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "prose-conventions",
             "shell-blocks", "bracket-ranges", "pinned-citations", "placeholders",
             "aiqt-baseline") + ANY
+# CHANGELOG.md also feeds version-basis, which reads its newest dated heading, the two bundle
+# builds that run it, and generated-committed.
+CHANGELOG = MARKDOWN + ("changelog-prs", "changelog-format", "version-basis", "llms-full",
+                        "plugin", "generated-committed")
 # The directories whose every file is code, checks or a bundle, and so selects every section.
 EVERY_DIRS = ("plugin", "tools", "scripts", ".baseline", ".aiqt", ".github")
-# The code under site/, which selects every section: the served headers (the CSP), the redirects
-# at any depth, and the served scripts and their source maps in any case.
-SITE_CODE_NAMES = ("_headers", "_redirects")
-SITE_CODE_ENDINGS = (".js", ".mjs", ".cjs", ".map")
+# The only endings, in any case, that make a file under site/ or site-src/ content.
+SITE_CONTENT = (".html", ".css", ".json", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".ico",
+                ".woff2", ".txt", ".xml")
 
 
-def is_site_code(path):
-    """Whether a path under site/ is code rather than content."""
+def is_site_content(path):
+    """Whether a path under site/ or site-src/ is allowed content rather than every section."""
     name = path.rsplit("/", 1)[-1]
-    return path.startswith("site/") and (name in SITE_CODE_NAMES
-                                         or name.lower().endswith(SITE_CODE_ENDINGS))
+    return (path.startswith(("site/", "site-src/")) and name.lower().endswith(SITE_CONTENT)
+            and name not in ("_headers", "_redirects")
+            and not name.lower().startswith("requirements"))
 
 
 # (scoped kind, changed path, the exact sections its selection must be)
 SCOPED = (
     ("a page", "site/index.html", SITE),
     ("a nested page", "site/disclosure/index.html", SITE),
+    ("a page named in upper case", "site/guides/INDEX.HTML", SITE),
     ("a page source", "site-src/content.json", SITE),
+    ("an .html file under site-src/", "site-src/pages/notes.html", SITE),
+    ("a .css file under site-src/", "site-src/notes.css", SITE),
+    ("a .json file under site-src/", "site-src/notes.json", SITE),
     ("a served stylesheet", "site/assets/baseline/fonts.css", SITE),
     ("a served image", "site/assets/baseline/logos/secureconfig.svg", SITE),
     ("a palette", "site/assets/baseline/palettes.css", SITE),
     ("the llms.txt index", "site/llms.txt", SITE),
     ("a name that only begins like a script's", "site/assets/baseline/scheme.json", SITE),
-    ("a name that only ends like _headers", "site/docs/old_headers", SITE),
-    ("a script under site-src/", "site-src/notes.js", SITE),
-    ("CHANGELOG.md", "CHANGELOG.md", MARKDOWN + ("changelog-prs", "changelog-format")),
+    *((f"an allowed ending {ending} under {top}/, in upper case",
+       f"{top}/assets/x{ending.upper()}", SITE)
+      for top in ("site", "site-src") for ending in SITE_CONTENT),
+    ("CHANGELOG.md", "CHANGELOG.md", CHANGELOG),
     ("TODO.md", "TODO.md", MARKDOWN + ("todo-rows",)),
     ("DONE.md", "DONE.md", MARKDOWN),
     ("DECISIONS.md", "DECISIONS.md", MARKDOWN),
@@ -99,20 +114,33 @@ SCOPED_LISTS = (
 
 # (every-section kind, changed paths, the MAP pattern a single path must match first, or None)
 EVERY = (
-    ("the served headers, the CSP", ["site/_headers"], "site/**/_headers"),
-    ("a nested headers file", ["site/guides/_headers"], "site/**/_headers"),
-    ("the redirects", ["site/_redirects"], "site/**/_redirects"),
-    ("a nested redirects file", ["site/assets/baseline/_redirects"], "site/**/_redirects"),
-    ("a served script", ["site/assets/baseline/scheme.js"], "site/**/*.js"),
-    ("another served script", ["site/assets/baseline/copy.js"], "site/**/*.js"),
-    ("a script at the site's root", ["site/app.js"], "site/**/*.js"),
-    ("a script named in upper case", ["site/assets/baseline/APP.JS"], "site/**/*.js"),
-    ("an ES module", ["site/assets/baseline/app.mjs"], "site/**/*.mjs"),
-    ("an ES module named in mixed case", ["site/assets/APP.Mjs"], "site/**/*.mjs"),
-    ("a CommonJS module", ["site/assets/baseline/app.cjs"], "site/**/*.cjs"),
-    ("a script's source map", ["site/assets/baseline/scheme.js.map"], "site/**/*.map"),
-    ("a source map named in upper case", ["site/assets/baseline/SCHEME.JS.MAP"], "site/**/*.map"),
+    ("the served headers, the CSP", ["site/_headers"], "**/_headers"),
+    ("a nested headers file", ["site/guides/_headers"], "**/_headers"),
+    ("a headers file under site-src/", ["site-src/_headers"], "**/_headers"),
+    ("a headers file at the root", ["_headers"], "**/_headers"),
+    ("the redirects", ["site/_redirects"], "**/_redirects"),
+    ("a nested redirects file", ["site/assets/baseline/_redirects"], "**/_redirects"),
+    ("a redirects file under site-src/", ["site-src/_redirects"], "**/_redirects"),
+    ("a served script", ["site/assets/baseline/scheme.js"], None),
+    ("another served script", ["site/assets/baseline/copy.js"], None),
+    ("a script at the site's root", ["site/app.js"], None),
+    ("a script named in upper case", ["site/assets/baseline/APP.JS"], None),
+    ("an ES module", ["site/assets/baseline/app.mjs"], None),
+    ("an ES module named in mixed case", ["site/assets/APP.Mjs"], None),
+    ("a CommonJS module", ["site/assets/baseline/app.cjs"], None),
+    ("a script's source map", ["site/assets/baseline/scheme.js.map"], None),
+    ("a source map named in upper case", ["site/assets/baseline/SCHEME.JS.MAP"], None),
+    ("a script under site-src/", ["site-src/notes.js"], None),
+    ("an action under site-src/", ["site-src/action.yml"], None),
+    ("Markdown under site-src/", ["site-src/guide.md"], None),
+    ("Markdown under site/", ["site/assets/baseline/NOTICE.md"], None),
+    ("a name with no suffix under site-src/", ["site-src/Makefile"], None),
+    ("a name with no suffix under site/", ["site/assets/baseline/LICENSE"], None),
+    ("a name that only ends like _headers", ["site/docs/old_headers"], None),
+    ("an allowed ending followed by more text", ["site/index.html.bak"], None),
     ("a served script beside a page", ["site/index.html", "site/assets/baseline/rail.js"], None),
+    ("Markdown under site-src/ beside a page source",
+     ["site-src/content.json", "site-src/guide.md"], None),
     ("the served headers beside a palette", ["site/assets/baseline/palettes.css", "site/_headers"],
      None),
     ("a guide", ["mfa.md"], None),
@@ -178,6 +206,24 @@ def check_cases(failures):
         if chosen != [n for n in NAMES if n in union] or chosen == NAMES:
             failures.append(f"{paths!r} should select the union of its paths' sections in suite "
                             f"order: {chosen!r}, {notes!r}")
+    # generated-committed skips its rebuild on a clean tree because llms-full and plugin ran.
+    for paths in [[path] for _, path, _ in SCOPED] + list(SCOPED_LISTS):
+        chosen, _ = sg.select(paths, NAMES)
+        count += 1
+        if "generated-committed" in chosen and not {"llms-full", "plugin"} <= set(chosen):
+            failures.append(f"{paths!r} selects generated-committed without llms-full and "
+                            f"plugin: {chosen!r}")
+    saved = sg.COMPILED
+    alone = ("generated-committed",)
+    sg.COMPILED = (("x.md", sg.pattern_re("x.md", alone), alone),)
+    try:
+        chosen, _ = sg.select(["x.md"], NAMES)
+    finally:
+        sg.COMPILED = saved
+    count += 1
+    if not {"generated-committed", "llms-full", "plugin"} <= set(chosen) or chosen == NAMES:
+        failures.append(f"a map entry naming generated-committed alone should also select "
+                        f"llms-full and plugin: {chosen!r}")
     for kind, paths, pattern in EVERY:
         chosen, notes = sg.select(paths, NAMES)
         count += 1
@@ -250,16 +296,16 @@ def check_map(failures):
                             f"section: {scoped!r}")
     for top in ("site", "site-src"):
         files = files_under(top)
-        wrong = [f for f in files if (sg.sections_for(f)[1] == sg.ALL) != is_site_code(f)]
+        wrong = [f for f in files if (sg.sections_for(f)[1] == sg.ALL) == is_site_content(f)]
         count += 1
         if not files or wrong:
-            failures.append(f"each of the {len(files)} files under {top}/ should be scoped unless "
-                            f"it is code under site/, which selects every section: {wrong!r}")
-    code = [f for f in files_under("site") if is_site_code(f)]
+            failures.append(f"each of the {len(files)} files under {top}/ should be scoped exactly "
+                            f"when it is allowed content: {wrong!r}")
+    other = [f for f in files_under("site") if not is_site_content(f)]
     count += 1
-    if not code:
-        failures.append("no file under site/ is code (`_headers`, `_redirects` or a script or "
-                        "source map), so the code cases reach nothing in this checkout")
+    if not other:
+        failures.append("every file under site/ is allowed content, so the refusal cases reach "
+                        "nothing in this checkout")
     chosen, _ = sg.select(["site/index.html", "CHANGELOG.md"], NAMES)
     count += 1
     if chosen != [n for n in NAMES if n in set(chosen)]:
@@ -277,7 +323,8 @@ def check_command(failures):
     count = 0
     for stdin, want in (("site/index.html\n", sg.select(["site/index.html"], NAMES)[0]),
                         ("site/_headers\n", NAMES), ("site/assets/baseline/scheme.js\n", NAMES),
-                        ("site/assets/APP.MJS\n", NAMES), ("mfa.md\n", NAMES),
+                        ("site/assets/APP.MJS\n", NAMES), ("site-src/notes.js\n", NAMES),
+                        ("mfa.md\n", NAMES),
                         ("tools/check_sitemap.py\n", NAMES), ("", NAMES)):
         r = subprocess.run([sys.executable, "-I", "-B", str(TOOLS / "select_gates.py")],
                            input=stdin, capture_output=True, text=True, timeout=60)

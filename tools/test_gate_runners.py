@@ -63,7 +63,10 @@ what the output holds and lacks, and the stand-in's calls:
   - a selected gate that fails exits 1 with "One or more gates failed.";
   - an unknown name, alone, beside a known one or in another letter case, an empty name (a
     trailing comma or an empty list), a missing list, a misspelled option and an extra argument
-    are each refused with status 2 before any heading prints or the stand-in is called.
+    are each refused with status 2 before any heading prints or the stand-in is called;
+  - a name holding anything but letters, digits and hyphens (a known name with a newline after
+    it or between it and another, a space, a dot, a glob character) is refused with status 2
+    the same way, as a character the list may not hold.
 The file is also held to its section shape: every heading after the parser preflight sits right
 under a `# section: NAME` line, so a heading cannot escape --sections, and 1 `# end of sections`
 line comes before the summary.
@@ -214,6 +217,7 @@ WALKER_CALL = "-B tools/test_walk.py"
 SECRETS_CALL = "-I -B tools/test_secrets_scan.py"
 USAGE = "usage: tools/run_all_checks.sh [--sections NAME[,NAME...]]"
 REFUSED = "which is not a section of tools/run_all_checks.sh; no gate ran"
+CHARACTER = "which holds a character other than a letter, a digit or a hyphen; no gate ran"
 # (arguments, exit status, texts the output must hold, texts it must not hold, the stand-in's
 # calls, the call to fail)
 SECTIONS_CASES = (
@@ -232,6 +236,13 @@ SECTIONS_CASES = (
     (["--sections", "Walker"], 2, [f"names 'Walker', {REFUSED}"], ["== "], [], ""),
     (["--sections", "walker,"], 2, [f"names '', {REFUSED}"], ["== "], [], ""),
     (["--sections", ""], 2, [f"names '', {REFUSED}"], ["== "], [], ""),
+    (["--sections", "walker\n"], 2, [f"names 'walker\n', {CHARACTER}"], ["== "], [], ""),
+    (["--sections", "walker\nsecrets"], 2, [f"names 'walker\nsecrets', {CHARACTER}"], ["== "],
+     [], ""),
+    (["--sections", "secrets,\nwalker"], 2, [f"names '\nwalker', {CHARACTER}"], ["== "], [], ""),
+    (["--sections", "walker x"], 2, [f"names 'walker x', {CHARACTER}"], ["== "], [], ""),
+    (["--sections", "walker.sh"], 2, [f"names 'walker.sh', {CHARACTER}"], ["== "], [], ""),
+    (["--sections", "walk*"], 2, [f"names 'walk*', {CHARACTER}"], ["== "], [], ""),
     (["--sections"], 2, [USAGE], ["== "], [], ""),
     (["--section", "walker"], 2, [USAGE], ["== "], [], ""),
     (["--sections", "walker", "secrets"], 2, [USAGE], ["== "], [], ""),
@@ -471,8 +482,8 @@ def main():
           f"by the exit code only: 0 passes, 1, 2, any other code and a crash fail, and an "
           f"exit 1 with a traceback line is reported as a crash), and "
           f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
-          f"after the preflight, in the file's order; an unknown or empty name refused before "
-          f"any gate)")
+          f"after the preflight, in the file's order; an unknown or empty name, or one holding "
+          f"anything but letters, digits and hyphens, refused before any gate)")
     return 0
 
 

@@ -56,15 +56,20 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    covered by the online `gates` check on the target. This whole-corpus run is the release's
    explicit need and is not repeated per review round.
 
-WHAT IT CANNOT CHECK: whether `gates` passed on GitHub in the workflow_dispatch run of the whole
-suite that the publisher starts before cutting the release; no run starts on a push to `main`.
-workflow_dispatch runs on a branch or tag, not on a bare commit, so the publisher pushes a
-temporary branch `release-check/v<VERSION>` at the target, starts the workflow on that branch,
-requires its `gates` run to succeed on exactly the target commit, and then deletes the branch.
-Those are online steps of the procedure; --gates-check-run takes the id of that `gates` check
-run only to print it in the body and the pass line, which says the result is recorded, not
-verified. It also cannot see
-a merge, tag or release that exists only on GitHub, so the procedure fetches `main` and the
+WHAT IT CANNOT CHECK: anything about the online `gates` run, since it does not reach the network.
+It reads only whether `.github/workflows/checks.yml` at the target has a workflow_dispatch
+trigger, and the body names the run the publisher had to confirm. With the trigger, no run starts
+on a push to `main`, and workflow_dispatch runs on a branch or tag, not on a bare commit, so the
+publisher pushes a temporary branch `release-check/v<VERSION>` at the target, starts the workflow
+on that branch, confirms that the run's event is workflow_dispatch, that its branch is
+`release-check/v<VERSION>` and that its `gates` check run succeeded on exactly the target commit,
+and then deletes the branch. Without the trigger (a target before #1194), the workflow cannot be
+dispatched there, and the publisher instead confirms that the `gates` check run of the target's
+push run on `main`, which that workflow started, succeeded on exactly the target commit. Those
+are online steps of the procedure; --gates-check-run takes the id of that `gates` check run only
+to print it in the body, which states these as the publisher's confirmations that it does not
+verify, and in the pass line, which says the result is recorded, not verified. It also cannot
+see a merge, tag or release that exists only on GitHub, so the procedure fetches `main` and the
 `v*` tags first, and it does not check that a mention of a pull request in a section is that
 pull request's own entry.
 
@@ -115,6 +120,9 @@ VERSION_SHAPE = re.compile(r"1\.0\.([0-9]+)")
 TAG_SHAPE = re.compile(r"v1\.0\.([0-9]+)")
 FULL_ID = re.compile(r"[0-9a-f]{40}")
 RUN_ID = re.compile(r"[0-9]+")
+WORKFLOW = ".github/workflows/checks.yml"
+# A workflow_dispatch key indented under the workflow's top-level `on:` block.
+DISPATCH = re.compile(r"^on:\n(?:(?:[ \t#].*)?\n)*?[ \t]+workflow_dispatch:", re.M)
 
 
 class CannotCheck(Exception):
@@ -159,6 +167,13 @@ def first_parent(root, rev, stop=None):
 
 def at_target(root, target, path):
     return git(root, "show", f"{target}:{path}", binary=True)
+
+
+def dispatchable(root, target):
+    """Whether the target's .github/workflows/checks.yml has a workflow_dispatch trigger."""
+    if not succeeds(root, "cat-file", "-e", f"{target}:{WORKFLOW}"):
+        return False
+    return bool(DISPATCH.search(at_target(root, target, WORKFLOW).decode("utf-8", "replace")))
 
 
 def release_tags(root):
@@ -364,16 +379,25 @@ def examine(root, main_ref, target, tag, previous, gates_run):
         notes = "\n".join(parts)
         scope = (f"- It covers the UTC dates after {previous_date}, the date of `{previous}`, up "
                  f"to and including {target_date}.\n")
+    if dispatchable(root, target):
+        gates = (f"- Before the release was cut, the publisher confirmed online that `gates` "
+                 f"check run {gates_run} is from a run of the whole suite whose event is "
+                 f"`workflow_dispatch` and whose branch is `release-check/{tag}`, a temporary "
+                 f"branch pushed at the target and deleted afterwards, and that it succeeded on "
+                 f"exactly the target commit. These are the publisher's confirmations; the "
+                 f"offline release check records the id and does not verify them.\n")
+    else:
+        gates = (f"- The target's `{WORKFLOW}` has no `workflow_dispatch` trigger, so before the "
+                 f"release was cut the publisher confirmed online that `gates` check run "
+                 f"{gates_run} is from the run that the target's push to `main` started, and "
+                 f"that it succeeded on exactly the target commit. These are the publisher's "
+                 f"confirmations; the offline release check records the id and does not verify "
+                 f"them.\n")
     body = (f"secureconfig {tag} is a checksummed snapshot of `main` at `{target}`, the merge "
             f"of {own}.\n\n"
             f"- Tag `{tag}`. `VERSION` and the plugin version at the target are both "
             f"`{version}`.\n"
-            f"- The `gates` check of a workflow_dispatch run of the whole suite on the temporary "
-            f"branch `release-check/{tag}`, pushed at the target and deleted afterwards, check "
-            f"run {gates_run}, was confirmed online by the publisher to have succeeded on exactly "
-            f"the target commit before the release was cut. The offline release check records "
-            f"that id and does not verify it.\n"
-            + scope +
+            + gates + scope +
             f"- Pull requests merged in that range ({len(numbers)}): {pr_list}.\n"
             f"- The full notes are the `{notes_name}` asset, and the history is in "
             f"`{CHANGELOG}` at the tag: {changelog_url}.\n"

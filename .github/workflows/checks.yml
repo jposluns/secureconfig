@@ -26,18 +26,22 @@ name: Checks
 # Only what changed (the owner's rulings of 2026-11-03). On a pull request, `gates` runs only the
 # sections of tools/run_all_checks.sh that the pull request's changes affect: tools/select_gates.py
 # reads the paths changed since the base commit and names the sections, and the step prints both
-# lists. Only content is scoped: site/** and site-src/** (the pages, their sources, the served
-# stylesheets, fonts and images, and the palettes) and the root project records CHANGELOG.md,
-# TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md run their mapped sections. The code
-# under site/ (a _headers file, which holds the CSP, or a _redirects file at any depth, and every
-# file whose name ends in .js, .mjs, .cjs or .map in any case) runs every section,
-# and so does any other changed path: every guide, README.md, controls-reference.md, plugin/,
-# every file under tools/, scripts/, .baseline/, .aiqt/ and .github/, any requirements file,
-# CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE, LICENSE, VERSION and any path the
-# selector's map does not name; so does an empty list. No run starts on a push to main. The whole
-# suite runs with no argument weekly on Mondays at 06:00 UTC, on the default branch, and on demand
-# from the Actions tab (workflow_dispatch), which a release requires on its target. A local run
-# can do either.
+# lists. Only content is scoped, through an allowlist that fails closed: a file under site/ or
+# site-src/ whose name ends, in any case, in .html, .css, .json, .svg, .png, .jpg, .jpeg, .webp,
+# .ico, .woff2, .txt or .xml and is not _headers or _redirects, and the root project records
+# CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md, run their mapped
+# sections. A CHANGELOG.md change also selects version-basis, llms-full, plugin and
+# generated-committed, and any selection containing generated-committed also contains llms-full
+# and plugin. Every other file under site/ or site-src/ (_headers, which holds the CSP,
+# _redirects, scripts, Markdown, YAML such as action.yml, unknown types and files without a
+# suffix) runs every section, and so does any other changed path: every guide, README.md,
+# controls-reference.md, plugin/, every file under tools/, scripts/, .baseline/, .aiqt/ and
+# .github/, any requirements file, CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE,
+# LICENSE, VERSION and any path the selector's map does not name; so does an empty list. No run
+# starts on a push to main. The whole suite runs with no argument weekly on Mondays at 06:00 UTC,
+# on the default branch, and on demand from the Actions tab (workflow_dispatch), which a release
+# requires on its target; a target from before this trigger relies on its push run on main
+# instead. A local run can do either.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
@@ -162,12 +166,14 @@ jobs:
         run: python3 -I -B tools/check_verify_marking.py --assert-parser
       # On a pull request, only the sections its changes affect run: the paths changed since the
       # base commit, a rename listed as both of its paths, go to tools/select_gates.py, which names
-      # the sections, and both lists are printed; any path outside site/**, site-src/** and the
-      # five root project records selects every section, and so does the code under site/ (a
-      # _headers or _redirects file at any depth, and every .js, .mjs, .cjs or .map file in any
-      # case). If the changed paths cannot be listed, every section runs. The weekly schedule and
-      # a manual run run the whole suite with no argument, which is the only run that ends with
-      # "All gates passed.".
+      # the sections, and both lists are printed; only the five root project records and the
+      # files under site/ or site-src/ whose names end, in any case, in .html, .css, .json, .svg,
+      # .png, .jpg, .jpeg, .webp, .ico, .woff2, .txt or .xml and are not _headers or _redirects
+      # are scoped, and any other path selects every section. A CHANGELOG.md change also selects
+      # version-basis, llms-full, plugin and generated-committed, and a selection containing
+      # generated-committed also contains llms-full and plugin. If the changed paths cannot be
+      # listed, every section runs. The weekly schedule and a manual run run the whole suite with
+      # no argument, which is the only run that ends with "All gates passed.".
       - name: Run the gate suite
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}

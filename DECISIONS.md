@@ -26,18 +26,23 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - The scoped path "applies to web site content changes mandated by the maintainer, notably for simple changes, colour pallette, and things of that nature because we don't need 3 hours of QA and CI to change the colour of a heading".
   The fourth ruling's reasoning is in its own words; no other reasoning was recorded. The brief that relayed the
   fourth ruling reads it as "Code is not content." Its effect (applied by #1194): on a pull request,
-  `tools/select_gates.py` scopes only `site/**`, `site-src/**` and the root project records `CHANGELOG.md`,
-  `TODO.md`, `DONE.md`, `DECISIONS.md` and `PENDING-DECISIONS.md` to the sections of `tools/run_all_checks.sh` that
-  read them. The code under `site/` (a `_headers` file, which holds the CSP, or a `_redirects` file at any
-  depth, and every `.js`, `.mjs`, `.cjs` or `.map` file in any case), and any other changed path, a guide,
-  `README.md`, `controls-reference.md`, `plugin/`, a file under `tools/`, `scripts/`, `.baseline/`, `.aiqt/` or
-  `.github/`, a requirements file or an unmapped path included, runs every section. `.github/workflows/checks.yml`
-  no longer runs on a push to `main`; the whole suite runs weekly and on demand (`workflow_dispatch`). A release
-  now requires a successful `workflow_dispatch` run of the whole suite on its target before it is cut, and the
-  disclosure page's "Automated checks" entry says which gates a pull request runs. These rulings supersede in part
-  the 2026-10-25 ruling on running the gates workflow once per change (#906) below: its runs on pushes to `main`
-  end, and the green `gates` on the exact head that merges is the run of the sections that head's changes select.
-  The rest of that ruling stands.
+  `tools/select_gates.py` scopes only content, through an allowlist that fails closed. Scoped are a file under `site/` or `site-src/`
+  whose name ends, in any case, in `.html`, `.css`, `.json`, `.svg`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.ico`,
+  `.woff2`, `.txt` or `.xml` and is not `_headers` or `_redirects`, and the root project records `CHANGELOG.md`,
+  `TODO.md`, `DONE.md`, `DECISIONS.md` and `PENDING-DECISIONS.md`, which run the
+  sections of `tools/run_all_checks.sh` that read them. A `CHANGELOG.md` change also selects `version-basis`, `llms-full`, `plugin` and `generated-committed`,
+  and any selection containing `generated-committed` also contains `llms-full` and `plugin`. Every other file under
+  `site/` or `site-src/` (`_headers`, which holds the CSP, `_redirects`, scripts, Markdown, YAML such as
+  `action.yml`, unknown types and files without a suffix) runs every section. So does any other changed path, a guide, `README.md`,
+  `controls-reference.md`, `plugin/`, a file under `tools/`, `scripts/`, `.baseline/`, `.aiqt/` or `.github/`, a
+  requirements file or an unmapped path. `.github/workflows/checks.yml` no longer
+  runs on a push to `main`; the whole suite runs weekly and on demand (`workflow_dispatch`). A release now requires
+  a successful `workflow_dispatch` run of the whole suite on its target before it is cut, or, for a target whose
+  workflow has no `workflow_dispatch` trigger (one from before #1194), that commit's successful push run on
+  `main`, and the disclosure page's "Automated checks" entry says which gates a pull request runs. These rulings
+  supersede in part the 2026-10-25 ruling on running the gates workflow once per change (#906) below: its runs on
+  pushes to `main` end, and the green `gates` on the exact head that merges is the run of the sections that head's
+  changes select. The rest of that ruling stands.
 - **Maintainer rulings of 2026-11-01 on tagged releases (#1158).** The maintainer gave these rulings through
   AskUserQuestion in an attended session on 2026-11-01. No reasoning was recorded beyond the terms below. The
   maintainer's ruling of 2026-11-01 that started this work reads "we'll start doing that this week. lets ensure that

@@ -3,7 +3,8 @@
 
 Each case builds a throwaway git repository whose first-parent history is a run of pull
 request merges with fixed UTC committer dates, each carrying VERSION, plugin/plugin.json,
-site/llms-full.txt, CHANGELOG.md and a stub tools/run_all_checks.sh, so the check is exercised
+site/llms-full.txt, CHANGELOG.md, a stub tools/run_all_checks.sh and a
+.github/workflows/checks.yml with or without a workflow_dispatch trigger, so the check is exercised
 against real history, real `git archive` output and a real `git worktree`, not a stubbed one.
 The stub suite stands in for the gate suite and prints its pass line, a FAIL, a SKIP or
 nothing, as each case needs.
@@ -61,6 +62,23 @@ PYTHON_NOTE = ("Local python3 3.14.4 differed from CI's pinned PYTHON_VERSION 3.
                "pinned Python is covered by the online gates check on the target, which the "
                "procedure records.")
 
+# The target's workflow, with the workflow_dispatch trigger a release dispatches, and as it was
+# before #1194, running on a push to main instead; a comment naming the trigger is not one.
+DISPATCH_WORKFLOW = ("name: Checks\n# workflow_dispatch: below\non:\n  pull_request:\n"
+                     "    types: [opened]\n  schedule:\n    - cron: \"0 6 * * 1\"\n"
+                     "  workflow_dispatch: {}\n\npermissions:\n  contents: read\n")
+PUSH_WORKFLOW = ("name: Checks\n# a release once needed workflow_dispatch: here\non:\n"
+                 "  pull_request:\n    types: [opened]\n  push:\n    branches: [main]\n\n"
+                 "permissions:\n  contents: read\njobs:\n  workflow_dispatch:\n")
+DISPATCH_BODY = ("the publisher confirmed online that `gates` check run 4242 is from a run of the "
+                 "whole suite whose event is `workflow_dispatch` and whose branch is "
+                 "`release-check/v1.0.11`")
+PUSH_BODY = ("has no `workflow_dispatch` trigger, so before the release was cut the publisher "
+             "confirmed online that `gates` check run 4242 is from the run that the target's push "
+             "to `main` started")
+CONFIRMED = ("succeeded on exactly the target commit. These are the publisher's confirmations; "
+             "the offline release check records the id and does not verify them.")
+
 # (pull request, UTC committer time, the date heading its entry sits under). #12 and #13 share
 # 2026-10-03, so #13 is the last merge of that day and #12 is not.
 HISTORY = [
@@ -109,11 +127,12 @@ def changelog(entries, broken=False):
 
 
 def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plugin=None,
-          broken=None):
+          broken=None, workflow=DISPATCH_WORKFLOW):
     """A repository whose main is `history`; returns each pull request's merge commit."""
     root.mkdir(parents=True)
     git(root, "init", "-q")
     write(root, "tools/run_all_checks.sh", suite)
+    write(root, ".github/workflows/checks.yml", workflow)
     write(root, "VERSION", "1.0.9\n")
     write(root, "plugin/plugin.json", '{\n  "name": "fixture",\n  "version": "1.0.9"\n}\n')
     write(root, "plugin/SKILL.md", "fixture skill\n")
@@ -189,10 +208,9 @@ def cases(tmp):
     expect("the first release's body lists every pull request up to the target",
            (0, body), 0, "Pull requests merged in that range (3): #9, #10, #11.",
            "This is the first tagged release.", "/blob/v1.0.11/CHANGELOG.md",
-           "follow the moving branch",
-           "check run 4242, was confirmed online by the publisher",
-           "branch `release-check/v1.0.11`, pushed at the target and deleted afterwards",
-           "succeeded on exactly the target commit", absent=("#12",))
+           "follow the moving branch", DISPATCH_BODY,
+           "a temporary branch pushed at the target and deleted afterwards", CONFIRMED,
+           absent=("#12", "push to `main`"))
     expect("the first release's notes extract no sections and point to CHANGELOG.md at the tag",
            (0, notes), 0, "first tagged release", "/blob/v1.0.11/CHANGELOG.md",
            absent=("## 2026-",))
@@ -397,6 +415,17 @@ def cases(tmp):
            release(repo, c[11], "v1.0.11", None, tmp / "othershellcheck-out"), 0, OK,
            "reported shellcheck 0.10.0, which this check does not compare with CI's pinned "
            "SHELLCHECK_VERSION", RECORDED)
+
+    # A target from before #1194, whose workflow has no workflow_dispatch trigger: the body names
+    # the target's push run on main as what the publisher confirmed.
+    repo = tmp / "older"
+    c = build(repo, workflow=PUSH_WORKFLOW)
+    older = tmp / "older-out"
+    expect("a target whose workflow has no workflow_dispatch trigger passes",
+           release(repo, c[11], "v1.0.11", None, older), 0, OK, RECORDED)
+    body = (older / "body.md").read_text(encoding="utf-8")
+    expect("its body states the push run on main as the publisher's confirmation",
+           (0, body), 0, PUSH_BODY, CONFIRMED, absent=("release-check/", "event is"))
 
     # A shallow clone cannot show the history, so it fails closed rather than passing.
     shallow = tmp / "shallow"

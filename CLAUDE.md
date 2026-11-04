@@ -81,20 +81,26 @@ faces the internet, so an invented flag or a stale default is a security defect,
 
 `tools/run_all_checks.sh` is the whole-corpus gate suite and the required status check on `main`
 (check context `gates`). A pull request runs the gates its changes affect: `tools/select_gates.py`
-names the suite's sections from the paths changed since the base commit. Only content is scoped:
-`site/**` and `site-src/**` (the pages, their sources, the served stylesheets, fonts and images,
-and the palettes) and the root project records `CHANGELOG.md`, `TODO.md`, `DONE.md`,
-`DECISIONS.md` and `PENDING-DECISIONS.md` run their mapped sections. The code under `site/` (a
-`_headers` file, which holds the CSP, or a `_redirects` file at any depth, and every file whose
-name ends in `.js`, `.mjs`, `.cjs` or `.map` in any case) runs the whole suite. So does any
-other changed path: every guide, `README.md`, `controls-reference.md`, `plugin/`, every file
-under `tools/`, `scripts/`, `.baseline/`, `.aiqt/` and `.github/`, any requirements file,
-`CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`, `LICENSE`, `VERSION` and
-any path the map does not name; so does an empty change. The whole suite also runs weekly and on
-demand (`workflow_dispatch`), not on a push to `main`, and a release requires a successful
-`workflow_dispatch` run of it on the target. A local run can do either: with no argument the
-suite runs every section, and with `--sections NAME[,NAME...]` only the named ones, refusing an
-unknown name.
+names the suite's sections from the paths changed since the base commit. Only content is scoped,
+through an allowlist that fails closed. A file under `site/` or `site-src/` whose name ends, in
+any case, in `.html`, `.css`, `.json`, `.svg`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.ico`,
+`.woff2`, `.txt` or `.xml` and is not `_headers` or `_redirects`, and the root project records
+`CHANGELOG.md`, `TODO.md`, `DONE.md`, `DECISIONS.md` and `PENDING-DECISIONS.md`, run their mapped
+sections. A `CHANGELOG.md` change also selects `version-basis`, `llms-full`, `plugin` and
+`generated-committed`, and any selection containing `generated-committed` also contains
+`llms-full` and `plugin`. Every other file under `site/` or `site-src/` (`_headers`, which holds
+the CSP, `_redirects`, scripts, Markdown, YAML such as `action.yml`, unknown types and files
+without a suffix) runs the whole suite. So does any other changed path: every guide,
+`README.md`, `controls-reference.md`, `plugin/`, every file under `tools/`, `scripts/`,
+`.baseline/`, `.aiqt/` and `.github/`, any requirements file, `CLAUDE.md`, `AGENTS.md`,
+`CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`, `LICENSE`, `VERSION` and any path the map does not
+name; so does an empty change. The whole suite also runs weekly and on demand
+(`workflow_dispatch`), not on a push to `main`, and a release requires a successful
+`workflow_dispatch` run of it on the target, or, for a target whose workflow has no
+`workflow_dispatch` trigger (one from before #1194), that commit's successful push run on
+`main`. A local run can do either: with no argument the suite runs every section, and with
+`--sections NAME[,NAME...]` only the named ones, refusing an unknown name or one holding
+anything but letters, digits and hyphens.
 Every gate in it is deterministic and offline: no gate reaches the
 network, so no outside service can change a gate's answer. The `gates` job that runs it is not
 offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python

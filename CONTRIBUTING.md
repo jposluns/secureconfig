@@ -467,20 +467,30 @@ link to `CHANGELOG.md` at the tag.
    lists the merges with their UTC times. The target's subject begins
    `Merge pull request #N from `, and the tag is `v` plus `git show <sha>:VERSION`.
 3. Before cutting the release, run the whole suite on the target through a temporary branch and
-   require it to succeed. No run starts on a push to `main`, and a pull request's run checks the
-   pull request, possibly only some sections, not the merge commit, so no earlier run stands in
-   for this one. `workflow_dispatch` runs on a branch or tag, not on a bare commit, and the target
-   is usually no longer the head of `main`, so push a temporary branch
+   require it to succeed. From #1194 on, no run starts on a push to `main`, and a pull request's
+   run checks the pull request, possibly only some sections, not the merge commit, so no earlier
+   run stands in for this one. `workflow_dispatch` runs on a branch or tag, not on a bare
+   commit, and the target is usually no longer the head of `main`, so push a temporary branch
    `release-check/v1.0.<N>` at the target with
    `git push origin <sha>:refs/heads/release-check/v1.0.<N>`. Start the workflow on that branch
    with `workflow_dispatch`, from the Actions tab or with
-   `gh workflow run checks.yml --ref release-check/v1.0.<N>`, and wait for it to finish. Require
-   its `gates` check run to have concluded `success` on exactly the target commit: confirm online
-   that the check run's head commit is `<sha>`, for example with
-   `gh api 'repos/jposluns/secureconfig/commits/<sha>/check-runs?check_name=gates'`, and note
-   that check run's id. Then delete the branch with
-   `git push origin --delete release-check/v1.0.<N>`. If the run failed, never completed or ran
-   on any other commit, the release stops; delete the branch in that case too.
+   `gh workflow run checks.yml --ref release-check/v1.0.<N>`, and wait for it to finish. Confirm
+   online that the run's event is `workflow_dispatch`, that its branch is
+   `release-check/v1.0.<N>`, and that its `gates` check run concluded `success` on exactly the
+   target commit, its head commit being `<sha>`, for example on the run's page in the Actions
+   tab and with
+   `gh api 'repos/jposluns/secureconfig/commits/<sha>/check-runs?check_name=gates'`. Note
+   that check run's id; another `gates` run on the same commit, such as a scheduled one, does not
+   count. Then delete the branch with `git push origin --delete release-check/v1.0.<N>`. If the
+   run failed, never completed, had another event or branch, or ran on any other commit, the
+   release stops; delete the branch in that case too. A target whose
+   `.github/workflows/checks.yml` has no `workflow_dispatch` trigger, one from before #1194,
+   cannot be dispatched this way; its workflow still ran on a push to `main`, so the release
+   instead relies on that commit's push run: confirm online that the `gates` check run of the
+   target's push run on `main` concluded `success` on exactly the target commit, and note its id.
+   If it failed or never completed, the release stops. `tools/check_release.py` reads which case
+   applies from the target's workflow and states the matching confirmations in the body as the
+   publisher's, which it does not verify.
 4. Build the release twice, into two new directories outside the repository, and compare
    them with `diff -r`; any difference stops the release. Each build is
    `python3 -I -B tools/check_release.py --target <sha> --tag v1.0.<N> --previous <tag> --gates-check-run <id> --dir <dir> --build`,

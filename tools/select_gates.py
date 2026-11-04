@@ -9,15 +9,17 @@ and prints the names of the sections to run, one per line in the suite's order, 
 `tools/run_all_checks.sh --sections`. On standard error it prints, for each path, the sections it
 selected, so the CI log shows why.
 
-SCOPED CONTENT is the only content that runs less than every section: site/** and site-src/**
-(the pages, their sources, the served stylesheets, fonts and images, and the palettes) and the
-root project records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md. Code
-under site/ is not content, and it fails closed: a file named `_headers` (the CSP and the other
-served headers) or `_redirects` at any depth under site/, and every file under site/ whose name
-ends in `.js`, `.mjs`, `.cjs` or `.map` in any case (the served scripts and their source maps),
-run every section. Every other path runs every section too: every guide, README.md,
-controls-reference.md, plugin/, every file under tools/, scripts/, .baseline/, .aiqt/ and
-.github/, any requirements file, CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE,
+SCOPED CONTENT is the only content that runs less than every section, and it is an allowlist
+that fails closed: a file under site/ or site-src/ (the pages, their sources, the served
+stylesheets, fonts and images, and the palettes) whose name ends, in any case, in one of
+SITE_CONTENT (.html, .css, .json, .svg, .png, .jpg, .jpeg, .webp, .ico, .woff2, .txt or .xml)
+and is not `_headers` or `_redirects`, and the root project records CHANGELOG.md, TODO.md,
+DONE.md, DECISIONS.md and PENDING-DECISIONS.md. Every other file under site/ or site-src/ runs
+every section: `_headers` (the CSP and the other served headers) and `_redirects` at any depth,
+the scripts and their source maps, Markdown, YAML such as an action.yml, any type not in
+SITE_CONTENT and a name with no suffix. Every other path runs every section too: every guide,
+README.md, controls-reference.md, plugin/, every file under tools/, scripts/, .baseline/, .aiqt/
+and .github/, any requirements file, CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE,
 LICENSE, VERSION and any other path.
 
 THE MAP is MAP below, the one place it is written: a path takes the sections of the first pattern
@@ -25,18 +27,26 @@ it matches, and a path that matches no pattern takes every section. Every scoped
 ANY_PATH, the sections that read every file (the secrets scan) or resolve links to any path (a
 removed or renamed file can break a link elsewhere). A pattern's `*` matches within one path
 segment and `**/` any number of whole segments, including none. An ALL pattern matches in any
-case, since matching more paths only runs more sections; a scoped pattern matches case exactly. A
-section belongs to a scoped path when it reads that path: a project record feeds the Markdown
-gates, and site/ and site-src/ feed the site gates.
+case, since matching more paths only runs more sections; a scoped pattern matches case exactly,
+except a name ending after a `*` in its last segment, which matches in any case, so
+`site/**/*.html` takes INDEX.HTML too. A section belongs to a scoped path when it reads that
+path: a project record feeds the Markdown gates, and site/ and site-src/ feed the site gates.
+CHANGELOG.md also feeds version-basis, llms-full, plugin and generated-committed:
+tools/version_basis.py reads its newest dated heading, and both bundle builds run that check and
+list it as an input.
 
-FAIL SAFE: every section runs when the list is empty, when a path matches no pattern, and when a
-path matches an ALL pattern (a requirements file, even under site/, and the code under site/,
-which the ALL patterns name before site/**). A path git quotes (a name
-with unusual characters) matches nothing, so it runs every section too. The section names come
-from the suite's own `# section: NAME` lines; tools/test_select_gates.py holds MAP to them, and if
-MAP names one the suite no longer has, every section runs and a warning says so. The selection
-only chooses; the gates still decide. Exit 0 with the names printed, 2 when the suite cannot be
-read.
+DEPENDS: generated-committed skips its own rebuild on a clean tree because the llms-full and
+plugin sections before it already rebuilt HEAD, so a selection that holds generated-committed
+also holds llms-full and plugin.
+
+FAIL SAFE: every section runs when the list is empty, when a path matches no pattern (a file under
+site/ or site-src/ outside the allowlist included), and when a path matches an ALL pattern (a
+requirements file, even under site/, and `_headers` or `_redirects` at any depth, which the ALL
+patterns name before the site content). A path git quotes (a name with unusual characters)
+matches nothing, so it runs every section too. The section names come from the suite's own
+`# section: NAME` lines; tools/test_select_gates.py holds MAP to them, and if MAP names one the
+suite no longer has, every section runs and a warning says so. The selection only chooses; the
+gates still decide. Exit 0 with the names printed, 2 when the suite cannot be read.
 """
 import re
 import sys
@@ -57,25 +67,28 @@ MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "pr
 SITE = ("copy-buttons", "baseline-pin", "palette", "site-build", "site-draft", "pages-build",
         "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories", "llms-full",
         "generated-committed", "prose-conventions", "aiqt-baseline")
+# The only name endings, in any case, that make a file under site/ or site-src/ content.
+SITE_CONTENT = (".html", ".css", ".json", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".ico",
+                ".woff2", ".txt", ".xml")
+# A section that relies on others having run before it in the same selection.
+DEPENDS = {"generated-committed": ("llms-full", "plugin")}
 
 MAP = (
     # Fail safe: a requirements file at any depth, site/ included, pins packages the gates run on.
     ("**/requirements*", ALL),
-    # Code under site/ at any depth, matched before site/**: the CSP and the other served headers,
-    # the redirects, the served scripts and their source maps.
-    ("site/**/_headers", ALL),
-    ("site/**/_redirects", ALL),
-    ("site/**/*.js", ALL),
-    ("site/**/*.mjs", ALL),
-    ("site/**/*.cjs", ALL),
-    ("site/**/*.map", ALL),
-    # Site content: the pages, their sources, the served stylesheets, fonts and images, and the
-    # palettes.
-    ("site/**", SITE),
-    ("site-src/**", SITE),
+    # The CSP and the other served headers, and the redirects, at any depth.
+    ("**/_headers", ALL),
+    ("**/_redirects", ALL),
+    # Site content, an allowlist: the pages, their sources, the served stylesheets, fonts and
+    # images, and the palettes. Any other file under site/ or site-src/ (a script, a source map,
+    # Markdown, YAML, an unknown type or a name with no suffix) matches nothing here and runs every
+    # section.
+    *((f"{top}/**/*{ending}", SITE) for top in ("site", "site-src") for ending in SITE_CONTENT),
     # The root project records. Every other path, code and guides included, matches nothing here
-    # and runs every section.
-    ("CHANGELOG.md", MARKDOWN + ("changelog-prs", "changelog-format")),
+    # and runs every section. tools/version_basis.py reads CHANGELOG.md's newest dated heading,
+    # and the llms-full and plugin builds run it.
+    ("CHANGELOG.md", MARKDOWN + ("changelog-prs", "changelog-format", "version-basis",
+                                 "llms-full", "plugin", "generated-committed")),
     ("TODO.md", MARKDOWN + ("todo-rows",)),
     ("DONE.md", MARKDOWN),
     ("DECISIONS.md", MARKDOWN),
@@ -84,8 +97,15 @@ MAP = (
 
 
 def pattern_re(pattern, sections):
-    """A compiled full-path match for one MAP pattern, in any case when it selects ALL."""
+    """A compiled full-path match for one MAP pattern, in any case when it selects ALL, and
+    otherwise in any case only for the ending after its last `*` within the last segment."""
     out, i = [], 0
+    last = pattern.rfind("*")
+    if 0 <= last < len(pattern) - 1 and "/" not in pattern[last + 1:]:
+        tail = pattern[last + 1:]
+        pattern = pattern[:last + 1]
+    else:
+        tail = ""
     while i < len(pattern):
         if pattern.startswith("**/", i):
             out.append("(?:[^/]+/)*")
@@ -99,6 +119,8 @@ def pattern_re(pattern, sections):
         else:
             out.append(re.escape(pattern[i]))
             i += 1
+    if tail:
+        out.append(f"(?i:{re.escape(tail)})")
     return re.compile("".join(out), re.IGNORECASE if sections == ALL else 0)
 
 
@@ -131,6 +153,9 @@ def select(paths, names):
             return list(names), notes + [f"{path}: {why}: every section"]
         chosen.update(sections)
         notes.append(f"{path}: {', '.join(n for n in names if n in sections)}")
+    for section, needs in DEPENDS.items():
+        if section in chosen:
+            chosen.update(needs)
     stale = sorted(chosen - set(names))
     if stale:
         return list(names), notes + [f"the map names {stale!r}, which the suite does not have: "
