@@ -8,7 +8,8 @@ the pristine tree. The cases added in QA round 1 of #1182 hold the pin to the co
 digests and RUNTIME list, and keep excluded template material out whether pinned or not. The
 baseline 1.6.0 cases hold .baseline/check_palette.py, the copied palette gate, to its pin. The cases
 added in QA round 1 of #1190 refuse a .baseline/ that is a symbolic link or not a directory, a
-pin.toml that is a link, and any other entry in .baseline/ (a file, a subdirectory, a link).
+pin.toml that is a link, and any other entry in .baseline/ (a file, a subdirectory, a link). The
+baseline 1.8.0 cases hold .baseline/check_overflow.js, the copied overflow check, to its pin.
 """
 import hashlib
 import os
@@ -23,6 +24,7 @@ ROOT = TOOLS.parent
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
 PALETTE_GATE = Path(".baseline") / "check_palette.py"
+OVERFLOW_CHECK = Path(".baseline") / "check_overflow.js"
 
 
 def run(mutate=None):
@@ -32,6 +34,7 @@ def run(mutate=None):
         (d / PIN).parent.mkdir(parents=True)
         shutil.copyfile(ROOT / PIN, d / PIN)
         shutil.copyfile(ROOT / PALETTE_GATE, d / PALETTE_GATE)
+        shutil.copyfile(ROOT / OVERFLOW_CHECK, d / OVERFLOW_CHECK)
         if mutate is not None:
             mutate(d)
         r = subprocess.run([sys.executable, "-I", "-B", str(TOOLS / "check_baseline_pin.py"),
@@ -63,6 +66,13 @@ def link(d):
 
 def palette_gate_byte(d):
     target = d / PALETTE_GATE
+    data = bytearray(target.read_bytes())
+    data[-1] ^= 1
+    target.write_bytes(bytes(data))
+
+
+def overflow_check_byte(d):
+    target = d / OVERFLOW_CHECK
     data = bytearray(target.read_bytes())
     data[-1] ^= 1
     target.write_bytes(bytes(data))
@@ -181,6 +191,13 @@ CASES = [
     ("a symbolic link in .baseline/",
      lambda d: os.symlink("check_palette.py", d / ".baseline" / "palette.py"), 1,
      ".baseline/palette.py is not"),
+    # Baseline 1.8.0: the overflow check is copied to .baseline/ and pinned like the palette gate.
+    ("one byte changed in .baseline/check_overflow.js", overflow_check_byte, 1,
+     ".baseline/check_overflow.js differs from its pin"),
+    ("the overflow check deleted", lambda d: (d / OVERFLOW_CHECK).unlink(), 1,
+     ".baseline/check_overflow.js is pinned but missing"),
+    ("the overflow check's pin line removed", edit_pin_line('".baseline/check_overflow.js" ='), 1,
+     "does not pin .baseline/check_overflow.js"),
     ("the pristine copy", None, 0, "match baseline 1.8.0"),
 ]
 

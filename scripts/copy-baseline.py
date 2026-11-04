@@ -52,15 +52,18 @@ RUNTIME = (
     "marks/linkedin-in-bug.png", "marks/orcid-id.svg",
 )
 # The build tools the site copies and pins but never serves, package path to repository path; the
-# pin keys them by the repository path, as the baseline README shows (SPECIFICATION section 4).
-BUILD_TOOLS = {"tools/check_palette.py": ".baseline/check_palette.py"}
+# pin keys them by the repository path, as the baseline README shows (SPECIFICATION section 4):
+# the palette gate (baseline 1.6.0) and the overflow check (baseline 1.8.0).
+BUILD_TOOLS = {"tools/check_palette.py": ".baseline/check_palette.py",
+               "tools/check_overflow.js": ".baseline/check_overflow.js"}
 HEADER = """\
 # Shared site template baseline pin, read by tools/check_baseline_pin.py.
 #
-# The files under site/assets/baseline/ and .baseline/check_palette.py are copied byte for byte
-# from the baseline package at the upstream URL below by scripts/copy-baseline.py, which checked
-# each one against the package's SHA256SUMS. Never edit a copied file. A new baseline version is
-# 1 pull request that reruns the copy script and commits the copied files and this pin together.
+# The files under site/assets/baseline/, .baseline/check_palette.py and .baseline/check_overflow.js
+# are copied byte for byte from the baseline package at the upstream URL below by
+# scripts/copy-baseline.py, which checked each one against the package's SHA256SUMS. Never edit a
+# copied file. A new baseline version is 1 pull request that reruns the copy script and commits
+# the copied files and this pin together.
 """
 
 
@@ -117,7 +120,7 @@ def main(argv=None):
     lines += [f'"{BUILD_TOOLS[name]}" = "{pins[name]}"' for name in sorted(BUILD_TOOLS)]
     (ROOT / PIN).parent.mkdir(parents=True, exist_ok=True)
     (ROOT / PIN).write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"  ok    copied {len(RUNTIME)} files into {DEST} and {len(BUILD_TOOLS)} build tool into "
+    print(f"  ok    copied {len(RUNTIME)} files into {DEST} and {len(BUILD_TOOLS)} build tools into "
           f".baseline/, and wrote {PIN}")
     return 0
 
