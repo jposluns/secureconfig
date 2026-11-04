@@ -2,13 +2,13 @@ name: Checks
 
 # Once per change (maintainer ruling 2026-10-25, DECISIONS.md). A pull request stays a draft
 # through its QA rounds, where tools/run_all_checks.sh runs locally on each fix round, and `gates`
-# runs here once the change is ready: on every push to main and on every pull request event whose
-# pull request is not a draft, including ready_for_review, which runs it on the head being marked
-# ready. The converted_to_draft type is listed too, so turning a ready pull request back into a
-# draft starts a run whose `gates` job is skipped, and through the concurrency group below that run
-# cancels the ready run if it is still queued or in progress, since the change is going back into
-# QA. On a draft the job is skipped, and a skip is not a pass for merging, although GitHub reports
-# a job skipped by its `if:` to branch protection as a success. A draft cannot be merged, and the
+# runs here once the change is ready: on every pull request event whose pull request is not a
+# draft, including ready_for_review, which runs it on the head being marked ready. The
+# converted_to_draft type is listed too, so turning a ready pull request back into a draft starts
+# a run whose `gates` job is skipped, and through the concurrency group below that run cancels the
+# ready run if it is still queued or in progress, since the change is going back into QA. On a
+# draft the job is skipped, and a skip is not a pass for merging, although GitHub reports a job
+# skipped by its `if:` to branch protection as a success. A draft cannot be merged, and the
 # orchestrator's merge gate requires a `gates` job that ran and succeeded on the exact head that
 # merges. On #917 at head 582a7dd0, the run record shows these observed outcomes: a push and
 # ready_for_review created runs 40279911250 and 40279910962 in the same second, the ready run
@@ -22,19 +22,36 @@ name: Checks
 # the orchestrator's merge gate is what would refuse that head is an inference, given GitHub's
 # documented reporting of a skipped job to branch protection as a success. The orchestrator's merge
 # step therefore waits for the runs on a head to go idle before marking a pull request ready.
+#
+# Only what changed (the owner's rulings of 2026-11-03). On a pull request, `gates` runs only the
+# sections of tools/run_all_checks.sh that the pull request's changes affect: tools/select_gates.py
+# reads the paths changed since the base commit and names the sections, and the step prints both
+# lists. Only content is scoped: site/** and site-src/** (the pages, their sources, the served
+# stylesheets, fonts and images, and the palettes) and the root project records CHANGELOG.md,
+# TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md run their mapped sections. The code
+# under site/ (a _headers file, which holds the CSP, or a _redirects file at any depth, and every
+# file whose name ends in .js, .mjs, .cjs or .map in any case) runs every section,
+# and so does any other changed path: every guide, README.md, controls-reference.md, plugin/,
+# every file under tools/, scripts/, .baseline/, .aiqt/ and .github/, any requirements file,
+# CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE, LICENSE, VERSION and any path the
+# selector's map does not name; so does an empty list. No run starts on a push to main. The whole
+# suite runs with no argument weekly on Mondays at 06:00 UTC, on the default branch, and on demand
+# from the Actions tab (workflow_dispatch), which a release requires on its target. A local run
+# can do either.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
-  push:
-    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
 
 permissions:
   contents: read
 
 # A newer run for the same pull request cancels its older run, in progress or queued, since only
-# the newest head can merge. A push to main is grouped by its own run id, which no other run
-# shares, and `cancel-in-progress` is false for it as well, so a run on main is never cancelled
-# and never cancels a pull request run.
+# the newest head can merge. A scheduled run and a manual run are each grouped by their own run
+# id, which no other run shares, and `cancel-in-progress` is false for them as well, so such a run
+# is never cancelled and never cancels a pull request run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -143,5 +160,29 @@ jobs:
           python3 -m pip install --require-hashes --only-binary :all: -r tools/requirements-gates.txt
       - name: Assert markdown-it-py 4.2.0 and the locked runtime closure
         run: python3 -I -B tools/check_verify_marking.py --assert-parser
+      # On a pull request, only the sections its changes affect run: the paths changed since the
+      # base commit, a rename listed as both of its paths, go to tools/select_gates.py, which names
+      # the sections, and both lists are printed; any path outside site/**, site-src/** and the
+      # five root project records selects every section, and so does the code under site/ (a
+      # _headers or _redirects file at any depth, and every .js, .mjs, .cjs or .map file in any
+      # case). If the changed paths cannot be listed, every section runs. The weekly schedule and
+      # a manual run run the whole suite with no argument, which is the only run that ends with
+      # "All gates passed.".
       - name: Run the gate suite
-        run: tools/run_all_checks.sh
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" != pull_request ]; then
+            tools/run_all_checks.sh
+            exit 0
+          fi
+          if ! changed="$(git diff --name-only --no-renames "$BASE_SHA...HEAD")"; then
+            echo "::warning::could not list the paths changed since $BASE_SHA; running every section"
+            tools/run_all_checks.sh
+            exit 0
+          fi
+          printf 'Changed paths since %s:\n%s\n' "$BASE_SHA" "$changed"
+          sections="$(printf '%s\n' "$changed" | python3 -I -B tools/select_gates.py | paste -sd, -)"
+          echo "Selected sections: $sections"
+          tools/run_all_checks.sh --sections "$sections"

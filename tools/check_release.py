@@ -56,9 +56,14 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    covered by the online `gates` check on the target. This whole-corpus run is the release's
    explicit need and is not repeated per review round.
 
-WHAT IT CANNOT CHECK: whether `gates` passed on GitHub for the target's push to `main`. That is
-an online step of the procedure; --gates-check-run takes the id it found only to print it in
-the body and the pass line, which says the result is recorded, not verified. It also cannot see
+WHAT IT CANNOT CHECK: whether `gates` passed on GitHub in the workflow_dispatch run of the whole
+suite that the publisher starts before cutting the release; no run starts on a push to `main`.
+workflow_dispatch runs on a branch or tag, not on a bare commit, so the publisher pushes a
+temporary branch `release-check/v<VERSION>` at the target, starts the workflow on that branch,
+requires its `gates` run to succeed on exactly the target commit, and then deletes the branch.
+Those are online steps of the procedure; --gates-check-run takes the id of that `gates` check
+run only to print it in the body and the pass line, which says the result is recorded, not
+verified. It also cannot see
 a merge, tag or release that exists only on GitHub, so the procedure fetches `main` and the
 `v*` tags first, and it does not check that a mention of a pull request in a section is that
 pull request's own entry.
@@ -363,9 +368,11 @@ def examine(root, main_ref, target, tag, previous, gates_run):
             f"of {own}.\n\n"
             f"- Tag `{tag}`. `VERSION` and the plugin version at the target are both "
             f"`{version}`.\n"
-            f"- The `gates` check of the target's push to `main`, check run {gates_run}, was "
-            f"confirmed online by the publisher. The offline release check records that id and "
-            f"does not verify it.\n"
+            f"- The `gates` check of a workflow_dispatch run of the whole suite on the temporary "
+            f"branch `release-check/{tag}`, pushed at the target and deleted afterwards, check "
+            f"run {gates_run}, was confirmed online by the publisher to have succeeded on exactly "
+            f"the target commit before the release was cut. The offline release check records "
+            f"that id and does not verify it.\n"
             + scope +
             f"- Pull requests merged in that range ({len(numbers)}): {pr_list}.\n"
             f"- The full notes are the `{notes_name}` asset, and the history is in "

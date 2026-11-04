@@ -190,7 +190,9 @@ def cases(tmp):
            (0, body), 0, "Pull requests merged in that range (3): #9, #10, #11.",
            "This is the first tagged release.", "/blob/v1.0.11/CHANGELOG.md",
            "follow the moving branch",
-           "check run 4242, was confirmed online by the publisher", absent=("#12",))
+           "check run 4242, was confirmed online by the publisher",
+           "branch `release-check/v1.0.11`, pushed at the target and deleted afterwards",
+           "succeeded on exactly the target commit", absent=("#12",))
     expect("the first release's notes extract no sections and point to CHANGELOG.md at the tag",
            (0, notes), 0, "first tagged release", "/blob/v1.0.11/CHANGELOG.md",
            absent=("## 2026-",))

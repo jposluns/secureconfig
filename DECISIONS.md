@@ -17,6 +17,27 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Owner rulings of 2026-11-03 on QA and CI scope (#1194).** The owner gave four rulings on 2026-11-03. They
+  reached this change through the orchestrator's briefs, and the channel and the times were not recorded with
+  them. The rulings as recorded, verbatim:
+  - "We need to remove all repetitiveness in QA/CI and only check things once, QA should only look at what's changed, CI should only look at what's changed with a large review of the whole repo perhaps every 50-100 PRs or once a week."
+  - The whole suite runs "once per PR when the content is sensitive. Simple small changes and web site content is NOT sensitive".
+  - The standard QA process applies to "sensitive info that people will depend on (like security guides)".
+  - The scoped path "applies to web site content changes mandated by the maintainer, notably for simple changes, colour pallette, and things of that nature because we don't need 3 hours of QA and CI to change the colour of a heading".
+  The fourth ruling's reasoning is in its own words; no other reasoning was recorded. The brief that relayed the
+  fourth ruling reads it as "Code is not content." Its effect (applied by #1194): on a pull request,
+  `tools/select_gates.py` scopes only `site/**`, `site-src/**` and the root project records `CHANGELOG.md`,
+  `TODO.md`, `DONE.md`, `DECISIONS.md` and `PENDING-DECISIONS.md` to the sections of `tools/run_all_checks.sh` that
+  read them. The code under `site/` (a `_headers` file, which holds the CSP, or a `_redirects` file at any
+  depth, and every `.js`, `.mjs`, `.cjs` or `.map` file in any case), and any other changed path, a guide,
+  `README.md`, `controls-reference.md`, `plugin/`, a file under `tools/`, `scripts/`, `.baseline/`, `.aiqt/` or
+  `.github/`, a requirements file or an unmapped path included, runs every section. `.github/workflows/checks.yml`
+  no longer runs on a push to `main`; the whole suite runs weekly and on demand (`workflow_dispatch`). A release
+  now requires a successful `workflow_dispatch` run of the whole suite on its target before it is cut, and the
+  disclosure page's "Automated checks" entry says which gates a pull request runs. These rulings supersede in part
+  the 2026-10-25 ruling on running the gates workflow once per change (#906) below: its runs on pushes to `main`
+  end, and the green `gates` on the exact head that merges is the run of the sections that head's changes select.
+  The rest of that ruling stands.
 - **Maintainer rulings of 2026-11-01 on tagged releases (#1158).** The maintainer gave these rulings through
   AskUserQuestion in an attended session on 2026-11-01. No reasoning was recorded beyond the terms below. The
   maintainer's ruling of 2026-11-01 that started this work reads "we'll start doing that this week. lets ensure that

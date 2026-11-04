@@ -41,13 +41,32 @@ the ok and bad helpers are read out of the file and run with bash, with python3 
 stand-in that records its arguments and runs a stand-in gate body. Each case checks the call it
 made, that the gate's output is printed, and whether it set fail=1:
   - an exit 0 passes with the block's ok line whatever it prints: a clean or malformed RESULT
-    line, a FAIL in the tables, a `RESULT: fail ` line or no output at all;
-  - an exit 1 fails ("exited 1: a palette check failed or its input could not be read") whatever
-    it prints: a `RESULT: fail ` line, a malformed one, a pass line, or a crash's traceback, one
-    printed by a stand-in and one raised by a real interpreter;
-  - an exit 2 fails as a usage error ("exited 2, a usage error"), a pass line beside it or not;
+    line, a FAIL in the tables, a `RESULT: fail ` line, a traceback or no output at all;
+  - an exit 1 fails whatever it prints. With a line that is exactly `Traceback (most recent call
+    last):`, printed by a stand-in or raised by a real interpreter, the message says the gate
+    crashed ("exited 1 with a Python traceback: the gate crashed"); otherwise, for a
+    `RESULT: fail ` line, a malformed one, a pass line, an error line with no traceback or an
+    indented traceback line, it says "exited 1: a palette check failed or its input could not be
+    read";
+  - an exit 2 fails as a usage error ("exited 2, a usage error"), a pass line or a traceback
+    beside it or not;
   - any other code fails as an unexpected error ("exited N, an unexpected error"): an exit 3, and
     a gate killed by a signal (137).
+
+--SECTIONS: tools/run_all_checks.sh is copied into a scratch tree and run with bash, with a stand-in
+python3 first on PATH that records each call, prints an ok line (the parser preflight's included)
+and runs no gate, unless the call is the 1 it is told to fail. Each case checks the exit status,
+what the output holds and lacks, and the stand-in's calls:
+  - one name runs the parser preflight and that section only, and ends with the selected-pass
+    line, never "All gates passed.";
+  - two names given out of order run in the file's order;
+  - a selected gate that fails exits 1 with "One or more gates failed.";
+  - an unknown name, alone, beside a known one or in another letter case, an empty name (a
+    trailing comma or an empty list), a missing list, a misspelled option and an extra argument
+    are each refused with status 2 before any heading prints or the stand-in is called.
+The file is also held to its section shape: every heading after the parser preflight sits right
+under a `# section: NAME` line, so a heading cannot escape --sections, and 1 `# end of sections`
+line comes before the summary.
 
 Nothing here runs a real gate; tools/run_all_checks.sh runs those. Exit 0 ok, 1 on a finding.
 """
@@ -77,11 +96,15 @@ PALETTE_BLOCK = re.compile(r"^if palette=\$\(python3 .*?^fi$", re.M | re.S)
 PALETTE_OK = "  ok    check_palette.py: the secureconfig palette passes in both schemes"
 PALETTE_PASS = "RESULT: pass (1 site, 0 failing checks)"
 PALETTE_FAILED = "  FAIL  check_palette.py exited 1: a palette check failed or its input could not be read"
+PALETTE_CRASHED = ("  FAIL  check_palette.py exited 1 with a Python traceback: the gate crashed; "
+                   "the palette is unverified")
 PALETTE_USAGE = "  FAIL  check_palette.py exited 2, a usage error; the palette is unverified"
 PALETTE_ANY_FAIL = "  FAIL  check_palette.py exited"
+TRACEBACK = "Traceback (most recent call last):"
 # (stand-in gate body, fail=1 expected, texts the output must hold, texts it must not hold). The
 # block decides by the exit code only, so an exit 0 passes whatever it prints and a non-zero exit
-# fails whatever it prints; every case also holds the block to printing the gate's output.
+# fails whatever it prints; only the message of an exit 1 reads the output, for a traceback line.
+# Every case also holds the block to printing the gate's output.
 PALETTE_CASES = (
     (f"printf '  site  4.60:1  needs 4.5\\n{PALETTE_PASS}\\n'", False,
      [PALETTE_OK, "  site  4.60:1  needs 4.5", PALETTE_PASS], [PALETTE_ANY_FAIL]),
@@ -97,31 +120,44 @@ PALETTE_CASES = (
     (f"printf '  {PALETTE_PASS}\\n'", False, [PALETTE_OK, f"  {PALETTE_PASS}"], [PALETTE_ANY_FAIL]),
     ("printf 'RESULT: fail (1 site, 1 failing check)\\n'", False,
      [PALETTE_OK, "RESULT: fail (1 site, 1 failing check)"], [PALETTE_ANY_FAIL]),
+    (f"printf '{TRACEBACK}\\nKeyError: 1\\n'", False, [PALETTE_OK, TRACEBACK], [PALETTE_ANY_FAIL]),
     ("printf '  site  4.10:1  needs 4.5  FAIL\\nRESULT: fail (1 site, 1 failing check)\\n'; exit 1",
-     True, ["  site  4.10:1  needs 4.5  FAIL", PALETTE_FAILED], [PALETTE_OK, PALETTE_USAGE]),
+     True, ["  site  4.10:1  needs 4.5  FAIL", PALETTE_FAILED],
+     [PALETTE_OK, PALETTE_USAGE, PALETTE_CRASHED]),
     ("printf 'RESULT: fail (the input could not be checked)\\n'; exit 1", True,
-     ["RESULT: fail (the input could not be checked)", PALETTE_FAILED], [PALETTE_OK]),
-    ("printf 'Traceback (most recent call last):\\n  File \"x\", line 1\\nKeyError: 1\\n'; exit 1",
-     True, ["KeyError: 1", PALETTE_FAILED], [PALETTE_OK]),
+     ["RESULT: fail (the input could not be checked)", PALETTE_FAILED],
+     [PALETTE_OK, PALETTE_CRASHED]),
+    # A traceback line on an exit 1 is a crash, wherever it sits in the output; an error line
+    # without one, or a traceback line that is indented or carries more text, is not.
+    (f"printf '{TRACEBACK}\\n  File \"x\", line 1\\nKeyError: 1\\n'; exit 1",
+     True, ["KeyError: 1", PALETTE_CRASHED], [PALETTE_OK, PALETTE_FAILED]),
+    (f"printf '  site  4.60:1  needs 4.5\\n{TRACEBACK}\\nValueError: bad\\n'; exit 1", True,
+     ["  site  4.60:1  needs 4.5", PALETTE_CRASHED], [PALETTE_OK, PALETTE_FAILED]),
     ("printf 'RESULT: fail (1 site, 1 failing check)\\nValueError: bad\\n'; exit 1", True,
-     ["ValueError: bad", PALETTE_FAILED], [PALETTE_OK]),
+     ["ValueError: bad", PALETTE_FAILED], [PALETTE_OK, PALETTE_CRASHED]),
+    (f"printf '  {TRACEBACK}\\nKeyError: 1\\n'; exit 1", True,
+     [f"  {TRACEBACK}", PALETTE_FAILED], [PALETTE_OK, PALETTE_CRASHED]),
+    (f"printf '{TRACEBACK} x\\nKeyError: 1\\n'; exit 1", True,
+     [f"{TRACEBACK} x", PALETTE_FAILED], [PALETTE_OK, PALETTE_CRASHED]),
     ("printf 'RESULT:fail (1 site, 1 failing check)\\n'; exit 1", True,
      ["RESULT:fail", PALETTE_FAILED], [PALETTE_OK]),
     ("printf 'RESULT: failed\\n'; exit 1", True, ["RESULT: failed", PALETTE_FAILED], [PALETTE_OK]),
     ("printf '  RESULT: fail (1 site, 1 failing check)\\n'; exit 1", True,
      ["  RESULT: fail", PALETTE_FAILED], [PALETTE_OK]),
     (f"printf '{PALETTE_PASS}\\n'; exit 1", True, [PALETTE_PASS, PALETTE_FAILED], [PALETTE_OK]),
-    ("exit 2", True, [PALETTE_USAGE], [PALETTE_OK, PALETTE_FAILED]),
-    # Any other code fails too: a usage error that prints a pass line, an unknown code, a crash in
-    # a real interpreter (exit 1) and a gate killed by a signal (128 + 9).
+    ("exit 2", True, [PALETTE_USAGE], [PALETTE_OK, PALETTE_FAILED, PALETTE_CRASHED]),
+    # Any other code fails too: a usage error that prints a pass line or a traceback, an unknown
+    # code, a crash in a real interpreter (exit 1) and a gate killed by a signal (128 + 9).
     (f"printf 'usage: check_palette.py\\n{PALETTE_PASS}\\n'; exit 2", True,
      ["usage: check_palette.py", PALETTE_USAGE], [PALETTE_OK]),
+    (f"printf '{TRACEBACK}\\nKeyError: 1\\n'; exit 2", True, [TRACEBACK, PALETTE_USAGE],
+     [PALETTE_OK, PALETTE_CRASHED]),
     ("printf 'palette-exit-3-output\\n'; exit 3", True,
      ["palette-exit-3-output",
       "  FAIL  check_palette.py exited 3, an unexpected error; the palette is unverified"],
      [PALETTE_OK]),
-    ("python3 -I -c 'raise KeyError(1)'", True, ["Traceback (most recent call last):", PALETTE_FAILED],
-     [PALETTE_OK]),
+    ("python3 -I -c 'raise KeyError(1)'", True, [TRACEBACK, PALETTE_CRASHED],
+     [PALETTE_OK, PALETTE_FAILED]),
     ("kill -KILL $$", True,
      ["  FAIL  check_palette.py exited 137, an unexpected error; the palette is unverified"],
      [PALETTE_OK]),
@@ -159,6 +195,89 @@ RUN_GATE_CASES = (
     ("printf '  ok    x\\n'; exit 1", True,
      ["  FAIL  stand-in exited non-zero without reporting a result"], []),
 )
+
+
+# The --sections stand-in python3: it records its arguments, fails the 1 call named by
+# STANDIN_FAIL, and otherwise prints an ok line that also satisfies the parser preflight.
+SECTIONS_STANDIN = """#!/usr/bin/env bash
+printf '%s\\n' "$*" >> "$STANDIN_LOG"
+if [ "$*" = "$STANDIN_FAIL" ]; then
+  printf '  FAIL  stand-in finding\\n'
+  exit 1
+fi
+printf '  ok    gate parser preflight: stand-in\\n'
+"""
+WALKER = "== shared walker scans tracked files only =="
+SECRETS_TESTS = "== secrets scan fails closed on read errors =="
+PREFLIGHT_CALL = "-I -B tools/check_parser_pin.py"
+WALKER_CALL = "-B tools/test_walk.py"
+SECRETS_CALL = "-I -B tools/test_secrets_scan.py"
+USAGE = "usage: tools/run_all_checks.sh [--sections NAME[,NAME...]]"
+REFUSED = "which is not a section of tools/run_all_checks.sh; no gate ran"
+# (arguments, exit status, texts the output must hold, texts it must not hold, the stand-in's
+# calls, the call to fail)
+SECTIONS_CASES = (
+    (["--sections", "walker"], 0,
+     [WALKER, "All selected gates passed (walker); the other sections did not run."],
+     [SECRETS_TESTS, "All gates passed.", "  FAIL  "], [PREFLIGHT_CALL, WALKER_CALL], ""),
+    (["--sections", "secrets-tests,walker"], 0,
+     [WALKER, SECRETS_TESTS, "All selected gates passed (secrets-tests,walker)"],
+     ["All gates passed.", "  FAIL  "], [PREFLIGHT_CALL, WALKER_CALL, SECRETS_CALL], ""),
+    (["--sections", "walker"], 1, [WALKER, "  FAIL  test_walk.py failed", "One or more gates failed."],
+     ["All selected gates passed"], [PREFLIGHT_CALL, WALKER_CALL], WALKER_CALL),
+    (["--sections", "no-such-section"], 2, [f"  FAIL  --sections names 'no-such-section', {REFUSED}"],
+     ["== "], [], ""),
+    (["--sections", "walker,no-such-section"], 2, [f"names 'no-such-section', {REFUSED}"],
+     ["== "], [], ""),
+    (["--sections", "Walker"], 2, [f"names 'Walker', {REFUSED}"], ["== "], [], ""),
+    (["--sections", "walker,"], 2, [f"names '', {REFUSED}"], ["== "], [], ""),
+    (["--sections", ""], 2, [f"names '', {REFUSED}"], ["== "], [], ""),
+    (["--sections"], 2, [USAGE], ["== "], [], ""),
+    (["--section", "walker"], 2, [USAGE], ["== "], [], ""),
+    (["--sections", "walker", "secrets"], 2, [USAGE], ["== "], [], ""),
+)
+
+
+def sections_failures():
+    """Run a copy of tools/run_all_checks.sh with --sections on each of SECTIONS_CASES."""
+    failures = []
+    text = SUITE.read_text(encoding="utf-8")
+    lines = text.split("\n")
+    heads = [i for i, line in enumerate(lines) if line.startswith('echo "== ')]
+    loose = [lines[i] for i in heads[1:] if not lines[i - 1].startswith("# section: ")]
+    if not heads or "preflight" not in lines[heads[0]] or loose:
+        failures.append(f"tools/run_all_checks.sh: a heading after the parser preflight is not "
+                        f"right under a `# section: NAME` line: {loose!r}")
+    end = [i for i, line in enumerate(lines) if line == "# end of sections"]
+    if len(end) != 1 or end[0] < heads[-1]:
+        failures.append(f"tools/run_all_checks.sh needs 1 `# end of sections` line after the last "
+                        f"section, found {len(end)}")
+    d = Path(tempfile.mkdtemp())
+    try:
+        (d / "tools").mkdir()
+        (d / "bin").mkdir()
+        (d / "tools" / "run_all_checks.sh").write_text(text, encoding="utf-8")
+        standin = d / "bin" / "python3"
+        standin.write_text(SECTIONS_STANDIN, encoding="utf-8")
+        standin.chmod(0o755)
+        log = d / "calls.log"
+        for args, want_rc, needs, refuses, want_calls, fail in SECTIONS_CASES:
+            log.write_text("", encoding="utf-8")
+            env = dict(os.environ, PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
+                       STANDIN_LOG=str(log), STANDIN_FAIL=fail)
+            r = subprocess.run(["bash", str(d / "tools" / "run_all_checks.sh"), *args],
+                               capture_output=True, text=True, timeout=60, env=env)
+            out = r.stdout + r.stderr
+            calls = log.read_text(encoding="utf-8").splitlines()
+            missing = [n for n in needs if n not in out]
+            present = [n for n in refuses if n in out]
+            if r.returncode != want_rc or missing or present or calls != want_calls:
+                failures.append(f"--sections {args!r}: expected exit {want_rc} and calls "
+                                f"{want_calls!r}; got exit {r.returncode}, calls {calls!r}, the "
+                                f"output lacking {missing!r} or holding {present!r}: {out!r}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return failures
 
 
 def run_gate_source():
@@ -340,6 +459,7 @@ def main():
     failures += build_failures
     failures += palette_gate_failures()
     failures += palette_block_failures()
+    failures += sections_failures()
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
@@ -347,8 +467,12 @@ def main():
     print(f"  ok    {len(RUN_GATE_CASES)} run_gate cases and {build_cases} pages-build.sh cases "
           f"(Python 3.10 refused before any gate; with 3.11, every gate in order, and each gate's "
           f"failure stopping the build, in {' and '.join(forms)}), the palette gate in both "
-          f"runners, and {len(PALETTE_CASES)} cases of run_all_checks.sh's palette block (decided "
-          f"by the exit code only: 0 passes, 1, 2, any other code and a crash fail)")
+          f"runners, {len(PALETTE_CASES)} cases of run_all_checks.sh's palette block (decided "
+          f"by the exit code only: 0 passes, 1, 2, any other code and a crash fail, and an "
+          f"exit 1 with a traceback line is reported as a crash), and "
+          f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
+          f"after the preflight, in the file's order; an unknown or empty name refused before "
+          f"any gate)")
     return 0
 
 

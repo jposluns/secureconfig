@@ -414,8 +414,11 @@ committed `plugin/plugin.json` names the committed `VERSION`; when the working t
 committing.
 
 Record the change in `CHANGELOG.md` in the same pull request, not in a later bookkeeping one. A
-required gate checks that every merged pull request is referenced, exempting only the newest, so a
-second unrecorded merge turns the build red. Eight pull requests had gone unrecorded before that
+required gate checks that every merged pull request is referenced, exempting only the newest. It
+runs on a pull request that changes `CHANGELOG.md`, as each should, and in every whole-suite run:
+on a pull request that changes anything but site content and the project records, weekly and on
+demand, so a second unrecorded merge turns the next such run red. Eight pull requests had gone
+unrecorded before that
 gate existed. A second gate, `tools/check_changelog_format.py`, requires an empty line after each
 `## YYYY-MM-DD` heading, strictly descending dated headings and no date with two headings.
 
@@ -463,11 +466,21 @@ link to `CHANGELOG.md` at the tag.
    normally the day before the cut. `TZ=UTC git log --first-parent --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%H %cd %s' main`
    lists the merges with their UTC times. The target's subject begins
    `Merge pull request #N from `, and the tag is `v` plus `git show <sha>:VERSION`.
-3. Confirm online that the target's `gates` check run on its push to `main` concluded
-   `success`, for example with
+3. Before cutting the release, run the whole suite on the target through a temporary branch and
+   require it to succeed. No run starts on a push to `main`, and a pull request's run checks the
+   pull request, possibly only some sections, not the merge commit, so no earlier run stands in
+   for this one. `workflow_dispatch` runs on a branch or tag, not on a bare commit, and the target
+   is usually no longer the head of `main`, so push a temporary branch
+   `release-check/v1.0.<N>` at the target with
+   `git push origin <sha>:refs/heads/release-check/v1.0.<N>`. Start the workflow on that branch
+   with `workflow_dispatch`, from the Actions tab or with
+   `gh workflow run checks.yml --ref release-check/v1.0.<N>`, and wait for it to finish. Require
+   its `gates` check run to have concluded `success` on exactly the target commit: confirm online
+   that the check run's head commit is `<sha>`, for example with
    `gh api 'repos/jposluns/secureconfig/commits/<sha>/check-runs?check_name=gates'`, and note
-   the check run's id. If it failed or never completed, choose the last merge of an earlier
-   UTC day whose run passed.
+   that check run's id. Then delete the branch with
+   `git push origin --delete release-check/v1.0.<N>`. If the run failed, never completed or ran
+   on any other commit, the release stops; delete the branch in that case too.
 4. Build the release twice, into two new directories outside the repository, and compare
    them with `diff -r`; any difference stops the release. Each build is
    `python3 -I -B tools/check_release.py --target <sha> --tag v1.0.<N> --previous <tag> --gates-check-run <id> --dir <dir> --build`,

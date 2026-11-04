@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Name the sections of tools/run_all_checks.sh that a pull request's changes affect.
+
+The owner's rulings of 2026-11-03 (DECISIONS.md): CI looks only at what changed, the whole suite
+runs weekly, and the scoped path is for web site content changes mandated by the maintainer, such
+as simple changes and the colour palette; code is not content. This reads the changed paths, one
+per line on standard input, the way `git diff --name-only --no-renames BASE...HEAD` prints them,
+and prints the names of the sections to run, one per line in the suite's order, for
+`tools/run_all_checks.sh --sections`. On standard error it prints, for each path, the sections it
+selected, so the CI log shows why.
+
+SCOPED CONTENT is the only content that runs less than every section: site/** and site-src/**
+(the pages, their sources, the served stylesheets, fonts and images, and the palettes) and the
+root project records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md. Code
+under site/ is not content, and it fails closed: a file named `_headers` (the CSP and the other
+served headers) or `_redirects` at any depth under site/, and every file under site/ whose name
+ends in `.js`, `.mjs`, `.cjs` or `.map` in any case (the served scripts and their source maps),
+run every section. Every other path runs every section too: every guide, README.md,
+controls-reference.md, plugin/, every file under tools/, scripts/, .baseline/, .aiqt/ and
+.github/, any requirements file, CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE,
+LICENSE, VERSION and any other path.
+
+THE MAP is MAP below, the one place it is written: a path takes the sections of the first pattern
+it matches, and a path that matches no pattern takes every section. Every scoped path also takes
+ANY_PATH, the sections that read every file (the secrets scan) or resolve links to any path (a
+removed or renamed file can break a link elsewhere). A pattern's `*` matches within one path
+segment and `**/` any number of whole segments, including none. An ALL pattern matches in any
+case, since matching more paths only runs more sections; a scoped pattern matches case exactly. A
+section belongs to a scoped path when it reads that path: a project record feeds the Markdown
+gates, and site/ and site-src/ feed the site gates.
+
+FAIL SAFE: every section runs when the list is empty, when a path matches no pattern, and when a
+path matches an ALL pattern (a requirements file, even under site/, and the code under site/,
+which the ALL patterns name before site/**). A path git quotes (a name
+with unusual characters) matches nothing, so it runs every section too. The section names come
+from the suite's own `# section: NAME` lines; tools/test_select_gates.py holds MAP to them, and if
+MAP names one the suite no longer has, every section runs and a warning says so. The selection
+only chooses; the gates still decide. Exit 0 with the names printed, 2 when the suite cannot be
+read.
+"""
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SUITE = ROOT / "tools" / "run_all_checks.sh"
+SECTION = re.compile(r"^# section: ([a-z0-9-]+)$", re.M)
+
+ALL = "ALL"
+# Every scoped path: the secrets scan reads every file, and the two link gates resolve links to
+# any path in the checkout.
+ANY_PATH = ("secrets", "local-links", "llms-full-links")
+# The gates that read Markdown wherever it is tracked (each skips some directories of its own).
+MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "prose-conventions",
+            "shell-blocks", "bracket-ranges", "pinned-citations", "placeholders", "aiqt-baseline")
+# The generated site and what checks or builds it, site/llms.txt and site/llms-full.txt included.
+SITE = ("copy-buttons", "baseline-pin", "palette", "site-build", "site-draft", "pages-build",
+        "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories", "llms-full",
+        "generated-committed", "prose-conventions", "aiqt-baseline")
+
+MAP = (
+    # Fail safe: a requirements file at any depth, site/ included, pins packages the gates run on.
+    ("**/requirements*", ALL),
+    # Code under site/ at any depth, matched before site/**: the CSP and the other served headers,
+    # the redirects, the served scripts and their source maps.
+    ("site/**/_headers", ALL),
+    ("site/**/_redirects", ALL),
+    ("site/**/*.js", ALL),
+    ("site/**/*.mjs", ALL),
+    ("site/**/*.cjs", ALL),
+    ("site/**/*.map", ALL),
+    # Site content: the pages, their sources, the served stylesheets, fonts and images, and the
+    # palettes.
+    ("site/**", SITE),
+    ("site-src/**", SITE),
+    # The root project records. Every other path, code and guides included, matches nothing here
+    # and runs every section.
+    ("CHANGELOG.md", MARKDOWN + ("changelog-prs", "changelog-format")),
+    ("TODO.md", MARKDOWN + ("todo-rows",)),
+    ("DONE.md", MARKDOWN),
+    ("DECISIONS.md", MARKDOWN),
+    ("PENDING-DECISIONS.md", MARKDOWN),
+)
+
+
+def pattern_re(pattern, sections):
+    """A compiled full-path match for one MAP pattern, in any case when it selects ALL."""
+    out, i = [], 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out.append("(?:[^/]+/)*")
+            i += 3
+        elif pattern.startswith("**", i):
+            out.append(".*")
+            i += 2
+        elif pattern[i] == "*":
+            out.append("[^/]*")
+            i += 1
+        else:
+            out.append(re.escape(pattern[i]))
+            i += 1
+    return re.compile("".join(out), re.IGNORECASE if sections == ALL else 0)
+
+
+COMPILED = tuple((pattern, pattern_re(pattern, sections), sections) for pattern, sections in MAP)
+
+
+def suite_sections(text):
+    """The section names of tools/run_all_checks.sh, in its order."""
+    return SECTION.findall(text)
+
+
+def sections_for(path):
+    """(pattern, sections) for one changed path; (None, ALL) when no pattern matches it."""
+    for pattern, compiled, sections in COMPILED:
+        if compiled.fullmatch(path):
+            return pattern, sections if sections == ALL else sections + ANY_PATH
+    return None, ALL
+
+
+def select(paths, names):
+    """The sections to run for these changed paths, in suite order, and one note per path."""
+    paths = [p for p in paths if p]
+    if not paths:
+        return list(names), ["no changed paths: every section"]
+    chosen, notes = set(), []
+    for path in paths:
+        pattern, sections = sections_for(path)
+        if sections == ALL:
+            why = f"matches {pattern}" if pattern else "not scoped content"
+            return list(names), notes + [f"{path}: {why}: every section"]
+        chosen.update(sections)
+        notes.append(f"{path}: {', '.join(n for n in names if n in sections)}")
+    stale = sorted(chosen - set(names))
+    if stale:
+        return list(names), notes + [f"the map names {stale!r}, which the suite does not have: "
+                                     f"every section"]
+    return [n for n in names if n in chosen], notes
+
+
+def main():
+    try:
+        names = suite_sections(SUITE.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError) as exc:
+        print(f"  FAIL  cannot read {SUITE.relative_to(ROOT)}: {exc}", file=sys.stderr)
+        return 2
+    if not names:
+        print(f"  FAIL  {SUITE.relative_to(ROOT)} has no `# section: NAME` lines", file=sys.stderr)
+        return 2
+    chosen, notes = select(sys.stdin.read().split("\n"), names)
+    for note in notes:
+        print(f"select_gates: {note}", file=sys.stderr)
+    print("\n".join(chosen))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
