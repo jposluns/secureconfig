@@ -103,35 +103,8 @@ if [ "$#" -gt 0 ]; then
   fi
   printf 'Sections selected: %s\n' "$list"
   # A fresh bash sources the cut copy with this file as its $0 and no arguments, so the cd above
-  # lands in the same tree and the copy runs straight through. It runs in the background, in a
-  # process group of its own (set -m), and this shell waits for it. A HUP, INT or TERM sent to this
-  # shell's PID, or a Ctrl-C, which reaches this shell's group and not the copy's, is passed as a
-  # TERM to the copy's whole group, so the gate running in any section stops with the copy, whose
-  # own traps (the llms-full EXIT trap and the overflow section's) run before this shell exits with
-  # that signal's status. A signal that arrives before the copy's PID is recorded is held in
-  # suite_signal and passed on once it is. exec would make the copy this PID, but a TERM to it
-  # would then stop the shell running the sections and not the gate it runs.
-  suite_pid=""
-  suite_signal=""
-  forward_signal() {
-    suite_signal=$1
-    if [ -n "$suite_pid" ]; then
-      kill -TERM -- -"$suite_pid" 2>/dev/null
-      wait "$suite_pid"
-      exit "$1"
-    fi
-  }
-  trap 'forward_signal 129' HUP
-  trap 'forward_signal 130' INT
-  trap 'forward_signal 143' TERM
-  set -m
-  bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3<<< "$script" &
-  suite_pid=$!
-  set +m
-  if [ -n "$suite_signal" ]; then
-    forward_signal "$suite_signal"
-  fi
-  wait "$suite_pid"
+  # lands in the same tree and the copy runs straight through.
+  bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3<<< "$script"
   exit $?
 fi
 
@@ -1556,11 +1529,13 @@ if [ -n "$overflow_unlisted" ]; then
   bad "the overflow check's page list does not name the generated page(s)$overflow_unlisted"
 fi
 # The server and the check run in the background of this shell, which waits for them, so its HUP,
-# INT and TERM traps run at once and stop both by the PIDs started here (kill, then wait); the
-# traps then exit with the signal's status, so the suite's EXIT trap still runs. A signal that
+# INT and TERM traps run at once and stop both by the PIDs started here (kill, then wait). The
+# traps then reset themselves and send this shell the same signal, so it dies by that signal, as
+# a shell running any other section does, and the suite's EXIT trap still runs. A signal that
 # arrives while a launch is under way, before its PID is recorded, is held in overflow_signal and
-# acted on once the PID is. Under --sections this shell is the cut copy, whose process group the
-# suite's own shell sends a TERM.
+# acted on once the PID is. A Ctrl-C reaches this shell, since the INT goes to the whole foreground
+# group. Under --sections this shell is the cut copy, a child of the suite's own shell, so a TERM
+# sent only to the suite's PID does not reach it.
 overflow_pid=""
 overflow_check_pid=""
 overflow_dir=""
@@ -1570,15 +1545,19 @@ overflow_trap() {
   overflow_signal=$1
   if [ -z "$overflow_starting" ]; then
     overflow_stop
-    exit "$1"
+    overflow_die "$1"
   fi
 }
 overflow_started() {
   overflow_starting=""
   if [ -n "$overflow_signal" ]; then
     overflow_stop
-    exit "$overflow_signal"
+    overflow_die "$overflow_signal"
   fi
+}
+overflow_die() {
+  trap - HUP INT TERM
+  kill -s "$1" "$BASHPID"
 }
 overflow_stop() {
   if [ -n "$overflow_check_pid" ]; then
@@ -1614,9 +1593,9 @@ elif ! overflow_dir=$(mktemp -d); then
   overflow_dir=""
   bad "check_overflow.js did not start: mktemp could not create a folder for the server log; the pages are unverified"
 else
-  trap 'overflow_trap 129' HUP
-  trap 'overflow_trap 130' INT
-  trap 'overflow_trap 143' TERM
+  trap 'overflow_trap HUP' HUP
+  trap 'overflow_trap INT' INT
+  trap 'overflow_trap TERM' TERM
   # Port 0 lets the kernel pick a free port, which -u makes http.server print at once; the loop
   # waits until the server answers.
   overflow_starting=1
