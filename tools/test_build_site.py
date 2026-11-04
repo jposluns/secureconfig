@@ -20,6 +20,8 @@ Every page, the 404 and the review page included, at both bases, carries the lig
 of baseline 1.6.0 (SPECIFICATION 7.33) exactly as the reference pages write it, once, as the last
 child of the top bar after its nav, and loads scheme.js once, right after the touch icon and
 before the first stylesheet, with data-cfasync="false" before src and no defer or async.
+The landing page carries the About line of baseline 1.7.0 (SPECIFICATION 7.24) exactly once, with
+1 ordinary space after each dot span and none before it.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
 page at any base; a stray file outside assets/baseline/ other than assets/site.css is refused at
 both bases, except at the root a published file (PUBLISHED, such as llms.txt) beside the pages.
@@ -51,6 +53,15 @@ REFERENCE_SWITCH = (
     'focusable="false"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 '
     '12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>'
     '</svg><span class="vh">Dark mode</span></button>')
+# The About line as baseline 1.7.0's SPECIFICATION section 7.24 writes it, copied here by hand: 1
+# ordinary space after each dot span and none before it, so the line breaks only after a dot.
+DOT = '<span class="dot" aria-hidden="true">&middot;</span>'
+ABOUT_LINE = (
+    f'<p class="about"><a href="/disclosure/">Disclosure</a>{DOT} <a href="/license/">Licence</a>'
+    f'{DOT} <a href="https://posluns.ca/privacy/" target="_blank" rel="noopener noreferrer">Privacy'
+    f'<span class="vh"> (opens in a new tab)</span></a>{DOT} <a href="https://posluns.ca/security/" '
+    'target="_blank" rel="noopener noreferrer">Security<span class="vh"> (opens in a new tab)</span>'
+    '</a></p>')
 # Each page with link previews at the root: its title and the site-src/content.json key of its
 # description.
 PREVIEWS = {"index.html": ("Home", "home"), "guides/index.html": ("Guides", "guides"),
@@ -128,6 +139,11 @@ def main():
                           '<meta name="description" content="Read on GitHub. ', 1)
     if worded == home or refused(worded) is not None:
         failures.append(f'a description reading "Read on GitHub" was refused: {refused(worded)!r}')
+    # Baseline 1.7.0 (SPECIFICATION 7.24): the landing page's About line exactly as the
+    # specification writes it, with 1 ordinary space after each dot span and none before it.
+    if home.count(ABOUT_LINE) != 1:
+        failures.append("base /: index.html does not carry the About line of SPECIFICATION 7.24 "
+                        "(1 space after each dot span, none before it) exactly once")
 
     # The base path reaches every internal link and asset, at the root and in the staging form.
     staged_pages = build_site.Builder("/draft/").build()
@@ -311,7 +327,8 @@ def main():
     print(f"  ok    {len(plants)} planted refusals and a description using the word on, the base "
           f"path at / and /draft/ with the root's indexability, link previews at their full values "
           f"and canonicals and the review page's canonical and link previews, the light and dark "
-          f"switch and scheme.js on every page at both bases, and --check on a changed, an extra "
+          f"switch and scheme.js on every page at both bases, the landing page's About line, and "
+          f"--check on a changed, an extra "
           f".html and .HTM page, a missing page, a root-base published file and strays, and the "
           f"staged strays")
     return 0

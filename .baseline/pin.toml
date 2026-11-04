@@ -5,18 +5,18 @@
 # each one against the package's SHA256SUMS. Never edit a copied file. A new baseline version is
 # 1 pull request that reruns the copy script and commits the copied files and this pin together.
 
-version = "1.6.1"
-upstream = "https://posluns.ca/baseline/1.6.1/"
-archive_sha256 = "e14f950a151a9c2b2d6c7e58d96fd5a41360dd4698835b3c3feef3de2e672474"
-sha256sums_sha256 = "774784943c6c97768af5956ad299c06390273e1455a2e6a1214300cc4c516c4e"
-copied = "2026-11-03"
+version = "1.7.0"
+upstream = "https://posluns.ca/baseline/1.7.0/"
+archive_sha256 = "923432d8a6e9b4b0a1923fe4a5988492bc7348fee1c31d889f3119bcb6e38e9a"
+sha256sums_sha256 = "4894c8ee92003a1c09d1e235eb436e0756e1268783ad792e8d0614c85e1340ad"
+copied = "2026-11-04"
 
 # Paths under assets/baseline/ are relative to site/; the build tools' paths are
 # relative to the repository root.
 [files]
 "assets/baseline/LICENSE" = "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
 "assets/baseline/NOTICE.md" = "deeffb1a277a0b1f591feea15ecc10fbf4fc916cf0db07885625a288cc6e3b1e"
-"assets/baseline/baseline.css" = "654f9b349acf97860dae417e2bd3cc3de1fe51a2c7b1d7f88d0971efc83bceae"
+"assets/baseline/baseline.css" = "8a902e09bc770744e4f1a15066a0c5ef33095d829a5dc59486a502c567dac777"
 "assets/baseline/copy.js" = "9bf99b50471889b768c795af5a4f84f526cecf7622a1f1265ca3d088b31339a4"
 "assets/baseline/fonts.css" = "a309a8ff4026a67fb5d10dea2c02e5b9ea2c1b32d4b18d7892015e038397396a"
 "assets/baseline/fonts/dancing-script-LICENSE.txt" = "c02c0002d3bbd41a16933c162888c400469c7029f1362ca9d60d5ed20ea7d157"
@@ -45,7 +45,7 @@ copied = "2026-11-03"
 "assets/baseline/marks/github-invertocat-white.svg" = "ccd84c89b1056345608fc3489357f8acc7397e49a3cdc2d418b6c8016911d47b"
 "assets/baseline/marks/linkedin-in-bug.png" = "3c0149f26168b5fe0f43e68664abe40341a6443b3cd435d18a73e12f64f8b600"
 "assets/baseline/marks/orcid-id.svg" = "195be086656233fc1a0089086d9190d28dc6abce39c2290612d1893233e1f166"
-"assets/baseline/palettes.css" = "f1d77366c5bfdae3e7c35420f755cf6a7cbe2a0c8eca081e062635202769cb17"
+"assets/baseline/palettes.css" = "cf4bed49e0c3c16fcc8272acbf8263753e2f392db6dcdac96313540b0da220f2"
 "assets/baseline/rail.js" = "36535faf2df8637e694ff2a57af982b9c67c9f410f80d4dfceb193c4f2d601ca"
 "assets/baseline/scheme.js" = "39d035d986f53c987cbe92516b9a5fd499af5c7fcdda701ea896c63c45ef1634"
-".baseline/check_palette.py" = "d7a9994997ef721e8e7ba3809b18df3f0e9e3c803bd6fcddb3c8125171e21bfc"
+".baseline/check_palette.py" = "cae71e9a43e87c5687bc50dc75784e83b3a5b643a4e9a07298294b9d270971a4"

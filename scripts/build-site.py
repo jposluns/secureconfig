@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the secureconfig.ai pages on the shared site template (baseline 1.6.1).
+"""Build the secureconfig.ai pages on the shared site template (baseline 1.7.0).
 
 Usage:
   python3 -I -B scripts/build-site.py                 write the pages under site/
@@ -376,8 +376,9 @@ class Builder:
             f'<span class="n">{esc(self.n(t["meta"]))}</span><span class="d">{self.inline(t["desc"])}'
             f"</span></a></li>" for t in h["tiles"])
         start, _ = self.url(h["start"]["href"])
-        # SPECIFICATION 7.24: the links separated by hidden-from-reading middle dots.
-        about = '<span class="dot" aria-hidden="true">&middot;</span>'.join(
+        # SPECIFICATION 7.24: the links separated by hidden-from-reading middle dots, with 1 ordinary
+        # space after each dot span and none before it (from 1.7.0), so the line breaks after a dot.
+        about = '<span class="dot" aria-hidden="true">&middot;</span> '.join(
             self.inline(link) for link in h["about"]["links"])
         main = (f'<div class="wrap"><section class="hero" aria-label="Introduction"><div class="hero-text">'
                 f'<p class="lbl gold">{self.inline(h["kicker"]["text"])}</p>'
