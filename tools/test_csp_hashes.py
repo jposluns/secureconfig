@@ -62,9 +62,10 @@ foreignObject, style, script) inside a glyph.
 HEADER CASES. site/_headers must carry exactly the shared template policy under the bare /*:
 widened, reordered, comma-split, duplicated, detached, path-scoped or host-scoped policies fail,
 as does any X-Robots-Tag; a comment between the rule and its headers passes, as Cloudflare allows.
-X-Frame-Options, Permissions-Policy and Cross-Origin-Opener-Policy each fail when missing,
-changed, set twice, set only under a narrower rule or detached, and X-Content-Type-Options,
-Referrer-Policy and Strict-Transport-Security fail when set or detached anywhere.
+X-Frame-Options, Permissions-Policy and Cross-Origin-Opener-Policy each fail when missing or
+changed, and X-Frame-Options also when set twice, set only under a narrower rule or detached;
+X-Content-Type-Options, Referrer-Policy and Strict-Transport-Security fail when set, and
+Referrer-Policy also when detached.
 
 Exit 0 ok, 1 on a finding.
 """
