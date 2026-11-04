@@ -434,8 +434,9 @@ collection. With joins, and on its bounded-page path, it also skips that hook fo
 whose `Database::COLLECTION_GRANTED` attribute is true; where that attribute is set was not read.
 Separately, while the status is enabled, it wraps a permission hook for each joined table in a
 `Permission\Join` hook, whatever the main collection's `documentSecurity` or grant. It omits one
-only when the collection's `Database::JOIN_DOCUMENT_SECURITY` map gives that table a false value;
-an empty map, or one with no entry for the table, keeps it. Where that map is set was not read.
+only when the collection's `Database::JOIN_DOCUMENT_SECURITY` map gives that table a value that
+casts to false; an empty map, or one with no entry for the table, keeps it. Where that map is set
+was not read.
 On a join that keeps unmatched rows, it also adds a `Permission\OuterJoin` hook once any of these
 permission hooks is added. At 7.3.9 the predicate depended on the status alone, whatever the
 `documentSecurity` setting. See the
@@ -459,8 +460,9 @@ See the
 This guide's reasoning from the cited 10.1.0 SQL code is that, with authorization enabled, SQL
 `find` filters the main collection's rows by document permissions only for a collection with
 `documentSecurity` enabled or the metadata collection, and not for a granted collection on a join
-or bounded-page path, while it filters each joined table unless the collection's join
-document-security map disables that table. Disabled authorization omits those filters, while query conditions, ordering and pagination remain.
+or bounded-page path. It also filters each joined table unless the collection's join
+document-security map disables that table. Disabled authorization omits those filters, while
+query conditions, ordering and pagination remain.
 Whether a collection grant still makes Database-level `find` run with authorization disabled, as at
 7.3.9, is not established at 10.1.0, since the dispatch was not read.
 These are source-based conclusions, not a live authorization demonstration.
@@ -1417,7 +1419,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-10",
-  "body_sha256": "b93c4023b321ffad481fa3fc0940c051c4985ceb35597a21182c3ea71e0ec544",
+  "body_sha256": "5c4159d396104a7989bfc557644716a0dfdfe58ff4cb9900ea9e2aba91b202bc",
   "components": {
     "pb": {
       "name": "PocketBase",
