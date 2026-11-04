@@ -38,8 +38,10 @@ say "A name that is not a component, such as `surreal foo`, runs a `surreal-foo`
 and reports an unknown component otherwise." As this guide's inference, under the launcher `surreal start`
 does not start the database, and could pass the block's environment to a `surreal-start` found on `PATH`.
 So the block below uses `surreal db start`, for the documented launcher install; where the standalone database
-executable is installed as `surreal`, drop `db`. The container example in section 2 keeps `start`, because each
-image stage's `ENTRYPOINT` is the database executable itself.
+executable is installed as `surreal`, drop `db`. The container example in section 2 keeps `start`, because in the
+`dev` and `prod` stages of the repository's `docker/Dockerfile` the `ENTRYPOINT` runs `/surreal`, by default
+copied from `target/release/surreal`, which as this guide reads it is the database executable. The `dev-ci` and `prod-ci`
+stages copy a prebuilt CI artifact instead, whose origin is not established at v4.0.0.
 
 `surreal db start` takes `--user`/`-u` and `--pass`/`-p` (also `SURREAL_USER`/`SURREAL_PASS`) for, in the
 v4.0.0 help text, "the initial database root user. Only if no other root user exists": they initialize that
@@ -120,8 +122,12 @@ network interface."
 ## 3. User levels and access control
 
 System users (`DEFINE USER`) exist at three levels: root (visibility across every namespace and
-database), namespace, and database, each assigned a role of `OWNER`, `EDITOR`, or `VIEWER`. The docs
-warn plainly that "a root system user is not restricted by permissions at all, so it is the wrong
+database), namespace, and database. The best-practices page says system users may be assigned "roles that will
+limit the actions they can perform inside the level where they are defined", with `ROLES VIEWER` and
+`ROLES EDITOR` examples, and the start page says the start credentials "define a new root user with the `OWNER`
+role". Whether `OWNER`, `EDITOR` and `VIEWER` are the only roles, and whether every system user holds one, is
+not established by the pages read for this guide. The docs warn plainly that "a root system user is not
+restricted by permissions at all, so it is the wrong
 credential to put in an application"; give trusted backend administration a narrowly scoped system user. But
 system users at EVERY level are governed by RBAC and bypass table and field `PERMISSIONS` entirely, so a
 namespace- or database-level system user is not a substitute for record-level isolation: when application
@@ -132,7 +138,9 @@ Record users are different: they are rows in your own tables, authenticated thro
 beyond what a `PERMISSIONS` clause on a table or field grants them, the same
 rules-are-the-security model as Firebase and Supabase ([firebase-supabase.md](firebase-supabase.md)):
 the permissions page says "omitting `PERMISSIONS` results in a `PERMISSIONS NONE`", so a table with no
-`PERMISSIONS` clause grants a record user nothing by default. The `/signup` and `/signin`
+`PERMISSIONS` clause grants a record user nothing by default. Fields default the other way: "A field without an
+explicit clause is stored as `PERMISSIONS FULL`", which follows the table's rules, so give a sensitive field,
+such as a password hash, its own clause. The `/signup` and `/signin`
 HTTP endpoints accept unauthenticated credentials by design. At v4.0.0 so do `/signup/cookie` and
 `/signin/cookie`, which `--cookie-auth` with an explicit `--allow-origin` list enables, and scoped paths such as
 `/ns/{ns}/db/{db}/ac/{ac}/signup`, which the server rewrites to the unscoped route before any layer sees them.
@@ -155,6 +163,11 @@ patched in 4.0.0, so do not rely on those controls on an earlier release:
 - GHSA-fh2q-8f75-m4h6 (high): "REFERENCE ON DELETE CASCADE/UNSET/CUSTOM bypasses target table PERMISSIONS FOR delete/update".
 - GHSA-qh3v-rr48-x3cq (medium): "Authenticated Export Permission Bypass".
 - GHSA-ffvm-mqh3-7986 (medium): "SurrealDB 3.2.4 allows FOR loop variables named $access, $auth, and $token to shadow the authenticated session values used by table permission expressions."
+- GHSA-wjh3-m4pv-q6cp (medium): "Cross-field array-index drift in wildcard field-permission filtering".
+- GHSA-cff7-q66j-4hc8 (medium): "UNIQUE-Index Conflict Errors Disclose SELECT-Restricted Field Values and Record Ids in SurrealDB".
+- GHSA-3rcm-c653-wgmr (medium): "Re-RELATE on an Existing Edge Echoes Stored in/out Endpoints Despite SELECT Restrictions in SurrealDB".
+- GHSA-ff2q-h4x7-cpj4 (medium): "ON DELETE REJECT Errors Disclose SELECT-Hidden Referencing Record Ids in SurrealDB".
+- GHSA-pvv9-h693-m8r4 (medium): "SurrealDB LIVE query notification expressions allow write side effects that bypass the write-blocking guard"; its description says write side effects in the WHERE clause that reference document fields "can exfiltrate data even after the subscriber's SELECT permission is revoked".
 - GHSA-m887-2246-mgw3 (low): "VIEWER role can define tables implicitly via CREATE on a non-STRICT database".
 - GHSA-3287-hpm5-3f8r (medium): "SurrealDB DDL statements bypass namespace/database implicit-creation authorization added by GHSA-wp87-mgvq-5j93 fix".
 
@@ -184,10 +197,13 @@ function is allowed only when an allow entry matches it and no deny entry does
 
 Prefer `--deny-all` with narrow explicit allowances for the routes, RPC methods, and functions you need rather
 than a bare `--allow-funcs` or `--allow-net`, keep embedded scripting off unless required, and confirm each
-default against your pinned version. What `--deny-all` alone does to HTTP routes is not established at v4.0.0.
-Under `--deny-all` the route getter allows only what `--allow-http` lists, but `--allow-http` has a default
-value that its parser reads as every route, and no run showed which applies. So list the routes you use with
-`--allow-http`, `/health`, `/signin`, `/signup` and `/sql` included where needed. The HTTP protocol page says a
+default against your pinned version. As this guide's reading of the v4.0.0 source, `--deny-all` alone leaves
+every HTTP route, RPC method and MCP tool allowed by capabilities. `--allow-http`, `--allow-rpc` and `--allow-mcp`
+each default to an empty value (`#[arg(default_value_os = "")]`), their parsers read it as every target
+(`Ok(Targets::All)`), and under `--deny-all` each allow getter returns `Targets::All` for that list, while each
+deny getter denies nothing unless you name targets in its list. That runtime result is not established by a
+run. So pass explicit `--allow-http` and `--allow-rpc` lists of the routes and RPC
+methods you use, `/health`, `/signin`, `/signup` and `/sql` included where needed. The HTTP protocol page says a
 denied `health` route answers `403`, which the Verify block's health check reports as inconclusive.
 
 v4.0.0 also fixes these capability bypasses, each affecting versions below 4.0.0 and patched in 4.0.0:
@@ -196,8 +212,8 @@ v4.0.0 also fixes these capability bypasses, each affecting versions below 4.0.0
 - GHSA-fq69-wr4w-v3gm (high): "JavaScript Query Bridge Bypasses Arbitrary-Query Subject Gate".
 - GHSA-q83r-f38r-rwvj (high): "Surrealism WASI socket allowlist ignores deny_net, enabling SSRF via hostname resolving to a private IP".
 
-The 4.0 release page lists 23 advisories; this guide names the 10 that bear on its statements and counts the
-other 13 only.
+The 4.0 release page lists 23 advisories; this guide names the 15 that bear on its statements and counts the
+other 8 only.
 
 Functions such as `http::*` and JWKS retrieval make outbound requests, so restrict destinations and
 apply the metadata and internal-network protections in [egress-metadata.md](egress-metadata.md); authentication
@@ -311,16 +327,18 @@ access cannot bypass that gateway.
 REASONED: preceding block; public-origin reachability and TLS interpretation follow the cited SurrealDB bind and TLS documentation; no external test path or deployment certificate is available in the authoring environment, so no reachability result is recorded.
 The first block's listener inventory, health check and anonymous/authenticated database-info queries are declared by its own leading comment and follow the cited SurrealDB bind, health and SQL/authentication documentation; no running deployment or system-user JWT is available for them.
 At v4.0.0 the source says `/health` returns `200` unless its route is denied, the memory guard has stayed
-engaged or the storage backend fails its health check, so a `200` shows neither authentication nor finished
-startup. `/status` is the process and listener liveness check, and `/ready` returns `200` only once startup,
-import and credentials included, has finished. Confirm the TLS certificate chain wherever
+engaged for at least the configured `SURREAL_MEMORY_THRESHOLD_UNHEALTHY_AFTER` period, or the storage backend
+fails its health check. So a `200` can come while the guard is engaged, for less than that period or with that
+memory check disabled, and it shows neither authentication nor finished startup. `/status` is the process and
+listener liveness check, and `/ready` returns `200` only once startup, import and credentials included, has
+finished and, when a heartbeat budget is configured, the node's cluster heartbeat is fresh. Confirm the TLS certificate chain wherever
 TLS terminates with normal validation (a trusted CA for private PKI); never use `-k`.
 Paste the JWT alone at the first block's hidden prompt: a multi-line paste leaves every line after the first for your
 shell to run.
 
 ## Sources (checked September 2026)
 
-- SurrealDB CLI, `surreal db start` (checked November 2026): https://surrealdb.com/docs/reference/cli/db/commands/start
+- SurrealDB CLI, `surreal db start` (start credentials define a new root user with the `OWNER` role) (checked November 2026): https://surrealdb.com/docs/reference/cli/db/commands/start
 - Surreal CLI launcher: `surreal <component> <command>` passes everything after the component name on unchanged, and the install script installs `surreal` with the database as a pinned component (checked November 2026): https://surrealdb.com/docs/explore/cli
 - Surreal CLI components: a name that is not a component runs a `surreal-<name>` from `PATH`, and `SURREAL_*` variables other than `SURREAL_CLI_*` belong to the database (checked November 2026): https://surrealdb.com/docs/explore/cli/components
 - SurrealDB 4.0 release notes (the `db` component, RocksDB removal, the 3.x upgrade opt-in, cookie endpoints, "Basic authentication is rate-limited" and 23 advisories) (checked November 2026): https://surrealdb.com/releases/4.0
@@ -330,15 +348,15 @@ shell to run.
 - SurrealDB v4.0.0 `start` root user and password: `--username`/`--user`/`-u` or `SURREAL_USER` and `--password`/`--pass`/`-p` or `SURREAL_PASS`, each refusing an empty value, the password's value hidden from `--help`, no stdin form in the files read (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/start.rs#L178-L205
 - SurrealDB v4.0.0 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L56-L59
 - SurrealDB v4.0.0 `--bind`/`-b` (`SURREAL_BIND`) default `127.0.0.1:8000` (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/start.rs#L220-L223
-- SurrealDB `docker/Dockerfile` sets `ENV SURREAL_BIND="0.0.0.0:8000"` in each runtime stage (L78, L106, L141, L169), each followed by `ENTRYPOINT ["/surreal"]` with no `CMD`, shown here for the `prod-ci` stage (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/docker/Dockerfile#L88-L111
-- SurrealDB v4.0.0 database executable: the `start` command, with no `db` command (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/mod.rs#L144-L146
+- SurrealDB `docker/Dockerfile` sets `ENV SURREAL_BIND="0.0.0.0:8000"` in each runtime stage (L78, L106, L141, L169), each followed by `ENTRYPOINT ["/surreal"]` with no `CMD`; `dev` copies `/surreal` from `target/release/surreal` (L118-L120) and `dev-ci` from a prebuilt CI artifact (L59) (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/docker/Dockerfile#L47-L174
+- SurrealDB v4.0.0 database executable: the whole `Commands` enum, with a `start` command and no `db` command (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/mod.rs#L144-L190
 - SurrealDB v4.0.0 help: no argument's environment value shown, in any command (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/mod.rs#L427-L431
 - SurrealDB v4.0.0 SurrealKV refusal of a directory a 3.x release wrote, unless `SURREAL_EXPERIMENTAL_UPGRADE_FROM_3X=true` (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/kvs-surrealkv/src/lib.rs#L336-L348
 - SurrealDB v4.0.0 core root credentials: empty or whitespace-only values refused, and a root user created only when none exists (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/core/src/kvs/ds.rs#L3543-L3589
 - SurrealDB v4.0.0 `--import-file` (`SURREAL_IMPORT_FILE`) (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L67-L70 and the import running before credentials: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L1326-L1332
-- SurrealDB v4.0.0 capability getters: HTTP routes under `--deny-all` (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L498-L535 and specific function denies applied on top of allows: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L597-L607
-- SurrealDB v4.0.0 capability checks: function target matching (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/rpc/src/capabilities/mod.rs#L43-L55 and allow-and-not-deny: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/rpc/src/capabilities/mod.rs#L1158-L1160
-- SurrealDB v4.0.0 `/health`, and `/ready` (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/health.rs#L10-L36 and https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/ready.rs#L15-L23
+- SurrealDB v4.0.0 capabilities under `--deny-all`: `--allow-rpc`, `--allow-http` and `--allow-mcp` defaulting to an empty value (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L200-L231 and their parsers reading it as every target: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/validator/mod.rs#L154-L185 and the RPC and HTTP allow getters: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L459-L535 and the RPC deny, MCP and HTTP deny getters: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L629-L696 and specific function denies applied on top of allows: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L597-L607
+- SurrealDB v4.0.0 capability checks: function target matching (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/rpc/src/capabilities/mod.rs#L43-L55 and allow-and-not-deny: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/rpc/src/capabilities/mod.rs#L1158-L1160 and the same rule for RPC methods, MCP tools and HTTP routes: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/rpc/src/capabilities/mod.rs#L1226-L1236
+- SurrealDB v4.0.0 `/health` with its memory-guard condition, and `/ready` with its heartbeat condition (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/health.rs#L10-L71 and https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/ready.rs#L15-L23
 - SurrealDB v4.0.0 `/signup` and `/signup/cookie` handlers calling core signup (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/signup.rs#L43-L75 and https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/signup.rs#L133-L148
 - SurrealDB v4.0.0 `/signin` and `/signin/cookie` routes (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/signin.rs#L45-L54
 - SurrealDB v4.0.0 scoped `/ns/.../db/.../ac/...` paths rewritten before the router (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/scope.rs#L1-L35
@@ -346,10 +364,10 @@ shell to run.
 - SurrealDB v4.0.0 HTTP authentication rate limit, off by default, burst and per-minute rate 60 (pinned tag v4.0.0) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cnf/mod.rs#L290-L304 and the requests it covers: https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/rate_limit.rs#L244-L280
 - SurrealDB CLI, `surreal db sql` (checked November 2026): https://surrealdb.com/docs/reference/cli/db/commands/sql
 - SurrealDB security overview (checked November 2026): https://surrealdb.com/docs/learn/security
-- SurrealDB authentication overview (checked November 2026): https://surrealdb.com/docs/learn/security/authentication/overview
-- SurrealDB security best practices (checked November 2026): https://surrealdb.com/docs/learn/security/best-practices/security-best-practices
+- SurrealDB authentication overview (`DEFINE USER` at root, namespace or database level) (checked November 2026): https://surrealdb.com/docs/learn/security/authentication/overview
+- SurrealDB security best practices (system-user roles, with `ROLES VIEWER` and `ROLES EDITOR` examples) (checked November 2026): https://surrealdb.com/docs/learn/security/best-practices/security-best-practices
 - SurrealDB capabilities (`--allow-all`/`--deny-all`, net denied, functions allowed, scripting/guests off, specificity + deny-wins, a specific deny winning over any allow) (checked November 2026): https://surrealdb.com/docs/learn/security/authorization/capabilities
-- SurrealDB permissions and row-level security (system users bypass table/field PERMISSIONS; omitting `PERMISSIONS` results in `PERMISSIONS NONE`) (checked November 2026): https://surrealdb.com/docs/learn/security/authorization/permissions-and-row-level-security
+- SurrealDB permissions and row-level security (system users bypass table/field PERMISSIONS; on a table, omitting `PERMISSIONS` results in `PERMISSIONS NONE`, while a field without a clause is stored as `PERMISSIONS FULL`) (checked November 2026): https://surrealdb.com/docs/learn/security/authorization/permissions-and-row-level-security
 - SurrealDB DEFINE ACCESS (RECORD, JWT, BEARER) (checked November 2026): https://surrealdb.com/docs/reference/query-language/statements/define/access/record
 - SurrealDB 2.0.0 release (auth on by default, `--unauthenticated`, bind default 127.0.0.1) (checked November 2026): https://surrealdb.com/releases/2.0
 - SurrealDB HTTP protocol (`/signup`, `/signin`, `POST /sql`, `/health`, `/status`; a denied `health` route answers `403`) (checked November 2026): https://surrealdb.com/docs/reference/rest-api/http-protocol
@@ -364,6 +382,11 @@ shell to run.
 - SurrealDB advisory GHSA-fh2q-8f75-m4h6, "REFERENCE ON DELETE CASCADE/UNSET/CUSTOM bypasses target table PERMISSIONS FOR delete/update" (high; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-fh2q-8f75-m4h6
 - SurrealDB advisory GHSA-qh3v-rr48-x3cq, "Authenticated Export Permission Bypass" (medium; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-qh3v-rr48-x3cq
 - SurrealDB advisory GHSA-ffvm-mqh3-7986, FOR loop variables named `$access`, `$auth` and `$token` shadowing the session values that table permission expressions use (medium; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-ffvm-mqh3-7986
+- SurrealDB advisory GHSA-wjh3-m4pv-q6cp, "Cross-field array-index drift in wildcard field-permission filtering" (medium; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-wjh3-m4pv-q6cp
+- SurrealDB advisory GHSA-cff7-q66j-4hc8, "UNIQUE-Index Conflict Errors Disclose SELECT-Restricted Field Values and Record Ids in SurrealDB" (medium; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-cff7-q66j-4hc8
+- SurrealDB advisory GHSA-3rcm-c653-wgmr, "Re-RELATE on an Existing Edge Echoes Stored in/out Endpoints Despite SELECT Restrictions in SurrealDB" (medium; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-3rcm-c653-wgmr
+- SurrealDB advisory GHSA-ff2q-h4x7-cpj4, "ON DELETE REJECT Errors Disclose SELECT-Hidden Referencing Record Ids in SurrealDB" (medium; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-ff2q-h4x7-cpj4
+- SurrealDB advisory GHSA-pvv9-h693-m8r4, "SurrealDB LIVE query notification expressions allow write side effects that bypass the write-blocking guard", including data exfiltration after a SELECT permission is revoked (medium; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-pvv9-h693-m8r4
 - SurrealDB advisory GHSA-m887-2246-mgw3, "VIEWER role can define tables implicitly via CREATE on a non-STRICT database" (low; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-m887-2246-mgw3
 - SurrealDB advisory GHSA-3287-hpm5-3f8r, DDL statements bypassing namespace and database implicit-creation authorization (medium; affected `< 4.0.0`, patched `4.0.0`) (checked November 2026): https://github.com/surrealdb/surrealdb/security/advisories/GHSA-3287-hpm5-3f8r
 
@@ -406,24 +429,24 @@ Claims (full source mapping in the JSON block below):
 - unauthenticated (REASONED; docs, pinned): --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.
 - docker-bind (REASONED; pinned): v4.0.0 image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication. Whether published images use that file is not established.
 - private-network (REASONED; docs): Widen host binds only deliberately to private addresses; internal-service databases should have no public interface.
-- system-users (REASONED; docs): Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation.
-- record-users (REASONED; docs): Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; omitting PERMISSIONS results in PERMISSIONS NONE.
+- system-users (REASONED; docs): System users exist at root, namespace and database level; the pages read show OWNER, EDITOR and VIEWER roles but not that these are the only roles or that every user holds one. All bypass table/field PERMISSIONS, using roles instead, so scoped system users do not supply record isolation.
+- record-users (REASONED; docs): Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and are bound by table and field PERMISSIONS: omitting PERMISSIONS on a table results in PERMISSIONS NONE, while a field without a clause is stored as PERMISSIONS FULL and follows the table's rules.
 - signup (REASONED; docs, pinned): Unauthenticated /signup and /signin, their v4.0.0 cookie forms and scoped /ns/.../ac/... paths are intentional; every HTTP signup form reaches the core check that refuses an access method with no SIGNUP, so omit SIGNUP to prevent public registration and test refusal beside a provisioned sign-in. RPC signup was not traced.
 - rate-limit (REASONED; pinned, docs): At v4.0.0 the per-address HTTP limit on sign-in, sign-up and Basic-auth requests is off by default (SURREAL_HTTP_AUTH_RATE_LIMIT_ENABLED false; burst and per-minute 60 once on), so the release page's Basic-auth rate limit applies only when enabled; a request with no derivable client address is not limited.
-- permission-advisories (REASONED; advisories): v4.0.0 fixes advisories affecting versions below 4.0.0 on table, field and role controls: GHSA-5xcv-fm6g-4hf3, GHSA-fh2q-8f75-m4h6, GHSA-qh3v-rr48-x3cq, GHSA-ffvm-mqh3-7986, GHSA-m887-2246-mgw3 and GHSA-3287-hpm5-3f8r; do not rely on those controls on an earlier release.
+- permission-advisories (REASONED; advisories): v4.0.0 fixes advisories affecting versions below 4.0.0 on table, field and role controls: GHSA-5xcv-fm6g-4hf3, GHSA-fh2q-8f75-m4h6, GHSA-qh3v-rr48-x3cq, GHSA-ffvm-mqh3-7986, GHSA-wjh3-m4pv-q6cp, GHSA-cff7-q66j-4hc8, GHSA-3rcm-c653-wgmr, GHSA-ff2q-h4x7-cpj4, GHSA-pvv9-h693-m8r4, GHSA-m887-2246-mgw3 and GHSA-3287-hpm5-3f8r; do not rely on those controls on an earlier release.
 - scope-history (REASONED; scope-old, scope-removed): Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0.
 - access-types (REASONED; docs): DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions.
 - jwt-checks (REASONED; docs, audience): Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is available since 3.3.0, so set it at the v4.0.0 basis, and check the issuer in AUTHENTICATE as the JWT page's example does. Compare invalid tokens against a valid control.
-- capability-all (REASONED; docs, pinned): allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. What deny-all alone does to HTTP routes is not established at v4.0.0, because allow-http has a default, so list needed routes, /health included.
+- capability-all (REASONED; docs, pinned): allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. As this guide's reading of v4.0.0 source, deny-all alone leaves every HTTP route, RPC method and MCP tool allowed, as allow-http, allow-rpc and allow-mcp default to all targets; no run confirmed it, so pass explicit allow-http and allow-rpc lists.
 - capability-net (REASONED; docs): Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.
 - capability-functions (REASONED; docs): Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.
 - capability-scripting (REASONED; docs): Embedded scripting defaults off; enable it only when required.
 - capability-guests (REASONED; docs): Guest access defaults off; capabilities govern what an authorized query may do independently of authentication.
 - capability-precedence (REASONED; docs, pinned): A category allow list overrides deny-all or a bare category deny, and deny wins at equal specificity; between list entries a deny entry wins over any allow entry, so a narrower allow does not override a broader deny, as the capabilities page's own example and this guide's reading of v4.0.0 source agree.
-- capability-advisories (REASONED; advisories, docs): v4.0.0 fixes capability bypasses affecting versions below 4.0.0: GHSA-5w6j-qm42-4rc2, GHSA-fq69-wr4w-v3gm and GHSA-q83r-f38r-rwvj; the 4.0 release page lists 23 advisories, of which this guide names 10 and counts 13.
+- capability-advisories (REASONED; advisories, docs): v4.0.0 fixes capability bypasses affecting versions below 4.0.0: GHSA-5w6j-qm42-4rc2, GHSA-fq69-wr4w-v3gm and GHSA-q83r-f38r-rwvj; the 4.0 release page lists 23 advisories, of which this guide names 15 and counts 8.
 - tls (REASONED; docs): web-crt and web-key provide native HTTPS; SurrealDB documents TLS termination at a load balancer or reverse proxy, and reaching the instance only over a tailnet is this guide's own suggestion.
 - mfa (REASONED; docs): Whether SurrealDB v4.0.0 has a native second factor is not established, as no page read addresses one; require IdP or administrative-gateway MFA and prevent direct-origin bypass.
-- verify-inventory (REASONED; docs, pinned): Inventory 8000 on loopback/private addresses; at v4.0.0 a /health 200 means the route is allowed, the memory guard is not engaged and storage answers, not authentication or finished startup; /status is liveness and /ready follows startup.
+- verify-inventory (REASONED; docs, pinned): Inventory 8000 on loopback/private addresses; at v4.0.0 a /health 200 means the route is allowed, the memory guard has not stayed engaged for its configured period (a check that can be disabled) and storage answers, not authentication or finished startup; /status is liveness and /ready follows startup and any configured heartbeat budget.
 - verify-auth (REASONED; docs): Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.
 - verify-auth-limits (REASONED; docs): Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.
 - verify-origin (REASONED; docs): Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.
@@ -434,7 +457,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "87ee6929c82067d815236edd2b99f5be74dac089ff7a884a8ee4a6b32fe6863c",
+  "body_sha256": "2cf82c7a6981fcc5264ba9938588509182e6e4c38e1f632e20fab3085e3a2518",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",
@@ -443,18 +466,22 @@ Claims (full source mapping in the JSON block below):
         "s325ec1bdaeca": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/start.rs#L178-L205",
         "s025b59b3dab9": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L56-L59",
         "sd341f6f1f6cb": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/start.rs#L220-L223",
-        "sa4c7bc20d655": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/docker/Dockerfile#L88-L111",
-        "s29933d0b75dd": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/mod.rs#L144-L146",
+        "s439e9f7b6e75": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/docker/Dockerfile#L47-L174",
+        "s02c05ba6cc1a": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/mod.rs#L144-L190",
         "sc48298a83d5b": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/mod.rs#L427-L431",
         "s315fd2b3211f": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/kvs-surrealkv/src/lib.rs#L336-L348",
         "s68c349d06271": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/core/src/kvs/ds.rs#L3543-L3589",
         "s85b6558fdf7d": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L67-L70",
         "se2b9738f37cc": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L1326-L1332",
-        "sc07a54a13543": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L498-L535",
+        "scce5b37cc67e": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L200-L231",
+        "sb983f262eea6": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/cli/validator/mod.rs#L154-L185",
+        "s41f93c8f1044": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L459-L535",
+        "s10eff64ec263": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L629-L696",
         "sd1dcb148f996": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/dbs/mod.rs#L597-L607",
         "s6a13d5749f9a": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/rpc/src/capabilities/mod.rs#L43-L55",
         "s6f5b41199da6": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/rpc/src/capabilities/mod.rs#L1158-L1160",
-        "sf3cc586861b8": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/health.rs#L10-L36",
+        "sc2c677a2fedc": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/rpc/src/capabilities/mod.rs#L1226-L1236",
+        "s538897c5bacc": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/health.rs#L10-L71",
         "s67ee52a23e57": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/ready.rs#L15-L23",
         "s6ddbe030cea1": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/signup.rs#L43-L75",
         "s1c21ede08712": "https://github.com/surrealdb/surrealdb/blob/v4.0.0/surrealdb/server/src/ntw/signup.rs#L133-L148",
@@ -524,6 +551,11 @@ Claims (full source mapping in the JSON block below):
         "sb541fcd902da": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-fh2q-8f75-m4h6",
         "s2da32614f366": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-qh3v-rr48-x3cq",
         "s8064745de0e0": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-ffvm-mqh3-7986",
+        "s2f3b208498de": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-wjh3-m4pv-q6cp",
+        "se50ef588388b": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-cff7-q66j-4hc8",
+        "se5f6e6699691": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-3rcm-c653-wgmr",
+        "s29b6dab1b6dd": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-ff2q-h4x7-cpj4",
+        "sb7209bfe440d": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-pvv9-h693-m8r4",
         "s6363f9220ffe": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-m887-2246-mgw3",
         "s1f98319f76ae": "https://github.com/surrealdb/surrealdb/security/advisories/GHSA-3287-hpm5-3f8r"
       }
@@ -555,7 +587,7 @@ Claims (full source mapping in the JSON block below):
   "claims": {
     "auth-default": {"text": "Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default.", "components": ["defaults"], "sources": ["defaults:se73fa9c93548"], "status": "REASONED"},
     "bind-default": {"text": "Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v4.0.0 --bind/-b and SURREAL_BIND retain that loopback default.", "components": ["defaults", "pinned"], "sources": ["defaults:se73fa9c93548", "pinned:sd341f6f1f6cb"], "status": "REASONED"},
-    "command-form": {"text": "At v4.0.0 the database executable takes start and defines no db command; the Surreal CLI launcher runs it as surreal db start, passing the rest unchanged. As this guide's inference, under the launcher surreal start does not start the database, so the host block uses surreal db start and the image keeps start.", "components": ["pinned", "docs"], "sources": ["pinned:s29933d0b75dd", "pinned:sa4c7bc20d655", "docs:se2dbccd34348", "docs:s80d3b718d95d", "docs:sac0752ff1726"], "status": "REASONED"},
+    "command-form": {"text": "At v4.0.0 the database executable takes start and defines no db command; the Surreal CLI launcher runs it as surreal db start, passing the rest unchanged. As this guide's inference, under the launcher surreal start does not start the database, so the host block uses surreal db start and the image keeps start.", "components": ["pinned", "docs"], "sources": ["pinned:s02c05ba6cc1a", "pinned:s439e9f7b6e75", "docs:se2dbccd34348", "docs:s80d3b718d95d", "docs:sac0752ff1726"], "status": "REASONED"},
     "root-bootstrap": {"text": "User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password. At v4.0.0 the flags refuse empty values, core also refuses whitespace-only ones, and an import file that supplies root users suppresses the flag user.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "pinned:s325ec1bdaeca", "pinned:s68c349d06271", "pinned:s85b6558fdf7d", "pinned:se2b9738f37cc"], "status": "REASONED"},
     "root-input": {"text": "No v4.0.0 server file read has a stdin password form; prompt and use a Bash command-local environment assignment, not argv. As this guide's assessment, the initial server environment may be exposed to the same account and root when the procfs ptrace check permits; an inheriting process may expose it the same way while it runs; treat it as exposed to that account and root while the server runs.", "components": ["pinned", "bash", "procfs", "ptrace"], "sources": ["pinned:s325ec1bdaeca", "bash:sf9757e9fd6e8", "procfs:s56aa3e840419", "procfs:s9aae2a8587f2", "procfs:sd64e43d1515a", "ptrace:sfe9fe6919d33"], "status": "REASONED"},
     "help-values": {"text": "Before 4.0.0 --help could print SURREAL_PASS and SURREAL_TOKEN values (GHSA-whfh-76h8-2r66, low, affecting versions below 4.0.0, patched in 4.0.0); at v4.0.0 the start password sets hide_env_values and the executable hides every argument's environment value in help.", "components": ["pinned", "advisories"], "sources": ["pinned:s325ec1bdaeca", "pinned:sc48298a83d5b", "advisories:sd74a20d357b6"], "status": "REASONED"},
@@ -563,26 +595,26 @@ Claims (full source mapping in the JSON block below):
     "launcher-unknowns": {"text": "Whether the Surreal CLI launcher stays running as the server's parent, or passes SURREAL_PASS on unchanged, is not established at v4.0.0; as this guide's assessment, treat a resident launcher as exposed like the server and confirm the root user by signing in.", "components": ["docs"], "sources": ["docs:se2dbccd34348", "docs:s80d3b718d95d"], "status": "REASONED"},
     "storage-upgrade": {"text": "v4.0.0 removes the RocksDB engine; the docs read rocksdb:// as a deprecated spelling of surrealkv://, and the block names surrealkv:/data/mydb.db. A 3.x directory is refused unless SURREAL_EXPERIMENTAL_UPGRADE_FROM_3X=true, which the block cannot carry; convert it as a separate step after a backup. The server path check was not read.", "components": ["pinned", "docs"], "sources": ["pinned:s315fd2b3211f", "docs:s2eb33a763ea4", "docs:sac0752ff1726"], "status": "REASONED"},
     "unauthenticated": {"text": "--unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "pinned:s025b59b3dab9"], "status": "REASONED"},
-    "docker-bind": {"text": "v4.0.0 image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication. Whether published images use that file is not established.", "components": ["pinned"], "sources": ["pinned:sa4c7bc20d655"], "status": "REASONED"},
+    "docker-bind": {"text": "v4.0.0 image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication. Whether published images use that file is not established.", "components": ["pinned"], "sources": ["pinned:s439e9f7b6e75"], "status": "REASONED"},
     "private-network": {"text": "Widen host binds only deliberately to private addresses; internal-service databases should have no public interface.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED"},
-    "system-users": {"text": "Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sb9c3a17a2998"], "status": "REASONED"},
-    "record-users": {"text": "Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; omitting PERMISSIONS results in PERMISSIONS NONE.", "components": ["docs"], "sources": ["docs:sb9c3a17a2998", "docs:sfdfa4e63cdd5"], "status": "REASONED"},
+    "system-users": {"text": "System users exist at root, namespace and database level; the pages read show OWNER, EDITOR and VIEWER roles but not that these are the only roles or that every user holds one. All bypass table/field PERMISSIONS, using roles instead, so scoped system users do not supply record isolation.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sae73137661aa", "docs:s2eb33a763ea4", "docs:sb9c3a17a2998"], "status": "REASONED"},
+    "record-users": {"text": "Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and are bound by table and field PERMISSIONS: omitting PERMISSIONS on a table results in PERMISSIONS NONE, while a field without a clause is stored as PERMISSIONS FULL and follows the table's rules.", "components": ["docs"], "sources": ["docs:sb9c3a17a2998", "docs:sfdfa4e63cdd5"], "status": "REASONED"},
     "signup": {"text": "Unauthenticated /signup and /signin, their v4.0.0 cookie forms and scoped /ns/.../ac/... paths are intentional; every HTTP signup form reaches the core check that refuses an access method with no SIGNUP, so omit SIGNUP to prevent public registration and test refusal beside a provisioned sign-in. RPC signup was not traced.", "components": ["docs", "pinned"], "sources": ["docs:sfdfa4e63cdd5", "docs:scc00d3d3618d", "docs:sac0752ff1726", "pinned:s6ddbe030cea1", "pinned:s1c21ede08712", "pinned:s0a950c71cc01", "pinned:saa6be90fd793", "pinned:se50982814d76"], "status": "REASONED"},
     "rate-limit": {"text": "At v4.0.0 the per-address HTTP limit on sign-in, sign-up and Basic-auth requests is off by default (SURREAL_HTTP_AUTH_RATE_LIMIT_ENABLED false; burst and per-minute 60 once on), so the release page's Basic-auth rate limit applies only when enabled; a request with no derivable client address is not limited.", "components": ["pinned", "docs"], "sources": ["pinned:s57c8f0d7c045", "pinned:s0d453e52834e", "docs:sac0752ff1726"], "status": "REASONED"},
-    "permission-advisories": {"text": "v4.0.0 fixes advisories affecting versions below 4.0.0 on table, field and role controls: GHSA-5xcv-fm6g-4hf3, GHSA-fh2q-8f75-m4h6, GHSA-qh3v-rr48-x3cq, GHSA-ffvm-mqh3-7986, GHSA-m887-2246-mgw3 and GHSA-3287-hpm5-3f8r; do not rely on those controls on an earlier release.", "components": ["advisories"], "sources": ["advisories:s1b98c24eb665", "advisories:sb541fcd902da", "advisories:s2da32614f366", "advisories:s8064745de0e0", "advisories:s6363f9220ffe", "advisories:s1f98319f76ae"], "status": "REASONED"},
+    "permission-advisories": {"text": "v4.0.0 fixes advisories affecting versions below 4.0.0 on table, field and role controls: GHSA-5xcv-fm6g-4hf3, GHSA-fh2q-8f75-m4h6, GHSA-qh3v-rr48-x3cq, GHSA-ffvm-mqh3-7986, GHSA-wjh3-m4pv-q6cp, GHSA-cff7-q66j-4hc8, GHSA-3rcm-c653-wgmr, GHSA-ff2q-h4x7-cpj4, GHSA-pvv9-h693-m8r4, GHSA-m887-2246-mgw3 and GHSA-3287-hpm5-3f8r; do not rely on those controls on an earlier release.", "components": ["advisories"], "sources": ["advisories:s1b98c24eb665", "advisories:sb541fcd902da", "advisories:s2da32614f366", "advisories:s8064745de0e0", "advisories:s2f3b208498de", "advisories:se50ef588388b", "advisories:se5f6e6699691", "advisories:s29b6dab1b6dd", "advisories:sb7209bfe440d", "advisories:s6363f9220ffe", "advisories:s1f98319f76ae"], "status": "REASONED"},
     "scope-history": {"text": "Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0.", "components": ["scope-old", "scope-removed"], "sources": ["scope-old:s5a6f3aad8f24", "scope-removed:s5a6f3aad8f24"], "status": "REASONED"},
     "access-types": {"text": "DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sfdfa4e63cdd5", "docs:s048fd6bd1f3e"], "status": "REASONED"},
     "jwt-checks": {"text": "Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is available since 3.3.0, so set it at the v4.0.0 basis, and check the issuer in AUTHENTICATE as the JWT page's example does. Compare invalid tokens against a valid control.", "components": ["docs", "audience"], "sources": ["docs:s048fd6bd1f3e", "audience:s048fd6bd1f3e"], "status": "REASONED"},
-    "capability-all": {"text": "allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. What deny-all alone does to HTTP routes is not established at v4.0.0, because allow-http has a default, so list needed routes, /health included.", "components": ["docs", "pinned"], "sources": ["docs:sc798cc43c457", "docs:scc00d3d3618d", "pinned:sc07a54a13543"], "status": "REASONED"},
+    "capability-all": {"text": "allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. As this guide's reading of v4.0.0 source, deny-all alone leaves every HTTP route, RPC method and MCP tool allowed, as allow-http, allow-rpc and allow-mcp default to all targets; no run confirmed it, so pass explicit allow-http and allow-rpc lists.", "components": ["docs", "pinned"], "sources": ["docs:sc798cc43c457", "docs:scc00d3d3618d", "pinned:scce5b37cc67e", "pinned:sb983f262eea6", "pinned:s41f93c8f1044", "pinned:s10eff64ec263", "pinned:sc2c677a2fedc"], "status": "REASONED"},
     "capability-net": {"text": "Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-functions": {"text": "Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-scripting": {"text": "Embedded scripting defaults off; enable it only when required.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-guests": {"text": "Guest access defaults off; capabilities govern what an authorized query may do independently of authentication.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-precedence": {"text": "A category allow list overrides deny-all or a bare category deny, and deny wins at equal specificity; between list entries a deny entry wins over any allow entry, so a narrower allow does not override a broader deny, as the capabilities page's own example and this guide's reading of v4.0.0 source agree.", "components": ["docs", "pinned"], "sources": ["docs:sc798cc43c457", "pinned:sd1dcb148f996", "pinned:s6a13d5749f9a", "pinned:s6f5b41199da6"], "status": "REASONED"},
-    "capability-advisories": {"text": "v4.0.0 fixes capability bypasses affecting versions below 4.0.0: GHSA-5w6j-qm42-4rc2, GHSA-fq69-wr4w-v3gm and GHSA-q83r-f38r-rwvj; the 4.0 release page lists 23 advisories, of which this guide names 10 and counts 13.", "components": ["advisories", "docs"], "sources": ["advisories:s28cd26dc0103", "advisories:sad31e9ec665b", "advisories:s9c8e76544223", "docs:sac0752ff1726"], "status": "REASONED"},
+    "capability-advisories": {"text": "v4.0.0 fixes capability bypasses affecting versions below 4.0.0: GHSA-5w6j-qm42-4rc2, GHSA-fq69-wr4w-v3gm and GHSA-q83r-f38r-rwvj; the 4.0 release page lists 23 advisories, of which this guide names 15 and counts 8.", "components": ["advisories", "docs"], "sources": ["advisories:s28cd26dc0103", "advisories:sad31e9ec665b", "advisories:s9c8e76544223", "docs:sac0752ff1726"], "status": "REASONED"},
     "tls": {"text": "web-crt and web-key provide native HTTPS; SurrealDB documents TLS termination at a load balancer or reverse proxy, and reaching the instance only over a tailnet is this guide's own suggestion.", "components": ["docs"], "sources": ["docs:s2eb33a763ea4", "docs:sae73137661aa"], "status": "REASONED"},
     "mfa": {"text": "Whether SurrealDB v4.0.0 has a native second factor is not established, as no page read addresses one; require IdP or administrative-gateway MFA and prevent direct-origin bypass.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sae73137661aa"], "status": "REASONED"},
-    "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; at v4.0.0 a /health 200 means the route is allowed, the memory guard is not engaged and storage answers, not authentication or finished startup; /status is liveness and /ready follows startup.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "docs:scc00d3d3618d", "pinned:sf3cc586861b8", "pinned:s67ee52a23e57"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; at v4.0.0 a /health 200 means the route is allowed, the memory guard has not stayed engaged for its configured period (a check that can be disabled) and storage answers, not authentication or finished startup; /status is liveness and /ready follows startup and any configured heartbeat budget.", "components": ["docs", "pinned"], "sources": ["docs:s2eb33a763ea4", "docs:scc00d3d3618d", "pinned:s538897c5bacc", "pinned:s67ee52a23e57"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
     "verify-auth-limits": {"text": "Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
     "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [2]},
