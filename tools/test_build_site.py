@@ -21,8 +21,8 @@ of baseline 1.6.0 (SPECIFICATION 7.33) exactly as the reference pages write it, 
 child of the top bar after its nav, and loads scheme.js once, right after the touch icon and
 before the first stylesheet, with data-cfasync="false" before src and no defer or async.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
-page at any base; a stray file outside assets/baseline/ is refused at both bases, except at the
-root a published file (PUBLISHED, such as llms.txt) beside the pages.
+page at any base; a stray file outside assets/baseline/ other than assets/site.css is refused at
+both bases, except at the root a published file (PUBLISHED, such as llms.txt) beside the pages.
 """
 import html
 import importlib.util
