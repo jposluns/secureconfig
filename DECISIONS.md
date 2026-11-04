@@ -17,6 +17,27 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-04: standing version-currency policy across major releases (#NNN).** The maintainer
+  gave this standing policy on 2026-11-04, after the `jupyter.md` ruling below, and the orchestrator recorded it in
+  its store; the time was not recorded with it here. In the maintainer's words: "Automatically increase version when
+  it's minor (like from 5.4 to 5.5), and when a new major version comes out, you should keep the last version of the
+  previous major and the latest, so in this case, 5.5.4 and 6.1.1 would both have info if they are different. if
+  they're identical per documentation and any info you find, then keep only the latest (6.1.1 in this example). we
+  want to be able to help people who are not running the latest for whatever reason." The reasoning recorded with it
+  is its last sentence. Its effect: a version-currency row that crosses only a minor release moves the basis without
+  a further ruling, and one that crosses a major release keeps the last release of the previous major beside the
+  latest wherever the two differ, and keeps only the latest where the documentation and other evidence show them
+  identical. #NNN applies it first, to `jupyter.md` (TODO 1.402). The revert path is a later maintainer ruling that
+  replaces the policy; guides moved under it keep their recorded bases until a row moves them again.
+- **Maintainer ruling of 2026-11-04 on `jupyter.md` TODO 1.402 (#NNN).** The maintainer ruled through AskUserQuestion
+  on 2026-11-04, and the orchestrator recorded the ruling in its store; the time was not recorded with it here. The
+  ruling: move JupyterHub to 6.1.1, the newest release, with jupyter_server v2.21.1. No reasoning was recorded beyond
+  its terms. The standing policy above, given after it, adds 5.5.4, the last 5.x release, beside 6.1.1 where the two
+  differ. Its effect (applied by #NNN): `jupyter.md` re-pins its JupyterHub sources to 6.1.1, adds 5.5.4 citations
+  where the releases differ, re-pins its Jupyter Server sources to v2.21.1, revises the statements that changed, and
+  records the questions the source passes could not settle as not established, with TODO row 1.431 tracking them.
+  The revert path is a later maintainer ruling for another basis, which re-pins the sources and revises the
+  statements that depend on the basis.
 - **Maintainer ruling of 2026-11-04 on `surrealdb.md` TODO 1.422 (#1211).** The maintainer ruled through
   AskUserQuestion on 2026-11-04, and the orchestrator recorded the ruling in its store; the time was not recorded
   with it here. The ruling: move the guide's pinned basis from SurrealDB v3.2.4 to v4.0.0. The reasoning recorded
