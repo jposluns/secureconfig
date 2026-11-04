@@ -33,8 +33,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   on 2026-11-04, and the orchestrator recorded the ruling in its store; the time was not recorded with it here. The
   ruling: move JupyterHub to 6.1.1, the newest release, with jupyter_server v2.21.1. No reasoning was recorded beyond
   its terms. The standing policy above, given after it, adds 5.5.4, the last 5.x release, beside 6.1.1 where the two
-  differ. Its effect (applied by #1212): `jupyter.md` re-pins its JupyterHub sources to 6.1.1, adds 5.5.4 citations
-  where the releases differ, re-pins its Jupyter Server sources to v2.21.1, revises the statements that changed, and
+  differ. Its effect (applied by #1212): `jupyter.md` re-pins its pinned JupyterHub source citations to 6.1.1, adds
+  5.5.4 citations where the releases differ, re-pins its pinned Jupyter Server source citations to v2.21.1, leaves
+  the rolling documentation pages to TODO 1.431, revises the statements that changed, and
   records the questions the source passes could not settle as not established, with TODO row 1.431 tracking them.
   The revert path is a later maintainer ruling for another basis, which re-pins the sources and revises the
   statements that depend on the basis.
