@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, and Service identity RFC 9525, plus 5 more recorded bases; 9 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 25 claims: 1 demonstrated by a check that ran and 24 reasoned from cited sources.
+Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, and Service identity RFC 9525, plus 5 more recorded bases; 9 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 27 claims: 1 demonstrated by a check that ran and 26 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -86,6 +86,10 @@ Debian trixie and Ubuntu noble remain cited; the Debian bookworm and bullseye an
 Documentation reading on 2026-10-24: Debian's releases page gives bullseye's End of LTS as 2026-08-31, now past, although its Status cell still says LTS support (see Sources). Documentation reading on 2026-10-24: Ubuntu's release-cycle page gives focal's standard security maintenance as ending May 2025, now past, with coverage after that only through Ubuntu Pro (see Sources). Both the bullseye and focal manpage citations remain because they still document those releases' commands.
 
 RHEL 9 remains cited, and the RHEL 8 shared system certificates page also says to copy a certificate in the simple PEM or DER file formats to `/usr/share/pki/ca-trust-source/anchors/` or `/etc/pki/ca-trust/source/anchors/` and run `update-ca-trust extract` (see Sources). The CentOS Stream 8, 9 and 10 package manuals and the Fedora rawhide, 41, 42, 43, 44 and 45 branch dist-git manuals instruct adding a simple PEM or DER certificate to `/etc/pki/ca-trust/source/anchors/` and running `update-ca-trust extract` (see Sources). The Fedora 41, 42 and 43 branch manuals, at the pinned commits, give this instruction on the same lines 97 to 99 as the cited rawhide manual, with no difference from the rawhide citation there. The CentOS Stream 9 and Fedora 44 and 45 branch manuals, at the pinned commits, also give it on lines 97 to 99. CentOS Stream is not RHEL, rawhide is Fedora's development branch, not a released Fedora, and this guide does not establish whether Fedora 45 has been released; use on other RHEL releases (including 10), other Fedora releases and other CentOS Stream releases remains this guide's assessment, with release-specific citations absent.
+
+Documentation reading on 2026-11-04: Red Hat's product life-cycle API response for Red Hat Enterprise Linux, cited here as the API response and not as the rendered errata page, gives each phase of versions 10, 9 and 8 with its dates, quoted below as the JSON gives them (see Sources). For version 10 it gives General availability with start date `N/A` and end date `2025-05-20T00:00:00.000Z`, Full support from `2025-05-20T00:00:00.000Z` to `2030-05-31T00:00:00.000Z`, and Maintenance support from `2030-06-01T00:00:00.000Z` to `2035-05-31T00:00:00.000Z`. Version 10 then has Extended life cycle support (ELS) add-on from `2035-06-01T00:00:00.000Z` to `2039-05-31T00:00:00.000Z` and Extended life phase from `2039-06-01T00:00:00.000Z` to `Ongoing`. For version 9 it gives General availability with start date `N/A` and end date `2022-05-18T00:00:00.000Z`, Full support from `2022-05-18T00:00:00.000Z` to `2027-05-31T00:00:00.000Z`, and Maintenance support from `2027-06-01T00:00:00.000Z` to `2032-05-31T00:00:00.000Z`. Version 9 then has Extended life cycle support (ELS) add-on from `2032-06-01T00:00:00.000Z` to `2036-05-31T00:00:00.000Z` and Extended life phase from `2036-06-01T00:00:00.000Z` to `Ongoing`. For version 8 it gives General availability from `2019-05-07T00:00:00.000Z` to `2019-05-07T00:00:00.000Z`, Full support from `2019-05-07T00:00:00.000Z` to `2024-05-31T00:00:00.000Z`, and Maintenance support from `2024-06-01T00:00:00.000Z` to `2029-05-31T00:00:00.000Z`. Version 8 then has Extended life cycle support (ELS) add-on from `2029-06-01T00:00:00.000Z` to `2033-05-31T00:00:00.000Z` and Extended life phase from `2033-06-01T00:00:00.000Z` to `Ongoing`. The response's `all_phases` text calls the Extended life phase "the post-retirement time period" and says "there are no bug fixes, security fixes, hardware enablement, or root cause analysis available during the Extended Life Phase", when customers "may choose to purchase the Extended Life Cycle Support Add-On". The response carries no date or version of its own, so 2026-11-04 is the date it was read, not a date the response states. This guide's reading of those dates, not a statement in the response, is that on 2026-11-04 RHEL 10 and 9 are in Full support and RHEL 8 is in Maintenance support. The response does label versions 10 and 9 `"type":"Full Support"` and version 8 `"type":"Maintenance Support"`, but it does not define that field or give a date for it. The response gives life-cycle phases, not trust-store instructions, so using the command below on RHEL 10 remains this guide's assessment, with release-specific citations absent.
+
+Documentation reading on 2026-11-04: the mirrors.kernel.org Fedora `releases/` index lists `45/`, dated 03-Nov-2026 11:31 in the index, and the `development/` index also lists `45/`, dated 30-Oct-2026 10:02 (see Sources). Neither index states the time zone of its dates. A directory index shows which trees exist, not which releases are supported, so this guide still does not establish whether Fedora 45 has been released.
 
 ```bash
 # Debian trixie/bookworm/bullseye and Ubuntu resolute/noble/jammy/focal system trust store; other releases: this guide's assessment
@@ -191,6 +195,9 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - Node.js v24.22.0 `NODE_TLS_REJECT_UNAUTHORIZED` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944
 - Node.js v24.22.0 `tls.connect` client `rejectUnauthorized` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789
 - Node.js v24.22.0 `tls.createServer` `rejectUnauthorized` and `requestCert` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L2250-L2255
+- Red Hat product life-cycle API response for Red Hat Enterprise Linux, cited as the API response and not as the rendered errata page (checked November 2026). Sources for this item: https://access.redhat.com/product-life-cycles/api/v1/products?name=Red%20Hat%20Enterprise%20Linux. Read 2026-11-04: each phase's name, start date and end date for versions 10, 9 and 8. The response carries no date or version of its own.
+- mirrors.kernel.org Fedora releases index (checked November 2026). Sources for this item: https://mirrors.kernel.org/fedora/releases/. Read 2026-11-04: lists `45/`, dated 03-Nov-2026 11:31 in the index. A directory index shows which trees exist, not which releases are supported.
+- mirrors.kernel.org Fedora development index (checked November 2026). Sources for this item: https://mirrors.kernel.org/fedora/development/. Read 2026-11-04: lists `45/`, dated 30-Oct-2026 10:02 in the index, beside `rawhide/`. A directory index shows which trees exist, not which releases are supported.
 
 
 <!-- version-basis:start -->
@@ -233,6 +240,8 @@ Components (recorded basis):
 - centos-stream-9: CentOS Stream 9 ca-certificates (848a7831862d78a087c8f5d2284ce603f20ed42f)
 - fedora-44: Fedora 44 ca-certificates (1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec)
 - fedora-45: Fedora 45 ca-certificates (branch) (3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7)
+- rhel-lifecycle: Red Hat product life-cycle API response (RHEL) (unknown)
+- fedora-mirror-index: mirrors.kernel.org Fedora directory indexes (unknown)
 
 Claims (full source mapping in the JSON block below):
 
@@ -251,6 +260,8 @@ Claims (full source mapping in the JSON block below):
 - mkcert-custody (REASONED; mkcert): Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.
 - debian-trust (REASONED; mkcert, debian-ca, ubuntu-ca, debian-bookworm, ubuntu-jammy, debian-bullseye, ubuntu-focal, ubuntu-resolute): Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm/bullseye and Ubuntu resolute/noble/jammy/focal; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.
 - rhel-trust (REASONED; mkcert, rhel-ca, centos-stream-8, centos-stream-10, fedora-rawhide, fedora-41, fedora-42, fedora-43, rhel-8, centos-stream-9, fedora-44, fedora-45): Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 8/9 are cited. CentOS Stream 8/9/10 (not RHEL), Fedora 41/42/43/44, Fedora 45 branch (release unestablished) and rawhide (development, not a release) manuals give the steps for simple PEM/DER certificates; other RHEL (including 10), Fedora and CentOS Stream releases remain this guide's assessment.
+- rhel-lifecycle (REASONED; rhel-lifecycle): Red Hat's product life-cycle API response, read 2026-11-04 and cited as the API response, not the rendered errata page, gives each RHEL 10, 9 and 8 phase with its dates, including RHEL 10 Full support from 2025-05-20 to 2030-05-31; the response carries no date or version of its own. Using the trust-store command on RHEL 10 remains this guide's assessment.
+- fedora-45-index (REASONED; fedora-mirror-index): On 2026-11-04 the mirrors.kernel.org Fedora releases/ index lists 45/, dated 03-Nov-2026 11:31, and the development/ index also lists 45/, dated 30-Oct-2026 10:02; a directory index shows which trees exist, not which releases are supported, so this guide does not establish whether Fedora 45 has been released.
 - curl-trust (REASONED; openssl, curl-source): curl --cacert server.crt supplies explicit trust for app.internal.
 - requests-trust (REASONED; openssl, requests): REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.
 - node-trust (REASONED; mkcert, node): NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.
@@ -267,7 +278,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "196780f12072f4617b4c87d0e6383ebf32a7a6ab0b4e038fc4b70e68eb9beb53",
+  "body_sha256": "4ae79b82954e778c01185c8ddd7c0a0a4a4cf17268441a590d5e6a961a71a26d",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -470,6 +481,21 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s28e014a1e5b3": "https://src.fedoraproject.org/rpms/ca-certificates/blob/3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7/f/update-ca-trust.8.txt#_97"
       }
+    },
+    "rhel-lifecycle": {
+      "name": "Red Hat product life-cycle API response (RHEL)",
+      "basis": "unknown",
+      "sources": {
+        "sadf9901f3c2e": "https://access.redhat.com/product-life-cycles/api/v1/products?name=Red%20Hat%20Enterprise%20Linux"
+      }
+    },
+    "fedora-mirror-index": {
+      "name": "mirrors.kernel.org Fedora directory indexes",
+      "basis": "unknown",
+      "sources": {
+        "s3898fc8d477b": "https://mirrors.kernel.org/fedora/releases/",
+        "s2c0d4f8934f4": "https://mirrors.kernel.org/fedora/development/"
+      }
     }
   },
   "claims": {
@@ -488,6 +514,8 @@ Claims (full source mapping in the JSON block below):
     "mkcert-custody": {"text": "Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
     "debian-trust": {"text": "Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm/bullseye and Ubuntu resolute/noble/jammy/focal; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "debian-ca", "ubuntu-ca", "debian-bookworm", "ubuntu-jammy", "debian-bullseye", "ubuntu-focal", "ubuntu-resolute"], "sources": ["mkcert:s41ae17dba4ce", "debian-ca:s99e100121493", "ubuntu-ca:s4c3728cc6c12", "debian-bookworm:sa5e706846110", "ubuntu-jammy:s73a246e6ccfa", "debian-bullseye:s2eedd95a8996", "ubuntu-focal:s4ddde36c49dc", "ubuntu-resolute:sec84181fd9fa"], "status": "REASONED"},
     "rhel-trust": {"text": "Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 8/9 are cited. CentOS Stream 8/9/10 (not RHEL), Fedora 41/42/43/44, Fedora 45 branch (release unestablished) and rawhide (development, not a release) manuals give the steps for simple PEM/DER certificates; other RHEL (including 10), Fedora and CentOS Stream releases remain this guide's assessment.", "components": ["mkcert", "rhel-ca", "centos-stream-8", "centos-stream-10", "fedora-rawhide", "fedora-41", "fedora-42", "fedora-43", "rhel-8", "centos-stream-9", "fedora-44", "fedora-45"], "sources": ["mkcert:s41ae17dba4ce", "rhel-ca:s876e668e7116", "centos-stream-8:s448b09073b79", "centos-stream-10:s2862e6522c85", "fedora-rawhide:s70fd69620a8b", "fedora-41:s15529d5b4f48", "fedora-42:sedab1dd6dee7", "fedora-43:sf4a64ff0a939", "rhel-8:s9f44bb7b2935", "centos-stream-9:s6289706376f0", "fedora-44:sd111db8cd76e", "fedora-45:s28e014a1e5b3"], "status": "REASONED"},
+    "rhel-lifecycle": {"text": "Red Hat's product life-cycle API response, read 2026-11-04 and cited as the API response, not the rendered errata page, gives each RHEL 10, 9 and 8 phase with its dates, including RHEL 10 Full support from 2025-05-20 to 2030-05-31; the response carries no date or version of its own. Using the trust-store command on RHEL 10 remains this guide's assessment.", "components": ["rhel-lifecycle"], "sources": ["rhel-lifecycle:sadf9901f3c2e"], "status": "REASONED"},
+    "fedora-45-index": {"text": "On 2026-11-04 the mirrors.kernel.org Fedora releases/ index lists 45/, dated 03-Nov-2026 11:31, and the development/ index also lists 45/, dated 30-Oct-2026 10:02; a directory index shows which trees exist, not which releases are supported, so this guide does not establish whether Fedora 45 has been released.", "components": ["fedora-mirror-index"], "sources": ["fedora-mirror-index:s3898fc8d477b", "fedora-mirror-index:s2c0d4f8934f4"], "status": "REASONED"},
     "curl-trust": {"text": "curl --cacert server.crt supplies explicit trust for app.internal.", "components": ["openssl", "curl-source"], "sources": ["openssl:se5d70578564e", "curl-source:s19ed21fc98f8"], "status": "REASONED"},
     "requests-trust": {"text": "REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.", "components": ["openssl", "requests"], "sources": ["openssl:se5d70578564e", "requests:s21c6be6f6df4"], "status": "REASONED"},
     "node-trust": {"text": "NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.", "components": ["mkcert", "node"], "sources": ["mkcert:s41ae17dba4ce", "node:s402034f5dcea"], "status": "REASONED"},
