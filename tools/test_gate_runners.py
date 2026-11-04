@@ -56,9 +56,12 @@ made, that the gate's output is printed, and whether it set fail=1:
 THE OVERFLOW SECTION of tools/run_all_checks.sh (from `# section: overflow` to the next section)
 and the ok and bad helpers are read out of the file and run with bash in a scratch tree holding a
 generated file for each page of the section's list, after an EXIT trap that prints a line. node is
-a stand-in first on PATH that records its arguments, answers the Chromium check (`node -e`) with
-the case's status, and otherwise runs a stand-in check body; python3 is a function that records
-the server's PID and runs this interpreter's real http.server on 127.0.0.1. Each case checks what
+a stand-in first on PATH that records its arguments, answers the Chromium check (`node -e`, which
+must ask playwright-core's registry for the headless shell's path) with the case's status, and
+otherwise runs a stand-in check body; python3 is a function that records the server's PID and
+runs this interpreter's real http.server on 127.0.0.1. Each case runs in a process group the
+harness creates, which a timeout stops, and whatever recorded its PID is stopped by that PID
+before the scratch tree is removed. Each case checks what
 it prints, whether it set fail=1, the node calls, that the server and the check are no longer
 running afterwards, that the HUP, INT and TERM traps are reset, and that the EXIT trap still ran:
   - node not on PATH, or its Chromium check failing: a SKIP and no failure, or with
@@ -72,7 +75,17 @@ running afterwards, that the HUP, INT and TERM traps are reset, and that the EXI
     still runs; 404.html and HTML files under assets/ are not pages;
   - a TERM sent to the shell running the section, while the check runs, stops the check and the
     server and exits 143 after the EXIT trap; the same TERM sent to a copy of the suite run with
-    `--sections overflow`, which passes it to the shell running the section, does the same.
+    `--sections overflow`, which passes it to the shell running the section, does the same;
+  - a TERM the section's shell sends itself between the launch of the server, or of the check,
+    and the record of its PID (a `kill` written into the section just before that record) still
+    stops what was launched and exits 143 after the EXIT trap.
+
+--SECTIONS SIGNALS: the suite is copied into a scratch tree with a stand-in python3 that becomes a
+5-second sleep for the walker gate and a stand-in llms-full build that writes the bundle after 2
+seconds, and run in a process group the harness creates. A Ctrl-C (an INT to that group) or a TERM
+to the suite's PID, sent while the walker gate or the build runs, exits 130 or 143 with nothing
+left running, the build never finishing and site/llms-full.txt holding its original bytes. So
+does a TERM the suite sends itself between the launch of its cut copy and the record of its PID.
 
 --SECTIONS: tools/run_all_checks.sh is copied into a scratch tree and run with bash, with a stand-in
 python3 first on PATH that records each call, prints an ok line (the parser preflight's included)
@@ -195,9 +208,15 @@ PALETTE_CASES = (
 OVERFLOW_SECTION = re.compile(r"^# section: overflow\n.*?(?=^# section: )", re.M | re.S)
 OVERFLOW_LIST = re.compile(r"^overflow_pages=\(([^)\n]*)\)$", re.M)
 OVERFLOW_OK = "  ok    check_overflow.js: the 8 site pages pass at every default width in both schemes"
-OVERFLOW_SKIP = "  SKIP  node, the playwright package or its Chromium was not found; overflow check not run."
-OVERFLOW_REQUIRED = ("  FAIL  check_overflow.js needs node, the playwright package and its Chromium, and "
-                     "one of them was not found while SECURECONFIG_REQUIRE_OVERFLOW=1")
+OVERFLOW_SKIP = ("  SKIP  node, the playwright package or its headless Chromium shell was not found; "
+                 "overflow check not run.")
+OVERFLOW_REQUIRED = ("  FAIL  check_overflow.js needs node, the playwright package and its headless "
+                     "Chromium shell, and one of them was not found while "
+                     "SECURECONFIG_REQUIRE_OVERFLOW=1")
+# The files the stand-ins record their PIDs in: the server, the check, and a slow gate or build.
+PID_FILES = ("server.pid", "check.pid", "gate.pid")
+# What the Chromium check asks playwright-core's registry for: the executable a headless launch runs.
+HEADLESS_SHELL = 'findExecutable("chromium-headless-shell").executablePath()'
 OVERFLOW_FAILED = "  FAIL  check_overflow.js exited 1: a page scrolls sideways"
 OVERFLOW_USAGE = "  FAIL  check_overflow.js exited 2, a usage error; the pages are unverified"
 OVERFLOW_MISSING = "  FAIL  the overflow check's page list names page(s) with no generated file:"
@@ -320,6 +339,23 @@ printf '  ok    gate parser preflight: stand-in\\n'
 # llms-full and plugin sections pass on the stand-in tree's files.
 BUILD_STANDINS = {"build-llms-full.sh": "printf 'build-llms-full.sh\\n' >> \"$STANDIN_LOG\"\n",
                   "build-plugin.sh": "printf 'build-plugin.sh\\n' >> \"$STANDIN_LOG\"\n"}
+# For the signal cases under --sections: a stand-in python3 that records its PID and becomes a
+# 5-second sleep for the 1 call named by STANDIN_SLOW, and a stand-in llms-full build that records
+# its PID, writes the bundle after 2 seconds and then records that it finished.
+SIGNAL_STANDIN = """#!/usr/bin/env bash
+printf '%s\\n' "$*" >> "$STANDIN_LOG"
+if [ "$*" = "$STANDIN_SLOW" ]; then
+  printf '%s\\n' "$$" > "$STANDIN_GATE_PID"
+  exec sleep 5
+fi
+printf '  ok    gate parser preflight: stand-in\\n'
+"""
+SLOW_BUILD = """printf '%s\\n' "$$" > "$STANDIN_GATE_PID"
+sleep 2
+printf 'written after the signal\\n' > site/llms-full.txt
+printf 'build-llms-full.sh finished\\n' >> "$STANDIN_LOG"
+"""
+BUILD_FINISHED = "build-llms-full.sh finished"
 WALKER = "== shared walker scans tracked files only =="
 SECRETS_TESTS = "== secrets scan fails closed on read errors =="
 LLMS_FULL = "== llms-full.txt is current =="
@@ -424,6 +460,81 @@ def sections_failures():
     finally:
         shutil.rmtree(d, ignore_errors=True)
     return failures
+
+
+def signal_tree(d, text):
+    """A scratch tree under d for the --sections signal cases, the suite's text as given."""
+    for sub in ("tools", "bin", "scripts", "site", "plugin"):
+        (d / sub).mkdir()
+    (d / "tools" / "run_all_checks.sh").write_text(text, encoding="utf-8")
+    (d / "scripts" / "build-llms-full.sh").write_text(SLOW_BUILD, encoding="utf-8")
+    (d / "scripts" / "build-plugin.sh").write_text(BUILD_STANDINS["build-plugin.sh"],
+                                                    encoding="utf-8")
+    (d / "site" / "llms-full.txt").write_text("bundle\n", encoding="utf-8")
+    (d / "plugin" / "plugin.json").write_text("{}\n", encoding="utf-8")
+    (d / "bin" / "python3").write_text(SIGNAL_STANDIN, encoding="utf-8")
+    (d / "bin" / "python3").chmod(0o755)
+    (d / "calls.log").write_text("", encoding="utf-8")
+
+
+def signal_env(d, slow):
+    return dict(os.environ, PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
+                STANDIN_LOG=str(d / "calls.log"), STANDIN_SLOW=slow,
+                STANDIN_GATE_PID=str(d / "gate.pid"))
+
+
+def sections_signal_failures():
+    """A Ctrl-C (an INT to the suite's process group) and a TERM to the suite's PID while the gate
+    of walker, or the build of llms-full, runs under --sections; and a TERM between the launch of
+    the cut copy and the record of its PID."""
+    failures, count = [], 0
+    text = SUITE.read_text(encoding="utf-8")
+    bash = shutil.which("bash")
+    for section, slow in (("walker", WALKER_CALL), ("llms-full", "")):
+        for ctrl_c, what, want_rc in ((True, "a Ctrl-C", 130), (False, "a TERM to its PID", 143)):
+            count += 1
+            d = Path(tempfile.mkdtemp())
+            try:
+                signal_tree(d, text)
+                rc, out, left = interrupt(d, [bash, str(d / "tools" / "run_all_checks.sh"),
+                                              "--sections", section], signal_env(d, slow),
+                                          "gate.pid", ctrl_c)
+                bundle = (d / "site" / "llms-full.txt").read_text(encoding="utf-8")
+                finished = BUILD_FINISHED in (d / "calls.log").read_text(encoding="utf-8")
+                if (rc != want_rc or left or not (d / "gate.pid").exists() or finished
+                        or bundle != "bundle\n"):
+                    failures.append(f"--sections {section}, {what} while its gate runs: expected "
+                                    f"exit {want_rc}, nothing left running, no build finishing "
+                                    f"and site/llms-full.txt unchanged; got exit {rc}, {left!r} "
+                                    f"still running, the build finishing: {finished}, the bundle "
+                                    f"{bundle!r}: {out!r}")
+            finally:
+                survivors(d)
+                shutil.rmtree(d, ignore_errors=True)
+    count += 1
+    injected = window(text, "  suite_pid=$!\n")
+    if injected is None:
+        failures.append("--sections: the record of the cut copy's PID, '  suite_pid=$!', is not in "
+                        "tools/run_all_checks.sh once, so a TERM cannot be sent just before it")
+        return failures, count
+    d = Path(tempfile.mkdtemp())
+    try:
+        signal_tree(d, injected)
+        rc, stdout, stderr = run_in_group([bash, str(d / "tools" / "run_all_checks.sh"),
+                                           "--sections", "llms-full"], d, signal_env(d, ""))
+        left = started_late(d, [])
+        bundle = (d / "site" / "llms-full.txt").read_text(encoding="utf-8")
+        finished = BUILD_FINISHED in (d / "calls.log").read_text(encoding="utf-8")
+        if rc != 143 or left or finished or bundle != "bundle\n":
+            failures.append(f"--sections llms-full, a TERM between the launch of the cut copy and "
+                            f"the record of its PID: expected exit 143, nothing left running, no "
+                            f"build finishing and site/llms-full.txt unchanged; got exit {rc}, "
+                            f"{left!r} still running, the build finishing: {finished}, the bundle "
+                            f"{bundle!r}: {stdout + stderr!r}")
+    finally:
+        survivors(d)
+        shutil.rmtree(d, ignore_errors=True)
+    return failures, count
 
 
 def run_gate_source():
@@ -639,18 +750,49 @@ def running(pid_file):
         return None
     except PermissionError:
         pass
-    return pid
+    # A process that ended but is not reaped yet (an orphan waits for its new parent) answers the
+    # kill too; on Linux its state in /proc says so.
+    try:
+        stat = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
+    except OSError:
+        return pid
+    return None if stat.rpartition(") ")[2].startswith("Z") else pid
 
 
-def survivors(d):
-    """The server and check stand-ins started under d that still run, each stopped by its PID."""
+def survivors(d, stop=True):
+    """The stand-ins started under d (the server, the check and a slow gate) that still run, each
+    stopped by its PID unless stop is false."""
     found = []
-    for name in ("server.pid", "check.pid"):
+    for name in PID_FILES:
         pid = running(d / name)
         if pid is not None:
             found.append(name)
-            os.kill(pid, signal.SIGTERM)
+            if stop:
+                os.kill(pid, signal.SIGTERM)
     return found
+
+
+def run_in_group(argv, d, env):
+    """Run argv in d in a process group the harness creates: (exit, stdout, stderr). On a timeout
+    the group is stopped before argv is reaped, and the exit is None."""
+    p = subprocess.Popen(argv, cwd=d, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                         env=env, start_new_session=True)
+    try:
+        stdout, stderr = p.communicate(timeout=120)
+    except subprocess.TimeoutExpired:
+        os.killpg(p.pid, signal.SIGKILL)
+        stdout, stderr = p.communicate()
+        return None, stdout, stderr
+    return p.returncode, stdout, stderr
+
+
+def started_late(d, names):
+    """Wait up to 2 seconds for each of names under d, which a process forked just before a signal
+    writes when it is not stopped first; then the stand-ins under d that still run."""
+    deadline = time.monotonic() + 2
+    while not all((d / n).exists() for n in names) and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return survivors(d, stop=False)
 
 
 def overflow_env(d, browser, gate, require):
@@ -696,29 +838,28 @@ def overflow_failures():
                     (d / "nonode" / tool).symlink_to(shutil.which(tool))
                 env["PATH"] = str(d / "nonode")
             (d / "calls.log").write_text("", encoding="utf-8")
-            r = subprocess.run([bash, "-c", script], cwd=d, capture_output=True, text=True,
-                               timeout=120, env=env)
-            out = r.stdout + r.stderr
+            rc, stdout, stderr = run_in_group([bash, "-c", script], d, env)
+            out = stdout + stderr
             calls = (d / "calls.log").read_text(encoding="utf-8").splitlines()
             left = survivors(d)
             fails = re.findall(r"^fail=([01])$", out, re.M)
-            if r.returncode or fails not in (["0"], ["1"]):
-                failures.append(f"overflow section, {case}: the harness exited {r.returncode}: "
-                                f"{out!r}")
+            if rc or fails not in (["0"], ["1"]):
+                failures.append(f"overflow section, {case}: the harness exited {rc}: {out!r}")
             elif (fails == ["1"]) is not want_fail:
                 failures.append(f"overflow section, {case}: expected fail={int(want_fail)}: {out!r}")
-            if ("\nsignal traps=\n" not in r.stdout
-                    or not r.stdout.rstrip("\n").endswith(EXIT_TRAP)):
+            if ("\nsignal traps=\n" not in stdout
+                    or not stdout.rstrip("\n").endswith(EXIT_TRAP)):
                 failures.append(f"overflow section, {case}: the HUP, INT and TERM traps are not "
                                 f"reset, or the EXIT trap did not run last: {out!r}")
             browser_calls = [c for c in calls if c.startswith("node -e ")]
             check_calls = [c for c in calls if not c.startswith("node -e ")]
             want_browser = 1 if has_node and not remove else 0
             if (len(browser_calls) != want_browser
-                    or any("chromium.executablePath()" not in c or "existsSync" not in c
+                    or any(HEADLESS_SHELL not in c or "existsSync" not in c
                            or "launch" in c for c in browser_calls)):
                 failures.append(f"overflow section, {case}: expected {want_browser} Chromium "
-                                f"check asking playwright for its path, got {browser_calls!r}")
+                                f"check asking playwright for its headless shell's path, got "
+                                f"{browser_calls!r}")
             if len(check_calls) != int(started) or not all(check.fullmatch(c) for c in check_calls):
                 failures.append(f"overflow section, {case}: expected {int(started)} check call "
                                 f"on the {len(pages)} listed pages, got {check_calls!r}")
@@ -733,46 +874,76 @@ def overflow_failures():
                 failures.append(f"overflow section, {case}: the output lacks {missing!r} or holds "
                                 f"{present!r}: {out!r}")
         finally:
+            survivors(d)
             shutil.rmtree(d, ignore_errors=True)
-    signal_failures = overflow_signal_failures(script, pages)
-    return failures + signal_failures, len(OVERFLOW_CASES) + 2
+    signal_failures, signal_cases = overflow_signal_failures(script, pages)
+    return failures + signal_failures, len(OVERFLOW_CASES) + signal_cases
 
 
-def terminate(d, argv, env):
-    """Start argv in d, send it a TERM once the stand-in check runs: (exit, output, survivors)."""
+def interrupt(d, argv, env, ready, ctrl_c=False):
+    """Start argv in d in a process group the harness creates and, once the stand-in that records
+    its PID in d/ready runs, send a Ctrl-C (an INT to that group) or a TERM to argv's own PID:
+    (exit, output, the stand-ins still running when argv exited). Those are given up to 5 seconds
+    to end, so what they write afterwards lands, and are then stopped by their PIDs; the group is
+    stopped too if argv was never reaped."""
     p = subprocess.Popen(argv, cwd=d, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, env=env)
-    deadline = time.monotonic() + 60
-    while running(d / "check.pid") is None and p.poll() is None and time.monotonic() < deadline:
-        time.sleep(0.05)
-    if p.poll() is None:
-        p.send_signal(signal.SIGTERM)
-    # What still runs once the suite's own PID has exited, before its output is read to the end
-    # (a shell it left behind would hold that output open).
+                         text=True, env=env, start_new_session=True)
     try:
-        p.wait(timeout=60)
-        left = survivors(d)
-    except subprocess.TimeoutExpired:
-        left = survivors(d) + ["the suite"]
-        p.kill()
-    out, _ = p.communicate(timeout=120)
-    return p.returncode, out, left
+        deadline = time.monotonic() + 60
+        while running(d / ready) is None and p.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.05)
+        if p.poll() is None:
+            if ctrl_c:
+                os.killpg(p.pid, signal.SIGINT)
+            else:
+                p.send_signal(signal.SIGTERM)
+        # What still runs once the suite's own PID has exited, before its output is read to the
+        # end (a shell it left behind would hold that output open).
+        try:
+            p.wait(timeout=60)
+            left = survivors(d, stop=False)
+        except subprocess.TimeoutExpired:
+            left = survivors(d, stop=False) + ["the suite"]
+            os.killpg(p.pid, signal.SIGKILL)
+        deadline = time.monotonic() + 5
+        while survivors(d, stop=False) and time.monotonic() < deadline:
+            time.sleep(0.1)
+        survivors(d)
+        out, _ = p.communicate(timeout=120)
+        return p.returncode, out, left
+    finally:
+        survivors(d)
+        if p.returncode is None:
+            os.killpg(p.pid, signal.SIGKILL)
+            p.wait()
+
+
+def window(text, line):
+    """text with a TERM sent to the running shell just before line, the record of a launch's PID,
+    so the signal lands between the launch and that record; None when line is not in text."""
+    if text.count(line) != 1:
+        return None
+    indent = line[:len(line) - len(line.lstrip(" "))]
+    return text.replace(line, f'{indent}kill -TERM "$BASHPID"\n{line}')
 
 
 def overflow_signal_failures(script, pages):
-    """A TERM to the shell running the overflow section, and to the suite run with --sections."""
+    """A TERM to the shell running the overflow section and to the suite run with --sections, and
+    a TERM between the launch of the server, or of the check, and the record of its PID."""
     failures = []
     bash = shutil.which("bash")
     d = Path(tempfile.mkdtemp())
     try:
         overflow_tree(d, pages)
         overflow_bin(d)
-        rc, out, left = terminate(d, [bash, "-c", script], overflow_env(d, 0, "sleep 60", ""))
+        rc, out, left = interrupt(d, [bash, "-c", script], overflow_env(d, 0, "sleep 60", ""),
+                                  "check.pid")
         if rc != 143 or left or not (d / "check.pid").exists() or EXIT_TRAP not in out:
             failures.append(f"overflow section, a TERM while the check runs: expected exit 143 "
                             f"after the EXIT trap and nothing left running; got exit {rc}, "
                             f"{left!r} still running: {out!r}")
     finally:
+        survivors(d)
         shutil.rmtree(d, ignore_errors=True)
     d = Path(tempfile.mkdtemp())
     try:
@@ -781,16 +952,40 @@ def overflow_signal_failures(script, pages):
         (d / "tools").mkdir()
         (d / "tools" / "run_all_checks.sh").write_text(SUITE.read_text(encoding="utf-8"),
                                                        encoding="utf-8")
-        rc, out, left = terminate(d, [bash, str(d / "tools" / "run_all_checks.sh"), "--sections",
-                                      "overflow"], overflow_env(d, 0, "sleep 60", ""))
+        rc, out, left = interrupt(d, [bash, str(d / "tools" / "run_all_checks.sh"), "--sections",
+                                      "overflow"], overflow_env(d, 0, "sleep 60", ""), "check.pid")
         if (rc != 143 or left or not (d / "check.pid").exists()
                 or "Sections selected: overflow" not in out):
             failures.append(f"--sections overflow, a TERM to the suite while the check runs: "
                             f"expected exit 143 and nothing left running; got exit {rc}, "
                             f"{left!r} still running: {out!r}")
     finally:
+        survivors(d)
         shutil.rmtree(d, ignore_errors=True)
-    return failures
+    for launch, line, names in (("the server", "  overflow_pid=$!\n", ["server.pid"]),
+                                ("the check", "    overflow_check_pid=$!\n",
+                                 ["server.pid", "check.pid"])):
+        injected = window(script, line)
+        if injected is None:
+            failures.append(f"overflow section: the record of {launch}'s PID, {line!r}, is not "
+                            f"in the section once, so a TERM cannot be sent just before it")
+            continue
+        d = Path(tempfile.mkdtemp())
+        try:
+            overflow_tree(d, pages)
+            overflow_bin(d)
+            rc, stdout, stderr = run_in_group([bash, "-c", injected], d,
+                                              overflow_env(d, 0, "sleep 60", ""))
+            left = started_late(d, names)
+            if rc != 143 or left or EXIT_TRAP not in stdout:
+                failures.append(f"overflow section, a TERM between the launch of {launch} and "
+                                f"the record of its PID: expected exit 143 after the EXIT trap "
+                                f"and nothing left running; got exit {rc}, {left!r} still "
+                                f"running: {stdout + stderr!r}")
+        finally:
+            survivors(d)
+            shutil.rmtree(d, ignore_errors=True)
+    return failures, 4
 
 
 def main():
@@ -802,6 +997,8 @@ def main():
     overflow_cases_failures, overflow_cases = overflow_failures()
     failures += overflow_cases_failures
     failures += sections_failures()
+    sections_signals, signal_cases = sections_signal_failures()
+    failures += sections_signals
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
@@ -814,11 +1011,14 @@ def main():
           f"exit 1 with a traceback line is reported as a crash), {overflow_cases} cases of its "
           f"overflow section (a SKIP or, when required, a FAIL without node or Chromium; 0 "
           f"passes and any other code fails; a missing or unlisted page fails; nothing left "
-          f"running, a TERM included), and "
+          f"running, a TERM included, between a launch and the record of its PID too), "
           f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
           f"and those they depend on after the preflight, in the file's order; an unknown or "
           f"empty name, or one holding "
-          f"anything but letters, digits and hyphens, refused before any gate)")
+          f"anything but letters, digits and hyphens, refused before any gate), and "
+          f"{signal_cases} signal cases of --sections (a Ctrl-C or a TERM during a gate of walker "
+          f"or llms-full, and a TERM before the copy's PID is recorded, leave nothing running and "
+          f"site/llms-full.txt unchanged)")
     return 0
 
 

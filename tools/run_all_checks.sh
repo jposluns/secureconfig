@@ -103,23 +103,34 @@ if [ "$#" -gt 0 ]; then
   fi
   printf 'Sections selected: %s\n' "$list"
   # A fresh bash sources the cut copy with this file as its $0 and no arguments, so the cd above
-  # lands in the same tree and the copy runs straight through. It runs in the background and this
-  # shell waits for it, so a HUP, INT or TERM sent to this shell's PID reaches the copy as a TERM
-  # (a background bash starts with INT ignored), and the copy's own traps, the overflow section's
-  # included, clean up before this shell exits with that signal's status.
+  # lands in the same tree and the copy runs straight through. It runs in the background, in a
+  # process group of its own (set -m), and this shell waits for it. A HUP, INT or TERM sent to this
+  # shell's PID, or a Ctrl-C, which reaches this shell's group and not the copy's, is passed as a
+  # TERM to the copy's whole group, so the gate running in any section stops with the copy, whose
+  # own traps (the llms-full EXIT trap and the overflow section's) run before this shell exits with
+  # that signal's status. A signal that arrives before the copy's PID is recorded is held in
+  # suite_signal and passed on once it is. exec would make the copy this PID, but a TERM to it
+  # would then stop the shell running the sections and not the gate it runs.
   suite_pid=""
+  suite_signal=""
   forward_signal() {
+    suite_signal=$1
     if [ -n "$suite_pid" ]; then
-      kill -TERM "$suite_pid" 2>/dev/null
+      kill -TERM -- -"$suite_pid" 2>/dev/null
       wait "$suite_pid"
+      exit "$1"
     fi
-    exit "$1"
   }
   trap 'forward_signal 129' HUP
   trap 'forward_signal 130' INT
   trap 'forward_signal 143' TERM
+  set -m
   bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3<<< "$script" &
   suite_pid=$!
+  set +m
+  if [ -n "$suite_signal" ]; then
+    forward_signal "$suite_signal"
+  fi
   wait "$suite_pid"
   exit $?
 fi
@@ -1512,10 +1523,11 @@ echo "== no site page scrolls sideways at the template's widths =="
 # 127.0.0.1, and the site self-contained (the site-draft section), it reaches no network. It needs
 # node and the playwright package with its Chromium, installed before the suite: put playwright's
 # node_modules folder on NODE_PATH and its browsers folder on PLAYWRIGHT_BROWSERS_PATH. When node is
-# not on PATH, cannot load playwright, or finds no file at the Chromium path playwright reports
-# (asked through node, without launching it), a local run prints a SKIP and passes; CI installs the
-# pinned playwright from tools/overflow/ and sets SECURECONFIG_REQUIRE_OVERFLOW=1, under which that
-# is a failure. tools/test_gate_runners.py runs this section on stand-ins for node and the check.
+# not on PATH, cannot load playwright, or finds no file at the path of the headless Chromium shell
+# that a headless launch runs (asked through node, without launching it), a local run prints a SKIP
+# and passes; CI installs the pinned playwright from tools/overflow/ and sets
+# SECURECONFIG_REQUIRE_OVERFLOW=1, under which that is a failure. tools/test_gate_runners.py runs
+# this section on stand-ins for node and the check.
 # The pages, the one place they are listed: every generated page that answers 200, the review page
 # included; 404.html is the not-found page and is not listed. A listed page whose index.html is
 # missing fails before the server starts, since http.server would answer its path with a directory
@@ -1545,11 +1557,29 @@ if [ -n "$overflow_unlisted" ]; then
 fi
 # The server and the check run in the background of this shell, which waits for them, so its HUP,
 # INT and TERM traps run at once and stop both by the PIDs started here (kill, then wait); the
-# traps then exit with the signal's status, so the suite's EXIT trap still runs. Under
-# --sections this shell is the cut copy, which the suite's own shell sends a TERM.
+# traps then exit with the signal's status, so the suite's EXIT trap still runs. A signal that
+# arrives while a launch is under way, before its PID is recorded, is held in overflow_signal and
+# acted on once the PID is. Under --sections this shell is the cut copy, whose process group the
+# suite's own shell sends a TERM.
 overflow_pid=""
 overflow_check_pid=""
 overflow_dir=""
+overflow_starting=""
+overflow_signal=""
+overflow_trap() {
+  overflow_signal=$1
+  if [ -z "$overflow_starting" ]; then
+    overflow_stop
+    exit "$1"
+  fi
+}
+overflow_started() {
+  overflow_starting=""
+  if [ -n "$overflow_signal" ]; then
+    overflow_stop
+    exit "$overflow_signal"
+  fi
+}
 overflow_stop() {
   if [ -n "$overflow_check_pid" ]; then
     kill "$overflow_check_pid" 2>/dev/null
@@ -1567,27 +1597,32 @@ overflow_stop() {
     overflow_dir=""
   fi
 }
-# Exit 0 when the Chromium executable playwright reports exists; it loads playwright, launches nothing.
-overflow_browser='process.exit(require("fs").existsSync(require("playwright").chromium.executablePath()) ? 0 : 1)'
+# Exit 0 when the executable a headless chromium.launch() runs exists: playwright 1.64.1 launches
+# its chromium-headless-shell there, not the full Chromium that chromium.executablePath() reports,
+# so this asks the registry of the playwright-core that playwright loads for that executable's path.
+# It loads playwright and launches nothing.
+overflow_browser='require("playwright"); const core = require(require.resolve("playwright-core/lib/coreBundle", { paths: [require.resolve("playwright")] })); process.exit(require("fs").existsSync(core.registry.registry.findExecutable("chromium-headless-shell").executablePath()) ? 0 : 1)'
 if [ -n "$overflow_missing" ]; then
   bad "the overflow check's page list names page(s) with no generated file:$overflow_missing; run python3 -I -B scripts/build-site.py; the pages are unverified"
 elif ! command -v node >/dev/null 2>&1 || ! node -e "$overflow_browser" >/dev/null 2>&1; then
   if [ "${SECURECONFIG_REQUIRE_OVERFLOW:-}" = 1 ]; then
-    bad "check_overflow.js needs node, the playwright package and its Chromium, and one of them was not found while SECURECONFIG_REQUIRE_OVERFLOW=1; the pages are unverified"
+    bad "check_overflow.js needs node, the playwright package and its headless Chromium shell, and one of them was not found while SECURECONFIG_REQUIRE_OVERFLOW=1; the pages are unverified"
   else
-    printf '  SKIP  node, the playwright package or its Chromium was not found; overflow check not run. To run it, set NODE_PATH to the node_modules folder holding playwright and PLAYWRIGHT_BROWSERS_PATH to the folder holding its Chromium\n'
+    printf '  SKIP  node, the playwright package or its headless Chromium shell was not found; overflow check not run. To run it, set NODE_PATH to the node_modules folder holding playwright and PLAYWRIGHT_BROWSERS_PATH to the folder holding its Chromium\n'
   fi
 elif ! overflow_dir=$(mktemp -d); then
   overflow_dir=""
   bad "check_overflow.js did not start: mktemp could not create a folder for the server log; the pages are unverified"
 else
-  trap 'overflow_stop; exit 129' HUP
-  trap 'overflow_stop; exit 130' INT
-  trap 'overflow_stop; exit 143' TERM
+  trap 'overflow_trap 129' HUP
+  trap 'overflow_trap 130' INT
+  trap 'overflow_trap 143' TERM
   # Port 0 lets the kernel pick a free port, which -u makes http.server print at once; the loop
   # waits until the server answers.
+  overflow_starting=1
   python3 -I -B -u -m http.server 0 --bind 127.0.0.1 --directory site > "$overflow_dir/server.log" 2>&1 &
   overflow_pid=$!
+  overflow_started
   overflow_port=""
   overflow_status=""
   for _ in $(seq 100); do
@@ -1611,8 +1646,10 @@ else
     tail -n 20 "$overflow_dir/server.log" | sed 's/^/          /'
     bad "check_overflow.js did not start, as the lines above say; the pages are unverified"
   else
+    overflow_starting=1
     node .baseline/check_overflow.js --base "http://127.0.0.1:$overflow_port" "${overflow_pages[@]}" > "$overflow_dir/check.out" 2>&1 &
     overflow_check_pid=$!
+    overflow_started
     wait "$overflow_check_pid"
     overflow_rc=$?
     overflow_check_pid=""

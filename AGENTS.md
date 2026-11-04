@@ -120,8 +120,9 @@ no network. A listed page with no generated file fails before the server starts,
 other `.html` or `.htm` file under `site/` but `404.html` and the files under `assets/`. It needs
 node and playwright with its Chromium: set `NODE_PATH` to the `node_modules` folder holding
 playwright and `PLAYWRIGHT_BROWSERS_PATH` to the folder holding its Chromium. A local run where node
-is not on PATH, cannot load playwright, or finds no file at the Chromium path playwright reports
-prints a SKIP, never a failure; CI installs the pinned playwright and sets
+is not on PATH, cannot load playwright, or finds no file at the path of the headless Chromium shell
+that the check's headless launch runs (which `npx playwright install chromium` installs beside the
+full Chromium) prints a SKIP, never a failure; CI installs the pinned playwright and sets
 `SECURECONFIG_REQUIRE_OVERFLOW=1`, under which any of those fails. The suite also compares local Python with CI's pinned `PYTHON_VERSION`: a mismatch or unavailable comparison
 prints an advisory SKIP, never a failure, because `html.parser` behaviour can differ between
 releases.
