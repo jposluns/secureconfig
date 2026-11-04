@@ -48,15 +48,24 @@ link whose decoded, case-folded rel holds the token stylesheet; a page without i
 other spelling (attribute order, defer, async, a type, a body, another file, host or base path),
 each other place (after a `rel="style&#115;heet"` or `rel="preload stylesheet"` link, after a
 <div>, text or a comment in <head>, inside <svg> or <title>, after </head>, in <body>), a second
-copy, and any other scheme.js (deferred, in an attribute, as text) has its own refusal. The
-glyphs pass as generated; inside one, any element but path and circle (an a, g, script,
-foreignObject, use, image, style, title or svg, a deferred baseline script included, and any end
-tag but theirs) is refused, as are a style= or on* attribute on one and any attribute outside the
-glyphs' presentation and geometry attributes, class, aria-hidden and focusable.
+copy, and any other scheme.js (deferred, in an attribute, as text, percent-encoded or split by a
+tab or newline in an href, or in text that starts on the head line itself) has its own refusal;
+the `</head>` reason is isolated on a page with no stylesheet link before it. The glyphs pass as
+generated; inside one, any element but path and circle (an a, g, script, foreignObject, use,
+image, style, title or svg, a deferred baseline script included, and any end tag but theirs) is
+refused, as are a style= or on* attribute on one and any attribute outside the glyphs'
+presentation and geometry attributes, class, aria-hidden and focusable. Rules 2 and 3 of
+the refused contexts also have direct cases, each pinning its own message beside the allowlist's:
+a textarea, noscript or xmp holding `<`, a <math>, and each SVG integration point (title, desc,
+foreignObject, style, script) inside a glyph.
 
 HEADER CASES. site/_headers must carry exactly the shared template policy under the bare /*:
 widened, reordered, comma-split, duplicated, detached, path-scoped or host-scoped policies fail,
 as does any X-Robots-Tag; a comment between the rule and its headers passes, as Cloudflare allows.
+X-Frame-Options, Permissions-Policy and Cross-Origin-Opener-Policy each fail when missing or
+changed, and X-Frame-Options also when set twice, set only under a narrower rule or detached;
+X-Content-Type-Options, Referrer-Policy and Strict-Transport-Security fail when set, and
+Referrer-Policy also when detached.
 
 Exit 0 ok, 1 on a finding.
 """
@@ -89,6 +98,12 @@ MOON = '<svg class="moon" viewBox="0 0 24 24"'
 # The moon glyph's path, as the generator writes it.
 MOON_PATH = '<path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/>'
 HEAD_PLACE = "is not in <head> before the first stylesheet"
+HEAD_AFTER = HEAD_PLACE + ": it is after </head>"
+# The home page without its stylesheet links, so a head line after </head> meets </head> before
+# any stylesheet and the </head> reason is the one reported.
+NO_STYLESHEETS, STYLESHEETS_REMOVED = re.subn(r'<link rel="stylesheet" [^>]*>\n', "", PAGE)
+if not STYLESHEETS_REMOVED:
+    raise AssertionError("the home page no longer carries a stylesheet link to remove")
 SCHEME_ELSEWHERE = "scheme.js appears outside the 1 head line this gate accepts"
 SCHEME_DEFERRED = '<script src="/assets/baseline/scheme.js" defer></script>'
 SVG_CONTENT = "inside an inline <svg>, where this gate admits only <path> and <circle>"
@@ -101,6 +116,12 @@ FIXTURE = {"index.html": PAGE, "404.html": PAGE_404, "for-ai/index.html": SCRIPT
            "draft/index.html": REVIEW}
 OK_PAGES = "4 page(s) under site"
 SHARED = "shared template policy"
+# The line of the moon glyph's path on the page that loads copy.js, for a finding that names it.
+FOR_AI_MOON_LINE = SCRIPTED[:SCRIPTED.index(MOON_PATH)].count("\n") + 1
+# Section 9's other header lines under /*, as site/_headers writes them.
+XFO_LINE = "  X-Frame-Options: DENY\n"
+COOP_LINE = "  Cross-Origin-Opener-Policy: same-origin\n"
+CLOUDFLARE_SENDS = "which Cloudflare sends itself"
 
 
 def run_against(page=None, headers=None, extra_files=None, setup=None):
@@ -252,8 +273,6 @@ CASES = [
      edited(PAGE, SCHEME_JS, SCHEME_DEFERRED), None, True, "has 1 <script> elements"),
     ("a second, deferred scheme.js in <body>",
      edited(PAGE, "</body>", SCHEME_DEFERRED + "\n</body>"), None, True, SCHEME_ELSEWHERE),
-    ("a second copy of the head line in <body>",
-     edited(PAGE, "</body>", SCHEME_JS + "\n</body>"), None, True, "more than once"),
     ("scheme.js in a link's href",
      edited(PAGE, "</body>", '<p><a href="/assets/baseline/scheme.js">x</a></p>\n</body>'), None,
      True, SCHEME_ELSEWHERE),
@@ -262,6 +281,29 @@ CASES = [
      None, True, SCHEME_ELSEWHERE),
     ("scheme.js as text, in another case",
      edited(PAGE, "</body>", "<p>see Scheme.JS</p>\n</body>"), None, True, SCHEME_ELSEWHERE),
+    # QA round 2 of #1190: a URL spelling of scheme.js, read as a URL parser and a host read it.
+    ("scheme.js in an href, percent-encoded",
+     edited(PAGE, "</body>", '<p><a href="/assets/baseline/%73cheme.js">x</a></p>\n</body>'),
+     None, True, SCHEME_ELSEWHERE),
+    ("scheme.js in an href, percent-encoded twice",
+     edited(PAGE, "</body>", '<p><a href="/assets/baseline/%2573cheme.js">x</a></p>\n</body>'),
+     None, True, SCHEME_ELSEWHERE),
+    ("scheme.js in an href, percent-encoded in upper case with an encoded dot",
+     edited(PAGE, "</body>", '<p><a href="/assets/baseline/%53CHEME%2eJS">x</a></p>\n</body>'),
+     None, True, SCHEME_ELSEWHERE),
+    ("scheme.js in an href, split by a tab reference",
+     edited(PAGE, "</body>", '<p><a href="/assets/baseline/sch&#9;eme.js">x</a></p>\n</body>'),
+     None, True, SCHEME_ELSEWHERE),
+    ("scheme.js in an href, split by a newline reference",
+     edited(PAGE, "</body>", '<p><a href="/assets/baseline/sch&#10;eme.js">x</a></p>\n</body>'),
+     None, True, SCHEME_ELSEWHERE),
+    ("scheme.js in an href, split by a literal tab",
+     edited(PAGE, "</body>", '<p><a href="/assets/baseline/sch\teme.js">x</a></p>\n</body>'),
+     None, True, SCHEME_ELSEWHERE),
+    # QA round 2 of #1190: the text after the head line starts on its line and is still searched.
+    ("scheme.js in a character reference, in the text that starts on the head line",
+     edited(PAGE, SCHEME_JS + "\n", SCHEME_JS + "\nsee sch&#101;me.js\n"), None, True,
+     SCHEME_ELSEWHERE),
     ('rel="style&#115;heet" before the head script',
      edited(PAGE, SCHEME_JS, '<link rel="style&#115;heet" href="/assets/baseline/fonts.css">\n'
             + SCHEME_JS), None, True, HEAD_PLACE),
@@ -284,11 +326,11 @@ CASES = [
      edited(PAGE, SCHEME_JS, "<svg>\n" + SCHEME_JS + "\n</svg>"), None, True,
      "<script> is " + SVG_CONTENT),
     ("the head line inside the moon glyph",
-     edited(edited(PAGE, SCHEME_JS + "\n", ""), MOON_PATH, "\n" + SCHEME_JS + "\n" + MOON_PATH),
-     None, True, HEAD_PLACE),
+     edited(edited(NO_STYLESHEETS, SCHEME_JS + "\n", ""), MOON_PATH,
+            "\n" + SCHEME_JS + "\n" + MOON_PATH), None, True, HEAD_AFTER),
     ("the head line after </head>",
-     edited(edited(PAGE, SCHEME_JS + "\n", ""), "</head>\n", "</head>\n" + SCHEME_JS + "\n"), None,
-     True, HEAD_PLACE),
+     edited(edited(NO_STYLESHEETS, SCHEME_JS + "\n", ""), "</head>\n",
+            "</head>\n" + SCHEME_JS + "\n"), None, True, HEAD_AFTER),
     ("the head line inside <title>",
      edited(edited(PAGE, SCHEME_JS + "\n", ""), "</title>\n", "\n" + SCHEME_JS + "\n</title>\n"),
      None, True, HEAD_PLACE),
@@ -360,7 +402,7 @@ CASES = [
      edited(PAGE, MOON_PATH, COPY_JS + MOON_PATH), None, True, "<script> is " + SVG_CONTENT),
     ("a deferred copy.js inside the moon glyph, on the page that loads copy.js",
      {"for-ai/index.html": edited(SCRIPTED, MOON_PATH, COPY_JS + MOON_PATH)}, None, True,
-     "site/for-ai/index.html"),
+     f"site/for-ai/index.html:{FOR_AI_MOON_LINE}: <script> is " + SVG_CONTENT),
     ("a link inside the switch's glyph",
      edited(PAGE, MOON_PATH, '<a href="https://example.org">x</a>' + MOON_PATH), None, True,
      "<a> is " + SVG_CONTENT),
@@ -437,6 +479,18 @@ CASES = [
      False, OK_PAGES),
     ("a <math> element", edited(PAGE, "</body>", "<math><mi>x</mi></math>\n</body>"), None, True,
      "element <math> " + ALLOWLIST),
+    # QA round 1 of #1189: rules 2 and 3 by their own messages, not only by the allowlist's.
+    ("a <math> element, by rule 3",
+     edited(PAGE, "</body>", "<math><mi>x</mi></math>\n</body>"), None, True,
+     "has a <math> element. html.parser reads MathML as HTML"),
+    *[(f"a <{name}> whose content holds a <, by rule 2",
+       edited(PAGE, "</body>", f"<{name}>a <p> c</{name}>\n</body>"), None, True,
+       f"has a <{name}> whose content contains `<` before its </{name}>")
+      for name in ("textarea", "noscript", "xmp")],
+    *[(f"a <{name}> inside the switch's glyph, by rule 3",
+       edited(PAGE, MOON_PATH, f"<{name}></{name}>" + MOON_PATH), None, True,
+       f"has a <{name}> inside an inline <svg>. html.parser reads it as an HTML element")
+      for name in ("title", "desc", "foreignObject", "style", "script")],
     ("a malformed end tag, </ and a space",
      edited(PAGE, "</body>", "<p>a</ p>b</p>\n</body>"), None, True, MALFORMED),
     ("a malformed end tag, </>", edited(PAGE, "</body>", "<p>a</>b</p>\n</body>"), None, True,
@@ -498,6 +552,41 @@ CASES = [
     ("a comment between the rule and its headers, which is valid in _headers",
      None, HEADERS.replace("/*\n", "/*\n# the policy below is held by tools/check_csp_hashes.py\n", 1),
      False, OK_PAGES),
+
+    # QA round 1 of #1189: section 9's other headers, pinned under /*, and none Cloudflare sends.
+    ("X-Frame-Options removed", None, edited(HEADERS, XFO_LINE, ""), True,
+     "sets X-Frame-Options 0 times"),
+    ("X-Frame-Options: SAMEORIGIN",
+     None, edited(HEADERS, "X-Frame-Options: DENY", "X-Frame-Options: SAMEORIGIN"), True,
+     "sets X-Frame-Options under /* to SAMEORIGIN"),
+    ("X-Frame-Options set again under /guides/*",
+     None, HEADERS + "\n/guides/*\n  X-Frame-Options: DENY\n", True, "sets X-Frame-Options 2 times"),
+    ("X-Frame-Options only under /guides/*",
+     None, edited(HEADERS, XFO_LINE, "") + "\n/guides/*\n" + XFO_LINE, True,
+     "sets X-Frame-Options under the rule /guides/*"),
+    ("X-Frame-Options detached under /guides/*",
+     None, HEADERS + "\n/guides/*\n  ! X-Frame-Options\n", True,
+     "detaches X-Frame-Options under /guides/*"),
+    ("Permissions-Policy removed",
+     None, edited(HEADERS, "  Permissions-Policy: ", "  X-Other: "), True,
+     "sets Permissions-Policy 0 times"),
+    ("Permissions-Policy widened to let the page use the camera",
+     None, edited(HEADERS, "camera=()", "camera=(self)"), True,
+     "sets Permissions-Policy under /* to"),
+    ("Cross-Origin-Opener-Policy removed", None, edited(HEADERS, COOP_LINE, ""), True,
+     "sets Cross-Origin-Opener-Policy 0 times"),
+    ("Cross-Origin-Opener-Policy weakened to same-origin-allow-popups",
+     None, edited(HEADERS, COOP_LINE, COOP_LINE.replace("same-origin", "same-origin-allow-popups")),
+     True, "sets Cross-Origin-Opener-Policy under /* to same-origin-allow-popups"),
+    *[(f"{name} set under /*",
+       None, edited(HEADERS, XFO_LINE, XFO_LINE + f"  {name}: {value}\n"), True,
+       f"sets or detaches {name.lower()}, {CLOUDFLARE_SENDS}")
+      for name, value in (("X-Content-Type-Options", "nosniff"),
+                          ("Referrer-Policy", "strict-origin-when-cross-origin"),
+                          ("Strict-Transport-Security", "max-age=31536000"))],
+    ("Referrer-Policy detached under /guides/*",
+     None, HEADERS + "\n/guides/*\n  ! Referrer-Policy\n", True,
+     f"sets or detaches referrer-policy, {CLOUDFLARE_SENDS}"),
 ]
 
 # Cases carried by run_against arguments rather than page/headers overrides.

@@ -17,6 +17,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-11-04
 
+- The CSP and header gate now requires section 9's X-Frame-Options, Permissions-Policy and Cross-Origin-Opener-Policy exactly once under `/*`, and refuses any X-Content-Type-Options, Referrer-Policy or Strict-Transport-Security line. It also finds `scheme.js` when it is percent-encoded or split by a tab or newline, and in text that starts on the head line. The tests check refused-context rules 2 and 3 directly. (#1193)
 - The site build's on* refusal now reads attribute names, so a description can use the word "on" inside a quoted value; its tests now check the full value of each link-preview tag; and `--check` at the root now refuses any file that is not a page, a file under `assets/baseline/`, `assets/site.css` or one of the named published files. (#1192)
 
 ## 2026-11-03
