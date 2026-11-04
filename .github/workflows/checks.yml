@@ -41,8 +41,8 @@ name: Checks
 # LICENSE, VERSION and any path the selector's map does not name; so does an empty list. No run
 # starts on a push to main. The whole suite runs with no argument weekly on Mondays at 06:00 UTC,
 # on the default branch, and on demand from the Actions tab (workflow_dispatch), which a release
-# requires on its target; a target from before this trigger relies on its push run on main
-# instead. A local run can do either.
+# requires on its target, so a release targets the merge of #1194 or a later one. A local run
+# can do either.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]

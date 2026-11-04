@@ -465,7 +465,8 @@ link to `CHANGELOG.md` at the tag.
 2. Choose the target: the last first-parent merge on `main` of a UTC day that has ended,
    normally the day before the cut. `TZ=UTC git log --first-parent --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%H %cd %s' main`
    lists the merges with their UTC times. The target's subject begins
-   `Merge pull request #N from `, and the tag is `v` plus `git show <sha>:VERSION`.
+   `Merge pull request #N from `, and the tag is `v` plus `git show <sha>:VERSION`. The target
+   is the merge of #1194 or a later one, as step 3 explains.
 3. Before cutting the release, run the whole suite on the target through a temporary branch and
    require it to succeed. From #1194 on, no run starts on a push to `main`, and a pull request's
    run checks the pull request, possibly only some sections, not the merge commit, so no earlier
@@ -483,14 +484,11 @@ link to `CHANGELOG.md` at the tag.
    that check run's id; another `gates` run on the same commit, such as a scheduled one, does not
    count. Then delete the branch with `git push origin --delete release-check/v1.0.<N>`. If the
    run failed, never completed, had another event or branch, or ran on any other commit, the
-   release stops; delete the branch in that case too. A target whose
-   `.github/workflows/checks.yml` has no `workflow_dispatch` trigger, one from before #1194,
-   cannot be dispatched this way; its workflow still ran on a push to `main`, so the release
-   instead relies on that commit's push run: confirm online that the `gates` check run of the
-   target's push run on `main` concluded `success` on exactly the target commit, and note its id.
-   If it failed or never completed, the release stops. `tools/check_release.py` reads which case
-   applies from the target's workflow and states the matching confirmations in the body as the
-   publisher's, which it does not verify.
+   release stops; delete the branch in that case too. Every release dispatches this way, so a
+   release must target a commit at or after the merge of #1194, the first merge on `main` whose
+   `.github/workflows/checks.yml` has the `workflow_dispatch` trigger. `tools/check_release.py`
+   does not read the workflow; the body it generates states that requirement and these
+   confirmations as the publisher's, which it does not verify.
 4. Build the release twice, into two new directories outside the repository, and compare
    them with `diff -r`; any difference stops the release. Each build is
    `python3 -I -B tools/check_release.py --target <sha> --tag v1.0.<N> --previous <tag> --gates-check-run <id> --dir <dir> --build`,

@@ -13,14 +13,15 @@ SCOPED CONTENT is the only content that runs less than every section, and it is 
 that fails closed: a file under site/ or site-src/ (the pages, their sources, the served
 stylesheets, fonts and images, and the palettes) whose name ends, in any case, in one of
 SITE_CONTENT (.html, .css, .json, .svg, .png, .jpg, .jpeg, .webp, .ico, .woff2, .txt or .xml)
-and is not `_headers` or `_redirects`, and the root project records CHANGELOG.md, TODO.md,
-DONE.md, DECISIONS.md and PENDING-DECISIONS.md. Every other file under site/ or site-src/ runs
-every section: `_headers` (the CSP and the other served headers) and `_redirects` at any depth,
-the scripts and their source maps, Markdown, YAML such as an action.yml, any type not in
-SITE_CONTENT and a name with no suffix. Every other path runs every section too: every guide,
-README.md, controls-reference.md, plugin/, every file under tools/, scripts/, .baseline/, .aiqt/
-and .github/, any requirements file, CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE,
-LICENSE, VERSION and any other path.
+and is not `_headers`, `_redirects` or a requirements file, and the root project records
+CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md. Every other file under
+site/ or site-src/ runs every section: `_headers` (the CSP and the other served headers) and
+`_redirects` at any depth, a requirements file even with a listed suffix, the scripts and their
+source maps, Markdown, YAML such as an action.yml, any type not in SITE_CONTENT and a name with
+no suffix. Every other path runs every section too: every guide, README.md, controls-reference.md,
+plugin/, every file under tools/, scripts/, .baseline/, .aiqt/ and .github/, any requirements
+file, CLAUDE.md, AGENTS.md, CONTRIBUTING.md, SECURITY.md, NOTICE, LICENSE, VERSION and any other
+path.
 
 THE MAP is MAP below, the one place it is written: a path takes the sections of the first pattern
 it matches, and a path that matches no pattern takes every section. Every scoped path also takes

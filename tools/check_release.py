@@ -57,26 +57,19 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    explicit need and is not repeated per review round.
 
 WHAT IT CANNOT CHECK: anything about the online `gates` run, since it does not reach the network.
-It reads only whether `.github/workflows/checks.yml` at the target has a workflow_dispatch
-trigger, and the body names the run the publisher had to confirm. It reads the triggers under the
-top-level `on` key, written plain or quoted, as a block mapping or sequence under `on:`, a
-one-line flow sequence or mapping (`on: [push, workflow_dispatch]`,
-`on: {workflow_dispatch: {}}`) or one name. A workflow that is missing or not UTF-8, or whose
-`on` key is absent, repeated or in any other form, is a candidate it cannot check (exit 2,
-naming the file), never a target without the trigger. With the trigger, no run starts
-on a push to `main`, and workflow_dispatch runs on a branch or tag, not on a bare commit, so the
-publisher pushes a temporary branch `release-check/v<VERSION>` at the target, starts the workflow
-on that branch, confirms that the run's event is workflow_dispatch, that its branch is
-`release-check/v<VERSION>` and that its `gates` check run succeeded on exactly the target commit,
-and then deletes the branch. Without the trigger (a target before #1194), the workflow cannot be
-dispatched there, and the publisher instead confirms that the `gates` check run of the target's
-push run on `main`, which that workflow started, succeeded on exactly the target commit. Those
-are online steps of the procedure; --gates-check-run takes the id of that `gates` check run only
-to print it in the body, which states these as the publisher's confirmations that it does not
-verify, and in the pass line, which says the result is recorded, not verified. It also cannot
-see a merge, tag or release that exists only on GitHub, so the procedure fetches `main` and the
-`v*` tags first, and it does not check that a mention of a pull request in a section is that
-pull request's own entry.
+Every release dispatches: no run starts on a push to `main`, and workflow_dispatch runs on a
+branch or tag, not on a bare commit, so the publisher pushes a temporary branch
+`release-check/v<VERSION>` at the target, starts the workflow on that branch, confirms that the
+run's event is workflow_dispatch, that its branch is `release-check/v<VERSION>` and that its
+`gates` check run succeeded on exactly the target commit, and then deletes the branch. So a
+release targets a commit at or after the merge of #1194, the first merge on `main` whose
+`.github/workflows/checks.yml` has the workflow_dispatch trigger; this check does not read the
+workflow, and the body states that requirement. Those are online steps of the procedure;
+--gates-check-run takes the id of that `gates` check run only to print it in the body, which
+states these as the publisher's confirmations that it does not verify, and in the pass line,
+which says the result is recorded, not verified. It also cannot see a merge, tag or release that
+exists only on GitHub, so the procedure fetches `main` and the `v*` tags first, and it does not
+check that a mention of a pull request in a section is that pull request's own entry.
 
 THE RELEASE DIRECTORY: --build writes it into a new directory: `body.md`, the release body, and
 `assets/` with `llms-full.txt`, `secureconfig-plugin-v1.0.<N>.tar.gz`,
@@ -125,20 +118,6 @@ VERSION_SHAPE = re.compile(r"1\.0\.([0-9]+)")
 TAG_SHAPE = re.compile(r"v1\.0\.([0-9]+)")
 FULL_ID = re.compile(r"[0-9a-f]{40}")
 RUN_ID = re.compile(r"[0-9]+")
-WORKFLOW = ".github/workflows/checks.yml"
-# A trigger name, plain or in double or single quotes.
-NAME = r"[A-Za-z_][A-Za-z0-9_-]*"
-EVENT = rf"""(?:({NAME})|"({NAME})"|'({NAME})')"""
-EVENT_NAME = re.compile(EVENT)
-# The workflow's top-level `on` key, plain or quoted, and what follows it on its line.
-ON_KEY = re.compile(r"""(?:on|"on"|'on')[ \t]*:(?:[ \t]+(.*))?""")
-# A trigger under a block `on:`, as a mapping key or a sequence item.
-BLOCK_KEY = re.compile(EVENT + r"[ \t]*:(?:[ \t].*)?")
-BLOCK_ITEM = re.compile(r"-(?:[ \t]+(.*))?")
-# An entry of a one-line flow mapping: a key alone or with a value; a quoted key may meet its
-# colon, as JSON writes it.
-FLOW_KEY = re.compile(rf"""(?:({NAME})[ \t]*(?::(?:[ \t].*)?)?|"({NAME})"[ \t]*(?::.*)?"""
-                      rf"""|'({NAME})'[ \t]*(?::.*)?)""")
 
 
 class CannotCheck(Exception):
@@ -183,124 +162,6 @@ def first_parent(root, rev, stop=None):
 
 def at_target(root, target, path):
     return git(root, "show", f"{target}:{path}", binary=True)
-
-
-def named(match, text):
-    """The trigger name a match of EVENT, BLOCK_KEY or FLOW_KEY holds; ValueError for none."""
-    if not match:
-        raise ValueError(f"{text!r} is not a trigger name this check reads")
-    return next(group for group in match.groups()[:3] if group is not None)
-
-
-def uncommented(value):
-    """value without a trailing comment, a `#` at its start or after a space or tab outside
-    quotes; ValueError for a quote left open."""
-    quote = None
-    for i, ch in enumerate(value):
-        if quote:
-            if ch == quote:
-                quote = None
-        elif ch in "\"'":
-            quote = ch
-        elif ch == "#" and (i == 0 or value[i - 1] in " \t"):
-            return value[:i].rstrip()
-    if quote:
-        raise ValueError(f"{value!r} leaves a quote open")
-    return value.rstrip()
-
-
-def flow_entries(value):
-    """The entries of a flow sequence or mapping that opens and closes on its one line, split at
-    its own commas, outside nested brackets and quotes; ValueError for any other shape."""
-    closers = {"[": "]", "{": "}"}
-    stack, quote, entries, start = [], None, [], 1
-    for i, ch in enumerate(value):
-        if quote:
-            if ch == quote:
-                quote = None
-        elif ch in "\"'":
-            quote = ch
-        elif ch in closers:
-            stack.append(closers[ch])
-        elif ch in "]}":
-            if not stack or stack.pop() != ch:
-                raise ValueError(f"{value!r} closes a bracket it did not open")
-            if not stack:
-                if i != len(value) - 1:
-                    raise ValueError(f"{value!r} goes on after its closing {ch}")
-                entries.append(value[start:i])
-        elif ch == "," and len(stack) == 1:
-            entries.append(value[start:i])
-            start = i + 1
-    if quote or stack:
-        raise ValueError(f"{value!r} does not close on its line")
-    entries = [entry.strip() for entry in entries]
-    if entries and not entries[-1]:
-        entries.pop()
-    if not entries or not all(entries):
-        raise ValueError(f"{value!r} has an empty entry or none")
-    return entries
-
-
-def triggers(text):
-    """The trigger names under a workflow's top-level `on` key, plain or quoted: a block mapping
-    or sequence under it, a one-line flow sequence or mapping, or one name. ValueError when the
-    key is missing or repeated, or its value is in any other form, so an unread layout is never
-    taken for a missing trigger."""
-    lines = re.split(r"\r\n|\r|\n", text.removeprefix("\N{ZERO WIDTH NO-BREAK SPACE}"))
-    top = [i for i, line in enumerate(lines) if line[:1] not in ("", " ", "\t", "#")]
-    keys = [i for i in top if ON_KEY.fullmatch(lines[i])]
-    if len(keys) != 1:
-        raise ValueError(f"it has {len(keys)} top-level `on` keys in a form this check reads, "
-                         "not 1")
-    start = keys[0]
-    value = uncommented(ON_KEY.fullmatch(lines[start])[1] or "")
-    if value.startswith("["):
-        return [named(EVENT_NAME.fullmatch(entry), entry) for entry in flow_entries(value)]
-    if value.startswith("{"):
-        return [named(FLOW_KEY.fullmatch(entry), entry) for entry in flow_entries(value)]
-    if value:
-        return [named(EVENT_NAME.fullmatch(value), value)]
-    end = next((i for i in top if i > start), len(lines))
-    body = [line for line in lines[start + 1:end]
-            if line.strip() and not line.lstrip(" \t").startswith("#")]
-    if not body:
-        raise ValueError("its `on:` has nothing under it")
-    indent = len(body[0]) - len(body[0].lstrip(" "))
-    names, kinds = [], set()
-    for line in body:
-        depth = len(line) - len(line.lstrip(" "))
-        if "\t" in line[:len(line) - len(line.lstrip(" \t"))]:
-            raise ValueError(f"{line!r} under `on:` is indented with a tab")
-        if depth < indent:
-            raise ValueError(f"{line!r} under `on:` is indented less than the first trigger")
-        if depth > indent:
-            continue
-        item = BLOCK_ITEM.fullmatch(line[depth:])
-        if item:
-            kinds.add("sequence")
-            entry = uncommented(item[1] or "")
-            names.append(named(EVENT_NAME.fullmatch(entry), entry))
-        else:
-            kinds.add("mapping")
-            names.append(named(BLOCK_KEY.fullmatch(line[depth:]), line.strip()))
-    if len(kinds) > 1:
-        raise ValueError("its `on:` mixes sequence items and mapping keys")
-    return names
-
-
-def dispatchable(root, target):
-    """Whether the target's .github/workflows/checks.yml lists workflow_dispatch among its
-    triggers. CannotCheck when the file is missing, is not UTF-8, or its `on` key cannot be read
-    with confidence, rather than reading any of those as no trigger."""
-    if not succeeds(root, "cat-file", "-e", f"{target}:{WORKFLOW}"):
-        raise CannotCheck(f"{WORKFLOW} is missing at the target, so which run of the suite the "
-                          "publisher must confirm cannot be read")
-    try:
-        return "workflow_dispatch" in triggers(at_target(root, target, WORKFLOW).decode("utf-8"))
-    except ValueError as exc:
-        raise CannotCheck(f"{WORKFLOW} at the target cannot be read with confidence, so which "
-                          f"run of the suite the publisher must confirm is unknown: {exc}") from exc
 
 
 def release_tags(root):
@@ -506,25 +367,19 @@ def examine(root, main_ref, target, tag, previous, gates_run):
         notes = "\n".join(parts)
         scope = (f"- It covers the UTC dates after {previous_date}, the date of `{previous}`, up "
                  f"to and including {target_date}.\n")
-    if dispatchable(root, target):
-        gates = (f"- Before the release was cut, the publisher confirmed online that `gates` "
-                 f"check run {gates_run} is from a run of the whole suite whose event is "
-                 f"`workflow_dispatch` and whose branch is `release-check/{tag}`, a temporary "
-                 f"branch pushed at the target and deleted afterwards, and that it succeeded on "
-                 f"exactly the target commit. These are the publisher's confirmations; the "
-                 f"offline release check records the id and does not verify them.\n")
-    else:
-        gates = (f"- The target's `{WORKFLOW}` has no `workflow_dispatch` trigger, so before the "
-                 f"release was cut the publisher confirmed online that `gates` check run "
-                 f"{gates_run} is from the run that the target's push to `main` started, and "
-                 f"that it succeeded on exactly the target commit. These are the publisher's "
-                 f"confirmations; the offline release check records the id and does not verify "
-                 f"them.\n")
     body = (f"secureconfig {tag} is a checksummed snapshot of `main` at `{target}`, the merge "
             f"of {own}.\n\n"
             f"- Tag `{tag}`. `VERSION` and the plugin version at the target are both "
             f"`{version}`.\n"
-            + gates + scope +
+            f"- A release targets a commit at or after the merge of pull request #1194, the "
+            f"first merge on `main` whose `.github/workflows/checks.yml` has the "
+            f"`workflow_dispatch` trigger. Before the release was cut, the publisher confirmed "
+            f"online that `gates` check run {gates_run} is from a run of the whole suite whose "
+            f"event is `workflow_dispatch` and whose branch is `release-check/{tag}`, a "
+            f"temporary branch pushed at the target and deleted afterwards, and that it "
+            f"succeeded on exactly the target commit. These are the publisher's confirmations; "
+            f"the offline release check records the id and does not verify them.\n"
+            + scope +
             f"- Pull requests merged in that range ({len(numbers)}): {pr_list}.\n"
             f"- The full notes are the `{notes_name}` asset, and the history is in "
             f"`{CHANGELOG}` at the tag: {changelog_url}.\n"

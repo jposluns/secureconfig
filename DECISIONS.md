@@ -38,12 +38,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   `controls-reference.md`, `plugin/`, a file under `tools/`, `scripts/`, `.baseline/`, `.aiqt/` or `.github/`, a
   requirements file or an unmapped path. `.github/workflows/checks.yml` no longer
   runs on a push to `main`; the whole suite runs weekly and on demand (`workflow_dispatch`). A release now requires
-  a successful `workflow_dispatch` run of the whole suite on its target before it is cut, or, for a target whose
-  workflow has no `workflow_dispatch` trigger (one from before #1194), that commit's successful push run on
-  `main`, and the disclosure page's "Automated checks" entry says which gates a pull request runs. These rulings
-  supersede in part the 2026-10-25 ruling on running the gates workflow once per change (#906) below: its runs on
-  pushes to `main` end, and the green `gates` on the exact head that merges is the run of the sections that head's
-  changes select. The rest of that ruling stands.
+  a successful `workflow_dispatch` run of the whole suite on its target before it is cut, so its target is the
+  merge of #1194 or a later one, and the disclosure page's "Automated checks" entry says which gates a pull
+  request runs. These rulings supersede in part the 2026-10-25 ruling on running the gates workflow once per
+  change (#906) below: its runs on pushes to `main` end, and the green `gates` on the exact head that merges is
+  the run of the sections that head's changes select. The rest of that ruling stands.
 - **Maintainer rulings of 2026-11-01 on tagged releases (#1158).** The maintainer gave these rulings through
   AskUserQuestion in an attended session on 2026-11-01. No reasoning was recorded beyond the terms below. The
   maintainer's ruling of 2026-11-01 that started this work reads "we'll start doing that this week. lets ensure that
