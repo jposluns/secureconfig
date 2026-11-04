@@ -18,22 +18,33 @@ under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable 
 review page, none on the 404); the "no page links /draft/" and Disclosure and Licence rules compare
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
 percent-encoded letter or a fragment does not get past them; and the published indexes are read
-by a fail-closed rule after percent-decoding and character-reference decoding (at most 8 rounds),
-NFKC, case folding and `\\` read as `/`: site/llms.txt, site/robots.txt and
-site/.well-known/security.txt are refused for any literal `draft` once tabs and CRs are deleted
-(relative, Disallow, bold, host-only, www, href=, backslash, 1-slash, .html, character-reference,
-tab and CR spellings and a raw CR inside the path among the cases) and accept "Raft consensus and
-Raft logs", and site/llms-full.txt for each form of the draft path, matched with tabs and CRs kept
-and with them deleted (character references, a tab or CR character reference or a raw CR inside
-the path, a tab as the only separator between a word and the reference for forms a, b and e, bare
-Markdown link destinations, reference definitions, HTML attribute values, a link broken across a
-line end, a link broken inside a blockquote, a reference definition whose destination is on the
-next line, whose label spans 2 lines, or that sits in a blockquote or a list item, and 1 case each
-for forms b, d and e that only that form catches), while its prose ("drafting", "drafted",
-"a draft.", "the draft's", "draft / final", "and Raft", "Choose draft" wrapped before
-"/ final wording." in the text and in a link title, "draft-ietf-oauth-v2-1", a datatracker draft
-URL and a description meta saying "draft") is accepted. A 9-times percent-encoded path exceeds
-the round limit and is refused. Each refusal names the file and line, counted by `\\n` only (a
+after percent-decoding and character-reference decoding (at most 8 rounds), NFKC, case folding
+and `\\` read as `/`: site/llms.txt, site/robots.txt and site/.well-known/security.txt are refused
+for any literal `draft` once tabs and CRs are deleted (relative, Disallow, bold, host-only, www,
+href=, backslash, 1-slash, .html, character-reference, tab and CR spellings and a raw CR inside
+the path among the cases) and accept "Raft consensus and Raft logs", and site/llms-full.txt for
+each URL that resolves against https://secureconfig.ai/llms-full.txt to this site with `draft` as
+its first path segment. Every llms-full.txt refusal of the regex rule this replaced is kept (bare
+paths and URLs, character references, a tab or CR character reference or a raw CR inside the
+path, a tab as the only separator between a word and the reference, Markdown link destinations,
+reference definitions, HTML attribute values, a link broken across a line end or inside a
+blockquote, a reference definition whose destination is on the next line, whose label spans 2
+lines, or that sits in a blockquote or a list item). Added: each URL form the parser reads (an
+image, an autolink, an unused and a duplicate reference definition, a definition destination
+split by a line end, and each URL-valued HTML attribute, srcset and ping candidates and a meta
+refresh among them) and each normalization (a leading C0 control, trailing C0 controls and
+spaces, a line end inside the scheme, `https:` without slashes, `https:///`, a Pages alias, a dot
+segment, a percent-encoded upper-case path, backslashes, a tab, CR or LF inside a character
+reference or a percent escape, a refresh with a whitespace-only separator, a line end inside its
+URL, an entity-quoted URL or a spaced `URL =`). Those cases, and the 3 cases whose only separator
+is a tab, also assert exactly which ways of reading (a Markdown construct, an HTML attribute or a
+bare word) the finding names. Prose ("drafting", "drafted", "a draft.", "the draft's",
+"draft / final", "and Raft", "Choose draft" wrapped before "/ final wording." in the text and in
+a link title, "draft-ietf-oauth-v2-1", a datatracker draft URL, a description meta saying
+"draft" or "url=draft", a content on an element with `data-http-equiv`, a link title "draft"),
+`https://draft.example/`, a host named draft on another site, and a reference definition
+followed by a line starting "draft" are accepted. A 9-times percent-encoded path exceeds the
+round limit and is refused. Each refusal names the file and line, counted by `\\n` only (a
 U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a
 reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and write
 bytes, so they translate no newline. A second robots meta whose first name attribute is robots is
@@ -43,6 +54,7 @@ The generated() cases keep the source-to-generated-page path: a Unicode host wri
 content.json survives the build and its own --check and is refused by this gate, and a site.css
 setting only the 2 per-site constants is accepted by the build and the gate.
 """
+import re
 import shutil
 import subprocess
 import sys
@@ -202,32 +214,90 @@ REFUSED_LINES = {
         "The next version is staged at /dr&#13;aft/ for review.\n",
         # A raw CR inside the path, which ends no line.
         "The next version is staged at /dr\raft/ for review.\n",
-        # A tab as the only separator between a word and the reference, which forms a, b and e
-        # read on the text with tabs kept (deleting the tab would join them).
-        "The next version is staged at https://secureconfig.ai/draft\tfor review.\n",
-        "The next version: see\tdraft/notes for review.\n",
-        'The next version is staged <a\thref="draft">here</a>.\n',
     ),
 }
-# The llms-full.txt cases that only 1 corpus form catches (DRAFT_REFS a to e in the gate), each
-# with that form's letter and how many lines below the first appended line its match starts;
-# main() asserts that no other form matches. The reference definition follows a blank line, so it
-# is a definition and not a paragraph continuation.
-SINGLE_FORM = (
-    ("The next version: see draft/notes for review.\n", "b", 0),
-    ("\n[review]: draft\n", "d", 1),
-    ('The next version is staged <a href="draft">here</a>.\n', "e", 0),
-)
-# Ordinary Markdown that forms c and d read across a line end or a blockquote or list marker, each
-# with how many lines below the first appended line its match starts: a reference definition (after
-# a blank line) whose destination is on the next line, whose label spans 2 lines, or that sits in a
-# blockquote or a list item, and an inline link broken inside a blockquote.
-MARKDOWN_FORMS = (
-    ("\n[review]:\n  draft\n", 1),
-    ("\n[review\nnotes]: draft\n", 2),
-    ("\n> [review]: draft\n", 1),
-    ("\n- [review]: draft\n", 1),
-    ("> The next version is staged [x](\n> draft) for review.\n", 0),
+# The ways the gate reads an llms-full.txt URL, as its findings name them.
+LINK = "a Markdown link destination"
+IMAGE = "a Markdown image source"
+AUTOLINK = "a Markdown autolink"
+DEFINITION = "a Markdown reference definition"
+JOINED = "a Markdown reference definition joined across a line end"
+REFRESH = "an HTML meta refresh URL"
+BARE = "a bare URL or path"
+
+
+def attr(name):
+    return f"the HTML {name} attribute"
+
+
+# llms-full.txt refusals that also assert every way the gate read the URL on that line, each with
+# how many lines below the first appended line the finding is. A reference definition follows a
+# blank line, so it is a definition and not a paragraph continuation.
+READ_AS = (
+    # A tab as the only separator between a word and the reference: the bare-word reader splits
+    # at the tab, and the HTML parser reads the attribute after it.
+    ("The next version is staged at https://secureconfig.ai/draft\tfor review.\n", {BARE}, 0),
+    ("The next version: see\tdraft/notes for review.\n", {BARE}, 0),
+    ('The next version is staged <a\thref="draft">here</a>.\n', {attr("href")}, 0),
+    # The same 3 ways with a space.
+    ("The next version: see draft/notes for review.\n", {BARE}, 0),
+    ("\n[review]: draft\n", {DEFINITION}, 1),
+    ('The next version is staged <a href="draft">here</a>.\n', {attr("href")}, 0),
+    # Ordinary Markdown read across a line end or a blockquote or list marker: a reference
+    # definition whose destination is on the next line, whose label spans 2 lines (reported on
+    # the line it closes), or that sits in a blockquote or a list item, and an inline link broken
+    # inside a blockquote.
+    ("\n[review]:\n  draft\n", {DEFINITION}, 1),
+    ("\n[review\nnotes]: draft\n", {DEFINITION}, 2),
+    ("\n> [review]: draft\n", {DEFINITION}, 1),
+    ("\n- [review]: draft\n", {DEFINITION}, 1),
+    ("> The next version is staged [x](\n> draft) for review.\n", {LINK}, 0),
+    # Each Markdown form.
+    ("See ![logo](draft) here.\n", {IMAGE}, 0),
+    ("See <https:draft> here.\n", {AUTOLINK, BARE}, 0),
+    ("\n[unused]: <draft>\n", {DEFINITION}, 1),
+    ("\n[dup]: /guides/\n[dup]: draft\n", {DEFINITION}, 2),
+    # A line end inside an unbracketed definition destination.
+    ("\n[x]: dr\naft\n", {JOINED}, 1),
+    # Each URL-valued HTML attribute.
+    ('See <img src="draft"> here.\n', {attr("src")}, 0),
+    ('See <img srcset="a.png 1x, draft 2x"> here.\n', {attr("srcset")}, 0),
+    ('See <link imagesrcset="draft 1x"> here.\n', {attr("imagesrcset")}, 0),
+    ('See <form action="draft"></form> here.\n', {attr("action")}, 0),
+    ('See <button formaction="draft">x</button> here.\n', {attr("formaction")}, 0),
+    ('See <object data="draft"></object> here.\n', {attr("data")}, 0),
+    ('See <q cite="draft">x</q> here.\n', {attr("cite")}, 0),
+    ('See <video poster="draft"></video> here.\n', {attr("poster")}, 0),
+    ('See <a href="/guides/" ping="/x draft">x</a> here.\n', {attr("ping")}, 0),
+    ('See <table background="draft"></table> here.\n', {attr("background")}, 0),
+    ('See <img longdesc="draft"> here.\n', {attr("longdesc")}, 0),
+    ('See <svg><a xlink:href="draft">x</a></svg> here.\n', {attr("xlink:href")}, 0),
+    # Meta refresh: url=, a whitespace-only separator, an LF inside the URL, an entity-quoted URL,
+    # a spaced and quoted URL =, and http-equiv in another case.
+    ('<meta http-equiv="refresh" content="0;url=draft">\n', {REFRESH}, 0),
+    ('<meta http-equiv="refresh" content="0 draft">\n', {REFRESH}, 0),
+    ('See <meta http-equiv="refresh" content="0;url=dr\naft"> here.\n', {REFRESH}, 0),
+    ('<meta http-equiv="refresh" content="0;url=&quot;draft&quot;">\n', {REFRESH}, 0),
+    ("<meta http-equiv=\"Refresh\" content=\"5; URL = 'draft'\">\n", {REFRESH}, 0),
+    # Browser normalization: a leading C0 control, trailing C0 controls and spaces, a line end
+    # inside the scheme, backslashes on a special scheme.
+    ('See <a href="\x01draft">x</a> here.\n', {attr("href")}, 0),
+    ('See <img src=" draft\x1f "> here.\n', {attr("src")}, 0),
+    ('See <a href="htt\nps:draft">x</a> here.\n', {attr("href")}, 0),
+    ('See <img src="https:\\\\secureconfig.ai\\draft"> here.\n', {attr("src"), BARE}, 0),
+    # Resolution: https: without slashes, https:/// before the host, a Pages alias, a dot segment,
+    # a percent-encoded upper-case path.
+    ("See [x](https:draft) here.\n", {LINK, BARE}, 0),
+    ("See [x](https:///secureconfig.ai/draft/) here.\n", {LINK, BARE}, 0),
+    ("See [x](https://secureconfig.pages.dev/draft/) here.\n", {LINK, BARE}, 0),
+    ("See [x](/guides/../draft/) here.\n", {LINK, BARE}, 0),
+    ("See [x](%44RAFT) here.\n", {LINK}, 0),
+    # A tab, CR or LF inside a character reference or a percent escape.
+    ("See [x](dr&#9;aft) here.\n", {LINK}, 0),
+    ("See [x](dr%0Daft) here.\n", {LINK}, 0),
+    ("The next version is staged at /dr%09aft/ for review.\n", {BARE}, 0),
+    ("The next version is staged at /dr&#10;aft/ for review.\n", {BARE}, 0),
+    ("The next version is staged at /dr%0Aaft/ for review.\n", {BARE}, 0),
 )
 INDEX_CASES = [(f"{rel[5:]} naming {spelling}", append(rel, line.format(spelling)),
                 refused_at(rel), 1)
@@ -235,8 +305,8 @@ INDEX_CASES = [(f"{rel[5:]} naming {spelling}", append(rel, line.format(spelling
 INDEX_CASES += [(f"{rel[5:]} carrying {line.strip()!r}", append(rel, line), refused_at(rel), 1)
                 for rel, lines in REFUSED_LINES.items() for line in lines]
 INDEX_CASES += [(f"llms-full.txt carrying {line.strip()!r}", append("site/llms-full.txt", line),
-                 refused_at("site/llms-full.txt", after), 1)
-                for line, *_, after in (*SINGLE_FORM, *MARKDOWN_FORMS)]
+                 refused_at("site/llms-full.txt", after), 1, read_as)
+                for line, read_as, after in READ_AS]
 # 9 times percent-encoded: still changing after the 8-round limit, so refused as such.
 NINE = "%" + "25" * 8 + "2F"
 INDEX_CASES += [("llms-full.txt carrying /draft/ percent-encoded 9 times",
@@ -271,7 +341,19 @@ CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
                 "Start from a draft.\n",
                 "Keep the gRPC and Raft ports closed.\n",
                 '<meta name="description" content="This is a draft.">\n',
-                '[x](/guide "Choose draft\n/ final wording.")\n')
+                '[x](/guide "Choose draft\n/ final wording.")\n',
+                # URL-like text that is no URL to the review page: a description meta and a
+                # content beside data-http-equiv (neither is a refresh), a link title, a host
+                # named draft (on another site, bare, in a link and as a host name), and a
+                # definition whose next line starts with "draft" after a path.
+                '<meta name="description" content="Example: url=draft">\n',
+                '<meta data-http-equiv="refresh" content="0;url=draft">\n',
+                '<a href="/guides/" title="draft">guides</a>\n',
+                "See https://draft.example/ for the example.\n",
+                "See [the example](https://draft.example/notes) here.\n",
+                "The host https://draft/ is another site.\n",
+                "Hosts such as draft.example.com/notes are elsewhere.\n",
+                "\n[guides]: /guides/\ndraft notes follow.\n")
 INDEX_CASES += [(f"llms-full.txt prose {line.strip()!r}", append("site/llms-full.txt", line),
                  OK_LINE, 0) for line in CORPUS_PROSE]
 # The hand-written indexes refuse only the literal word.
@@ -455,23 +537,31 @@ def generated(edit_content, extra=None):
         shutil.rmtree(d, ignore_errors=True)
 
 
+def read_as(out, prefix):
+    """The ways of reading named by the gate's PART 3 findings that start with prefix."""
+    ways = set()
+    for line in out.splitlines():
+        line = line.strip().removeprefix("FAIL  ")
+        if line.startswith(prefix):
+            m = re.search(r"\(([^()]*)\)(?:, whose path is [^;]*)?; the /draft/ review page stays "
+                          r"out of every published index$", line)
+            ways.add(m.group(1) if m else line)
+    return ways
+
+
 def main():
     failures = []
-    for desc, mutate, expected, want in CASES:
+    for desc, mutate, expected, want, *ways in CASES:
         rc, out = run(mutate)
         if rc != want:
             failures.append(f"{desc}: expected exit {want}, got {rc}: {out!r}")
         elif expected not in out:
             failures.append(f"{desc}: expected the output to contain {expected!r}: {out!r}")
+        elif ways and read_as(out, expected) != ways[0]:
+            failures.append(f"{desc}: expected the finding to be read only as {sorted(ways[0])}, "
+                            f"got {sorted(read_as(out, expected))}: {out!r}")
         if "Traceback (most recent call last):" in out:
             failures.append(f"{desc}: the gate crashed: {out!r}")
-    # Each SINGLE_FORM line is caught by its own corpus form and by no other.
-    sys.path.insert(0, str(TOOLS))
-    from check_draft import DRAFT_REFS, normalized
-    for line, form, _ in SINGLE_FORM:
-        forms = "".join(f for f, p in zip("abcde", DRAFT_REFS) if p.search(normalized(line)))
-        if forms != form:
-            failures.append(f"{line.strip()!r}: expected only form {form} to match, got {forms!r}")
     # Source to generated page: a Unicode host written in content.json is generated, passes the
     # build's own --check, and is refused by this gate.
     (b, bout), (c, cout), (g, gout) = generated(
