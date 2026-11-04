@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Copy the shared site template's runtime files into the site and write the pin.
 
-Usage: python3 -I -B scripts/copy-baseline.py --from <unpacked baseline version folder>
+Usage: python3 -I -B scripts/copy-baseline.py --from <unpacked baseline version folder> --date <YYYY-MM-DD>
 
 The folder is a verified copy of https://posluns.ca/baseline/<version>/ (its SHA256SUMS checked
 against the published digest before this runs). This script checks every file it copies against
@@ -23,12 +23,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
-VERSION = "1.7.0"
+VERSION = "1.8.0"
 UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # The archive's digest in https://posluns.ca/baseline/SHA256SUMS, and the digest of the version's
-# SHA256SUMS in https://posluns.dev/hashes.txt (the template owner's 1.7.0 notice of 2026-11-04).
-ARCHIVE_SHA256 = "923432d8a6e9b4b0a1923fe4a5988492bc7348fee1c31d889f3119bcb6e38e9a"
-SUMS_SHA256 = "4894c8ee92003a1c09d1e235eb436e0756e1268783ad792e8d0614c85e1340ad"
+# SHA256SUMS in https://posluns.dev/hashes.txt (the template owner's 1.8.0 notice of 2026-11-04).
+ARCHIVE_SHA256 = "958a148bf896a4274dc294f230d792e035835eae7d4f8844f8bbcda6ab843197"
+SUMS_SHA256 = "e365054b9fd156413cc1581561e43157b587a064bc2e74386faee770ab2ba1ef"
 # Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
 # The runtime and licence files the site publishes. The reference pages, tools/measure.js,
