@@ -17,6 +17,14 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-04 on `surrealdb.md` TODO 1.422 (#1211).** The maintainer ruled through
+  AskUserQuestion on 2026-11-04, and the orchestrator recorded the ruling in its store; the time was not recorded
+  with it here. The ruling: move the guide's pinned basis from SurrealDB v3.2.4 to v4.0.0. The reasoning recorded
+  with it: v4.0.0 fixes the vendor advisories listed as affecting v3.3.5 and earlier, and it matches the
+  documentation surrealdb.com serves. Its effect (applied by #1211): `surrealdb.md` re-pins its SurrealDB sources to
+  `blob/v4.0.0`, revises the statements that changed at v4.0.0, and records the questions the source passes could
+  not settle at v4.0.0 as not established, with TODO row 1.430 tracking them. The revert path is a later maintainer
+  ruling for another basis, which re-pins the sources and revises the statements that depend on the basis.
 - **Maintainer ruling of 2026-11-04 on the `pocketbase.md` Appwrite version basis, TODO 1.388 (#1209).** The
   maintainer ruled through AskUserQuestion on 2026-11-04, and the ruling was recorded in the orchestrator's store
   and is entered here by #1209. The time of the ruling was not relayed with it, and no reasoning was recorded beyond
