@@ -61978,7 +61978,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 100 claims: 14 demonstrated by a check that ran and 86 reasoned from cited sources.
+Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 102 claims: 14 demonstrated by a check that ran and 88 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -62484,10 +62484,16 @@ There are two fixes, and you can use both:
   interceptor except for listed methods. From source reading, the query-tags, HTTP-header,
   ingestion-policy, query-limits and fake-tenant interceptors, and the OpenTracing interceptor that
   dskit adds when a global tracer is registered, each pass the handler either the stream itself or
-  a wrapper that replaces only its `Context`, and return the handler's error unchanged. The
+  a wrapper that replaces only its `Context`, and return the handler's error unchanged. In the
+  vendored opentracing-contrib go-grpc package, `OpenTracingStreamServerInterceptor` passes the
+  original stream when an `IncludingSpans` function rejects the call and otherwise a wrapper that
+  embeds the stream and overrides only `Context`, so under none of its options does it wrap
+  `SendMsg`; dskit passes it no option. The
   query-limits interceptor can also end the call before the handler runs when its metadata does
-  not parse. The recovery interceptor is built by the vendored go-grpc-middleware recovery package,
-  whose code was not read, so whether it wraps `SendMsg` or changes its result is not established.
+  not parse. The recovery interceptor is built by the vendored go-grpc-middleware recovery package.
+  From source reading at v3.7.8, that package's `StreamServerInterceptor` passes the handler the
+  original stream and returns the handler's error, replacing it only after a panic, with the result
+  of Loki's `onPanic`; it wraps neither the stream nor `SendMsg`.
   A search of every Go file in the v3.7.8 tree, `vendor/` included, finds no appender to dskit's
   `GRPCStreamMiddleware` beyond `loki.go`, `modules.go` and `fakeauth.SetupAuthMiddleware`, so the
   stream interceptors named here are all that Loki code adds. The same search finds nothing that
@@ -62516,12 +62522,57 @@ There are two fixes, and you can use both:
   server handler, and adds its in-flight limiter when `GrpcMethodLimiter` is set and its own stats
   handler when stats tracking is enabled. From source reading, the limiter's `TagRPC` returns its input,
   dskit's stats handler's returns a `context.WithValue` child of its input, and otelgrpc's returns a
-  `context.WithValue` child of the context that its propagator extraction and tracer start return,
-  code this reading does not cover. Nor does this reading cover how grpc-go combines the handlers,
-  and the search above finds no handler added through `GRPCOptions` or global server options. Which status
+  `context.WithValue` child of the context that its propagator extraction and tracer start return.
+  From source reading at v3.7.8, grpc-go's `NewCombinedHandler` returns nil for no handler, a lone
+  handler as is and otherwise one that chains each handler's `TagRPC` in order, each taking the
+  previous one's result; dskit always passes otelgrpc's handler, so Loki's servers have at least
+  one, and the search above finds no handler added through `GRPCOptions` or global server options.
+  Before `TagRPC`, the transport wraps the context it creates for the stream in a
+  `context.WithValue` child through `metadata.NewIncomingContext` when the request carries
+  metadata, then replaces it with what any tap handle returns, and `handleStream` adds a
+  `context.WithValue` child through `contextWithServer`. The dskit server builds that tap handle
+  with `grpcutil.ComposeTapHandles` from its `GRPCTapHandles` field, which has no YAML key, and,
+  when `GrpcMethodLimiter` is set, the in-flight limiter's tap handle. `ComposeTapHandles` returns
+  a lone handle as is and otherwise calls each in order on the previous one's context. A search of
+  every file in the v3.7.8 tag archive finds `GRPCTapHandles` only in that field's declaration and
+  dskit's append, so nothing in the repository sets it; a program that imports Loki is not traced.
+  The otelgrpc server handler, which dskit builds with no option, takes OpenTelemetry's global
+  propagator and tracer provider by default. From source reading of `cmd/loki/main.go`, Loki's
+  `main` calls dskit's `NewOTelOrJaegerFromEnv`, with no option, when `tracing.enabled`, true by
+  default, is set. That function takes its Jaeger path when `JAEGER_AGENT_HOST`, `JAEGER_ENDPOINT`
+  or `JAEGER_SAMPLER_MANAGER_HOST_PORT` is non-empty, else its OpenTelemetry path when
+  `OTEL_TRACES_EXPORTER`, `OTEL_EXPORTER_OTLP_ENDPOINT` or `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is
+  non-empty, and otherwise installs no tracer provider or propagator. Unless its setup fails
+  first, each path sets the global tracer provider to `otelpyroscope`'s provider wrapping an SDK
+  provider, since `main` does not disable pyroscope. It sets the global propagator to a
+  composite of TraceContext, Baggage, contrib Jaeger and dskit Jaeger debugging when
+  `OTEL_PROPAGATORS` is empty, otherwise of those its `tracecontext`, `baggage` and `jaeger`
+  entries name, or of none if it lists `none`.
+  By the same source reading, the `Extract` methods of OpenTelemetry's global, composite,
+  TraceContext and Baggage propagators, the contrib Jaeger propagator and dskit's Jaeger debugging
+  propagator return their input or a context built from it only by `context.WithValue`. So do the
+  `Start` methods of the SDK, global and noop tracers, except where the global tracer returns its
+  delegate's result, where the SDK tracer returns the context of `runtime/trace.NewTask`, which it
+  calls when `runtime/trace.IsEnabled` reports true, and in `otelpyroscope`'s `Start`, which
+  otelgrpc's tracer start reaches once `main` installs a provider; `NewTask` and that `Start` were
+  not read. That reading also sets aside the global tracer's auto-instrumentation path, which its
+  code comment says is off by default, and a baggage set hook, for which a search of every file in
+  the v3.7.8 tag archive finds no installer. It also does not cover the Go standard library's
+  `context.WithValue`, the `pprof.WithLabels` and `x/net/trace` contexts that `handleStream` can
+  add before `TagRPC`, or the in-flight limiter's `RPCCallStarting`, whose returned context the
+  limiter's tap handle wraps in a `context.WithValue` child that the transport makes the stream's
+  context. From source reading, `handleStream` adds the `x/net/trace` context only when grpc-go's
+  `EnableTracing` package variable is true, and a search of every Go file in the v3.7.8 tag archive
+  finds that variable read in `NewServer`, `handleStream` and the client's `newAttemptLocked` but
+  never assigned, so nothing in the repository sets it; a program that imports Loki is not traced.
+  `handleStream` adds the `pprof.WithLabels` context only when the setting grpc-go reads from the
+  `GRPC_GO_SERVER_GOROUTINE_LABELS` environment variable has its server-method bit set, so that
+  depends on the deployment's environment. Which status
   code the send then fails with is therefore not established, though the failure is a gRPC status
-  error either way. So, in this guide's reading, unless an unread
-  interceptor intervenes, an empty-batch send that passes `SendMsg`'s message preparation and
+  error either way. In this guide's assessment, which this reading does not establish, that status
+  would be `Canceled` or `DeadlineExceeded`, not `Internal`, provided a `context.WithValue` child
+  reports its parent's `Done` and `Err` and the code not covered adds no cancellable context. So,
+  in this guide's reading, an empty-batch send that passes `SendMsg`'s message preparation and
   reaches `Write` on a stream already marked done fails with a gRPC status error, never the exact
   value `context.Canceled`, and the ingester code returns that error. That reading does not cover
   an error from `prepareMsg`, which `SendMsg` returns as is before it calls `Write`. That reading
@@ -62542,7 +62593,8 @@ There are two fixes, and you can use both:
   then returns none; once the control buffer is finished, the enqueue fails with
   `ErrConnClosing`, as in the transport-close case below. After a failed wait, `write`
   returns `ErrConnClosing` if the transport's `done` channel is closed and otherwise `ContextErr` of
-  the stream's current context, whose state is not established, as above. If the transport closes
+  the stream's current context, whose state is not established beyond the source reading above.
+  If the transport closes
   before the stream is marked done, a send that enqueues its frames before the control buffer is
   finished returns no error. A later enqueue fails with `ErrConnClosing`, and so does `write`
   after a write-quota wait that `Close` ends by cancelling the stream, since `Close` first closes the
@@ -63156,13 +63208,55 @@ from your own account's view of the process.
 - Loki v3.7.8 vendored otelgrpc server handler `TagRPC` (a `context.WithValue` child of the extracted, span-started context): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/stats_handler.go#L98-L158
 - Loki v3.7.8 vendored dskit in-flight limiter `TagRPC` (returns its input): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/limits.go#L151-L153
 - Loki v3.7.8 vendored dskit stats handler `TagRPC` (a `context.WithValue` child): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/middleware/grpc_stats.go#L56-L58
+- Loki v3.7.8 vendored grpc-go `NewCombinedHandler` and combined `TagRPC` (each handler's `TagRPC` chained in order): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/stats/stats.go#L35-L51
+- Loki v3.7.8 vendored grpc-go server tap handle (its context becomes the stream's context): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L572-L574
+- Loki v3.7.8 vendored dskit in-flight limiter tap handle (a `context.WithValue` child of what `RPCCallStarting` returns): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/limits.go#L63-L88
+- Loki v3.7.8 vendored otelgrpc propagator extraction from incoming metadata: https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/metadata_supplier.go#L51-L60
+- Loki v3.7.8 vendored OpenTelemetry global propagator (forwards to its delegate or an empty composite): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/propagator.go#L27-L66
+- Loki v3.7.8 vendored OpenTelemetry composite propagator `Extract` (members chained in order): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/propagation/propagation.go#L136-L141
+- Loki v3.7.8 vendored OpenTelemetry TraceContext `Extract` (input or a remote span context child): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/propagation/trace_context.go#L72-L78
+- Loki v3.7.8 vendored OpenTelemetry Baggage `Extract` (input or a baggage child): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/propagation/baggage.go#L50-L78
+- Loki v3.7.8 vendored OpenTelemetry `baggage.ContextWithBaggage`: https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/baggage/context.go#L13-L16
+- Loki v3.7.8 vendored OpenTelemetry internal `ContextWithList` (a `context.WithValue` child, then any set hook): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/baggage/context.go#L55-L68
+- Loki v3.7.8 vendored contrib Jaeger propagator `Extract` and header parsing: https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/propagators/jaeger/jaeger_propagator.go#L74-L151
+- Loki v3.7.8 vendored contrib Jaeger `withDebug` (a `context.WithValue` child): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/propagators/jaeger/context.go#L15-L17
+- Loki v3.7.8 vendored dskit `JaegerDebuggingPropagator.Extract` (input or a `context.WithValue` child): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel_jaeger.go#L330-L338
+- Loki v3.7.8 vendored OpenTelemetry `ContextWithSpan` and `ContextWithRemoteSpanContext` (`context.WithValue` children): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/trace/context.go#L13-L31
+- Loki v3.7.8 vendored OpenTelemetry global tracer `Start` (delegate, auto-instrumentation path or a span child): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/trace.go#L144-L188
+- Loki v3.7.8 vendored OpenTelemetry SDK tracer `Start`: https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/sdk/trace/tracer.go#L32-L78
+- Loki v3.7.8 vendored OpenTelemetry SDK span `runtimeTrace` (`runtime/trace.NewTask` when enabled): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/sdk/trace/span.go#L970-L982
+- Loki v3.7.8 vendored OpenTelemetry noop tracer `Start`: https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/trace/noop.go#L40-L47
+- Loki v3.7.8 vendored OpenTelemetry `noop.Tracer.Start`: https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/trace/noop/noop.go#L54-L73
+- Loki v3.7.8 vendored OpenTelemetry global tracer delegation (`SetTracerProvider` makes the installed provider the default provider's delegate, and each of its tracers takes that provider's tracer): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/state.go#L70-L91 ; https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/trace.go#L59-L74 ; https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/trace.go#L138-L139
+- Loki v3.7.8 vendored grpc-go server stream metadata context (`metadata.NewIncomingContext` when the request carries metadata): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L541-L544
+- Loki v3.7.8 vendored grpc-go `metadata.NewIncomingContext` (a `context.WithValue` child): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/metadata/metadata.go#L164-L166
+- Loki v3.7.8 vendored grpc-go `contextWithServer` (a `context.WithValue` child): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L2053-L2055
+- Loki v3.7.8 vendored grpc-go `EnableTracing` package variable (a `bool`, so `false` unless code assigns it): https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/trace.go#L31-L33
+- Loki v3.7.8 vendored grpc-go `handleStream` `x/net/trace` context, added only when `EnableTracing` is true: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1809-L1823
+- Loki v3.7.8 vendored grpc-go `NewServer` and client `newAttemptLocked` reads of `EnableTracing`: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L725-L728 ; https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/stream.go#L482-L495
+- Loki v3.7.8 vendored grpc-go `GRPC_GO_SERVER_GOROUTINE_LABELS` setting, read from the environment: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/envconfig/envconfig.go#L62-L69
+- Loki v3.7.8 vendored grpc-go `handleStream` `pprof.WithLabels` branch, taken only when that setting's server-method bit is set: https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1803-L1808
+- Loki v3.7.8 vendored dskit `GRPCTapHandles` field (`yaml:"-"`): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L125
+- Loki v3.7.8 vendored dskit server tap handles (`GRPCTapHandles`, then the in-flight limiter's when `GrpcMethodLimiter` is set, composed with `grpcutil.ComposeTapHandles`): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L503-L511
+- Loki v3.7.8 vendored dskit `grpcutil.ComposeTapHandles` (a lone handle as is, otherwise each in order): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/grpcutil/taphandle.go#L10-L25
+- Loki v3.7.8 vendored otelgrpc default propagator and tracer provider (OpenTelemetry's global ones): https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/config.go#L78-L79
+- Loki v3.7.8 `main` tracing setup (`NewOTelOrJaegerFromEnv` with no option when tracing is enabled): https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/main.go#L113-L127
+- Loki v3.7.8 `tracing.enabled` flag (default true): https://github.com/grafana/loki/blob/v3.7.8/pkg/tracing/config.go#L11-L13
+- Loki v3.7.8 `Tracing` configuration field and its flag registration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L126 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L226
+- Loki v3.7.8 vendored dskit `NewOTelOrJaegerFromEnv` (Jaeger path, OpenTelemetry path or no tracing, by environment variable): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel_jaeger.go#L47-L69
+- Loki v3.7.8 vendored dskit Jaeger-path tracer provider and propagator installation (`otelpyroscope` wrapper unless disabled): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel_jaeger.go#L296-L307
+- Loki v3.7.8 vendored dskit `NewOTelFromEnv` (OpenTelemetry-path tracer provider and propagator installation, `otelpyroscope` wrapper unless disabled): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel.go#L37-L83
+- Loki v3.7.8 vendored dskit `OTelPropagatorsFromEnv` (`OTEL_PROPAGATORS`, defaulting to TraceContext, Baggage, Jaeger and Jaeger debugging): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel.go#L277-L306
 - Loki v3.7.8 recovery stream interceptor (built by the vendored go-grpc-middleware recovery package): https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/recovery.go#L39
+- Loki v3.7.8 vendored go-grpc-middleware recovery `StreamServerInterceptor` (original stream passed to the handler; its error returned, replaced only after a panic) and `recoverFrom`: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery/interceptors.go#L39-L59
+- Loki v3.7.8 vendored go-grpc-middleware recovery `WithRecoveryHandler` (returns the handler's result): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery/options.go#L31-L37
 - Loki v3.7.8 query-tags stream interceptor and its `Context`-only wrapper: https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/grpc_query_tags.go#L66-L81
 - Loki v3.7.8 HTTP-header stream interceptor: https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/grpc_headers.go#L56-L61
 - Loki v3.7.8 ingestion-policy stream interceptor and its `Context`-only wrapper: https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/ingestion_policies.go#L256-L312
 - Loki v3.7.8 query-limits stream interceptor and its `Context`-only wrapper (a metadata parse error ends the call): https://github.com/grafana/loki/blob/v3.7.8/pkg/util/querylimits/grpc.go#L63-L122
 - Loki v3.7.8 `fakeauth.SetupAuthMiddleware` stream interceptors and the fake-tenant wrapper: https://github.com/grafana/loki/blob/v3.7.8/pkg/util/fakeauth/fake_auth.go#L15-L78
 - Loki v3.7.8 vendored OpenTracing stream server interceptor and its `Context`-only wrapper: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/opentracing-contrib/go-grpc/server.go#L91-L135
+- Loki v3.7.8 vendored OpenTracing interceptor options (`LogPayloads`, `IncludingSpans` and `SpanDecorator`): https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/opentracing-contrib/go-grpc/options.go#L14-L80
 - Loki v3.7.8 ingester log query batch limit and send call: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1121-L1129
 - Loki v3.7.8 ingester sample query send call: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1193-L1195
 - Loki v3.7.8 log batch read: https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/entry_iterator.go#L681-L716
@@ -63292,7 +63386,9 @@ Claims (full source mapping in the JSON block below):
 - loki-ingester-push-validation (REASONED; loki): From source reading, Loki v3.7.8's ingester gRPC push chain compares timestamps with stream state and schema configuration, never the clock, with no future timestamp bound. Unordered writes (default true) drop entries below the stream's highest timestamp minus half max_chunk_age (default 2h); ordered appends reject those older than the head block's newest or, head empty, the last block's maximum.
 - loki-ingester-inverted-hold (REASONED; loki): Without a Loki run, in this guide's source assessment, an ingester can hold an entry dated exactly at the inverted interval's future start when the lookback's magnitude is at most creation_grace_period, on one clock, grace unchanged. For a larger magnitude a direct ingester gRPC push can; in-tree Go Kafka producers add no route of their own; duplicate shifts are open.
 - loki-ingester-inverted-unordered (REASONED; loki): From source reading, Loki v3.7.8's backward log queries do not time-filter a chunk's head block, and the unordered head block queries its vendored go-datastructures v1.1.7 range tree from an interval's start to one nanosecond before its end, both inclusive. For an inverted interval that query returns no entry, so the head block yields nothing.
-- loki-ingester-empty-send (REASONED; loki): From source reading, Loki v3.7.8's ingester Query or QuerySample sends one empty batch with statistics and warnings for an empty, error-free iterator if the context is not done, failing only on a Send error besides context.Canceled, like grpc-go's status error from Write on a done stream, barring unread interceptors. The ingester querier's iterator records those, yields nothing and ends cleanly.
+- loki-ingester-empty-send (REASONED; loki): From source reading, Loki v3.7.8's ingester Query or QuerySample sends one empty batch with stats and warnings for an empty, error-free iterator if the context is not done, failing only on a Send error besides context.Canceled, like grpc-go's status error from Write on a done stream; no interceptor read wraps SendMsg. The ingester querier's iterator records those, yields nothing and ends cleanly.
+- loki-stream-context (REASONED; loki): From source reading, Loki v3.7.8's vendored grpc-go chains stats handlers' TagRPC in order; the dskit server's TagRPC methods, the propagator Extract paths and the SDK, global and noop tracers' Start return their input or a context.WithValue descendant, outside paths named as unread. The status code of a send after a failed write-quota wait is not established.
+- loki-tracing-install (REASONED; loki): From source reading, Loki v3.7.8's main calls dskit's NewOTelOrJaegerFromEnv when tracing.enabled (default true) is set. If a JAEGER_AGENT_HOST, JAEGER_ENDPOINT, JAEGER_SAMPLER_MANAGER_HOST_PORT, OTEL_TRACES_EXPORTER or OTLP endpoint variable is non-empty and setup succeeds, it installs an otelpyroscope-wrapped SDK tracer provider and a composite propagator set by OTEL_PROPAGATORS; else none.
 - loki-querier-inverted-merge (REASONED; loki): From source reading, a Loki v3.7.8 querier merges the ingester querier's per-ingester iterators for a log or sample selection with the iterator of any store query it makes for that selection, which it skips when query_ingester_only is set or it builds no store interval; a log selection with only one iterator gets that iterator unmerged.
 - loki-ingester-wrapper-search (REASONED; loki): From source reading, a word search for Wrapper in Loki v3.7.8 outside vendor finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides comments and source maps, and no vendored package imports Loki's ingester or loki package; nothing in the repository sets it.
 - loki-querier-ingester-inverted-result (REASONED; loki): Source reading of Loki's querier, ingester querier and ingester query code, with no Loki run, does not establish what they return for the inverted ingester interval a negative store lookback besides -1 yields: in this guide's assessment ingesters can hold entries dated exactly at its start when the lookback's magnitude is within the grace period, on one clock, grace unchanged; no run observed it.
@@ -63315,7 +63411,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "9722177864aa4aa4d580a0c275c4345f746695bdc295b7cfbb11cb86dd45ff68",
+  "body_sha256": "441ffdd2b896159a7c9044785b1ef1956ea1a11fd556afcb8b299c7bc91693b5",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -63617,7 +63713,68 @@ Claims (full source mapping in the JSON block below):
         "s9b3d31b2b6c1": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/limit.go#L58-L85",
         "sd72e6a5f3e04": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/proto/limits.pb.go#L1489-L1505",
         "s9dbe31d6448e": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/proto/limits.pb.go#L1449-L1472",
-        "s04c8e8dc2ec3": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/store.go#L211-L269"
+        "s04c8e8dc2ec3": "https://github.com/grafana/loki/blob/09e6ce2ff1bdc19763a10265b870c86f51c98655/pkg/limits/store.go#L211-L269",
+        "s4b1dc6d8d7ec": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery/interceptors.go#L39-L59",
+        "sb50c698e0afb": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery/options.go#L31-L37",
+        "sb5f9683bc990": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/stats/stats.go#L35-L51",
+        "s6f56d1ed6b3f": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L572-L574",
+        "sfdb7d43a2980": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/limits.go#L63-L88",
+        "s833a9f682fd8": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/metadata_supplier.go#L51-L60",
+        "s191e0362b7d4": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/propagator.go#L27-L66",
+        "s2c80d5c08178": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/propagation/propagation.go#L136-L141",
+        "seadda9b48aa2": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/propagation/trace_context.go#L72-L78",
+        "s55353854b212": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/propagation/baggage.go#L50-L78",
+        "s2ff883be9ce6": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/baggage/context.go#L13-L16",
+        "sdb0262c336d5": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/baggage/context.go#L55-L68",
+        "sd28c548a76d6": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/propagators/jaeger/jaeger_propagator.go#L74-L151",
+        "s3bd2ef28f5eb": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/propagators/jaeger/context.go#L15-L17",
+        "sf5441c22b843": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel_jaeger.go#L330-L338",
+        "s13c2f2df2b51": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/trace/context.go#L13-L31",
+        "s5fbd8b2f869a": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/trace.go#L144-L188",
+        "se5dc791277fb": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/sdk/trace/tracer.go#L32-L78",
+        "sb85966a1647c": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/sdk/trace/span.go#L970-L982",
+        "s8caa30d7268e": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/trace/noop.go#L40-L47",
+        "s1d5e4de8178c": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/trace/noop/noop.go#L54-L73",
+        "s816ec3b28f7a": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1800-L1853",
+        "s87a488ab017d": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/server_stream.go#L121-L125",
+        "s195be863483a": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L712-L721",
+        "sc721ca2d10be": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L483-L485",
+        "s98ea18f5a30e": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L491-L523",
+        "s6dea674467e6": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/stats_handler.go#L98-L158",
+        "sfe1b650e2542": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/limits.go#L151-L153",
+        "sec27b6b62b83": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/middleware/grpc_stats.go#L56-L58",
+        "s7f484d800206": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/state.go#L70-L91",
+        "s1f761db14084": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/trace.go#L59-L74",
+        "s5f45265cff52": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/otel/internal/global/trace.go#L138-L139",
+        "s50e474e6a856": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/transport/http2_server.go#L541-L544",
+        "sdd4428846203": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/metadata/metadata.go#L164-L166",
+        "sdf285f2c696c": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L2053-L2055",
+        "sda7c216e072c": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L125",
+        "s8e15e7dac6b5": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/server/server.go#L503-L511",
+        "s537caf6030ab": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/grpcutil/taphandle.go#L10-L25",
+        "sfca43a4aca4a": "https://github.com/grafana/loki/blob/v3.7.8/vendor/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/config.go#L78-L79",
+        "sde5d4b0f4af8": "https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/main.go#L113-L127",
+        "se0352cf5607d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/tracing/config.go#L11-L13",
+        "sbc50b29a9eb0": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L126",
+        "s61aa9f686df5": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L226",
+        "sdbb2abd16b84": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel_jaeger.go#L47-L69",
+        "s98651a70b4fa": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel_jaeger.go#L296-L307",
+        "s339be8c4f2aa": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel.go#L37-L83",
+        "s5b16e21a3e40": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/grafana/dskit/tracing/otel.go#L277-L306",
+        "sb8b9a8832798": "https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/recovery.go#L39",
+        "s434d9489a883": "https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/grpc_query_tags.go#L66-L81",
+        "s093f0844b29b": "https://github.com/grafana/loki/blob/v3.7.8/pkg/util/server/grpc_headers.go#L56-L61",
+        "sd0a99a08256a": "https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/ingestion_policies.go#L256-L312",
+        "s00fcdec5c4ec": "https://github.com/grafana/loki/blob/v3.7.8/pkg/util/querylimits/grpc.go#L63-L122",
+        "sf18867aee842": "https://github.com/grafana/loki/blob/v3.7.8/pkg/util/fakeauth/fake_auth.go#L15-L78",
+        "sfc08964ae1ac": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/opentracing-contrib/go-grpc/server.go#L91-L135",
+        "s0f81a8e67d8a": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/opentracing-contrib/go-grpc/options.go#L14-L80",
+        "s997c8175cf06": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/trace.go#L31-L33",
+        "s5f6956abae16": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1809-L1823",
+        "s40b82e4c0abc": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L725-L728",
+        "sf01b2f9a53a9": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/stream.go#L482-L495",
+        "s2157d4c926e7": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/internal/envconfig/envconfig.go#L62-L69",
+        "s16dba5c6e972": "https://github.com/grafana/loki/blob/v3.7.8/vendor/google.golang.org/grpc/server.go#L1803-L1808"
       }
     },
     "jaeger-docs": {
@@ -63809,7 +63966,9 @@ Claims (full source mapping in the JSON block below):
     "loki-ingester-push-validation": {"text": "From source reading, Loki v3.7.8's ingester gRPC push chain compares timestamps with stream state and schema configuration, never the clock, with no future timestamp bound. Unordered writes (default true) drop entries below the stream's highest timestamp minus half max_chunk_age (default 2h); ordered appends reject those older than the head block's newest or, head empty, the last block's maximum.", "components": ["loki"], "sources": ["loki:sa5963eda217e", "loki:s02173d6919e0", "loki:s6d778dd956ad", "loki:s3683552f47e7", "loki:s48eb47bcb74e", "loki:s1d09c7438f6c", "loki:s631c8b46da80", "loki:s6259f9f6561b", "loki:sef39e72a9288", "loki:sfc254eaeb3c3", "loki:s19e37d99684b"], "status": "REASONED"},
     "loki-ingester-inverted-hold": {"text": "Without a Loki run, in this guide's source assessment, an ingester can hold an entry dated exactly at the inverted interval's future start when the lookback's magnitude is at most creation_grace_period, on one clock, grace unchanged. For a larger magnitude a direct ingester gRPC push can; in-tree Go Kafka producers add no route of their own; duplicate shifts are open.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:s7be82cdc7279", "loki:s03a9eb3c1800", "loki:s9acb77638396", "loki:sa66ae191eb87", "loki:sa5963eda217e", "loki:s3683552f47e7", "loki:s9044377b42e9", "loki:sd2ef570a75c2", "loki:sd01827189b1e", "loki:s9c1fabf63f70", "loki:s93219a6da66c", "loki:se9b1d3173a5a", "loki:s1086bb06662d", "loki:s861664803499", "loki:sf9ef7591755e", "loki:sa050ceb04cea", "loki:s11d04b8a83cd", "loki:s6e92710b6c7d", "loki:s15fcd48516e5", "loki:sc6b2e0b6d26a", "loki:s7832fbb96765", "loki:s27e4e7b322b7", "loki:sa05dadacc9a7", "loki:sdfe8e95abe48", "loki:sb999c70880c3", "loki:s104fbc7a699f", "loki:s9b3d31b2b6c1", "loki:sd72e6a5f3e04", "loki:s9dbe31d6448e", "loki:s04c8e8dc2ec3"], "status": "REASONED"},
     "loki-ingester-inverted-unordered": {"text": "From source reading, Loki v3.7.8's backward log queries do not time-filter a chunk's head block, and the unordered head block queries its vendored go-datastructures v1.1.7 range tree from an interval's start to one nanosecond before its end, both inclusive. For an inverted interval that query returns no entry, so the head block yields nothing.", "components": ["loki"], "sources": ["loki:sd5181aa115e4", "loki:s33683997e787", "loki:s69faadc4a015", "loki:s18bc063957e1", "loki:sf185bec82940", "loki:s015710936d80", "loki:saf4f45f2d5c7", "loki:sd8ad9fae3598", "loki:sd82568caaafc", "loki:s996300b7bdcf", "loki:s9a133bb92cd3"], "status": "REASONED"},
-    "loki-ingester-empty-send": {"text": "From source reading, Loki v3.7.8's ingester Query or QuerySample sends one empty batch with statistics and warnings for an empty, error-free iterator if the context is not done, failing only on a Send error besides context.Canceled, like grpc-go's status error from Write on a done stream, barring unread interceptors. The ingester querier's iterator records those, yields nothing and ends cleanly.", "components": ["loki"], "sources": ["loki:s76e4e638e936", "loki:s5732ba30414b", "loki:sa1a1efa48033", "loki:s00b4ce2d9a6a", "loki:s9f438349ea61", "loki:sf89b7c829a53", "loki:s6c74d0f4adb3", "loki:sdf678b8f143f", "loki:s61e16a1ac1f0", "loki:se2deb786e148", "loki:s4be52dc17660", "loki:s3eb2a64252dc", "loki:sbe53a886169a", "loki:sfa17c8b9744c", "loki:s6bbef377347c", "loki:s958c3fc5fde9", "loki:s6621f46a53f1", "loki:s72e8d6673510", "loki:s807df01bc8a9", "loki:sf19870535c9b", "loki:s86a537881f1c", "loki:s2fdef6108709", "loki:s4011490e4c44", "loki:sc764d609c18a", "loki:sc7f949d05c7e", "loki:sbc58e5ae2f15", "loki:s88b28c9fa838", "loki:s86f5e4dbf938", "loki:sf1dbb24b6f89", "loki:s347ea47da1d9", "loki:scedf32486af2", "loki:s09f50c15300b", "loki:scf2ca760e412", "loki:s658bfc32b613", "loki:s1b47472c83c8", "loki:s0540308a9bbf", "loki:s369533e16eb3", "loki:s334ac63c0892", "loki:s68c48fdded52", "loki:sbf9e7851df52", "loki:s326c544e4f05"], "status": "REASONED"},
+    "loki-ingester-empty-send": {"text": "From source reading, Loki v3.7.8's ingester Query or QuerySample sends one empty batch with stats and warnings for an empty, error-free iterator if the context is not done, failing only on a Send error besides context.Canceled, like grpc-go's status error from Write on a done stream; no interceptor read wraps SendMsg. The ingester querier's iterator records those, yields nothing and ends cleanly.", "components": ["loki"], "sources": ["loki:s4b1dc6d8d7ec", "loki:sb50c698e0afb", "loki:s76e4e638e936", "loki:s5732ba30414b", "loki:sa1a1efa48033", "loki:s00b4ce2d9a6a", "loki:s9f438349ea61", "loki:sf89b7c829a53", "loki:s6c74d0f4adb3", "loki:sdf678b8f143f", "loki:s61e16a1ac1f0", "loki:se2deb786e148", "loki:s4be52dc17660", "loki:s3eb2a64252dc", "loki:sbe53a886169a", "loki:sfa17c8b9744c", "loki:s6bbef377347c", "loki:s958c3fc5fde9", "loki:s6621f46a53f1", "loki:s72e8d6673510", "loki:s807df01bc8a9", "loki:sf19870535c9b", "loki:s86a537881f1c", "loki:s2fdef6108709", "loki:s4011490e4c44", "loki:sc764d609c18a", "loki:sc7f949d05c7e", "loki:sbc58e5ae2f15", "loki:s88b28c9fa838", "loki:s86f5e4dbf938", "loki:sf1dbb24b6f89", "loki:s347ea47da1d9", "loki:scedf32486af2", "loki:s09f50c15300b", "loki:scf2ca760e412", "loki:s658bfc32b613", "loki:s1b47472c83c8", "loki:s0540308a9bbf", "loki:s369533e16eb3", "loki:s334ac63c0892", "loki:s68c48fdded52", "loki:sbf9e7851df52", "loki:s326c544e4f05", "loki:sb8b9a8832798", "loki:s434d9489a883", "loki:s093f0844b29b", "loki:sd0a99a08256a", "loki:s00fcdec5c4ec", "loki:sf18867aee842", "loki:sfc08964ae1ac", "loki:s0f81a8e67d8a"], "status": "REASONED"},
+    "loki-stream-context": {"text": "From source reading, Loki v3.7.8's vendored grpc-go chains stats handlers' TagRPC in order; the dskit server's TagRPC methods, the propagator Extract paths and the SDK, global and noop tracers' Start return their input or a context.WithValue descendant, outside paths named as unread. The status code of a send after a failed write-quota wait is not established.", "components": ["loki"], "sources": ["loki:sb5f9683bc990", "loki:s6f56d1ed6b3f", "loki:sfdb7d43a2980", "loki:s833a9f682fd8", "loki:s191e0362b7d4", "loki:s2c80d5c08178", "loki:seadda9b48aa2", "loki:s55353854b212", "loki:s2ff883be9ce6", "loki:sdb0262c336d5", "loki:sd28c548a76d6", "loki:s3bd2ef28f5eb", "loki:sf5441c22b843", "loki:s13c2f2df2b51", "loki:s5fbd8b2f869a", "loki:se5dc791277fb", "loki:sb85966a1647c", "loki:s8caa30d7268e", "loki:s1d5e4de8178c", "loki:s816ec3b28f7a", "loki:s87a488ab017d", "loki:s195be863483a", "loki:sc721ca2d10be", "loki:s98ea18f5a30e", "loki:s6dea674467e6", "loki:sfe1b650e2542", "loki:sec27b6b62b83", "loki:s7f484d800206", "loki:s1f761db14084", "loki:s5f45265cff52", "loki:s50e474e6a856", "loki:sdd4428846203", "loki:sdf285f2c696c", "loki:sda7c216e072c", "loki:s8e15e7dac6b5", "loki:s537caf6030ab", "loki:sfca43a4aca4a", "loki:s997c8175cf06", "loki:s5f6956abae16", "loki:s40b82e4c0abc", "loki:sf01b2f9a53a9", "loki:s2157d4c926e7", "loki:s16dba5c6e972"], "status": "REASONED"},
+    "loki-tracing-install": {"text": "From source reading, Loki v3.7.8's main calls dskit's NewOTelOrJaegerFromEnv when tracing.enabled (default true) is set. If a JAEGER_AGENT_HOST, JAEGER_ENDPOINT, JAEGER_SAMPLER_MANAGER_HOST_PORT, OTEL_TRACES_EXPORTER or OTLP endpoint variable is non-empty and setup succeeds, it installs an otelpyroscope-wrapped SDK tracer provider and a composite propagator set by OTEL_PROPAGATORS; else none.", "components": ["loki"], "sources": ["loki:sde5d4b0f4af8", "loki:se0352cf5607d", "loki:sbc50b29a9eb0", "loki:s61aa9f686df5", "loki:sdbb2abd16b84", "loki:s98651a70b4fa", "loki:s339be8c4f2aa", "loki:s5b16e21a3e40", "loki:sfca43a4aca4a"], "status": "REASONED"},
     "loki-querier-inverted-merge": {"text": "From source reading, a Loki v3.7.8 querier merges the ingester querier's per-ingester iterators for a log or sample selection with the iterator of any store query it makes for that selection, which it skips when query_ingester_only is set or it builds no store interval; a log selection with only one iterator gets that iterator unmerged.", "components": ["loki"], "sources": ["loki:s8f53a03e764f", "loki:sdc0d0e6ad95d", "loki:s86fc597288e2", "loki:s2d763a8942ef", "loki:s10870cc18ddc", "loki:se3f01b0b8f64", "loki:s6f04b102b391", "loki:s61e16a1ac1f0", "loki:s529cd9a944d9"], "status": "REASONED"},
     "loki-ingester-wrapper-search": {"text": "From source reading, a word search for Wrapper in Loki v3.7.8 outside vendor finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides comments and source maps, and no vendored package imports Loki's ingester or loki package; nothing in the repository sets it.", "components": ["loki"], "sources": ["loki:s24cd2d4a2bce", "loki:sd7efa15100d2", "loki:sf253d44e375f"], "status": "REASONED"},
     "loki-querier-ingester-inverted-result": {"text": "Source reading of Loki's querier, ingester querier and ingester query code, with no Loki run, does not establish what they return for the inverted ingester interval a negative store lookback besides -1 yields: in this guide's assessment ingesters can hold entries dated exactly at its start when the lookback's magnitude is within the grace period, on one clock, grace unchanged; no run observed it.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:sdc0d0e6ad95d", "loki:s10870cc18ddc", "loki:s61e16a1ac1f0", "loki:sadb084375296", "loki:s0b40d7d25a3f", "loki:se34169c8b133", "loki:sd5181aa115e4", "loki:s33683997e787", "loki:s69faadc4a015", "loki:sa66ae191eb87", "loki:s7be82cdc7279", "loki:s9acb77638396"], "status": "REASONED"},
