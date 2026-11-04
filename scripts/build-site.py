@@ -24,15 +24,18 @@ page included, carries the light and dark switch as the last child of the top ba
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
-with a body, an `on*` attribute, or "what this is" framing (SPECIFICATION.md section 12). It does
-not write the copied baseline files under assets/baseline/ (scripts/copy-baseline.py does).
+with a body, an `on*` attribute, or "what this is" framing (SPECIFICATION.md section 12). An
+`on*` attribute is any `on...=` text (the CSP gate's VALUED_HANDLER) or an attribute name in a tag
+that begins with "on" after whitespace; a word inside a closed quoted attribute value is not a
+name, so a description may say "read on GitHub". It does not write the copied baseline files
+under assets/baseline/ (scripts/copy-baseline.py does).
 `--check` compares every page it writes with the file on disk, byte for byte, and also fails on
-an extra page under the output folder that it does not write (a page being a .html or .htm file
-in any case, as the CSP gate names one), outside assets/baseline/. At base `/` that is all it
-checks: the root also holds the published files (llms.txt, robots.txt, _headers, images), so a
-non-page file passes `--check` there and is left to the CSP and self-containment gates. At
-`/draft/` (any base other than `/`) it also fails on any file that is neither a page it writes,
-nor under assets/baseline/, nor the optional assets/site.css.
+any other file under the output folder outside assets/baseline/ and the optional assets/site.css:
+an extra page (a .html or .htm file in any case, as the CSP gate names one) at any base, and any
+other file except, at base `/` only, the published files the root holds beside the pages
+(PUBLISHED: llms.txt, llms-full.txt, robots.txt, sitemap.xml, _headers, .well-known/security.txt,
+favicon.svg, apple-touch-icon.png and images/secureconfig-card.png). A new published file is
+added to PUBLISHED before it ships.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error.
 Standard library only. No network.
@@ -53,6 +56,10 @@ README = Path("README.md")
 VERSIONED = Path("tools") / "version_basis_guides.txt"
 COPIED = "assets/baseline/"  # the copied template files, which this build does not write
 SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline README), hand-written
+# The files the root holds beside the pages and the copied template files; a root --check refuses
+# every other file, so a stray file cannot ship unnoticed.
+PUBLISHED = (".well-known/security.txt", "_headers", "apple-touch-icon.png", "favicon.svg",
+             "images/secureconfig-card.png", "llms-full.txt", "llms.txt", "robots.txt", "sitemap.xml")
 REPO = "https://github.com/jposluns/secureconfig"
 BLOB = REPO + "/blob/main/"
 ORIGIN = "https://secureconfig.ai"
@@ -87,6 +94,11 @@ INLINE = re.compile(r"`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)|\*([^*]+)\*|(https?://
 DASHES = tuple(chr(c) for c in range(0x2010, 0x2016)) + ("\u2212",)
 SCRIPT_TAG = re.compile(r"<script\b([^>]*)>(.*?)</script>", re.I | re.S)
 FRAMING = re.compile(r"what\s+this\s+is", re.I)
+# An on* attribute: whitespace in a tag, then a name that begins with "on". It is matched against
+# each tag with its closed quoted values blanked (blank_values), so a word in a value is not a name.
+ON_ATTR = re.compile(r"<[a-z][^>]*\son[a-z-]*[\s>/=]", re.I)
+TAG_START = re.compile(r"<[a-z]", re.I)
+HTML_SPACE = "\t\n\f\r "  # HTML's whitespace (a CR reaches the tokenizer as a line feed)
 
 
 class Refused(Exception):
@@ -532,6 +544,43 @@ class Builder:
         return pages
 
 
+def blank_values(text, start):
+    """The tag that opens at `start`, to its `>` (or the end of the text), with the inside of each
+    closed quoted attribute value replaced by "x". The tag is read as HTML's tokenizer reads one in
+    the data state: a name runs to whitespace, `/`, `>` or `=`, a quote opens a value only after
+    `=`, and a `>` inside a quoted value does not end the tag. An unclosed quote is read as the
+    start of an unquoted value, so nothing after it is blanked."""
+    n = len(text)
+    i = start + 1
+    while i < n and text[i] not in HTML_SPACE + "/>":
+        i += 1  # the tag name
+    out = [text[start:i]]
+    while i < n and text[i] != ">":
+        if text[i] in HTML_SPACE + "/":
+            out.append(text[i])
+            i += 1
+            continue
+        k = i + 1  # an attribute name, whose first character may be "="
+        while k < n and text[k] not in HTML_SPACE + "/>=":
+            k += 1
+        while k < n and text[k] in HTML_SPACE:
+            k += 1
+        if k < n and text[k] == "=":
+            k += 1
+            while k < n and text[k] in HTML_SPACE:
+                k += 1
+            close = text.find(text[k], k + 1) if k < n and text[k] in "\"'" else -1
+            if close != -1:
+                out += [text[i:k + 1], "x" * (close - k - 1), text[close]]
+                i = close + 1
+                continue
+            while k < n and text[k] not in HTML_SPACE + ">":
+                k += 1  # an unquoted value
+        out.append(text[i:k])
+        i = k
+    return "".join(out) + text[i:i + 1]
+
+
 def refuse(name, text):
     """Raise Refused when a page carries what SPECIFICATION section 12 forbids."""
     why = []
@@ -544,7 +593,8 @@ def refuse(name, text):
             why.append("an inline script")
     if len(re.findall(r"<script\b", text, re.I)) != len(SCRIPT_TAG.findall(text)):
         why.append("an unclosed or unparsed <script>")
-    if VALUED_HANDLER.search(text) or re.search(r"<[a-z][^>]*\son[a-z-]*[\s>/=]", text, re.I):
+    if VALUED_HANDLER.search(text) or any(ON_ATTR.match(blank_values(text, m.start()))
+                                          for m in TAG_START.finditer(text)):
         why.append("an on* attribute")
     if FRAMING.search(re.sub(r"<[^>]+>", " ", text)):
         why.append('"what this is" framing')
@@ -597,7 +647,7 @@ def main(argv=None):
         # or the optional assets/site.css that the baseline README allows for the 2 per-site
         # constants (its grammar is held by tools/check_draft.py). A page is .html or .htm in any
         # case, read as the CSP gate reads one (name_suffix). At the root after promotion the folder
-        # also holds the live files, so only pages are compared.
+        # also holds the published files, named one by one in PUBLISHED.
         if out.is_dir():
             for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
@@ -608,6 +658,9 @@ def main(argv=None):
                 elif args.base != "/":
                     problems.append(f"{rel} is neither a page this build writes nor a copied "
                                     f"template file under {COPIED}")
+                elif rel not in PUBLISHED:
+                    problems.append(f"{rel} is neither a page this build writes, a copied template "
+                                    f"file under {COPIED}, nor a published file in PUBLISHED")
         if problems:
             for p in problems:
                 print(f"  FAIL  {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}/{p}; "
