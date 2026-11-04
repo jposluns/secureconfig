@@ -61,6 +61,16 @@ PYTHON_NOTE = ("Local python3 3.14.4 differed from CI's pinned PYTHON_VERSION 3.
                "pinned Python is covered by the online gates check on the target, which the "
                "procedure records.")
 
+# The body's statement of the run every release dispatches, and of the targets that can have one.
+SINCE_1194 = ("A release targets a commit at or after the merge of pull request #1194, the first "
+              "merge on `main` whose `.github/workflows/checks.yml` has the `workflow_dispatch` "
+              "trigger.")
+DISPATCH_BODY = ("the publisher confirmed online that `gates` check run 4242 is from a run of the "
+                 "whole suite whose event is `workflow_dispatch` and whose branch is "
+                 "`release-check/v1.0.11`")
+CONFIRMED = ("succeeded on exactly the target commit. These are the publisher's confirmations; "
+             "the offline release check records the id and does not verify them.")
+
 # (pull request, UTC committer time, the date heading its entry sits under). #12 and #13 share
 # 2026-10-03, so #13 is the last merge of that day and #12 is not.
 HISTORY = [
@@ -189,8 +199,9 @@ def cases(tmp):
     expect("the first release's body lists every pull request up to the target",
            (0, body), 0, "Pull requests merged in that range (3): #9, #10, #11.",
            "This is the first tagged release.", "/blob/v1.0.11/CHANGELOG.md",
-           "follow the moving branch",
-           "check run 4242, was confirmed online by the publisher", absent=("#12",))
+           "follow the moving branch", SINCE_1194, DISPATCH_BODY,
+           "a temporary branch pushed at the target and deleted afterwards", CONFIRMED,
+           absent=("#12", "push to `main`"))
     expect("the first release's notes extract no sections and point to CHANGELOG.md at the tag",
            (0, notes), 0, "first tagged release", "/blob/v1.0.11/CHANGELOG.md",
            absent=("## 2026-",))

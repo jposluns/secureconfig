@@ -56,12 +56,20 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    covered by the online `gates` check on the target. This whole-corpus run is the release's
    explicit need and is not repeated per review round.
 
-WHAT IT CANNOT CHECK: whether `gates` passed on GitHub for the target's push to `main`. That is
-an online step of the procedure; --gates-check-run takes the id it found only to print it in
-the body and the pass line, which says the result is recorded, not verified. It also cannot see
-a merge, tag or release that exists only on GitHub, so the procedure fetches `main` and the
-`v*` tags first, and it does not check that a mention of a pull request in a section is that
-pull request's own entry.
+WHAT IT CANNOT CHECK: anything about the online `gates` run, since it does not reach the network.
+Every release dispatches: no run starts on a push to `main`, and workflow_dispatch runs on a
+branch or tag, not on a bare commit, so the publisher pushes a temporary branch
+`release-check/v<VERSION>` at the target, starts the workflow on that branch, confirms that the
+run's event is workflow_dispatch, that its branch is `release-check/v<VERSION>` and that its
+`gates` check run succeeded on exactly the target commit, and then deletes the branch. So a
+release targets a commit at or after the merge of #1194, the first merge on `main` whose
+`.github/workflows/checks.yml` has the workflow_dispatch trigger; this check does not read the
+workflow, and the body states that requirement. Those are online steps of the procedure;
+--gates-check-run takes the id of that `gates` check run only to print it in the body, which
+states these as the publisher's confirmations that it does not verify, and in the pass line,
+which says the result is recorded, not verified. It also cannot see a merge, tag or release that
+exists only on GitHub, so the procedure fetches `main` and the `v*` tags first, and it does not
+check that a mention of a pull request in a section is that pull request's own entry.
 
 THE RELEASE DIRECTORY: --build writes it into a new directory: `body.md`, the release body, and
 `assets/` with `llms-full.txt`, `secureconfig-plugin-v1.0.<N>.tar.gz`,
@@ -363,9 +371,14 @@ def examine(root, main_ref, target, tag, previous, gates_run):
             f"of {own}.\n\n"
             f"- Tag `{tag}`. `VERSION` and the plugin version at the target are both "
             f"`{version}`.\n"
-            f"- The `gates` check of the target's push to `main`, check run {gates_run}, was "
-            f"confirmed online by the publisher. The offline release check records that id and "
-            f"does not verify it.\n"
+            f"- A release targets a commit at or after the merge of pull request #1194, the "
+            f"first merge on `main` whose `.github/workflows/checks.yml` has the "
+            f"`workflow_dispatch` trigger. Before the release was cut, the publisher confirmed "
+            f"online that `gates` check run {gates_run} is from a run of the whole suite whose "
+            f"event is `workflow_dispatch` and whose branch is `release-check/{tag}`, a "
+            f"temporary branch pushed at the target and deleted afterwards, and that it "
+            f"succeeded on exactly the target commit. These are the publisher's confirmations; "
+            f"the offline release check records the id and does not verify them.\n"
             + scope +
             f"- Pull requests merged in that range ({len(numbers)}): {pr_list}.\n"
             f"- The full notes are the `{notes_name}` asset, and the history is in "

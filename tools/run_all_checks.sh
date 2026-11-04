@@ -8,10 +8,105 @@
 # job. External link rot is caught separately by the weekly lychee sweep, which
 # stays advisory so that a site being down cannot block a merge.
 #
-# Usage: tools/run_all_checks.sh   (runs from any directory)
+# Usage: tools/run_all_checks.sh [--sections NAME[,NAME...]]   (runs from any directory)
+#
+# With no argument every section runs. That is the whole-corpus run, which CI makes weekly and on
+# demand, and only it ends with "All gates passed.". With --sections, the named sections and their prerequisites run,
+# in this file's order; on a pull request tools/select_gates.py names them from the changed paths,
+# and names every section when the pull request changes any path other than the root project
+# records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md and the files
+# under site/ or site-src/ whose names end, in any case, in .html, .css, .json, .svg, .png, .jpg,
+# .jpeg, .webp, .ico, .woff2, .txt or .xml and are not _headers, _redirects or a requirements
+# file. A section that relies on others has a `# depends: NAME: NEED...` line below, which
+# tools/select_gates.py reads too: when the list names it, --sections adds each NEED the list
+# lacks, in this file's order, and says so, so a selection that holds generated-committed always
+# runs llms-full and plugin, whose rebuilds it relies on. A section is everything from its
+# `# section: NAME` line to the next such line or to `# end of sections`. What comes before the
+# first section (the helpers, run_gate and the parser preflight) and the summary after the last
+# one run either way. A name holding anything but letters, digits and hyphens (a newline
+# included), or that is not a section here, is refused with status 2 before any gate runs, and so
+# is a `# depends:` line not shaped `NAME: NEED...` or, for a named section, needing a name that
+# is not a section here. The named sections are cut out of this file's text, not wrapped in a
+# condition, so each section's heading and body are the same in both runs and the tests that cut
+# a block out of this file still find it.
+#
+# generated-committed skips its own rebuild on a clean tree because the llms-full and plugin
+# sections before it already rebuilt HEAD.
+# depends: generated-committed: llms-full plugin
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
+
+selected_sections=""
+if [ "$#" -gt 0 ]; then
+  if [ "$#" -ne 2 ] || [ "$1" != --sections ]; then
+    printf 'usage: tools/run_all_checks.sh [--sections NAME[,NAME...]]\n' >&2
+    exit 2
+  fi
+  known=$(sed -n 's/^# section: \([a-z0-9-]*\)$/\1/p' tools/run_all_checks.sh)
+  rest="$2,"
+  while [ -n "$rest" ]; do
+    name=${rest%%,*}
+    rest=${rest#*,}
+    # grep reads a newline in its pattern as a second pattern, so only these characters pass.
+    case $name in
+      *[!A-Za-z0-9-]*)
+        printf "  FAIL  --sections names '%s', which holds a character other than a letter, a digit or a hyphen; no gate ran\n" "$name"
+        exit 2 ;;
+    esac
+    if [ -z "$name" ] || ! grep -qxF -- "$name" <<< "$known"; then
+      printf "  FAIL  --sections names '%s', which is not a section of tools/run_all_checks.sh; no gate ran\n" "$name"
+      exit 2
+    fi
+  done
+  # What a named section relies on, from the `# depends:` lines above, added in this file's order.
+  needed=" "
+  while read -r line; do
+    case $line in
+      [a-z0-9]*': '[a-z0-9]*) ;;
+      *)
+        printf "  FAIL  the '# depends: %s' line of tools/run_all_checks.sh is not 'NAME: NEED...'; no gate ran\n" "$line"
+        exit 2 ;;
+    esac
+    case ",$2," in
+      *",${line%%: *},"*) needed+="${line#*: } " ;;
+    esac
+  done < <(sed -n 's/^# depends: //p' tools/run_all_checks.sh)
+  while read -r need; do
+    if [ -n "$need" ] && ! grep -qxF -- "$need" <<< "$known"; then
+      printf "  FAIL  a '# depends:' line of tools/run_all_checks.sh needs '%s', which is not a section of it; no gate ran\n" "$need"
+      exit 2
+    fi
+  done < <(tr ' ' '\n' <<< "$needed")
+  added=""
+  while read -r name; do
+    case $needed in *" $name "*) ;; *) continue ;; esac
+    case ",$2," in *",$name,"*) continue ;; esac
+    added+=",$name"
+  done <<< "$known"
+  list=$2$added
+  # This file with only the selected sections (the named ones and their prerequisites), and
+  # selected_sections set for the summary.
+  if ! script=$(awk -v want=",$list," -v list="$list" '
+      /^# section: / {
+        if (!started) { print "selected_sections=" list; started = 1 }
+        inside = 1; keep = index(want, "," substr($0, 12) ",") > 0
+      }
+      /^# end of sections$/ { inside = 0 }
+      !inside || keep
+    ' tools/run_all_checks.sh) || ! grep -qx '# end of sections' <<< "$script"; then
+    printf '  FAIL  could not cut the named sections out of tools/run_all_checks.sh; no gate ran\n'
+    exit 2
+  fi
+  if [ -n "$added" ]; then
+    printf 'Sections added: %s, which a named section depends on\n' "${added#,}"
+  fi
+  printf 'Sections selected: %s\n' "$list"
+  # A fresh bash sources the cut copy with this file as its $0 and no arguments, so the cd above
+  # lands in the same tree and the copy runs straight through.
+  bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3<<< "$script"
+  exit $?
+fi
 
 fail=0
 ok()  { printf '  ok    %s\n' "$1"; }
@@ -30,6 +125,33 @@ not_a_guide() {
     CONTRIBUTING.md|SECURITY.md|CLAUDE.md|AGENTS.md|CHANGELOG.md|README.sources.md|TODO.md|DONE.md|DECISIONS.md|PENDING-DECISIONS.md|controls-reference.md) return 0 ;;
     *) return 1 ;;
   esac
+}
+
+# The runner of the site gates further down. Each gate runs after its self-test, so a gate that
+# stopped catching its cases cannot report a pass. A gate that exits 0 while printing a FAIL line
+# or without printing an ok line, or that crashes, is a failure. It is defined here, before the
+# first section, so a --sections run that skips the sections around it still has it.
+# tools/test_gate_runners.py reads this function out of this file and runs it on stand-in gates.
+run_gate() {
+  local label=$1 out
+  shift
+  if out=$("$@" 2>&1); then
+    printf '%s\n' "$out"
+    if grep -q '^  FAIL  ' <<< "$out"; then
+      bad "$label printed findings but exited 0"
+    elif ! grep -q '^  ok    ' <<< "$out"; then
+      bad "$label exited 0 without an ok line"
+    fi
+  elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$out"; then
+    bad "$label crashed"
+    printf '%s\n' "$out" | sed 's/^/          /'
+  elif grep -q '^  FAIL  ' <<< "$out"; then
+    printf '%s\n' "$out"
+    fail=1
+  else
+    bad "$label exited non-zero without reporting a result"
+    printf '%s\n' "$out" | sed 's/^/          /'
+  fi
 }
 
 echo "== gate parser preflight: this python3 has the pinned markdown-it-py =="
@@ -55,6 +177,7 @@ else
   exit 2
 fi
 
+# section: parser-pin-tests
 echo "== the gate parser preflight still refuses what it should =="
 if preflight_tests=$(python3 -I -B tools/test_parser_pin.py 2>&1); then
   printf '%s\n' "$preflight_tests"
@@ -67,6 +190,7 @@ else
   bad "test_parser_pin.py failed"
 fi
 
+# section: credential-scanner
 echo "== credential scanner regressions and shell lint =="
 python3 tools/test_scan_credential.py || bad "credential scanner self-test"
 if command -v shellcheck >/dev/null 2>&1; then
@@ -75,10 +199,12 @@ else
   printf '  SKIP  shellcheck is not installed; credential scanner lint not run\n'
 fi
 
+# section: version-basis
 echo "== version basis =="
 python3 tools/test_version_basis.py || bad "version-basis self-test"
 python3 tools/version_basis.py --check || bad "version-basis metadata or summary"
 
+# section: claim-lengths
 echo "== claim text stays within the 400-character baseline =="
 # Maintainer ruling 2026-10-23 (DECISIONS.md): a claim's text over 400 characters
 # fails unless tools/claim_length_baseline.txt lists it at its exact current
@@ -97,6 +223,7 @@ for claim_check in test_claim_lengths.py check_claim_lengths.py; do
   fi
 done
 
+# section: sentence-split
 echo "== the shared sentence splitter still splits as recorded =="
 # Row 3.47: one implementation measures the 400-character rules for guide prose
 # (DONE 1.385) and for generated claim-summary sentences (row 1.383). Only its
@@ -113,6 +240,7 @@ else
   bad "test_sentence_split.py failed"
 fi
 
+# section: llms-full
 echo "== llms-full.txt is current =="
 orig=$(mktemp)
 cp site/llms-full.txt "$orig"
@@ -129,6 +257,7 @@ fi
 # An unchecked restore could leave a half-written bundle for every later gate to read.
 cp "$orig" site/llms-full.txt || { bad "could not restore site/llms-full.txt from $orig"; exit 1; }
 
+# section: llms-full-links
 echo "== llms-full.txt links are absolute and name repository paths =="
 # site/llms-full.txt is served from https://secureconfig.ai/, where a relative link such as
 # (mfa.md) names a page that does not exist, so scripts/build-llms-full.sh rewrites each one to
@@ -152,6 +281,7 @@ else
   printf '%s\n' "$llms_links" | sed 's/^/          /'
 fi
 
+# section: plugin
 echo "== the plugin bundle is current =="
 # plugin/ is generated from the guides by scripts/build-plugin.sh, the same way
 # site/llms-full.txt is, and for the same reason: a bundle that has drifted from the guides ships
@@ -172,6 +302,7 @@ rm -rf plugin
 cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
 rm -rf "$plugin_tmp"
 
+# section: generated-committed
 echo "== the committed generated files match a fresh build of the commit =="
 # The two gates above rebuild in the working tree, so they pass when the working tree is right and
 # the commit is not: a bundle rebuilt but only partly staged (F-PLUGIN-MANIFEST-PARTIAL-STAGE), or
@@ -179,7 +310,9 @@ echo "== the committed generated files match a fresh build of the commit =="
 # exports HEAD with git archive on every run and checks the committed plugin.json version against
 # the committed VERSION. Unless git status shows the working tree is HEAD with no change, in which
 # case the gates above already rebuilt HEAD, it also runs the same two builds in the export and
-# compares. The self-test runs first, so what runs is the shipped gate.
+# compares; that skip relies on the llms-full and plugin sections, which --sections adds whenever
+# it names this one (the `# depends:` line at the top). The self-test runs first, so what runs is
+# the shipped gate.
 for generated_check in test_generated_committed.py check_generated_committed.py; do
   if generated_committed=$(python3 -I -B "tools/$generated_check" 2>&1); then
     printf '%s\n' "$generated_committed"
@@ -192,6 +325,7 @@ for generated_check in test_generated_committed.py check_generated_committed.py;
   fi
 done
 
+# section: gensrc
 echo "== the generated-file record matches how they are generated =="
 # CLAUDE.md names .aiqt/gensrc.json as the record of which sources produce site/llms-full.txt.
 # Adding a guide touches five wiring surfaces and four of them were gated; this was the fifth,
@@ -215,6 +349,7 @@ else
   printf '%s\n' "$gensrc" | sed 's/^/          /'
 fi
 
+# section: gensrc-tests
 echo "== the generated-file record gate still catches what review found =="
 # The first version of the gate above was naive in both directions, and the two are not
 # equally bad: missing a source is a silent pass, while inventing one is a fabricated
@@ -238,6 +373,7 @@ else
   printf '%s\n' "$gensrc_tests" | sed 's/^/          /'
 fi
 
+# section: bare-urls
 echo "== bare double-underscore URLs in tracked root Markdown =="
 if bare_urls=$(python3 tools/check_bare_urls.py 2>&1); then
   printf '%s\n' "$bare_urls"
@@ -257,6 +393,7 @@ else
   printf '%s\n' "$bare_urls" | sed 's/^/          /'
 fi
 
+# section: bare-urls-tests
 echo "== bare URL gate fixtures =="
 if bare_urls_tests=$(python3 tools/test_bare_urls_gate.py 2>&1); then
   printf '%s\n' "$bare_urls_tests"
@@ -276,6 +413,7 @@ else
   printf '%s\n' "$bare_urls_tests" | sed 's/^/          /'
 fi
 
+# section: guide-wiring
 echo "== every guide is wired into the site =="
 wired=1
 # Strip HTML comments across the whole file (re.S, not a line-at-a-time sed) so a README row
@@ -298,6 +436,7 @@ for f in *.md; do
 done
 [ "$wired" = 1 ] && ok "every guide is listed in the build script, linked from llms.txt, indexed in README.md, and on the generated Guides page"
 
+# section: guide-categories
 echo "== README guide-index categories match the generated Guides page and site/llms.txt =="
 # The README's "## Guide index" section and site/llms.txt are two hand-maintained copies of the
 # same category list, and the generated Guides page is built from the README's; nothing else in
@@ -429,6 +568,7 @@ else
   printf '%s\n' "$cat_diff" | sed 's/^/          /'
 fi
 
+# section: guide-counts
 echo "== README's stated guide and category counts match the corpus =="
 # README.md's "## What this is" section states the corpus size in prose ("that is N guides across
 # the M categories indexed below"), and the gates above check category lists and membership but not
@@ -533,6 +673,7 @@ else
   printf '%s\n' "$count_diff" | sed 's/^/          /'
 fi
 
+# section: guide-shape
 echo "== every guide has a Verify section and dated Sources =="
 # The structural half of the CONTRIBUTING rule that a guide must hand the reader runnable checks and
 # dated, cited sources. What a reader copies from here faces the internet, so a guide that ships with
@@ -561,6 +702,7 @@ else
   printf '%s\n' "$guide_shape" | sed 's/^/          /'
 fi
 
+# section: verify-tls
 echo "== no code block disables TLS verification =="
 # Three Verify blocks passed curl -k before anything checked, while three other files in this corpus
 # told the reader not to. A probe that skips certificate verification is satisfied by a substituted
@@ -584,6 +726,7 @@ else
   printf '%s\n' "$verify_safety" | sed 's/^/          /'
 fi
 
+# section: guard-conventions
 echo "== the curl guard conventions: -q leads every probe, and a glob URL carries -g =="
 st_out="$(python3 -I -B tools/check_guard_conventions.py --self-test 2>&1)"
 st_status=$?
@@ -626,6 +769,7 @@ case "$gc_out" in
     ;;
 esac
 
+# section: unfiltered-ss
 echo "== ss listener probes are unfiltered (no ss | grep) =="
 ss_st_out="$(python3 -I -B tools/check_unfiltered_ss.py --self-test 2>&1)"
 ss_st_status=$?
@@ -668,6 +812,7 @@ case "$ss_out" in
     ;;
 esac
 
+# section: changelog-prs
 echo "== every merged pull request is recorded in the changelog =="
 if changelog_prs=$(python3 tools/check_changelog_prs.py 2>&1); then
   printf '%s\n' "$changelog_prs"
@@ -686,6 +831,7 @@ else
   printf '%s\n' "$changelog_prs" | sed 's/^/          /'
 fi
 
+# section: changelog-prs-tests
 echo "== the changelog-coverage gate still catches what it claims =="
 if changelog_tests=$(python3 tools/test_changelog_prs.py 2>&1); then
   printf '%s\n' "$changelog_tests"
@@ -703,6 +849,7 @@ else
   printf '%s\n' "$changelog_tests" | sed 's/^/          /'
 fi
 
+# section: changelog-format
 echo "== CHANGELOG dated headings: a blank line after each, newest first, one per date =="
 # Row 3.45: a dated heading without the blank line after it slipped through on 2026-10-23,
 # and six older ones lacked it. The gate reads CHANGELOG.md only, not the git history, so a
@@ -720,10 +867,12 @@ for changelog_check in test_changelog_format.py check_changelog_format.py; do
   fi
 done
 
+# section: release-tests
 echo "== the release check still refuses what it claims =="
 # tools/check_release.py runs in the release procedure (CONTRIBUTING.md "Releasing"), not here:
 # it needs a built release directory and runs this suite in a worktree of the target. Its
-# self-test runs here so the shipped rule is tested on every pull request. The self-test builds
+# self-test runs here so the shipped rule is tested on every pull request that changes it and on
+# every whole-suite run. The self-test builds
 # throwaway repositories with fixed commit dates and stays offline; the check compares a
 # target's UTC date with today's, and the fixtures sit in October 2026 and in 2099.
 if release_tests=$(python3 -I -B tools/test_release.py 2>&1); then
@@ -737,6 +886,7 @@ else
   bad "test_release.py failed"
 fi
 
+# section: todo-rows
 echo "== TODO.md: one backlog row per line =="
 # Finding F-TODO-ROW-CONCATENATION: a lost line break joins two banded-table rows onto one line,
 # and Markdown renders the second inside the first row's last cell. #71 committed one, joining
@@ -753,6 +903,7 @@ for todo_check in test_todo_rows.py check_todo_rows.py; do
   fi
 done
 
+# section: prose-conventions
 echo "== prose conventions: Oxford -ize and house placeholders =="
 # A corpus-wide -ize conversion missed a word because its word list was incomplete, and the same word
 # was written into a new guide hours later. A placeholder outside the house set reached the corpus and
@@ -775,6 +926,7 @@ else
   printf '%s\n' "$prose_conv" | sed 's/^/          /'
 fi
 
+# section: shell-blocks
 echo "== every fenced bash block is shell =="
 # Nothing in this suite checked whether the shell in a Verify block parses, and a reader
 # pastes these into a terminal. What it catches is five real defects this corpus was
@@ -801,6 +953,7 @@ else
   printf '%s\n' "$shellblocks" | sed 's/^/          /'
 fi
 
+# section: python-version
 echo "== local Python release matches CI =="
 # Advisory like the shellcheck SKIP above: html.parser can change between releases.
 # Never set fail here, including when the workflow or the interpreter cannot be read.
@@ -846,6 +999,7 @@ then
   printf '  SKIP  Python version comparison unavailable: python3 did not complete\n'
 fi
 
+# section: python-version-tests
 echo "== the Python-version notice still reports without failing =="
 if python_notice_tests=$(python3 tools/test_python_version_notice.py 2>&1); then
   printf '%s\n' "$python_notice_tests"
@@ -858,6 +1012,7 @@ else
   printf '%s\n' "$python_notice_tests"
 fi
 
+# section: shell-blocks-tests
 echo "== the shell-block gate still catches what it claims =="
 # Two of these cases assert what the gate does NOT catch, which are the very defects that
 # prompted it. They are recorded so the file cannot quietly start claiming that coverage.
@@ -877,6 +1032,7 @@ else
   printf '%s\n' "$shellblock_tests" | sed 's/^/          /'
 fi
 
+# section: bracket-ranges
 echo "== no bracket range in a fenced bash block works as a validator =="
 # Outside the C locale GNU grep, GNU sed and bash [[ =~ ]] let a range such as [A-Za-z] or
 # [0-9a-f] match non-ASCII letters and digits, so a guard written with one accepts values it
@@ -903,6 +1059,7 @@ else
   printf '%s\n' "$bracket_ranges" | sed 's/^/          /'
 fi
 
+# section: bracket-ranges-tests
 echo "== the bracket-range gate still catches what it claims =="
 # Eight of these cases assert what the gate does NOT catch, so the file cannot quietly start
 # claiming that coverage.
@@ -922,9 +1079,11 @@ else
   printf '%s\n' "$bracket_range_tests" | sed 's/^/          /'
 fi
 
+# section: quote-guards
 echo "== literal quote guards preserve diagnostics and status =="
 python3 tools/test_quote_guards.py || fail=1
 
+# section: convention-gates-tests
 echo "== the convention gates still catch what review found =="
 # The two gates above were broken repeatedly across rounds of cross-family review, and
 # several of those rounds broke something an earlier round had fixed. Each case in this
@@ -947,6 +1106,7 @@ else
   printf '%s\n' "$gate_tests" | sed 's/^/          /'
 fi
 
+# section: local-links
 echo "== local links resolve =="
 # Heading slugs of a Markdown file, using the GitHub transformation: lowercase, drop everything but
 # letters, digits, spaces and hyphens, then spaces to hyphens.
@@ -1085,6 +1245,7 @@ done
 
 [ "$links" = 1 ] && ok "every local link target and heading anchor resolves"
 
+# section: copy-buttons
 echo "== site copy buttons =="
 # Every copy button names the <pre> it copies from; a dangling data-copy is a silently dead button.
 # Every .html page under site/ is read, the /draft/ review page and the 404 included; each finding names its page.
@@ -1118,6 +1279,7 @@ else
 fi
 
 
+# section: pinned-citations
 echo "== source citations are pinned, not mutable branch refs =="
 # tools/check_pinned_citations.py flags raw.githubusercontent/github-blob citations whose REF segment
 # is main or master (a main/master inside a file path is not flagged). Advisory: it fails only when a
@@ -1140,6 +1302,7 @@ else
   bad "the pinned-citation gate could not complete (exit $pc_rc); failing closed:"
   printf '%s\n' "$pc" | sed 's/^/          /'
 fi
+# section: verify-marking
 echo "== Verify fences, list items, table rows and prose declare demonstration or reasoning =="
 # Keep retained exemptions visible; a baseline pass is not full corpus compliance.
 # Run on its own, an absent/mismatched parser emits one SKIP and fence checks still run, but
@@ -1165,6 +1328,7 @@ else
   printf '%s\n' "$vm_st"
   bad "Verify-marking self-test failed"
 fi
+# section: exposure-index
 echo "== every port a guide names is mapped by the exposure index =="
 # tools/check_exposure_index.py: a guide that documents a listener exposure-index.md never maps leaves a
 # reader holding a scan result with nothing to search on. A fixed set of port shapes (listed in the
@@ -1185,6 +1349,7 @@ else
   bad "exposure-index self-test failed: $(printf '%s' "$ei_st" | tail -1)"
 fi
 
+# section: walker
 echo "== shared walker scans tracked files only =="
 if walker=$(python3 -B tools/test_walk.py 2>&1); then
   printf '%s\n' "$walker"
@@ -1196,6 +1361,7 @@ else
   bad "test_walk.py failed"
 fi
 
+# section: placeholders
 echo "== no leftover authoring placeholders =="
 # The self-test exercises failing fixtures and clean inputs through the real gate.
 # The corpus run then checks tracked Markdown and VERSION, including TODO and DONE.
@@ -1211,6 +1377,7 @@ for placeholder_check in test_no_placeholders.py check_no_placeholders.py; do
   fi
 done
 
+# section: secrets
 echo "== no committed secrets =="
 # Deliberately narrow: only material that is a credential wherever it appears.
 # A guide that must show sample key output will trip this; allowlist it here
@@ -1232,6 +1399,7 @@ case "$secret_rc" in
     ;;
 esac
 
+# section: secrets-tests
 echo "== secrets scan fails closed on read errors =="
 if secret_tests=$(python3 -I -B tools/test_secrets_scan.py 2>&1); then
   printf '%s\n' "$secret_tests"
@@ -1243,33 +1411,10 @@ else
   bad "test_secrets_scan.py failed"
 fi
 
-# The generated site under site/ (baseline SPECIFICATION section 4.1 item 5, promoted). Each gate
-# runs after its self-test, so a gate that stopped catching its cases cannot report a pass; the
-# pages are checked fresh before the CSP gate reads them. A gate that exits 0 while printing a FAIL
-# line or without printing an ok line, or that crashes, is a failure. tools/test_gate_runners.py
-# reads this function out of this file and runs it on stand-in gates (the next section).
-run_gate() {
-  local label=$1 out
-  shift
-  if out=$("$@" 2>&1); then
-    printf '%s\n' "$out"
-    if grep -q '^  FAIL  ' <<< "$out"; then
-      bad "$label printed findings but exited 0"
-    elif ! grep -q '^  ok    ' <<< "$out"; then
-      bad "$label exited 0 without an ok line"
-    fi
-  elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$out"; then
-    bad "$label crashed"
-    printf '%s\n' "$out" | sed 's/^/          /'
-  elif grep -q '^  FAIL  ' <<< "$out"; then
-    printf '%s\n' "$out"
-    fail=1
-  else
-    bad "$label exited non-zero without reporting a result"
-    printf '%s\n' "$out" | sed 's/^/          /'
-  fi
-}
-
+# The generated site under site/ (baseline SPECIFICATION section 4.1 item 5, promoted). The site
+# gates below run through run_gate, defined before the first section, and the pages are checked
+# fresh before the CSP gate reads them.
+# section: gate-runners
 echo "== run_gate and scripts/pages-build.sh still fail closed =="
 # tools/test_gate_runners.py runs run_gate, read out of this file, on stand-in gates, and runs
 # scripts/pages-build.sh, as committed and in its promoted form at /, with a stand-in python3 that
@@ -1286,10 +1431,29 @@ else
   bad "test_gate_runners.py failed"
 fi
 
+# section: select-gates-tests
+echo "== the pull-request gate selector maps paths to sections and fails safe =="
+# tools/select_gates.py names the sections a pull request runs. Its cases cover each scoped kind of
+# content, each kind of path that selects every section, an unmapped path and an empty list, and
+# hold its map to the section names in this file and to the files in the checkout. It reads no git
+# history and no network.
+if select_tests=$(python3 -I -B tools/test_select_gates.py 2>&1); then
+  printf '%s\n' "$select_tests"
+  if grep -q '^  FAIL  ' <<< "$select_tests" ||
+     ! grep -qE '^  ok    [0-9]+ recorded cases for the gate selector$' <<< "$select_tests"; then
+    bad "test_select_gates.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$select_tests"
+  bad "test_select_gates.py failed"
+fi
+
+# section: baseline-pin
 echo "== the copied site template files match their pin =="
 run_gate test_baseline_pin.py python3 -I -B tools/test_baseline_pin.py
 run_gate check_baseline_pin.py python3 -I -B tools/check_baseline_pin.py
 
+# section: palette
 echo "== the site palette passes the template's contrast gate =="
 # From baseline 1.6.0 the palette gate is mandatory on every site (SPECIFICATION section 4 item 3).
 # .baseline/check_palette.py is the template's own file, copied and pinned (the gate above holds it
@@ -1297,7 +1461,9 @@ echo "== the site palette passes the template's contrast gate =="
 # run_gate's ok-line rule does not fit it. Its contract is its exit code (baseline 1.6.1 README):
 # 0 pass, 1 fail or unreadable input, 2 usage error. This decides by the exit code only, never by
 # the wording of the printed lines, and prints the gate's output in every case; any code other than
-# 0 fails, a crash (1) or a signal included. secureconfig.ai has no site-palette.css.
+# 0 fails, a crash (1) or a signal included. Only the message reads the output: an exit 1 whose
+# output holds a `Traceback (most recent call last):` line says the gate crashed, since Python exits
+# 1 on an uncaught exception. secureconfig.ai has no site-palette.css.
 # scripts/pages-build.sh runs the same call under set -e.
 if palette=$(python3 -I -B .baseline/check_palette.py --site secureconfig --palettes site/assets/baseline/palettes.css 2>&1); then
   printf '%s\n' "$palette"
@@ -1306,23 +1472,33 @@ else
   palette_rc=$?
   printf '%s\n' "$palette"
   case "$palette_rc" in
-    1) bad "check_palette.py exited 1: a palette check failed or its input could not be read" ;;
+    1)
+      if grep -qxF 'Traceback (most recent call last):' <<< "$palette"; then
+        bad "check_palette.py exited 1 with a Python traceback: the gate crashed; the palette is unverified"
+      else
+        bad "check_palette.py exited 1: a palette check failed or its input could not be read"
+      fi
+      ;;
     2) bad "check_palette.py exited 2, a usage error; the palette is unverified" ;;
     *) bad "check_palette.py exited $palette_rc, an unexpected error; the palette is unverified" ;;
   esac
 fi
 
+# section: site-build
 echo "== the site pages are a fresh build of their sources =="
 run_gate test_build_site.py python3 -I -B tools/test_build_site.py
 run_gate "build-site.py --check" python3 -I -B scripts/build-site.py --check
 
+# section: site-draft
 echo "== the site is self-contained and only /draft/ and the 404 are noindex =="
 run_gate test_draft.py python3 -I -B tools/test_draft.py
 run_gate check_draft.py python3 -I -B tools/check_draft.py
 
+# section: pages-build
 echo "== the Pages build check's Python files parse as Python 3.11 =="
 run_gate test_pages_build.py python3 -I -B tools/test_pages_build.py
 
+# section: site-csp
 echo "== every site page fits the template page model and the CSP is the shared policy =="
 # Since promotion tools/check_csp_hashes.py holds every page under site/ to the template page
 # model: no inline <style> or <script> at all (a page's scripts are the generator's same-origin
@@ -1351,6 +1527,7 @@ else
   printf '%s\n' "$csp" | sed 's/^/          /'
 fi
 
+# section: site-csp-tests
 echo "== the CSP page-model gate still catches what review found =="
 # Five review rounds (#352) taught the gate's page model where html.parser and a browser part
 # company, and the test file keeps every one of those refusals, retargeted to the generated
@@ -1371,6 +1548,7 @@ else
   printf '%s\n' "$csp_tests" | sed 's/^/          /'
 fi
 
+# section: security-txt
 echo "== site/.well-known/security.txt carries the owner's six fields =="
 # W3 (the owner's decision of 2026-11-03): the repository serves security.txt and Cloudflare's own
 # security.txt feature is off, so a wrong contact or policy URL would ship with nothing to say so.
@@ -1390,6 +1568,7 @@ for security_txt_check in test_security_txt.py check_security_txt.py; do
   fi
 done
 
+# section: sitemap
 echo "== site/sitemap.xml lists the live pages dated by their last change, and robots.txt names it =="
 # W4 (the owner's decision A6 of 2026-11-03): sitemap.xml lists every indexable live page with a
 # lastmod and no /draft/ page, and robots.txt carries one Sitemap line. tools/check_sitemap.py
@@ -1411,6 +1590,7 @@ for sitemap_check in test_sitemap.py check_sitemap.py test_sitemap_lastmod.py ch
   fi
 done
 
+# section: workflow-pins
 echo "== workflow actions are pinned to full commit SHAs =="
 # Row 3.17 (#348) pinned every workflow `uses:` to a full commit SHA with a `# vX.Y.Z` comment naming
 # the release, and nothing held it there: the next `@v4` would have merged green. This fails a tag, a
@@ -1437,6 +1617,7 @@ else
   printf '%s\n' "$workflow_pins" | sed 's/^/          /'
 fi
 
+# section: workflow-pins-tests
 echo "== the workflow-pin gate still catches what it claims =="
 # Every check in the gate has a case here that fails when the check is removed. Some cases assert a
 # PASS instead, because a gate that alarms on them would be switched off: a `run: |` block of shell
@@ -1459,6 +1640,7 @@ else
   printf '%s\n' "$workflow_pin_tests" | sed 's/^/          /'
 fi
 
+# section: lychee-tests
 echo "== weekly link reports fail closed on incomplete sweeps =="
 if lychee_tests=$(python3 -I -B tools/test_lychee_report.py 2>&1); then
   printf '%s\n' "$lychee_tests"
@@ -1470,6 +1652,7 @@ else
   bad "lychee report fixtures failed"
 fi
 
+# section: citation-sweep-import
 echo "== the advisory citation sweep still imports =="
 # NOT a gate on the citations themselves: report_citation_drift.py reaches the network and can
 # never run in this suite. But it imports SOURCES_RE, headings and section_body from
@@ -1485,6 +1668,7 @@ else
   bad "report_citation_drift.py no longer imports; the weekly citation sweep would fail: $imp"
 fi
 
+# section: aiqt-baseline
 echo "== AIQT baseline =="
 # The vendored gates derive the repo root from their own location, so they operate on this tree.
 # AIQT_SITE_HOST retargets the upstream helpers from their aiqt.ai default; AIQT_NEWTAB_ROOTS limits the
@@ -1506,8 +1690,11 @@ else
 fi
 python3 tools/gen_aiqt_settings.py --check || fail=1
 
+# end of sections
 echo
-if [ "$fail" = 0 ]; then
+if [ "$fail" = 0 ] && [ -n "$selected_sections" ]; then
+  echo "All selected gates passed ($selected_sections); the other sections did not run."
+elif [ "$fail" = 0 ]; then
   echo "All gates passed."
 else
   echo "One or more gates failed."
