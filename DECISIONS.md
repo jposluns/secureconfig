@@ -17,6 +17,18 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-04 on the `pocketbase.md` Appwrite version basis, TODO 1.388 (#1209).** The
+  maintainer ruled through AskUserQuestion on 2026-11-04, and the ruling was recorded in the orchestrator's store
+  and is entered here by #1209. The time of the ruling was not relayed with it, and no reasoning was recorded beyond
+  its terms. The brief for #1209 relays those terms, not as a verbatim quote of the record, as: move the basis to
+  2.7.0, checking each cited statement against 2.7.0's release notes and source as well as the served pages, and
+  stating any 2.7.0 change those pages do not reflect; also state the 2.3.0 console URL change and the 17 August
+  2026 API key deprecation. Its effect (applied by #1209): `pocketbase.md`'s Appwrite basis moves from 2.2.0 to
+  2.7.0, and its utopia-php/database basis from 7.3.9 to 10.1.0, the version 2.7.0 pins, with every Appwrite and
+  utopia-php/database source re-pinned. The guide quotes the 2.3.0 console URL change and the key-creation
+  deprecation, and states the 2.7.0 changes that the pages served on 2026-11-04 do not reflect. Statements those
+  sources could not settle are not asserted at 2.7.0 and are tracked in TODO 1.429, and TODO 1.388 closes (DONE
+  1.388). The revert path is a later maintainer ruling for another basis, which re-pins the sources again.
 - **Owner rulings of 2026-11-03 on QA and CI scope (#1194).** The owner gave four rulings on 2026-11-03. They
   reached this change through the orchestrator's briefs, and the channel and the times were not recorded with
   them. The rulings as recorded, verbatim:
