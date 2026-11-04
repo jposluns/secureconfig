@@ -4,23 +4,27 @@
 The refusals are SPECIFICATION section 12's: a page carrying a dash character (U+2010 to
 U+2015, U+2212), an inline style or style= attribute, an inline script, an on* attribute or "what
 this is" framing is never written. Each is planted in a real generated page and must be refused,
-while the page as generated passes.
+while the page as generated passes. An on* attribute is a name in a tag: an onload after a quoted
+value holding ">" is refused, and the word "on" inside a closed quoted value (a description reading
+"Read on GitHub") is not refused.
 The base path must reach every internal link and asset at / (the default since promotion) and at
 /draft/ (the staging form). At the root, every page is indexable except the 404 page and the
 /draft/ review page, which carry the noindex meta; a staged build is noindex everywhere. The
 review page carries its canonical, description and link previews at every base (as auditthis.ai's
 /draft/ page does), and no other page names /draft/. At the root each indexable page and the
-review page carry their description, the link-preview tags (og:site_name after og:type) and their
-canonical in the template's head order; the 404 page and a staged build's other pages carry no
-previews.
+review page carry their title, description, the link-preview tags (og:site_name after og:type)
+and their canonical in the template's head order, each tag with its full value (the page title with
+" | SecureConfig.ai", the description from site-src/content.json, the card's alt text); the 404
+page and a staged build's other pages carry no previews.
 Every page, the 404 and the review page included, at both bases, carries the light and dark switch
 of baseline 1.6.0 (SPECIFICATION 7.33) exactly as the reference pages write it, once, as the last
 child of the top bar after its nav, and loads scheme.js once, right after the touch icon and
 before the first stylesheet, with data-cfasync="false" before src and no defer or async.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
-page at any base; a stray file outside assets/baseline/ is refused in a staged build and allowed
-at the root, where the published files (llms.txt, robots.txt, _headers) sit beside the pages.
+page at any base; a stray file outside assets/baseline/ is refused at both bases, except at the
+root a published file (PUBLISHED, such as llms.txt) beside the pages.
 """
+import html
 import importlib.util
 import shutil
 import subprocess
@@ -47,6 +51,14 @@ REFERENCE_SWITCH = (
     'focusable="false"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 '
     '12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>'
     '</svg><span class="vh">Dark mode</span></button>')
+# Each page with link previews at the root: its title and the site-src/content.json key of its
+# description.
+PREVIEWS = {"index.html": ("Home", "home"), "guides/index.html": ("Guides", "guides"),
+            "for-ai/index.html": ("For AI assistants", "for_ai"),
+            "for-humans/index.html": ("For humans", "for_humans"),
+            "checklist/index.html": ("Checklist", "checklist"),
+            "disclosure/index.html": ("Disclosure", "disclosure"),
+            "license/index.html": ("Licence", "license"), "draft/index.html": ("Draft review", "draft")}
 
 
 def refused(text):
@@ -65,7 +77,8 @@ def run(*args):
 
 def main():
     failures = []
-    pages = build_site.Builder("/").build()
+    builder = build_site.Builder("/")
+    pages = builder.build()
     home = pages["index.html"]
     rail_page = pages["disclosure/index.html"]
     plants = [
@@ -90,6 +103,14 @@ def main():
         ("an onclick attribute", home.replace('<p class="intro">', '<p class="intro" onclick="x()">', 1),
          "on* attribute"),
         ("a valueless onload attribute", home.replace("<body>", "<body onload>", 1), "on* attribute"),
+        # The on* check reads attribute names, so a ">" inside a quoted value does not end the tag,
+        # and a word in a closed quoted value hides no name after it.
+        ('an onload after a quoted value holding ">"',
+         home.replace('<p class="intro">', '<p class="intro" title="a>b" onload>', 1), "on* attribute"),
+        ('an onload after a quoted value reading "read on"',
+         home.replace('<p class="intro">', '<p class="intro" title="read on" onload>', 1),
+         "on* attribute"),
+        ("an on after a quote that never closes", home + '<p title="read on>', "on* attribute"),
         ('"what this is" framing', home.replace("Start here", "What this is", 1), "what this is"),
     ]
     for desc, text, expected in plants:
@@ -102,6 +123,11 @@ def main():
     for name, text in pages.items():
         if refused(text) is not None:
             failures.append(f"{name} as generated is refused: {refused(text)}")
+    # #1189 drafting: a description may use the word "on" inside its quoted value.
+    worded = home.replace('<meta name="description" content="',
+                          '<meta name="description" content="Read on GitHub. ', 1)
+    if worded == home or refused(worded) is not None:
+        failures.append(f'a description reading "Read on GitHub" was refused: {refused(worded)!r}')
 
     # The base path reaches every internal link and asset, at the root and in the staging form.
     staged_pages = build_site.Builder("/draft/").build()
@@ -151,10 +177,11 @@ def main():
             if needle not in review:
                 failures.append(f"base {base}: the review page lacks {needle}")
 
-    # At the root each indexable page and the review page carry their description, then the link
-    # previews (og:site_name after og:type, as auditthis.ai orders it), then the icons and
-    # stylesheets, then their canonical URL; the 404 page carries no link previews, canonical or
-    # description, and a staged build's other pages no link previews or canonical.
+    # At the root each indexable page and the review page carry their title and description, then
+    # the link previews (og:site_name after og:type, as auditthis.ai orders it), then the icons and
+    # stylesheets, then their canonical URL, each tag with its full value; the 404 page carries no
+    # link previews, canonical or description, and a staged build's other pages no link previews or
+    # canonical.
     for name, text in pages.items():
         head = text.split("</head>", 1)[0]
         if name == "404.html":
@@ -164,20 +191,28 @@ def main():
                 failures.append("base /: 404.html carries a canonical or a description")
             continue
         url = build_site.ORIGIN + "/" + name[:-len("index.html")]
-        needles = ("</title>", '<meta name="description" content="',
+        # #1189 QA: the full value of each tag, not its prefix.
+        title, key = PREVIEWS[name]
+        full = html.escape(f"{title} | SecureConfig.ai", quote=True)
+        desc = html.escape(builder.n(builder.c[key]["description"]["text"]), quote=True)
+        alt = html.escape(build_site.CARD_ALT, quote=True)
+        needles = (f"<title>{title} | SecureConfig.ai</title>",
+                   f'<meta name="description" content="{desc}">',
                    '<meta property="og:type" content="website">',
                    '<meta property="og:site_name" content="SecureConfig.ai">',
-                   f'<meta property="og:url" content="{url}">', '<meta property="og:title" content="',
-                   '<meta property="og:description" content="',
+                   f'<meta property="og:url" content="{url}">',
+                   f'<meta property="og:title" content="{full}">',
+                   f'<meta property="og:description" content="{desc}">',
                    f'<meta property="og:image" content="{build_site.CARD}">',
                    '<meta property="og:image:type" content="image/png">',
                    '<meta property="og:image:width" content="1200">',
                    '<meta property="og:image:height" content="630">',
-                   '<meta property="og:image:alt" content="',
+                   f'<meta property="og:image:alt" content="{alt}">',
                    '<meta name="twitter:card" content="summary_large_image">',
-                   '<meta name="twitter:title" content="', '<meta name="twitter:description" content="',
+                   f'<meta name="twitter:title" content="{full}">',
+                   f'<meta name="twitter:description" content="{desc}">',
                    f'<meta name="twitter:image" content="{build_site.CARD}">',
-                   '<meta name="twitter:image:alt" content="', '<link rel="icon" ',
+                   f'<meta name="twitter:image:alt" content="{alt}">', '<link rel="icon" ',
                    '<script data-cfasync="false" src="/assets/baseline/scheme.js"></script>',
                    '<link rel="stylesheet" href="/assets/baseline/baseline.css">',
                    f'<link rel="canonical" href="{url}">')
@@ -220,13 +255,20 @@ def main():
         if rc != 1 or "Extra.HTM is not a page this build writes" not in text:
             failures.append(f"--check missed an extra .HTM page: {text!r}")
         (out / "Extra.HTM").unlink()
-        # At the root base the published files sit beside the pages, so a non-page stray passes
-        # --check here; the CSP and self-containment gates read the real tree.
+        # At the root base the published files (PUBLISHED) sit beside the pages and pass --check.
         (out / "llms.txt").write_text("# index\n", encoding="utf-8")
         rc, text = run("--check", "--out", str(out))
         if rc != 0:
-            failures.append(f"--check at the root refused a non-page file beside the pages: {text!r}")
+            failures.append(f"--check at the root refused a published file beside the pages: {text!r}")
         (out / "llms.txt").unlink()
+        # #1189 QA: any other file at the root is refused, so a stray script cannot ship.
+        for stray in ("assets/other.js", "notes.txt"):
+            (out / stray).parent.mkdir(exist_ok=True)
+            (out / stray).write_text("x\n", encoding="utf-8")
+            rc, text = run("--check", "--out", str(out))
+            if rc != 1 or f"{stray} is neither a page this build writes" not in text:
+                failures.append(f"--check at the root accepted a stray {stray}: {text!r}")
+            (out / stray).unlink()
         (out / "404.html").unlink()
         rc, text = run("--check", "--out", str(out))
         if rc != 1 or "404.html is missing" not in text:
@@ -266,11 +308,12 @@ def main():
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {len(plants)} planted refusals, the base path at / and /draft/ with the root's "
-          f"indexability, link previews and canonicals and the review page's canonical and link "
-          f"previews, the light and dark switch and scheme.js on every page at both bases, and "
-          f"--check on a changed, an extra .html "
-          f"and .HTM page, a missing page, a root-base non-page file, and the staged strays")
+    print(f"  ok    {len(plants)} planted refusals and a description using the word on, the base "
+          f"path at / and /draft/ with the root's indexability, link previews at their full values "
+          f"and canonicals and the review page's canonical and link previews, the light and dark "
+          f"switch and scheme.js on every page at both bases, and --check on a changed, an extra "
+          f".html and .HTM page, a missing page, a root-base published file and strays, and the "
+          f"staged strays")
     return 0
 
 
