@@ -33,10 +33,12 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   on 2026-11-04, and the orchestrator recorded the ruling in its store; the time was not recorded with it here. The
   ruling: move JupyterHub to 6.1.1, the newest release, with jupyter_server v2.21.1. No reasoning was recorded beyond
   its terms. The standing policy above, given after it, adds 5.5.4, the last 5.x release, beside 6.1.1 where the two
-  differ. Its effect (applied by #1212): `jupyter.md` re-pins its pinned JupyterHub source citations to 6.1.1, adds
-  5.5.4 citations where the releases differ, re-pins its pinned Jupyter Server source citations to v2.21.1, leaves
-  the rolling documentation pages to TODO 1.431, revises the statements that changed, and
-  records the questions the source passes could not settle as not established, with TODO row 1.431 tracking them.
+  differ. Its effect (applied by #1212): `jupyter.md` re-pins its pinned JupyterHub citations to 6.1.1, adds 5.5.4
+  citations where the releases differ, re-pins its pinned Jupyter Server citations to v2.21.1, and moves its `stable`
+  links to the proxy configuration, authenticator API, configuration reference and spawners pages to `/en/6.1.1/`.
+  It leaves its other `stable` and `latest` pages rolling and its links cited without line ranges without them, both
+  tracked in TODO 1.431, revises the statements that changed, and records the questions the source passes could not
+  settle as not established, with TODO row 1.431 tracking them.
   The revert path is a later maintainer ruling for another basis, which re-pins the sources and revises the
   statements that depend on the basis.
 - **Maintainer ruling of 2026-11-04 on `surrealdb.md` TODO 1.422 (#1211).** The maintainer ruled through
