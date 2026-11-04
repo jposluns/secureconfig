@@ -23,30 +23,39 @@ and `\\` read as `/`: site/llms.txt, site/robots.txt and site/.well-known/securi
 for any literal `draft` once tabs and CRs are deleted (relative, Disallow, bold, host-only, www,
 href=, backslash, 1-slash, .html, character-reference, tab and CR spellings and a raw CR inside
 the path among the cases) and accept "Raft consensus and Raft logs", and site/llms-full.txt for
-each URL that resolves against https://secureconfig.ai/llms-full.txt to this site with `draft` as
-its first path segment. Every llms-full.txt refusal of the regex rule this replaced is kept (bare
-paths and URLs, character references, a tab or CR character reference or a raw CR inside the
-path, a tab as the only separator between a word and the reference, Markdown link destinations,
-reference definitions, HTML attribute values, a link broken across a line end or inside a
-blockquote, a reference definition whose destination is on the next line, whose label spans 2
-lines, or that sits in a blockquote or a list item). Added: each URL form the parser reads (an
-image, an autolink, an unused and a duplicate reference definition, a definition destination
-split by a line end, and each URL-valued HTML attribute, srcset and ping candidates and a meta
-refresh among them) and each normalization (a leading C0 control, trailing C0 controls and
-spaces, a line end inside the scheme, `https:` without slashes, `https:///`, a Pages alias, a dot
-segment, a percent-encoded upper-case path, backslashes, a tab, CR or LF inside a character
-reference or a percent escape, a refresh with a whitespace-only separator, a line end inside its
-URL, an entity-quoted URL or a spaced `URL =`). Those cases, and the 3 cases whose only separator
-is a tab, also assert exactly which ways of reading (a Markdown construct, an HTML attribute or a
-bare word) the finding names. Prose ("drafting", "drafted", "a draft.", "the draft's",
-"draft / final", "and Raft", "Choose draft" wrapped before "/ final wording." in the text and in
-a link title, "draft-ietf-oauth-v2-1", a datatracker draft URL, a description meta saying
-"draft" or "url=draft", a content on an element with `data-http-equiv`, a link title "draft"),
-`https://draft.example/`, a host named draft on another site, and a reference definition
-followed by a line starting "draft" are accepted. A 9-times percent-encoded path exceeds the
-round limit and is refused. Each refusal names the file and line, counted by `\\n` only (a
-U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a
-reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and write
+whatever main's pattern rule (forms a to e on the normalized text and on it with tabs and CRs
+deleted) or the parser rule (each Markdown or raw HTML URL that resolves against
+https://secureconfig.ai/llms-full.txt to this site with `draft` as its first path segment)
+refuses. Every llms-full.txt refusal of main's rule is kept (bare paths and URLs, character
+references, a tab or CR character reference or a raw CR inside the path, a tab as the only
+separator between a word and the reference, Markdown link destinations, reference definitions,
+HTML attribute values, a link broken across a line end or inside a blockquote, a reference
+definition whose destination is on the next line, whose label spans 2 lines, or that sits in a
+blockquote or a list item). Added: each URL form the parser reads (an image, an autolink, an
+unused and a duplicate reference definition, and each URL-valued HTML attribute, srcset and ping
+candidates, a srcdoc and a meta refresh among them) and each normalization (a leading C0
+control, trailing C0 controls and spaces, a line end inside the scheme, `https:` without slashes,
+`https:///`, a Pages alias, a dot segment, a percent-encoded upper-case path, backslashes, a
+character reference or percent escape that decodes to a tab or CR between 2 letters of the path
+(`dr&#9;aft`, `dr%0Daft`, `/dr%09aft/`), a tab planted inside a percent escape, as a raw tab
+(`%6<TAB>4raft`) or as `&#9;` (`%6&#9;4raft`, in a link and in an href), a soft hyphen in the
+host, a refresh with a whitespace-only separator, a line end inside its URL, an entity-quoted URL
+or a spaced `URL =`), and the input of each HIGH finding of QA round 1.
+Those cases, and the 3 cases whose only separator is a tab, also assert exactly which ways of
+reading (main's pattern rule, a Markdown construct or an HTML attribute) the findings name. Prose
+("drafting", "drafted", "a draft.", "the draft's", "draft / final", "and Raft", "Choose draft"
+wrapped before "/ final wording." in the text and in a link title, "draft-ietf-oauth-v2-1", a
+datatracker draft URL, a description meta saying "This is a draft.", a link title "draft"), a
+host name `draft.example.com/notes`, a reference definition followed by a line starting
+"draft", and a definition destination `dr` followed by a line starting `aft` are accepted.
+`https://draft.example/`, `https://draft/`, `url=draft` in a description meta or beside
+`data-http-equiv`, and QA round 1's titles, `data-href` and a refresh on a `div` are refused by
+main's rule, so those refusals are no regression; `/dr&#10;aft/` and `/dr%0Aaft/` (an escape
+that decodes to an LF between 2 letters of a bare path in prose) are accepted, as main accepts
+them, since no URL reader reads a bare path. A 9-times percent-encoded path exceeds the round
+limit and is refused. Each refusal names the file and line, counted by `\\n` only (a U+2028 or a
+`\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a reference on
+line 2 as line 2). The edit, append, prepend and crlf mutations read and write
 bytes, so they translate no newline. A second robots meta whose first name attribute is robots is
 read by that first name, as a browser reads it.
 
@@ -221,83 +230,128 @@ LINK = "a Markdown link destination"
 IMAGE = "a Markdown image source"
 AUTOLINK = "a Markdown autolink"
 DEFINITION = "a Markdown reference definition"
-JOINED = "a Markdown reference definition joined across a line end"
 REFRESH = "an HTML meta refresh URL"
-BARE = "a bare URL or path"
+# Main's pattern rule (forms a to e), as its findings name it.
+PATTERN = "a reference to the draft path"
 
 
 def attr(name):
     return f"the HTML {name} attribute"
 
 
+def in_srcdoc(name):
+    return f"{attr(name)} inside a srcdoc"
+
+
 # llms-full.txt refusals that also assert every way the gate read the URL on that line, each with
 # how many lines below the first appended line the finding is. A reference definition follows a
-# blank line, so it is a definition and not a paragraph continuation.
+# blank line, so it is a definition and not a paragraph continuation. PATTERN in a set means
+# main's rule refuses the line too; a set without it is a refusal the parser adds.
 READ_AS = (
-    # A tab as the only separator between a word and the reference: the bare-word reader splits
-    # at the tab, and the HTML parser reads the attribute after it.
-    ("The next version is staged at https://secureconfig.ai/draft\tfor review.\n", {BARE}, 0),
-    ("The next version: see\tdraft/notes for review.\n", {BARE}, 0),
-    ('The next version is staged <a\thref="draft">here</a>.\n', {attr("href")}, 0),
+    # A tab as the only separator between a word and the reference: main's patterns read the kept
+    # tab, and the HTML parser reads the attribute after it.
+    ("The next version is staged at https://secureconfig.ai/draft\tfor review.\n", {PATTERN}, 0),
+    ("The next version: see\tdraft/notes for review.\n", {PATTERN}, 0),
+    ('The next version is staged <a\thref="draft">here</a>.\n', {PATTERN, attr("href")}, 0),
     # The same 3 ways with a space.
-    ("The next version: see draft/notes for review.\n", {BARE}, 0),
-    ("\n[review]: draft\n", {DEFINITION}, 1),
-    ('The next version is staged <a href="draft">here</a>.\n', {attr("href")}, 0),
+    ("The next version: see draft/notes for review.\n", {PATTERN}, 0),
+    ("\n[review]: draft\n", {PATTERN, DEFINITION}, 1),
+    ('The next version is staged <a href="draft">here</a>.\n', {PATTERN, attr("href")}, 0),
     # Ordinary Markdown read across a line end or a blockquote or list marker: a reference
     # definition whose destination is on the next line, whose label spans 2 lines (reported on
     # the line it closes), or that sits in a blockquote or a list item, and an inline link broken
     # inside a blockquote.
-    ("\n[review]:\n  draft\n", {DEFINITION}, 1),
-    ("\n[review\nnotes]: draft\n", {DEFINITION}, 2),
-    ("\n> [review]: draft\n", {DEFINITION}, 1),
-    ("\n- [review]: draft\n", {DEFINITION}, 1),
-    ("> The next version is staged [x](\n> draft) for review.\n", {LINK}, 0),
+    ("\n[review]:\n  draft\n", {PATTERN, DEFINITION}, 1),
+    ("\n[review\nnotes]: draft\n", {PATTERN, DEFINITION}, 2),
+    ("\n> [review]: draft\n", {PATTERN, DEFINITION}, 1),
+    ("\n- [review]: draft\n", {PATTERN, DEFINITION}, 1),
+    ("> The next version is staged [x](\n> draft) for review.\n", {PATTERN, LINK}, 0),
     # Each Markdown form.
-    ("See ![logo](draft) here.\n", {IMAGE}, 0),
-    ("See <https:draft> here.\n", {AUTOLINK, BARE}, 0),
-    ("\n[unused]: <draft>\n", {DEFINITION}, 1),
-    ("\n[dup]: /guides/\n[dup]: draft\n", {DEFINITION}, 2),
-    # A line end inside an unbracketed definition destination.
-    ("\n[x]: dr\naft\n", {JOINED}, 1),
+    ("See ![logo](draft) here.\n", {PATTERN, IMAGE}, 0),
+    ("See <https:draft> here.\n", {AUTOLINK}, 0),
+    ("\n[unused]: <draft>\n", {PATTERN, DEFINITION}, 1),
+    ("\n[dup]: /guides/\n[dup]: draft\n", {PATTERN, DEFINITION}, 2),
     # Each URL-valued HTML attribute.
-    ('See <img src="draft"> here.\n', {attr("src")}, 0),
+    ('See <img src="draft"> here.\n', {PATTERN, attr("src")}, 0),
     ('See <img srcset="a.png 1x, draft 2x"> here.\n', {attr("srcset")}, 0),
     ('See <link imagesrcset="draft 1x"> here.\n', {attr("imagesrcset")}, 0),
-    ('See <form action="draft"></form> here.\n', {attr("action")}, 0),
-    ('See <button formaction="draft">x</button> here.\n', {attr("formaction")}, 0),
+    ('See <form action="draft"></form> here.\n', {PATTERN, attr("action")}, 0),
+    ('See <button formaction="draft">x</button> here.\n', {PATTERN, attr("formaction")}, 0),
     ('See <object data="draft"></object> here.\n', {attr("data")}, 0),
     ('See <q cite="draft">x</q> here.\n', {attr("cite")}, 0),
     ('See <video poster="draft"></video> here.\n', {attr("poster")}, 0),
     ('See <a href="/guides/" ping="/x draft">x</a> here.\n', {attr("ping")}, 0),
     ('See <table background="draft"></table> here.\n', {attr("background")}, 0),
     ('See <img longdesc="draft"> here.\n', {attr("longdesc")}, 0),
-    ('See <svg><a xlink:href="draft">x</a></svg> here.\n', {attr("xlink:href")}, 0),
+    ('See <svg><a xlink:href="draft">x</a></svg> here.\n', {PATTERN, attr("xlink:href")}, 0),
+    ('See <iframe srcdoc="&lt;img srcset=&quot;draft 1x&quot;&gt;"></iframe> here.\n',
+     {in_srcdoc("srcset")}, 0),
     # Meta refresh: url=, a whitespace-only separator, an LF inside the URL, an entity-quoted URL,
     # a spaced and quoted URL =, and http-equiv in another case.
-    ('<meta http-equiv="refresh" content="0;url=draft">\n', {REFRESH}, 0),
+    ('<meta http-equiv="refresh" content="0;url=draft">\n', {PATTERN, REFRESH}, 0),
     ('<meta http-equiv="refresh" content="0 draft">\n', {REFRESH}, 0),
     ('See <meta http-equiv="refresh" content="0;url=dr\naft"> here.\n', {REFRESH}, 0),
-    ('<meta http-equiv="refresh" content="0;url=&quot;draft&quot;">\n', {REFRESH}, 0),
-    ("<meta http-equiv=\"Refresh\" content=\"5; URL = 'draft'\">\n", {REFRESH}, 0),
+    ('<meta http-equiv="refresh" content="0;url=&quot;draft&quot;">\n', {PATTERN, REFRESH}, 0),
+    ("<meta http-equiv=\"Refresh\" content=\"5; URL = 'draft'\">\n", {PATTERN, REFRESH}, 0),
     # Browser normalization: a leading C0 control, trailing C0 controls and spaces, a line end
     # inside the scheme, backslashes on a special scheme.
     ('See <a href="\x01draft">x</a> here.\n', {attr("href")}, 0),
-    ('See <img src=" draft\x1f "> here.\n', {attr("src")}, 0),
+    ('See <img src=" draft\x1f "> here.\n', {PATTERN, attr("src")}, 0),
     ('See <a href="htt\nps:draft">x</a> here.\n', {attr("href")}, 0),
-    ('See <img src="https:\\\\secureconfig.ai\\draft"> here.\n', {attr("src"), BARE}, 0),
+    ('See <img src="https:\\\\secureconfig.ai\\draft"> here.\n', {PATTERN, attr("src")}, 0),
     # Resolution: https: without slashes, https:/// before the host, a Pages alias, a dot segment,
     # a percent-encoded upper-case path.
-    ("See [x](https:draft) here.\n", {LINK, BARE}, 0),
-    ("See [x](https:///secureconfig.ai/draft/) here.\n", {LINK, BARE}, 0),
-    ("See [x](https://secureconfig.pages.dev/draft/) here.\n", {LINK, BARE}, 0),
-    ("See [x](/guides/../draft/) here.\n", {LINK, BARE}, 0),
-    ("See [x](%44RAFT) here.\n", {LINK}, 0),
-    # A tab, CR or LF inside a character reference or a percent escape.
-    ("See [x](dr&#9;aft) here.\n", {LINK}, 0),
-    ("See [x](dr%0Daft) here.\n", {LINK}, 0),
-    ("The next version is staged at /dr%09aft/ for review.\n", {BARE}, 0),
-    ("The next version is staged at /dr&#10;aft/ for review.\n", {BARE}, 0),
-    ("The next version is staged at /dr%0Aaft/ for review.\n", {BARE}, 0),
+    ("See [x](https:draft) here.\n", {LINK}, 0),
+    ("See [x](https:///secureconfig.ai/draft/) here.\n", {PATTERN, LINK}, 0),
+    ("See [x](https://secureconfig.pages.dev/draft/) here.\n", {PATTERN, LINK}, 0),
+    ("See [x](/guides/../draft/) here.\n", {PATTERN, LINK}, 0),
+    ("See [x](%44RAFT) here.\n", {PATTERN, LINK}, 0),
+    # A character reference or percent escape that decodes to a tab or CR between 2 letters of
+    # the path; nothing is planted inside an escape. Main's rule deletes the decoded tab or CR.
+    ("See [x](dr&#9;aft) here.\n", {PATTERN, LINK}, 0),
+    ("See [x](dr%0Daft) here.\n", {PATTERN, LINK}, 0),
+    ("The next version is staged at /dr%09aft/ for review.\n", {PATTERN}, 0),
+    # A tab planted inside the percent escape %64, as a raw tab or as `&#9;`: a browser deletes
+    # it and the escape names d. Main refuses none of these; the speed shortcut must not skip them.
+    ('See <a href="%6\t4raft">x</a> here.\n', {attr("href")}, 0),
+    # QA round 1, report 1, HIGH 1.
+    ('See <a href="%6&#9;4raft">x</a> here.\n', {attr("href")}, 0),
+    ("See [x](%6&#9;4raft) here.\n", {LINK}, 0),
+    # A backslash escape that markdown-it drops before a percent escape (QA round 1, report 2,
+    # H4): the destination is `dr%61ft/`. Main refuses none of it.
+    ("See [x](dr\\%61ft/) here.\n", {LINK}, 0),
+    # QA round 1, report 1, HIGH 2 and report 2, H2: a soft hyphen in the host, raw and as `&shy;`.
+    ('See <a href="https://secureconfi\N{SOFT HYPHEN}g.ai/draft/">x</a> here.\n',
+     {PATTERN, attr("href")}, 0),
+    ('See <a href="https://secure&shy;config.ai/draft/">x</a> here.\n', {PATTERN, attr("href")}, 0),
+    # QA round 1, report 1, HIGH 5: refused by main's form e; the parser's refresh steps read no
+    # URL after the `f`.
+    ('<meta http-equiv="refresh" content="0.foo;url=draft">\n', {PATTERN}, 0),
+    # QA round 1, report 1, HIGH 6: refused by main's form a, which the parser rule does not
+    # narrow.
+    ('See <a href="/guides/draft/">x</a> here.\n', {PATTERN}, 0),
+    ('See <a href="https://elsewhere.example/draft/">x</a> here.\n', {PATTERN}, 0),
+    # QA round 1, report 2, H1: a bare URL that does not start its word, refused by main's form a.
+    ("See \N{LEFT DOUBLE QUOTATION MARK}https://secureconfig.ai/draft/"
+     "\N{RIGHT DOUBLE QUOTATION MARK} here.\n", {PATTERN}, 0),
+    ("Run it with --url=https://secureconfig.ai/draft/ here.\n", {PATTERN}, 0),
+    ("See the next version\N{EM DASH}secureconfig.ai/draft/ here.\n", {PATTERN}, 0),
+    # QA round 1, report 2, H3: a link inside a srcdoc.
+    ('See <iframe srcdoc="<a href=draft>x</a>"></iframe> here.\n', {PATTERN, in_srcdoc("href")}, 0),
+    # QA round 1, report 1, HIGH 3: no URL the parser reads, but main refuses each (forms b, b, e and
+    # e), so each refusal is no regression.
+    ('[x](/guides/ "Choose draft/final wording")\n', {PATTERN}, 0),
+    ('<meta name="description" content="Choose draft/final wording">\n', {PATTERN}, 0),
+    ('<a data-href="draft">text</a>\n', {PATTERN}, 0),
+    ('<div http-equiv="refresh" content="0;url=draft">text</div>\n', {PATTERN}, 0),
+    # Accepted by the parser rule, which reads no title, description or data-http-equiv content
+    # and no host named draft on another site, but refused by main's form e (`url=`) or a
+    # (`/draft.` and `/draft/`), so each refusal is no regression.
+    ('<meta name="description" content="Example: url=draft">\n', {PATTERN}, 0),
+    ('<meta data-http-equiv="refresh" content="0;url=draft">\n', {PATTERN}, 0),
+    ("See https://draft.example/ for the example.\n", {PATTERN}, 0),
+    ("See [the example](https://draft.example/notes) here.\n", {PATTERN}, 0),
+    ("The host https://draft/ is another site.\n", {PATTERN}, 0),
 )
 INDEX_CASES = [(f"{rel[5:]} naming {spelling}", append(rel, line.format(spelling)),
                 refused_at(rel), 1)
@@ -342,18 +396,22 @@ CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
                 "Keep the gRPC and Raft ports closed.\n",
                 '<meta name="description" content="This is a draft.">\n',
                 '[x](/guide "Choose draft\n/ final wording.")\n',
-                # URL-like text that is no URL to the review page: a description meta and a
-                # content beside data-http-equiv (neither is a refresh), a link title, a host
-                # named draft (on another site, bare, in a link and as a host name), and a
-                # definition whose next line starts with "draft" after a path.
-                '<meta name="description" content="Example: url=draft">\n',
-                '<meta data-http-equiv="refresh" content="0;url=draft">\n',
+                # URL-like text that is no URL to the review page: a link title, a host name
+                # starting draft on another site, and a definition whose next line starts with
+                # "draft" after a path. Main accepts each too.
                 '<a href="/guides/" title="draft">guides</a>\n',
-                "See https://draft.example/ for the example.\n",
-                "See [the example](https://draft.example/notes) here.\n",
-                "The host https://draft/ is another site.\n",
                 "Hosts such as draft.example.com/notes are elsewhere.\n",
-                "\n[guides]: /guides/\ndraft notes follow.\n")
+                "\n[guides]: /guides/\ndraft notes follow.\n",
+                # A definition whose destination is `dr`, with `aft` starting the next line: the
+                # destination ends at the line end, so no URL reads `draft`. Accepted, and main
+                # accepts it too (the second is QA round 1, report 1, HIGH 4).
+                "\n[x]: dr\naft\n",
+                "\n[x]: dr\naft prose follows\n",
+                # A character reference or percent escape that decodes to an LF between 2
+                # letters of a bare path in prose: no URL reader reads a bare path, and main's
+                # rule keeps the LF, so it is accepted, as on main.
+                "The next version is staged at /dr&#10;aft/ for review.\n",
+                "The next version is staged at /dr%0Aaft/ for review.\n")
 INDEX_CASES += [(f"llms-full.txt prose {line.strip()!r}", append("site/llms-full.txt", line),
                  OK_LINE, 0) for line in CORPUS_PROSE]
 # The hand-written indexes refuse only the literal word.

@@ -63,66 +63,83 @@ without newline translation, and each finding names the file and the line, count
 U+2028 or a lone `\\r` ends no line):
   - every line is NORMALIZED: the round { percent-decode; `html.unescape` } repeats until the line
     stops changing, at most 8 rounds (a line still changing in a 9th round is refused); then
-    Unicode NFKC, case folding and every `\\` read as `/`;
+    Unicode NFKC, case folding and every `\\` read as `/`. That gives the KEPT text, and the kept
+    text with every ASCII tab and CR deleted gives the DELETED text (a browser deletes both from a
+    URL; the `\\n`s stay). No step reads across a `\\n`, so normalizing line by line and joining
+    the lines with `\\n` gives the whole text's normalization, and a match maps to the original
+    line it starts on;
   - site/llms.txt, site/robots.txt and site/.well-known/security.txt are hand-written indexes that
-    never need the word, so any literal `draft` in their normalized text with every ASCII tab and
-    CR deleted is refused, read across line ends too (deleting only joins characters, so that text
-    holds every `draft` the normalized text holds);
+    never need the word, so any literal `draft` anywhere in their deleted text is refused, read
+    across line ends too (deleting only joins characters, so the deleted text holds every `draft`
+    the kept text holds);
   - site/llms-full.txt, the generated guide corpus, says "draft" in prose and in `draft-ietf-...`
-    names, so there the rule reads URLs and never a prose word: each URL read in one of the 3 ways
-    below is RESOLVED against https://secureconfig.ai/llms-full.txt and refused when it lands on
-    this site with the draft path. A finding names the way it was read, once per line and way:
-      a. Markdown, parsed by the pinned markdown-it-py with its CommonMark rules (the pin carries
-         no linkify-it-py, so markdown-it reads no bare URL; c reads them): each inline link
-         destination, image source and autolink, and every reference definition, used or not,
-         duplicates too, as written (entities and backslash escapes decoded, nothing
-         percent-encoded); a definition is reported on the line its label closes, and an
-         unbracketed definition destination that ends its line is read again joined to the first
-         word of the next line (a line end inside it). The parse reads `\\r\\n` as `\\n` and
-         deletes a lone `\\r`, so its lines are the lines counted above;
-      b. raw HTML, the html_block and html_inline tokens of a, read by html.parser (character
-         references decoded), each duplicate attribute too: every attribute named or ending in
-         `href` or `src` (`xlink:href` among them), and action, formaction, data, cite, poster,
-         background and longdesc; each whitespace-separated ping URL; each srcset and imagesrcset
-         candidate URL, split by the HTML candidate rules; and, on an element with an
-         `http-equiv` (exactly that name) that is `refresh` once trimmed and case folded, the URL
-         of each content value by the HTML standard's shared declarative refresh steps (digits
-         and dots, then `;`, `,` or whitespace, then an optional `url` `=` and an optional quote
-         that ends the URL at its partner);
-      c. bare URLs and paths: each line normalized as above and split into words at whitespace
-         other than tab and CR and at any of ( ) [ ] < > { } " ' ` | *, with any trailing
-         . , ; : ! ? cut. A tab, CR or decoded LF inside a word reads the word twice, once with
-         them deleted and once split at them. A word is read when it starts with a special
-         scheme (http, https, ws, wss or ftp) and a `:`; when it starts with a host name (dotted
-         labels ending in 2 or more letters, or `www.`), as `http://` and the word; or when it
-         holds a `/`. A word with another scheme is read from after its first `:` when that holds
-         a `/`. A word with none of these, such as "drafting", "draft." or `draft-ietf-...`, is
-         prose and never read;
+    names. There a reference is refused when EITHER of 2 rules refuses it, so the gate refuses
+    everything main's rule refuses and the parser only adds refusals:
+    MAIN'S PATTERN RULE (main's rule unchanged, #1191 included; DRAFT_REFS below): each match of
+    any of a to e, on the kept text and on the deleted text, each read across a line end too, is
+    refused, and a line matched in either is reported once, as "a reference to the draft path".
+    The kept text keeps a tab or CR that alone separates a word from the path, which deleting
+    would join to it; the deleted text joins a path a tab or CR splits:
+      a. `/draft(?![a-z0-9_-])`;
+      b. `(?<![a-z0-9_-])draft/`;
+      c. a Markdown link destination whose first segment is `draft`, with any whitespace, line
+         ends and blockquote `>` markers before it or its `<`:
+         `\\]\\([\\s>]*<?[\\s>]*(?:\\./)*draft(?![a-z0-9_-])`;
+      d. a reference definition, with no line-start anchor, so its label may span lines and it
+         may sit in a blockquote or a list item, and with any whitespace, line ends and
+         blockquote `>` markers before its destination or its `<`, so the destination may be on
+         the next line: `\\]:[\\s>]*<?[\\s>]*(?:\\./)*draft(?![a-z0-9_-])`;
+      e. an HTML attribute value:
+         `\\b(?:href|src|action|formaction|content|url)\\s*=\\s*["']?\\s*(?:\\./)*draft(?![a-z0-9_-])`.
+    THE PARSER RULE: each URL read in one of the 2 ways below is RESOLVED against
+    https://secureconfig.ai/llms-full.txt and refused when it lands on this site with the draft
+    path. It reads no prose word. A finding names the way it was read, once per line and way:
+      i. Markdown, parsed by the pinned markdown-it-py with its CommonMark rules (the pin carries
+         no linkify-it-py, so markdown-it reads no bare URL): each inline link destination, image
+         source and autolink, and every reference definition, used or not, duplicates too, as
+         written (entities and backslash escapes decoded, nothing percent-encoded); a definition
+         is reported on the line its label closes. The parse reads `\\r\\n` as `\\n` and deletes a
+         lone `\\r`, so its lines are the lines counted above;
+      ii. raw HTML, the html_block and html_inline tokens of i, read by html.parser (character
+         references decoded), each duplicate attribute too, by these exact attribute names: href,
+         src, xlink:href, action, formaction, data, cite, poster, background and longdesc; each
+         whitespace-separated ping URL; each srcset and imagesrcset candidate URL, split by the
+         HTML candidate rules; each srcdoc value, read as HTML by these same rules (its URLs
+         resolve against the same base); and, on a `meta` element with an `http-equiv` (exactly
+         that name) that is `refresh` once trimmed and case folded, the URL of each content value
+         by the HTML standard's shared declarative refresh steps (digits and dots, then `;`, `,`
+         or whitespace, then an optional `url` `=` and an optional quote that ends the URL at its
+         partner);
     RESOLVED: the URL is browser-normalized (leading and trailing C0 controls and spaces stripped,
     every tab, LF and CR deleted, `\\` read as `/`, as for any special scheme and any URL relative
     to an https base); `https:` without `//` after it is relative to the base, as is a URL with no
     scheme; another special scheme, or a leading `//`, skips every slash up to its host; any other
     scheme (`mailto:`, `file:`, `javascript:` ...) leaves the site. The host, without userinfo and
-    port, is percent-decoded, U+3002, U+FF0E and U+FF61 read as dots, NFKC and case folded, its
-    trailing dot cut, and is this site when it is secureconfig.ai, a subdomain of it, pages.dev or
-    a subdomain of that (the Pages aliases; llms-full.txt lists none). The path, query and
-    fragment cut, is percent-decoded until it stops changing, at most 8 rounds (a path still
-    changing is refused), then has every tab, LF and CR deleted, `\\` read as `/`, NFKC and case
-    folding, and its `.` and `..` segments resolved; it is the DRAFT PATH when its first non-empty
-    segment is `draft`, or `draft` followed by a character other than a-z, 0-9, `_` or `-` (so
-    `draft.html`, which Pages serves as the review page, too).
+    port, is percent-decoded, U+3002, U+FF0E and U+FF61 read as dots, its Unicode
+    default-ignorable code points (U+00AD soft hyphen among them) dropped, NFKC and case folded,
+    its trailing dot cut, and is this site when it is secureconfig.ai, a subdomain of it,
+    pages.dev or a subdomain of that (the Pages aliases; llms-full.txt lists none). The path,
+    query and fragment cut, is percent-decoded until it stops changing, at most 8 rounds (a path
+    still changing is refused), then has every tab, LF and CR deleted, `\\` read as `/`, NFKC and
+    case folding, and its `.` and `..` segments resolved; it is the DRAFT PATH when its first
+    non-empty segment is `draft`, or `draft` followed by a character other than a-z, 0-9, `_` or
+    `-` (so `draft.html`, which Pages serves as the review page, too).
+    Markdown inline parsing and raw HTML skip a block only when the round { percent-decode;
+    `html.unescape`; every tab, LF, CR and `\\` deleted } run on it until it stops changing (a
+    block still changing in a 9th round is read), then NFKC and case folding, leaves no `draft`.
     So `/draft/`, `./draft/`, `\\draft\\`, `%2Fdraft%2F`, `dr&#97;ft/`, `/draft.html`,
-    `secureconfig.ai/draft/`, `[x](draft)`, `[x](<draft>)`, `[x](\\ndraft)`, `![x](draft)`,
-    `<https:draft>`, `[x]: draft`, `> [x]: draft`, `[x]: dr\\naft`, `href="draft"`,
-    `href="\\x01draft"`, `href="htt\\nps:draft"`, `srcset="a.png 1x, draft 2x"`,
-    `content="0 draft"`, `content="0;url=&quot;draft&quot;"` on a refresh, `[x](dr&#9;aft)` and
-    `[x](dr%0Daft)` are refused, while "drafting", "drafted", "a draft.", "the draft's",
-    "draft / final", "and Raft", "draft-ietf-oauth-v2-1", a link title or a description meta
-    saying "draft", a content on an element with `data-http-equiv`, `https://draft.example/`,
-    `https://draft/` and `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are accepted.
-    Code spans and code blocks are read by c only. Markdown inline parsing, raw HTML and bare
-    words skip a block or line whose normalization with every tab, LF and CR deleted holds no
-    `draft`, as no URL read from it can then have the draft path.
+    `secureconfig.ai/draft/`, `/guides/draft/`, `https://elsewhere.example/draft/`,
+    `[x](draft)`, `[x](<draft>)`, `[x](\\ndraft)`, `![x](draft)`, `<https:draft>`, `[x]: draft`,
+    `> [x]: draft`, `href="draft"`, `href="\\x01draft"`, `href="htt\\nps:draft"`,
+    `href="%6&#9;4raft"`, `srcset="a.png 1x, draft 2x"`, `srcdoc="<a href=draft>x</a>"`,
+    `content="0 draft"` and `content="0;url=&quot;draft&quot;"` on a refresh, `[x](dr&#9;aft)`,
+    `[x](dr%0Daft)` and a host `secure&shy;config.ai` are refused; main's rule also refuses
+    `https://draft.example/`, `https://draft/`, and `url=draft` or `draft/` anywhere, a link
+    title or a description meta included. "drafting", "drafted", "a draft.", "the draft's",
+    "draft / final", "and Raft", "draft-ietf-oauth-v2-1", a link title "draft",
+    `draft.example.com/notes`, `[x]: dr` with `aft` on the next line and
+    `https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/` are accepted. Code spans and code
+    blocks are read by main's rule only.
 
 Exit 0 ok, 1 on a finding, 2 on a read error.
 Usage: python3 -I -B tools/check_draft.py [--root <repository root>]
@@ -158,10 +175,19 @@ INDEXABLE = ("index.html", "guides/index.html", "for-ai/index.html", "for-humans
              "checklist/index.html", "disclosure/index.html", "license/index.html")
 NOTFOUND = "404.html"
 # The published indexes (PART 3): the hand-written ones refuse the word, read after normalized();
-# the guide corpus refuses each URL that resolves to the draft path.
+# the guide corpus refuses what main's pattern rule or the parser rule refuses.
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
 CORPUS_INDEX = "llms-full.txt"
 DRAFT_WORD = re.compile(r"draft")
+# MAIN'S PATTERN RULE: the corpus forms a to e of the docstring, each matched on its own, exactly
+# as main has them. The parser rule below only adds refusals to these.
+DRAFT_REFS = (
+    re.compile(r"/draft(?![a-z0-9_-])"),
+    re.compile(r"(?<![a-z0-9_-])draft/"),
+    re.compile(r"\]\([\s>]*<?[\s>]*(?:\./)*draft(?![a-z0-9_-])"),
+    re.compile(r"\]:[\s>]*<?[\s>]*(?:\./)*draft(?![a-z0-9_-])"),
+    re.compile(r"""\b(?:href|src|action|formaction|content|url)\s*=\s*["']?\s*(?:\./)*draft(?![a-z0-9_-])"""),
+)
 DECODE_ROUNDS = 8
 # The URL every llms-full.txt URL is resolved against, and the draft path's first segment.
 CORPUS_URL = "https://secureconfig.ai/llms-full.txt"
@@ -169,22 +195,28 @@ DRAFT_SEGMENT = re.compile(r"draft(?![a-z0-9_-])")
 SCHEME = re.compile(r"([a-zA-Z][a-zA-Z0-9+.-]*):")
 SPECIAL = {"http", "https", "ws", "wss", "ftp", "file"}
 C0_SPACE = "".join(map(chr, range(0x21)))
-# The HTML attributes PART 3 reads (besides any name ending in href or src, ping, the candidate
-# lists and a refresh content), and ASCII whitespace as the HTML standard defines it.
-INDEX_URL_NAMES = {"action", "formaction", "data", "cite", "poster", "background", "longdesc"}
+# The HTML attributes the parser rule reads by exact name (besides ping, the candidate lists,
+# srcdoc and a refresh content), and ASCII whitespace as the HTML standard defines it.
+INDEX_URL_NAMES = {"href", "src", "xlink:href", "action", "formaction", "data", "cite", "poster",
+                   "background", "longdesc"}
 HTML_SPACE = " \t\n\r\f"
-# Bare words (form c): the separators, the trailing punctuation cut, a host name at the start.
-WORD_BREAK = re.compile(r"[^\S\t\r\n]+|[()\[\]<>{}\"'`|*]")
-INSIDE_BREAK = re.compile(r"[\t\r\n]")
-HOST_START = re.compile(r"(?:www\.|(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d*)?(?:[/?#]|$))")
+# The Unicode default-ignorable code points (DerivedCoreProperties.txt, Unicode 16.0), dropped
+# from a host before the site check, as IDNA maps U+00AD and others onto nothing.
+IGNORABLE_RANGES = ((0x00AD, 0x00AD), (0x034F, 0x034F), (0x061C, 0x061C), (0x115F, 0x1160),
+                    (0x17B4, 0x17B5), (0x180B, 0x180F), (0x200B, 0x200F), (0x202A, 0x202E),
+                    (0x2060, 0x206F), (0x3164, 0x3164), (0xFE00, 0xFE0F), (0xFEFF, 0xFEFF),
+                    (0xFFA0, 0xFFA0), (0xFFF0, 0xFFF8), (0x1BCA0, 0x1BCA3), (0x1D173, 0x1D17A),
+                    (0xE0000, 0xE0FFF))
+DEFAULT_IGNORABLE = re.compile("[" + "".join(f"{chr(a)}-{chr(b)}" for a, b in IGNORABLE_RANGES) + "]")
+# The characters the speed shortcut deletes in each round: a browser deletes tab, LF and CR from
+# a URL, and a Markdown backslash escape drops its backslash.
+SHORTCUT_DELETED = re.compile(r"[\t\n\r\\]")
 # How each URL was read, named in a finding.
 MD_LINK = "a Markdown link destination"
 MD_IMAGE = "a Markdown image source"
 MD_AUTOLINK = "a Markdown autolink"
 MD_DEFINITION = "a Markdown reference definition"
-MD_JOINED = "a Markdown reference definition joined across a line end"
 HTML_REFRESH = "an HTML meta refresh URL"
-BARE = "a bare URL or path"
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
 # must not carry at all.
 NOINDEX_PAGES = {"draft/index.html", "404.html"}
@@ -330,12 +362,14 @@ def browser_url(value):
 
 def on_site(host):
     """True for this site's host, a subdomain of it or a Pages alias, read as a URL parser reads
-    a host (percent-decoded, the IDNA full stops read as dots, NFKC, case folded, trailing dot
-    cut)."""
+    a host (percent-decoded, the IDNA full stops read as dots, default-ignorable code points
+    dropped, NFKC, case folded, trailing dot cut)."""
     host = unquote(host)
     for dot in "\N{IDEOGRAPHIC FULL STOP}\N{FULLWIDTH FULL STOP}\N{HALFWIDTH IDEOGRAPHIC FULL STOP}":
         host = host.replace(dot, ".")
-    host = unicodedata.normalize("NFKC", host).casefold().rstrip(".")
+    # Dropped again after NFKC, which maps U+FFA0 onto U+3164.
+    host = unicodedata.normalize("NFKC", DEFAULT_IGNORABLE.sub("", host)).casefold()
+    host = DEFAULT_IGNORABLE.sub("", host).rstrip(".")
     return (host == SITE_HOST or host.endswith("." + SITE_HOST) or host == "pages.dev"
             or host.endswith(".pages.dev"))
 
@@ -476,7 +510,7 @@ def srcset_urls(value):
 
 
 class IndexHTML(HTMLParser):
-    """The URL-valued attributes of 1 raw HTML fragment of llms-full.txt (form b of PART 3)."""
+    """The URL-valued attributes of 1 raw HTML fragment of llms-full.txt (form ii of PART 3)."""
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
@@ -484,8 +518,8 @@ class IndexHTML(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         line = self.getpos()[0]
-        refresh = any(k == "http-equiv" and (v or "").strip().casefold() == "refresh"
-                      for k, v in attrs)
+        refresh = tag == "meta" and any(
+            k == "http-equiv" and (v or "").strip().casefold() == "refresh" for k, v in attrs)
         for k, v in attrs:
             if v is None:
                 continue
@@ -493,8 +527,14 @@ class IndexHTML(HTMLParser):
                 values = srcset_urls(v)
             elif k == "ping":
                 values = v.split()
-            elif k.endswith("href") or k.endswith("src") or k in INDEX_URL_NAMES:
+            elif k in INDEX_URL_NAMES:
                 values = [v]
+            elif k == "srcdoc":
+                # A document of its own, read by the same rules; its URLs resolve against the same
+                # base, as an about:srcdoc document's do.
+                self.urls.extend((line + at - 1, f"{how} inside a srcdoc", value)
+                                 for at, how, value in html_urls(v, 1))
+                continue
             elif k == "content" and refresh:
                 url = refresh_url(v)
                 self.urls.extend([(line, HTML_REFRESH, url)] if url is not None else [])
@@ -516,21 +556,23 @@ def html_urls(fragment, line):
 
 
 def may_name_draft(text):
-    """False only when no URL read from text can have the draft path: its normalization (a line
-    still changing counts as may) with every tab, LF and CR deleted holds no `draft`. Every step
-    that builds a URL's path (character references, percent-decoding, NFKC, case folding, tab,
-    LF and CR deletion) is one that normalization applies too; the rest only cut characters."""
-    norm = normalized(text)
-    return norm is None or "draft" in deleted(norm).replace("\n", "")
-
-
-def first_word(text):
-    """The first word of text after any whitespace and blockquote markers."""
-    return re.match(r"[\s>]*(\S*)", text).group(1)
+    """False only when no URL read from text can have the draft path: the round { percent-decode;
+    `html.unescape`; every tab, LF, CR and `\\` deleted } repeats until text stops changing (text
+    still changing in round DECODE_ROUNDS + 1 counts as may), and the result, NFKC and case
+    folded, holds no `draft`. Every step that builds a URL's path is one this applies: character
+    references, backslash escapes, tab, LF and CR deletion and percent-decoding in each round, so
+    each after any of the others, then NFKC and case folding last, as draft_path() applies them;
+    the rest only cut characters."""
+    for _ in range(DECODE_ROUNDS + 1):
+        decoded = SHORTCUT_DELETED.sub("", html.unescape(unquote(text)))
+        if decoded == text:
+            return "draft" in unicodedata.normalize("NFKC", text).casefold()
+        text = decoded
+    return True
 
 
 def markdown_urls(text):
-    """(line, way read, value) of each Markdown and raw HTML URL of llms-full.txt (forms a and b
+    """(line, way read, value) of each Markdown and raw HTML URL of llms-full.txt (forms i and ii
     of PART 3), parsed by the pinned markdown-it-py."""
     from markdown_it import MarkdownIt
     from markdown_it.rules_block.reference import reference
@@ -571,16 +613,6 @@ def markdown_urls(text):
             pos += 1
         line = start + 1 + written.count("\n", 0, close)
         urls.append((line, MD_DEFINITION, destinations[-1]))
-        # An unbracketed destination ending its line is read joined to the next line's first word.
-        rest = re.match(r"\]:\s*", written[close:])
-        if rest:
-            after = written[close + rest.end():]
-            dest = re.match(r"[^\s<][^\s]*", after)
-            dest_line = start + written.count("\n", 0, close + rest.end())
-            if dest and dest.end() == len(after.split("\n", 1)[0]) and dest_line + 1 < len(lines):
-                word = first_word(lines[dest_line + 1])
-                if word:
-                    urls.append((line, MD_JOINED, dest.group(0) + word))
         return True
 
     md.block.ruler.at("reference", definition)
@@ -611,33 +643,6 @@ def markdown_urls(text):
     return urls
 
 
-def bare_readings(word):
-    """The URLs a bare word of a normalized line is read as (form c of PART 3), none for prose."""
-    word = word.rstrip(".,;:!?")
-    m = SCHEME.match(word)
-    if m:
-        if m.group(1).lower() in SPECIAL:
-            return [word]
-        rest = word[m.end():]
-        return [rest] if "/" in rest else []
-    if HOST_START.match(word):
-        return ["http://" + word]
-    return [word] if "/" in word else []
-
-
-def bare_urls(normalized_lines):
-    """(line, way read, value) of each bare URL or path (form c of PART 3)."""
-    urls = []
-    for n, line in enumerate(normalized_lines, 1):
-        # A line is already normalized, so a word's path can only hold what the line holds.
-        if "draft" not in deleted(line).replace("\n", ""):
-            continue
-        for word in WORD_BREAK.split(line):
-            pieces = {deleted(word).replace("\n", ""), *INSIDE_BREAK.split(word)}
-            urls.extend((n, BARE, url) for piece in sorted(pieces) for url in bare_readings(piece))
-    return urls
-
-
 def index_findings(name, text):
     """The PART 3 findings for 1 published index under site/, each naming the file and line."""
     findings = []
@@ -653,27 +658,35 @@ def index_findings(name, text):
                             f"/draft/ review page stays out of every published index")
             line = ""
         kept.append(line)
+    # MAIN'S PATTERN RULE, as main runs it. The literal word is read on the deleted text only,
+    # which holds every `draft` the kept text holds; the corpus forms on both, as deleting a tab or
+    # CR may join a word to the path.
     if name in STRICT_INDEXES:
-        # The literal word, read on the joined text with tabs and CRs deleted, reported on the
-        # original line it starts on.
-        norm = [deleted(line) for line in kept]
+        texts = ([deleted(line) for line in kept],)
+        patterns, why = (DRAFT_WORD,), "this hand-written index never carries the word draft"
+    else:
+        texts = (kept, [deleted(line) for line in kept])
+        patterns, why = DRAFT_REFS, "a reference to the draft path"
+    # Matched on the joined text, so a Markdown link broken across a line end is still read; a
+    # match is reported on the original line it starts on, once whichever text it is found in.
+    excerpts = {}
+    for norm in texts:
         starts, at = [], 0
         for line in norm:
             starts.append(at)
             at += len(line) + 1
         joined = "\n".join(norm)
-        excerpts = {}
-        for m in DRAFT_WORD.finditer(joined):
-            excerpts.setdefault(bisect_right(starts, m.start()),
-                                joined[max(0, m.start() - 20):m.end() + 20])
-        for n, excerpt in sorted(excerpts.items()):
-            findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses {excerpt!r} "
-                            f"(this hand-written index never carries the word draft); the /draft/ "
-                            f"review page stays out of every published index")
+        for start, end in sorted((m.start(), m.end()) for p in patterns for m in p.finditer(joined)):
+            excerpts.setdefault(bisect_right(starts, start), joined[max(0, start - 20):end + 20])
+    for n, excerpt in sorted(excerpts.items()):
+        findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses {excerpt!r} ({why}); "
+                        f"the /draft/ review page stays out of every published index")
+    if name in STRICT_INDEXES:
         return findings
-    # The guide corpus: each URL read as Markdown, as raw HTML or as a bare word, resolved.
+    # THE PARSER RULE, for the guide corpus only: each URL read as Markdown or as raw HTML,
+    # resolved. It only adds findings to main's.
     seen = set()
-    for n, how, value in sorted(set(markdown_urls(text) + bare_urls(kept))):
+    for n, how, value in sorted(set(markdown_urls(text))):
         verdict = refuses(value)
         if verdict is False or (n, how) in seen:
             continue
