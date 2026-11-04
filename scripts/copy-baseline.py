@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Copy the shared site template's runtime files into the site and write the pin.
 
-Usage: python3 -I -B scripts/copy-baseline.py --from <unpacked baseline version folder>
+Usage: python3 -I -B scripts/copy-baseline.py --from <unpacked baseline version folder> --date <YYYY-MM-DD>
 
 The folder is a verified copy of https://posluns.ca/baseline/<version>/ (its SHA256SUMS checked
 against the published digest before this runs). This script checks every file it copies against
