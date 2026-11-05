@@ -59983,7 +59983,8 @@ sign session tokens) to turn it on; at 20.27.0, `phoenix serve` raises an error 
 is on for any `PHOENIX_HOST` that is not loopback, including `0.0.0.0`, `::` and any hostname other than
 `localhost`, and off for a loopback address, while an explicit `True` or `False` overrides that. Since 21.0.0's
 default bind is loopback, this guide reads its defaults as leaving authentication off on a listener only the
-host itself reaches.
+host itself reaches, though a reverse proxy or tunnel on the same host that forwards to that listener exposes
+it with authentication still off.
 `PHOENIX_SECRET` is optional at 21.0.0, but its source says that without it "Saved credentials use a publicly
 known encryption key and are readable by database readers", so set it there too, and set
 `PHOENIX_ENABLE_AUTH=True` explicitly rather than relying on the host rule. The served documentation page
@@ -59994,13 +59995,17 @@ Turning auth on is not enough. Phoenix creates an administrator account `admin@l
 `admin` at startup, whether or not auth is on, so the flip alone leaves a reachable instance with a known admin login. `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD`
 sets that password when the startup creates the account: set it on a brand-new deployment,
 before the first start. At 20.27.0 that is the only time it takes effect: on any instance that has started before, the variable is inert, and setting it and
-restarting changes nothing and reports no error, so never read "I set it and restarted" as proof the password
-changed. At 21.0.0 a later start also applies it while the account still needs a password reset and still has
-the password `admin`: that start replaces the password, deletes the account's pending password-reset tokens,
+restarting changes nothing and reports no error. At 21.0.0 a later start also applies a custom value, one other
+than `admin`, while the local `admin@localhost` account still needs a password reset and still has
+the password `admin`. That start replaces the password, deletes the account's pending password-reset tokens,
 ends its sessions and logs "Applied PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD to the default admin account, which
 still had the default password, and ended its existing sessions". The 21.0.0 `MIGRATION.md` adds that the
-account's API keys stay valid and that all replicas must be stopped first for old sessions to end at once.
-Once the password is no longer `admin`, the variable is inert at 21.0.0 as well. Unless you are setting it on a
+account's API keys stay valid, and that running replicas can keep accepting cached tokens until they stop, so
+all replicas must be stopped first for old sessions to end at once.
+Once the password is no longer `admin`, the variable is inert at 21.0.0 as well. In both releases, never read
+"I set it and restarted" as proof the password changed: at 20.27.0 the restart changes nothing once the account
+exists, and at 21.0.0 it changes nothing once the account no longer needs a reset or no longer has `admin`,
+and replicas left running can keep accepting the old sessions' cached tokens. Unless you are setting it on a
 brand-new deployment's very first start, treat the account as already existing: log in at the UI as
 `admin@localhost`, which prompts for a new password, then run the
 default-credential check in Verify to prove `admin` is dead. At 20.27.0 a login with `admin` opens a session;
@@ -60028,18 +60033,30 @@ database off host interfaces.
 Upgrading from 20.x to 21.0.0 changes what an unchanged deployment does, by this guide's reading of the
 21.0.0 source and its `MIGRATION.md`. A deployment that set a non-loopback `PHOENIX_HOST` but never
 `PHOENIX_ENABLE_AUTH`, including a container built from the 21.0.0 `Dockerfile`, comes up with
-authentication on, so collectors and clients without an API key are refused until you create keys for them.
+authentication on, so collectors and clients that send no valid credential are refused, and this guide
+recommends creating API keys for them. By this guide's inference, if such a deployment ran on 20.x with
+authentication off because `PHOENIX_ENABLE_AUTH` was unset, and its `admin@localhost` account still has
+`admin` and the password-reset mark 20.27.0 creates it with, then on 21.0.0, with authentication on,
+whoever first logs in with `admin` gets a password-reset token and can set the admin password with it.
+Setting `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` to an unpredictable value before upgrading closes that
+window, by this guide's inference, because 21.0.0 applies it at startup while that account still needs a
+reset and still has `admin`; `MIGRATION.md` says to stop all replicas first so old sessions end at once.
 A deployment outside such a container that relied on the `0.0.0.0` default comes up on `127.0.0.1` only, and `MIGRATION.md` says
-`phoenix serve --host` is removed in favour of `PHOENIX_HOST`. With `PHOENIX_SECRET` unset, 21.0.0 still
-starts with authentication on, signing tokens with a key derived from a deployment seed, and anyone who can
-read the database, including a Compose PostgreSQL published as above, can read the saved credentials, such
-as provider API keys. `MIGRATION.md` also says that setting or changing `PHOENIX_SECRET` makes previously saved
+`phoenix serve --host` is removed in favour of `PHOENIX_HOST`. By this guide's inference about argparse, whose
+handling of an option a command no longer defines is not in the sources read, a 20.x `phoenix serve --host`
+command line is no longer accepted at 21.0.0, so move its value to `PHOENIX_HOST` before upgrading. With
+`PHOENIX_SECRET` unset, 21.0.0 still starts, and whenever authentication is enabled, which
+`PHOENIX_ENABLE_AUTH` and the host rule decide, not the secret, it signs tokens with a key derived from a
+deployment seed. Either way, anyone who can read the database, including a Compose PostgreSQL published as
+above, can read the saved credentials, such as provider API keys. `MIGRATION.md` also says that setting or changing `PHOENIX_SECRET` makes previously saved
 credentials unreadable, so plan to enter them again when you set it.
 
-Enabling auth on a running instance stops trace collection and blocks all API access until API keys exist, so
-mint a key immediately after the flip: a system key (admin-created, acts for the whole instance) or a user key
-authenticates API requests via `PHOENIX_API_KEY` sent as an `Authorization: Bearer` header, and collectors and
-SDKs need one to keep sending traces. At 21.0.0 the same lockout follows from the bind rule alone on a
+Enabling auth on a running instance makes Phoenix reject unauthenticated requests, so collectors and SDKs
+that send no credential stop delivering traces; mint an API key for them immediately after the flip. A system
+key (admin-created, acts for the whole instance) or a user key authenticates API requests via
+`PHOENIX_API_KEY` sent as an `Authorization: Bearer` header. Phoenix also accepts the `PHOENIX_ADMIN_SECRET`
+value, when one is set, and a user's access token as credentials, but this guide recommends API keys for collectors. At 21.0.0
+the same rejection follows from the bind rule alone on a
 non-loopback `PHOENIX_HOST` when `PHOENIX_ENABLE_AUTH` is unset, and `MIGRATION.md` says unauthenticated requests are then rejected with HTTP
 401 or gRPC unauthenticated errors. Phoenix's authentication documentation describes no native MFA, and none
 appears in the 21.0.0 files read for this guide, though that Phoenix has none is not established; it can
@@ -60285,11 +60302,12 @@ alone does not prove authentication. No exposed-versus-fixed Collector run was p
 )
 ```
 
-REASONED: the Phoenix default-credential check and the anonymous read-API probe it introduces, per the guide's cited Arize Phoenix authentication entry (the default admin account and /v1/ REST permissions) and Arize Phoenix OAuth2 sign-up and basic-auth controls entry. No Phoenix instance is available in the authoring environment, so the manual login was not attempted; the expected exposed and fixed results are those stated here. For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
+REASONED: the Phoenix default-credential check and the anonymous read-API probe it introduces, per the guide's cited Arize Phoenix authentication entry (the default admin account and /v1/ REST permissions) and Arize Phoenix OAuth2 sign-up and basic-auth controls entry. The 21.0.0 HTTP 403 with a password-reset token and the 20.27.0 session rest on the Phoenix password login entries at arize-phoenix-v21.0.0 and arize-phoenix-v20.27.0, the Phoenix default admin bootstrap entries at both releases and the Phoenix migration notes entry, and the read-API outcomes on the Phoenix /v1 REST authentication and viewer write refusal entry. No Phoenix instance is available in the authoring environment, so the manual login was not attempted; the expected exposed and fixed results are those stated here. For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
 anonymous request. **These checks are REASONED from the cited Phoenix documentation and source, not demonstrated** (no Phoenix instance in the authoring
 environment). The credential
-check is manual, because the vendor documents only the UI login flow and a scripted guess against the wrong
-endpoint can read a `404` as a rejection: in a fresh browser session with no saved Phoenix cookies, try once
+check is manual: at 20.27.0 the vendor documents only the UI login flow, and although the 21.0.0 `MIGRATION.md`
+documents scripted logins with `admin` receiving HTTP 403 and a reset token, a scripted guess against the wrong
+endpoint can read a `404` as a rejection. In a fresh browser session with no saved Phoenix cookies, try once
 to log in as `admin@localhost` with the password `admin`. **Exposed:** it logs in or, at 21.0.0, is answered
 with a demand to change the password: that release's server answers a login with `admin` with HTTP 403 and a
 password-reset token that sets the admin password, so `admin` still controls the account. **Fixed:** it is rejected,
@@ -60329,9 +60347,12 @@ is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login p
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
 
-REASONED: the OTLP/HTTP admission and OTLP gRPC Export checks, per the guide's cited Arize Phoenix authentication entry, Arize Phoenix gRPC OTLP Export authorization entry and pinned Phoenix gRPC bind entry. They need a running Phoenix and, for 4317, an OTLP gRPC client with the protobuf descriptor; the authoring environment has no Phoenix and no protobuf or gRPC Python package, so live HTTP admission, protobuf encoding and gRPC Export were not exercised. During marking review (October 2026), bash ran the HTTP recipe with a stub curl on PATH and no network, anonymously and with a dummy bearer header supplied through stdin using --header @-. In both calls the stub received --data-binary followed by an empty argument, -H followed by Content-Type: application/x-protobuf, and https://phoenix.internal:6006/v1/traces; the anonymous call had empty stdin and no authorization header, and the second received Authorization: Bearer dummy-write-key followed by a newline on stdin. Both stub calls exited 0. This checks local HTTP request construction only, not protobuf serialization, Phoenix admission or gRPC behaviour. The expected exposed and fixed results are those stated here. The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
+REASONED: the OTLP/HTTP admission and OTLP gRPC Export checks, per the guide's cited Arize Phoenix authentication entry and Arize Phoenix gRPC OTLP Export authorization entry. The HTTP outcomes, including the viewer's HTTP 403, rest on the Phoenix /v1 REST authentication and viewer write refusal entry and the Phoenix OTLP/HTTP traces handler entry. The gRPC outcomes rest on the Phoenix gRPC OTLP Export handler entry, the Phoenix gRPC OTLP server entries at arize-phoenix-v21.0.0 and arize-phoenix-v20.27.0, the Phoenix create_app entries at both releases and the Phoenix authentication settings entry at arize-phoenix-v21.0.0. They need a running Phoenix and, for 4317, an OTLP gRPC client with the protobuf descriptor; the authoring environment has no Phoenix and no protobuf or gRPC Python package, so live HTTP admission, protobuf encoding and gRPC Export were not exercised. During marking review (October 2026), bash ran the HTTP recipe with a stub curl on PATH and no network, anonymously and with a dummy bearer header supplied through stdin using --header @-. In both calls the stub received --data-binary followed by an empty argument, -H followed by Content-Type: application/x-protobuf, and https://phoenix.internal:6006/v1/traces; the anonymous call had empty stdin and no authorization header, and the second received Authorization: Bearer dummy-write-key followed by a newline on stdin. Both stub calls exited 0. This checks local HTTP request construction only, not protobuf serialization, Phoenix admission or gRPC behaviour. The expected exposed and fixed results are those stated here. The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
 is a zero-length protobuf body, so send `--data-binary ''` with `Content-Type: application/x-protobuf` to
-`/v1/traces` on the HTTP port (6006) and read the status. The anonymous request must be rejected (401/403),
+`/v1/traces` on the HTTP port (6006) and read the status. Phoenix's `/v1/traces` handler parses the body as an
+`ExportTraceServiceRequest`, answers 422 only when that parse fails, and otherwise answers 200 with an empty
+`ExportTraceServiceResponse` (see Sources); by this guide's reading, a zero-length body parses as an empty
+request. The anonymous request must be rejected (401/403),
 and the request with a WRITE-authorized `Authorization: Bearer` key (a system key, or a user key allowed to
 write traces, NOT a viewer key) is admitted (a 2xx). This tests request ADMISSION, not span
 persistence, and a valid VIEWER-role key is not a positive control here: Phoenix authenticates a viewer but
@@ -60346,8 +60367,9 @@ protobuf descriptor (and the CA if TLS is on), so it ships REASONED: with authen
 disabled the same anonymous empty Export returns `OK` (the exposed outcome), because Phoenix then builds no
 token store and adds no `ApiKeyInterceptor`, and at 21.0.0 authentication is disabled by default only on a
 loopback `PHOENIX_HOST`. The authenticated,
-viewer-rejected, and empty-request behaviours follow Phoenix's gRPC Export handler and `ApiKeyInterceptor`
-(see Sources). At 20.27.0 Phoenix's gRPC listener binds `[::]` regardless of `PHOENIX_HOST`, so you cannot
+viewer-rejected, and empty-request behaviours follow, by this guide's reading, Phoenix's gRPC Export handler,
+which loops over the request's spans and returns an empty `ExportTraceServiceResponse`, so a request with no
+spans returns at once, and `ApiKeyInterceptor`, which passes an admitted call to that handler (see Sources). At 20.27.0 Phoenix's gRPC listener binds `[::]` regardless of `PHOENIX_HOST`, so you cannot
 move it to loopback by host setting; at 21.0.0 it binds `PHOENIX_HOST`, the same address as the HTTP server.
 Either way, isolate it in a private container network, restrict or omit its host publication, and inspect its
 namespace, publications, and firewall separately from the HTTP port. A wildcard listener inside an isolated
@@ -60399,7 +60421,7 @@ that accepts spans with no credential at all.
 
 - Leaving Phoenix's or Helicone's auth off "because it's just internal" on a host with a public IP.
 - Enabling `PHOENIX_ENABLE_AUTH` without creating an API key first, which locks out collectors mid-flight; at 21.0.0 a non-loopback `PHOENIX_HOST` with `PHOENIX_ENABLE_AUTH` unset does the same.
-- Leaving Phoenix's default `admin@localhost` / `admin` in place after turning auth on, or trusting `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` to have changed it on an instance whose admin account already existed, where at 20.27.0 the variable is silently inert and at 21.0.0 it is inert once the password is no longer `admin`.
+- Leaving Phoenix's default `admin@localhost` / `admin` in place after turning auth on, or trusting `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` to have changed it on an instance whose admin account already existed, where at 20.27.0 the variable is silently inert and at 21.0.0 it is inert once the account no longer needs a reset or no longer has `admin`.
 - Running Phoenix 21.0.0 without `PHOENIX_SECRET`, which its source says leaves saved credentials readable by database readers.
 - Publishing the OTLP gRPC/HTTP ports (4317/4318) to `0.0.0.0` because a docker-compose example did.
 - Assuming an ingestion key protects the UI, or a UI login protects the ingestion endpoint; they are
@@ -60443,7 +60465,7 @@ that accepts spans with no credential at all.
 - OpenTelemetry Collector Contrib, `bearertokenauthextension` incoming `Authenticate` header and metadata checks (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L234-L255
 - OpenTelemetry Collector Contrib, `bearertokenauthextension` HTTP header assignment (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L264-L272
 - OpenTelemetry Collector Contrib, `bearertokenauthextension` header and scheme defaults (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/factory.go#L15-L18
-- Arize Phoenix, gRPC OTLP Export authorization at arize-phoenix-v21.0.0 (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a key, `PERMISSION_DENIED` for a viewer token, `OK` with a write-authorized key; `bearer_auth.py` is the same file at arize-phoenix-v20.27.0; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L152-L190
+- Arize Phoenix, gRPC OTLP Export authorization at arize-phoenix-v21.0.0 (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a valid credential, `PERMISSION_DENIED` for a viewer token, and the call passed to the Export handler for the admin secret or a valid non-viewer API key or access token; `bearer_auth.py` is the same file at arize-phoenix-v20.27.0; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L152-L190
 - OpenTelemetry Collector v0.161.0, internal telemetry metrics default `localhost:8888`: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/service/telemetry/otelconftelemetry/factory.go#L49-L64
 - OpenTelemetry Collector v0.161.0, zPages default endpoint and HTTP server configuration: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/factory.go#L15-L29
 - OpenTelemetry Collector v0.161.0, zPages server wiring and optional HTTP authentication: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/zpagesextension.go#L87-L105 and https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/config/confighttp/server.go#L352-L364
@@ -60454,6 +60476,7 @@ that accepts spans with no credential at all.
 - Phoenix defaults `HOST = "0.0.0.0"`, `PORT = 6006`, `GRPC_PORT = 4317` at arize-phoenix-v20.27.0, and `get_env_host()` returns `PHOENIX_HOST` or that default (checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/config.py#L3131-L3137 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/config.py#L3364-L3365
 - Phoenix gRPC OTLP server at arize-phoenix-v21.0.0, which binds the host it is given through `_bind_address` and adds `ApiKeyInterceptor` only when it has a token store (checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/grpc_server.py#L55-L82 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/grpc_server.py#L109-L131
 - Phoenix gRPC OTLP server at arize-phoenix-v20.27.0, which binds `[::]` regardless of the HTTP host and adds `ApiKeyInterceptor` only when it has a token store (checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/grpc_server.py#L55-L80 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/grpc_server.py#L107-L109
+- Phoenix gRPC OTLP Export handler at arize-phoenix-v21.0.0, with the same lines at arize-phoenix-v20.27.0 (`Servicer.Export` decodes and enqueues each span in the request and returns an empty `ExportTraceServiceResponse`; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/grpc_server.py#L41-L52 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/grpc_server.py#L41-L52
 - Phoenix `serve` command at arize-phoenix-v21.0.0 (bind host from `get_env_host()`, auth settings from `get_env_auth_settings()`, `grpc_host=host`, and the HTTP server's `host=None if host == "::" else host`; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/cli/commands/serve.py#L238-L246 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/cli/commands/serve.py#L363-L393
 - Phoenix `serve` command at arize-phoenix-v20.27.0 (a `--host` option with no default, then `get_env_host()`, `::` passed to the HTTP server as `None`, no gRPC host, and `secret=auth_settings.phoenix_secret`; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/cli/commands/serve.py#L148-L160, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/cli/commands/serve.py#L244-L253 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/cli/commands/serve.py#L383-L417
 - Phoenix `create_app` at arize-phoenix-v21.0.0 (the gRPC host defaulting to `get_env_host()`, the admin bootstrap added on every start, the token store only with authentication enabled, and a deployment-seed signing key without `PHOENIX_SECRET`; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/app.py#L1007-L1014, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/app.py#L1060-L1069 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/app.py#L704-L739
@@ -60463,11 +60486,12 @@ that accepts spans with no credential at all.
 - Phoenix vendor Compose file at arize-phoenix-v21.0.0, the same file at arize-phoenix-v20.27.0 (`6006:6006`, `4317:4317`, and PostgreSQL `- 5432` with user and password `postgres`; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/docker-compose.yml#L1-L23
 - Phoenix authentication settings at arize-phoenix-v21.0.0 (`PHOENIX_ENABLE_AUTH` following a non-loopback `PHOENIX_HOST` when unset, optional `PHOENIX_SECRET` with saved credentials readable by database readers when unset, and `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` applied while the default admin still has `admin`; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/config.py#L415-L467, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/config.py#L1274-L1278 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/config.py#L1509-L1534
 - Phoenix authentication settings at arize-phoenix-v20.27.0 (`PHOENIX_ENABLE_AUTH` default `False`, `PHOENIX_SECRET` required when auth is enabled, and `PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD` with no effect once the default admin record exists; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/config.py#L403-L449, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/config.py#L1256-L1260 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/config.py#L1491-L1501
-- Phoenix default admin bootstrap at arize-phoenix-v21.0.0 (creates `admin@localhost` with `reset_password=True`, and on a later start replaces a still-default password with a custom initial password, deletes its reset tokens and ends its sessions; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/db/facilitator.py#L115-L219
+- Phoenix default admin bootstrap at arize-phoenix-v21.0.0 (creates `admin@localhost` with `reset_password=True`, and on a later start, while that account still needs a reset, replaces a still-default password with a custom initial password, deletes its reset tokens and ends its sessions; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/db/facilitator.py#L115-L219
 - Phoenix default admin bootstrap at arize-phoenix-v20.27.0 (creates `admin@localhost` only when no admin exists, as a step added to every start; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/db/facilitator.py#L113-L160 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/app.py#L972
-- Phoenix password login at arize-phoenix-v21.0.0 (`POST /auth/login` with the default password answers HTTP 403 with a password-reset token, and `POST /auth/password-reset` refuses `admin` as the new password; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L147-L198 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L311-L341
-- Phoenix password login at arize-phoenix-v20.27.0 (`POST /auth/login` issues tokens for any valid password, with no default-password check; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/api/routers/auth.py#L144-L186
-- Phoenix `/v1` REST authentication and viewer write refusal at arize-phoenix-v21.0.0, the same files at arize-phoenix-v20.27.0 (`is_authenticated` on the `/v1` router only with authentication enabled, 401 without a valid token, `restrict_access_by_viewers` answering a viewer's non-GET request with 403, and `GET /v1/projects` and `POST /v1/traces` under that router; checked November 2026): <https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/__init__.py#L35-L83>, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L213-L282, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/authorization.py#L73-L84, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/projects.py#L66-L67 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L431-L433
+- Phoenix password login at arize-phoenix-v21.0.0 (the `/auth` router's `POST /login` and `POST /password-reset` routes; `POST /auth/login` with the default password answers HTTP 403 with a password-reset token, and `POST /auth/password-reset` refuses `admin` as the new password and otherwise sets a new password that passes its format check; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L131-L138, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L147-L198 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L311-L341
+- Phoenix password login at arize-phoenix-v20.27.0 (the `/auth` router's `POST /login` and `POST /password-reset` routes; `POST /auth/login` issues tokens for any valid password, with no default-password check; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/api/routers/auth.py#L128-L135 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/api/routers/auth.py#L144-L186
+- Phoenix `/v1` REST authentication and viewer write refusal at arize-phoenix-v21.0.0, the same files at arize-phoenix-v20.27.0 (`is_authenticated` on the `/v1` router only with authentication enabled, the bearer backend accepting the admin secret, an API key or an access token, 401 without a valid token, `restrict_access_by_viewers` answering a viewer's non-GET request with 403, and `GET /v1/projects` and `POST /v1/traces` under that router; checked November 2026): <https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/__init__.py#L35-L83>, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L94-L109, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L213-L282, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/authorization.py#L73-L84, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/projects.py#L66-L67 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L431-L433
+- Phoenix OTLP/HTTP traces handler at arize-phoenix-v21.0.0, the same file at arize-phoenix-v20.27.0 (`post_traces` parses the body with `ParseFromString`, answers 422 when that parse fails, and otherwise returns an empty `ExportTraceServiceResponse` with status 200; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L478-L500
 
 
 <!-- version-basis:start -->
@@ -60519,11 +60543,11 @@ Claims (full source mapping in the JSON block below):
 - lf-ports (REASONED; lf-compose): langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private.
 - lf-tls (REASONED; langfuse): Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS.
 - phoenix-enable (REASONED; phoenix, phoenix-auth, phoenix-auth-20): At 20.27.0 auth defaults off and needs PHOENIX_ENABLE_AUTH=True with PHOENIX_SECRET; at 21.0.0 an unset PHOENIX_ENABLE_AUTH turns auth on for any non-loopback PHOENIX_HOST, and PHOENIX_SECRET is optional, but without it saved credentials are readable by database readers; set both explicitly.
-- phoenix-admin (REASONED; phoenix, phoenix-auth, phoenix-auth-20): Startup creates admin@localhost/admin unless PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD is set first; later changes are inert at 20.27.0, while 21.0.0 applies them only while the admin still has the default password, then ends its sessions.
+- phoenix-admin (REASONED; phoenix, phoenix-bind, phoenix-auth, phoenix-auth-20): Startup creates admin@localhost/admin unless PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD is set first; later changes are inert at 20.27.0, while 21.0.0 applies a custom value only while the local default admin still needs a reset and has the default password, then revokes its sessions, though running replicas accept cached tokens until stopped, and its API keys stay valid.
 - phoenix-password (REASONED; phoenix, phoenix-auth, phoenix-auth-20): Existing admin needs UI password replacement before exposure; admin/admin opens a session at 20.27.0 and gets a password-reset token at 21.0.0; remove the initial-password variable once the password is changed.
 - phoenix-http (REASONED; phoenix-bind, phoenix-bind-20): HTTP UI/REST/OTLP binds PHOENIX_HOST, or --host at 20.27.0, defaulting to 0.0.0.0:6006 at 20.27.0 and 127.0.0.1:6006 at 21.0.0, whose Dockerfile sets PHOENIX_HOST=::; vendor Compose publishes 6006 and 4317 and lists PostgreSQL ports; restrict bind, publication and database exposure.
 - phoenix-grpc (REASONED; phoenix-bind, phoenix-bind-20): Separate OTLP gRPC on 4317 binds [::] regardless of PHOENIX_HOST at 20.27.0 but binds PHOENIX_HOST, default 127.0.0.1, at 21.0.0; isolate namespace, publication and firewall separately.
-- phoenix-keys (REASONED; phoenix, phoenix-bind, phoenix-auth): Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer; at 21.0.0 a non-loopback PHOENIX_HOST with PHOENIX_ENABLE_AUTH unset enables auth on its own.
+- phoenix-keys (REASONED; phoenix, phoenix-bind, phoenix-auth): Enabling auth rejects unauthenticated collection/API requests; system or user API keys sent as PHOENIX_API_KEY Bearer are recommended for collectors, though the admin secret and access tokens also authenticate; at 21.0.0 a non-loopback PHOENIX_HOST with PHOENIX_ENABLE_AUTH unset enables auth on its own.
 - phoenix-mfa (REASONED; phoenix): Documentation describes no native MFA and none was found in the 21.0.0 files read, though absence is not established; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there.
 - phoenix-signup (REASONED; phoenix): PHOENIX_OAUTH2_&lt;IDP&gt;_ALLOW_SIGN_UP defaults True; set False and restrict provider membership.
 - phoenix-basic (REASONED; phoenix): Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested.
@@ -60550,7 +60574,7 @@ Claims (full source mapping in the JSON block below):
 - verify-dashboard (REASONED; langfuse): Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.
 - verify-lf-api (REASONED; langfuse): Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.
 - verify-collector (REASONED; otel-docs, basicauth): Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.
-- verify-phoenix-admin (REASONED; phoenix, phoenix-auth, phoenix-auth-20): Default admin/admin must fail, with a 20.27.0 session or a 21.0.0 reset token both exposed, and the replacement password must succeed; with basic auth disabled, require local-login refusal and approved MFA IdP success.
+- verify-phoenix-admin (REASONED; phoenix, phoenix-bind, phoenix-auth, phoenix-auth-20): Default admin/admin must fail, with a 20.27.0 session or a 21.0.0 reset token both exposed, and the replacement password must succeed; with basic auth disabled, require local-login refusal and approved MFA IdP success.
 - verify-phoenix-read (REASONED; phoenix, phoenix-auth, curl): Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.
 - verify-phoenix-http (REASONED; phoenix, phoenix-auth): Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key gets 403 and is not a positive control.
 - verify-phoenix-grpc (REASONED; phoenix-auth, phoenix-bind, phoenix-bind-20): Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.
@@ -60560,7 +60584,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "c54d1d6a67807c51623c5738beca13170d7078e740668068d6a81981298ae0ed",
+  "body_sha256": "b0656a8551a88ab361be59c05ec54a9e72801418d8c4640808e01c7474eb4612",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -60581,6 +60605,7 @@ Claims (full source mapping in the JSON block below):
         "s4618901856d4": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/config.py#L3425-L3447",
         "s74e11942206c": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/grpc_server.py#L55-L82",
         "s1b9b41c2b9da": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/grpc_server.py#L109-L131",
+        "sf4f82f3650d7": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/grpc_server.py#L41-L52",
         "s9294363c778c": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/cli/commands/serve.py#L238-L246",
         "s4746650f1449": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/cli/commands/serve.py#L363-L393",
         "sfcdf7957ab53": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/app.py#L1007-L1014",
@@ -60599,6 +60624,7 @@ Claims (full source mapping in the JSON block below):
         "s68717d339677": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/config.py#L3364-L3365",
         "sab369cec4af9": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/grpc_server.py#L55-L80",
         "s78a38870f8ea": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/grpc_server.py#L107-L109",
+        "s1cb038a6327a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/grpc_server.py#L41-L52",
         "s27bd68072127": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/cli/commands/serve.py#L148-L160",
         "s566f5ab791a7": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/cli/commands/serve.py#L244-L253",
         "s8fb8f6b9d2f3": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/cli/commands/serve.py#L383-L417",
@@ -60687,13 +60713,16 @@ Claims (full source mapping in the JSON block below):
         "sdbaa6371c568": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/config.py#L1274-L1278",
         "s438ca2a1d10a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/config.py#L1509-L1534",
         "s921dc8bddc0a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/db/facilitator.py#L115-L219",
+        "s12d17ea860a0": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L131-L138",
         "s9b5694263627": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L147-L198",
         "sb292bb2171aa": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L311-L341",
         "se91e507879d3": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/__init__.py#L35-L83",
+        "sd4999c5d2719": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L94-L109",
         "sc7c47b61ba20": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L213-L282",
         "sb802793835cd": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/authorization.py#L73-L84",
         "s00e9a72f392a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/projects.py#L66-L67",
-        "se7438e02fc6a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L431-L433"
+        "se7438e02fc6a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L431-L433",
+        "s9efa643de335": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L478-L500"
       }
     },
     "phoenix-auth-20": {
@@ -60705,6 +60734,7 @@ Claims (full source mapping in the JSON block below):
         "s530d72b9665c": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/config.py#L1491-L1501",
         "s048f854055c7": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/db/facilitator.py#L113-L160",
         "sabe5c0470bf0": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/app.py#L972",
+        "s341552cade7a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/api/routers/auth.py#L128-L135",
         "s8a3e177589da": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/api/routers/auth.py#L144-L186"
       }
     },
@@ -60787,11 +60817,11 @@ Claims (full source mapping in the JSON block below):
     "lf-ports": {"text": "langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private.", "components": ["lf-compose"], "sources": ["lf-compose:s4d19a7b83526"], "status": "REASONED"},
     "lf-tls": {"text": "Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS.", "components": ["langfuse"], "sources": ["langfuse:sb92c8a6aaad1"], "status": "REASONED"},
     "phoenix-enable": {"text": "At 20.27.0 auth defaults off and needs PHOENIX_ENABLE_AUTH=True with PHOENIX_SECRET; at 21.0.0 an unset PHOENIX_ENABLE_AUTH turns auth on for any non-loopback PHOENIX_HOST, and PHOENIX_SECRET is optional, but without it saved credentials are readable by database readers; set both explicitly.", "components": ["phoenix", "phoenix-auth", "phoenix-auth-20"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:s036fb8ea6f51", "phoenix-auth:sdbaa6371c568", "phoenix-auth:s438ca2a1d10a", "phoenix-auth-20:sbb3f3e1ef927", "phoenix-auth-20:s530d72b9665c"], "status": "REASONED"},
-    "phoenix-admin": {"text": "Startup creates admin@localhost/admin unless PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD is set first; later changes are inert at 20.27.0, while 21.0.0 applies them only while the admin still has the default password, then ends its sessions.", "components": ["phoenix", "phoenix-auth", "phoenix-auth-20"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:s036fb8ea6f51", "phoenix-auth:s921dc8bddc0a", "phoenix-auth-20:s710acd292052", "phoenix-auth-20:s048f854055c7", "phoenix-auth-20:sabe5c0470bf0"], "status": "REASONED"},
-    "phoenix-password": {"text": "Existing admin needs UI password replacement before exposure; admin/admin opens a session at 20.27.0 and gets a password-reset token at 21.0.0; remove the initial-password variable once the password is changed.", "components": ["phoenix", "phoenix-auth", "phoenix-auth-20"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:s9b5694263627", "phoenix-auth:sb292bb2171aa", "phoenix-auth-20:s8a3e177589da"], "status": "REASONED"},
+    "phoenix-admin": {"text": "Startup creates admin@localhost/admin unless PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD is set first; later changes are inert at 20.27.0, while 21.0.0 applies a custom value only while the local default admin still needs a reset and has the default password, then revokes its sessions, though running replicas accept cached tokens until stopped, and its API keys stay valid.", "components": ["phoenix", "phoenix-bind", "phoenix-auth", "phoenix-auth-20"], "sources": ["phoenix:s5a90699b7950", "phoenix-bind:s8402a7dc0c90", "phoenix-auth:s036fb8ea6f51", "phoenix-auth:s921dc8bddc0a", "phoenix-auth-20:s710acd292052", "phoenix-auth-20:s048f854055c7", "phoenix-auth-20:sabe5c0470bf0"], "status": "REASONED"},
+    "phoenix-password": {"text": "Existing admin needs UI password replacement before exposure; admin/admin opens a session at 20.27.0 and gets a password-reset token at 21.0.0; remove the initial-password variable once the password is changed.", "components": ["phoenix", "phoenix-auth", "phoenix-auth-20"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:s12d17ea860a0", "phoenix-auth:s9b5694263627", "phoenix-auth:sb292bb2171aa", "phoenix-auth-20:s341552cade7a", "phoenix-auth-20:s8a3e177589da"], "status": "REASONED"},
     "phoenix-http": {"text": "HTTP UI/REST/OTLP binds PHOENIX_HOST, or --host at 20.27.0, defaulting to 0.0.0.0:6006 at 20.27.0 and 127.0.0.1:6006 at 21.0.0, whose Dockerfile sets PHOENIX_HOST=::; vendor Compose publishes 6006 and 4317 and lists PostgreSQL ports; restrict bind, publication and database exposure.", "components": ["phoenix-bind", "phoenix-bind-20"], "sources": ["phoenix-bind:s1e4c3ebd33de", "phoenix-bind:se0340e8cbaba", "phoenix-bind:s4618901856d4", "phoenix-bind:s9294363c778c", "phoenix-bind:s4746650f1449", "phoenix-bind:s93abe2c011ec", "phoenix-bind:s8402a7dc0c90", "phoenix-bind:s053ea1feac0e", "phoenix-bind-20:scfb88225f2ad", "phoenix-bind-20:s68717d339677", "phoenix-bind-20:s27bd68072127", "phoenix-bind-20:s566f5ab791a7", "phoenix-bind-20:s8fb8f6b9d2f3", "phoenix-bind-20:s6c614a43f382"], "status": "REASONED"},
     "phoenix-grpc": {"text": "Separate OTLP gRPC on 4317 binds [::] regardless of PHOENIX_HOST at 20.27.0 but binds PHOENIX_HOST, default 127.0.0.1, at 21.0.0; isolate namespace, publication and firewall separately.", "components": ["phoenix-bind", "phoenix-bind-20"], "sources": ["phoenix-bind:se0340e8cbaba", "phoenix-bind:s74e11942206c", "phoenix-bind:s1b9b41c2b9da", "phoenix-bind:sfcdf7957ab53", "phoenix-bind:s62273aeb92e3", "phoenix-bind:s4746650f1449", "phoenix-bind-20:s78a38870f8ea", "phoenix-bind-20:sd9548a2295ae"], "status": "REASONED"},
-    "phoenix-keys": {"text": "Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer; at 21.0.0 a non-loopback PHOENIX_HOST with PHOENIX_ENABLE_AUTH unset enables auth on its own.", "components": ["phoenix", "phoenix-bind", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-bind:s8402a7dc0c90", "phoenix-auth:sdbaa6371c568"], "status": "REASONED"},
+    "phoenix-keys": {"text": "Enabling auth rejects unauthenticated collection/API requests; system or user API keys sent as PHOENIX_API_KEY Bearer are recommended for collectors, though the admin secret and access tokens also authenticate; at 21.0.0 a non-loopback PHOENIX_HOST with PHOENIX_ENABLE_AUTH unset enables auth on its own.", "components": ["phoenix", "phoenix-bind", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-bind:s8402a7dc0c90", "phoenix-auth:sdbaa6371c568", "phoenix-auth:sd4999c5d2719", "phoenix-auth:s253973703f36"], "status": "REASONED"},
     "phoenix-mfa": {"text": "Documentation describes no native MFA and none was found in the 21.0.0 files read, though absence is not established; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
     "phoenix-signup": {"text": "PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP defaults True; set False and restrict provider membership.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
     "phoenix-basic": {"text": "Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
@@ -60818,10 +60848,10 @@ Claims (full source mapping in the JSON block below):
     "verify-dashboard": {"text": "Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED", "verify": [2]},
     "verify-lf-api": {"text": "Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED", "verify": [2]},
     "verify-collector": {"text": "Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED", "verify": [3]},
-    "verify-phoenix-admin": {"text": "Default admin/admin must fail, with a 20.27.0 session or a 21.0.0 reset token both exposed, and the replacement password must succeed; with basic auth disabled, require local-login refusal and approved MFA IdP success.", "components": ["phoenix", "phoenix-auth", "phoenix-auth-20"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:s9b5694263627", "phoenix-auth-20:s8a3e177589da"], "status": "REASONED"},
+    "verify-phoenix-admin": {"text": "Default admin/admin must fail, with a 20.27.0 session or a 21.0.0 reset token both exposed, and the replacement password must succeed; with basic auth disabled, require local-login refusal and approved MFA IdP success.", "components": ["phoenix", "phoenix-bind", "phoenix-auth", "phoenix-auth-20"], "sources": ["phoenix:s5a90699b7950", "phoenix-bind:s8402a7dc0c90", "phoenix-auth:s921dc8bddc0a", "phoenix-auth:s12d17ea860a0", "phoenix-auth:s9b5694263627", "phoenix-auth:sb292bb2171aa", "phoenix-auth-20:s048f854055c7", "phoenix-auth-20:s341552cade7a", "phoenix-auth-20:s8a3e177589da"], "status": "REASONED"},
     "verify-phoenix-read": {"text": "Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.", "components": ["phoenix", "phoenix-auth", "curl"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:se91e507879d3", "phoenix-auth:sc7c47b61ba20", "phoenix-auth:s00e9a72f392a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [4]},
-    "verify-phoenix-http": {"text": "Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key gets 403 and is not a positive control.", "components": ["phoenix", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:se91e507879d3", "phoenix-auth:sc7c47b61ba20", "phoenix-auth:sb802793835cd", "phoenix-auth:se7438e02fc6a"], "status": "REASONED"},
-    "verify-phoenix-grpc": {"text": "Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.", "components": ["phoenix-auth", "phoenix-bind", "phoenix-bind-20"], "sources": ["phoenix-auth:s253973703f36", "phoenix-bind:s74e11942206c", "phoenix-bind:s1b9b41c2b9da", "phoenix-bind:s22756c69d535", "phoenix-bind-20:sab369cec4af9", "phoenix-bind-20:s78a38870f8ea", "phoenix-bind-20:s5f40ca1e1785"], "status": "REASONED"}
+    "verify-phoenix-http": {"text": "Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key gets 403 and is not a positive control.", "components": ["phoenix", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:se91e507879d3", "phoenix-auth:sd4999c5d2719", "phoenix-auth:sc7c47b61ba20", "phoenix-auth:sb802793835cd", "phoenix-auth:se7438e02fc6a", "phoenix-auth:s9efa643de335"], "status": "REASONED"},
+    "verify-phoenix-grpc": {"text": "Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.", "components": ["phoenix-auth", "phoenix-bind", "phoenix-bind-20"], "sources": ["phoenix-auth:s253973703f36", "phoenix-auth:sdbaa6371c568", "phoenix-bind:s74e11942206c", "phoenix-bind:s1b9b41c2b9da", "phoenix-bind:sf4f82f3650d7", "phoenix-bind:s22756c69d535", "phoenix-bind-20:sab369cec4af9", "phoenix-bind-20:s78a38870f8ea", "phoenix-bind-20:s1cb038a6327a", "phoenix-bind-20:s5f40ca1e1785"], "status": "REASONED"}
   }
 }
 ````
