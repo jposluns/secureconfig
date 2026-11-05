@@ -553,7 +553,7 @@ that accepts spans with no credential at all.
 - Phoenix default admin bootstrap at arize-phoenix-v20.27.0 (creates `admin@localhost` only when no admin exists, as a step added to every start; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/db/facilitator.py#L113-L160 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/app.py#L972
 - Phoenix password login at arize-phoenix-v21.0.0 (`POST /auth/login` with the default password answers HTTP 403 with a password-reset token, and `POST /auth/password-reset` refuses `admin` as the new password; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L147-L198 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L311-L341
 - Phoenix password login at arize-phoenix-v20.27.0 (`POST /auth/login` issues tokens for any valid password, with no default-password check; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/api/routers/auth.py#L144-L186
-- Phoenix `/v1` REST authentication and viewer write refusal at arize-phoenix-v21.0.0, the same files at arize-phoenix-v20.27.0 (`is_authenticated` on the `/v1` router only with authentication enabled, 401 without a valid token, `restrict_access_by_viewers` answering a viewer's non-GET request with 403, and `GET /v1/projects` and `POST /v1/traces` under that router; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/__init__.py#L35-L83, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L213-L282, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/authorization.py#L73-L84, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/projects.py#L66-L67 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L431-L433
+- Phoenix `/v1` REST authentication and viewer write refusal at arize-phoenix-v21.0.0, the same files at arize-phoenix-v20.27.0 (`is_authenticated` on the `/v1` router only with authentication enabled, 401 without a valid token, `restrict_access_by_viewers` answering a viewer's non-GET request with 403, and `GET /v1/projects` and `POST /v1/traces` under that router; checked November 2026): <https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/__init__.py#L35-L83>, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L213-L282, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/authorization.py#L73-L84, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/projects.py#L66-L67 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L431-L433
 
 
 <!-- version-basis:start -->
@@ -646,7 +646,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "91b2536cf14b254076554c6abc38baa1f56c92074e663cf234f1b22af68b5ae5",
+  "body_sha256": "c54d1d6a67807c51623c5738beca13170d7078e740668068d6a81981298ae0ed",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
