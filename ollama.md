@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Ollama v0.40.14, Ollama (go list sweep and go.sum reading) v0.34.2, Docker Engine localhost boundary 28.0, systemd v257, and Go go1.26.5, go1.26.0, go1.26.1, go1.26.2, go1.26.3, go1.26.4, go1.26.6, go1.26.7, go1.26.8, go1.26.9, and go1.26.10, plus 4 more recorded bases; 1 further source is pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 79 claims, all reasoned from cited sources.
+Written against Ollama v0.40.14, Ollama (go list sweep and go.sum reading) v0.34.2, Docker Engine localhost boundary 28.0, systemd v257, Go go1.26.5, go1.26.0, go1.26.1, go1.26.2, go1.26.3, go1.26.4, go1.26.6, go1.26.7, go1.26.8, go1.26.9, and go1.26.10, and github.com/dgryski/trifles v0.0.0-20200323201526-dd97f9abfb48, plus 3 more recorded bases; 7 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 79 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -1118,7 +1118,6 @@ Components (recorded basis):
 
 - ollama: Ollama (v0.40.14)
 - ollama-sweep: Ollama (go list sweep and go.sum reading) (v0.34.2)
-- commit: Ollama release commit (9a3e8177767245acc62b735eba7d5d8a553606d0)
 - ollama-rolling: Ollama documentation (rolling) (unknown)
 - docker: Docker Engine localhost boundary (28.0)
 - systemd: systemd (v257)
@@ -1357,13 +1356,6 @@ Claims (full source mapping in the JSON block below):
         "s45897fae891f": "https://github.com/ollama/ollama/blob/v0.34.2/app/webview/webview.go#L51",
         "s2b2be911f51e": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L10",
         "se6c615cc2b3a": "https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/webview.go#L6"
-      }
-    },
-    "commit": {
-      "name": "Ollama release commit",
-      "basis": "9a3e8177767245acc62b735eba7d5d8a553606d0",
-      "sources": {
-        "s214ba987c13b": "https://github.com/ollama/ollama/commit/9a3e8177767245acc62b735eba7d5d8a553606d0"
       }
     },
     "ollama-rolling": {
