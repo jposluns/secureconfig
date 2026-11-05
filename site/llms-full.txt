@@ -60351,8 +60351,8 @@ REASONED: the OTLP/HTTP admission and OTLP gRPC Export checks, per the guide's c
 is a zero-length protobuf body, so send `--data-binary ''` with `Content-Type: application/x-protobuf` to
 `/v1/traces` on the HTTP port (6006) and read the status. Phoenix's `/v1/traces` handler parses the body as an
 `ExportTraceServiceRequest`, and at that parse step it answers 422 only when the parse fails and otherwise
-answers 200 with an empty `ExportTraceServiceResponse` (see Sources); the route's dependencies and the other
-checks that run before that step can answer other codes. By this guide's reading, a zero-length body parses as an
+answers 200 with an empty `ExportTraceServiceResponse` (see Sources); before that step it answers 415 for an
+unsupported content type or content encoding. By this guide's reading, a zero-length body parses as an
 empty request. The anonymous request must be rejected (401/403),
 and the request with a WRITE-authorized `Authorization: Bearer` key (a system key, or a user key allowed to
 write traces, NOT a viewer key) is admitted (a 2xx). This tests request ADMISSION, not span
@@ -60492,7 +60492,7 @@ that accepts spans with no credential at all.
 - Phoenix password login at arize-phoenix-v21.0.0 (the `/auth` router's `POST /login` and `POST /password-reset` routes; `POST /auth/login` with the default password answers HTTP 403 with a password-reset token, and `POST /auth/password-reset` refuses `admin` as the new password and otherwise sets a new password that passes its format check; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L131-L138, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L147-L198 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/auth.py#L311-L341
 - Phoenix password login at arize-phoenix-v20.27.0 (the `/auth` router's `POST /login` and `POST /password-reset` routes; `POST /auth/login` issues tokens for any valid password, with no default-password check; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/api/routers/auth.py#L128-L135 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.27.0/src/phoenix/server/api/routers/auth.py#L144-L186
 - Phoenix `/v1` REST authentication and viewer write refusal at arize-phoenix-v21.0.0, the same files at arize-phoenix-v20.27.0 (`is_authenticated` on the `/v1` router only with authentication enabled, the bearer backend accepting the admin secret, an API key or an access token, 401 without a valid token, `restrict_access_by_viewers` answering a viewer's non-GET request with 403, and `GET /v1/projects` and `POST /v1/traces` under that router; checked November 2026): <https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/__init__.py#L35-L83>, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L94-L109, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/bearer_auth.py#L213-L282, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/authorization.py#L73-L84, https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/projects.py#L66-L67 and https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L431-L433
-- Phoenix OTLP/HTTP traces handler at arize-phoenix-v21.0.0, the same file at arize-phoenix-v20.27.0 (`post_traces` parses the body with `ParseFromString`, answers 422 when that parse fails, and otherwise returns an empty `ExportTraceServiceResponse` with status 200; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L478-L500
+- Phoenix OTLP/HTTP traces handler at arize-phoenix-v21.0.0, the same file at arize-phoenix-v20.27.0 (`post_traces` answers 415 for an unsupported content type or content encoding, then parses the body with `ParseFromString`, answers 422 when that parse fails, and otherwise returns an empty `ExportTraceServiceResponse` with status 200; checked November 2026): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L468-L500
 
 
 <!-- version-basis:start -->
@@ -60585,7 +60585,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "5d19670d11bfeb90edcd6dfc5d538bf4e4704f754d32bd10ecec1d0e1ded5c18",
+  "body_sha256": "fedfe69f91436b52bb1b513ae54fb4099e5dd17eed91691b4f6f6bea16ebe19b",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -60723,7 +60723,7 @@ Claims (full source mapping in the JSON block below):
         "sb802793835cd": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/authorization.py#L73-L84",
         "s00e9a72f392a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/projects.py#L66-L67",
         "se7438e02fc6a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L431-L433",
-        "s9efa643de335": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L478-L500"
+        "saff9365321eb": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v21.0.0/src/phoenix/server/api/routers/v1/traces.py#L468-L500"
       }
     },
     "phoenix-auth-20": {
@@ -60851,7 +60851,7 @@ Claims (full source mapping in the JSON block below):
     "verify-collector": {"text": "Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED", "verify": [3]},
     "verify-phoenix-admin": {"text": "Default admin/admin must fail, with a 20.27.0 session or a 21.0.0 reset token both exposed, and the replacement password must succeed; with basic auth disabled, require local-login refusal and approved MFA IdP success.", "components": ["phoenix", "phoenix-bind", "phoenix-auth", "phoenix-auth-20"], "sources": ["phoenix:s5a90699b7950", "phoenix-bind:s8402a7dc0c90", "phoenix-auth:s921dc8bddc0a", "phoenix-auth:s12d17ea860a0", "phoenix-auth:s9b5694263627", "phoenix-auth:sb292bb2171aa", "phoenix-auth-20:s048f854055c7", "phoenix-auth-20:s341552cade7a", "phoenix-auth-20:s8a3e177589da"], "status": "REASONED"},
     "verify-phoenix-read": {"text": "Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.", "components": ["phoenix", "phoenix-auth", "curl"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:se91e507879d3", "phoenix-auth:sc7c47b61ba20", "phoenix-auth:s00e9a72f392a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [4]},
-    "verify-phoenix-http": {"text": "Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key gets 403 and is not a positive control.", "components": ["phoenix", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:se91e507879d3", "phoenix-auth:sd4999c5d2719", "phoenix-auth:sc7c47b61ba20", "phoenix-auth:sb802793835cd", "phoenix-auth:se7438e02fc6a", "phoenix-auth:s9efa643de335"], "status": "REASONED"},
+    "verify-phoenix-http": {"text": "Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key gets 403 and is not a positive control.", "components": ["phoenix", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:se91e507879d3", "phoenix-auth:sd4999c5d2719", "phoenix-auth:sc7c47b61ba20", "phoenix-auth:sb802793835cd", "phoenix-auth:se7438e02fc6a", "phoenix-auth:saff9365321eb"], "status": "REASONED"},
     "verify-phoenix-grpc": {"text": "Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.", "components": ["phoenix-auth", "phoenix-bind", "phoenix-bind-20"], "sources": ["phoenix-auth:s253973703f36", "phoenix-auth:sdbaa6371c568", "phoenix-bind:s74e11942206c", "phoenix-bind:s1b9b41c2b9da", "phoenix-bind:sf4f82f3650d7", "phoenix-bind:s22756c69d535", "phoenix-bind-20:sab369cec4af9", "phoenix-bind-20:s78a38870f8ea", "phoenix-bind-20:s1cb038a6327a", "phoenix-bind-20:s5f40ca1e1785"], "status": "REASONED"}
   }
 }
