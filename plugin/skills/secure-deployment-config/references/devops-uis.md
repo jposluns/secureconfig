@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Portainer (no recorded version), Dashboard arguments v2.7.0, Gitea listener v1.27.3, Gitea MFA minimum 1.24, and Apache htpasswd 2.4; 2 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources.
+Written against Portainer (no recorded version), Dashboard arguments v2.7.0, Gitea source v28.3.0, Gitea 1.x source v1.27.3, Gitea MFA minimum 1.24, and Apache htpasswd 2.4; 2 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked September 2026. The guide records 63 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -66,9 +66,11 @@ The admin UI is on port `81`; the proxy itself is on `80`/`443`. Port `81` is ne
 
 ## Gitea
 
-- It listens on `HTTP_ADDR = 0.0.0.0` and `HTTP_PORT = 3000` by default (both as of v1.27.3); set `HTTP_ADDR = 127.0.0.1` behind a proxy, or `PROTOCOL = https` with `CERT_FILE` and `KEY_FILE` to terminate TLS itself.
-- In `[service]`, `DISABLE_REGISTRATION = true` (default `false`) and, for a private forge, `REQUIRE_SIGNIN_VIEW = true` (default `false`).
-- Users enrol TOTP or a WebAuthn key under Settings > Security; `TWO_FACTOR_AUTH = enforced` in `[security]` (Gitea 1.24 and later) requires it. With MFA on, Git over HTTP uses an access token instead of the password, and tokens bypass MFA, so scope them and revoke unused ones ([machine-auth.md](machine-auth.md)).
+- It listens on `HTTP_ADDR = 0.0.0.0` and `HTTP_PORT = 3000` by default (both as of v28.3.0); set `HTTP_ADDR = 127.0.0.1` behind a proxy, or `PROTOCOL = https` with `CERT_FILE` and `KEY_FILE` to terminate TLS itself.
+- In `[service]`, set `DISABLE_REGISTRATION = true` and, for a private forge, `REQUIRE_SIGNIN_VIEW = true` (default `false`). The code default of `DISABLE_REGISTRATION` differs between the two releases this guide covers. At v28.3.0 Gitea reads it with `sec.Key("DISABLE_REGISTRATION").MustBool(true)`, a default of `true`, although that release's `app.example.ini` still shows `;DISABLE_REGISTRATION = false`. At v1.27.3 it reads `sec.Key("DISABLE_REGISTRATION").MustBool()`, which this guide reads as a default of `false`, the value that release's `app.example.ini` shows. Which release after v1.27.3 first defaults to `true` is not established.
+- At both releases the install wizard starts its registration checkbox from the loaded setting (`form.DisableRegistration = setting.Service.DisableRegistration`) and writes the submitted value to `app.ini` as an explicit setting (`cfg.Section("service").Key("DISABLE_REGISTRATION").SetValue(strconv.FormatBool(form.DisableRegistration))`); it handles `REQUIRE_SIGNIN_VIEW` the same way. As this guide's inference, a wizard install that leaves the checkbox as first shown writes `false` at v1.27.3 and `true` at v28.3.0, unless an existing setting changed what it showed, so read `DISABLE_REGISTRATION` in `app.ini` after installing instead of relying on either default.
+- Users enrol TOTP or a WebAuthn key under Settings > Security; `TWO_FACTOR_AUTH = enforced` in `[security]` (Gitea 1.24 and later) requires it. Gitea's source reads `TWO_FACTOR_AUTH` at v1.24.0 and v28.3.0 and not at v1.23.8; whether a later 1.23.x release added it is not established. With MFA on, Git over HTTP uses an access token instead of the password, and tokens bypass MFA, so scope them and revoke unused ones ([machine-auth.md](machine-auth.md)).
+- At v28.3.0, Gitea's Basic authentication method, which its code comment describes as for API requests only, first tries the credential as an OAuth2, personal access or Actions task token, a path with no 2FA check. Only after that, and only while `ENABLE_BASIC_AUTHENTICATION` (default `true`) is on, does it try a password. Unless the user's sign-in source skips 2FA, it then refuses the password while a WebAuthn key is enrolled and, with TOTP enrolled, requires a valid code in an `X-Gitea-OTP` header. Whether Git over HTTP uses this method is not established, and neither is whether `TWO_FACTOR_AUTH = enforced` refuses the tokens of users who have not enrolled; the v28.3.0 `app.example.ini` says users without 2FA "have no access to repositories via API or web".
 
 ## GitLab CE
 
@@ -276,7 +278,12 @@ REASONED: preceding block; the GitLab initial-password-file check follows the ci
 - Docker Registry deployment (default authentication, TLS requirement; rolling documentation, checked September 2026): https://distribution.github.io/distribution/about/deploying/
 - Filebrowser: https://github.com/filebrowser/filebrowser
 - Node-RED securing the runtime (adminAuth, credentialSecret): https://nodered.org/docs/user-guide/runtime/securing-node-red
-- Gitea `HTTP_ADDR` default `0.0.0.0` and `HTTP_PORT` default `3000` (pinned tag v1.27.3): https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/server.go#L121-L122
+- Gitea listener at pinned tag v28.3.0 (checked November 2026): `HTTP_ADDR` default `0.0.0.0` and `HTTP_PORT` default `3000` https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/server.go#L151-L152 and `PROTOCOL`, `CERT_FILE` and `KEY_FILE` https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/server.go#L163-L203
+- Gitea `[service]` settings at pinned tag v28.3.0 (checked November 2026): `DISABLE_REGISTRATION` default https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/service.go#L148 , `REQUIRE_SIGNIN_VIEW` and `ENABLE_BASIC_AUTHENTICATION` https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/service.go#L168-L179 , and the example config's `TWO_FACTOR_AUTH` and `DISABLE_REGISTRATION` entries https://github.com/go-gitea/gitea/blob/v28.3.0/custom/conf/app.example.ini#L524-L526 and https://github.com/go-gitea/gitea/blob/v28.3.0/custom/conf/app.example.ini#L841-L842
+- Gitea install wizard at pinned tag v28.3.0 (checked November 2026): checkbox prefill https://github.com/go-gitea/gitea/blob/v28.3.0/routers/install/install.go#L106-L108 and explicit writes https://github.com/go-gitea/gitea/blob/v28.3.0/routers/install/install.go#L363-L365
+- Gitea `TWO_FACTOR_AUTH` and Basic authentication at pinned tag v28.3.0 (checked November 2026): https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/security.go#L197-L204 and https://github.com/go-gitea/gitea/blob/v28.3.0/services/auth/basic.go#L37-L195
+- Gitea 1.x source at pinned tag v1.27.3 (checked November 2026): `DISABLE_REGISTRATION` read https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/service.go#L151 , example value https://github.com/go-gitea/gitea/blob/v1.27.3/custom/conf/app.example.ini#L809-L810 , and install wizard prefill and explicit writes https://github.com/go-gitea/gitea/blob/v1.27.3/routers/install/install.go#L109-L112 and https://github.com/go-gitea/gitea/blob/v1.27.3/routers/install/install.go#L384-L387
+- Gitea MFA minimum 1.24, `TWO_FACTOR_AUTH` read at tag v1.24.0 and absent from tag v1.23.8 (checked November 2026): https://github.com/go-gitea/gitea/blob/v1.24.0/modules/setting/security.go#L146-L153 and https://github.com/go-gitea/gitea/blob/v1.23.8/modules/setting/security.go
 - Apache 2.4 `htpasswd` bcrypt default cost and `-C` override (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - OWASP password storage at commit 1a3f58ed2714f258a1d713966457f1a0f426e841 (bcrypt minimum work factor 10) (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/1a3f58ed2714f258a1d713966457f1a0f426e841/cheatsheets/Password_Storage_Cheat_Sheet.md#L139
 
@@ -296,7 +303,8 @@ Components (recorded basis):
 
 - portainer: Portainer (unknown)
 - dashboard-old: Dashboard arguments (v2.7.0)
-- gitea-pin: Gitea listener (v1.27.3)
+- gitea-pin: Gitea source (v28.3.0)
+- gitea-1: Gitea 1.x source (v1.27.3)
 - gitea-mfa-min: Gitea MFA minimum (1.24)
 - coolify: Coolify (unknown)
 - dokploy: Dokploy (unknown)
@@ -347,12 +355,13 @@ Claims (full source mapping in the JSON block below):
 - jenkins-csrf (REASONED; jenkins): Keep CSRF enabled even privately; disabling uses hudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION, not a UI switch.
 - jenkins-agents (REASONED; jenkins): Inbound agents use fixed/random TCP or WebSocket on HTTPS; prefer WebSocket or isolate the extra port.
 - jenkins-mfa (REASONED; jenkins): No native second factor; enforce MFA through SSO/fronting identity.
-- gitea-bind (REASONED; gitea-pin): HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default; set 127.0.0.1 behind a proxy.
-- gitea-tls (REASONED; gitea): Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.
-- gitea-registration (REASONED; gitea): Set service DISABLE_REGISTRATION=true; default false.
-- gitea-private (REASONED; gitea): Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false.
-- gitea-mfa (REASONED; gitea, gitea-mfa-min): Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later.
+- gitea-bind (REASONED; gitea-pin): HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default at v28.3.0; set 127.0.0.1 behind a proxy.
+- gitea-tls (REASONED; gitea, gitea-pin): Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.
+- gitea-registration (REASONED; gitea, gitea-pin, gitea-1): Set service DISABLE_REGISTRATION=true. Code default is true at v28.3.0, whose example ini still shows false, and false at v1.27.3; which release changed it is not established. Both install wizards write an explicit value, so read it in app.ini.
+- gitea-private (REASONED; gitea, gitea-pin): Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false. The install wizard writes an explicit value.
+- gitea-mfa (REASONED; gitea, gitea-mfa-min, gitea-pin): Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later. Source reads it at v1.24.0 and v28.3.0, not at v1.23.8; a later 1.23.x is not established.
 - gitea-tokens (REASONED; gitea): With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens.
+- gitea-basic-auth (REASONED; gitea-pin): At v28.3.0 Basic auth tries tokens first, with no 2FA check; a password needs ENABLE_BASIC_AUTHENTICATION, is refused with WebAuthn enrolled and needs a valid X-Gitea-OTP with TOTP. Git HTTP use and enforced-2FA token refusal are not established.
 - gitlab-root (REASONED; gitlab): Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG.
 - gitlab-signup (REASONED; gitlab): signup_enabled defaults true; disable for a private forge.
 - gitlab-approval (REASONED; gitlab): New instances require admin approval after signup by default; do not rely on approval alone.
@@ -384,9 +393,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "adf7ad8a80aa173d02cc81a02884dc892d6eb65d764ad6693bb516b5d863b4b8",
+  "body_sha256": "00d301a3b0133a0c94fb5d6e3ac9ea6fd095de51a1e3f3f1bcb882b2df52f1c9",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -406,17 +415,38 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "gitea-pin": {
-      "name": "Gitea listener",
+      "name": "Gitea source",
+      "basis": "v28.3.0",
+      "sources": {
+        "s01438ea0392a": "https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/server.go#L151-L152",
+        "s94fcc58b53a7": "https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/server.go#L163-L203",
+        "s5f900af6c58a": "https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/service.go#L148",
+        "sa1a585c22f58": "https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/service.go#L168-L179",
+        "s57a09b15fc30": "https://github.com/go-gitea/gitea/blob/v28.3.0/custom/conf/app.example.ini#L524-L526",
+        "sb47c6c0b545b": "https://github.com/go-gitea/gitea/blob/v28.3.0/custom/conf/app.example.ini#L841-L842",
+        "s4b700228467a": "https://github.com/go-gitea/gitea/blob/v28.3.0/routers/install/install.go#L106-L108",
+        "s2029804191d3": "https://github.com/go-gitea/gitea/blob/v28.3.0/routers/install/install.go#L363-L365",
+        "s17f07be814d4": "https://github.com/go-gitea/gitea/blob/v28.3.0/modules/setting/security.go#L197-L204",
+        "s11c58c9a7056": "https://github.com/go-gitea/gitea/blob/v28.3.0/services/auth/basic.go#L37-L195"
+      }
+    },
+    "gitea-1": {
+      "name": "Gitea 1.x source",
       "basis": "v1.27.3",
       "sources": {
-        "s31dd622b1c12": "https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/server.go#L121-L122"
+        "scc62ce4e5d4b": "https://github.com/go-gitea/gitea/blob/v1.27.3/modules/setting/service.go#L151",
+        "s99677826f27f": "https://github.com/go-gitea/gitea/blob/v1.27.3/custom/conf/app.example.ini#L809-L810",
+        "s9c7fa227cc6c": "https://github.com/go-gitea/gitea/blob/v1.27.3/routers/install/install.go#L109-L112",
+        "s0ecc49b4eb51": "https://github.com/go-gitea/gitea/blob/v1.27.3/routers/install/install.go#L384-L387"
       }
     },
     "gitea-mfa-min": {
       "name": "Gitea MFA minimum",
       "basis": "1.24",
       "sources": {
-        "sfec17fde7bb0": "https://docs.gitea.com/administration/config-cheat-sheet/"
+        "sfec17fde7bb0": "https://docs.gitea.com/administration/config-cheat-sheet/",
+        "sa5869c041fc5": "https://github.com/go-gitea/gitea/blob/v1.24.0/modules/setting/security.go#L146-L153",
+        "s023053a8ef10": "https://github.com/go-gitea/gitea/blob/v1.23.8/modules/setting/security.go"
       }
     },
     "coolify": {
@@ -583,12 +613,13 @@ Claims (full source mapping in the JSON block below):
     "jenkins-csrf": {"text": "Keep CSRF enabled even privately; disabling uses hudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION, not a UI switch.", "components": ["jenkins"], "sources": ["jenkins:s6f5287fd36d4"], "status": "REASONED"},
     "jenkins-agents": {"text": "Inbound agents use fixed/random TCP or WebSocket on HTTPS; prefer WebSocket or isolate the extra port.", "components": ["jenkins"], "sources": ["jenkins:s524c8d5871f1"], "status": "REASONED"},
     "jenkins-mfa": {"text": "No native second factor; enforce MFA through SSO/fronting identity.", "components": ["jenkins"], "sources": ["jenkins:s524c8d5871f1", "jenkins:sdfee751aeeee"], "status": "REASONED"},
-    "gitea-bind": {"text": "HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default; set 127.0.0.1 behind a proxy.", "components": ["gitea-pin"], "sources": ["gitea-pin:s31dd622b1c12"], "status": "REASONED"},
-    "gitea-tls": {"text": "Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
-    "gitea-registration": {"text": "Set service DISABLE_REGISTRATION=true; default false.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
-    "gitea-private": {"text": "Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false.", "components": ["gitea"], "sources": ["gitea:sfec17fde7bb0"], "status": "REASONED"},
-    "gitea-mfa": {"text": "Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later.", "components": ["gitea", "gitea-mfa-min"], "sources": ["gitea:sfec17fde7bb0", "gitea:s3b7060d58383", "gitea-mfa-min:sfec17fde7bb0"], "status": "REASONED"},
+    "gitea-bind": {"text": "HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default at v28.3.0; set 127.0.0.1 behind a proxy.", "components": ["gitea-pin"], "sources": ["gitea-pin:s01438ea0392a"], "status": "REASONED"},
+    "gitea-tls": {"text": "Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.", "components": ["gitea", "gitea-pin"], "sources": ["gitea:sfec17fde7bb0", "gitea-pin:s94fcc58b53a7"], "status": "REASONED"},
+    "gitea-registration": {"text": "Set service DISABLE_REGISTRATION=true. Code default is true at v28.3.0, whose example ini still shows false, and false at v1.27.3; which release changed it is not established. Both install wizards write an explicit value, so read it in app.ini.", "components": ["gitea", "gitea-pin", "gitea-1"], "sources": ["gitea:sfec17fde7bb0", "gitea-pin:s5f900af6c58a", "gitea-pin:sb47c6c0b545b", "gitea-pin:s4b700228467a", "gitea-pin:s2029804191d3", "gitea-1:scc62ce4e5d4b", "gitea-1:s99677826f27f", "gitea-1:s9c7fa227cc6c", "gitea-1:s0ecc49b4eb51"], "status": "REASONED"},
+    "gitea-private": {"text": "Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false. The install wizard writes an explicit value.", "components": ["gitea", "gitea-pin"], "sources": ["gitea:sfec17fde7bb0", "gitea-pin:sa1a585c22f58", "gitea-pin:s4b700228467a", "gitea-pin:s2029804191d3"], "status": "REASONED"},
+    "gitea-mfa": {"text": "Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later. Source reads it at v1.24.0 and v28.3.0, not at v1.23.8; a later 1.23.x is not established.", "components": ["gitea", "gitea-mfa-min", "gitea-pin"], "sources": ["gitea:sfec17fde7bb0", "gitea:s3b7060d58383", "gitea-mfa-min:sfec17fde7bb0", "gitea-mfa-min:sa5869c041fc5", "gitea-mfa-min:s023053a8ef10", "gitea-pin:s17f07be814d4"], "status": "REASONED"},
     "gitea-tokens": {"text": "With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens.", "components": ["gitea"], "sources": ["gitea:s3b7060d58383"], "status": "REASONED"},
+    "gitea-basic-auth": {"text": "At v28.3.0 Basic auth tries tokens first, with no 2FA check; a password needs ENABLE_BASIC_AUTHENTICATION, is refused with WebAuthn enrolled and needs a valid X-Gitea-OTP with TOTP. Git HTTP use and enforced-2FA token refusal are not established.", "components": ["gitea-pin"], "sources": ["gitea-pin:s11c58c9a7056", "gitea-pin:sa1a585c22f58", "gitea-pin:s57a09b15fc30"], "status": "REASONED"},
     "gitlab-root": {"text": "Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED"},
     "gitlab-signup": {"text": "signup_enabled defaults true; disable for a private forge.", "components": ["gitlab"], "sources": ["gitlab:s6e8d16cad2ef"], "status": "REASONED"},
     "gitlab-approval": {"text": "New instances require admin approval after signup by default; do not rely on approval alone.", "components": ["gitlab"], "sources": ["gitlab:s6e8d16cad2ef"], "status": "REASONED"},
