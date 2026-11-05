@@ -519,17 +519,20 @@ link to `CHANGELOG.md` at the tag.
    `git ls-remote origin refs/tags/v1.0.<N>` that the tag names the target. Immutable releases
    were enabled on this repository when this procedure was written (read from the GitHub API on
    2026-11-01), so once a release is published its assets and tag cannot be changed, which is
-   why its assets are verified while it is a draft. Five online behaviours of steps 6 to 8 were
-   not verified offline, and the first release will confirm them. They are whether a draft
-   creates the tag before it is published; whether `gh release download v1.0.<N>` finds a draft
-   by its tag; whether `gh release edit --draft=false` creates the tag at the draft's
-   `--target`; whether the download holds exactly the four uploaded assets, as step 7's
-   `diff -r` assumes; and whether the "All Tags" ruleset's bypass role lets the publisher create
-   the tag. Step 7's checks, the publish command's exit status and the `git ls-remote` check
-   are what would show one of them failing.
+   why its assets are verified while it is a draft. Five online behaviours of steps 6 to 8 could
+   not be verified offline, and the first release, v1.0.1211 on 2026-11-05, confirmed each: a
+   draft creates no tag before it is published; `gh release download v1.0.<N>` finds a draft by
+   its tag; `gh release edit --draft=false` creates the tag at the draft's `--target`; the
+   download holds exactly the four uploaded assets, as step 7's `diff -r` assumes; and the
+   "All Tags" ruleset's bypass role let the publisher create the tag. Step 7's checks, the
+   publish command's exit status and the `git ls-remote` check still show any of them failing
+   on a later release.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers. The next release
    passes this tag as `--previous`.
+10. Ask lab_infra, which maintains https://posluns.dev/hashes.txt, to add the release: send the
+   tag, its target commit and the SHA-256 of the release's `SHA256SUMS` asset, and once the line
+   is live, check it against that digest.
 
 The released `llms-full.txt` is the committed file, so its repository links point at `main`,
 not at the tag, and the body says so. The bundled
