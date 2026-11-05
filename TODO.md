@@ -24,7 +24,7 @@ Each row is one physical line. `tools/check_todo_rows.py`, which `tools/run_all_
 fails a line holding two row starts such as `| 3.6 |`, the shape a lost line break leaves when it
 joins two rows.
 
-Next ids: **1.431**, **2.50**, **3.49**, **4.12**.
+Next ids: **1.431**, **2.50**, **3.50**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -141,6 +141,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.49 | `tools/run_all_checks.sh`: a TERM sent only to the suite's own PID does not stop a running gate in any section on the `--sections` path, or in any section but `overflow` on the whole-suite path, and the `llms-full` build can rewrite `site/llms-full.txt` after the EXIT trap restored it; this predates #1210, whose CHANGELOG bullet says the gap is tracked separately. #1210 tried a background copy and then a process group for `--sections`, and reverted both after QA found regressions (an ordinary exit instead of death by signal, a hang under `stty tostop`, group SIGKILL and Ctrl-Z not reaching the gates). Design a fix that keeps foreground terminal behaviour and death by signal, with tests. (L, M) | `[gap]` |
 
 ## Decisions
 
