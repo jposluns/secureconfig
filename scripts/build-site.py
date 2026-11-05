@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the secureconfig.ai pages on the shared site template (baseline 1.8.0).
+"""Build the secureconfig.ai pages on the shared site template (baseline 1.9.2).
 
 Usage:
   python3 -I -B scripts/build-site.py                 write the pages under site/
