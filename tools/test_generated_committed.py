@@ -5,7 +5,8 @@ Each repository carries a guide, VERSION, plugin/plugin.json, a tracked site/ind
 stub build scripts that do what the gate depends on the real ones doing: build-llms-full.sh
 writes site/llms-full.txt from the guide, and build-plugin.sh refuses a malformed VERSION,
 replaces the references directory, writes VERSION into plugin.json with the real script's sed,
-and writes a MANIFEST.sha256. The repository is built and committed clean before each case
+writes VERSION and the root guide count into SKILL.md with the real script's seds, and writes a
+MANIFEST.sha256. The repository is built and committed clean before each case
 changes it.
 
 The two finding cases reproduce how each defect reaches a commit: the working tree is rebuilt
@@ -23,7 +24,7 @@ from pathlib import Path
 
 GATE = Path(__file__).resolve().parent / "check_generated_committed.py"
 OK = "  ok    commit "
-REBUILT = "site/llms-full.txt and 3 files under plugin/ match a fresh build of the commit"
+REBUILT = "site/llms-full.txt and 4 files under plugin/ match a fresh build of the commit"
 DEFERRED = "the working tree is this commit with no change"
 
 LLMS_BUILD = r"""#!/usr/bin/env bash
@@ -41,10 +42,17 @@ rm -rf "$dest"
 mkdir -p "$dest"
 cp guide.md "$dest/guide.md"
 sed -i "s/^\(  \"version\": \)\"[^\"]*\"/\1\"$version\"/" plugin/plugin.json
+skill=plugin/skills/secure-deployment-config/SKILL.md
+count=$(find . -maxdepth 1 -name '*.md' ! -name README.md | wc -l)
+sed -i -e "1,/^---\$/ s/^\(  version: \)\"[^\"]*\"\$/\1\"$version\"/" \
+  -e "s/\(This skill carries \)[0-9][0-9]*\( short guides\)/\1$count\2/" "$skill"
 ( cd "$dest" && sha256sum guide.md ) > "$dest/MANIFEST.sha256"
 """
 
 PLUGIN_JSON = '{\n  "name": "fixture",\n  "version": "1.0.5",\n  "license": "CC0-1.0"\n}\n'
+SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
+SKILL_MD = ('---\nname: fixture\nmetadata:\n  version: "1.0.5"\n---\n\n'
+            "This skill carries 1 short guides.\n")
 
 
 def environment(root):
@@ -104,6 +112,7 @@ def case(change, expected=0, needle=OK, *, also=(), absent=(), worktree_current=
         write(root, "guide.md", "first text\n")
         write(root, "VERSION", "1.0.5\n")
         write(root, "plugin/plugin.json", PLUGIN_JSON)
+        write(root, SKILL, SKILL_MD)
         # Tracked, so site/ is in every export, as it is in the repository.
         write(root, "site/index.html", "<!doctype html>\n")
         build(root)
@@ -152,7 +161,7 @@ def bump(stage_manifest, stage_after=False):
     def change(root):
         write(root, "VERSION", "1.0.6\n")
         build(root)
-        commit(root, "VERSION", *(["plugin/plugin.json"] if stage_manifest else []))
+        commit(root, "VERSION", *(["plugin/plugin.json", SKILL] if stage_manifest else []))
         if stage_after:
             git(root, "add", "--", "plugin/plugin.json")
     return change
@@ -181,7 +190,26 @@ def worktree_only(root):
 def bad_version(root):
     write(root, "VERSION", "1.0.x\n")
     write(root, "plugin/plugin.json", PLUGIN_JSON.replace("1.0.5", "1.0.x"))
+    write(root, SKILL, SKILL_MD.replace("1.0.5", "1.0.x"))
     commit(root)
+
+
+def skill(old, new):
+    """Commit SKILL.md with old replaced by new and nothing rebuilt."""
+    def change(root):
+        write(root, SKILL, SKILL_MD.replace(old, new))
+        commit(root)
+    return change
+
+
+def added_guide(rebuilt):
+    """Commit a second guide, with or without the rebuild that restates SKILL.md's count."""
+    def change(root):
+        write(root, "other.md", "another guide\n")
+        if rebuilt:
+            build(root)
+        commit(root)
+    return change
 
 
 def manifest(text):
@@ -201,10 +229,12 @@ def main():
     try:
         # Clean, both ways: with the tree clean the gate defers to the staleness gates, and
         # with --rebuild the commit is its own fresh build.
-        count += case(nothing, also=("plugin/plugin.json names VERSION 1.0.5; " + DEFERRED,),
+        count += case(nothing, also=("plugin/plugin.json names VERSION 1.0.5, SKILL.md names it "
+                                     "and states 1 guides; " + DEFERRED,),
                       absent=(REBUILT,))
         count += case(nothing, args=rebuild,
-                      also=("plugin/plugin.json names VERSION 1.0.5, and " + REBUILT,))
+                      also=("plugin/plugin.json names VERSION 1.0.5, SKILL.md names it and "
+                            "states 1 guides, and " + REBUILT,))
 
         # F-PLUGIN-MANIFEST-PARTIAL-STAGE: the working tree is current, the commit lacks the
         # rebuilt MANIFEST.sha256; the twin stages it and passes on the same rebuild path.
@@ -223,7 +253,8 @@ def main():
                              "VERSION as committed is '1.0.6'",
                       also=("plugin/plugin.json as committed differs from a fresh build",))
         count += case(bump(True), worktree_current=True, args=rebuild,
-                      also=("plugin/plugin.json names VERSION 1.0.6, and " + REBUILT,))
+                      also=("plugin/plugin.json names VERSION 1.0.6, SKILL.md names it and "
+                            "states 1 guides, and " + REBUILT,))
 
         # A guide committed with nothing rebuilt: every derived file is reported.
         count += case(unbuilt_guide, expected=1, args=rebuild,
@@ -254,6 +285,36 @@ def main():
         count += case(manifest(PLUGIN_JSON.replace('  "version": "1.0.5",\n', "")),
                       expected=1,
                       needle='plugin/plugin.json as committed has no top-level string "version"')
+
+        # SKILL.md's version and guide count, which build-plugin.sh rewrites, are checked on a
+        # clean tree too: a stale version, a stale count and its fixed twin, and the version
+        # line or count sentence missing or stated twice.
+        count += case(skill('"1.0.5"', '"1.0.4"'), expected=1,
+                      needle=SKILL + " as committed names version '1.0.4' but VERSION as "
+                             "committed is '1.0.5'",
+                      absent=("plugin/plugin.json as committed",))
+        count += case(added_guide(False), expected=1,
+                      needle=SKILL + " as committed states 1 guides but the commit has 2")
+        count += case(added_guide(False), expected=1, args=rebuild,
+                      needle=SKILL + " as committed states 1 guides but the commit has 2",
+                      also=(SKILL + " as committed differs from a fresh build",))
+        count += case(added_guide(True), args=rebuild,
+                      also=("SKILL.md names it and states 2 guides, and " + REBUILT,))
+        count += case(skill("This skill carries 1 short guides", "This skill has 1 guide"),
+                      expected=1,
+                      needle=SKILL + ' as committed states "This skill carries N short guides" '
+                             "0 times, not once")
+        count += case(skill("This skill carries 1 short guides.",
+                            "This skill carries 1 short guides. This skill carries 1 short "
+                            "guides."),
+                      expected=1, needle='short guides" 2 times, not once')
+        count += case(skill('  version: "1.0.5"\n', ""), expected=1,
+                      needle=SKILL + " as committed has 0 metadata version lines in its front "
+                             "matter, not 1")
+        # A version-shaped line after the front matter is not the metadata line, to the build's
+        # sed range or to the gate.
+        count += case(skill("short guides.\n", 'short guides.\n  version: "1.0.4"\n'),
+                      args=rebuild, also=(REBUILT,))
 
         # Fail closed: a revision that is not a commit, an option-shaped revision, a directory
         # that is not a repository, and a repository with no commit.

@@ -58,6 +58,24 @@ sed -i "s/^\(  \"version\": \)\"[^\"]*\"/\1\"$version\"/" plugin/plugin.json
 grep -qF "  \"version\": \"$version\"," plugin/plugin.json \
   || { echo "plugin.json version did not update to $version; its version line may have been reformatted" >&2; exit 1; }
 
+# SKILL.md states the same version in its metadata and the guide count in "This skill carries N
+# short guides", and nothing rewrote either, so both drifted. The count is the guide-counts gate's
+# set in tools/run_all_checks.sh: every root *.md outside not_a_guide, less README.md. It comes
+# from guides() in tools/_verify_sections.py, whose META_EXCLUDE tools/test_verify_marking.py holds
+# equal to not_a_guide, so the README and SKILL.md counts have one definition. The version sed is
+# limited to the front matter (line 1 to the next "---" line) and to its two-space-indented key,
+# and each value is confirmed afterwards for the reason given for plugin.json above.
+skill="plugin/skills/secure-deployment-config/SKILL.md"
+count=$(python3 -c 'import sys; from pathlib import Path; sys.path.insert(0, "tools"); from _verify_sections import guides; print(sum(p.name != "README.md" for p in guides(Path("."))))')
+printf '%s' "$count" | grep -qxE '[1-9][0-9]*' \
+  || { echo "the guide count is '$count', not a positive number; refusing to build" >&2; exit 1; }
+sed -i -e "1,/^---\$/ s/^\(  version: \)\"[^\"]*\"\$/\1\"$version\"/" \
+  -e "s/\(This skill carries \)[0-9][0-9]*\( short guides\)/\1$count\2/" "$skill"
+grep -qxF "  version: \"$version\"" "$skill" \
+  || { echo "SKILL.md version did not update to $version; its metadata version line may have been reformatted" >&2; exit 1; }
+grep -qF "This skill carries $count short guides" "$skill" \
+  || { echo "SKILL.md guide count did not update to $count; the sentence \"This skill carries N short guides\" may have been reworded or wrapped" >&2; exit 1; }
+
 # A digest per bundled file, so an adopter's updater can verify what it fetched before replacing
 # anything, and so a partial or corrupted download is a refusal rather than a silent downgrade.
 ( cd "$dest" && sha256sum "${files[@]}" ) > "$dest/MANIFEST.sha256"

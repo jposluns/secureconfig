@@ -19,6 +19,11 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   to VERSION as committed, read the way scripts/build-plugin.sh reads it (`$(cat VERSION)`,
   which drops trailing newlines). This runs before any build, so a bump without a rebuild is
   reported in those words and not only as a changed file;
+- plugin/skills/secure-deployment-config/SKILL.md as committed has exactly 1 metadata line
+  `  version: "..."` in its front matter, naming that VERSION, and states "This skill carries N
+  short guides" exactly once, with N the guide-counts gate's set in the commit: every root *.md
+  outside not_a_guide, less README.md, as guides() in tools/_verify_sections.py reads it. That
+  module is this gate's own copy, not the commit's;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -54,15 +59,24 @@ import argparse
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 import tarfile
 import tempfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _verify_sections import guides  # noqa: E402  the guide-counts gate's guide set
+
 LLMS_FULL = "site/llms-full.txt"
 PLUGIN = "plugin"
 MANIFEST = "plugin/plugin.json"
+SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
+# What scripts/build-plugin.sh rewrites in SKILL.md: the metadata version line in the front matter,
+# and the guide count in this sentence.
+SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
+SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")
@@ -167,6 +181,35 @@ def version_findings(version_text, manifest_text):
     return []
 
 
+def guide_count(tree):
+    """The guides the guide-counts gate counts: root *.md outside not_a_guide, less README.md."""
+    return sum(1 for path in guides(tree) if path.name != "README.md")
+
+
+def skill_findings(version_text, skill_text, count):
+    """Findings for the committed SKILL.md version and guide count against the commit."""
+    version = version_text.rstrip("\n")
+    lines = skill_text.split("\n")
+    # The front matter as build-plugin.sh's sed range reads it: line 1 to the next "---" line.
+    end = next((i for i in range(1, len(lines)) if lines[i] == "---"), len(lines) - 1)
+    stated = [m[1] for line in lines[:end + 1] if (m := SKILL_VERSION.fullmatch(line))]
+    findings = []
+    if len(stated) != 1:
+        findings.append(f"{SKILL} as committed has {len(stated)} metadata version lines in its "
+                        "front matter, not 1")
+    elif stated[0] != version:
+        findings.append(f"{SKILL} as committed names version {stated[0]!r} but VERSION as "
+                        f"committed is {version!r}; {REMEDY}")
+    counts = SKILL_COUNT.findall(skill_text)
+    if len(counts) != 1:
+        findings.append(f'{SKILL} as committed states "This skill carries N short guides" '
+                        f"{len(counts)} times, not once")
+    elif int(counts[0]) != count:
+        findings.append(f"{SKILL} as committed states {counts[0]} guides but the commit has "
+                        f"{count} (root *.md outside not_a_guide, less README.md); {REMEDY}")
+    return findings
+
+
 def build_findings(tree):
     """Run both builds in the export; a finding for the first one that does not exit 0."""
     for script in BUILDS:
@@ -204,10 +247,14 @@ def main(argv=None):
         try:
             version_text = (tree / "VERSION").read_text(encoding="utf-8")
             manifest_text = (tree / MANIFEST).read_text(encoding="utf-8")
+            skill_text = (tree / SKILL).read_text(encoding="utf-8")
+            count = guide_count(tree)
         except (OSError, UnicodeError) as exc:
-            findings.append(f"cannot read VERSION or {MANIFEST} as committed: {exc}")
+            findings.append(f"cannot read VERSION, {MANIFEST}, {SKILL} or the guides as "
+                            f"committed: {exc}")
         else:
             findings += version_findings(version_text, manifest_text)
+            findings += skill_findings(version_text, skill_text, count)
             version = version_text.rstrip("\n")
         rebuild = args.rebuild
         if not rebuild:
@@ -234,10 +281,12 @@ def main(argv=None):
             return 1
         if rebuild:
             files = sum(1 for path in committed if path.startswith(PLUGIN + "/"))
-            print(f"  ok    {label}: {MANIFEST} names VERSION {version}, and {LLMS_FULL} and "
+            print(f"  ok    {label}: {MANIFEST} names VERSION {version}, SKILL.md names it and "
+                  f"states {count} guides, and {LLMS_FULL} and "
                   f"{files} files under {PLUGIN}/ match a fresh build of the commit")
         else:
-            print(f"  ok    {label}: {MANIFEST} names VERSION {version}; the working tree is "
+            print(f"  ok    {label}: {MANIFEST} names VERSION {version}, SKILL.md names it and "
+                  f"states {count} guides; the working tree is "
                   "this commit with no change, so the working-tree staleness gates in "
                   "tools/run_all_checks.sh decide its generated files (--rebuild rebuilds "
                   "it here)")
