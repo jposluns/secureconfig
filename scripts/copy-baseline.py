@@ -23,12 +23,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
-VERSION = "1.8.0"
+VERSION = "1.9.2"
 UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # The archive's digest in https://posluns.ca/baseline/SHA256SUMS, and the digest of the version's
-# SHA256SUMS in https://posluns.dev/hashes.txt (the template owner's 1.8.0 notice of 2026-11-04).
-ARCHIVE_SHA256 = "958a148bf896a4274dc294f230d792e035835eae7d4f8844f8bbcda6ab843197"
-SUMS_SHA256 = "e365054b9fd156413cc1581561e43157b587a064bc2e74386faee770ab2ba1ef"
+# SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.9.2" row, commit 45f8317, 2026-11-05).
+ARCHIVE_SHA256 = "c9d369cab7bb10182755b1f5f4c2788b2bc40547e751206e037004108816cfed"
+SUMS_SHA256 = "d6f9875b12270be2e8661fb624872ea8f104d02ee4582efd433342053885f0f4"
 # Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
 # The runtime and licence files the site publishes. The reference pages, tools/measure.js,
@@ -53,7 +53,8 @@ RUNTIME = (
 )
 # The build tools the site copies and pins but never serves, package path to repository path; the
 # pin keys them by the repository path, as the baseline README shows (SPECIFICATION section 4):
-# the palette gate (baseline 1.6.0) and the overflow check (baseline 1.8.0).
+# the palette gate (baseline 1.6.0) and the overflow check (baseline 1.8.0). The card builder
+# (baseline 1.9.0, tools/build_card.js and tools/card-fonts/) is not copied: no gate here runs it.
 BUILD_TOOLS = {"tools/check_palette.py": ".baseline/check_palette.py",
                "tools/check_overflow.js": ".baseline/check_overflow.js"}
 HEADER = """\
