@@ -67,13 +67,14 @@ run's event is workflow_dispatch, that its branch is `release-check/v<VERSION>` 
 release targets a commit at or after the merge of #1194, the first merge on `main` whose
 `.github/workflows/checks.yml` has the workflow_dispatch trigger; check 1 reads that file at the
 target from local git objects and refuses a target without the trigger, and the body states that
-requirement. Check 1 shows only that the file lies inside the YAML subset it reads, block
-indentation included, and that the file's top-level `on:` mapping holds `workflow_dispatch` in an
-accepted form. It runs neither GitHub's workflow parser nor its schema, so that GitHub loads the
-file and offers the trigger rests on the publisher's online confirmation of a successful
-workflow_dispatch run on the target; nor does check 1 show that the target descends from #1194,
-or that a run was dispatched. Those are online steps of the procedure; --gates-check-run takes
-the id of that `gates` check run only to print it in the body, which states these as the
+requirement. Check 1 shows only that the file uses only the forms its strict line model lists,
+block indentation included, and that the file's top-level `on:` mapping holds
+`workflow_dispatch` in an accepted form. That model is not a YAML parser, and check 1 runs
+neither GitHub's workflow parser nor its schema, so whether GitHub loads the file and offers the
+trigger rests on the publisher's online confirmation of a successful workflow_dispatch run on
+the target; nor does check 1 show that the target descends from #1194, or that a run was
+dispatched. Those are online steps of the procedure; --gates-check-run takes the id of that
+`gates` check run only to print it in the body, which states these as the
 publisher's confirmations that it does not verify, and in the pass line, which says the result
 is recorded, not verified. It also cannot see a merge, tag or release that
 exists only on GitHub, so the procedure fetches `main` and the `v*` tags first, and it does not
@@ -90,29 +91,44 @@ bytes repeat for one git, Python and zlib. `git archive` applies export-ignore a
 attributes; .gitattributes sets neither today.
 
 THE DISPATCH TRIGGER: check 1 uses only the standard library, so it reads the workflow with its
-own line model of a declared subset of YAML, written for this check alone, and refuses the
-release for any file outside it. The file must be the blob of a regular file at the target (a
-symlink, a directory, a submodule or a missing path is refused) and valid UTF-8. CRLF is read as
-LF; a lone CR, any other C0 or C1 control character but tab and LF, U+2028, U+2029 and a BOM are
-refused, and so are a directive, a `...` marker and every `---` marker but one before the first
-structural line.
+own strict line model, written for this check alone. The model is not a YAML parser: it accepts
+only the forms listed here and refuses every other form, and check 1 refuses the release for a
+file that uses any other form. The model shares no code with tools/check_workflow_pins.py. The
+file must be the blob of a regular file at the target (a symlink, a directory, a submodule or a
+missing path is refused) and valid UTF-8. CRLF is read as LF; a lone CR, any other C0 or C1
+control character but tab and LF, U+2028, U+2029, U+FFFE, U+FFFF and a BOM are refused, and so
+are a directive, a `...` marker and every `---` marker but one line that is exactly `---` before
+the first structural line; a `---` line with anything else on it, such as a comment, is refused.
 
-Outside a block scalar's content every line is blank, a comment, or a structural line: optional
-sequence-entry dashes (`- `), then either a key and its value or, after a dash, a value alone. A
-key is plain, `[A-Za-z0-9_][A-Za-z0-9_.-]*` followed by `:` and a space or the end of the line,
-or that shape in single or double quotes. A value is empty, a block scalar header (`|` or `>`,
-optionally with `+` or `-`), a quoted scalar closed on its line, a flow collection closed on its
-line by matching brackets, or a plain scalar holding no `: ` and not ending in `:`, and a
-comment may follow it. A tab, an anchor (&), an alias (*), a tag (!), an explicit key (?), a
-value starting with another indicator, a block scalar header with an indentation indicator, a
-quoted key of another shape, a line that is neither a key nor a sequence entry, and text after
-a closed scalar or collection are refused, and so is an entry inside a flow collection that
-starts with one of & * ! ? | > % @ or a backquote.
+Outside a block scalar's content every line is blank, a comment line (any spaces, then `#`), or
+a structural line: optional sequence-entry dashes (`- `), then either a key and its value or, after
+a dash, a value alone. A key is plain, `[A-Za-z0-9_][A-Za-z0-9_.-]*` followed by `:` and a space
+or the end of the line, or that shape in single or double quotes, which spaces may separate from
+its `:`; from its first character to its `:` a key is at most 1,024 characters. A value is one of:
 
-Indentation is tracked across the whole file as YAML block structure. Each structural line must
+- empty, or a comment alone;
+- a block scalar header: `|` or `>`, optionally with `+` or `-`, then only spaces or one or more
+  spaces and a comment;
+- a single-quoted scalar closed on its line, or a double-quoted scalar closed on its line that
+  holds no backslash;
+- the flow mapping `{}`;
+- a flow sequence on one line: `[`, one or more entries separated by a comma and one space, then
+  `]`, where each entry is a letter, digit or `_` followed by any number of letters, digits and
+  `_ . / -`;
+- a plain scalar, which is the text before the first ` #` without its trailing spaces: it does
+  not start with one of & * ! ? % @ , ] } or a backquote, nor with `-` or `:` followed by a space
+  or the end of the line, and it holds no `: ` and no `#` and does not end in `:`.
+
+After a quoted scalar, `{}` or a flow sequence only spaces may follow, or one or more spaces and a
+comment; after a plain scalar a comment starts at ` #`. Every other form is refused, among them a
+tab, an anchor (&), an alias (*), a tag (!), an explicit key (?), every other flow collection, a
+block scalar header with an indentation indicator, a quoted key of another shape and a line that
+is neither a key nor a sequence entry.
+
+Indentation is tracked across the whole file as block structure. Each structural line must
 start at the column of a block mapping or block sequence still open, and must be a key in a
-mapping or a dash in a sequence. A line may start deeper than the open collections only when the
-structural line before it opened a block: a key with no value, whose block may also be a
+mapping or a dash in a sequence. A structural line may start deeper than the open collections
+only when the structural line before it opened a block: a key with no value, whose block may also be a
 sequence at the key's own column, or a dash with no value. A key after a dash opens a mapping at
 its own column. So a dedent to a column no open collection uses, a plain scalar continuing onto
 a more indented line, a key among a sequence's entries and a dash among a mapping's keys are
@@ -122,17 +138,19 @@ indented than that; a line between those two indentations is refused, and so is 
 before the content that holds more spaces than the content's indentation. Keys repeated in one
 mapping are not checked, except as below.
 
-Within that subset check 1 accepts exactly one form: one plain top-level key `on:` at column 0
-with no value on its line (a comment may follow), whose block mapping has the plain key
+Within those forms check 1 accepts exactly one trigger form: one plain top-level key `on:` at
+column 0 with no value on its line (a comment may follow), whose block mapping has the plain key
 `workflow_dispatch:` directly under it, either with the value `{}` or with no value on its line,
 and then nothing beneath it or a more indented block mapping whose only key is the plain
-`inputs:`; what `inputs:` holds is read only as part of the subset. It refuses everything else:
+`inputs:`, which has no value on its line and a more indented block mapping beneath it; what
+that mapping holds is read only against the forms above. It refuses everything else:
 no file; no top-level `on:`; a second one; `on:` quoted or in another case; `on:` as a plain or
 quoted string, a flow sequence or mapping, a block scalar or a block sequence, or with nothing
 beneath it; a document whose top level is not a block mapping at column 0; a dash among the keys
 directly under `on:`; `workflow_dispatch` quoted, in another case, repeated, or with any other
 value, including a block sequence beneath it; a key beneath `workflow_dispatch:` other than one
-plain `inputs:`; and `workflow_dispatch` that appears only as a key nested deeper or outside
+plain `inputs:`; `inputs:` with a value on its line, with nothing beneath it or holding a block
+sequence; and `workflow_dispatch` that appears only as a key nested deeper or outside
 `on:`, or only in a comment or a scalar. A refusal names the reason, and the line where there is
 one.
 
@@ -177,22 +195,31 @@ WORKFLOW = ".github/workflows/checks.yml"
 DISPATCH = "workflow_dispatch"
 INPUTS = "inputs"
 REGULAR_MODES = ("100644", "100755")
-# The pieces of check 1's YAML subset; THE DISPATCH TRIGGER in the docstring describes it.
+# The pieces of check 1's strict line model; THE DISPATCH TRIGGER in the docstring lists its
+# forms.
 PLAIN_KEY = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]*")
+# The most characters a key may span, from its first character to its `:`.
+KEY_LIMIT = 1024
 BLOCK_HEADER = re.compile(r"[|>][+-]?(?: *| +#.*)")
+# The one flow sequence form read: on one line, `[`, plain names separated by `, `, then `]`.
+FLOW_ENTRY = r"[A-Za-z0-9_][A-Za-z0-9_./-]*"
+FLOW_SEQUENCE = re.compile(rf"\[{FLOW_ENTRY}(?:, {FLOW_ENTRY})*\]")
+# The one flow mapping read.
+FLOW_MAPPING = "{}"
 # Characters one YAML version reads as a line break and another does not (NEL, LS, PS), a BOM,
-# and the C0 and C1 controls other than tab and LF; a CR left once CRLF is read as LF is one.
-# Written with escapes and chr() so this source file stays plain ASCII.
-UNREAD_CHARS = re.compile("[\x00-\x08\x0b-\x1f\x7f-\x9f"
-                          + chr(0x2028) + chr(0x2029) + chr(0xFEFF) + "]")
+# the C0 and C1 controls other than tab and LF, and the noncharacters U+FFFE and U+FFFF; a CR
+# left once CRLF is read as LF is one. Written with escapes and chr() so this source file stays
+# plain ASCII.
+UNREAD_CHARS = re.compile("[\x00-\x08\x0b-\x1f\x7f-\x9f" + chr(0x2028) + chr(0x2029)
+                          + chr(0xFEFF) + chr(0xFFFE) + chr(0xFFFF) + "]")
 
 
 class CannotCheck(Exception):
     """A git step failed, so the candidate was not checked."""
 
 
-class OutsideSubset(Exception):
-    """A workflow line outside the YAML subset check 1 reads; the message says why."""
+class OutsideModel(Exception):
+    """A workflow line in a form check 1's line model does not list; the message says why."""
 
 
 def git(root, *args, binary=False):
@@ -301,17 +328,20 @@ def shape(kind, text):
 
 
 def outside(n, why):
-    """A refusal of line n as outside check 1's YAML subset."""
-    return f"line {n} is outside the YAML subset this check reads ({why})"
+    """A refusal of line n as a form check 1's line model does not list."""
+    return f"line {n} is outside the forms this check reads ({why})"
 
 
 def quote_end(s, i):
-    """Index of the quote closing the scalar that opens at s[i], or None if the line ends first."""
+    """Index of the quote closing the scalar that opens at s[i], or None if the line ends first.
+
+    A backslash in a double-quoted scalar is refused, so no escape is ever read.
+    """
     q, j = s[i], i + 1
     while j < len(s):
         if q == '"' and s[j] == "\\":
-            j += 2
-            continue
+            raise OutsideModel("a backslash in a double-quoted scalar, which this check does not "
+                               "read")
         if s[j] == q:
             if q == "'" and j + 1 < len(s) and s[j + 1] == "'":
                 j += 2
@@ -325,42 +355,7 @@ def after_node(rest, what):
     """Refuse anything but spaces and a comment after a closed quoted scalar or collection."""
     stripped = rest.lstrip(" ")
     if stripped and not (stripped.startswith("#") and len(stripped) < len(rest)):
-        raise OutsideSubset(f"text follows {what} on the same line")
-
-
-def flow_end(s):
-    """Index just past the flow collection that opens at s[0] and closes on the same line."""
-    openers, i, at_start = [], 0, True
-    while i < len(s):
-        ch = s[i]
-        if at_start and ch in "\"'":
-            j = quote_end(s, i)
-            if j is None:
-                raise OutsideSubset("a quoted scalar inside a flow collection runs past the end "
-                                    "of its line")
-            i, at_start = j + 1, False
-            continue
-        if ch in "[{":
-            openers.append(ch)
-            at_start = True
-        elif ch in "]}":
-            if openers.pop() != {"]": "[", "}": "{"}[ch]:
-                raise OutsideSubset(f"a flow collection closed by {ch!r}, which does not match "
-                                    "the bracket that opened it")
-            if not openers:
-                return i + 1
-            at_start = False
-        elif ch in ",:":
-            at_start = True
-        elif ch == "#" and s[i - 1] == " ":
-            break
-        elif ch != " ":
-            if at_start and ch in "&*!?|>%@`":
-                raise OutsideSubset(f"a flow collection holding the indicator {ch!r}, which this "
-                                    "check does not read")
-            at_start = False
-        i += 1
-    raise OutsideSubset("a flow collection that runs past the end of its line")
+        raise OutsideModel(f"text follows {what} on the same line")
 
 
 def node(s):
@@ -370,35 +365,43 @@ def node(s):
         return "empty", ""
     ch = s[0]
     if ch == "&":
-        raise OutsideSubset("an anchor (&), which lets one node stand in for another elsewhere "
-                            "in the file")
+        raise OutsideModel("an anchor (&), which lets one node stand in for another elsewhere "
+                           "in the file")
     if ch == "*":
-        raise OutsideSubset("an alias (*), which repeats a node defined elsewhere in the file")
+        raise OutsideModel("an alias (*), which repeats a node defined elsewhere in the file")
     if ch == "!":
-        raise OutsideSubset("a tag (!), which changes how a node is read")
+        raise OutsideModel("a tag (!), which changes how a node is read")
     if ch in "?%@`,]}" or (ch in "-:" and s[1:2] in ("", " ")):
-        raise OutsideSubset(f"a value starting with {ch!r}, which this check does not read as a "
-                            "plain scalar")
+        raise OutsideModel(f"a value starting with {ch!r}, which this check does not read as a "
+                           "plain scalar")
     if ch in "|>":
         if not BLOCK_HEADER.fullmatch(s):
-            raise OutsideSubset("a block scalar header with an indentation indicator or other "
-                                "text; only |, > and their + or - forms are read")
+            raise OutsideModel("a block scalar header with an indentation indicator or other "
+                               "text; only |, > and their + or - forms are read")
         return "block", ""
     if ch in "\"'":
         j = quote_end(s, 0)
         if j is None:
-            raise OutsideSubset("a quoted scalar that runs past the end of its line")
+            raise OutsideModel("a quoted scalar that runs past the end of its line")
         after_node(s[j + 1:], "a quoted scalar")
         return "quoted", s[: j + 1]
     if ch in "[{":
-        j = flow_end(s)
+        flow = FLOW_SEQUENCE.match(s)
+        j = flow.end() if flow else len(FLOW_MAPPING) if s.startswith(FLOW_MAPPING) else None
+        if j is None:
+            raise OutsideModel("a flow collection other than {} or a one-line [a, b] list of "
+                               "names made of letters, digits and _ . / -, which this check does "
+                               "not read")
         after_node(s[j:], "a flow collection")
         return "flow", s[:j]
     comment = s.find(" #")
     text = (s if comment < 0 else s[:comment]).rstrip(" ")
     if ": " in text or text.endswith(":"):
-        raise OutsideSubset("a plain scalar holding ': ' or ending in ':', which is a nested "
-                            "mapping or an error")
+        raise OutsideModel("a plain scalar holding ': ' or ending in ':', which is a nested "
+                           "mapping or an error")
+    if "#" in text:
+        raise OutsideModel("a '#' in a plain scalar with no space before it, which this check "
+                           "does not read")
     return "plain", text
 
 
@@ -406,7 +409,7 @@ def read_line(line):
     """Split one line outside a block scalar's content: None for a blank or comment line, else
     its sequence-entry dashes' columns, the column after them, its key, and its value."""
     if "\t" in line:
-        raise OutsideSubset("a tab, which this check reads only inside a block scalar's content")
+        raise OutsideModel("a tab, which this check reads only inside a block scalar's content")
     body = line.lstrip(" ")
     if not body or body.startswith("#"):
         return None
@@ -418,23 +421,29 @@ def read_line(line):
         body = rest
     key = written = None
     quoted = False
+    span = 0
     if body.startswith(("'", '"')):
         j = quote_end(body, 0)
         after = body[j + 1:] if j is not None else ""
         if j is not None and re.match(r" *:(?: |$)", after):
             if not PLAIN_KEY.fullmatch(body[1:j]):
-                raise OutsideSubset("a quoted key that is not a plain name, which this check "
-                                    "cannot compare with the keys it reads")
+                raise OutsideModel("a quoted key that is not a plain name, which this check "
+                                   "cannot compare with the keys it reads")
             key, written, quoted = body[1:j], body[: j + 1], True
+            span = j + 1 + after.index(":")
             body = after.lstrip(" ")[1:]
     else:
         match = PLAIN_KEY.match(body)
         if match and re.match(r":(?: |$)", body[match.end():]):
             key = written = match.group()
+            span = match.end()
             body = body[match.end() + 1:]
+    if span > KEY_LIMIT:
+        raise OutsideModel(f"a key spanning {span} characters before its ':', more than the "
+                           f"{KEY_LIMIT:,} this check reads")
     if key is None and not dashes:
-        raise OutsideSubset("a line that is neither a key nor a sequence entry, which is how a "
-                            "multi-line plain scalar continues")
+        raise OutsideModel("a line that is neither a key nor a sequence entry, which is how a "
+                           "multi-line plain scalar continues")
     kind, text = node(body.lstrip(" "))
     return {"dashes": dashes, "col": col, "key": key, "written": written, "quoted": quoted,
             "kind": kind, "text": text}
@@ -473,18 +482,20 @@ def block_end(lines, i, parent):
 def dispatch_problem(text):
     """None when the workflow text has the trigger in the accepted form, else why it does not.
 
-    See THE DISPATCH TRIGGER in the module docstring for the subset read and the forms accepted.
+    See THE DISPATCH TRIGGER in the module docstring for the forms read and the trigger forms
+    accepted.
     """
     text = text.replace("\r\n", "\n")
     bad = UNREAD_CHARS.search(text)
     if bad:
         return (f"line {text[:bad.start()].count(chr(10)) + 1} has the character "
-                f"U+{ord(bad.group()):04X}, which is outside the YAML subset this check reads")
+                f"U+{ord(bad.group()):04X}, which is outside the forms this check reads")
     lines = text.split("\n")
     # Each open block collection: (column, "map" or "seq", whether it is a sequence at its
     # parent key's own column, role). The role is "top" for the document's mapping, "on" for
     # the mapping under the top-level `on:`, "dispatch" for the one under its
-    # `workflow_dispatch:`, and None for any other.
+    # `workflow_dispatch:`, "inputs" for the one under that mapping's `inputs:`, and None for
+    # any other.
     stack = [(0, "map", False, "top")]
     # The line before, when it ended with no value: (its key's or last dash's column, whether
     # that was a key, the role a block collection beneath it takes).
@@ -495,7 +506,7 @@ def dispatch_problem(text):
         line, n = lines[i], i + 1
         body = line.strip(" ")
         if body.startswith("%") or body in ("---", "...") or body.startswith(("--- ", "... ")):
-            if body == "---" and not seen:
+            if line == "---" and not seen:
                 seen = True
                 i += 1
                 continue
@@ -503,7 +514,7 @@ def dispatch_problem(text):
                     "document with at most a leading ---")
         try:
             parsed = read_line(line)
-        except OutsideSubset as exc:
+        except OutsideModel as exc:
             return outside(n, exc)
         if parsed is None:
             i += 1
@@ -523,6 +534,8 @@ def dispatch_problem(text):
                 child = col
             if held[2] == "dispatch" and dashes:
                 return f"line {n}: `workflow_dispatch:` holds a block sequence"
+            if held[2] == "inputs" and dashes:
+                return f"line {n}: `inputs:` under `workflow_dispatch:` holds a block sequence"
             stack.append((col, "seq" if dashes else "map", col == held[0], held[2]))
         else:
             if held and held[2] == "on":
@@ -533,7 +546,7 @@ def dispatch_problem(text):
             at, collection, _, role = stack[-1]
             if at < col and not left:
                 return (f"line {n}: a scalar from an earlier line continues onto this more "
-                        "indented line, which is outside the YAML subset this check reads")
+                        "indented line, which is outside the forms this check reads")
             if at < col:
                 if any(entry[3] == "on" for entry in left):
                     return (f"line {n} is less indented than the first key under `on:`, at "
@@ -548,6 +561,9 @@ def dispatch_problem(text):
                 return outside(n, "a sequence entry among the keys of a block mapping")
             if collection == "seq" and not dashes:
                 return outside(n, "a key among the entries of a block sequence")
+            if held and held[2] == "inputs":
+                return (f"line {inputs}: `inputs:` under `workflow_dispatch:` has nothing "
+                        "beneath it")
         owner = None if dashes else stack[-1][3]
         for column in dashes[1:]:
             stack.append((column, "seq", False, None))
@@ -594,6 +610,10 @@ def dispatch_problem(text):
                 return (f"line {n}: a second `inputs:` under `workflow_dispatch:`; the first is "
                         f"at line {inputs}")
             inputs = n
+            if kind != "empty":
+                return (f"line {n}: `inputs:` under `workflow_dispatch:` is "
+                        f"{shape(kind, parsed['text'])}; only a block mapping beneath it is read")
+            role = "inputs"
         elif key is not None and key.lower() == DISPATCH and elsewhere is None:
             elsewhere = n
         if kind == "empty":
@@ -604,6 +624,8 @@ def dispatch_problem(text):
                 return problem
             continue
         i += 1
+    if pending and pending[2] == "inputs":
+        return f"line {inputs}: `inputs:` under `workflow_dispatch:` has nothing beneath it"
     if on_line is None:
         return "there is no top-level `on:` key"
     if child is None:
