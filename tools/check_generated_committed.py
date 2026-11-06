@@ -22,13 +22,21 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
 - plugin/skills/secure-deployment-config/SKILL.md as committed opens with front matter (line 1
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
-  version-shaped line elsewhere does not count. Outside HTML comments (`<!-- ... -->`, removed
-  first, as the README guide-counts gate removes them from README.md, and an unclosed `<!--`
-  removed to the end of the file), it states "This skill
-  carries N short guides" exactly once, with N the guide-counts gate's set in the commit, as
-  counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts
-  nor stands in for a stale or missing visible sentence. That module is this gate's own copy,
-  not the commit's;
+  version-shaped line elsewhere does not count. In its source, front matter included, less the
+  whole HTML comments that stand as HTML blocks of their own outside any list item or block
+  quote in its body, as skill_counts() in tools/_verify_sections.py reads it (the pinned
+  CommonMark parser tells which lines are such a comment, so a `<!--` in code or after a
+  backslash hides nothing, and a copy in code, a title, a destination, a label, an info string
+  or the front matter counts, wrapped or not), it states "This skill carries N short guides"
+  exactly once, on one line with 1 space between its words, as scripts/build-plugin.sh rewrites
+  it, with N the guide-counts gate's set in the commit, as counted_guides() in
+  tools/_verify_sections.py lists it, so a wrapped stale copy is a second statement, a lone
+  sentence wrapped across lines, split across blocks or around a comment block is a finding,
+  and a copy in a removed comment neither counts nor stands in for a stale or missing sentence.
+  Any `<!--` in the front matter, which is not parsed, and any other HTML in SKILL.md's body,
+  inline HTML included, is not read and is a finding naming the front matter's line, or the
+  first line of the block, or the table row, that holds it. That module is this gate's own
+  copy, not the commit's, and without the pinned parser the commit could not be checked;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -72,7 +80,8 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _verify_sections import counted_guides  # noqa: E402  the guide-counts gate's guide set
+from _verify_sections import SkillHtml, counted_guides, skill_counts  # noqa: E402  as the build
+from check_verify_marking import ParserUnavailable  # noqa: E402  skill_counts() needs the parser
 
 LLMS_FULL = "site/llms-full.txt"
 PLUGIN = "plugin"
@@ -81,12 +90,13 @@ SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
 # What scripts/build-plugin.sh rewrites in SKILL.md: the version line of the metadata mapping in
 # the front matter (metadata_versions() below), and the guide count in this sentence.
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
-SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
-# Text inside an HTML comment is not shown to a reader, so the count sentence is searched for only
-# after removing comments, the way the README guide-counts gate in tools/run_all_checks.sh reads
-# README.md. A "<!--" with no "-->" after it hides the rest of the file, as it does in HTML, so it
-# is removed to the end, as scripts/build-plugin.sh removes it.
-HTML_COMMENT = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
+# Text inside an HTML comment is not shown to a reader, so skill_counts() in
+# tools/_verify_sections.py, which scripts/build-plugin.sh also calls, blanks in SKILL.md's body
+# the lines of each whole HTML comment the pinned CommonMark parser reads as an HTML block of its
+# own outside any list item or block quote, and counts the sentence in the rest, front matter
+# included, wrapped or not, and again only where it stands on one line as written; it
+# raises SkillHtml, a finding here, for any "<!--" in the front matter and any other HTML in the
+# body, inline HTML included, which it does not read.
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")
@@ -236,11 +246,20 @@ def skill_findings(version_text, skill_text, count):
     elif match[1] != version:
         findings.append(f"{SKILL} as committed names version {match[1]!r} but VERSION as "
                         f"committed is {version!r}; {REMEDY}")
-    counts = SKILL_COUNT.findall(HTML_COMMENT.sub("", skill_text))
+    try:
+        counts, written = skill_counts(skill_text)
+    except SkillHtml as exc:
+        findings.append(f"{SKILL} as committed cannot have its guide count checked: {exc}")
+        return findings
     if len(counts) != 1:
         findings.append(f'{SKILL} as committed states "This skill carries N short guides" '
-                        f"{len(counts)} times, not once (text inside HTML comments does not "
-                        "count)")
+                        f"{len(counts)} times, not once (text inside an HTML comment block in the "
+                        "body does not count; the front matter is searched as written)")
+    elif written != counts:
+        findings.append(f'{SKILL} as committed states "This skill carries N short guides" once, '
+                        "but not on one line with 1 space between its words, the only form "
+                        "scripts/build-plugin.sh rewrites; it is wrapped, split across blocks or "
+                        "around an HTML comment block, or spaced otherwise")
     elif int(counts[0]) != count:
         findings.append(f"{SKILL} as committed states {counts[0]} guides but the commit has "
                         f"{count} (counted_guides() in tools/_verify_sections.py); {REMEDY}")
@@ -291,7 +310,12 @@ def main(argv=None):
                             f"committed: {exc}")
         else:
             findings += version_findings(version_text, manifest_text)
-            findings += skill_findings(version_text, skill_text, count)
+            try:
+                findings += skill_findings(version_text, skill_text, count)
+            except ParserUnavailable as exc:
+                print(f"  FAIL  cannot check {label}: {SKILL}'s guide count is checked with the "
+                      f"pinned parser: {exc}")
+                return 2
             version = version_text.rstrip("\n")
         rebuild = args.rebuild
         if not rebuild:
