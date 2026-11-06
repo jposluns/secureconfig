@@ -357,7 +357,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "f3350be18137b71d212d3dbacd2f9d6e595eec989d22e90632bb0f272b50f609",
+  "body_sha256": "4e861b1eef8803cbb389462240c19ceb58a0e97dcbe762a7c7be4ff4ad5f2d2f",
   "components": {
     "django": {
       "name": "Django documentation",
