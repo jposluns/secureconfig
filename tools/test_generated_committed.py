@@ -21,8 +21,9 @@ and two record what the gate does not do: read the index, or rebuild a clean tre
 The gate and the real build count SKILL.md's count sentence in its source, front matter
 included, less the whole HTML comments that stand as HTML blocks of their own outside any list
 item or block quote in its body, which the pinned CommonMark parser tells apart (skill_counts()
-in tools/_verify_sections.py); any other HTML in the body is refused. Where that parser is
-absent or another version,
+in tools/_verify_sections.py), wrapped or not, and require the one copy to stand on one line as
+written; any "<!--" in the front matter and any other HTML in the body is refused. Where that
+parser is absent or another version,
 every case that needs it is skipped and counted in a "skip" line naming the reason. 2 cases run
 on every host and confirm that the gate and the real build refuse when the parser is not the
 pinned one: each runs on a copy of the tools whose lock pins a markdown-it-py version other than
@@ -140,6 +141,19 @@ STALE_AFTER = (
 )
 # A sentence wrapped within its paragraph is shown on 1 line, so a stale one counts.
 WRAPPED = "This skill carries\n3 short guides.\n"
+# The build's sed rewrites the sentence only on one line, so the lone count sentence must stand on
+# one line as written, with 1 space between its words, as the regex the parser replaced required:
+# wrapped within its paragraph, split around a comment block, split between a heading and the
+# paragraph after it, or spaced with a tab, it is refused.
+LONE = tuple(SKILL_MD.replace("This skill carries 1 short guides.", sentence) for sentence in (
+    "This skill carries\n1 short guides.",
+    "This skill carries\n<!-- x -->\n1 short guides.",
+    "# This skill carries\n1 short guides.",
+    "This skill carries 1 short\tguides.",
+))
+ONE_LINE = (SKILL + ' as committed states "This skill carries N short guides" once, but not on '
+            "one line with 1 space between its words, the only form scripts/build-plugin.sh "
+            "rewrites")
 # Beside the same constructs, a real comment block still hides its sentence: one after a heading
 # that holds a stray backtick, and one after a fence in a block quote. The same comment inline
 # after an escaped opener is inline HTML, so it is refused (INLINE below).
@@ -242,9 +256,17 @@ ELSEWHERE = (
 WHOLE_COMMENTS = (
     "\n<!--\nThis skill carries 3 short guides.\n-->\n",
 )
-# The front matter is not parsed and no comment in it is removed, so a copy there counts.
+# The front matter is not parsed and no comment in it could be removed, so any "<!--" there is
+# refused, naming its line: a stale copy in a comment there beside the visible sentence, and the
+# current one in a comment there in place of a missing visible sentence, which would otherwise
+# stand in for it.
 FRONT_COMMENT = SKILL_MD.replace(
     "name: fixture\n", "name: fixture\ndescription: a <!-- This skill carries 3 short guides -->\n")
+FRONT_ONLY = SKILL_MD.replace(
+    "name: fixture\n", "name: fixture\ndescription: a <!-- This skill carries 1 short guides -->\n"
+).replace("This skill carries 1 short guides.\n", "Intro.\n")
+IN_FRONT = ('the front matter holds "<!--" on line 3; the front matter is not parsed, so no '
+            'comment in it is removed, and SKILL.md may hold "<!--" only in its body')
 # What the gate's 0-or-2-times finding says of comments.
 IN_BLOCKS = ("text inside an HTML comment block in the body does not count; the front matter is "
              "searched as written")
@@ -449,7 +471,7 @@ def real_build(skill_md, expected, needle, parser=True, lock=None):
     """Run the real build-plugin.sh on a fixture holding skill_md, with one guide and two .md
     names that are not guides, and with lock, when given, as its tools/requirements-gates.txt;
     on success, SKILL.md must name VERSION 1.0.5 and, outside its body's HTML comment blocks,
-    1 guide."""
+    1 guide, once, on one line as written."""
     if skipped(parser):
         return 0
     with tempfile.TemporaryDirectory() as directory:
@@ -475,7 +497,7 @@ def real_build(skill_md, expected, needle, parser=True, lock=None):
         assert needle in output, (needle, output)
         if expected == 0:
             text = (root / SKILL).read_text(encoding="utf-8")
-            assert '  version: "1.0.5"\n' in text and skill_counts(text) == ["1"], text
+            assert '  version: "1.0.5"\n' in text and skill_counts(text) == (["1"], ["1"]), text
     return 1
 
 
@@ -590,10 +612,17 @@ def main():
                       absent=("times, not once",))
         count += case(skill_text(SKILL_MD + "<!-- This skill carries 7 short guides. -->\n"),
                       also=("SKILL.md names it and states 1 guides; ",))
-        # The front matter is not parsed and no comment there is removed, so a commented stale
-        # copy in it is a second statement.
-        count += case(skill_text(FRONT_COMMENT), expected=1,
-                      needle='short guides" 2 times, not once')
+        # The front matter is not parsed, so any "<!--" in it is a finding naming its line: beside
+        # the visible sentence, and in place of a missing one.
+        for text in (FRONT_COMMENT, FRONT_ONLY):
+            count += case(skill_text(text), expected=1,
+                          needle=SKILL + " as committed cannot have its guide count checked: "
+                                 + IN_FRONT)
+        # The lone count sentence wrapped, split around a comment block or after a heading, or
+        # spaced with a tab, is counted but is not on one line as the build rewrites it.
+        for text in LONE:
+            count += case(skill_text(text), expected=1, needle=ONE_LINE,
+                          absent=("times, not once",))
         # A line opening "<!--" with no "-->" after it starts an HTML block that runs to the end
         # of the file and is not a whole comment, so it is refused, naming its first line.
         count += case(skill("This skill carries 1 short guides.",
@@ -718,19 +747,27 @@ def main():
         count += real_build(SKILL_MD.replace("This skill carries", "This skill has"), 1,
                             "SKILL.md guide count did not update to 1")
         # Only text outside the HTML comment blocks of the body counts: a commented sentence with
-        # no visible one, a second visible sentence, and a commented copy in the front matter,
-        # which the build rewrites too, are refused; a stale visible count beside a commented
-        # current one is rewritten, which real_build confirms outside comment blocks.
+        # no visible one and a second visible sentence are refused, and so is any "<!--" in the
+        # front matter, naming its line; a stale visible count beside a commented current one is
+        # rewritten, which real_build confirms outside comment blocks.
         uncounted = ("SKILL.md guide count did not update to 1; outside the HTML comment blocks "
                      "of its body, front matter included")
+        cannot = "SKILL.md's guide count cannot be checked: "
         count += real_build(SKILL_MD.replace("This skill carries 1 short guides.",
                                              "<!-- This skill carries 1 short guides. -->"),
                             1, uncounted)
         count += real_build(SKILL_MD + "This skill carries 1 short guides.\n", 1, uncounted)
-        count += real_build(FRONT_COMMENT, 1, uncounted)
+        for text in (FRONT_COMMENT, FRONT_ONLY):
+            count += real_build(text, 1, cannot + IN_FRONT + "; refusing to build")
+        # The sed rewrites the sentence only on one line, so a lone sentence wrapped, split
+        # around a comment block or after a heading, or spaced with a tab, is refused with the
+        # message that says it must not be reworded or wrapped.
+        for text in LONE:
+            count += real_build(text, 1, uncounted + ", and including in code, titles, "
+                                "destinations and labels, it must state the sentence \"This skill "
+                                "carries N short guides\" exactly once, not reworded or wrapped")
         # A line opening "<!--" with no "-->" after it starts raw HTML that is not a whole
         # comment, so the build refuses it, naming the first line of its block.
-        cannot = "SKILL.md's guide count cannot be checked: "
         count += real_build(SKILL_MD.replace("This skill carries 1 short guides.",
                                              "<!--\nThis skill carries 1 short guides."),
                             1, cannot + not_read(7) + "; refusing to build")

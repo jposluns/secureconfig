@@ -83,24 +83,30 @@ metadata=$(sed -n -e '1 { /^---$/!q }' -e '2,$ { /^---$/ { p; q }; /^metadata:$/
 # skill_counts() in tools/_verify_sections.py, which tools/check_generated_committed.py also
 # calls, and the sentence must appear there exactly once, so a copy in a removed comment can
 # neither stand in for a missing sentence nor sit beside a second one; a copy in code, a title, a
-# destination, a label, an info string or the front matter counts, even inside a comment there.
+# destination, a label, an info string or the front matter counts, wrapped or not. The sed above
+# rewrites the sentence only on one line, so that one copy must also stand on one line as
+# written, with 1 space between its words, and a lone sentence wrapped across lines, split across
+# blocks or around a comment block is refused, as the regex this replaced refused it.
 # skill_counts() parses SKILL.md's body with the pinned CommonMark parser only to tell which lines
 # are such a comment, so a "<!--" in code or after a backslash hides nothing. Raw HTML is not
 # read: the body may hold it only as those comment blocks, which hide their text, and the build
 # refuses any other, inline HTML included, naming the first line of the block, or the table row,
-# that holds it. Without that parser the build refuses too.
+# that holds it. The front matter is not parsed, so the build refuses any "<!--" there, naming
+# its line. Without that parser the build refuses too.
 visible=$(python3 - "$skill" <<'PY'
 import sys
 sys.path.insert(0, "tools")
 from _verify_sections import SkillHtml, skill_counts
 from check_verify_marking import ParserUnavailable
 try:
-    counts = skill_counts(open(sys.argv[1], encoding="utf-8").read())
+    counts, written = skill_counts(open(sys.argv[1], encoding="utf-8").read())
 except ParserUnavailable as exc:
     sys.exit(f"SKILL.md's guide count is checked with the pinned parser: {exc}; refusing to build")
 except SkillHtml as exc:
     sys.exit(f"SKILL.md's guide count cannot be checked: {exc}; refusing to build")
-print("\n".join(counts))
+# Printed only when every counted copy stands on one line as written, so a copy wrapped across
+# lines or blocks fails the comparison below.
+print("\n".join(counts) if written == counts else "")
 PY
 )
 [ "$visible" = "$count" ] \

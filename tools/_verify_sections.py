@@ -107,9 +107,10 @@ HTML_SPACE = " \t\n\f\r"
 
 
 class SkillHtml(ValueError):
-    """SKILL.md's body holds HTML other than whole HTML comments that stand as HTML blocks of
-    their own outside any list item or block quote, or such a comment whose source lines are not
-    its text as the parser read it, so skill_counts() cannot find the count sentence."""
+    """SKILL.md's front matter holds "<!--", or its body holds HTML other than whole HTML comments
+    that stand as HTML blocks of their own outside any list item or block quote, or such a comment
+    whose source lines are not its text as the parser read it, so skill_counts() cannot find the
+    count sentence."""
 
 
 def whole_comment(raw):
@@ -138,17 +139,21 @@ def front_matter(text):
 
 
 def skill_counts(text):
-    """The N of each "This skill carries N short guides" in SKILL.md, front matter included,
-    outside the whole HTML comments that stand as HTML blocks of their own in its body: in its
-    text and code, in link and image destinations and titles, in reference labels and
-    definitions, in fence info strings, and in the front matter.
+    """(counts, written): counts holds the N of each "This skill carries N short guides" in
+    SKILL.md, front matter included, outside the whole HTML comments that stand as HTML blocks of
+    their own in its body, wrapped or not: in its text and code, in link and image destinations
+    and titles, in reference labels and definitions, in fence info strings, and in the front
+    matter. written holds the N of each of those copies that stands on one line as written, with
+    1 space between its words, the only form the line-by-line sed in scripts/build-plugin.sh
+    rewrites.
 
     The sentence is searched for in the raw source, as the regex this replaced searched the file
     with comments removed, so every copy that stands in the file outside such a comment counts.
-    The front matter is not parsed and nothing in it is removed, so a copy there counts even
-    inside "<!--" and "-->", which fails closed. Only which lines are a comment is taken from the
-    pinned CommonMark parser, gate_parser(required=True) in tools/check_verify_marking.py, which
-    parses the body: a "<!--" in code, in a link destination, title or label, or after a
+    The front matter is not parsed, so nothing in it could be removed, and any "<!--" in it
+    raises SkillHtml, naming its line; a copy of the sentence in a comment there would otherwise
+    count and could stand in for a missing visible one. Only which lines are a comment is taken
+    from the pinned CommonMark parser, gate_parser(required=True) in tools/check_verify_marking.py,
+    which parses the body: a "<!--" in code, in a link destination, title or label, or after a
     backslash is not an HTML token, so it hides nothing. Raw HTML, which the parser passes
     through unread, is not read. The body may hold HTML only as HTML blocks at nesting level 0,
     so in no list item or block quote, each of them one whole HTML comment as whole_comment()
@@ -156,16 +161,25 @@ def skill_counts(text):
     quote, and any HTML block that is not one whole comment raise SkillHtml, naming the first
     line of the block, or the table row, that holds it, not the line of the HTML itself. Each
     accepted comment is removed by blanking exactly the source lines the parser maps it to, after
-    confirming that those lines, joined, are the token's text, or SkillHtml is raised. Each run
-    of whitespace in what remains is read as 1 space, so a sentence wrapped within a block
-    counts, and so does one split across blocks. ParserUnavailable is raised when that parser is
-    absent or not the pinned version. scripts/build-plugin.sh and
-    tools/check_generated_committed.py each require exactly one, so a copy in a removed comment
-    neither counts nor stands in for a stale or missing sentence.
+    confirming that those lines, joined, are the token's text, or SkillHtml is raised. For
+    counts, each run of whitespace in what remains is read as 1 space, so a copy wrapped within a
+    block counts, and so does one split across blocks or around a removed comment block. written
+    is searched for in what remains as it stands, so such a copy is not in it, and neither is one
+    spaced otherwise. ParserUnavailable is raised when that parser is absent or not the pinned
+    version. scripts/build-plugin.sh and tools/check_generated_committed.py each require counts
+    to hold exactly one N and written to hold the same one, as the regex this replaced required
+    the sentence once on one line, so a wrapped stale copy is a second statement, a lone wrapped
+    sentence is refused, and a copy in a removed comment neither counts nor stands in for a stale
+    or missing sentence.
     """
     from check_verify_marking import gate_parser  # here, as that module imports this one
     parser = gate_parser(required=True)
     head, body = front_matter(text)
+    if "<!--" in head:
+        line = head[:head.index("<!--")].count("\n") + 1
+        raise SkillHtml(f'the front matter holds "<!--" on line {line}; the front matter is not '
+                        "parsed, so no comment in it is removed, and SKILL.md may hold \"<!--\" "
+                        "only in its body")
     first_line = head.count("\n") + 2 if head else 1
     # The parser reads "\r\n" and "\r" as "\n" and NUL as U+FFFD before it parses, so the same is
     # done here, and its line numbers and token text then match these lines.
@@ -186,6 +200,11 @@ def skill_counts(text):
                 start, end = token.map
                 # The block's text is its lines, the last with its line ending when one follows.
                 source = "\n".join(lines[start:end]) + ("\n" if end < len(lines) else "")
+                # No input is known to reach this refusal: at nesting level 0 no list item or
+                # block quote has moved a line's start, and the parser's html_block rule takes its
+                # text with getLines() at indent 0, which cuts each line from the source as it
+                # stands. It stays so that a parser that read these lines otherwise would fail
+                # closed rather than blank other text, and it has no test case for that reason.
                 if source != token.content:
                     raise SkillHtml(f"the HTML comment block starting at line "
                                     f"{first_line + start} is not its source lines as written, "
@@ -196,8 +215,9 @@ def skill_counts(text):
                 walk(token.children, token.map or block)
 
     walk(parser.parse(body), [0, len(lines)])
-    rest = "\n".join(lines)
-    return SKILL_COUNT.findall(re.sub(r"\s+", " ", (head + "\n" if head else "") + rest))
+    rest = (head + "\n" if head else "") + "\n".join(lines)
+    # SKILL_COUNT holds no newline, so each match in rest as it stands lies on one line.
+    return SKILL_COUNT.findall(re.sub(r"\s+", " ", rest)), SKILL_COUNT.findall(rest)
 
 
 def atx_headings(lines):
