@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the secureconfig.ai pages on the shared site template (baseline 1.9.2).
+"""Build the secureconfig.ai pages on the shared site template (baseline 1.11.0).
 
 Usage:
   python3 -I -B scripts/build-site.py                 write the pages under site/
@@ -311,6 +311,13 @@ class Builder:
             else:
                 cards.append(f'<li class="slice slice-{i}"><a class="card" href="{href}" '
                              f'target="_blank" rel="noopener noreferrer">{img}{cname}{NEWTAB}</a></li>')
+        # Baseline 1.11.0 (SPECIFICATION 7.19): vendorreplies.ai's card is always the last project
+        # card, after the 6 rainbow cards, with its PNG logo.
+        cards.append(f'<li class="slice slice-vr"><a class="card" href="https://vendorreplies.ai/" '
+                     f'target="_blank" rel="noopener noreferrer">'
+                     f'<img src="{b}assets/baseline/logos/vendorreplies.png" alt="">'
+                     f'<span class="cname">VendorReplies<span class="tld">.ai</span></span>{NEWTAB}'
+                     f'</a></li>')
         m = f"{b}assets/baseline/marks/"
         ext = 'target="_blank" rel="noopener noreferrer"'
         tail = (f'<li class="tile tile-1"><a class="card" href="https://github.com/jposluns" {ext}>'
@@ -328,7 +335,7 @@ class Builder:
                f'<span class="pre">A </span>Jeff<span class="gold">@</span>Posluns'
                f'<span class="gold">.ca</span><span class="post"> Project</span></a></div>')
         return (f'<footer class="family wrap"><div class="bar"><ul class="cards rainbow" '
-                f'aria-label="The 6 project sites">{"".join(cards)}</ul><ul class="tail" '
+                f'aria-label="The 7 project sites">{"".join(cards)}</ul><ul class="tail" '
                 f'aria-label="Jeff Posluns elsewhere">{tail}</ul>{sig}</div></footer>\n'
                 f'<p class="vh" id="copy-status" role="status" aria-live="polite"></p>\n'
                 f"</body>\n</html>\n")
