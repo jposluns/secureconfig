@@ -30,14 +30,14 @@ What a sentence is, here:
   or `<` opens nothing. A `<!--` at the start of a line, after any block quote
   markers and list marker, where a block may start (no paragraph is open, or the
   line may interrupt the one that is), opens a comment that runs to the next `-->`
-  or the end of the file, as an HTML block does, and the rest of the line that
-  closes it is a unit of its own, as the end of that block. Anywhere else, a `<!--`
-  opens a comment only when a `-->` follows it in its paragraph or table cell, and
-  is text otherwise. As in CommonMark 0.31.2, `<!-->` and `<!--->` are whole
-  comments. A backtick or `<!--` in the destination or title of a link opens
-  nothing, and a link reference definition where a block may start is a unit of
-  its own, whose backticks pair with nothing on a later line, in the simple forms
-  of each that item 4 of the limits below describes.
+  or the end of the file, as an HTML block outside a container does, and the rest
+  of the line that closes it is a unit of its own, as the end of that block.
+  Anywhere else, a `<!--` opens a comment only when a `-->` follows it in its
+  paragraph or table cell, and is text otherwise. As in CommonMark 0.31.2, `<!-->`
+  and `<!--->` are whole comments. A line of a paragraph that an inline comment
+  leaves empty does not end the paragraph. A link's destination and title, and a
+  link reference definition, are read as paragraph text, as item 4 of the limits
+  below says.
 - Rendering. A link or image renders as its text, and an autolink as its URL,
   before splitting, so a mark in link text counts like any other.
   Backticks, emphasis markers and every other character are kept and counted;
@@ -114,11 +114,10 @@ and the list is not exhaustive:
 3. Inline HTML tags and autolinks are not recognized, so a backtick inside one
    can pair with a later backtick and show a real comment between them, and a
    `<!--` in a tag's attribute value can hide text up to a later `-->`.
-4. A link or link reference definition is recognized only in simple forms: on
-   one line, with no brackets nested in its text or label, and with at most one
-   level of nested parentheses in its destination. A backtick in the
-   destination or title of one that is not recognized can pair and show a real
-   comment, and a `<!--` there can hide text up to a later `-->`.
+4. A link's destination and title, and a link reference definition, are read
+   as paragraph text. So a backtick in one can pair with a later backtick and
+   show a real comment between them, and a `<!--` in one can open a comment
+   that hides the text after it up to a later `-->`.
 5. Container structure is approximated: any line that opens with a pipe ends a
    paragraph, a list marker indented 4 or more spaces ends one as it does
    unindented, and a list item's column comes from the first line of the unit.
@@ -128,6 +127,13 @@ and the list is not exhaustive:
 7. A setext underline that CommonMark reads as a lazy continuation line, after a
    paragraph in a block quote or list item, ends the paragraph here.
 8. A GFM table body row without a pipe is read as a paragraph line, not as a row.
+9. A comment HTML block in a block quote or list item runs to the next `-->` or
+   the end of the file, and does not end with its container as CommonMark's
+   does, so it can hide the text after the container.
+10. A `<!--` on a line of a list item counts its indentation from column 0, not
+    from the item's text, so one indented 4 or more spaces, as on a later line
+    of an item under `- ` or `10. `, opens no comment block. With no `-->` later
+    in its paragraph it is text, and the comment it opens in CommonMark is shown.
 Where a paragraph ends here and not in CommonMark (items 5 and 7), a code span
 may not pair, and a `<!--` in it then hides text up to a later `-->`; where it
 goes on here and not in CommonMark (items 5, 6 and 8), a code span may pair and
@@ -170,12 +176,6 @@ HTML_BLOCK_RE = re.compile(
     r"|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol"
     r"|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr"
     r"|track|ul)(?=[ \t>]|/>|$))")
-# A link reference definition on one line: a label, a destination and an optional title, with
-# nothing after them. It is not paragraph text, so a backtick in it pairs with nothing later.
-REFERENCE_DEF_RE = re.compile(
-    r" {0,3}\[(?!\s*\])(?:[^\[\]\\]|\\.)+\]:[ \t]*"
-    r"(?:<(?:[^<>\\\n]|\\.)*>|(?!<)(?:[^\s()\\]|\\.|\((?:[^\s()\\]|\\.)*\))+)"
-    r"(?:[ \t]+(?:\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'|\((?:[^()\\]|\\.)*\)))?[ \t]*$")
 LINK_RE = re.compile(
     r"!?\[((?:[^\[\]`\\]|\\.|`[^`]*`)*)\]"
     r"\([ \t]*(?:<[^<>]*>|[^\s()]*(?:\([^\s()]*\)[^\s()]*)*)"
@@ -427,9 +427,8 @@ def _strip_comments(line, in_comment, span=0, later="", block=True):
     others, opens nothing. A "<!--" where it opens an HTML block (COMMENT_BLOCK_RE, unless
     block is false) opens a comment that runs to the next "-->" or the end of the file.
     Anywhere else it opens one only when a "-->" follows it in the line or in later, and is
-    text otherwise. As in CommonMark 0.31.2, "<!-->" and "<!--->" are whole comments. The
-    destination and title of a link that LINK_RE finds on the line are skipped, so a backtick
-    or a "<!--" in them opens nothing.
+    text otherwise. As in CommonMark 0.31.2, "<!-->" and "<!--->" are whole comments. A
+    link's destination and title are read as text like the rest of the line.
     """
     out = ""
     opener = COMMENT_BLOCK_RE.match(line) if block and not in_comment and not span else None
@@ -446,15 +445,9 @@ def _strip_comments(line, in_comment, span=0, later="", block=True):
                 return out + line, False, span
             out, line, span = out + line[:close.end()], line[close.end():], 0
         else:
-            i, skip = 0, {}
+            i = 0
             while i < len(line):
-                if i in skip:
-                    # A link's destination and title, from its "]", are not inline text.
-                    i = skip[i]
-                elif line[i] == "[" and (link := LINK_RE.match(line, i)):
-                    skip[link.end(1)] = link.end()
-                    i += 1
-                elif line.startswith("<!--", i):
+                if line.startswith("<!--", i):
                     if i == opener or (line + "\n" + later).find("-->", i + 2) >= 0:
                         break
                     i += 4
@@ -539,33 +532,38 @@ def units(markdown):
         row = (line.lstrip().startswith("|")
                or (last_row == number - 1 and CELL_SPLIT_RE.search(line))
                or (number < len(lines) and starts_table(line, lines[number])))
-        alone = False
+        alone = emptied = False
         if row and not in_comment and not span:
             # GFM splits a table row into cells before it reads code spans or comments, so
             # each cell is read on its own, and a "<!--" opens a comment only within its cell.
             line = "|".join(_strip_comments(cell, False, block=False)[0]
                             for cell in CELL_SPLIT_RE.split(line))
         else:
-            # A block, such as a comment HTML block or a link reference definition, starts only
-            # where no paragraph is open or where the line may interrupt the one that is.
+            # A comment HTML block starts only where no paragraph is open or where the line
+            # may interrupt the one that is.
             starts = not (in_comment or span) and (not raw.strip() or _block_start(line, item))
-            block_comment = block_comment or bool(starts and COMMENT_BLOCK_RE.match(line))
-            body = quoted[marker.end():] if marker else quoted
-            alone = block_comment or bool(starts and REFERENCE_DEF_RE.match(body))
+            alone = block_comment = block_comment or bool(starts and COMMENT_BLOCK_RE.match(line))
             later = ""
             if ("`" in line or "<!--" in line) and not (HEADING_RE.match(quoted) or row or alone):
                 # A code span or a comment may close on a later line of the paragraph, but
-                # not past a heading, a table row, a comment HTML block or a reference
-                # definition, whose text ends with the line.
+                # not past a heading, a table row or a comment HTML block, whose text ends
+                # with the line.
                 column = marker.end() if marker else item if raw.strip() else None
                 later = _paragraph_after(lines, number, column)
+            source = line
             line, in_comment, span = _strip_comments(line, in_comment, span, later, starts)
-            # The rest of the line that closes a comment HTML block ends that block, and a
-            # reference definition is no paragraph, so each is a unit of its own.
+            # A line of an open paragraph that an inline comment leaves empty does not end the
+            # paragraph, so the next line is read as it would be without the comment.
+            emptied = bool(raw.strip() and not alone and _unquoted(source).strip()
+                           and not _unquoted(line).strip())
+            # The rest of the line that closes a comment HTML block ends that block, so it is a
+            # unit of its own.
             block_comment = block_comment and in_comment
             alone = alone and not in_comment
             if alone:
                 flush()
+        if emptied:
+            continue
         if not line.strip():
             flush()
             continue

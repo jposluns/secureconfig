@@ -437,23 +437,9 @@ class HtmlBlockStarts(unittest.TestCase):
 class Round2Layouts(unittest.TestCase):
     """Layouts in which QA round 2 on #1235 found a real comment shown or text hidden."""
 
-    def test_reference_definition_pairs_no_backtick_with_later_text(self):
-        self.assertEqual(guide("[x]: /url`foo\nText <!-- hidden ` --> visible.\n"),
-                         [(1, "[x]: /url`foo"), (2, "Text  visible.")])
-        self.assertEqual(guide('[r]: http://e.com "`"\nText <!-- h --> `x`.\n'),
-                         [(1, '[r]: http://e.com "`"'), (2, "Text  `x`.")])
-
     def test_reference_definition_cannot_interrupt_a_paragraph(self):
         self.assertEqual(guide("Para `x\n[r]: /u\nb <!-- c --> `\n"),
                          [(1, "Para `x [r]: /u b <!-- c --> `")])
-
-    def test_link_destination_and_title_open_nothing(self):
-        for link in ('[a](http://e.com "`")', "[a](http://e.com/`)"):
-            with self.subTest(link=link):
-                self.assertEqual(guide(f"See {link} <!-- h --> and `x` y.\n"),
-                                 [(1, "See a  and `x` y.")])
-        self.assertEqual(guide('See [a](http://e.com "<!--") Shown --> b.\n'),
-                         [(1, "See a Shown --> b.")])
 
     def test_comment_block_ends_with_its_closing_line(self):
         self.assertEqual(guide("<!-- c --> `x\nb <!-- h --> `\n"), [(1, "`x"), (2, "b  `")])
@@ -464,6 +450,63 @@ class Round2Layouts(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertEqual(guide(f"See a\n{marker} <!-- Shown c.\n\nMore shown.\n"),
                                  [(1, "See a"), (2, "<!-- Shown c."), (4, "More shown.")])
+
+
+class EmptiedLines(unittest.TestCase):
+    """A line of a paragraph that an inline comment leaves empty does not end the paragraph,
+    so the next line is read as it would be without the comment (QA round 3 on #1235)."""
+
+    def test_item_numbered_2_after_an_emptied_line_opens_no_comment_block(self):
+        self.assertEqual(guide("Para <!-- a\nb -->\n2. <!-- SHOWX c.\n\nMore SHOWY.\n"),
+                         [(1, "Para"), (3, "<!-- SHOWX c."), (5, "More SHOWY.")])
+        self.assertEqual(guide("> Para <!-- a\n> b -->\n> 2. <!-- SHOWQ c.\n"),
+                         [(1, "Para"), (3, "<!-- SHOWQ c.")])
+
+    def test_definition_shaped_line_after_an_emptied_line_is_paragraph_text(self):
+        self.assertEqual(guide("Para <!-- a\nb -->\n[r]: /u`x\nc <!-- SHOWZ --> `\n"),
+                         [(1, "Para [r]: /u`x c <!-- SHOWZ --> `")])
+
+    def test_comment_across_three_lines_keeps_one_paragraph(self):
+        self.assertEqual(guide("Para <!-- a\nmid\nb --> rest. Next.\n"),
+                         [(1, "Para rest."), (3, "Next.")])
+
+
+class KnownDivergences(unittest.TestCase):
+    """Layouts the module docstring lists as known to differ from CommonMark, pinned so that a
+    change in them is seen (QA rounds 2 and 3 on #1235). Each expected value is this scanner's
+    reading, not CommonMark's."""
+
+    def test_link_destination_and_title_are_paragraph_text(self):
+        # Item 4: a backtick there pairs with a later one and shows the comment between them.
+        for link in ('[a](http://e.com "`")', "[a](http://e.com/`)"):
+            with self.subTest(link=link):
+                self.assertEqual(guide(f"See {link} <!-- h --> and `x` y.\n"),
+                                 [(1, "See a <!-- h --> and `x` y.")])
+        self.assertEqual(guide("See [a <!-- h --> b](/u \"`\") <!-- HIDDEN --> and `x`.\n"),
+                         [(1, "See a  b <!-- HIDDEN --> and `x`.")])
+        # Item 4: a "<!--" there opens a comment that hides text up to a later "-->".
+        self.assertEqual(guide('See [a](http://e.com "<!--") Shown --> b.\n'),
+                         [(1, 'See [a](http://e.com " b.')])
+        self.assertEqual(guide('See [a <!-- h --> b](/u "<!--") SHOW --> end.\n'),
+                         [(1, 'See [a  b](/u " end.')])
+
+    def test_reference_definition_is_paragraph_text(self):
+        # Item 4: a backtick in a definition pairs with one on the next line.
+        self.assertEqual(guide("[x]: /url`foo\nText <!-- hidden ` --> visible.\n"),
+                         [(1, "[x]: /url`foo Text <!-- hidden ` --> visible.")])
+        self.assertEqual(guide('[r]: http://e.com "`"\nText <!-- h --> `x`.\n'),
+                         [(1, '[r]: http://e.com "`" Text <!-- h --> `x`.')])
+
+    def test_comment_block_in_a_list_item_runs_past_the_item(self):
+        # Item 9: CommonMark ends the block with the item and shows "More HIDC.".
+        self.assertEqual(guide("See a\n1. <!-- HIDA c.\n\nMore HIDC.\n"), [(1, "See a")])
+
+    def test_comment_opener_in_a_list_item_counts_indentation_from_column_0(self):
+        # Item 10: in CommonMark 0.31.2, each "<!--" here opens a comment block in its item.
+        self.assertEqual(guide("- a\n\n    <!-- HIDL\n\n    x -->\n"),
+                         [(1, "a"), (3, "<!-- HIDL"), (5, "x -->")])
+        self.assertEqual(guide("10. a\n    <!-- HIDW\n\n    more -->\n"),
+                         [(1, "a <!-- HIDW"), (4, "more -->")])
 
 
 class Command(unittest.TestCase):
