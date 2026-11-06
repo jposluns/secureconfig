@@ -22,15 +22,16 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
 - plugin/skills/secure-deployment-config/SKILL.md as committed opens with front matter (line 1
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
-  version-shaped line elsewhere does not count. In the text a reader sees, as skill_counts() in
-  tools/_verify_sections.py finds it with the pinned CommonMark parser (whole HTML comments
-  dropped, a `<!--` in code or after a backslash left as the literal text it is, and link
-  titles, reference definition titles and fence info strings searched too), it states "This
-  skill carries N short guides" exactly once, with N the guide-counts gate's set in the commit,
-  as counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts
-  nor stands in for a stale or missing visible sentence. Raw HTML in SKILL.md other than whole
-  HTML comments is not read and is a finding. That module is this gate's own copy, not the
-  commit's, and without the pinned parser the commit could not be checked;
+  version-shaped line elsewhere does not count. In its source less its whole HTML comments, as
+  skill_counts() in tools/_verify_sections.py reads it (the pinned CommonMark parser tells which
+  text is a comment, so a `<!--` in code or after a backslash hides nothing, and a copy in code,
+  a title, a destination, a label or an info string counts), it states "This skill carries N
+  short guides" exactly once, with N the guide-counts gate's set in the commit, as
+  counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts nor
+  stands in for a stale or missing sentence. Raw HTML in SKILL.md other than whole HTML
+  comments, and an inline comment whose text cannot be removed alone, are not read and are a
+  finding naming the first line of the block that holds them. That module is this gate's own
+  copy, not the commit's, and without the pinned parser the commit could not be checked;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -85,9 +86,10 @@ SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
 # the front matter (metadata_versions() below), and the guide count in this sentence.
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
 # Text inside an HTML comment is not shown to a reader, so skill_counts() in
-# tools/_verify_sections.py, which scripts/build-plugin.sh also calls, finds the count sentence
-# only outside the whole HTML comments the pinned CommonMark parser marks as raw HTML, and raises
-# SkillHtml, a finding here, for any other raw HTML, which it does not read.
+# tools/_verify_sections.py, which scripts/build-plugin.sh also calls, removes from SKILL.md's
+# source the whole HTML comments the pinned CommonMark parser marks as raw HTML and counts the
+# sentence in the rest, and raises SkillHtml, a finding here, for any other raw HTML, which it
+# does not read, and for an inline comment whose text it cannot remove alone.
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")

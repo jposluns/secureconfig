@@ -107,7 +107,8 @@ HTML_SPACE = " \t\n\f\r"
 
 
 class SkillHtml(ValueError):
-    """SKILL.md holds raw HTML other than whole HTML comments, which skill_counts() cannot read."""
+    """SKILL.md holds raw HTML other than whole HTML comments, or a whole comment that
+    skill_counts() cannot remove alone, so it cannot find the count sentence."""
 
 
 def whole_comment(raw):
@@ -135,75 +136,81 @@ def front_matter(text):
     return "", text
 
 
-def visible_text(tokens, first_line=1):
-    """The text of parsed Markdown tokens that skill_counts() searches, with a NUL between blocks.
-
-    The parser decides what is Markdown code, so a "<!--" in a code span, in a fenced or indented
-    code block (in a block quote or list item too) or after a backslash is literal text. Code is
-    kept, since a reader sees it. Raw HTML, which the parser passes through unread, is not read
-    here either: an HTML block or inline HTML token that is one whole HTML comment, as
-    whole_comment() accepts it, is dropped, and any other raises SkillHtml naming its line, counted
-    from first_line, the line the tokens' source starts on. Emphasis, links and inline code join
-    the text around them, a line break is a newline, and an image keeps its alt text. Link and
-    image titles, the titles of link reference definitions (the parser must be set to emit
-    "definition" tokens and to label reference links, as skill_counts() sets it) and fence info
-    strings are searched too, each on its own, as the regex this replaced searched them.
-    """
-    parts, apart = [], []
-
-    def walk(tokens, line):
-        for token in tokens:
-            if token.map:
-                line = token.map[0]
-            kind = token.type
-            if kind in ("text", "text_special", "code_inline", "code_block"):
-                parts.append(token.content)
-            elif kind == "fence":
-                parts.append(token.content)
-                apart.append(token.info)
-            elif kind in ("softbreak", "hardbreak"):
-                parts.append("\n")
-                line += 1
-            elif kind in ("html_block", "html_inline"):
-                if not whole_comment(token.content):
-                    raise SkillHtml(f"line {first_line + line} holds raw HTML; SKILL.md may hold "
-                                    "HTML only as whole HTML comments")
-                line += token.content.count("\n")
-            elif kind == "definition":
-                apart.append(token.meta.get("title") or "")
-            elif kind in ("link_open", "image") and "label" not in token.meta:
-                # A reference link's title is its definition's, which is searched once there.
-                apart.append(token.attrGet("title") or "")
-            if token.children:
-                walk(token.children, line)
-            if token.block:
-                parts.append("\0")
-
-    walk(tokens, 0)
-    return "".join(parts) + "\0" + "\0".join(apart)
-
-
 def skill_counts(text):
-    """The N of each "This skill carries N short guides" a reader of SKILL.md sees, or that sits
-    in a link, image or reference definition title or a fence info string.
+    """The N of each "This skill carries N short guides" in SKILL.md outside its whole HTML
+    comments: in its text and code, in link and image destinations and titles, in reference
+    labels and definitions, in fence info strings, and in the front matter.
 
-    The body is parsed with the pinned CommonMark parser, gate_parser(required=True) in
-    tools/check_verify_marking.py, and searched in visible_text(); the front matter, which is not
-    Markdown, is searched as it stands. Each run of whitespace is read as 1 space, as a rendered
-    page shows it, so a sentence wrapped within one block counts; one split across blocks does
-    not. ParserUnavailable is raised when that parser is absent or not the pinned version, and
-    SkillHtml when the body holds raw HTML other than whole HTML comments, which nothing here
-    reads. scripts/build-plugin.sh and tools/check_generated_committed.py each require exactly
-    one, so a commented copy neither counts nor stands in for a stale or missing visible sentence.
+    The sentence is searched for in the raw source, as the regex this replaced searched the file
+    with comments removed, so every copy that stands in the file outside a whole comment counts.
+    Only which text is a comment is taken from the pinned CommonMark parser,
+    gate_parser(required=True) in tools/check_verify_marking.py, which parses the body: a "<!--"
+    in code, in a link destination, title or label, or after a backslash is not an HTML token,
+    so it hides nothing. Raw HTML, which the parser passes through unread, is not read: every
+    HTML block and inline HTML token, children included, must be one whole HTML comment as
+    whole_comment() accepts it, or SkillHtml is raised, naming the first line of the block that
+    holds it, not the line of the HTML itself. Each whole comment is then removed from the
+    source: an HTML block by blanking its lines, an inline comment by deleting its text from its
+    block's lines, which raises SkillHtml, naming that block's first line, when that text also
+    stands there outside a comment or does not stand there as written. Each run of whitespace in
+    what remains is read as 1 space, so a sentence wrapped within a block counts, and so does one
+    split across blocks. ParserUnavailable is raised when that parser is absent or not the
+    pinned version. scripts/build-plugin.sh and tools/check_generated_committed.py each require
+    exactly one, so a commented copy neither counts nor stands in for a stale or missing sentence.
     """
     from check_verify_marking import gate_parser  # here, as that module imports this one
     parser = gate_parser(required=True)
-    parser.options["inline_definitions"] = True
-    parser.options["store_labels"] = True
     head, body = front_matter(text)
     first_line = head.count("\n") + 2 if head else 1
-    visible = head + "\0" + visible_text(parser.parse(body), first_line)
-    return SKILL_COUNT.findall(re.sub(r"\s+", " ", visible))
+    # The parser reads "\r\n" and "\r" as "\n" and NUL as U+FFFD before it parses, so the same is
+    # done here, and its line numbers and token text then match these lines.
+    body = re.sub(r"\r\n?", "\n", body).replace("\0", "\ufffd")
+    lines = body.split("\n")
+    inline = {}  # each block's map (start and end line) -> the inline comments it holds
+
+    def walk(tokens, block):
+        for token in tokens:
+            if token.type in ("html_block", "html_inline"):
+                where = token.map if token.type == "html_block" else block
+                if not whole_comment(token.content):
+                    raise SkillHtml(f"raw HTML in the block starting at line "
+                                    f"{first_line + where[0]} is not a whole HTML comment; "
+                                    "SKILL.md may hold HTML only as whole HTML comments")
+                if token.type == "html_block":
+                    lines[where[0]:where[1]] = [""] * (where[1] - where[0])
+                else:
+                    inline.setdefault(tuple(where), []).append(token.content)
+            if token.children:
+                # An inline token's map is its block's lines; an image's alt text has none.
+                walk(token.children, token.map or block)
+
+    walk(parser.parse(body), [0, len(lines)])
+    for (start, end), comments in inline.items():
+        source = "\n".join(lines[start:end])
+        # Each comment's text is deleted where it first stands in its block's lines, after the
+        # removals before it. That is the comment itself only when no copy of the same text stands
+        # there outside a comment, in a code span, a link destination, title or label, or after a
+        # backslash: deleting such a copy in its place would join the text around the copy and
+        # split the text around the comment, which can make or break a sentence, as with
+        # "`<!-- a -->` This skill carries<!-- a --> 3 short guides". So the text must stand there
+        # exactly as many times as the block holds that comment. Then every place it stands is one
+        # of those comments, all of them are deleted, and which copy goes first cannot change the
+        # count: the removed and kept text are the same string, and in the end none is kept.
+        # Longer comments go first, so a comment whose text ends another one is counted after
+        # that one is gone. A comment that spans lines in a block quote or list item stands in
+        # its block's lines with the quote markers or indentation the parser took from its text,
+        # so it is not found, and is refused the same way.
+        for comment in sorted(set(comments), key=len, reverse=True):
+            if source.count(comment) != comments.count(comment):
+                raise SkillHtml(f"an HTML comment in the block starting at line "
+                                f"{first_line + start} cannot be removed alone: its text also "
+                                "stands there outside a comment, or not as written, as when the "
+                                "comment spans lines in a block quote or list item")
+            for _ in range(comments.count(comment)):
+                source = source.replace(comment, "", 1)
+        lines[start:end] = [source] + [None] * (end - start - 1)
+    rest = "\n".join(line for line in lines if line is not None)
+    return SKILL_COUNT.findall(re.sub(r"\s+", " ", (head + "\n" if head else "") + rest))
 
 
 def atx_headings(lines):

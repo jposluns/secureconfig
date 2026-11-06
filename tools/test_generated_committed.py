@@ -18,8 +18,9 @@ twin that differs only in the defect and takes the same rebuild path. A case who
 tree is clean passes --rebuild where it needs the rebuild path. The last cases fail closed,
 and two record what the gate does not do: read the index, or rebuild a clean tree unasked.
 
-The gate and the real build find SKILL.md's count sentence with the pinned CommonMark parser
-(skill_counts() in tools/_verify_sections.py). Where that parser is absent or another version,
+The gate and the real build count SKILL.md's count sentence in its source less its whole HTML
+comments, which the pinned CommonMark parser tells apart (skill_counts() in
+tools/_verify_sections.py). Where that parser is absent or another version,
 every case that needs it is skipped and counted in a "skip" line naming the reason. 2 cases run
 on every host and confirm that the gate and the real build refuse when the parser is not the
 pinned one: each runs on a copy of the tools whose lock pins a markdown-it-py version other than
@@ -97,8 +98,8 @@ sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1
 
 # The real scripts/build-plugin.sh runs on a fixture whose guide list and version-basis check are
 # stand-ins, the second because the real check reads the whole repository; everything after them
-# is the real script, with the real tools/_verify_sections.py counting the guides and finding the
-# count sentence with the pinned parser.
+# is the real script, with the real tools/_verify_sections.py counting the guides and counting the
+# count sentence outside the whole HTML comments that the pinned parser tells apart.
 REAL_BUILD = GATE.parent.parent / "scripts" / "build-plugin.sh"
 LIST_GUIDES = r"""#!/usr/bin/env bash
 printf '%s\n' guide.md
@@ -116,7 +117,9 @@ FENCED = "```html\n<!--\n```\nThis skill carries 3 short guides.\n"
 BESIDE_CODE = "Type `<!--` to open one. <!-- This skill carries 7 short guides. -->\n"
 # What the hand-written scan that the parser replaced misread, from the 2 QA reports on #1233: a
 # "<!--" in a fence in a block quote, in a code span on a heading, list item or block quote line
-# after a stray backtick, after a backslash, or in an indented code block, then a stale sentence.
+# after a stray backtick, after a backslash, in an indented code block, or in a tilde fence
+# indented 4 spaces in a nested list, then a stale sentence; and an unclosed "<!--" in the middle
+# of a paragraph, which opens no comment, then a stale sentence.
 STALE_AFTER = (
     "\n> ~~~html\n> <!--\n> ~~~\n\nThis skill carries 3 short guides.\n",
     "\nUse a ` here.\n# Type `<!--`\n`\nThis skill carries 3 short guides.\n",
@@ -124,6 +127,8 @@ STALE_AFTER = (
     "\na ` b\n> Type `<!--`\n`\nThis skill carries 3 short guides.\n",
     "\n\\<!--\nThis skill carries 3 short guides.\n",
     "\n    <!--\n\nThis skill carries 3 short guides.\n",
+    "\n- a\n  - b\n\n    ~~~\n    <!--\n    ~~~\n\nThis skill carries 3 short guides.\n",
+    "\nSee a <!-- b\nThis skill carries 3 short guides.\n",
 )
 # A sentence wrapped within its paragraph is shown on 1 line, so a stale one counts.
 WRAPPED = "This skill carries\n3 short guides.\n"
@@ -134,13 +139,15 @@ REAL_COMMENTS = (
     "\n\\<!-- <!-- This skill carries 3 short guides. -->\n",
     "\n> ~~~\n> <!--\n> ~~~\n\n<!-- This skill carries 3 short guides. -->\n",
 )
-# Raw HTML other than a whole comment is not read, so each is refused, naming line 9, where each
-# starts after SKILL_MD. From the round 2 QA reports on #1233: a "<!--" in a quoted attribute or
+# Raw HTML other than a whole comment is not read, so each is refused, naming line 9, the first
+# line of the block that holds it after SKILL_MD. From the round 2 QA reports on #1233: a "<!--" in
+# a quoted attribute or
 # in a textarea, which a browser shows; an apparent tag in a textarea, which a browser shows; a
 # quoted ">" in an attribute, which a browser does not show; a comment opened in a div block and
 # continued past a blank line; and script content, which a browser does not show. Also a style
 # block, a comment ended early by "--!>", the abrupt "<!-->", text after a comment's "-->", and
-# an inline tag.
+# an inline tag. From the round 3 QA reports: a tag on line 11, after a code span on lines 10 and
+# 11, in a paragraph that starts on line 9, which is the line named.
 RAW_HTML = (
     '\n<div title="<!--">\nThis skill carries 3 short guides.\n</div>\n',
     "\n<textarea>\n<!--\nThis skill carries 3 short guides.\n</textarea>\n",
@@ -153,17 +160,46 @@ RAW_HTML = (
     "\n<!-->\nThis skill carries 3 short guides.\n",
     "\n<!-- a --> This skill carries 3 short guides.\n",
     "\nSee <b>this</b>.\n",
+    "\nText\na `x\ny` <b>z</b>\n",
 )
-NOT_READ = "line 9 holds raw HTML; SKILL.md may hold HTML only as whole HTML comments"
-# A copy of the sentence in a link title, a link reference definition title, an image title or a
-# fence info string counts, as it did when a regex searched the whole file, so a stale one there
-# is a second statement.
+NOT_READ = ("raw HTML in the block starting at line 9 is not a whole HTML comment; SKILL.md may "
+            "hold HTML only as whole HTML comments")
+# A copy of the sentence in a link title, a link reference definition title, an image title, a
+# fence info string or the title of a definition no link uses counts, as it did when a regex
+# searched the whole file, so a stale one there is a second statement.
 TITLES = (
     '\nSee [this](https://example.invalid "This skill carries 3 short guides").\n',
     '\nSee [this].\n\n[this]: https://example.invalid "This skill carries 3 short guides"\n',
     '\n![a figure](figure.png "This skill carries 3 short guides")\n',
     "\n```This skill carries 3 short guides\ncode\n```\n",
+    '\n[unused]: https://example.invalid "This skill carries 3 short guides"\n',
 )
+# From the round 3 QA reports on #1233: a second copy of the current sentence counts in the label
+# of a definition no link uses, in an angle-bracket definition destination, in an inline link or
+# image destination, and in a full reference label (its definition's label differs in case, so
+# only the reference's own label holds the sentence), as it did when a regex searched the whole
+# file, so each is a second statement.
+COPIES = (
+    "\n[This skill carries 1 short guides]: https://example.invalid\n",
+    "\n[x]: <This skill carries 1 short guides>\n",
+    "\nSee [this](<This skill carries 1 short guides>).\n",
+    "\n![a figure](<This skill carries 1 short guides>)\n",
+    "\nSee [this][This skill carries 1 short guides].\n\n"
+    "[this skill carries 1 short guides]: https://example.invalid\n",
+)
+# A whole inline comment is removed by deleting its text from its block's lines, so its text must
+# stand there only as that comment: the same text in a code span beside it, where deleting the
+# copy in place of the comment would hide the stale sentence the comment splits, and a comment
+# that spans lines in a list item, whose indentation the parser takes from its text, are refused,
+# naming line 9, where the block starts; the same comment twice in one block is removed twice.
+APART = (
+    "\n`<!-- a -->` This skill carries<!-- a --> 3 short guides.\n",
+    "\n- a <!-- b\n  This skill carries 3 short guides. -->\n",
+)
+NOT_APART = ("an HTML comment in the block starting at line 9 cannot be removed alone: its text "
+             "also stands there outside a comment, or not as written")
+TWICE = ("\nSee <!-- This skill carries 3 short guides. --> and, again,\n"
+         "this <!-- This skill carries 3 short guides. -->.\n")
 # A whole comment, inline or as a block, still hides its text.
 WHOLE_COMMENTS = (
     "\nSee <!-- This skill carries 3 short guides. --> this.\n",
@@ -369,7 +405,7 @@ def not_guides(rebuilt):
 def real_build(skill_md, expected, needle, parser=True, lock=None):
     """Run the real build-plugin.sh on a fixture holding skill_md, with one guide and two .md
     names that are not guides, and with lock, when given, as its tools/requirements-gates.txt;
-    on success, SKILL.md must name VERSION 1.0.5 and, in the text a reader sees, 1 guide."""
+    on success, SKILL.md must name VERSION 1.0.5 and, outside its whole HTML comments, 1 guide."""
     if skipped(parser):
         return 0
     with tempfile.TemporaryDirectory() as directory:
@@ -511,12 +547,13 @@ def main():
         count += case(skill_text(SKILL_MD + "<!-- This skill carries 7 short guides. -->\n"),
                       also=("SKILL.md names it and states 1 guides; ",))
         # A line opening "<!--" with no "-->" after it starts an HTML block that runs to the end
-        # of the file and is not a whole comment, so it is refused, naming its line.
+        # of the file and is not a whole comment, so it is refused, naming its first line.
         count += case(skill("This skill carries 1 short guides.",
                             "<!--\nThis skill carries 1 short guides."),
                       expected=1,
-                      needle=SKILL + " as committed cannot have its guide count checked: line 7 "
-                             "holds raw HTML; SKILL.md may hold HTML only as whole HTML comments",
+                      needle=SKILL + " as committed cannot have its guide count checked: raw HTML "
+                             "in the block starting at line 7 is not a whole HTML comment; "
+                             "SKILL.md may hold HTML only as whole HTML comments",
                       absent=("times, not once",))
         # A "<!--" in a code span or a fenced code block opens no comment, so the stale sentence
         # after it is a second statement; a real comment beside a code span still hides its text,
@@ -534,8 +571,9 @@ def main():
                       expected=1, needle='short guides" 2 times, not once')
         count += case(skill_text(SKILL_MD + "<!-- `x --> `\nThis skill carries 3 short guides.\n"),
                       expected=1,
-                      needle=SKILL + " as committed cannot have its guide count checked: line 8 "
-                             "holds raw HTML; SKILL.md may hold HTML only as whole HTML comments")
+                      needle=SKILL + " as committed cannot have its guide count checked: raw HTML "
+                             "in the block starting at line 8 is not a whole HTML comment; "
+                             "SKILL.md may hold HTML only as whole HTML comments")
         # The QA cases on #1233: each stale sentence, and a wrapped one, is a second statement,
         # and each real comment beside the same constructs still hides its sentence.
         for tail in (*STALE_AFTER, WRAPPED):
@@ -558,6 +596,19 @@ def main():
         for tail in WHOLE_COMMENTS:
             count += case(skill_text(SKILL_MD + tail),
                           also=("SKILL.md names it and states 1 guides; ",))
+        # The round 3 QA cases on #1233: a second copy of the current sentence in a definition
+        # label, a destination or a full reference label is a second statement. An inline comment
+        # whose text also stands outside it in its block, or that spans lines in a list item, is
+        # a finding, and the same comment twice in one block still hides its sentence.
+        for tail in COPIES:
+            count += case(skill_text(SKILL_MD + tail), expected=1,
+                          needle='short guides" 2 times, not once')
+        for tail in APART:
+            count += case(skill_text(SKILL_MD + tail), expected=1,
+                          needle=SKILL + " as committed cannot have its guide count checked: "
+                                 + NOT_APART)
+        count += case(skill_text(SKILL_MD + TWICE),
+                      also=("SKILL.md names it and states 1 guides; ",))
         count += case(skill('  version: "1.0.5"\n', ""), expected=1,
                       needle=SKILL + " as committed has 0 metadata version lines in its front "
                              "matter, not 1")
@@ -616,21 +667,22 @@ def main():
         count += real_build(SKILL_MD.replace("\n---\n", "\n", 1), 1, refused)
         count += real_build(SKILL_MD.replace("This skill carries", "This skill has"), 1,
                             "SKILL.md guide count did not update to 1")
-        # Only text outside HTML comments counts: a commented sentence with no visible one, and
-        # a second visible sentence, are refused; a stale visible count beside a commented
+        # Only text outside whole HTML comments counts: a commented sentence with no visible one,
+        # and a second visible sentence, are refused; a stale visible count beside a commented
         # current one is rewritten, which real_build confirms outside comments.
-        uncounted = "SKILL.md guide count did not update to 1; outside HTML comments"
+        uncounted = "SKILL.md guide count did not update to 1; outside whole HTML comments"
         count += real_build(SKILL_MD.replace("This skill carries 1 short guides.",
                                              "<!-- This skill carries 1 short guides. -->"),
                             1, uncounted)
         count += real_build(SKILL_MD + "This skill carries 1 short guides.\n", 1, uncounted)
         # A line opening "<!--" with no "-->" after it starts raw HTML that is not a whole
-        # comment, so the build refuses it, naming its line.
+        # comment, so the build refuses it, naming the first line of its block.
         not_read = "SKILL.md's guide count cannot be checked: "
         count += real_build(SKILL_MD.replace("This skill carries 1 short guides.",
                                              "<!--\nThis skill carries 1 short guides."),
-                            1, not_read + "line 7 holds raw HTML; SKILL.md may hold HTML only "
-                            "as whole HTML comments; refusing to build")
+                            1, not_read + "raw HTML in the block starting at line 7 is not a "
+                            "whole HTML comment; SKILL.md may hold HTML only as whole HTML "
+                            "comments; refusing to build")
         count += real_build(SKILL_MD.replace("carries 1 short", "carries 3 short")
                             + "<!-- This skill carries 1 short guides. -->\n", 0,
                             "wrote plugin/skills/secure-deployment-config/references")
@@ -657,6 +709,15 @@ def main():
         for tail in WHOLE_COMMENTS:
             count += real_build(SKILL_MD + tail, 0,
                                 "wrote plugin/skills/secure-deployment-config/references")
+        # The round 3 QA cases on #1233: the build refuses a second copy of the current sentence
+        # in a definition label, a destination or a full reference label, and an inline comment it
+        # cannot remove alone, and builds beside the same comment twice in one block.
+        for tail in COPIES:
+            count += real_build(SKILL_MD + tail, 1, uncounted)
+        for tail in APART:
+            count += real_build(SKILL_MD + tail, 1, not_read + NOT_APART)
+        count += real_build(SKILL_MD + TWICE, 0,
+                            "wrote plugin/skills/secure-deployment-config/references")
 
         # Fail closed: a revision that is not a commit, an option-shaped revision, a directory
         # that is not a repository, and a repository with no commit.
