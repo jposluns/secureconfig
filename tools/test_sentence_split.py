@@ -394,6 +394,78 @@ class CommentOpeners(unittest.TestCase):
         self.assertEqual(guide("Text\n<!-- block\n\nHidden too.\n"), [(1, "Text")])
 
 
+class HtmlBlockStarts(unittest.TestCase):
+    """The start of a CommonMark 0.31.2 HTML block of types 1 to 6 ends a paragraph, so a code
+    span cannot pair past it and a real comment after it stays hidden; a line that only looks
+    like one is paragraph text, so the span pairs (QA round 2 on #1235)."""
+
+    def check(self, starts, ends):
+        for start in starts:
+            with self.subTest(start=start):
+                tail = "Then  g." if ends else "Then <!-- e ` f --> g."
+                self.assertEqual(guide(f"Use ` here.\n{start}\nThen <!-- e ` f --> g.\n"),
+                                 [(1, f"Use ` here. {start} {tail}")])
+
+    def test_type_1(self):
+        self.check(["<script>", "<PRE class=x>", "<textarea"], True)
+        self.check(["<scripts>", "<preview>"], False)
+
+    def test_type_2(self):
+        self.assertEqual(guide("Use ` here.\n<!-- c -->\nThen <!-- e ` f --> g.\n"),
+                         [(1, "Use ` here."), (3, "Then  g.")])
+        self.check(["<!- c", "<! -- c"], False)
+
+    def test_type_3(self):
+        self.check(["<?php", "<?xml version=1?>"], True)
+        self.check(["< ?php"], False)
+
+    def test_type_4(self):
+        self.check(["<!DOCTYPE html>", "<!doctype html>"], True)
+        self.check(["<!1>", "<! DOCTYPE>"], False)
+
+    def test_type_5_is_case_sensitive(self):
+        self.check(["<![CDATA[ x"], True)
+        self.check(["<![cdata[", "<![Cdata["], False)
+        self.assertEqual(guide("Text `x\n<![cdata[\nY <!-- z` kept. --> End.\n"),
+                         [(1, "Text `x <![cdata[ Y <!-- z` kept. --> End.")])
+
+    def test_type_6_follows_commonmark_0_31_2(self):
+        self.check(["<search>", "<DIV>", "</div>", "<hr/>", "<p", "<Section class=x>"], True)
+        self.check(["<source>", "<span>", "<divx>", "<p-x>"], False)
+
+
+class Round2Layouts(unittest.TestCase):
+    """Layouts in which QA round 2 on #1235 found a real comment shown or text hidden."""
+
+    def test_reference_definition_pairs_no_backtick_with_later_text(self):
+        self.assertEqual(guide("[x]: /url`foo\nText <!-- hidden ` --> visible.\n"),
+                         [(1, "[x]: /url`foo"), (2, "Text  visible.")])
+        self.assertEqual(guide('[r]: http://e.com "`"\nText <!-- h --> `x`.\n'),
+                         [(1, '[r]: http://e.com "`"'), (2, "Text  `x`.")])
+
+    def test_reference_definition_cannot_interrupt_a_paragraph(self):
+        self.assertEqual(guide("Para `x\n[r]: /u\nb <!-- c --> `\n"),
+                         [(1, "Para `x [r]: /u b <!-- c --> `")])
+
+    def test_link_destination_and_title_open_nothing(self):
+        for link in ('[a](http://e.com "`")', "[a](http://e.com/`)"):
+            with self.subTest(link=link):
+                self.assertEqual(guide(f"See {link} <!-- h --> and `x` y.\n"),
+                                 [(1, "See a  and `x` y.")])
+        self.assertEqual(guide('See [a](http://e.com "<!--") Shown --> b.\n'),
+                         [(1, "See a Shown --> b.")])
+
+    def test_comment_block_ends_with_its_closing_line(self):
+        self.assertEqual(guide("<!-- c --> `x\nb <!-- h --> `\n"), [(1, "`x"), (2, "b  `")])
+        self.assertEqual(guide("<!--\nc\n--> `x\nb <!-- h --> `\n"), [(3, "`x"), (4, "b  `")])
+
+    def test_item_numbered_2_opens_no_comment_block(self):
+        for marker in ("2.", "2)"):
+            with self.subTest(marker=marker):
+                self.assertEqual(guide(f"See a\n{marker} <!-- Shown c.\n\nMore shown.\n"),
+                                 [(1, "See a"), (2, "<!-- Shown c."), (4, "More shown.")])
+
+
 class Command(unittest.TestCase):
     def run_cli(self, text, *args):
         with tempfile.TemporaryDirectory() as directory:
