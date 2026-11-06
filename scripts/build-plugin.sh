@@ -78,15 +78,17 @@ sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1
 metadata=$(sed -n -e '1 { /^---$/!q }' -e '2,$ { /^---$/ { p; q }; /^metadata:$/,/^[^ ]/ { /^  version:/p } }' "$skill")
 [ "$metadata" = "  version: \"$version\""$'\n'"---" ] \
   || { echo "SKILL.md version did not update to $version; its front matter must open and close with a \"---\" line and its metadata must hold exactly one line '  version: \"...\"'" >&2; exit 1; }
-# The count is confirmed in SKILL.md's source less its whole HTML comments, by skill_counts() in
-# tools/_verify_sections.py, which tools/check_generated_committed.py also calls, and the sentence
-# must appear there exactly once, so a commented copy can neither stand in for a missing sentence
-# nor sit beside a second one; a copy in code, a title, a destination, a label or an info string
-# counts. skill_counts() parses SKILL.md's body with the pinned CommonMark parser only to tell
-# which text is a comment, so a "<!--" in code or after a backslash hides nothing. Raw HTML is
-# not read: SKILL.md may hold it only as whole HTML comments, which hide their text, and the build
-# refuses any other, and an inline comment whose text it cannot remove alone, naming the first
-# line of the block that holds it. Without that parser the build refuses too.
+# The count is confirmed in SKILL.md's source, front matter included, less the whole HTML comments
+# that stand as HTML blocks of their own outside any list item or block quote in its body, by
+# skill_counts() in tools/_verify_sections.py, which tools/check_generated_committed.py also
+# calls, and the sentence must appear there exactly once, so a copy in a removed comment can
+# neither stand in for a missing sentence nor sit beside a second one; a copy in code, a title, a
+# destination, a label, an info string or the front matter counts, even inside a comment there.
+# skill_counts() parses SKILL.md's body with the pinned CommonMark parser only to tell which lines
+# are such a comment, so a "<!--" in code or after a backslash hides nothing. Raw HTML is not
+# read: the body may hold it only as those comment blocks, which hide their text, and the build
+# refuses any other, inline HTML included, naming the first line of the block, or the table row,
+# that holds it. Without that parser the build refuses too.
 visible=$(python3 - "$skill" <<'PY'
 import sys
 sys.path.insert(0, "tools")
@@ -102,7 +104,7 @@ print("\n".join(counts))
 PY
 )
 [ "$visible" = "$count" ] \
-  || { echo "SKILL.md guide count did not update to $count; outside whole HTML comments, including in code, titles, destinations and labels, it must state the sentence \"This skill carries N short guides\" exactly once, not reworded or wrapped" >&2; exit 1; }
+  || { echo "SKILL.md guide count did not update to $count; outside the HTML comment blocks of its body, front matter included, and including in code, titles, destinations and labels, it must state the sentence \"This skill carries N short guides\" exactly once, not reworded or wrapped" >&2; exit 1; }
 
 # A digest per bundled file, so an adopter's updater can verify what it fetched before replacing
 # anything, and so a partial or corrupted download is a refusal rather than a silent downgrade.

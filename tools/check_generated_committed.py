@@ -22,16 +22,18 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
 - plugin/skills/secure-deployment-config/SKILL.md as committed opens with front matter (line 1
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
-  version-shaped line elsewhere does not count. In its source less its whole HTML comments, as
-  skill_counts() in tools/_verify_sections.py reads it (the pinned CommonMark parser tells which
-  text is a comment, so a `<!--` in code or after a backslash hides nothing, and a copy in code,
-  a title, a destination, a label or an info string counts), it states "This skill carries N
+  version-shaped line elsewhere does not count. In its source, front matter included, less the
+  whole HTML comments that stand as HTML blocks of their own outside any list item or block
+  quote in its body, as skill_counts() in tools/_verify_sections.py reads it (the pinned
+  CommonMark parser tells which lines are such a comment, so a `<!--` in code or after a
+  backslash hides nothing, and a copy in code, a title, a destination, a label, an info string
+  or the front matter counts, even inside a comment there), it states "This skill carries N
   short guides" exactly once, with N the guide-counts gate's set in the commit, as
-  counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts nor
-  stands in for a stale or missing sentence. Raw HTML in SKILL.md other than whole HTML
-  comments, and an inline comment whose text cannot be removed alone, are not read and are a
-  finding naming the first line of the block that holds them. That module is this gate's own
-  copy, not the commit's, and without the pinned parser the commit could not be checked;
+  counted_guides() in tools/_verify_sections.py lists it, so a copy in a removed comment neither
+  counts nor stands in for a stale or missing sentence. Any other HTML in SKILL.md's body,
+  inline HTML included, is not read and is a finding naming the first line of the block, or the
+  table row, that holds it. That module is this gate's own copy, not the commit's, and without
+  the pinned parser the commit could not be checked;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -86,10 +88,11 @@ SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
 # the front matter (metadata_versions() below), and the guide count in this sentence.
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
 # Text inside an HTML comment is not shown to a reader, so skill_counts() in
-# tools/_verify_sections.py, which scripts/build-plugin.sh also calls, removes from SKILL.md's
-# source the whole HTML comments the pinned CommonMark parser marks as raw HTML and counts the
-# sentence in the rest, and raises SkillHtml, a finding here, for any other raw HTML, which it
-# does not read, and for an inline comment whose text it cannot remove alone.
+# tools/_verify_sections.py, which scripts/build-plugin.sh also calls, blanks in SKILL.md's body
+# the lines of each whole HTML comment the pinned CommonMark parser reads as an HTML block of its
+# own outside any list item or block quote, and counts the sentence in the rest, front matter
+# included; it raises SkillHtml, a finding here, for any other HTML in the body, inline HTML
+# included, which it does not read.
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")
@@ -246,8 +249,8 @@ def skill_findings(version_text, skill_text, count):
         return findings
     if len(counts) != 1:
         findings.append(f'{SKILL} as committed states "This skill carries N short guides" '
-                        f"{len(counts)} times, not once (text inside HTML comments does not "
-                        "count)")
+                        f"{len(counts)} times, not once (text inside an HTML comment block in the "
+                        "body does not count; the front matter is searched as written)")
     elif int(counts[0]) != count:
         findings.append(f"{SKILL} as committed states {counts[0]} guides but the commit has "
                         f"{count} (counted_guides() in tools/_verify_sections.py); {REMEDY}")
