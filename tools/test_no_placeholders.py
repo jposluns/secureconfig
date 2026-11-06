@@ -197,6 +197,11 @@ def main():
         count += case({"site/a.md": "#NNN\n", "plugin/a.md": "1.NEW\n",
                        "notes.txt": "1.0.NNN\n", "untracked.md": "#NNN\n"},
                       0, "no authoring placeholders", untracked=("untracked.md",))
+        # plugin/always-on.md is kept by hand, so it is scanned though plugin/ is not.
+        count += case({"plugin/always-on.md": "#NNN\n"}, needle="plugin/always-on.md:1:1:")
+        count += case({"plugin/always-on.md": "clean\n", "plugin/other.md": "#NNN\n",
+                       "plugin/skills/always-on.md": "1.NEW\n"},
+                      0, "no authoring placeholders")
         count += case({"lost.md": "clean\n"}, 2, "lost.md",
                       missing=("lost.md",))
         for name in ("untracked/locked", "site/locked", "plugin/locked"):

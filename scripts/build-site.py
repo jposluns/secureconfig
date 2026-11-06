@@ -9,9 +9,8 @@ Usage:
 
 Every page is generated from this repository's sources with the markup of the baseline's reference
 pages (SPECIFICATION.md section 7): README.md for the guide index, the 10 rules and the checklist
-count; site-src/content.json for the page copy, each entry with its source, with the Claude Code
-install commands on the For AI assistants page refused unless each block is the body of a fenced
-code block in README.md's "Install in Claude Code" section; and
+count, and the Claude Code install commands on the For AI assistants page; site-src/content.json
+for the page copy, each entry with its source; and
 tools/version_basis_guides.txt for 1 count on the Disclosure page. Counts are computed, so a new
 guide or rule makes `--check` report the pages stale. Internal links and assets take the base path
 (`/` since promotion; `/draft/` builds the staging form). The "Draft review" page at draft/
@@ -23,6 +22,15 @@ the card at images/secureconfig-card.png (as on auditthis.ai). Every page, the 4
 page included, carries the light and dark switch as the last child of the top bar, after its
 `nav`, and loads scheme.js in `<head>` before the stylesheets, without `defer` or `async`
 (SPECIFICATION.md section 7.33).
+
+The install commands have 1 source, README.md's "Install in Claude Code" section, read with the
+pinned CommonMark parser (gate_parser(required=True) in tools/check_verify_marking.py, pinned by
+tools/requirements-gates.txt), so site-src/content.json carries none of them. The section must hold
+exactly 2 code blocks, both fenced at the top level and each closed by its own fence: first the
+in-session block, info string `text`, every line starting `/plugin `; then the shell block, info
+string `bash`, every line starting `claude plugin `. Anything else is refused, and so is a README
+with no such section or more than 1, or a parser that is absent, not the pinned version or cannot
+be loaded (exit 2). A block hidden in an HTML comment is not a code block, so it is never shown.
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
@@ -39,8 +47,9 @@ other file except, at base `/` only, the published files the root holds beside t
 favicon.svg, apple-touch-icon.png and images/secureconfig-card.png). A new published file is
 added to PUBLISHED before it ships.
 
-Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error.
-Standard library only. No network.
+Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
+or a source the build cannot read as it needs.
+The standard library and the pinned markdown-it-py. No network.
 """
 import argparse
 import html
@@ -52,14 +61,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from check_csp_hashes import STYLE_ATTR, VALUED_HANDLER, name_suffix  # noqa: E402  (shared rules)
+from check_verify_marking import ParserUnavailable, gate_parser  # noqa: E402  (the pinned parser)
 
 CONTENT = Path("site-src") / "content.json"
 README = Path("README.md")
 VERSIONED = Path("tools") / "version_basis_guides.txt"
-# The README section whose fenced command blocks the For AI assistants page repeats, and the keys
-# under for_ai.install in site-src/content.json that carry them.
+# The README section that is the only source of the install commands on the For AI assistants
+# page, and its 2 fenced blocks in order: (key, info string, the start of every line).
 INSTALL = "## Install in Claude Code"
-INSTALL_BLOCKS = ("session", "shell")
+INSTALL_FENCES = (("session", "text", "/plugin "), ("shell", "bash", "claude plugin "))
 COPIED = "assets/baseline/"  # the copied template files, which this build does not write
 SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline README), hand-written
 # The files the root holds beside the pages and the copied template files; a root --check refuses
@@ -153,7 +163,8 @@ class Builder:
             self.c = json.loads(self.read(CONTENT))
         except json.JSONDecodeError as exc:
             raise SourceError(f"{CONTENT} is not valid JSON: {exc}") from exc
-        lines = self.read(README).splitlines()
+        readme = self.read(README)
+        lines = readme.splitlines()
         self.categories = []
         for line in self.section(lines, "## Guide index"):
             if line.startswith("### "):
@@ -197,24 +208,55 @@ class Builder:
             if row["quote"] not in item:
                 raise SourceError(f"checklist row {i}: its quote {row['quote']!r} is not in "
                                   f"{README} checklist item {i}")
-        # The install commands on the For AI assistants page are the README's, so the two cannot
-        # drift: each command block in site-src/content.json must be, line for line, the body of a
-        # fenced code block in the README's install section.
-        fenced, block = [], None
-        for line in self.section(lines, INSTALL):
-            if line.startswith("```"):
-                if block is None:
-                    block = []
-                else:
-                    fenced.append("\n".join(block))
-                    block = None
-            elif block is not None:
-                block.append(line)
-        for key in INSTALL_BLOCKS:
-            commands = self.c["for_ai"]["install"][key]["commands"]
-            if commands not in fenced:
-                raise SourceError(f"{CONTENT} for_ai.install.{key}.commands is not the body of a "
-                                  f"fenced code block in {README} section {INSTALL!r}")
+        self.install = self.install_commands(readme)
+
+    def install_commands(self, text):
+        """{key: commands} for INSTALL_FENCES, read from the README's install section with the
+        pinned parser; the module docstring gives what is refused."""
+        where = f"{README} section {INSTALL!r}"
+        try:
+            parser = gate_parser(required=True)
+        except ParserUnavailable as exc:
+            raise SourceError(f"{where} is read with the pinned parser: {exc}") from None
+        except Exception as exc:  # noqa: BLE001  any failure to load the parser refuses the build
+            # A lock that cannot be read or parsed, or a markdown_it package without the version
+            # metadata of markdown-it-py or mdurl, raises something other than ParserUnavailable;
+            # each is refused in one line naming the cause, never a traceback.
+            cause = " ".join(f"{type(exc).__name__}: {exc}".split())
+            raise SourceError("the pinned parser cannot be loaded from tools/requirements-gates.txt "
+                              f"and the installed markdown-it-py and mdurl: {cause}") from None
+        tokens = parser.parse(text)
+        title = INSTALL[3:]
+        heads = [i for i, t in enumerate(tokens) if t.type == "heading_open" and t.tag == "h2"
+                 and tokens[i + 1].content.strip() == title]
+        if len(heads) != 1:
+            raise SourceError(f"{README} has {len(heads)} level-2 headings {title!r}; the build "
+                              f"reads the install commands from exactly 1")
+        end = next((i for i in range(heads[0] + 1, len(tokens)) if tokens[i].type == "heading_open"
+                    and tokens[i].tag in ("h1", "h2")), len(tokens))
+        blocks = [t for t in tokens[heads[0]:end] if t.type in ("fence", "code_block")]
+        want = " then ".join(f"a `{info}` block of `{prefix.strip()}` lines"
+                             for _, info, prefix in INSTALL_FENCES)
+        if len(blocks) != len(INSTALL_FENCES):
+            raise SourceError(f"{where} holds {len(blocks)} code block"
+                              f"{'' if len(blocks) == 1 else 's'}; the build needs exactly "
+                              f"{len(INSTALL_FENCES)}, fenced: {want}")
+        # The parser's lines: it reads \r\n and a lone \r as \n, and no other line break.
+        lines = re.split(r"\r\n?|\n", text)
+        commands = {}
+        for n, (token, (key, info, prefix)) in enumerate(zip(blocks, INSTALL_FENCES), 1):
+            closing = lines[token.map[1] - 1].strip() if token.map[1] - 1 > token.map[0] else ""
+            closed = (token.type == "fence" and len(closing) >= len(token.markup)
+                      and set(closing) == {token.markup[0]})
+            body = token.content[:-1] if token.content.endswith("\n") else token.content
+            if (not closed or token.level != 0 or token.info.strip() != info or not body
+                    or not all(line.startswith(prefix) for line in body.split("\n"))):
+                raise SourceError(f"{where}: code block {n} (line {token.map[0] + 1}) is not a "
+                                  f"top-level fenced block closed by its own fence, with info "
+                                  f"string {info!r} and every line starting {prefix!r}; the "
+                                  f"build needs {want}")
+            commands[key] = body
+        return commands
 
     def inputs(self):
         return [p.as_posix() for p in (CONTENT, README, VERSIONED)]
@@ -465,10 +507,10 @@ class Builder:
                  f'<p>{self.inline(inst["lead"]["text"])}</p>',
                  f'<p>{self.inline(inst["session"]["text"])}</p>',
                  '<p class="lbl blk">In a session</p>',
-                 self.copyblock("install-session", inst["session"]["commands"]),
+                 self.copyblock("install-session", self.install["session"]),
                  f'<p>{self.inline(inst["shell"]["text"])}</p>',
                  '<p class="lbl blk">In a shell</p>',
-                 self.copyblock("install-shell", inst["shell"]["commands"]),
+                 self.copyblock("install-shell", self.install["shell"]),
                  f'<p>{self.inline(inst["copy"]["text"])}</p>',
                  f'<p>{self.inline(inst["always"]["text"])}</p>', self.next_block(a["next"])]
         return self.page("For AI assistants", "for-ai/",

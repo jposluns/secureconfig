@@ -1,9 +1,9 @@
 ## Rules that apply to every deployment
-From the secure-deployment-config skill of secureconfig. Apply these whether or not a specific guide is open:
+Apply these whether or not a specific guide is open:
 
 1. Treat every service as internet-reachable until you have confirmed otherwise. Bind to `127.0.0.1` by default and expose only through a TLS-terminating layer you configured.
-2. Choose the certificate and access path before configuring exposure.
-3. Apply every guide that fits, not just one: the service guide, its host or platform, containers where used, plus identity, secrets and the operational guides.
+2. Choose the certificate and access path before configuring exposure. Public DNS name with reachable 80 and 443: `free-certificates.md`. Behind NAT or no public ports: `cloudflare.md` or `tunnels.md`. Internal or local only: `self-signed.md`.
+3. Apply every guide that fits, not just one. A deployment usually needs the service guide, its host or platform, containers where used, plus identity, secrets and the operational guides.
 4. Redirect HTTP to HTTPS, or do not listen on HTTP at all.
 5. Require authentication on every non-public endpoint. Never ship default or hardcoded credentials. Add MFA to human logins where viable. Where a tool has no native authentication, say so and put a fronting layer in front of it rather than inventing an option it does not have.
 6. **A successful login is not authorization.** Check the returned identity against an allowlist (tenant, hosted domain, group, or explicit users) before granting access.

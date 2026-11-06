@@ -418,11 +418,16 @@ Two files beside the plugin are kept by hand, not built. `.claude-plugin/marketp
 this repository a Claude Code plugin marketplace whose one plugin is `./plugin`; it carries no
 version, so `VERSION` and the builds never touch it, and `plugin/plugin.json` stays the plugin's
 versioned manifest. `plugin/always-on.md` is the always-on snippet that README.md's "Install in
-Claude Code" section offers for a project's `CLAUDE.md` or `AGENTS.md`: the rules of the "Rules
-that apply to every deployment" section of the plugin's `SKILL.md`, from no other source, and one
-line pointing at the skill. A pull request that changes that section changes the snippet with it;
-no gate compares the two. The For AI assistants page repeats the install commands, and
-`scripts/build-site.py` refuses to build unless each is a fenced block in README.md's section.
+Claude Code" section offers for a project's `CLAUDE.md` or `AGENTS.md`: the "Rules that apply to
+every deployment" section of the plugin's `SKILL.md`, its heading, lead line and rules as that
+section words them, each rule on one line, and one line pointing at the skill. The only changes
+are to the `references/` paths, which would not resolve from a project: rules 5, 7 and 8 drop
+their parenthesised paths, and rule 2 names its guides by file name without the folder. A pull
+request that changes that section changes the snippet with it; no gate compares the two, and the
+placeholder gate scans the snippet though it skips the rest of `plugin/`. The For AI assistants
+page takes its install commands from README.md's section itself: `scripts/build-site.py` reads
+the section with the pinned parser and refuses to build unless it holds exactly 2 code blocks,
+the fenced in-session block and then the fenced shell block, so the page never carries a copy.
 
 Record the change in `CHANGELOG.md` in the same pull request, not in a later bookkeeping one. A
 required gate checks that every merged pull request is referenced, exempting only the newest. It
