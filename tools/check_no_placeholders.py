@@ -2,7 +2,8 @@
 """Refuse authoring placeholders in tracked Markdown and the root VERSION.
 
 Scan raw text, including comments, quotations and code blocks. Generated site/ and
-plugin/ trees are excluded. There are no path exemptions. Match standalone PR, id
+plugin/ trees are excluded, except plugin/always-on.md, which is kept by hand and
+scanned (HAND_KEPT). There are no other path exemptions. Match standalone PR, id
 and version markers, plus the case-sensitive stale completion phrase. Ids have a
 single digit and optionally a hyphen followed by one uppercase ASCII word.
 Token boundaries use ASCII letters and digits. An adjacent underscore is a
@@ -41,6 +42,8 @@ PLACEHOLDER = re.compile(
 SHORT_PR = re.compile(r"(?<![A-Za-z0-9])(?<![A-Za-z0-9]_)#N(?![A-Za-z0-9]|_[A-Za-z0-9])")
 MARKDOWN = {".md", ".markdown", ".mdc"}
 GENERATED = {"site", "plugin"}
+# Hand-kept files inside a generated tree, scanned like any other tracked Markdown file.
+HAND_KEPT = {Path("plugin/always-on.md")}
 
 
 def exact_notation(line, match):
@@ -67,7 +70,7 @@ def main():
         tracked = {Path(os.fsdecode(name)) for name in result.stdout.split(b"\0") if name}
         wanted = {
             path for path in tracked
-            if path.parts[0] not in GENERATED
+            if (path.parts[0] not in GENERATED or path in HAND_KEPT)
             and (path.suffix.lower() in MARKDOWN or path == Path("VERSION"))
         }
         if Path("VERSION") not in wanted:
