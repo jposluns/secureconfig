@@ -58,6 +58,41 @@ sed -i "s/^\(  \"version\": \)\"[^\"]*\"/\1\"$version\"/" plugin/plugin.json
 grep -qF "  \"version\": \"$version\"," plugin/plugin.json \
   || { echo "plugin.json version did not update to $version; its version line may have been reformatted" >&2; exit 1; }
 
+# SKILL.md states the same version in its metadata and the guide count in "This skill carries N
+# short guides", and nothing rewrote either, so both drifted. The count is the length of
+# counted_guides() in tools/_verify_sections.py, the list the guide-counts gate in
+# tools/run_all_checks.sh and tools/check_generated_committed.py count too, so the README and
+# SKILL.md counts have one definition. The version sed is limited to the front matter (line 1,
+# which is "---", to the next "---" line) and, inside it, to the "metadata:" mapping (that line
+# to the next line that does not start with a space). Each value is confirmed afterwards for the
+# reason given for plugin.json above, and the version in that same scope, so a version-shaped
+# line elsewhere in the file neither takes the rewrite nor passes the confirmation.
+skill="plugin/skills/secure-deployment-config/SKILL.md"
+count=$(python3 -c 'import sys; from pathlib import Path; sys.path.insert(0, "tools"); from _verify_sections import counted_guides; print(len(counted_guides(Path("."))))')
+printf '%s' "$count" | grep -qxE '[1-9][0-9]*' \
+  || { echo "the guide count is '$count', not a positive number; refusing to build" >&2; exit 1; }
+sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1\"$version\"/ }" \
+  -e "s/\(This skill carries \)[0-9][0-9]*\( short guides\)/\1$count\2/" "$skill"
+# Every "  version:" line of the metadata mapping in the front matter, then the closing "---"; this
+# prints nothing when line 1 is not "---", and no "---" when the front matter does not close.
+metadata=$(sed -n -e '1 { /^---$/!q }' -e '2,$ { /^---$/ { p; q }; /^metadata:$/,/^[^ ]/ { /^  version:/p } }' "$skill")
+[ "$metadata" = "  version: \"$version\""$'\n'"---" ] \
+  || { echo "SKILL.md version did not update to $version; its front matter must open and close with a \"---\" line and its metadata must hold exactly one line '  version: \"...\"'" >&2; exit 1; }
+# The count is confirmed only outside HTML comments, removed first as the README guide-counts gate
+# removes them from README.md, and the sentence must appear there exactly once, so a commented copy
+# can neither stand in for a missing visible sentence nor sit beside a second one. A "<!--" with no
+# "-->" after it hides the rest of the file, as it does in HTML, so it is removed to the end.
+visible=$(python3 - "$skill" <<'PY'
+import re
+import sys
+text = open(sys.argv[1], encoding="utf-8").read()
+text = re.sub(r"<!--.*?(?:-->|\Z)", "", text, flags=re.S)
+print("\n".join(re.findall(r"This skill carries ([0-9]+) short guides", text)))
+PY
+)
+[ "$visible" = "$count" ] \
+  || { echo "SKILL.md guide count did not update to $count; outside HTML comments it must state the sentence \"This skill carries N short guides\" exactly once, not reworded or wrapped" >&2; exit 1; }
+
 # A digest per bundled file, so an adopter's updater can verify what it fetched before replacing
 # anything, and so a partial or corrupted download is a refusal rather than a silent downgrade.
 ( cd "$dest" && sha256sum "${files[@]}" ) > "$dest/MANIFEST.sha256"

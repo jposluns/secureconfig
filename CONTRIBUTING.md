@@ -409,7 +409,8 @@ A pull request that changes `VERSION` or a guide also runs `bash scripts/build-l
 `bash scripts/build-plugin.sh` and commits every file they change. The suite's two staleness gates
 rebuild the working tree, so they pass when a rebuilt file was left unstaged.
 `tools/check_generated_committed.py` exports `HEAD` with `git archive` and fails unless the
-committed `plugin/plugin.json` names the committed `VERSION`; when the working tree differs from
+committed `plugin/plugin.json` and the plugin's `SKILL.md` name the committed `VERSION` and
+`SKILL.md` states the committed guide count; when the working tree differs from
 `HEAD`, it also rebuilds the export and compares. It reads `HEAD`, so run the suite again after
 committing.
 

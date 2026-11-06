@@ -5,13 +5,13 @@ license: CC0-1.0
 compatibility: Every guide is bundled, so no network access is needed to use this skill. scripts/update-guides.sh needs network, and only when you choose to run it. Commands in the guides are run by you against the user's own systems.
 metadata:
   source: https://github.com/jposluns/secureconfig
-  version: "1.0.38"
+  version: "1.0.1228"
 ---
 
 # Secure deployment configuration
 
 Publicly reachable services built with AI assistance are routinely deployed on plain HTTP with no
-authentication. This skill carries 86 short guides that close that gap, one per service or
+authentication. This skill carries 102 short guides that close that gap, one per service or
 control, each line traced to the vendor page it came from.
 
 **A reader copies these configurations onto a system that faces the internet. An invented flag or
