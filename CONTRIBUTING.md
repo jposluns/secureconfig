@@ -510,8 +510,10 @@ link to `CHANGELOG.md` at the tag.
    release stops; delete the branch in that case too. Every release dispatches this way, so a
    release must target a commit at or after the merge of #1194, the first merge on `main` whose
    `.github/workflows/checks.yml` has the `workflow_dispatch` trigger. `tools/check_release.py`
-   does not read the workflow; the body it generates states that requirement and these
-   confirmations as the publisher's, which it does not verify.
+   reads that file at the target from local git and refuses the release unless its top-level
+   `on:` block mapping has a plain `workflow_dispatch:` key directly under it, in the forms its
+   docstring names; the body it generates states that requirement and these confirmations as
+   the publisher's, which it does not verify.
 4. Build the release twice, into two new directories outside the repository, and compare
    them with `diff -r`; any difference stops the release. Each build is
    `python3 -I -B tools/check_release.py --target <sha> --tag v1.0.<N> --previous <tag> --gates-check-run <id> --dir <dir> --build`,

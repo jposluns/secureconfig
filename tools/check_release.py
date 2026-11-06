@@ -19,7 +19,9 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
 1. The target is a full commit id on the first-parent chain of `main` (--main), and its
    subject begins `Merge pull request #N from `. It is the last first-parent merge of its UTC
    date on that chain, and that UTC date is before today's, so every CHANGELOG date section
-   falls wholly in one release.
+   falls wholly in one release. `.github/workflows/checks.yml` exists at the target as a
+   regular file and its top-level `on:` block mapping has a `workflow_dispatch` key, read as
+   THE DISPATCH TRIGGER below says.
 2. The tag is `v` plus `VERSION` at the target, `VERSION` is `1.0.<digits>` once trailing
    newlines are dropped (as scripts/build-plugin.sh reads it), and `plugin/plugin.json` at the
    target carries the same version.
@@ -63,8 +65,10 @@ branch or tag, not on a bare commit, so the publisher pushes a temporary branch
 run's event is workflow_dispatch, that its branch is `release-check/v<VERSION>` and that its
 `gates` check run succeeded on exactly the target commit, and then deletes the branch. So a
 release targets a commit at or after the merge of #1194, the first merge on `main` whose
-`.github/workflows/checks.yml` has the workflow_dispatch trigger; this check does not read the
-workflow, and the body states that requirement. Those are online steps of the procedure;
+`.github/workflows/checks.yml` has the workflow_dispatch trigger; check 1 reads that file at the
+target from local git objects and refuses a target without the trigger, and the body states that
+requirement. Check 1 shows that the target's workflow has the trigger, not that the target
+descends from #1194, and not that a run was dispatched. Those are online steps of the procedure;
 --gates-check-run takes the id of that `gates` check run only to print it in the body, which
 states these as the publisher's confirmations that it does not verify, and in the pass line,
 which says the result is recorded, not verified. It also cannot see a merge, tag or release that
@@ -80,6 +84,22 @@ empty line. The tarball is `git archive --format=tar --prefix=secureconfig-plugi
 of `plugin` with tar.umask 0002, compressed by Python's gzip at level 9 with mtime 0, so its
 bytes repeat for one git, Python and zlib. `git archive` applies export-ignore and export-subst
 attributes; .gitattributes sets neither today.
+
+THE DISPATCH TRIGGER: no YAML library is available here, so check 1 reads the workflow with the
+line model of tools/check_workflow_pins.py, a declared subset of YAML in which every line outside
+a block scalar's content is blank, a comment, a key line or a sequence entry; any line outside
+it, a forbidden character, a directive or a second document refuses the release. The file must
+be the blob of a regular file at the target (a symlink, a directory or a missing path is
+refused) and valid UTF-8. Within the model it accepts exactly one form: one plain top-level key
+`on:` at column 0 with no value on its line (a comment may follow), opening a block mapping whose
+direct children share one indentation, one of which is the plain key `workflow_dispatch:` with
+either no value on its line, optionally followed by a more indented block mapping such as its
+`inputs:`, or the value `{}`. It refuses everything else: no file; no top-level `on:`; a second
+one; `on:` quoted or in another case; `on:` as a plain or quoted string, a flow sequence or
+mapping, a block scalar or a block sequence, or with nothing beneath it; a document whose top
+level is not a block mapping at column 0; `workflow_dispatch` quoted, in another case, repeated,
+or with any other value, including a block sequence beneath it; and `workflow_dispatch` that
+appears only as a key nested deeper or outside `on:`, or only in a comment or a scalar.
 
 Exit 0 is a pass, 1 a finding, and 2 a candidate that could not be checked.
 """
@@ -97,6 +117,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_changelog_format import HEADING, check as format_findings  # noqa: E402
 from check_changelog_prs import MERGE_COMMIT, merged_number, referenced  # noqa: E402
+from check_workflow_pins import (FORBIDDEN_CHARS, OutsideModel, parse_line,  # noqa: E402
+                                 skip_block)
 
 REPOSITORY = "https://github.com/jposluns/secureconfig"
 CHANGELOG = "CHANGELOG.md"
@@ -118,6 +140,9 @@ VERSION_SHAPE = re.compile(r"1\.0\.([0-9]+)")
 TAG_SHAPE = re.compile(r"v1\.0\.([0-9]+)")
 FULL_ID = re.compile(r"[0-9a-f]{40}")
 RUN_ID = re.compile(r"[0-9]+")
+WORKFLOW = ".github/workflows/checks.yml"
+DISPATCH = "workflow_dispatch"
+REGULAR_MODES = ("100644", "100755")
 
 
 class CannotCheck(Exception):
@@ -215,6 +240,172 @@ def sums(files):
                    for name, data in files).encode("ascii")
 
 
+def indent(line):
+    return len(line) - len(line.lstrip(" "))
+
+
+def shape(kind, text):
+    """How a non-empty value is written, for a message."""
+    if kind == "block":
+        return "a block scalar"
+    what = {"plain": "a plain string", "quoted": "a quoted string"}.get(kind)
+    if what is None:
+        what = "a flow sequence" if text.startswith("[") else "a flow mapping"
+    return f"{what}, {text!r}"
+
+
+def dispatch_problem(text):
+    """None when the workflow text has the trigger in the accepted form, else why it does not.
+
+    See THE DISPATCH TRIGGER in the module docstring for the one accepted form.
+    """
+    text = text.replace("\r\n", "\n")
+    bad = FORBIDDEN_CHARS.search(text)
+    if bad:
+        return (f"line {text[:bad.start()].count(chr(10)) + 1} has the character "
+                f"U+{ord(bad.group()):04X}, which is outside the YAML subset this check reads")
+    lines = text.split("\n")
+    i, seen, limit, top_seen = 0, False, None, False
+    on_line = child = None
+    on_open = dispatch_open = False
+    found = elsewhere = None
+    while i < len(lines):
+        line, n = lines[i], i + 1
+        body = line.strip(" ")
+        if limit is not None and body and not body.startswith("#"):
+            if indent(line) > limit:
+                return (f"line {n}: a scalar from an earlier line continues onto this more "
+                        "indented line, which is outside the YAML subset this check reads")
+            limit = None
+        if body.startswith("%") or body in ("---", "...") or body.startswith(("--- ", "... ")):
+            if body == "---" and not seen:
+                seen = True
+                i += 1
+                continue
+            return (f"line {n}: a YAML directive or document marker; this check reads one "
+                    "document with at most a leading ---")
+        try:
+            parsed = parse_line(line)
+        except OutsideModel as exc:
+            return f"line {n} is outside the YAML subset this check reads ({exc})"
+        if parsed is None:
+            i += 1
+            continue
+        seen = True
+        col, key, kind = indent(line), parsed["key"], parsed["kind"]
+        stripped = line.lstrip(" ")
+        dash = stripped == "-" or stripped.startswith("- ")
+        quoted = not dash and stripped.startswith(("'", '"'))
+        if col == 0:
+            if on_open and child is None:
+                if dash:
+                    return (f"line {n}: the top-level `on:` holds a block sequence, not a block "
+                            "mapping")
+                return f"line {on_line}: the top-level `on:` has nothing beneath it"
+            on_open = False
+            if dash or key is None:
+                return f"line {n}: the document's top level is not a block mapping"
+            top_seen = True
+            if key.lower() == DISPATCH and elsewhere is None:
+                elsewhere = n
+            if key.lower() == "on" and (quoted or key != "on"):
+                return (f"line {n}: the top-level key is written {stripped.split(':')[0]!r}; "
+                        "only the plain key `on` is read")
+            if key == "on":
+                if on_line is not None:
+                    return (f"line {n}: a second top-level `on:` key; the first is at line "
+                            f"{on_line}")
+                on_line = n
+                if kind != "empty":
+                    return (f"line {n}: the top-level `on:` is {shape(kind, parsed['text'])}, "
+                            "not a block mapping")
+                on_open = True
+        elif not top_seen:
+            return f"line {n}: the document's top level is not a block mapping at column 0"
+        elif on_open:
+            if child is None:
+                if dash:
+                    return (f"line {n}: the top-level `on:` holds a block sequence, not a block "
+                            "mapping")
+                child = col
+            if col < child:
+                return (f"line {n} is less indented than the first key under `on:`, at column "
+                        f"{child + 1}")
+            if col == child:
+                dispatch_open = False
+                if dash:
+                    return f"line {n}: a sequence entry among the keys of the top-level `on:`"
+                if key.lower() == DISPATCH and (quoted or key != DISPATCH):
+                    return (f"line {n}: the key under `on:` is written "
+                            f"{stripped.split(':')[0]!r}; only the plain key `workflow_dispatch` "
+                            "is read")
+                if key == DISPATCH:
+                    if found is not None:
+                        return (f"line {n}: a second `workflow_dispatch:` under `on:`; the first "
+                                f"is at line {found}")
+                    if kind == "flow" and parsed["text"] == "{}":
+                        found = n
+                    elif kind == "empty":
+                        found, dispatch_open = n, True
+                    else:
+                        return (f"line {n}: `workflow_dispatch:` under `on:` is "
+                                f"{shape(kind, parsed['text'])}; only no value, a block mapping "
+                                "beneath it or `{}` is read")
+            else:
+                if dispatch_open and dash:
+                    return f"line {n}: `workflow_dispatch:` holds a block sequence"
+                dispatch_open = False
+                if key is not None and key.lower() == DISPATCH and elsewhere is None:
+                    elsewhere = n
+        elif key is not None and key.lower() == DISPATCH and elsewhere is None:
+            elsewhere = n
+        if kind == "block":
+            refusals = []
+            i = skip_block(lines, i + 1, parsed["parent"], WORKFLOW, refusals)
+            if i is None:
+                return refusals[0]
+            continue
+        if kind != "empty":
+            limit = parsed["parent"]
+        i += 1
+    if on_line is None:
+        return "there is no top-level `on:` key"
+    if child is None:
+        return f"line {on_line}: the top-level `on:` has nothing beneath it"
+    if found is not None:
+        return None
+    if elsewhere is not None:
+        return (f"`workflow_dispatch` is a key only at line {elsewhere}, which is not directly "
+                "under the top-level `on:`")
+    word = next((k + 1 for k, line in enumerate(lines) if DISPATCH in line.lower()), None)
+    if word is not None:
+        return (f"`workflow_dispatch` appears only in a comment or a scalar, first at line "
+                f"{word}, not as a key directly under the top-level `on:`")
+    return "the top-level `on:` has no `workflow_dispatch` key"
+
+
+def dispatch_findings(root, target):
+    """Check 1's finding when the target's workflow lacks the trigger every release dispatches."""
+    listed = git(root, "ls-tree", "-z", target, "--", WORKFLOW, binary=True)
+    entry = listed.split(b"\0")[0].decode("utf-8", "replace")
+    meta, _, path = entry.partition("\t")
+    fields = meta.split()
+    if path != WORKFLOW or len(fields) != 3:
+        problem = "it does not exist"
+    elif fields[1] != "blob" or fields[0] not in REGULAR_MODES:
+        problem = f"it is not a regular file (mode {fields[0]}, {fields[1]})"
+    else:
+        try:
+            problem = dispatch_problem(git(root, "cat-file", "blob", fields[2]))
+        except UnicodeError:
+            problem = "it is not valid UTF-8"
+    if problem is None:
+        return []
+    return [f"{WORKFLOW} at the target: {problem}; a release needs the plain "
+            "`workflow_dispatch:` key directly under the file's top-level `on:` block mapping, "
+            "as at the merge of #1194 and later"]
+
+
 def examine(root, main_ref, target, tag, previous, gates_run):
     """Findings for checks 1 to 6, and the regenerated release when they pass."""
     findings = []
@@ -250,6 +441,7 @@ def examine(root, main_ref, target, tag, previous, gates_run):
     if target_date >= today:
         findings.append(f"the target's UTC date {target_date} has not ended (today is {today} "
                         "UTC), so a later merge could still land under that date")
+    findings += dispatch_findings(root, target)
 
     # 2. The tag, VERSION and plugin.json agree.
     version = at_target(root, target, "VERSION").decode("utf-8", "replace").rstrip("\n")

@@ -71,6 +71,25 @@ DISPATCH_BODY = ("the publisher confirmed online that `gates` check run 4242 is 
 CONFIRMED = ("succeeded on exactly the target commit. These are the publisher's confirmations; "
              "the offline release check records the id and does not verify them.")
 
+# The target's .github/workflows/checks.yml: a stub with the trigger as checks.yml writes it,
+# and the variants below, each of which replaces only its `on:` block.
+WORKFLOW_HEAD = "name: Checks\n\n# A release runs this on its target.\n"
+WORKFLOW_ON = ('on:\n  pull_request:\n    types: [opened, synchronize]\n  schedule:\n'
+               '    - cron: "0 6 * * 1"\n  workflow_dispatch: {}\n')
+WORKFLOW_TAIL = ("\npermissions:\n  contents: read\n\njobs:\n  gates:\n"
+                 "    runs-on: ubuntu-latest\n    steps:\n      - run: |\n"
+                 "          bash tools/run_all_checks.sh\n")
+WORKFLOW = WORKFLOW_HEAD + WORKFLOW_ON + WORKFLOW_TAIL
+SYMLINK = object()
+NEEDS_TRIGGER = ("a release needs the plain `workflow_dispatch:` key directly under the file's "
+                 "top-level `on:` block mapping, as at the merge of #1194 and later")
+
+
+def workflow(on):
+    """The stub workflow with its `on:` block replaced."""
+    return WORKFLOW_HEAD + on + WORKFLOW_TAIL
+
+
 # (pull request, UTC committer time, the date heading its entry sits under). #12 and #13 share
 # 2026-10-03, so #13 is the last merge of that day and #12 is not.
 HISTORY = [
@@ -119,11 +138,20 @@ def changelog(entries, broken=False):
 
 
 def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plugin=None,
-          broken=None):
-    """A repository whose main is `history`; returns each pull request's merge commit."""
+          broken=None, checks=WORKFLOW):
+    """A repository whose main is `history`; returns each pull request's merge commit.
+
+    `checks` is the text of .github/workflows/checks.yml, None for no such file, or SYMLINK for
+    a symlink to a file holding the stub.
+    """
     root.mkdir(parents=True)
     git(root, "init", "-q")
     write(root, "tools/run_all_checks.sh", suite)
+    if checks is SYMLINK:
+        write(root, ".github/workflows/real.yml", WORKFLOW)
+        (root / ".github/workflows/checks.yml").symlink_to("real.yml")
+    elif checks is not None:
+        write(root, ".github/workflows/checks.yml", checks)
     write(root, "VERSION", "1.0.9\n")
     write(root, "plugin/plugin.json", '{\n  "name": "fixture",\n  "version": "1.0.9"\n}\n')
     write(root, "plugin/SKILL.md", "fixture skill\n")
@@ -288,6 +316,101 @@ def cases(tmp):
            "not a full 40-character")
     expect("a non-numeric gates check run id cannot be checked",
            subprocess_result(repo, c[13], "abc"), 2, "not a numeric check run id")
+
+    # Check 1 again: the target's checks.yml has the workflow_dispatch trigger. The clean
+    # releases above pass with `workflow_dispatch: {}`; these other accepted forms pass checks 1
+    # to 6 with --build, and each refused form fails with its own message.
+    accepted = [
+        ("a bare `workflow_dispatch:` with a comment",
+         workflow("on:  # triggers\n  pull_request:\n  workflow_dispatch:  # on demand\n")),
+        ("`workflow_dispatch:` with a nested block mapping",
+         workflow("on:\n  workflow_dispatch:\n    inputs:\n      reason:\n"
+                  "        description: why\n  pull_request:\n")),
+        ("CRLF line endings and a leading ---", "---\r\n" + WORKFLOW.replace("\n", "\r\n")),
+    ]
+    for name, text in accepted:
+        other = tmp / f"dispatch{COUNT[0]}"
+        merges = build(other, checks=text)
+        expect(f"a target whose checks.yml has {name} passes checks 1 to 6",
+               gate(other, merges[11], "v1.0.11", None, tmp / f"dispatch-out{COUNT[0]}",
+                    "--build"), 0, "checks 1 to 6 passed", absent=("FAIL",))
+    refused = [
+        ("no checks.yml", None, "checks.yml at the target: it does not exist"),
+        ("a symlinked checks.yml", SYMLINK, "it is not a regular file (mode 120000, blob)"),
+        ("no workflow_dispatch key",
+         workflow("on:\n  pull_request:\n  schedule:\n    - cron: \"0 6 * * 1\"\n"),
+         "the top-level `on:` has no `workflow_dispatch` key"),
+        ("the key only nested under another trigger",
+         workflow("on:\n  pull_request:\n    workflow_dispatch: {}\n"),
+         "`workflow_dispatch` is a key only at line 6, which is not directly under"),
+        ("the key only at the top level, beside `on:`",
+         workflow("on:\n  pull_request:\nworkflow_dispatch: {}\n"),
+         "`workflow_dispatch` is a key only at line 6, which is not directly under"),
+        ("the key only in a comment",
+         workflow("on:\n  pull_request:\n  # workflow_dispatch: {}\n"),
+         "`workflow_dispatch` appears only in a comment or a scalar, first at line 6"),
+        ("the key only in a string",
+         workflow("on:\n  pull_request:\n    types: [\"workflow_dispatch\"]\n"),
+         "`workflow_dispatch` appears only in a comment or a scalar, first at line 6"),
+        ("`on:` as a plain string", workflow("on: workflow_dispatch\n"),
+         "line 4: the top-level `on:` is a plain string, 'workflow_dispatch', not a block mapping"),
+        ("`on:` as a quoted string", workflow("on: \"workflow_dispatch\"\n"),
+         "the top-level `on:` is a quoted string"),
+        ("`on:` as a flow sequence", workflow("on: [pull_request, workflow_dispatch]\n"),
+         "the top-level `on:` is a flow sequence"),
+        ("`on:` as a flow mapping", workflow("on: {workflow_dispatch: {}}\n"),
+         "the top-level `on:` is a flow mapping"),
+        ("`on:` as an indented block sequence",
+         workflow("on:\n  - pull_request\n  - workflow_dispatch\n"),
+         "line 5: the top-level `on:` holds a block sequence"),
+        ("`on:` as a block sequence at column 0",
+         workflow("on:\n- pull_request\n- workflow_dispatch\n"),
+         "line 5: the top-level `on:` holds a block sequence"),
+        ("`on:` as a block scalar", workflow("on: |\n  workflow_dispatch\n"),
+         "the top-level `on:` is a block scalar"),
+        ("`on:` with nothing beneath it", workflow("on:\n"),
+         "line 4: the top-level `on:` has nothing beneath it"),
+        ("no top-level `on:`", workflow(""), "there is no top-level `on:` key"),
+        ("a second top-level `on:`",
+         workflow("on:\n  workflow_dispatch: {}\non:\n  pull_request:\n"),
+         "line 6: a second top-level `on:` key; the first is at line 4"),
+        ("a double-quoted `on` key", workflow("\"on\":\n  workflow_dispatch: {}\n"),
+         "the top-level key is written '\"on\"'; only the plain key `on` is read"),
+        ("an `on` key in another case", workflow("On:\n  workflow_dispatch: {}\n"),
+         "the top-level key is written 'On'; only the plain key `on` is read"),
+        ("a double-quoted `workflow_dispatch` key",
+         workflow("on:\n  \"workflow_dispatch\": {}\n"),
+         "the key under `on:` is written '\"workflow_dispatch\"'; only the plain key"),
+        ("a single-quoted `workflow_dispatch` key",
+         workflow("on:\n  'workflow_dispatch':\n"),
+         "the key under `on:` is written \"'workflow_dispatch'\"; only the plain key"),
+        ("a `workflow_dispatch` key in another case",
+         workflow("on:\n  Workflow_Dispatch: {}\n"),
+         "the key under `on:` is written 'Workflow_Dispatch'"),
+        ("a second `workflow_dispatch` key",
+         workflow("on:\n  workflow_dispatch:\n  workflow_dispatch: {}\n"),
+         "line 6: a second `workflow_dispatch:` under `on:`; the first is at line 5"),
+        ("`workflow_dispatch:` with a plain value", workflow("on:\n  workflow_dispatch: true\n"),
+         "`workflow_dispatch:` under `on:` is a plain string, 'true'; only no value"),
+        ("`workflow_dispatch:` with a non-empty flow mapping",
+         workflow("on:\n  workflow_dispatch: {inputs: {}}\n"),
+         "`workflow_dispatch:` under `on:` is a flow mapping"),
+        ("`workflow_dispatch:` holding a block sequence",
+         workflow("on:\n  workflow_dispatch:\n    - inputs\n"),
+         "line 6: `workflow_dispatch:` holds a block sequence"),
+        ("an anchor on `on:`", workflow("on: &triggers\n  workflow_dispatch: {}\n"),
+         "line 4 is outside the YAML subset this check reads (an anchor"),
+        ("a top level indented past column 0", "  on:\n    workflow_dispatch: {}\n",
+         "line 1: the document's top level is not a block mapping at column 0"),
+        ("a second document", WORKFLOW + "---\non:\n  pull_request:\n",
+         "a YAML directive or document marker"),
+    ]
+    for name, text, needle in refused:
+        other = tmp / f"dispatch{COUNT[0]}"
+        merges = build(other, checks=text)
+        expect(f"a target with {name} in checks.yml is refused",
+               release(other, merges[11], "v1.0.11", None, tmp / f"dispatch-out{COUNT[0]}"), 1,
+               needle, NEEDS_TRIGGER)
 
     # Checks 2 and 3: the tag.
     expect("a tag that is not v plus VERSION at the target is refused",
