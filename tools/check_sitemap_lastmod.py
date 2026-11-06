@@ -17,9 +17,10 @@ WHAT IT CHECKS, reading only local git objects and the working tree:
     parses with no finding, and it lists at least one `url`;
   - each `url` holds exactly one `loc` and one `lastmod`, and check_sitemap.page_of maps its `loc`
     to a page that exists as a regular file: site/index.html for `/` and site/<path>/index.html
-    for `/<path>/`, at any depth, so every listed page is dated by its own file. While the site
-    is staged (tools/check_draft.py's BASE is not `/`), a `loc` under BASE maps to no page and is
-    refused, as is a `loc` in any other form;
+    for `/<path>/`, at any depth, so every listed page is dated by its own file. A `loc` whose
+    first segment is `draft`, in any case, maps to no page at any base (the live site carries no
+    /draft/ page); while the site is staged (tools/check_draft.py's BASE is not `/`), a `loc`
+    under BASE maps to no page either; each is refused, as is a `loc` in any other form;
   - a page that git status shows as changed (staged, unstaged or untracked) has no commit date
     yet, so its `lastmod` must be today's date in UTC, the date its commit gets when made today
     in UTC. This project runs the suite on the staged tree before committing, so that run passes

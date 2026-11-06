@@ -119,8 +119,10 @@ the indented lines under it; `#` is a comment; `! Name` DETACHES a header. This 
     'unsafe-inline'` for Cloudflare's JavaScript Detections loader, which this gate's page model
     never relies on: no page carries an inline block for it to permit. A comma, which would make
     the value more than one policy, gets its own message;
-  - no rule sets or detaches X-Robots-Tag: the /draft/ review page carries its own robots meta,
-    and a header-level noindex would silently deindex whatever its rule matches;
+  - no rule sets or detaches X-Robots-Tag: the 404 page carries its own robots meta, the live
+    site carries no /draft/ page for a `/draft/*` noindex rule to cover (baseline SPECIFICATION
+    section 4.1 items 0 and 2: that rule belongs on the `draft` branch), and a header-level noindex
+    would silently deindex whatever its rule matches;
   - section 9's other headers (PINNED_HEADERS): X-Frame-Options, Permissions-Policy and
     Cross-Origin-Opener-Policy are each set exactly once across the whole file, under the bare
     `/*` rule, to exactly section 9's value, and no rule detaches one;
@@ -830,8 +832,9 @@ def header_findings(headers_text):
                            f"page served under that rule has no policy at all")
             elif name == "x-robots-tag":
                 out.append(f"{HEADERS} rule {rule} sets or detaches X-Robots-Tag, which reaches "
-                           f"every page its rule matches; the /draft/ review page carries its own "
-                           f"robots meta, and this gate models no header-level noindex")
+                           f"every page its rule matches; the 404 page carries its own robots "
+                           f"meta, the live site carries no /draft/ page, and this gate models no "
+                           f"header-level noindex")
             elif name in CLOUDFLARE_HEADERS:
                 out.append(f"{HEADERS} rule {rule} sets or detaches {name}, which Cloudflare "
                            f"sends itself (baseline SPECIFICATION section 9: never set "

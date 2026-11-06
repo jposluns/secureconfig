@@ -1298,7 +1298,7 @@ done
 # section: copy-buttons
 echo "== site copy buttons =="
 # Every copy button names the <pre> it copies from; a dangling data-copy is a silently dead button.
-# Every .html page under site/ is read, the /draft/ review page and the 404 included; each finding names its page.
+# Every .html page under site/ is read, the 404 included; each finding names its page.
 if missing_copy=$(python3 - <<'PY'
 import re, sys
 from pathlib import Path
@@ -1551,13 +1551,15 @@ echo "== no site page scrolls sideways at the template's widths =="
 # and passes; CI installs the pinned playwright from tools/overflow/ and sets
 # SECURECONFIG_REQUIRE_OVERFLOW=1, under which that is a failure. tools/test_gate_runners.py runs
 # this section on stand-ins for node and the check.
-# The pages, the one place they are listed: every generated page that answers 200, the review page
-# included; 404.html is the not-found page and is not listed. A listed page whose index.html is
-# missing fails before the server starts, since http.server would answer its path with a directory
-# listing. Every other .html or .htm file under site/ (in any case, at any depth, outside assets/,
-# whose files scripts/build-site.py does not write) that is not a listed page's index.html fails,
-# so a new page cannot go unchecked.
-overflow_pages=(/ /checklist/ /disclosure/ /draft/ /for-ai/ /for-humans/ /guides/ /license/)
+# The pages, the one place they are listed: every generated page that answers 200; 404.html is the
+# not-found page and is not listed, and the live site carries no /draft/ page (baseline
+# SPECIFICATION section 4.1 item 0: drafts are built on the `draft` branch), so a page under
+# site/draft/ is unlisted and fails here as well as in the site-draft section. A listed page whose
+# index.html is missing fails before the server starts, since http.server would answer its path
+# with a directory listing. Every other .html or .htm file under site/ (in any case, at any depth,
+# outside assets/, whose files scripts/build-site.py does not write) that is not a listed page's
+# index.html fails, so a new page cannot go unchecked.
+overflow_pages=(/ /checklist/ /disclosure/ /for-ai/ /for-humans/ /guides/ /license/)
 overflow_missing=""
 for overflow_path in "${overflow_pages[@]}"; do
   if [ ! -f "site${overflow_path}index.html" ]; then
@@ -1712,7 +1714,7 @@ run_gate test_install_blocks.py python3 -I -B tools/test_install_blocks.py
 run_gate check_install_blocks.py python3 -I -B tools/check_install_blocks.py
 
 # section: site-draft
-echo "== the site is self-contained and only /draft/ and the 404 are noindex =="
+echo "== the site is self-contained, only the 404 is noindex, and there is no /draft/ =="
 run_gate test_draft.py python3 -I -B tools/test_draft.py
 run_gate check_draft.py python3 -I -B tools/check_draft.py
 
@@ -1793,8 +1795,9 @@ done
 # section: sitemap
 echo "== site/sitemap.xml lists the live pages dated by their last change, and robots.txt names it =="
 # W4 (the owner's decision A6 of 2026-11-03): sitemap.xml lists every indexable live page with a
-# lastmod and no /draft/ page, and robots.txt carries one Sitemap line. tools/check_sitemap.py
-# parses the sitemap with expat and maps each loc to its page under site/, reading no git history.
+# lastmod and no /draft/ page (the live site carries none), and robots.txt carries one Sitemap
+# line. tools/check_sitemap.py parses the sitemap with expat and maps each loc to its page under
+# site/, reading no git history.
 # tools/check_sitemap_lastmod.py then requires each lastmod to equal the date of the last commit
 # that changed its page (git log -1 --format=%cs), or today's UTC date for a listed page with
 # uncommitted or staged changes, and fails closed in a shallow clone or a tree without its
