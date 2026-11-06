@@ -5,9 +5,11 @@ Each repository carries a guide, VERSION, plugin/plugin.json, a tracked site/ind
 stub build scripts that do what the gate depends on the real ones doing: build-llms-full.sh
 writes site/llms-full.txt from the guide, and build-plugin.sh refuses a malformed VERSION,
 replaces the references directory, writes VERSION into plugin.json with the real script's sed,
-writes VERSION and the root guide count into SKILL.md with the real script's seds, and writes a
-MANIFEST.sha256. The repository is built and committed clean before each case
-changes it.
+writes VERSION and the guide count from the gate's own tools/_verify_sections.py into SKILL.md
+with the real script's seds, and writes a MANIFEST.sha256. The repository is built and committed
+clean before each case changes it. The last group runs the real scripts/build-plugin.sh, with
+stand-ins only for its guide list and its version-basis check, on SKILL.md files it must
+rewrite or refuse.
 
 The two finding cases reproduce how each defect reaches a commit: the working tree is rebuilt
 in full, so the working-tree staleness gates pass, which each case confirms by rebuilding the
@@ -43,11 +45,20 @@ mkdir -p "$dest"
 cp guide.md "$dest/guide.md"
 sed -i "s/^\(  \"version\": \)\"[^\"]*\"/\1\"$version\"/" plugin/plugin.json
 skill=plugin/skills/secure-deployment-config/SKILL.md
-count=$(find . -maxdepth 1 -name '*.md' ! -name README.md | wc -l)
-sed -i -e "1,/^---\$/ s/^\(  version: \)\"[^\"]*\"\$/\1\"$version\"/" \
+count=$(python3 "SECTIONS_PY" | wc -l)
+sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1\"$version\"/ }" \
   -e "s/\(This skill carries \)[0-9][0-9]*\( short guides\)/\1$count\2/" "$skill"
 ( cd "$dest" && sha256sum guide.md ) > "$dest/MANIFEST.sha256"
+""".replace("SECTIONS_PY", str(GATE.parent / "_verify_sections.py"))
+
+# The real scripts/build-plugin.sh runs on a fixture whose guide list and version-basis check are
+# stand-ins, because the real check needs the pinned parser; everything after them is the real
+# script, with the real tools/_verify_sections.py counting the guides.
+REAL_BUILD = GATE.parent.parent / "scripts" / "build-plugin.sh"
+LIST_GUIDES = r"""#!/usr/bin/env bash
+printf '%s\n' guide.md
 """
+VERSION_BASIS = "import sys\nsys.exit(0)\n"
 
 PLUGIN_JSON = '{\n  "name": "fixture",\n  "version": "1.0.5",\n  "license": "CC0-1.0"\n}\n'
 SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
@@ -212,6 +223,53 @@ def added_guide(rebuilt):
     return change
 
 
+def skill_text(text):
+    """Commit SKILL.md as text and nothing rebuilt."""
+    def change(root):
+        write(root, SKILL, text)
+        commit(root)
+    return change
+
+
+def not_guides(rebuilt):
+    """Commit a dot-named .md file and a directory named *.md, which are not guides."""
+    def change(root):
+        write(root, ".notes.md", "not a guide\n")
+        write(root, "drafts.md/note.txt", "not a guide\n")
+        if rebuilt:
+            build(root)
+        commit(root)
+    return change
+
+
+def real_build(skill_md, expected, needle):
+    """Run the real build-plugin.sh on a fixture holding skill_md, with one guide and two .md
+    names that are not guides; on success, SKILL.md must name VERSION 1.0.5 and 1 guide."""
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory) / "repo"
+        root.mkdir()
+        write(root, "scripts/build-plugin.sh", REAL_BUILD.read_text(encoding="utf-8"))
+        write(root, "scripts/build-llms-full.sh", LIST_GUIDES)
+        write(root, "tools/version_basis.py", VERSION_BASIS)
+        for name in ("_verify_sections.py", "_markdown.py"):
+            write(root, "tools/" + name, (GATE.parent / name).read_text(encoding="utf-8"))
+        write(root, "guide.md", "first text\n")
+        write(root, ".notes.md", "not a guide\n")
+        write(root, "drafts.md/note.txt", "not a guide\n")
+        write(root, "VERSION", "1.0.5\n")
+        write(root, "plugin/plugin.json", PLUGIN_JSON)
+        write(root, SKILL, skill_md)
+        done = subprocess.run(["bash", "scripts/build-plugin.sh"], cwd=root, capture_output=True,
+                              text=True, env=environment(root), timeout=120)
+        output = done.stdout + done.stderr
+        assert done.returncode == expected, ("real build", done.returncode, expected, output)
+        assert needle in output, (needle, output)
+        if expected == 0:
+            text = (root / SKILL).read_text(encoding="utf-8")
+            assert '  version: "1.0.5"\n' in text and "carries 1 short guides" in text, text
+    return 1
+
+
 def manifest(text):
     def change(root):
         write(root, "plugin/plugin.json", text)
@@ -315,6 +373,38 @@ def main():
         # sed range or to the gate.
         count += case(skill("short guides.\n", 'short guides.\n  version: "1.0.4"\n'),
                       args=rebuild, also=(REBUILT,))
+        # Nor does one satisfy them: a stale metadata version with a current decoy in the body,
+        # a version line outside the metadata mapping, and no front matter at all.
+        stale = SKILL_MD.replace('"1.0.5"', '"1.0.4"')
+        count += case(skill_text(stale + '  version: "1.0.5"\n'), expected=1,
+                      needle=SKILL + " as committed names version '1.0.4' but VERSION as "
+                             "committed is '1.0.5'")
+        count += case(skill("metadata:\n", "other:\n"), expected=1,
+                      needle=SKILL + " as committed has 0 metadata version lines in its front "
+                             "matter, not 1")
+        count += case(skill_text(SKILL_MD.replace("---\n", "")), expected=1,
+                      needle=SKILL + ' as committed has no front matter between a "---" first '
+                             'line and a closing "---" line')
+        # One count definition: a dot-named .md file and a directory named *.md are not guides
+        # to the build or the gate (each was one to the shell glob or to the earlier guides()).
+        count += case(not_guides(False), also=("SKILL.md names it and states 1 guides; ",))
+        count += case(not_guides(True), args=rebuild,
+                      also=("SKILL.md names it and states 1 guides, and " + REBUILT,))
+
+        # The real build-plugin.sh rewrites only the metadata version in the front matter and
+        # the count sentence, and refuses when either is not there to rewrite, decoy or not.
+        count += real_build(stale, 0, "wrote plugin/skills/secure-deployment-config/references")
+        count += real_build((GATE.parent.parent / SKILL).read_text(encoding="utf-8"), 0,
+                            "wrote plugin/skills/secure-deployment-config/references")
+        refused = "SKILL.md version did not update to 1.0.5"
+        count += real_build(SKILL_MD.replace('"1.0.5"', "1.0.4") + '  version: "1.0.5"\n', 1,
+                            refused)
+        count += real_build(SKILL_MD.replace('  version: "1.0.5"\n', "")
+                            + '  version: "1.0.5"\n', 1, refused)
+        count += real_build(SKILL_MD.replace("metadata:\n", "other:\n"), 1, refused)
+        count += real_build(SKILL_MD.replace("---\n", ""), 1, refused)
+        count += real_build(SKILL_MD.replace("This skill carries", "This skill has"), 1,
+                            "SKILL.md guide count did not update to 1")
 
         # Fail closed: a revision that is not a commit, an option-shaped revision, a directory
         # that is not a repository, and a repository with no commit.

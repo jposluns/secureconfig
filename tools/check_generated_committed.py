@@ -19,11 +19,12 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   to VERSION as committed, read the way scripts/build-plugin.sh reads it (`$(cat VERSION)`,
   which drops trailing newlines). This runs before any build, so a bump without a rebuild is
   reported in those words and not only as a changed file;
-- plugin/skills/secure-deployment-config/SKILL.md as committed has exactly 1 metadata line
-  `  version: "..."` in its front matter, naming that VERSION, and states "This skill carries N
-  short guides" exactly once, with N the guide-counts gate's set in the commit: every root *.md
-  outside not_a_guide, less README.md, as guides() in tools/_verify_sections.py reads it. That
-  module is this gate's own copy, not the commit's;
+- plugin/skills/secure-deployment-config/SKILL.md as committed opens with front matter (line 1
+  is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
+  `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
+  version-shaped line elsewhere does not count. It states "This skill carries N short guides"
+  exactly once, with N the guide-counts gate's set in the commit, as counted_guides() in
+  tools/_verify_sections.py lists it. That module is this gate's own copy, not the commit's;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -67,14 +68,14 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _verify_sections import guides  # noqa: E402  the guide-counts gate's guide set
+from _verify_sections import counted_guides  # noqa: E402  the guide-counts gate's guide set
 
 LLMS_FULL = "site/llms-full.txt"
 PLUGIN = "plugin"
 MANIFEST = "plugin/plugin.json"
 SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
-# What scripts/build-plugin.sh rewrites in SKILL.md: the metadata version line in the front matter,
-# and the guide count in this sentence.
+# What scripts/build-plugin.sh rewrites in SKILL.md: the version line of the metadata mapping in
+# the front matter (metadata_versions() below), and the guide count in this sentence.
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
 SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
@@ -182,23 +183,49 @@ def version_findings(version_text, manifest_text):
 
 
 def guide_count(tree):
-    """The guides the guide-counts gate counts: root *.md outside not_a_guide, less README.md."""
-    return sum(1 for path in guides(tree) if path.name != "README.md")
+    """The guides the guide-counts gate counts: counted_guides() in tools/_verify_sections.py."""
+    return len(counted_guides(tree))
+
+
+def metadata_versions(lines):
+    """The "  version:" lines of the metadata mapping in SKILL.md's front matter, or None.
+
+    The scope is the one scripts/build-plugin.sh rewrites and confirms: the front matter runs from
+    line 1, which must be "---", to the next "---" line, and the mapping from a "metadata:" line to
+    the next line that does not start with a space. None means no front matter, or one not closed.
+    """
+    if not lines or lines[0] != "---":
+        return None
+    found, inside = [], False
+    for line in lines[1:]:
+        if line == "---":
+            return found
+        if inside:
+            if line and not line.startswith(" "):
+                inside = False
+            elif line.startswith("  version:"):
+                found.append(line)
+        elif line == "metadata:":
+            inside = True
+    return None
 
 
 def skill_findings(version_text, skill_text, count):
     """Findings for the committed SKILL.md version and guide count against the commit."""
     version = version_text.rstrip("\n")
-    lines = skill_text.split("\n")
-    # The front matter as build-plugin.sh's sed range reads it: line 1 to the next "---" line.
-    end = next((i for i in range(1, len(lines)) if lines[i] == "---"), len(lines) - 1)
-    stated = [m[1] for line in lines[:end + 1] if (m := SKILL_VERSION.fullmatch(line))]
+    stated = metadata_versions(skill_text.split("\n"))
     findings = []
-    if len(stated) != 1:
+    if stated is None:
+        findings.append(f'{SKILL} as committed has no front matter between a "---" first line and '
+                        f'a closing "---" line; {REMEDY}')
+    elif len(stated) != 1:
         findings.append(f"{SKILL} as committed has {len(stated)} metadata version lines in its "
                         "front matter, not 1")
-    elif stated[0] != version:
-        findings.append(f"{SKILL} as committed names version {stated[0]!r} but VERSION as "
+    elif not (match := SKILL_VERSION.fullmatch(stated[0])):
+        findings.append(f"{SKILL} as committed has the metadata version line {stated[0]!r}, not "
+                        "in the form '  version: \"...\"' that scripts/build-plugin.sh rewrites")
+    elif match[1] != version:
+        findings.append(f"{SKILL} as committed names version {match[1]!r} but VERSION as "
                         f"committed is {version!r}; {REMEDY}")
     counts = SKILL_COUNT.findall(skill_text)
     if len(counts) != 1:
@@ -206,7 +233,7 @@ def skill_findings(version_text, skill_text, count):
                         f"{len(counts)} times, not once")
     elif int(counts[0]) != count:
         findings.append(f"{SKILL} as committed states {counts[0]} guides but the commit has "
-                        f"{count} (root *.md outside not_a_guide, less README.md); {REMEDY}")
+                        f"{count} (counted_guides() in tools/_verify_sections.py); {REMEDY}")
     return findings
 
 
