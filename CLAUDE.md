@@ -154,15 +154,28 @@ copied from the shared site template by `scripts/copy-baseline.py` and pinned in
 
 Site drafts are reviewed off the live site (the template's SPECIFICATION section 4.1, from
 baseline 1.11.0). A draft is built on a branch named `draft` with
-`python3 -I -B scripts/build-site.py --base /draft/ --out site/draft`. Cloudflare Pages (project
-`secureconfig`) deploys that branch at `https://draft.secureconfig.pages.dev`, so the owner
+`python3 -I -B scripts/build-site.py --base /draft/ --out site/draft`, which writes the pages
+only. The template's item 1 also puts the baseline files under the draft
+(`/draft/assets/baseline/`); from the repository root, copy the pinned files there with
+`python3 -I -c "import shutil; shutil.copytree('site/assets/baseline', 'site/draft/assets/baseline')"`,
+which refuses to run if that folder exists. Cloudflare Pages (project `secureconfig`) deploys
+that branch at `https://draft.secureconfig.pages.dev` once its Pages build passes, so the owner
 reviews the draft at `https://draft.secureconfig.pages.dev/draft/`. `main` never carries
-`/draft/`: the root build writes no page there, and `scripts/build-site.py --check` and
-`tools/check_draft.py` fail if anything appears under `site/draft/`. On the `draft` branch, each
-gate that scans every HTML file either covers the draft under the template's rules or excludes
-`/draft/` explicitly. Promotion follows the template's item 5: only after the owner approves, 1
-pull request from `draft` to `main` takes every step that item lists, among them rebuilding the
-draft at base `/` and removing the `/draft/` noindex rules and any gate exclusion.
+`/draft/`: the root build writes no page there, `scripts/build-site.py --check` refuses every file
+under `site/draft/` but skips folders, so an empty folder there passes it, and
+`tools/check_draft.py` refuses any `site/` entry named `draft` in any case, folder or file, empty
+or not. Those checks refuse the staged tree on the `draft` branch too, and no gate excludes
+`/draft/` today. So the `draft` branch's Pages build (`scripts/pages-build.sh`) fails until that
+branch gives each of these checks an explicit `/draft/` exclusion, or makes it cover the draft
+under the template's rules (item 3): the root `--check`, `tools/check_draft.py` and
+`tools/check_csp_hashes.py`. The last one's head-line and script models refuse the staged pages,
+and it refuses any `X-Robots-Tag` rule, so that branch's exclusion must admit the
+`X-Robots-Tag: noindex` rule for `/draft/*` that item 2 requires. The gate suite's overflow
+page list in `tools/run_all_checks.sh`, which the Pages build does not run, refuses every
+`.html` or `.htm` page under the draft, though not other files or an empty folder, and needs the
+same exclusion on that branch. Promotion follows the template's item 5: only after the owner
+approves, 1 pull request from `draft` to `main` takes every step that item lists, among them
+rebuilding the draft at base `/` and removing the `/draft/` noindex rules and any gate exclusion.
 
 `.claude/settings.json` is merged by `tools/gen_aiqt_settings.py` from the vendored hooks manifest.
 It also carries hooks this repository does not own, so never overwrite it by hand.
