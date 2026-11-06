@@ -1431,7 +1431,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "380a934227670b3c89bf2917119fc9421993e6ba66bec88510d178d30be91fad",
+  "body_sha256": "68d7a4cbc524ade2f68b835cc89ab8eb3a9b0e650f952cd4ab0138f3729d4f8b",
   "components": {
     "pb": {
       "name": "PocketBase",
