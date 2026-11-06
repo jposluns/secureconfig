@@ -575,8 +575,12 @@ echo "== README's stated guide and category counts match the corpus =="
 # those numerals. The count sentence is matched in any letter case, with any whitespace between
 # words, after HTML comments are stripped. The "## What this is" section must hold exactly one
 # match, and any match elsewhere in README.md fails, so a stale copy can neither mask a wrong count
-# nor drift unchecked. The guide count is checked against the root guides (every root *.md outside
-# not_a_guide, less README.md itself), the same set the wiring gate above walks. The README guide
+# nor drift unchecked. The guide count is checked against the root guides that
+# `python3 tools/_verify_sections.py` lists (counted_guides(): every root regular file *.md
+# whose name does not start with ".", outside not_a_guide, less README.md itself).
+# scripts/build-plugin.sh and tools/check_generated_committed.py count SKILL.md's guides with
+# that same function, so a dot-named file or a directory named *.md cannot make the counts
+# differ. The README guide
 # index must list exactly that set, once each, so the two definitions of the guide count cannot
 # drift apart. The category count is checked against the "###" headings of "## Guide index".
 # Both sections and the "###" headings come from the pinned CommonMark parser that the
@@ -586,9 +590,8 @@ echo "== README's stated guide and category counts match the corpus =="
 # gate fails if the pinned parser is unavailable. A reworded, missing or misplaced count sentence
 # fails closed rather than passing unchecked.
 guide_files=()
-for f in *.md; do
-  not_a_guide "$f" || [ "$f" = README.md ] || guide_files+=("$f")
-done
+guide_list=$(python3 tools/_verify_sections.py) || bad "tools/_verify_sections.py could not list the root guides"
+[ -z "$guide_list" ] || mapfile -t guide_files <<< "$guide_list"
 if count_diff=$(python3 - "${guide_files[@]}" <<'PY'
 import re, sys
 
@@ -657,7 +660,7 @@ if len(rows) != len(set(rows)) or set(rows) != set(guides):
                     f"not indexed: {missing!r}; listed more than once: {twice!r}")
 if stated_guides != len(guides):
     problems.append(f"README.md states {stated_guides} guides but the root has "
-                    f"{len(guides)} guides (root *.md outside not_a_guide, less README.md)")
+                    f"{len(guides)} guides (counted_guides() in tools/_verify_sections.py)")
 if stated_cats != len(cats):
     problems.append(f"README.md states {stated_cats} categories but its '## Guide index' "
                     f"section has {len(cats)} '###' category headings")
