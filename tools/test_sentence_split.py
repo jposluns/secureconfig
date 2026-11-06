@@ -328,6 +328,72 @@ class CodeSpanComments(unittest.TestCase):
                           (4, "Also seen.")])
 
 
+class ParagraphEnds(unittest.TestCase):
+    """Where CommonMark ends a paragraph, a code span cannot pair past it, so a real comment
+    after it stays hidden (QA round 1 on #1235). A thematic break or a setext underline is
+    still read as a line of the unit, as the module docstring says."""
+
+    def test_lone_quote_marker_ends_the_paragraph(self):
+        self.assertEqual(guide("> Text `code\n>\n> Text <!-- Hidden. -->` after.\n"),
+                         [(1, "Text `code"), (3, "Text ` after.")])
+
+    def test_thematic_break_ends_the_paragraph(self):
+        self.assertEqual(guide("Text with ` stray.\n***\nAnother <!-- a ` b --> end.\n"),
+                         [(1, "Text with ` stray. *** Another  end.")])
+
+    def test_setext_underlines_end_the_paragraph(self):
+        for underline in ("---", "==="):
+            self.assertEqual(guide(f"Head ` x\n{underline}\nAnd <!-- c ` d --> e.\n"),
+                             [(1, f"Head ` x {underline} And  e.")])
+
+    def test_html_block_start_ends_the_paragraph(self):
+        self.assertEqual(guide("Use ` here.\n<div>\nThen <!-- e ` f --> g.\n</div>\n"),
+                         [(1, "Use ` here. <div> Then  g. </div>")])
+
+    def test_table_cells_are_read_one_at_a_time(self):
+        self.assertEqual(guide("| `a | b <!-- x --> ` |\n| --- | --- |\n"
+                               "| c <!-- y | z --> |\n"),
+                         [(1, "`a"), (1, "b  `"), (3, "c <!-- y"), (3, "z -->")])
+
+    def test_item_numbered_2_does_not_interrupt_a_paragraph(self):
+        self.assertEqual(guide("See `a\n2. <!-- b` c. Shown?\n\nMore text.\n"),
+                         [(1, "See `a"), (2, "<!-- b` c."), (2, "Shown?"), (4, "More text.")])
+
+    def test_sibling_item_ends_the_paragraph(self):
+        self.assertEqual(guide("1. Use ` here.\n2. Then <!-- b ` --> c.\n"),
+                         [(1, "Use ` here."), (2, "Then  c.")])
+
+    def test_nested_item_numbered_2_does_not_end_the_paragraph(self):
+        self.assertEqual(guide("- See `a\n  2. b` c. Shown.\n"),
+                         [(1, "See `a"), (2, "b` c."), (2, "Shown.")])
+
+
+class CommentOpeners(unittest.TestCase):
+    """A `<!--` that CommonMark reads as text hides nothing (QA round 1 on #1235)."""
+
+    def test_escaped_opener_is_text(self):
+        self.assertEqual(guide("An \\<!-- escaped. Shown.\n\nMore text.\n"),
+                         [(1, "An <!-- escaped."), (1, "Shown."), (3, "More text.")])
+
+    def test_opener_with_no_closer_in_its_paragraph_is_text(self):
+        self.assertEqual(guide("A <!-- with no closer. Shown.\n\nMore -->text.\n"),
+                         [(1, "A <!-- with no closer."), (1, "Shown."), (3, "More -->text.")])
+
+    def test_short_comments_close_at_once(self):
+        for opener in ("<!-->", "<!--->"):
+            self.assertEqual(guide(f"A {opener} empty. Shown.\n\nMore -->text.\n"),
+                             [(1, "A  empty."), (1, "Shown."), (3, "More -->text.")])
+
+    def test_comment_across_lines_of_its_paragraph_is_hidden(self):
+        self.assertEqual(guide("A <!-- spans\nlines --> here. Shown.\n"),
+                         [(1, "A here."), (2, "Shown.")])
+
+    def test_comment_block_with_no_closer_hides_to_the_end(self):
+        self.assertEqual(guide("Text\n<!-- block\n\nstill hidden -->\nAfter.\n"),
+                         [(1, "Text"), (5, "After.")])
+        self.assertEqual(guide("Text\n<!-- block\n\nHidden too.\n"), [(1, "Text")])
+
+
 class Command(unittest.TestCase):
     def run_cli(self, text, *args):
         with tempfile.TemporaryDirectory() as directory:

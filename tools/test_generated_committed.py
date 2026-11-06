@@ -27,12 +27,16 @@ parser is absent or another version,
 every case that needs it is skipped and counted in a "skip" line naming the reason, and so is
 each when the parser cannot be loaded at all. 2 cases run on every host and confirm that the gate
 and the real build refuse when the parser is not the pinned one: each runs on a copy of the tools
-whose lock pins a markdown-it-py version other than the installed one. 6 more run on every host
-and confirm that when the parser cannot be loaded at all, from a lock that cannot be parsed or a
-markdown_it package without the version metadata of markdown-it-py or mdurl, the gate reports the
-commit as not checked and the real build refuses, each in one line naming the cause.
+whose lock pins a markdown-it-py version other than the installed one. 8 more run on every host
+and confirm that when the parser cannot be loaded at all, with no lock, a lock that cannot be
+parsed or a markdown_it package without the version metadata of markdown-it-py or mdurl, the gate
+reports the commit as not checked and the real build refuses, each in one line naming the cause.
+No case that needs no parser reads tools/requirements-gates.txt, and a last case runs this
+self-test on a copy without that file, which must still run those cases and name the missing
+lock in its skip line.
 """
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -62,9 +66,12 @@ def parser_problem():
 
 
 PARSER_PROBLEM = parser_problem()
-# What gate_parser() reads beside itself, and what the gate and the build import.
-TOOLS = ("_verify_sections.py", "_markdown.py", "check_verify_marking.py",
-         "requirements-gates.txt")
+# What the gate and the build import, and the lock gate_parser() reads beside them. A fixture
+# given its own lock never reads this one, so the cases that need no parser run without it.
+TOOLS = ("_verify_sections.py", "_markdown.py", "check_verify_marking.py")
+LOCK = "requirements-gates.txt"
+# A lock argument for a fixture that has no tools/requirements-gates.txt at all.
+ABSENT = object()
 
 
 def lock_text(markdown_it, mdurl):
@@ -368,8 +375,9 @@ def generated(root):
 def case(change, expected=0, needle=OK, *, also=(), absent=(), worktree_current=False,
          args=(), init=True, parser=True, lock=None, extra=None, lines=None):
     """Run the gate on a fixture repository after change; with lock, run a copy of the gate and
-    the modules it imports beside lock as its tools/requirements-gates.txt, and with extra, also
-    beside the files it maps, under an interpreter run with -S, which sees no installed package."""
+    the modules it imports beside lock as its tools/requirements-gates.txt, or beside no lock
+    for ABSENT, and with extra, also beside the files it maps, under an interpreter run with -S,
+    which sees no installed package."""
     if skipped(parser):
         return 0
     with tempfile.TemporaryDirectory() as directory:
@@ -380,7 +388,8 @@ def case(change, expected=0, needle=OK, *, also=(), absent=(), worktree_current=
             gate = Path(directory) / "tools" / GATE.name
             for name in (GATE.name, *TOOLS):
                 write(gate.parent, name, (GATE.parent / name).read_text(encoding="utf-8"))
-            write(gate.parent, "requirements-gates.txt", lock)
+            if lock is not ABSENT:
+                write(gate.parent, LOCK, lock)
             for name, text in (extra or {}).items():
                 write(gate.parent, name, text)
         write(root, "scripts/build-llms-full.sh", LLMS_BUILD)
@@ -511,7 +520,8 @@ def not_guides(rebuilt):
 
 def real_build(skill_md, expected, needle, parser=True, lock=None, extra=None, lines=None):
     """Run the real build-plugin.sh on a fixture holding skill_md, with one guide and two .md
-    names that are not guides, and with lock, when given, as its tools/requirements-gates.txt;
+    names that are not guides, and with lock, when given, as its tools/requirements-gates.txt,
+    or with none for ABSENT, in place of a copy of this repository's lock;
     with extra, also with the files it maps under tools/, and with a python3 first on PATH that
     runs this interpreter with -E and -S, which sees no installed package. On success, SKILL.md
     must name VERSION 1.0.5 and, outside its body's HTML comment blocks, 1 guide, once, on one
@@ -526,8 +536,10 @@ def real_build(skill_md, expected, needle, parser=True, lock=None, extra=None, l
         write(root, "tools/version_basis.py", VERSION_BASIS)
         for name in TOOLS:
             write(root, "tools/" + name, (GATE.parent / name).read_text(encoding="utf-8"))
-        if lock is not None:
-            write(root, "tools/requirements-gates.txt", lock)
+        if lock is None:
+            write(root, "tools/" + LOCK, (GATE.parent / LOCK).read_text(encoding="utf-8"))
+        elif lock is not ABSENT:
+            write(root, "tools/" + LOCK, lock)
         env = environment(root)
         if extra is not None:
             for name, text in extra.items():
@@ -564,6 +576,34 @@ def manifest(text):
 
 def init_only(root):
     git(root, "init", "-q")
+
+
+def without_lock(total):
+    """Run this self-test on a copy of the files it reads, less tools/requirements-gates.txt.
+
+    The copy must start, run every case that needs no parser, skip the rest in a skip line that
+    names the missing lock, and exit 0, so its run and skip counts add up to total, the cases run
+    or skipped before this one. In the copy, which finds no lock beside it, this case returns 0.
+    """
+    if not (GATE.parent / LOCK).exists():
+        return 0
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        for name in (Path(__file__).name, GATE.name, *TOOLS):
+            write(root, "tools/" + name, (GATE.parent / name).read_text(encoding="utf-8"))
+        write(root, "scripts/build-plugin.sh", REAL_BUILD.read_text(encoding="utf-8"))
+        write(root, SKILL, (GATE.parent.parent / SKILL).read_text(encoding="utf-8"))
+        copy = root / "tools" / Path(__file__).name
+        done = subprocess.run([sys.executable, "-I", "-B", str(copy)], capture_output=True,
+                              text=True, env=environment(root), timeout=1800)
+        output = done.stdout + done.stderr
+        assert done.returncode == 0, ("without the lock", done.returncode, output)
+        ran = re.search(r"^  ok    (\d+) recorded cases ", output, re.M)
+        skips = re.search(r"^  skip  (\d+) recorded cases need the pinned parser, which cannot run "
+                          r"here: the pinned parser cannot be loaded: FileNotFoundError: ",
+                          output, re.M)
+        assert ran and skips and int(ran[1]) + int(skips[1]) == total, (total, output)
+    return 1
 
 
 def main():
@@ -895,6 +935,14 @@ def main():
             count += real_build(SKILL_MD, 1, "the pinned parser " + CANNOT_LOAD + cause
                                 + "; refusing to build", parser=None, lock=lock, extra=extra,
                                 lines=1)
+        # And so does each when there is no lock to read.
+        missing = "FileNotFoundError: [Errno 2] No such file or directory: "
+        count += case(nothing, expected=2, parser=None, lock=ABSENT, lines=1,
+                      needle="  FAIL  cannot check commit ",
+                      also=(SKILL + "'s guide count is checked with the pinned parser, which "
+                            + CANNOT_LOAD + missing,))
+        count += real_build(SKILL_MD, 1, "the pinned parser " + CANNOT_LOAD + missing,
+                            parser=None, lock=ABSENT, lines=1)
 
         # Known limit: the index is not read, so a fix staged and not committed still fails.
         count += case(bump(False, stage_after=True), expected=1,
@@ -903,6 +951,10 @@ def main():
         # a commit whose generated files are stale; the working-tree staleness gates, which
         # run before it in tools/run_all_checks.sh, fail that same tree.
         count += case(unbuilt_guide, also=(DEFERRED,))
+
+        # Without tools/requirements-gates.txt this self-test still starts, runs the cases that
+        # need no parser and names the missing lock in its skip line (QA round 1 on #1235).
+        count += without_lock(count + len(SKIPPED))
     except (AssertionError, OSError, subprocess.SubprocessError) as exc:
         print(f"  FAIL  committed-generated-files gate self-test: {exc}")
         return 1

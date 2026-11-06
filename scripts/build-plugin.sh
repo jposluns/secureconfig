@@ -32,9 +32,11 @@ fi
 # gate_parser() in tools/check_verify_marking.py. When that parser cannot be loaded at all, from a
 # lock it cannot read or parse or from a markdown_it package without the installed version
 # metadata of markdown-it-py or mdurl, gate_parser() raises something other than
-# ParserUnavailable, which would end the first of those checks in a traceback, so the build
-# refuses here first, in one line naming the cause. An absent or mismatched parser, which raises
-# ParserUnavailable, is left to the checks below, which refuse it in their own words.
+# ParserUnavailable. The version-basis check below already refuses a lock it cannot read or parse
+# in one line of its own, but it does not catch the PackageNotFoundError of missing metadata,
+# which ends it in a traceback, so the build refuses each of these here first, in one line naming
+# the cause. An absent or mismatched parser, which raises ParserUnavailable, is left to the checks
+# below, which refuse it in their own words.
 python3 - <<'PY'
 import sys
 sys.path.insert(0, "tools")
