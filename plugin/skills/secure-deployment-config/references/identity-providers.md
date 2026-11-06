@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Microsoft Entra documentation (no recorded version), Authelia v4.39.28, oauth2-proxy v7.15.4, authentik source version/2026.8.3, Keycloak documentation 26.7.4, Ory Kratos v26.2.0, and Ory Hydra v26.2.0; 11 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
+Written against Microsoft Entra documentation (no recorded version), Authelia v4.39.28, oauth2-proxy v7.15.6, authentik source version/2026.8.3, Keycloak documentation 26.7.4, Ory Kratos v26.2.0, and Ory Hydra v26.2.0; 11 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -84,7 +84,7 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 ## Verify
 
 - REASONED: paired administrator MFA access, per the guide's cited Microsoft Entra security defaults and Conditional Access policy and Supabase MFA enforcement. No provider tenant, administrator test account or protected admin function is available; this item supplies no local command or configuration to execute. No login was observed. Exposed access permits a password-only or social-login-only session; fixed access denies that same admin function until MFA completes and then permits it. With only the password (or only a social login) an administrator cannot reach an admin function once MFA is required at the provider; test with a fresh session, and confirm the same admin function DOES succeed once MFA is completed, so the denial is MFA enforcement and not an unrelated failure.
-- REASONED: allowed and excluded account comparison, per the guide's cited oauth2-proxy v7.15.4 GitHub organization/team restrictions and username exception, Google ID-token hosted-domain claim and Microsoft Entra tenant and application assignment documentation; group-based assignment requires Entra P1 or P2 at the time of writing. No connected application or allowed/excluded provider accounts are available; this item supplies no local command or configuration to execute. No login was observed. Exposed authorization admits a valid outside account; fixed authorization rejects it while admitting an allowed account. A valid account from outside your allowlist (a personal Gmail, a different tenant, a non-member GitHub user) is rejected after login, not admitted, while an allowed account does reach the app, so the rejection is the allowlist and not a broken login path.
+- REASONED: allowed and excluded account comparison, per the guide's cited oauth2-proxy v7.15.6 GitHub organization/team restrictions and username exception, Google ID-token hosted-domain claim and Microsoft Entra tenant and application assignment documentation; group-based assignment requires Entra P1 or P2 at the time of writing. No connected application or allowed/excluded provider accounts are available; this item supplies no local command or configuration to execute. No login was observed. Exposed authorization admits a valid outside account; fixed authorization rejects it while admitting an allowed account. A valid account from outside your allowlist (a personal Gmail, a different tenant, a non-member GitHub user) is rejected after login, not admitted, while an allowed account does reach the app, so the rejection is the allowlist and not a broken login path.
 - REASONED: correlation of sign-in assurance and application authorization, per the guide's cited Microsoft Entra sign-in logs and Microsoft Entra security defaults. No provider test events or application decision logs are available; this item supplies no local command or configuration to execute. No logs were inspected. Exposed decisions admit insufficient assurance or an outside account; fixed decisions require the factor and deny the outside account, corroborated with sign-in records rather than inferred from login success alone. Correlate each test against the provider's sign-in log (in Microsoft Entra this is Sign-in logs, not Audit logs, which record configuration changes) and your application's authorization decision: confirm the required factor or assurance level was met and that the outside account was denied. A log entry alone shows only that a sign-in happened, not that MFA or the allowlist was enforced.
 
 ## Sources (checked September 2026)
@@ -116,7 +116,7 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 - Supabase MFA enforcement (pinned commit 10c7379c970ae4d2f30f3158194061cf5ffb8fc5, checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L96
 - Supabase `aal2` authorization policy (pinned commit 10c7379c970ae4d2f30f3158194061cf5ffb8fc5, checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L192-L196
 - Okta Verify TOTP, push and FastPass (pinned commit a4f65eea34b89af7f2f543e43a74a0dfbc709cd0, checked October 2026): https://github.com/okta/okta-developer-docs/blob/a4f65eea34b89af7f2f543e43a74a0dfbc709cd0/packages/@okta/vuepress-site/docs/guides/authenticators-okta-verify/main/index.md#L29
-- oauth2-proxy v7.15.4 GitHub organization/team restrictions and username exception (checked October 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/providers/github.md#L10-L14
+- oauth2-proxy v7.15.6 GitHub organization/team restrictions and username exception (checked November 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.6/docs/docs/configuration/providers/github.md#L10-L14
 - Zitadel OIDC and MFA capabilities (pinned commit ab3b44cd743709649e46f7708da2f6a6a70bc227, checked October 2026): https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/README.md#L121-L123
 - Zitadel MFA methods (pinned commit ab3b44cd743709649e46f7708da2f6a6a70bc227, checked October 2026): https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/apps/docs/content/guides/integrate/login-ui/mfa.mdx#L15-L19
 - Microsoft Authenticator passkey, passwordless and MFA support (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/authentication/concept-authentication-authenticator-app.md#L14
@@ -196,7 +196,7 @@ Components (recorded basis):
 - authelia-source: Authelia (v4.39.28)
 - supabase-docs: Supabase MFA documentation (10c7379c970ae4d2f30f3158194061cf5ffb8fc5)
 - okta-docs: Okta Verify documentation (a4f65eea34b89af7f2f543e43a74a0dfbc709cd0)
-- oauth2-proxy: oauth2-proxy (v7.15.4)
+- oauth2-proxy: oauth2-proxy (v7.15.6)
 - zitadel-source: Zitadel documentation (ab3b44cd743709649e46f7708da2f6a6a70bc227)
 - authentik-source: authentik source (version/2026.8.3)
 - keycloak-source: Keycloak documentation (26.7.4)
@@ -267,9 +267,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-21",
+  "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "7fd1b0cc8c353471bb6120eabce17eca4e34f2421ca767c69d31ce3e90b33a63",
+  "body_sha256": "f6ba36b06bb2c7487a2c2d2d9368763cd5cb9c6b6032ab8b6abac9889a510acb",
   "components": {
     "entra": {
       "name": "Microsoft Entra documentation",
@@ -404,9 +404,9 @@ Claims (full source mapping in the JSON block below):
     },
     "oauth2-proxy": {
       "name": "oauth2-proxy",
-      "basis": "v7.15.4",
+      "basis": "v7.15.6",
       "sources": {
-        "s6d5e39ce93b5": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/providers/github.md#L10-L14"
+        "s5b6b637c8ac1": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.6/docs/docs/configuration/providers/github.md#L10-L14"
       }
     },
     "zitadel-source": {
@@ -578,7 +578,7 @@ Claims (full source mapping in the JSON block below):
     "entra-every-signin": {"text": "At the time of writing, Entra P1 adds Conditional Access. An all-users, all-resources policy, initially in Report-only mode and excluding emergency-access accounts, requires MFA for included users when enforced; a separate Every time sign-in-frequency control requires repeated reauthentication, subject to a five-minute prompt tolerance. Security defaults instead prompt non-admin users when necessary. The cited passages do not establish a fresh MFA challenge on every resource access.", "components": ["entra", "entra-conditional"], "sources": ["entra:sd65e0717c272", "entra:s36db3cb5ed40", "entra-conditional:s9bf89b3e9f66", "entra-conditional:sc657c943e436", "entra-conditional:sb1623e284d92", "entra-conditional:se292d57dc695"], "status": "REASONED"},
     "application-allowlist": {"text": "Guide advice: after any provider login, the application or fronting layer must check a tenant, hosted-domain, group or explicit-user allowlist; accepting every Google or Microsoft account as staff is not authorization. Google documents the ID-token hd claim; Microsoft documents tenant issuer restriction and enterprise-application group assignment, which requires P1 or P2 at the time of writing. No fetched Google Workspace application-access page establishes a native admin-console allowlist.", "components": ["github", "aws-identity", "google-oidc-docs", "entra-allowlist"], "sources": ["github:s6b78ce27fabc", "aws-identity:sb1894f4f0139", "google-oidc-docs:sce9a29f93b69", "entra-allowlist:sb49c822a58e5", "entra-allowlist:sfdfe9683e4ff"], "status": "REASONED"},
     "firebase-data-policy": {"text": "Cloud Firestore Security Rules evaluate mobile/web client library requests after authentication; server client libraries bypass the Rules and use IAM. Supabase table grants decide permitted operations and RLS policies decide accessible rows. Supabase service_role bypasses RLS and must stay server-side.", "components": ["firebase", "supabase-rls-docs"], "sources": ["firebase:s5368f5c06957", "firebase:sd6071548f6fe", "firebase:s75d5ea2efd58", "supabase-rls-docs:sdb0688cb20c8"], "status": "REASONED"},
-    "github-proxy-workloads": {"text": "oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC gives workflows short-lived cloud-provider tokens. This guide's assessment is that workload OIDC is separate from human GitHub OAuth login.", "components": ["github", "oauth2-proxy", "github-docs"], "sources": ["github:s6b78ce27fabc", "oauth2-proxy:s6d5e39ce93b5", "github-docs:s4d638483756e"], "status": "REASONED"},
+    "github-proxy-workloads": {"text": "oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC gives workflows short-lived cloud-provider tokens. This guide's assessment is that workload OIDC is separate from human GitHub OAuth login.", "components": ["github", "oauth2-proxy", "github-docs"], "sources": ["github:s6b78ce27fabc", "oauth2-proxy:s5b6b637c8ac1", "github-docs:s4d638483756e"], "status": "REASONED"},
     "provider-authenticators": {"text": "Microsoft Authenticator and Okta Verify are provider-native; Google Account prompts on signed-in phones can replace a password or add a second step to it. Guide assessment beyond cited Entra, Okta and Google cases: an RFC 6238 app can use provider TOTP if algorithm, digits and period match. Listing every provider is more effort than this project wants; request one by GitHub issue or pull request.", "components": ["entra", "okta", "google-docs", "okta-docs", "entra-docs", "okta-totp-docs"], "sources": ["entra:s36db3cb5ed40", "okta:sc0f6f4461955", "google-docs:see25fce3a7a3", "okta-docs:sbad1704aaf36", "entra-docs:sa319646e1a02", "entra-docs:s4d3f93f998dd", "okta-totp-docs:s90c65e21037a", "okta-totp-docs:sd0899fd16083", "google-docs:s2c23c2e40308", "google-docs:s9680f27e2deb"], "status": "REASONED"},
     "provider-authenticators-entra": {"text": "Entra permits third-party OATH TOTP apps using an Entra-generated seed and programmable hardware tokens using a software setup seed; its hardware preview supports SHA-1 and SHA-256 with 30- or 60-second periods, while HOTP is unsupported. The cited page does not specify software-app algorithms, digits or periods.", "components": ["entra-docs"], "sources": ["entra-docs:s4d3f93f998dd"], "status": "REASONED"},
     "provider-authenticators-entra-software": {"text": "Entra's Authenticator page says Microsoft Authenticator can be a software token for OATH codes. Entra's token-management page says third-party software OATH tokens are enabled for sign-in by default; an Authentication Policy Administrator can disable them to prevent sign-in with a one-time password from a third-party Identity Provider. Neither page gives app algorithms, digits or periods.", "components": ["entra-docs"], "sources": ["entra-docs:s3d301a92e0bd", "entra-docs:s29290b7d7fef"], "status": "REASONED"},
