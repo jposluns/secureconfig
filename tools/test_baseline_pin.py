@@ -137,16 +137,16 @@ CASES = [
      edit_pin('"assets/baseline/copy.js" = "', '"assets/baseline/copy.js" = "x'), 1, "not a SHA-256"),
     ("a pin key outside assets/baseline/", edit_pin('"assets/baseline/copy.js" =', '"copy.js" ='), 1,
      "is not under assets/baseline/"),
-    ("a pin with no version", edit_pin('version = "1.11.0"', 'release = "1.11.0"'), 1,
+    ("a pin with no version", edit_pin('version = "1.11.1"', 'release = "1.11.1"'), 1,
      "no version"),
     ("a pin that is not TOML", edit_pin("[files]", "[files"), 1, "not valid TOML"),
     # QA round 1 of #1182: the pin must be the copy script's, and excluded material stays out.
     ("a pin at another version than the copy script's",
-     lambda d: (edit_pin('version = "1.11.0"', 'version = "1.3.1"')(d),
-                edit_pin("/baseline/1.11.0/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.11.0"),
-    ("an upstream URL for another version", edit_pin("/baseline/1.11.0/", "/baseline/1.3.1/"), 1,
-     "is not the URL of version 1.11.0"),
-    ("another archive digest", edit_pin('archive_sha256 = "7', 'archive_sha256 = "0'), 1,
+     lambda d: (edit_pin('version = "1.11.1"', 'version = "1.3.1"')(d),
+                edit_pin("/baseline/1.11.1/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.11.1"),
+    ("an upstream URL for another version", edit_pin("/baseline/1.11.1/", "/baseline/1.3.1/"), 1,
+     "is not the URL of version 1.11.1"),
+    ("another archive digest", edit_pin('archive_sha256 = "d', 'archive_sha256 = "0'), 1,
      "archive_sha256 is"),
     ("a copied, pinned file outside the copy script's list",
      pinned("extra.js", b"(function(){})();\n"), 1, "not in scripts/copy-baseline.py's RUNTIME list"),
@@ -198,7 +198,7 @@ CASES = [
      ".baseline/check_overflow.js is pinned but missing"),
     ("the overflow check's pin line removed", edit_pin_line('".baseline/check_overflow.js" ='), 1,
      "does not pin .baseline/check_overflow.js"),
-    ("the pristine copy", None, 0, "match baseline 1.11.0"),
+    ("the pristine copy", None, 0, "match baseline 1.11.1"),
 ]
 
 

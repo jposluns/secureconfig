@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Microsoft Entra documentation (no recorded version), Authelia v4.39.28, oauth2-proxy v7.15.6, authentik source version/2026.8.3, Keycloak documentation 26.7.4, Ory Kratos v26.2.0, and Ory Hydra v26.2.0; 11 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
+Written against Microsoft Entra documentation (no recorded version), Authelia v4.39.28, oauth2-proxy v7.15.6, authentik source version/2026.8.3, Keycloak documentation 26.8.2, Ory Kratos v26.2.0, and Ory Hydra v26.2.0; 11 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -124,10 +124,10 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 - authentik security advisory publication (version/2026.8.3, checked October 2026): https://github.com/goauthentik/authentik/blob/version/2026.8.3/SECURITY.md#L19-L23
 - authentik upgrade sequence and database backup (version/2026.8.3, checked October 2026): https://github.com/goauthentik/authentik/blob/version/2026.8.3/website/docs/install-config/upgrade.mdx#L27-L31
 - authentik PostgreSQL backup (version/2026.8.3, checked October 2026): https://github.com/goauthentik/authentik/blob/version/2026.8.3/website/docs/sys-mgmt/ops/backup-restore.mdx#L10-L18
-- Keycloak OTP policy and QR-code setup (26.7.4, checked October 2026): https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21
-- Keycloak security fix releases by severity and long-term support alternative for those unable to upgrade regularly (26.7.4, checked October 2026): https://github.com/keycloak/keycloak/blob/26.7.4/SECURITY.md#L44-L48
-- Keycloak upgrade order (26.7.4, checked October 2026): https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/upgrading/topics/intro.adoc#L5-L12
-- Keycloak realm export backup limits (26.7.4, checked October 2026): https://github.com/keycloak/keycloak/blob/26.7.4/docs/guides/server/importExport.adoc#L13-L15
+- Keycloak OTP policy and QR-code setup (26.8.2, checked November 2026): https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21
+- Keycloak security fix releases by severity and long-term support alternative for those unable to upgrade regularly (26.8.2, checked November 2026): https://github.com/keycloak/keycloak/blob/26.8.2/SECURITY.md#L44-L48
+- Keycloak upgrade order (26.8.2, checked November 2026): https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/upgrading/topics/intro.adoc#L5-L12
+- Keycloak realm export backup limits (26.8.2, checked November 2026): https://github.com/keycloak/keycloak/blob/26.8.2/docs/guides/server/importExport.adoc#L13-L15
 - Ory Kratos identity and MFA (v26.2.0, checked October 2026): https://github.com/ory/kratos/blob/v26.2.0/README.md#L37-L45
 - Ory Kratos Apache 2.0 security patch support (v26.2.0, checked October 2026): https://github.com/ory/kratos/blob/v26.2.0/SECURITY.md#L44-L51
 - Ory Kratos deployment options and Ory Network (v26.2.0, checked October 2026): https://github.com/ory/kratos/blob/v26.2.0/README.md#L78-L90
@@ -154,7 +154,7 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 - Supabase table grants and RLS policies (pinned commit 10c7379c970ae4d2f30f3158194061cf5ffb8fc5, checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/database/postgres/row-level-security.mdx#L28-L60
 - GitHub Actions OIDC for workflow cloud access (pinned commit cb051611377a0d2904411e6157154e9b4953d870, checked October 2026): https://github.com/github/docs/blob/cb051611377a0d2904411e6157154e9b4953d870/content/actions/concepts/security/openid-connect.md#L19-L23
 - Okta passkey authenticator policies (pinned commit a4f65eea34b89af7f2f543e43a74a0dfbc709cd0, checked October 2026): https://github.com/okta/okta-developer-docs/blob/a4f65eea34b89af7f2f543e43a74a0dfbc709cd0/packages/@okta/vuepress-site/docs/guides/custom-passkeys/main/index.md#L17-L21
-- Keycloak passkey login (26.7.4, checked October 2026): https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/passkeys.adoc#L5-L8
+- Keycloak passkey login (26.8.2, checked November 2026): https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/server_admin/topics/authentication/passkeys.adoc#L5-L8
 - Zitadel passkeys (pinned commit ab3b44cd743709649e46f7708da2f6a6a70bc227, checked October 2026): https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/apps/docs/content/concepts/features/passkeys.mdx#L7-L15
 - Microsoft Entra OATH TOTP software apps, seeds and hardware preview (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/authentication/concept-authentication-oath-tokens.md#L15-L27
 - Okta Google Authenticator TOTP factor added by an admin (rolling documentation, basis unknown; checked October 2026): https://help.okta.com/en-us/content/topics/security/mfa/google-authenticator.htm
@@ -199,7 +199,7 @@ Components (recorded basis):
 - oauth2-proxy: oauth2-proxy (v7.15.6)
 - zitadel-source: Zitadel documentation (ab3b44cd743709649e46f7708da2f6a6a70bc227)
 - authentik-source: authentik source (version/2026.8.3)
-- keycloak-source: Keycloak documentation (26.7.4)
+- keycloak-source: Keycloak documentation (26.8.2)
 - ory-kratos: Ory Kratos (v26.2.0)
 - ory-hydra: Ory Hydra (v26.2.0)
 - google-oidc-docs: Google OpenID Connect documentation (unknown)
@@ -269,7 +269,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "f6ba36b06bb2c7487a2c2d2d9368763cd5cb9c6b6032ab8b6abac9889a510acb",
+  "body_sha256": "fdbefe28b0184721aaf4417e2f3a4e851bec9dfadcae5f5c59820a69e86b5ea4",
   "components": {
     "entra": {
       "name": "Microsoft Entra documentation",
@@ -430,13 +430,13 @@ Claims (full source mapping in the JSON block below):
     },
     "keycloak-source": {
       "name": "Keycloak documentation",
-      "basis": "26.7.4",
+      "basis": "26.8.2",
       "sources": {
-        "s1e55f7daaa0d": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21",
-        "s676048230ec9": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/passkeys.adoc#L5-L8",
-        "s25457fd213fc": "https://github.com/keycloak/keycloak/blob/26.7.4/SECURITY.md#L44-L48",
-        "s83557a0c1a35": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/upgrading/topics/intro.adoc#L5-L12",
-        "s8e1361985790": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/guides/server/importExport.adoc#L13-L15"
+        "sab71553daacd": "https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21",
+        "s6c15a8d999b9": "https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/server_admin/topics/authentication/passkeys.adoc#L5-L8",
+        "s718758a5df7b": "https://github.com/keycloak/keycloak/blob/26.8.2/SECURITY.md#L44-L48",
+        "se8310ea39db5": "https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/upgrading/topics/intro.adoc#L5-L12",
+        "s73b2f670dd8f": "https://github.com/keycloak/keycloak/blob/26.8.2/docs/guides/server/importExport.adoc#L13-L15"
       }
     },
     "ory-kratos": {
@@ -588,8 +588,8 @@ Claims (full source mapping in the JSON block below):
     "provider-authenticators-okta-settings": {"text": "Okta's Classic Engine Custom TOTP and Identity Engine custom OTP pages list TOTP length and OTP length (the number of digits) respectively, HMAC algorithm, time step, clock drift interval and shared-secret encoding, saying to match HMAC and encoding to the implementation, but no HMAC, encoding or length choices. Okta's Classic Engine Google Authenticator page states no period or algorithm.", "components": ["okta-totp-docs"], "sources": ["okta-totp-docs:sd0899fd16083", "okta-totp-docs:s6cdace14b67d", "okta-totp-docs:s90c65e21037a"], "status": "REASONED"},
     "provider-authenticators-google": {"text": "Google Authenticator help: with 2-Step Verification, Google Account sign-in can use the app's codes, even offline. Google's 2-Step Verification page says a user without internet or mobile service can set up Google Authenticator or another app that creates one-time verification codes, naming no other app. Neither page nor Workspace's deployment page gives these codes' algorithms, digits or periods.", "components": ["google-docs"], "sources": ["google-docs:s2c23c2e40308", "google-docs:s9680f27e2deb", "google-docs:s4e673839253c"], "status": "REASONED"},
     "provider-authenticators-google-defaults": {"text": "Google Authenticator's Key-Uri-Format wiki gives otpauth defaults of SHA1, 6 digits and a 30-second period and says, in notes unchanged since 2018, that the app's implementations ignore the algorithm and period parameters, and digits on Android and Blackberry. This guide's inference, not a Google statement about Google Account: its authenticator codes use SHA1, six digits and 30 seconds.", "components": ["google-authenticator-wiki", "google-docs"], "sources": ["google-authenticator-wiki:s7c1fe25bfffa", "google-docs:s2c23c2e40308"], "status": "REASONED"},
-    "admin-passkeys": {"text": "Microsoft Entra, Auth0, Okta, Keycloak and Zitadel document passkey or WebAuthn support. Guide advice: check each provider's tier before relying on availability and require phishing-resistant hardware keys or platform passkeys for administrators. The Auth0 pricing page lists passkeys on Free (September 2026), and Okta's passkey guide uses an Integrator Free Plan org; the cited pages do not establish production-tier availability for the five providers.", "components": ["entra-docs", "auth0", "okta-passkey-docs", "keycloak-source", "zitadel-source"], "sources": ["entra-docs:sa319646e1a02", "auth0:s6d62bb8ed8bf", "auth0:s5794c9fb8add", "okta-passkey-docs:s567594b07020", "keycloak-source:s676048230ec9", "zitadel-source:s27d60b6057d3"], "status": "REASONED"},
-    "self-hosted-mfa": {"text": "Self-hosted, Keycloak, authentik, Zitadel, Authelia and Ory Kratos, or Ory Hydra connected to an existing identity provider through a login and consent app, give you OIDC and MFA without a vendor (this guide's assessment where the cited ranges do not show it). Guide advice: for a self-hosted deployment, patch, back up and keep the identity service highly available.", "components": ["entra", "authelia-source", "zitadel-source", "authentik-source", "keycloak-source", "ory-kratos", "ory-hydra"], "sources": ["entra:s36db3cb5ed40", "authelia-source:se61b694f1b18", "authelia-source:sa874f6497a22", "zitadel-source:s729880406dc3", "authentik-source:sf805a10ca50a", "authentik-source:s8f5e451e02b4", "authentik-source:s7d192a1be39a", "zitadel-source:sd1f3f5ccaffa", "authentik-source:s18275a7072e9", "keycloak-source:s1e55f7daaa0d", "keycloak-source:s25457fd213fc", "keycloak-source:s83557a0c1a35", "keycloak-source:s8e1361985790", "ory-kratos:sa1328330301d", "ory-kratos:s3e746241fd0d", "ory-kratos:s0208175a002a", "ory-kratos:s557dc3b182b7", "ory-kratos:sd666b62f8a70", "ory-kratos:s3d2d98558214", "ory-hydra:s7735ed8cb7ad", "ory-hydra:se08c1e7174df", "ory-hydra:s58dac2f41ea0", "ory-hydra:s9e834fe62236"], "status": "REASONED"}
+    "admin-passkeys": {"text": "Microsoft Entra, Auth0, Okta, Keycloak and Zitadel document passkey or WebAuthn support. Guide advice: check each provider's tier before relying on availability and require phishing-resistant hardware keys or platform passkeys for administrators. The Auth0 pricing page lists passkeys on Free (September 2026), and Okta's passkey guide uses an Integrator Free Plan org; the cited pages do not establish production-tier availability for the five providers.", "components": ["entra-docs", "auth0", "okta-passkey-docs", "keycloak-source", "zitadel-source"], "sources": ["entra-docs:sa319646e1a02", "auth0:s6d62bb8ed8bf", "auth0:s5794c9fb8add", "okta-passkey-docs:s567594b07020", "keycloak-source:s6c15a8d999b9", "zitadel-source:s27d60b6057d3"], "status": "REASONED"},
+    "self-hosted-mfa": {"text": "Self-hosted, Keycloak, authentik, Zitadel, Authelia and Ory Kratos, or Ory Hydra connected to an existing identity provider through a login and consent app, give you OIDC and MFA without a vendor (this guide's assessment where the cited ranges do not show it). Guide advice: for a self-hosted deployment, patch, back up and keep the identity service highly available.", "components": ["entra", "authelia-source", "zitadel-source", "authentik-source", "keycloak-source", "ory-kratos", "ory-hydra"], "sources": ["entra:s36db3cb5ed40", "authelia-source:se61b694f1b18", "authelia-source:sa874f6497a22", "zitadel-source:s729880406dc3", "authentik-source:sf805a10ca50a", "authentik-source:s8f5e451e02b4", "authentik-source:s7d192a1be39a", "zitadel-source:sd1f3f5ccaffa", "authentik-source:s18275a7072e9", "keycloak-source:sab71553daacd", "keycloak-source:s718758a5df7b", "keycloak-source:se8310ea39db5", "keycloak-source:s73b2f670dd8f", "ory-kratos:sa1328330301d", "ory-kratos:s3e746241fd0d", "ory-kratos:s0208175a002a", "ory-kratos:s557dc3b182b7", "ory-kratos:sd666b62f8a70", "ory-kratos:s3d2d98558214", "ory-hydra:s7735ed8cb7ad", "ory-hydra:se08c1e7174df", "ory-hydra:s58dac2f41ea0", "ory-hydra:s9e834fe62236"], "status": "REASONED"}
   }
 }
 ````

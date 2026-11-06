@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.7.4, oauth2-proxy documentation v7.15.6, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL multifactor authentication 8.0 and 8.4, plus 9 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources.
+Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.8.2, oauth2-proxy documentation v7.15.6, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL multifactor authentication 8.0 and 8.4, plus 9 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -104,7 +104,7 @@ In this guide's assessment, unattended machine connections (service-to-service d
 - Duo Authentication Proxy RADIUS and LDAP modes (rolling documentation, checked October 2026): https://duo.com/docs/authproxy-reference
 - Google Workspace 2-Step Verification policy (rolling documentation, checked October 2026): https://knowledge.workspace.google.com/admin/security/deploy-2-step-verification
 - authentik source `version/2026.8.3`, authenticator-validation stage and allowed device classes (checked October 2026): https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L80-L108
-- Keycloak documentation `26.7.4`, OTP policy and QR-code setup (checked October 2026): https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21
+- Keycloak documentation `26.8.2`, OTP policy and QR-code setup (checked November 2026): https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21
 - oauth2-proxy documentation `v7.15.6`, configured OAuth provider (checked November 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.6/docs/docs/configuration/overview.md#L94-L108
 - oauth2-proxy documentation `v7.15.6`, configured upstream endpoints (checked November 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.6/docs/docs/configuration/overview.md#L305
 - Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, application session revocation (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L58-L62
@@ -176,7 +176,7 @@ Components (recorded basis):
 - webauthn: WebAuthn standard (unknown)
 - authelia: Authelia proxy support (unknown)
 - authentik-source: authentik source (version/2026.8.3)
-- keycloak-source: Keycloak documentation (26.7.4)
+- keycloak-source: Keycloak documentation (26.8.2)
 - oauth2-proxy-source: oauth2-proxy documentation (v7.15.6)
 - caddy-min: Caddy forward_auth minimum (2.5.1)
 - duo: Duo editions (unknown)
@@ -258,7 +258,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "131659e2f6f61e3d3a6c527cbef45da65f231224b4e010f7a808ba23cca94593",
+  "body_sha256": "bac1bf62e7639167fa222996b6f207cddd47b7e52a35a30260af1b0d9b23c5a0",
   "components": {
     "totp": {
       "name": "TOTP standard",
@@ -304,9 +304,9 @@ Claims (full source mapping in the JSON block below):
     },
     "keycloak-source": {
       "name": "Keycloak documentation",
-      "basis": "26.7.4",
+      "basis": "26.8.2",
       "sources": {
-        "s1e55f7daaa0d": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21"
+        "sab71553daacd": "https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21"
       }
     },
     "oauth2-proxy-source": {
@@ -618,7 +618,7 @@ Claims (full source mapping in the JSON block below):
     "factor-changes": {"text": "Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA.", "components": ["totp", "owasp-docs"], "sources": ["totp:s3190460e5d2d", "owasp-docs:s2940f630fb71"], "status": "REASONED"},
     "admin-factors": {"text": "Give administrators a phishing-resistant passkey or FIDO2 key wherever offered; TOTP is the floor and SMS is unacceptable for administrator accounts. OWASP advises MFA for privileged users; Microsoft Entra recommends phishing-resistant MFA for its administrator roles, and NIST SP 800-63B-4 section 2.2.2 requires it for federal staff, contractors and partners accessing federal systems and requires an AAL2 phishing-resistant option. The TOTP floor is this guide's advice; this guide requires that administrator accounts not use SMS, and OWASP advises against SMS for high-value applications.", "components": ["webauthn", "owasp-docs", "entra-docs", "nist"], "sources": ["webauthn:sef2c27817118", "owasp-docs:s95dac24ad579", "owasp-docs:sc030e5ded4b9", "entra-docs:s2ee634f73c4b", "nist:s2a689905c161"], "status": "REASONED"},
     "authelia-factors": {"text": "The body lists TOTP, WebAuthn security keys and Duo mobile push as Authelia second factors. Authelia v4.39.28 also documents passkey login, which counts as a single factor and by default prompts for a password when the request requires MFA.", "components": ["authelia", "authelia-source"], "sources": ["authelia:s1409ac8fe3d9", "authelia-source:sfeb54a05c30d", "authelia-source:s38726e46de86"], "status": "REASONED"},
-    "identity-layer-factors": {"text": "The authentik validation stage rejects a response unless the login's device challenges include a compatible class; Keycloak documents OTP policy for time-based (TOTP) and counter-based generators; oauth2-proxy configures an OAuth provider and routes to upstream endpoints. Requiring MFA in each protected login flow or provider policy and testing second-factor enforcement is this guide's advice.", "components": ["authentik-source", "keycloak-source", "oauth2-proxy-source"], "sources": ["authentik-source:s18275a7072e9", "keycloak-source:s1e55f7daaa0d", "oauth2-proxy-source:s523e9ec2bd77", "oauth2-proxy-source:sa2319a734772"], "status": "REASONED"},
+    "identity-layer-factors": {"text": "The authentik validation stage rejects a response unless the login's device challenges include a compatible class; Keycloak documents OTP policy for time-based (TOTP) and counter-based generators; oauth2-proxy configures an OAuth provider and routes to upstream endpoints. Requiring MFA in each protected login flow or provider policy and testing second-factor enforcement is this guide's advice.", "components": ["authentik-source", "keycloak-source", "oauth2-proxy-source"], "sources": ["authentik-source:s18275a7072e9", "keycloak-source:sab71553daacd", "oauth2-proxy-source:s523e9ec2bd77", "oauth2-proxy-source:sa2319a734772"], "status": "REASONED"},
     "totp-libraries": {"text": "The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. Each option generates and verifies RFC 6238 codes and pairs with a QR library so users can enrol a compatible TOTP authenticator app.", "components": ["totp", "pyotp-source", "python-qrcode-source", "django-otp-source", "otplib-source", "node-qrcode-source", "otp-source"], "sources": ["totp:s3190460e5d2d", "pyotp-source:sff126dae123b", "python-qrcode-source:s9481cd1c5c1c", "django-otp-source:s3b66277026d8", "otplib-source:s1cfb4a0cb98d", "node-qrcode-source:s427c06d742cf", "otp-source:s9dc96c06d6a0"], "status": "REASONED"},
     "ssh-pam-enforcement": {"text": "Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login.", "components": ["ssh-pam", "openssh-source"], "sources": ["ssh-pam:s3190460e5d2d", "openssh-source:sf299a4e3603a", "openssh-source:s862f0df9ce84"], "status": "REASONED"},
     "ssh-nullok": {"text": "Guide advice: remove nullok after rollout so accounts without a secret file are denied by this PAM module. google-authenticator-libpam is a PAM module supporting per-account TOTP. Guide assessment: it protects only the logins whose PAM services include it. Its setup command displays a QR code when libqrencode is available. Debian trixie and Ubuntu noble list libpam-google-authenticator as 20191231-based builds; the behaviour above is cited at tag 1.11.", "components": ["google-authenticator-libpam-source", "google-authenticator-libpam-packages"], "sources": ["google-authenticator-libpam-source:s7df1bfd61fef", "google-authenticator-libpam-source:s9ad5ca394e81", "google-authenticator-libpam-packages:sf33e01264f1d", "google-authenticator-libpam-packages:s598691ba0908"], "status": "REASONED"},
