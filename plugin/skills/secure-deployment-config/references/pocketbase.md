@@ -38,8 +38,8 @@ cited vendor documentation and the pinned sources that were available.
 
 From v0.41.0, PocketBase publishes its source and releases on its author's forge at
 `https://ganigeorgiev.com` instead of GitHub, so the PocketBase source citations below point to
-that forge at commit `f70b24e1`, which the v0.41.1 tag names, with any line range given in the
-link text. The
+that forge's pages for the v0.41.1 tag, as `rev=refs/tags/v0.41.1`, with any line range given in
+the link text. The
 [v0.41.0 release notes](https://ganigeorgiev.com/pocketbase/pocketbase/releases?expr=tag%3D%22v0.41.0%22)
 flag one change with a warning sign, the Go module's move from GitHub to the new host. No
 statement in this guide depends on the module path.
@@ -59,14 +59,14 @@ The installer URL contains a system-superuser authentication token valid for app
 30 minutes. A visitor registering an ordinary application user does not thereby become a
 superuser. Protect startup logs and the installer URL as credentials, and complete setup before
 publishing the proxy route. See the
-[pinned installer](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned installer](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=refs/tags/v0.41.1).
 
 PocketBase v0.38.0 and later can restrict superuser sessions by IP: set the allowed list under
 Settings > Application > Superuser IPs, or use the documented console example
 `./pocketbase superuser ips 127.0.0.1 10.0.0.0 --dir=/path/to/your/pb_data`, substituting your
 addresses and data directory. The setting is `superuserIPs`; an empty list imposes no restriction.
 See [production guidance](https://pocketbase.io/docs/going-to-production/) and the
-[pinned IP check](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned IP check](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares.go?rev=refs/tags/v0.41.1).
 
 This controls authenticated superuser requests, not public delivery of the dashboard's static
 assets. If the UI must be private, also restrict `/_/` at the proxy or network boundary.
@@ -78,20 +78,20 @@ PocketBase **has a native HTTPS listener with ACME integration**:
 `./pocketbase serve example.com` issues and renews a Let's Encrypt certificate for that domain.
 Alternatively, put it behind your own reverse proxy per [nginx.md](nginx.md) or
 [caddy.md](caddy.md) and terminate TLS there. See the
-[pinned TLS listener](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/serve.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned TLS listener](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/serve.go?rev=refs/tags/v0.41.1).
 
 Without a domain, `serve` binds to `127.0.0.1:8090`. With a domain, its default listeners become
 `0.0.0.0:80` and `0.0.0.0:443`. Behind a TLS proxy on the same host, keep
 `--http=127.0.0.1:8090` and omit the domain argument. Set `--origins=https://app.example.com`,
 replacing that origin with your real browser application origin; multiple origins are
 comma-separated. The default is `*`. CORS controls browser access and does not authorize records.
-See the [serve flags](https://ganigeorgiev.com/pocketbase/pocketbase/files/cmd/serve.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+See the [serve flags](https://ganigeorgiev.com/pocketbase/pocketbase/files/cmd/serve.go?rev=refs/tags/v0.41.1).
 
 Configure `trustedProxy.headers` only for headers your proxy strips and overwrites, such as
 `X-Real-IP`. Block direct backend access. Otherwise, attacker-supplied client-IP headers can
 undermine IP allowlists and rate limits. Review forwarded-header ordering before using
 `trustedProxy.useLeftmostIP`. See the
-[proxy settings](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[proxy settings](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1).
 
 `--dev` enables diagnostic logging, including SQL, to stderr; it is not an authentication bypass.
 In the pinned CLI wrapper, `Start()` registers the `serve` and `superuser` commands on the root
@@ -100,13 +100,13 @@ when `os.Args[0]` starts with a nonempty `os.TempDir()` or `cacheDir()` prefix, 
 In dev mode the pinned code logs executed SQL statements and lowers the logger
 threshold so practically all logs print. Avoid unnecessary production diagnostics and protect
 their output. See the
-[development-mode behavior](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63),
-[command wiring, lines 165 to 173](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63),
-[dev default selection, lines 73 to 79](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63),
-[go run detection, lines 10 to 19](https://ganigeorgiev.com/pocketbase/pocketbase/files/tools/osutils/run.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63),
-[flag-to-app wiring, lines 129 to 139](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63),
-[dev SQL logging, lines 1277 to 1286](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63), and
-[dev logger level, lines 1489 to 1499](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[development-mode behavior](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=refs/tags/v0.41.1),
+[command wiring, lines 165 to 173](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=refs/tags/v0.41.1),
+[dev default selection, lines 73 to 79](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=refs/tags/v0.41.1),
+[go run detection, lines 10 to 19](https://ganigeorgiev.com/pocketbase/pocketbase/files/tools/osutils/run.go?rev=refs/tags/v0.41.1),
+[flag-to-app wiring, lines 129 to 139](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=refs/tags/v0.41.1),
+[dev SQL logging, lines 1277 to 1286](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=refs/tags/v0.41.1), and
+[dev logger level, lines 1489 to 1499](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=refs/tags/v0.41.1).
 
 ### 3. Cover records, auth-record management, files, and realtime separately
 
@@ -117,21 +117,21 @@ the action to everyone, including unauthenticated guests. A nonempty rule filter
 Superusers bypass API rules entirely, so never hand a superuser account or token to a client
 application; use collection rules and scoped authentication instead. See
 [API rules](https://pocketbase.io/docs/api-rules-and-filters/) and the
-[pinned access check](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/record_query.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned access check](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/record_query.go?rev=refs/tags/v0.41.1).
 
 Auth collections additionally have a **top-level `manageRule`**, default `null`. It grants
 privileged management of another auth record, including changing its password without the old
 password and directly changing its email or verification state. It operates alongside create
 and update rules. Keep it locked unless that delegation is intentional. Its validator accepts
 `null` or a nonempty rule, **not `""`**. See the
-[pinned auth options and validator](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned auth options and validator](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=refs/tags/v0.41.1).
 
 **File fields are unprotected by default.** Knowing a file's full URL is sufficient to download
 it, even when the record's API rules are locked. For sensitive files, enable the field's
 **Protected** option and require an authorized identity in the collection's `viewRule`.
 A protected field with a public `viewRule` can still be downloaded publicly. See
 [file handling](https://pocketbase.io/docs/files-handling/) and the
-[pinned download authorization](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/file.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned download authorization](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/file.go?rev=refs/tags/v0.41.1).
 
 After authenticating as the intended ordinary user, obtain a short-lived file token with
 `await pb.files.getToken()` and supply it to `pb.files.getURL(record, filename, { token })`.
@@ -143,14 +143,14 @@ Realtime uses `listRule` for collection subscriptions and `viewRule` for individ
 subscriptions. An established SSE connection, or a successful subscription request, does not
 prove authorization to receive a particular record's events. Test actual event delivery with
 different users. See the
-[pinned realtime rule mapping](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/realtime.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63)
+[pinned realtime rule mapping](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/realtime.go?rev=refs/tags/v0.41.1)
 and [Realtime API](https://pocketbase.io/docs/api-realtime/).
 
 ### 4. Enable MFA and review authentication lifetimes
 
 These are the v0.41.1 auth-option initialization defaults, not a substitute for inspecting an
 existing collection's effective settings. Durations are seconds. See the
-[pinned defaults](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned defaults](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=refs/tags/v0.41.1).
 
 | Option | Default |
 | --- | --- |
@@ -169,7 +169,7 @@ enable both OTP and MFA. Leave `mfa.rule` empty to apply MFA to everyone in that
 This requires the password plus an email-delivered one-time code. **Enabling OTP alone is not
 MFA**; OTP can otherwise be a standalone login method. OAuth2 is unsupported for `_superusers`.
 See [authentication](https://pocketbase.io/docs/authentication/) and the
-[MFA configuration](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[MFA configuration](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=refs/tags/v0.41.1).
 
 For an application-user collection that should admit only verified accounts, set
 `authRule="verified = true"`. Provide working verification email before enforcing it. Keep
@@ -178,7 +178,7 @@ authentication alerts enabled and choose token lifetimes appropriate to the depl
 PocketBase authentication is stateless. Clearing `pb.authStore` removes the client's copy; it
 does not revoke a stolen copy. Do not treat browser logout as server-side token revocation.
 See [authentication semantics](https://pocketbase.io/docs/authentication/) and
-[token validation](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/record_query.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[token validation](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/record_query.go?rev=refs/tags/v0.41.1).
 
 ### 5. Protect persisted settings and backups
 
@@ -195,19 +195,19 @@ without `--encryptionEnv=PB_ENCRYPTION_KEY` is insufficient. This encrypts persi
 **not the database as a whole or uploaded files**. Protect the data directory, restrict backup
 access, and retain the encryption key separately. See
 [settings encryption](https://pocketbase.io/docs/going-to-production/) and
-[persistence code](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[persistence code](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1).
 
 Backups are local by default, and `backups.cron` defaults to empty, so automatic backups are
 off. Configure a schedule and retention deliberately. Archives contain the main and logs
 databases plus the rest of `pb_data`, excluding the backups directory and tracked exclusions.
 The source says uploaded collection files on S3 are outside `pb_data` and need manual backup;
-protect that storage separately. See [backup archive implementation, lines 36 to 60](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/backup_create.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63) and
-[backup settings](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+protect that storage separately. See [backup archive implementation, lines 36 to 60](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/backup_create.go?rev=refs/tags/v0.41.1) and
+[backup settings](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1).
 
 Backup downloads require a **superuser file token**, and the superuser IP restriction also
 applies. Ordinary auth tokens and ordinary-user file tokens do not grant backup access. Keep
 backup URLs private. See the
-[pinned backup download handler](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/backup.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned backup download handler](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/backup.go?rev=refs/tags/v0.41.1).
 
 ### 6. Enable rate limits and working authentication email
 
@@ -222,17 +222,17 @@ to **false**. Its seeded rules are:
 | `/api/` | 300 / 10 seconds |
 
 See [limiter availability](https://pocketbase.io/docs/going-to-production/) and
-[pinned defaults](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[pinned defaults](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1).
 Superusers and addresses in `rateLimits.excludedIPs` bypass the limiter. Keep exclusions narrow
 and test using an ordinary client from a non-excluded address. See the
-[bypass checks](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares_rate_limit.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+[bypass checks](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares_rate_limit.go?rev=refs/tags/v0.41.1).
 
 Configure SMTP before relying on OTP, alerts, verification, or recovery. `smtp.enabled` and
 `smtp.tls` both default to `false`; set the connection details and enforce transport protection
 appropriate to your mail service. With SMTP disabled, PocketBase falls back to system
 `sendmail`, which is not proof of deliverability. Test receipt in the intended mailbox.
-See [SMTP settings](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63)
-and [mailer selection](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+See [SMTP settings](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1)
+and [mailer selection](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=refs/tags/v0.41.1).
 
 ## Appwrite (self-hosted)
 
@@ -906,7 +906,7 @@ REASONED: console-origin and API selection; a live PocketBase or Appwrite stand-
 serves static `/_/` assets, and since 2.3.0 Appwrite builds console links from `_APP_CONSOLE_URL`,
 which 2.7.0 Compose passes without a value, and has dropped the legacy `/console/...` link shapes, so
 a `/console` path is deployment-dependent. Use the actual console origin and API endpoints below.
-See the [PocketBase installer](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63),
+See the [PocketBase installer](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=refs/tags/v0.41.1),
 [Appwrite Compose configuration](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/docker-compose.yml)
 and [Appwrite 2.3.0 release notes](https://github.com/appwrite/appwrite/releases/tag/2.3.0).
 
@@ -1043,8 +1043,8 @@ token must not create a superuser. On the private bootstrap fixture, the valid i
 must permit creating the operator. Confirm ordinary application-user registration never grants
 that privilege. After bootstrap, use a clean browser to inspect the deployed dashboard and
 exercise its API authorization; loading static assets is not evidence of administrative access.
-See the [installer](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63)
-and [record access checks](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/record_crud.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+See the [installer](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=refs/tags/v0.41.1)
+and [record access checks](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/record_crud.go?rev=refs/tags/v0.41.1).
 
 ### 3. Exercise the remaining controls
 
@@ -1055,14 +1055,14 @@ never command arguments.
 | Control | Required comparison |
 | --- | --- |
 | Appwrite console MFA | **REASONED:** Requires an unavailable live Appwrite console fixture and controlled operator account with a TOTP authenticator. Using the operator's session and `X-Appwrite-Project: console`, request `GET /v1/account` without an API key. With MFA disabled, password authentication permits this request. Enable MFA and verify the TOTP factor, then create a fresh password-only session: the same request must fail. As source reading of 2.7.0, the middleware throws `Exception::USER_MORE_FACTORS_REQUIRED` when a session holds fewer factors than the user's minimum, on routes outside its `mfa` group, and `GET /v1/account` is in the `api` and `account` groups. The error type string and status this produces are not established at 2.7.0, so record what the response returns. Complete the TOTP challenge in that session with a code not already redeemed, since 2.7.0 TOTP codes are single-use, and repeat the request: expect 200 with the operator's account data. See [console MFA](https://appwrite.io/docs/advanced/security/mfa), [MFA enforcement](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/app/controllers/shared/api.php), [account GET route groups](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Account/Http/Account/Get.php#L27-L30) and [single-use TOTP steps](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Auth/MFA/Challenge/TOTP.php#L30-L88). |
-| PocketBase writes and management | **REASONED:** Exercise `POST /api/collections/REPLACE_WITH_COLLECTION/records`, then `PATCH` and `DELETE` on disposable record URLs, using valid bodies. Public rules expose the actions; locked or restrictive rules must deny unauthorized changes while intended users still succeed. Separately attempt changing another auth record's email, password, and `verified` field: locked `manageRule` must not grant privileged management; an explicitly authorized manager must succeed only where intended. Confirm collection configuration rejects `manageRule=""`. See [CRUD handlers](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/record_crud.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63) and [management validation](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63). |
-| PocketBase protected files | **REASONED:** GET a known fixture file at `/api/files/REPLACE_WITH_COLLECTION/REPLACE_WITH_RECORD/REPLACE_WITH_FILENAME`. Before protection, its unsigned URL downloads despite locked record access. Enable Protected and a `viewRule` that permits the intended ordinary user but denies guests and an unrelated ordinary user. File-token issuance does not check access to a particular file: authenticated users can obtain tokens. Confirm the unrelated user's `pb.files.getToken()` succeeds, then GET the protected fixture using that user's token-bearing SDK URL: expect 404. The permitted user's `pb.files.getToken()` must also succeed, and GET with that user's token-bearing SDK URL must return the expected fixture bytes as a positive control. Separately, an unsigned guest GET of the same protected file must return 404. Use the SDK for signed URLs, or feed a protected curl configuration through stdin; that keeps the token-bearing URL out of curl's argv only. Prepare the file with an editor, not a shell command that contains the URL, which would put it in shell history and `set -x` tracing, and the account owner and root can still read the file and curl's memory. See [download checks](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/file.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63). |
+| PocketBase writes and management | **REASONED:** Exercise `POST /api/collections/REPLACE_WITH_COLLECTION/records`, then `PATCH` and `DELETE` on disposable record URLs, using valid bodies. Public rules expose the actions; locked or restrictive rules must deny unauthorized changes while intended users still succeed. Separately attempt changing another auth record's email, password, and `verified` field: locked `manageRule` must not grant privileged management; an explicitly authorized manager must succeed only where intended. Confirm collection configuration rejects `manageRule=""`. See [CRUD handlers](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/record_crud.go?rev=refs/tags/v0.41.1) and [management validation](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=refs/tags/v0.41.1). |
+| PocketBase protected files | **REASONED:** GET a known fixture file at `/api/files/REPLACE_WITH_COLLECTION/REPLACE_WITH_RECORD/REPLACE_WITH_FILENAME`. Before protection, its unsigned URL downloads despite locked record access. Enable Protected and a `viewRule` that permits the intended ordinary user but denies guests and an unrelated ordinary user. File-token issuance does not check access to a particular file: authenticated users can obtain tokens. Confirm the unrelated user's `pb.files.getToken()` succeeds, then GET the protected fixture using that user's token-bearing SDK URL: expect 404. The permitted user's `pb.files.getToken()` must also succeed, and GET with that user's token-bearing SDK URL must return the expected fixture bytes as a positive control. Separately, an unsigned guest GET of the same protected file must return 404. Use the SDK for signed URLs, or feed a protected curl configuration through stdin; that keeps the token-bearing URL out of curl's argv only. Prepare the file with an editor, not a shell command that contains the URL, which would put it in shell history and `set -x` tracing, and the account owner and root can still read the file and curl's memory. See [download checks](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/file.go?rev=refs/tags/v0.41.1). |
 | PocketBase realtime | **REASONED:** Establish `GET /api/realtime`, then `POST /api/realtime` subscriptions for both `REPLACE_WITH_COLLECTION/*` and a specific fixture record. Change that record through an authorized writer. Public rules expose events; restrictive list/view rules must suppress unauthorized delivery while an authorized subscriber receives the same mutation. A `PB_CONNECT` event or subscription acknowledgement is insufficient. See [Realtime API](https://pocketbase.io/docs/api-realtime/). |
-| PocketBase MFA, verification, and tokens | **REASONED:** Use `POST /api/collections/_superusers/auth-with-password`, followed by the OTP flow through `/request-otp` and `/auth-with-otp`. Without MFA, password authentication completes; with password, OTP, and MFA enabled, the first factor must not complete authentication, while the correct second factor does. For application users, compare password login for otherwise valid verified and unverified accounts with `authRule="verified = true"`. Retain a test token privately, clear the SDK auth store, and retry an allowed record request with the retained token: clearing local state alone must not revoke it. See [authentication flows](https://pocketbase.io/docs/authentication/) and [authRule option](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63). |
-| PocketBase IP and proxy boundary | **REASONED:** Repeat an authorized superuser resource GET from allowed and excluded source addresses. With no allowlist both can work; with the allowlist the excluded address must receive 403. Forged forwarded-IP headers must not change that result through the proxy. From a second host, test the actual backend address and port as well as the proxy: direct backend access must be blocked, while the permitted proxy route works. If the UI is private, separately test GET `/_/` from both networks. See [IP enforcement](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63) and [proxy settings](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63). |
-| TLS, origins, and hostnames | **REASONED:** Request a known API resource over HTTP and HTTPS, and inspect the HTTPS certificate. Fixed deployments must redirect or reject HTTP while HTTPS remains usable. Test Appwrite function/site domains separately. Send the same Appwrite request with an unconfigured `Host`: disabled router protection can serve it; enabled protection must reject it while the configured host works. For PocketBase, compare browser requests from an allowed and disallowed origin; then repeat outside the browser to confirm CORS has not replaced record authorization. See [PocketBase serve flags](https://ganigeorgiev.com/pocketbase/pocketbase/files/cmd/serve.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63) and [Appwrite routing](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/app/controllers/general.php). |
-| Abuse and email delivery | **REASONED:** From a non-excluded ordinary client, send a bounded sequence of valid PocketBase authentication requests across the configured `*:auth` threshold. Disabled limiting should not produce limiter denials; enabled limiting should produce 429, with normal requests succeeding after the window. For Appwrite, cross a documented client endpoint's threshold without an API key or privileged session and compare disabled/enabled abuse protection. Separately request OTP, verification, and recovery messages and confirm receipt and successful use; a successful request alone does not prove delivery. See [PocketBase limiter](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares_rate_limit.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63), [Appwrite limits](https://appwrite.io/docs/advanced/security/rate-limits), and [email delivery](https://appwrite.io/docs/advanced/self-hosting/configuration/email). |
-| Settings encryption and recovery | **REASONED:** On a private PocketBase fixture, save a disposable SMTP credential and inspect persisted settings before and after selecting the encryption environment; plaintext settings must become encrypted, and a restart with the retained key must recover them. Create and restore a backup in a separate fixture, checking local uploads and separately restored S3 objects. Request `/api/backups/REPLACE_WITH_BACKUP_KEY` with no token, an ordinary-user file token, and a superuser file token: only the permitted superuser case should download. For Appwrite, restore disposable encrypted data with the original key; a separate wrong-key fixture must not recover those encrypted values. See [settings persistence](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63), [backup authorization](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/backup.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63), and [Appwrite restoration](https://appwrite.io/docs/advanced/self-hosting/production/backups). |
+| PocketBase MFA, verification, and tokens | **REASONED:** Use `POST /api/collections/_superusers/auth-with-password`, followed by the OTP flow through `/request-otp` and `/auth-with-otp`. Without MFA, password authentication completes; with password, OTP, and MFA enabled, the first factor must not complete authentication, while the correct second factor does. For application users, compare password login for otherwise valid verified and unverified accounts with `authRule="verified = true"`. Retain a test token privately, clear the SDK auth store, and retry an allowed record request with the retained token: clearing local state alone must not revoke it. See [authentication flows](https://pocketbase.io/docs/authentication/) and [authRule option](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=refs/tags/v0.41.1). |
+| PocketBase IP and proxy boundary | **REASONED:** Repeat an authorized superuser resource GET from allowed and excluded source addresses. With no allowlist both can work; with the allowlist the excluded address must receive 403. Forged forwarded-IP headers must not change that result through the proxy. From a second host, test the actual backend address and port as well as the proxy: direct backend access must be blocked, while the permitted proxy route works. If the UI is private, separately test GET `/_/` from both networks. See [IP enforcement](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares.go?rev=refs/tags/v0.41.1) and [proxy settings](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1). |
+| TLS, origins, and hostnames | **REASONED:** Request a known API resource over HTTP and HTTPS, and inspect the HTTPS certificate. Fixed deployments must redirect or reject HTTP while HTTPS remains usable. Test Appwrite function/site domains separately. Send the same Appwrite request with an unconfigured `Host`: disabled router protection can serve it; enabled protection must reject it while the configured host works. For PocketBase, compare browser requests from an allowed and disallowed origin; then repeat outside the browser to confirm CORS has not replaced record authorization. See [PocketBase serve flags](https://ganigeorgiev.com/pocketbase/pocketbase/files/cmd/serve.go?rev=refs/tags/v0.41.1) and [Appwrite routing](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/app/controllers/general.php). |
+| Abuse and email delivery | **REASONED:** From a non-excluded ordinary client, send a bounded sequence of valid PocketBase authentication requests across the configured `*:auth` threshold. Disabled limiting should not produce limiter denials; enabled limiting should produce 429, with normal requests succeeding after the window. For Appwrite, cross a documented client endpoint's threshold without an API key or privileged session and compare disabled/enabled abuse protection. Separately request OTP, verification, and recovery messages and confirm receipt and successful use; a successful request alone does not prove delivery. See [PocketBase limiter](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares_rate_limit.go?rev=refs/tags/v0.41.1), [Appwrite limits](https://appwrite.io/docs/advanced/security/rate-limits), and [email delivery](https://appwrite.io/docs/advanced/self-hosting/configuration/email). |
+| Settings encryption and recovery | **REASONED:** On a private PocketBase fixture, save a disposable SMTP credential and inspect persisted settings before and after selecting the encryption environment; plaintext settings must become encrypted, and a restart with the retained key must recover them. Create and restore a backup in a separate fixture, checking local uploads and separately restored S3 objects. Request `/api/backups/REPLACE_WITH_BACKUP_KEY` with no token, an ordinary-user file token, and a superuser file token: only the permitted superuser case should download. For Appwrite, restore disposable encrypted data with the original key; a separate wrong-key fixture must not recover those encrypted values. See [settings persistence](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1), [backup authorization](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/backup.go?rev=refs/tags/v0.41.1), and [Appwrite restoration](https://appwrite.io/docs/advanced/self-hosting/production/backups). |
 | Appwrite uploads and functions | **REASONED:** Upload harmless fixtures through `POST /v1/storage/buckets/REPLACE_WITH_BUCKET/files`, comparing permitted and unrelated users. Test files at the chosen maximum and one byte above it. With a mandatory encryption/scanning policy capped at 20,000,000 bytes, larger uploads must be rejected; accepted fixtures must show the intended encryption and scanner processing. Invoke a harmless function through `POST /v1/functions/REPLACE_WITH_FUNCTION/executions`: intended execute roles succeed, unrelated users fail, and an authorized server key remains a separate privileged case even when the function is disabled. From the second host, confirm executor/orchestrator ports are inaccessible. See [bucket controls](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/src/Appwrite/Platform/Modules/Storage/Http/Buckets/Create.php), [function controls](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php), and [service networks](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/docker-compose.yml). |
 
 ### 4. Check the client bundle for privileged credentials
@@ -1125,7 +1125,7 @@ service result or deployed-bundle scan is claimed.
 
 The November 2026 date in this heading is the guide-wide documentation check, which covers every rolling documentation item: the 9 Appwrite rolling documentation items were rechecked as served on 2026-11-04 and the 5 PocketBase pages as served on 2026-11-05. Items pinned to a release or commit carry no check date, except those marked "checked October 2026" or "checked November 2026", which were checked individually, and some pinned items were first cited in October or November 2026.
 
-The PocketBase source items cite its author's forge at commit f70b24e1, which the v0.41.1 tag names, because PocketBase moved its source and releases off GitHub at v0.41.0. The cited files and line ranges were read in the v0.41.1 Go module from proxy.golang.org, whose recorded origin is the forge's v0.41.1 tag at that commit, and whose zip and `go.mod` match their sum.golang.org h1 hashes, recomputed on 2026-11-06. Each of the 16 cited files in that module is byte-identical to the copy the forge's API served for `refs/tags/v0.41.1` on 2026-11-06, and the API named f70b24e1 as that tag's newest commit. The forge's file pages load a file's text in the browser from that API, passing their `rev` value on unchanged. On 2026-11-06 the API answered a request for `pocketbase.go` at `rev=v0.41.1` with HTTP 400, "Invalid or missing revision.", and served it at the commit with the module copy's size, so the links name the commit. That each page shows its file's text at the commit is this guide's inference: no page was viewed in a browser, and only `pocketbase.go` was requested from the API at the commit. The forge's line-anchor format is not established, so line ranges stay in the link text: the file view marks its code for Prism's linkable line numbers, but the Prism script that reads an anchor was not read. The v0.41.0 release notes were read in the forge's public releases collection, in record `7vo1mkjw049veng` with tag v0.41.0. The release-notes link below has the form the forge's releases page builds as each release's own link, and that page lists the repository's releases matching its `expr` value, here `tag="v0.41.0"`. That it shows those notes is this guide's inference: the page was not viewed in a browser, and that the record's release channel belongs to this repository was not established.
+The PocketBase source items cite its author's forge at the v0.41.1 tag, as `rev=refs/tags/v0.41.1`, because PocketBase moved its source and releases off GitHub at v0.41.0. The cited files and line ranges were read in the v0.41.1 Go module from proxy.golang.org, whose recorded origin is the forge's v0.41.1 tag at commit f70b24e186df98df2e7ebc703f103cb94dc3ca63, and whose zip and `go.mod` match their sum.golang.org h1 hashes, recomputed on 2026-11-06. Each of the 16 cited files in that module is byte-identical to the copy the forge's API served for `refs/tags/v0.41.1` on 2026-11-06. As corroboration of the tag's commit, a commit list the forge's API returned that day starts with f70b24e1, but its request was not recorded, so that the API names f70b24e1 as the tag's newest commit is this guide's inference. The forge's app script loads a file page's text in the browser from that API, passing on the `rev` value that its router decodes from the page's query. That the router passes `refs/tags/v0.41.1` on unchanged is this guide's inference, because the router script was not read. On 2026-11-06 the API answered a request for `pocketbase.go` at `rev=v0.41.1` with HTTP 400, "Invalid or missing revision.", and served it at `rev=refs/tags/v0.41.1`, encoded or not, with the module copy's size, so the links use that form. That each page shows its file's text is this guide's inference: no page in this form was requested or viewed in a browser, and the page's own requests to the API were not made. The forge's line-anchor format is not established, so line ranges stay in the link text: the file view marks its code for Prism's linkable line numbers, but the Prism script that reads an anchor was not read. The v0.41.0 release notes were read in the forge's public releases collection, in record `7vo1mkjw049veng` with tag v0.41.0. The release-notes link below already names the release by its tag, in the form the forge's releases page builds as each release's own link. That the page lists the repository's releases matching its decoded `expr` value, here `tag="v0.41.0"`, is this guide's inference, because the router script that decodes the query was not read. That it shows those notes is this guide's inference too: the page was not viewed in a browser, and that the record's release channel belongs to this repository was not established.
 
 - PocketBase going to production (rolling documentation, checked November 2026): https://pocketbase.io/docs/going-to-production/
 - PocketBase API rules and filters (rolling documentation, checked November 2026): https://pocketbase.io/docs/api-rules-and-filters/
@@ -1134,20 +1134,20 @@ The PocketBase source items cite its author's forge at commit f70b24e1, which th
 - [PocketBase authentication (rolling documentation, checked November 2026)](https://pocketbase.io/docs/authentication/).
 - [PocketBase files and protected downloads (rolling documentation, checked November 2026)](https://pocketbase.io/docs/files-handling/).
 - [PocketBase Realtime API (rolling documentation, checked November 2026)](https://pocketbase.io/docs/api-realtime/).
-- [PocketBase v0.41.1 installer and bootstrap-token lifetime (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 listener and origin flags (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/cmd/serve.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 native TLS and ACME listener (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/serve.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 authentication and superuser IP middleware (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 record authorization and token validation (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/record_query.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 record CRUD handlers (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/record_crud.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 auth defaults, manageRule validation, and MFA (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 settings, encryption, proxy trust, SMTP, backups, and rate defaults (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 development logging and mailer selection (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 file-token and download authorization (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/file.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 realtime authorization (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/realtime.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 backup download authorization (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/backup.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 backup archive implementation, lines 36 to 60 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/backup_create.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 rate limiter and exemptions (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares_rate_limit.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+- [PocketBase v0.41.1 installer and bootstrap-token lifetime (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 listener and origin flags (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/cmd/serve.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 native TLS and ACME listener (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/serve.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 authentication and superuser IP middleware (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 record authorization and token validation (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/record_query.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 record CRUD handlers (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/record_crud.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 auth defaults, manageRule validation, and MFA (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 settings, encryption, proxy trust, SMTP, backups, and rate defaults (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 development logging and mailer selection (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 file-token and download authorization (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/file.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 realtime authorization (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/realtime.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 backup download authorization (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/backup.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 backup archive implementation, lines 36 to 60 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/backup_create.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 rate limiter and exemptions (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares_rate_limit.go?rev=refs/tags/v0.41.1).
 - [PocketBase v0.41.0 release notes on the move to the new host, read for the v0.41.1 basis (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/releases?expr=tag%3D%22v0.41.0%22).
 - [Appwrite 2.7.0 collection create parameters (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L88-L90).
 - [Appwrite 2.7.0 document create parameters (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php#L134-L139).
@@ -1230,13 +1230,13 @@ The PocketBase source items cite its author's forge at commit f70b24e1, which th
 - [Appwrite 2.7.0 function execute roles, execution-key scopes, enablement and scope grants (checked November 2026)](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php).
 - [Appwrite 2.7.0 storage thresholds and release constant (checked November 2026)](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/app/init/constants.php).
 - [Appwrite 2.7.0 Compose console URL, persistent volumes, and Docker socket mounts (checked November 2026)](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/docker-compose.yml).
-- [PocketBase v0.41.1 CLI wrapper and development flag wiring, lines 234 to 239 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 dev default selection, lines 73 to 79 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 flag-to-app dev wiring, lines 129 to 139 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 root command wiring for serve and superuser, lines 165 to 173 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 go run detection, lines 10 to 19 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/tools/osutils/run.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 dev SQL logging, lines 1277 to 1286 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
-- [PocketBase v0.41.1 dev logger level, lines 1489 to 1499 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63).
+- [PocketBase v0.41.1 CLI wrapper and development flag wiring, lines 234 to 239 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 dev default selection, lines 73 to 79 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 flag-to-app dev wiring, lines 129 to 139 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 root command wiring for serve and superuser, lines 165 to 173 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 go run detection, lines 10 to 19 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/tools/osutils/run.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 dev SQL logging, lines 1277 to 1286 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=refs/tags/v0.41.1).
+- [PocketBase v0.41.1 dev logger level, lines 1489 to 1499 (checked November 2026)](https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=refs/tags/v0.41.1).
 - [Appwrite 2.7.0 document read handler and requester checks (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L82-L97).
 - [Appwrite 2.7.0 document fetch, through the database layer without a transaction ID and through transaction state with one (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L105-L132).
 - [Appwrite 2.7.0 privileged and key role classification (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Utopia/Database/Documents/User.php#L82-L116).
@@ -1431,28 +1431,28 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "68d7a4cbc524ade2f68b835cc89ab8eb3a9b0e650f952cd4ab0138f3729d4f8b",
+  "body_sha256": "798578697fb83a927482162ef9ffcbe4f908f03b5f1ec5f4df82a1af98f9fe4f",
   "components": {
     "pb": {
       "name": "PocketBase",
       "basis": "v0.41.1",
       "sources": {
-        "s7fa158f42b48": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s10b0166012c1": "https://ganigeorgiev.com/pocketbase/pocketbase/files/cmd/serve.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "sa6fa205d404a": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/serve.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s67f548ce6f96": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s311b62aae8ec": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/record_query.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s61ac91651104": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/record_crud.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s88ffcf967d4d": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s97c66431f5b8": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "sf96f3f1fb745": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s1bf20d71dd24": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/file.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s184b4861390b": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/realtime.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "sb15e15b04067": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/backup.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "sdae11766b049": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/backup_create.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s44ceaf3cfcb8": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares_rate_limit.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s756adbfdc599": "https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
-        "s3387716a4786": "https://ganigeorgiev.com/pocketbase/pocketbase/files/tools/osutils/run.go?rev=f70b24e186df98df2e7ebc703f103cb94dc3ca63",
+        "s254c6ab00854": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/installer.go?rev=refs/tags/v0.41.1",
+        "se57548354680": "https://ganigeorgiev.com/pocketbase/pocketbase/files/cmd/serve.go?rev=refs/tags/v0.41.1",
+        "s172d68d13613": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/serve.go?rev=refs/tags/v0.41.1",
+        "sa89696d9163c": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares.go?rev=refs/tags/v0.41.1",
+        "sc74ad3d8cd5e": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/record_query.go?rev=refs/tags/v0.41.1",
+        "sa45421be29ae": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/record_crud.go?rev=refs/tags/v0.41.1",
+        "sf575d3a8df33": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/collection_model_auth_options.go?rev=refs/tags/v0.41.1",
+        "sb92f4450f7a5": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/settings_model.go?rev=refs/tags/v0.41.1",
+        "sadc66f5e4911": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/base.go?rev=refs/tags/v0.41.1",
+        "s41f09654a785": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/file.go?rev=refs/tags/v0.41.1",
+        "s6e47fd88f4aa": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/realtime.go?rev=refs/tags/v0.41.1",
+        "sc8abb26b1da5": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/backup.go?rev=refs/tags/v0.41.1",
+        "s16641df1822b": "https://ganigeorgiev.com/pocketbase/pocketbase/files/core/backup_create.go?rev=refs/tags/v0.41.1",
+        "s3f0220ba5d12": "https://ganigeorgiev.com/pocketbase/pocketbase/files/apis/middlewares_rate_limit.go?rev=refs/tags/v0.41.1",
+        "sebe7b75e76db": "https://ganigeorgiev.com/pocketbase/pocketbase/files/pocketbase.go?rev=refs/tags/v0.41.1",
+        "sc1e42a052cd4": "https://ganigeorgiev.com/pocketbase/pocketbase/files/tools/osutils/run.go?rev=refs/tags/v0.41.1",
         "s958702d638d0": "https://ganigeorgiev.com/pocketbase/pocketbase/releases?expr=tag%3D%22v0.41.0%22"
       }
     },
@@ -1634,37 +1634,37 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "pb-bootstrap": {"text": "Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s7fa158f42b48"], "status": "REASONED"},
-    "pb-installer": {"text": "Installer system-superuser token lasts about 30 minutes; protect its URL and startup logs as credentials.", "components": ["pb"], "sources": ["pb:s7fa158f42b48"], "status": "REASONED"},
-    "pb-ips": {"text": "Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s67f548ce6f96"], "status": "REASONED"},
-    "pb-tls": {"text": "serve with a domain provides native HTTPS/ACME; alternatively terminate TLS at a reverse proxy.", "components": ["pb"], "sources": ["pb:sa6fa205d404a"], "status": "REASONED"},
-    "pb-bind": {"text": "Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback.", "components": ["pb"], "sources": ["pb:s10b0166012c1"], "status": "REASONED"},
-    "pb-origins": {"text": "--origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records.", "components": ["pb"], "sources": ["pb:s10b0166012c1"], "status": "REASONED"},
-    "pb-proxy": {"text": "Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls.", "components": ["pb"], "sources": ["pb:s97c66431f5b8"], "status": "REASONED"},
-    "pb-dev": {"text": "--dev adds diagnostics including SQL on stderr, not an auth bypass; its configured default comes from New(): true if os.Args[0] starts with a nonempty os.TempDir() or cacheDir() prefix, false otherwise.", "components": ["pb"], "sources": ["pb:sf96f3f1fb745", "pb:s756adbfdc599", "pb:s3387716a4786"], "status": "REASONED"},
-    "pb-cli": {"text": "In the pinned CLI wrapper, Start() registers the serve and superuser commands on the root command and executes it.", "components": ["pb"], "sources": ["pb:s756adbfdc599"], "status": "REASONED"},
-    "pb-rules": {"text": "Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:saedbdfbdfc48", "pb:s311b62aae8ec"], "status": "REASONED"},
-    "pb-manage": {"text": "Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules.", "components": ["pb"], "sources": ["pb:s88ffcf967d4d"], "status": "REASONED"},
-    "pb-files": {"text": "File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sf711b6345643", "pb:s1bf20d71dd24"], "status": "REASONED"},
-    "pb-file-token": {"text": "Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sf711b6345643", "pb:s1bf20d71dd24"], "status": "REASONED"},
-    "pb-realtime": {"text": "Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sb850a71fad4d", "pb:s184b4861390b"], "status": "REASONED"},
-    "pb-password": {"text": "Auth initialization enables password authentication with email as the identity field.", "components": ["pb"], "sources": ["pb:s88ffcf967d4d"], "status": "REASONED"},
-    "pb-oauth": {"text": "OAuth2 defaults disabled and is unsupported for _superusers.", "components": ["pb", "pb-docs"], "sources": ["pb:s88ffcf967d4d", "pb-docs:s773e441dd51c"], "status": "REASONED"},
-    "pb-mfa-default": {"text": "MFA defaults disabled with duration 600 seconds.", "components": ["pb"], "sources": ["pb:s88ffcf967d4d"], "status": "REASONED"},
-    "pb-otp-default": {"text": "OTP defaults disabled with duration 180 seconds and length 8.", "components": ["pb"], "sources": ["pb:s88ffcf967d4d"], "status": "REASONED"},
-    "pb-alerts": {"text": "Authentication alerts default enabled; retain alerts and provide working email.", "components": ["pb"], "sources": ["pb:s88ffcf967d4d"], "status": "REASONED"},
-    "pb-auth-token": {"text": "Auth token duration defaults to 432000 seconds.", "components": ["pb"], "sources": ["pb:s88ffcf967d4d"], "status": "REASONED"},
-    "pb-file-duration": {"text": "File token duration defaults to 180 seconds.", "components": ["pb"], "sources": ["pb:s88ffcf967d4d"], "status": "REASONED"},
-    "pb-auth-rule": {"text": "authRule defaults empty; verified-only collections can require verified = true after email verification works.", "components": ["pb", "pb-docs"], "sources": ["pb:s88ffcf967d4d", "pb-docs:s773e441dd51c"], "status": "REASONED"},
-    "pb-mfa": {"text": "For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor.", "components": ["pb", "pb-docs"], "sources": ["pb:s88ffcf967d4d", "pb-docs:s773e441dd51c"], "status": "REASONED"},
-    "pb-logout": {"text": "Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s773e441dd51c", "pb:s311b62aae8ec"], "status": "REASONED"},
-    "pb-encryption": {"text": "Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s97c66431f5b8"], "status": "REASONED"},
-    "pb-backups": {"text": "Backups default local with empty cron (automatic backups off); archives contain main and logs databases plus remaining pb_data, excluding the backups directory and tracked exclusions; uploaded collection files on S3 require manual backup. Schedule/retain deliberately and protect archives.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s97c66431f5b8", "pb:sdae11766b049"], "status": "REASONED"},
-    "pb-backup-auth": {"text": "Backup downloads require a superuser file token and obey superuser IP restrictions; ordinary auth/file tokens do not suffice.", "components": ["pb"], "sources": ["pb:sb15e15b04067"], "status": "REASONED"},
-    "pb-limiter": {"text": "Native limits exist from v0.23.0 but default disabled at v0.41.1; enable rateLimits.enabled.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s97c66431f5b8"], "status": "REASONED"},
-    "pb-limit-rules": {"text": "Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s.", "components": ["pb"], "sources": ["pb:s97c66431f5b8"], "status": "REASONED"},
-    "pb-limit-bypass": {"text": "Superusers and rateLimits.excludedIPs bypass limits; test ordinary non-excluded clients.", "components": ["pb"], "sources": ["pb:s44ceaf3cfcb8"], "status": "REASONED"},
-    "pb-smtp": {"text": "smtp.enabled and smtp.tls default false; disabled SMTP falls back to sendmail. Configure protected transport and test actual delivery.", "components": ["pb"], "sources": ["pb:s97c66431f5b8", "pb:sf96f3f1fb745"], "status": "REASONED"},
+    "pb-bootstrap": {"text": "Privately bootstrap through the logged installer URL; superuser create EMAIL PASS exposes passwords in argv. Ordinary registration does not grant superuser rights.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:s254c6ab00854"], "status": "REASONED"},
+    "pb-installer": {"text": "Installer system-superuser token lasts about 30 minutes; protect its URL and startup logs as credentials.", "components": ["pb"], "sources": ["pb:s254c6ab00854"], "status": "REASONED"},
+    "pb-ips": {"text": "Superuser IP allowlists are available from v0.38.0; superuserIPs defaults empty and restricts authenticated requests, not /_/ static assets.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:sa89696d9163c"], "status": "REASONED"},
+    "pb-tls": {"text": "serve with a domain provides native HTTPS/ACME; alternatively terminate TLS at a reverse proxy.", "components": ["pb"], "sources": ["pb:s172d68d13613"], "status": "REASONED"},
+    "pb-bind": {"text": "Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback.", "components": ["pb"], "sources": ["pb:se57548354680"], "status": "REASONED"},
+    "pb-origins": {"text": "--origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records.", "components": ["pb"], "sources": ["pb:se57548354680"], "status": "REASONED"},
+    "pb-proxy": {"text": "Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls.", "components": ["pb"], "sources": ["pb:sb92f4450f7a5"], "status": "REASONED"},
+    "pb-dev": {"text": "--dev adds diagnostics including SQL on stderr, not an auth bypass; its configured default comes from New(): true if os.Args[0] starts with a nonempty os.TempDir() or cacheDir() prefix, false otherwise.", "components": ["pb"], "sources": ["pb:sadc66f5e4911", "pb:sebe7b75e76db", "pb:sc1e42a052cd4"], "status": "REASONED"},
+    "pb-cli": {"text": "In the pinned CLI wrapper, Start() registers the serve and superuser commands on the root command and executes it.", "components": ["pb"], "sources": ["pb:sebe7b75e76db"], "status": "REASONED"},
+    "pb-rules": {"text": "Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:saedbdfbdfc48", "pb:sc74ad3d8cd5e"], "status": "REASONED"},
+    "pb-manage": {"text": "Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules.", "components": ["pb"], "sources": ["pb:sf575d3a8df33"], "status": "REASONED"},
+    "pb-files": {"text": "File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sf711b6345643", "pb:s41f09654a785"], "status": "REASONED"},
+    "pb-file-token": {"text": "Short-lived file tokens provide identity context, not file authorization; viewRule decides. Protect token-bearing file URLs.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sf711b6345643", "pb:s41f09654a785"], "status": "REASONED"},
+    "pb-realtime": {"text": "Collection subscriptions use listRule and individual-record subscriptions viewRule; SSE/subscription success does not prove event authorization.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sb850a71fad4d", "pb:s6e47fd88f4aa"], "status": "REASONED"},
+    "pb-password": {"text": "Auth initialization enables password authentication with email as the identity field.", "components": ["pb"], "sources": ["pb:sf575d3a8df33"], "status": "REASONED"},
+    "pb-oauth": {"text": "OAuth2 defaults disabled and is unsupported for _superusers.", "components": ["pb", "pb-docs"], "sources": ["pb:sf575d3a8df33", "pb-docs:s773e441dd51c"], "status": "REASONED"},
+    "pb-mfa-default": {"text": "MFA defaults disabled with duration 600 seconds.", "components": ["pb"], "sources": ["pb:sf575d3a8df33"], "status": "REASONED"},
+    "pb-otp-default": {"text": "OTP defaults disabled with duration 180 seconds and length 8.", "components": ["pb"], "sources": ["pb:sf575d3a8df33"], "status": "REASONED"},
+    "pb-alerts": {"text": "Authentication alerts default enabled; retain alerts and provide working email.", "components": ["pb"], "sources": ["pb:sf575d3a8df33"], "status": "REASONED"},
+    "pb-auth-token": {"text": "Auth token duration defaults to 432000 seconds.", "components": ["pb"], "sources": ["pb:sf575d3a8df33"], "status": "REASONED"},
+    "pb-file-duration": {"text": "File token duration defaults to 180 seconds.", "components": ["pb"], "sources": ["pb:sf575d3a8df33"], "status": "REASONED"},
+    "pb-auth-rule": {"text": "authRule defaults empty; verified-only collections can require verified = true after email verification works.", "components": ["pb", "pb-docs"], "sources": ["pb:sf575d3a8df33", "pb-docs:s773e441dd51c"], "status": "REASONED"},
+    "pb-mfa": {"text": "For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor.", "components": ["pb", "pb-docs"], "sources": ["pb:sf575d3a8df33", "pb-docs:s773e441dd51c"], "status": "REASONED"},
+    "pb-logout": {"text": "Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s773e441dd51c", "pb:sc74ad3d8cd5e"], "status": "REASONED"},
+    "pb-encryption": {"text": "Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:sb92f4450f7a5"], "status": "REASONED"},
+    "pb-backups": {"text": "Backups default local with empty cron (automatic backups off); archives contain main and logs databases plus remaining pb_data, excluding the backups directory and tracked exclusions; uploaded collection files on S3 require manual backup. Schedule/retain deliberately and protect archives.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:sb92f4450f7a5", "pb:s16641df1822b"], "status": "REASONED"},
+    "pb-backup-auth": {"text": "Backup downloads require a superuser file token and obey superuser IP restrictions; ordinary auth/file tokens do not suffice.", "components": ["pb"], "sources": ["pb:sc8abb26b1da5"], "status": "REASONED"},
+    "pb-limiter": {"text": "Native limits exist from v0.23.0 but default disabled at v0.41.1; enable rateLimits.enabled.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:s9029ab974cf1", "pb:sb92f4450f7a5"], "status": "REASONED"},
+    "pb-limit-rules": {"text": "Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s.", "components": ["pb"], "sources": ["pb:sb92f4450f7a5"], "status": "REASONED"},
+    "pb-limit-bypass": {"text": "Superusers and rateLimits.excludedIPs bypass limits; test ordinary non-excluded clients.", "components": ["pb"], "sources": ["pb:s3f0220ba5d12"], "status": "REASONED"},
+    "pb-smtp": {"text": "smtp.enabled and smtp.tls default false; disabled SMTP falls back to sendmail. Configure protected transport and test actual delivery.", "components": ["pb"], "sources": ["pb:sb92f4450f7a5", "pb:sadc66f5e4911"], "status": "REASONED"},
     "pb-forge": {"text": "From v0.41.0 PocketBase publishes its source and releases on its author's forge at ganigeorgiev.com, which this guide cites at v0.41.1; the v0.41.0 notes flag only one change with a warning sign, the Go module's move to the new host, and no guide statement depends on the module path.", "components": ["pb"], "sources": ["pb:s958702d638d0"], "status": "REASONED"},
     "appwrite-https": {"text": "API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.7.0; explicitly enable both despite conflicting rolling deprecation/default documentation.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:s7a257b8fa05b", "appwrite-docs:s2bf9a4746d28"], "status": "REASONED"},
     "appwrite-hosts": {"text": "ROUTER_PROTECTION defaults disabled; configure actual domains and enable rejection of unknown hostnames.", "components": ["appwrite"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:s7a257b8fa05b"], "status": "REASONED"},
@@ -1695,17 +1695,17 @@ Claims (full source mapping in the JSON block below):
     "verify-appwrite-records": {"text": "Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s58ad28816c5d", "appwrite-docs:sa0bd132f7968"], "status": "REASONED", "verify": [1]},
     "verify-appwrite-keys": {"text": "A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control.", "components": ["appwrite"], "sources": ["appwrite:s535fef1a5540"], "status": "REASONED", "verify": [1]},
     "verify-registration": {"text": "On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls.", "components": ["appwrite"], "sources": ["appwrite:sd96c9b2ddc30"], "status": "REASONED", "verify": [2]},
-    "verify-pb-bootstrap": {"text": "Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access.", "components": ["pb"], "sources": ["pb:s7fa158f42b48", "pb:s61ac91651104"], "status": "REASONED"},
+    "verify-pb-bootstrap": {"text": "Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access.", "components": ["pb"], "sources": ["pb:s254c6ab00854", "pb:sa45421be29ae"], "status": "REASONED"},
     "verify-appwrite-mfa": {"text": "Console account GET succeeds without MFA, fails for a fresh password-only MFA session, where 2.7.0 throws USER_MORE_FACTORS_REQUIRED with a response string not established here, and succeeds after TOTP completion with a code not already redeemed.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite-docs:s221c6aaef8df", "appwrite:s535fef1a5540", "appwrite:sad0f2bc8be8f", "appwrite:se24bc37a7000"], "status": "REASONED"},
-    "verify-pb-writes": {"text": "Compare intended/unauthorized POST/PATCH/DELETE and privileged auth-record management; locked manageRule grants no management and empty-string configuration must fail.", "components": ["pb"], "sources": ["pb:s61ac91651104", "pb:s88ffcf967d4d"], "status": "REASONED"},
-    "verify-pb-files": {"text": "Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive.", "components": ["pb", "curl"], "sources": ["pb:s1bf20d71dd24", "curl:s82a34ee18632"], "status": "REASONED"},
-    "verify-pb-realtime": {"text": "Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sb850a71fad4d", "pb:s184b4861390b"], "status": "REASONED"},
-    "verify-pb-mfa": {"text": "Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token.", "components": ["pb", "pb-docs"], "sources": ["pb:s88ffcf967d4d", "pb-docs:s773e441dd51c"], "status": "REASONED"},
-    "verify-pb-ips": {"text": "Compare allowed/excluded superuser sources and forged forwarded headers; excluded sources must get 403 and direct backend access must fail with a working proxy control.", "components": ["pb"], "sources": ["pb:s67f548ce6f96", "pb:s97c66431f5b8"], "status": "REASONED"},
-    "verify-transport": {"text": "Compare HTTP/HTTPS and certificates, Appwrite API/function/site domains and configured/unknown Host; compare browser origins separately from record authorization.", "components": ["pb", "appwrite"], "sources": ["pb:s10b0166012c1", "appwrite:s7a257b8fa05b"], "status": "REASONED"},
-    "verify-abuse": {"text": "Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery.", "components": ["pb", "appwrite-docs"], "sources": ["pb:s44ceaf3cfcb8", "appwrite-docs:s000d05106450"], "status": "REASONED"},
-    "verify-email": {"text": "Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence.", "components": ["pb", "appwrite-docs"], "sources": ["pb:sf96f3f1fb745", "appwrite-docs:s38a1efa0c7d2"], "status": "REASONED"},
-    "verify-pb-recovery": {"text": "Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups.", "components": ["pb", "pb-docs"], "sources": ["pb:s97c66431f5b8", "pb:sb15e15b04067", "pb-docs:s9029ab974cf1"], "status": "REASONED"},
+    "verify-pb-writes": {"text": "Compare intended/unauthorized POST/PATCH/DELETE and privileged auth-record management; locked manageRule grants no management and empty-string configuration must fail.", "components": ["pb"], "sources": ["pb:sa45421be29ae", "pb:sf575d3a8df33"], "status": "REASONED"},
+    "verify-pb-files": {"text": "Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive.", "components": ["pb", "curl"], "sources": ["pb:s41f09654a785", "curl:s82a34ee18632"], "status": "REASONED"},
+    "verify-pb-realtime": {"text": "Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sb850a71fad4d", "pb:s6e47fd88f4aa"], "status": "REASONED"},
+    "verify-pb-mfa": {"text": "Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token.", "components": ["pb", "pb-docs"], "sources": ["pb:sf575d3a8df33", "pb-docs:s773e441dd51c"], "status": "REASONED"},
+    "verify-pb-ips": {"text": "Compare allowed/excluded superuser sources and forged forwarded headers; excluded sources must get 403 and direct backend access must fail with a working proxy control.", "components": ["pb"], "sources": ["pb:sa89696d9163c", "pb:sb92f4450f7a5"], "status": "REASONED"},
+    "verify-transport": {"text": "Compare HTTP/HTTPS and certificates, Appwrite API/function/site domains and configured/unknown Host; compare browser origins separately from record authorization.", "components": ["pb", "appwrite"], "sources": ["pb:se57548354680", "appwrite:s7a257b8fa05b"], "status": "REASONED"},
+    "verify-abuse": {"text": "Cross each configured threshold with ordinary non-excluded clients and compare disabled/enabled controls; PocketBase limiting yields 429 with later successful recovery.", "components": ["pb", "appwrite-docs"], "sources": ["pb:s3f0220ba5d12", "appwrite-docs:s000d05106450"], "status": "REASONED"},
+    "verify-email": {"text": "Request OTP, verification and recovery messages and confirm receipt and use; request success alone is not delivery evidence.", "components": ["pb", "appwrite-docs"], "sources": ["pb:sadc66f5e4911", "appwrite-docs:s38a1efa0c7d2"], "status": "REASONED"},
+    "verify-pb-recovery": {"text": "Compare plaintext/encrypted persisted settings, restart with retained key and restore local/S3 data; only permitted superuser file tokens may download backups.", "components": ["pb", "pb-docs"], "sources": ["pb:sb92f4450f7a5", "pb:sc8abb26b1da5", "pb-docs:s9029ab974cf1"], "status": "REASONED"},
     "verify-appwrite-recovery": {"text": "Restore encrypted fixtures with the original key; a separate wrong-key fixture must not recover encrypted values.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
     "verify-uploads": {"text": "Compare permitted/unrelated uploads and size-boundary fixtures; mandatory processing requires rejecting over-limit files and confirming accepted-file encryption/scanning.", "components": ["appwrite"], "sources": ["appwrite:seb281dd186ea", "appwrite:s1c49e69946a1"], "status": "REASONED"},
     "verify-functions": {"text": "Compare intended execute roles, unrelated users and privileged server keys, including disabled functions; confirm executor/orchestrator privacy from a second host.", "components": ["appwrite"], "sources": ["appwrite:s77e2ce52136f", "appwrite:s80913a396c73"], "status": "REASONED"},
