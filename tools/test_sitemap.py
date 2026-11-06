@@ -9,10 +9,12 @@ status, the ok line on a pass and a FAIL line on a refusal.
 
 Each run sets the BASE line of the copied check_draft.py, so the cases hold whichever base the
 shipped file names. CASES run at base /, the promoted site, where the real sitemap lists the 7
-indexable pages and the /draft/ review page and the 404 stay out by their noindex. STAGED_CASES
-run at base /draft/, where the gate's staged rules switch back on: a tree under site/draft/ is
-left out of the sitemap and a /draft/ loc is refused outright. One case at each base writes the
-pages of scripts/build-site.py, with `--base / --out <tree>/site` at / and under site/draft/ at
+indexable pages and the 404 stays out by its noindex. The live site carries no /draft/ page
+(baseline SPECIFICATION section 4.1 items 0 and 2), so at base / a /draft/ loc, in any case, is
+refused by its first segment, with or without a page planted under site/draft/. STAGED_CASES run
+at base /draft/, where the gate's staged rules switch back on: a tree under site/draft/ is left
+out of the sitemap and a /draft/ loc is refused outright. One case at each base writes the pages
+of scripts/build-site.py, with `--base / --out <tree>/site` at / and under site/draft/ at
 /draft/.
 """
 import re
@@ -31,7 +33,7 @@ GATES = ("check_sitemap.py", "check_draft.py", "check_csp_hashes.py")
 BASE_LINE = re.compile(r'^BASE = "[^"\n]*"$', re.M)
 PAGES = ("index.html", "404.html", "guides/index.html", "for-ai/index.html",
          "for-humans/index.html", "checklist/index.html", "disclosure/index.html",
-         "license/index.html", "draft/index.html")
+         "license/index.html")
 REAL = {name: (SITE / name).read_bytes() for name in PAGES + ("robots.txt", "sitemap.xml")}
 SITEMAP = REAL["sitemap.xml"].decode("utf-8")
 ROBOTS = REAL["robots.txt"].decode("utf-8")
@@ -117,9 +119,16 @@ CASES = [
       "sitemap.xml": with_entry("/extra/")}, None, "carries a robots noindex"),
     ("a folder page whose robots meta is none, left out of the sitemap",
      {"extra/index.html": HIDDEN.replace(b'content="noindex"', b'content="none"')}, None, None),
-    ("the /draft/ review page, noindex, left out of the sitemap", None, None, None),
-    ("the /draft/ review page listed, which its noindex forbids",
-     {"sitemap.xml": with_entry("/draft/")}, None, "carries a robots noindex"),
+    ("a /draft/ loc, with no draft tree", {"sitemap.xml": with_entry("/draft/")}, None,
+     "is a /draft/ page; the live site carries no /draft/ page"),
+    ("a /Draft/ loc in another case", {"sitemap.xml": with_entry("/Draft/")}, None,
+     "is a /draft/ page; the live site carries no /draft/ page"),
+    ("a /draft/ loc with a noindex page planted under site/draft/",
+     {"draft/index.html": HIDDEN, "sitemap.xml": with_entry("/draft/")}, None,
+     "is a /draft/ page; the live site carries no /draft/ page"),
+    ("a /draft/ subpage loc with an indexable page planted under site/draft/",
+     {"draft/guides/index.html": INDEXABLE, "sitemap.xml": with_entry("/draft/guides/")}, None,
+     "is a /draft/ page; the live site carries no /draft/ page"),
     ("no sitemap", {"sitemap.xml": None}, None, "site/sitemap.xml is missing"),
     ("the sitemap as a symbolic link", None, symlinked, "symbolic link"),
     ("a sitemap that is not UTF-8", {"sitemap.xml": REAL["sitemap.xml"] + b"\xff"}, None,
