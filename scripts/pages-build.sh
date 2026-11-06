@@ -7,8 +7,9 @@
 #   - the copied site template files match .baseline/pin.toml;
 #   - the site's palette passes the template's contrast gate, .baseline/check_palette.py, pinned by
 #     the gate above (mandatory from baseline 1.6.0; secureconfig.ai has no site-palette.css);
-#   - the pages under site/ match a fresh build of their sources at the root;
-#   - the site is self-contained and only the /draft/ review page and the 404 are noindex;
+#   - the pages under site/ match a fresh build of their sources at the root, and site/ holds no
+#     draft/ tree (drafts are built on the `draft` branch; main never carries /draft/);
+#   - the site is self-contained, only the 404 is noindex, and no /draft/ page or file exists;
 #   - every page fits the template page model and site/_headers carries exactly the shared policy;
 #   - site/.well-known/security.txt carries the owner's fields.
 # It needs bash and Python 3.11 or later (tomllib), and no network.

@@ -1,25 +1,32 @@
 #!/usr/bin/env python3
-"""Check that the published site is self-contained and that only /draft/ and the 404 are noindex.
+"""Check that the site is self-contained, only the 404 is noindex, and no /draft/ exists.
 
 WHY: since promotion (baseline SPECIFICATION section 4.1 item 5) the generated pages are served
 from the site root. A root-relative link that names no file ships a broken page; an absolute URL
 on this site's own host bypasses that check and can pin a scheme or an alias this gate cannot
-read; a stray robots meta on an indexable page, or a lost one on the 404 or the /draft/ review
-page, silently changes what search engines index; and the /draft/ review page stays out of the
-published indexes (SPECIFICATION section 4.1 item 2). Nothing else in the suite checks any of
-that. The sitemap gates import BASE and DRAFT below, and BASE = "/" switches their staged-draft
-rules off; tools/check_sitemap.py keeps /draft/ out of sitemap.xml through its noindex rule.
+read; a stray robots meta on an indexable page, or a lost one on the 404 page, silently changes
+what search engines index. From baseline 1.11.0 (SPECIFICATION section 4.1 items 0 and 3) a
+draft for review is built on the `draft` branch and reviewed at
+https://draft.secureconfig.pages.dev/draft/; the production branch (`main`) carries no /draft/
+page, and no live page or published index refers to one (item 2). Nothing else in the suite
+checks any of that. On the `draft` branch this gate meets the staged tree under site/draft/ and
+refuses it, so that branch, as item 3 requires, either covers the draft under the template's
+rules or excludes /draft/ explicitly, and removes the exclusion at promotion. The sitemap gates
+import BASE and DRAFT below, and BASE = "/" switches their staged-draft rules off;
+tools/check_sitemap.py refuses a /draft/ `loc` by its first segment at any base.
 
 A PAGE is any file under site/ named .html or .htm in any case, read by the CSP gate's own suffix
 rule (check_csp_hashes.name_suffix), so a page the CSP gate checks is a page this gate checks too.
 
-PART 1, INDEXABILITY:
-  - site/draft/index.html (the "Draft review" page) and site/404.html each carry exactly 1 robots
-    meta element, read by html.parser (so a commented-out one does not count, attribute case and
-    quoting do not matter, and of duplicate attributes the first counts, as in a browser), whose
-    content is `noindex, nofollow` (case and spacing aside);
+PART 1, INDEXABILITY AND NO DRAFT TREE:
+  - site/404.html carries exactly 1 robots meta element, read by html.parser (so a commented-out
+    one does not count, attribute case and quoting do not matter, and of duplicate attributes the
+    first counts, as in a browser), whose content is `noindex, nofollow` (case and spacing aside);
   - every other page carries NO robots meta element at all: the generated pages are indexable and
     carry none, so one appearing is an edit this gate refuses rather than guesses about;
+  - site/ holds no entry named `draft` in any case (a folder, with any file in it, or a file): the
+    live site carries no /draft/ tree (SPECIFICATION section 4.1 items 0 and 3). Any case is
+    refused, as a case-insensitive file system or server could serve `Draft/` at /draft/;
   - site/_redirects does not exist: a missing path returns the 404 page with status 404, never a
     redirect (the owner's rule). tools/check_csp_hashes.py holds site/_headers, X-Robots-Tag
     included.
@@ -38,18 +45,20 @@ PART 2, SELF-CONTAINED:
     forms IDNA maps onto ASCII); a `pages.dev` host (the Pages project's own aliases); a
     scheme-relative URL; and a relative path, since the pages use root-relative paths;
   - a `<link rel="canonical">` href, which is required to be absolute, has its own rule instead:
-    each of the 7 indexable pages (INDEXABLE below) and the /draft/ review page carries exactly 1,
-    equal byte for byte to `https://secureconfig.ai` plus that page's own root path (`/`,
-    `/guides/`, ..., `/draft/`); the 404 page carries none; any other page carries at most its own;
+    each of the 7 indexable pages (INDEXABLE below) carries exactly 1, equal byte for byte to
+    `https://secureconfig.ai` plus that page's own root path (`/`, `/guides/`, ...,
+    `/license/`); the 404 page carries none; any other page carries at most its own;
   - any `http-equiv` attribute is refused (a refresh would navigate away without a link);
   - every link that opens a new tab carries the visually hidden "(opens in a new tab)";
   - only the landing page, the Disclosure page and the Licence page link the Disclosure and Licence
-    pages (the owner's template note of 2026-11-03: they left the top bar), and no page links the
-    /draft/ review page. Both rules compare the FILE a root-relative URL resolves to, read as
-    resolves() reads it (query and fragment cut, percent-decoded, dot segments resolved, a folder
-    naming its index.html), with site/disclosure/index.html, site/license/index.html and
-    site/draft/index.html, so `/draft/?x`, `/draft//`, `/guides/../draft/`, `/%64raft/` and
-    `/draft/index.html#a` are each a link to the review page;
+    pages (the owner's template note of 2026-11-03: they left the top bar), and no page links
+    /draft/ (SPECIFICATION section 4.1 item 2). Both rules compare the FILE a root-relative URL
+    resolves to, read as resolves() reads it (query and fragment cut, percent-decoded, dot
+    segments resolved, a folder naming its index.html), with site/disclosure/index.html,
+    site/license/index.html and anything under site/draft/ (first segment in any case), so
+    `/draft/?x`, `/draft//`, `/guides/../draft/`, `/%64raft/` and `/draft/index.html#a` are each a
+    link to /draft/. With no draft tree such a link names no file, which the rule above refuses;
+    with a tree present, this rule names the link beside PART 1's draft-tree finding;
   - no stylesheet under site/ carries `@import` in any spelling (CSS escapes decoded), every
     `url(` in one is relative and resolves to a file inside site/assets/, and a site/assets/site.css,
     where one exists (scripts/build-site.py --check allows that 1 file beside the pages and the
@@ -58,7 +67,7 @@ PART 2, SELF-CONTAINED:
     `--logo-inset` to a number (baseline README, "Per-site constants").
 
 PART 3, THE PUBLISHED INDEXES (site/llms.txt, site/llms-full.txt, site/robots.txt and
-site/.well-known/security.txt): none of them refers to the /draft/ review page. The rule is
+site/.well-known/security.txt): none of them refers to /draft/. The rule is
 fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellings:
   - the whole file text is normalized: the round { percent-decode; `html.unescape` } repeats until
     the text stops changing, at most 8 rounds (text still changing in a 9th round is refused);
@@ -114,10 +123,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_csp_hashes import name_suffix  # noqa: E402  (the CSP gate's page-name rule)
 
 SITE = Path("site")
-# The published base path and the review-page tree, imported by tools/check_sitemap.py and
-# tools/check_sitemap_lastmod.py. At "/" their staged-draft rules switch off.
+# The published base path and the draft tree the `draft` branch stages, imported by
+# tools/check_sitemap.py and tools/check_sitemap_lastmod.py. At "/" their staged-draft rules
+# switch off. This gate refuses any site/ entry named DRAFT_NAME, in any case (PART 1).
 BASE = "/"
 DRAFT = Path("site") / "draft"
+DRAFT_NAME = "draft"
 SITE_HOST = "secureconfig.ai"
 NEWTAB = "(opens in a new tab)"
 URL_FN = re.compile(r"url\(\s*(['\"]?)([^'\")]*)\1\s*\)", re.I)
@@ -125,7 +136,6 @@ URL_FN = re.compile(r"url\(\s*(['\"]?)([^'\")]*)\1\s*\)", re.I)
 ABOUT_PAGES = {"index.html", "disclosure/index.html", "license/index.html"}
 # The files those 2 rules protect, compared after resolution (see resolved()).
 ABOUT_TARGETS = ("disclosure/index.html", "license/index.html")
-REVIEW_PAGE = "draft/index.html"
 # The 7 indexable pages, each carrying exactly 1 canonical: the origin plus its own root path.
 INDEXABLE = ("index.html", "guides/index.html", "for-ai/index.html", "for-humans/index.html",
              "checklist/index.html", "disclosure/index.html", "license/index.html")
@@ -146,7 +156,7 @@ DRAFT_REFS = (
 DECODE_ROUNDS = 8
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
 # must not carry at all.
-NOINDEX_PAGES = {"draft/index.html", "404.html"}
+NOINDEX_PAGES = {"404.html"}
 URL_LISTS = {"srcset", "imagesrcset"}
 URL_NAMES = {"formaction", "action", "ping", "poster", "background"}
 BAD_URL_CHARS = re.compile(r"[\x00-\x20\x7f\\]")
@@ -166,6 +176,12 @@ def page_files(base):
     if not base.is_dir():
         return []
     return sorted(p for p in base.rglob("*") if p.is_file() and name_suffix(p.name) in (".html", ".htm"))
+
+
+def in_draft(rel):
+    """True when a path relative to site/ lies in the draft tree: its first segment, in any case,
+    is DRAFT_NAME."""
+    return bool(rel.parts) and rel.parts[0].casefold() == DRAFT_NAME
 
 
 def site_host(host):
@@ -292,8 +308,7 @@ def index_findings(name, text):
         if line is None:
             findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses a line still "
                             f"changing after {DECODE_ROUNDS} rounds of percent-decoding and "
-                            f"character-reference decoding; the /draft/ review page stays out of "
-                            f"every published index")
+                            f"character-reference decoding; no published index refers to /draft/")
             line = ""
         kept.append(line)
     # The literal word is read on the deleted text only, which holds every `draft` the kept text
@@ -317,7 +332,7 @@ def index_findings(name, text):
             excerpts.setdefault(bisect_right(starts, start), joined[max(0, start - 20):end + 20])
     for n, excerpt in sorted(excerpts.items()):
         findings.append(f"{SITE}/{name}:{n}: the published-index rule refuses {excerpt!r} ({why}); "
-                        f"the /draft/ review page stays out of every published index")
+                        f"no published index refers to /draft/")
     return findings
 
 
@@ -380,8 +395,8 @@ def check(root):
                                 f"'noindex, nofollow'; it carries {[c for _, c in parsed.robots]!r}")
         elif parsed.robots:
             findings.append(f"{rel} carries a robots meta element "
-                            f"({[c for _, c in parsed.robots]!r}); only the /draft/ review page "
-                            f"and the 404 page are noindex, and every other page carries none")
+                            f"({[c for _, c in parsed.robots]!r}); only the 404 page is noindex, "
+                            f"and every other page carries none")
         for line in parsed.http_equiv:
             findings.append(f"{rel}:{line}: carries http-equiv, which can refresh or redirect the "
                             f"page without a link; the pages carry none")
@@ -390,15 +405,14 @@ def check(root):
             if why:
                 findings.append(f"{rel}:{line}: {name}={value!r} {why}")
         # A canonical is this page's own absolute URL, byte for byte: exactly 1 on each indexable
-        # page and on the review page (https://secureconfig.ai/draft/), none on the 404, and at
-        # most its own on any other page.
+        # page, none on the 404, and at most its own on any other page.
         expected = own_url(page_rel)
         if page_rel == NOTFOUND:
             for line, value in parsed.canonicals:
                 findings.append(f"{rel}:{line}: carries the canonical {value!r}; the 404 page "
                                 f"carries none")
         else:
-            required = page_rel in INDEXABLE or page_rel == REVIEW_PAGE
+            required = page_rel in INDEXABLE
             if (required and len(parsed.canonicals) != 1) or len(parsed.canonicals) > 1:
                 findings.append(f"{rel} must carry exactly 1 canonical, {expected!r}; it carries "
                                 f"{[v for _, v in parsed.canonicals]!r}")
@@ -408,9 +422,9 @@ def check(root):
                                     f"own URL {expected!r}")
         # The owner's template note of 2026-11-03: Disclosure and Licence are linked from the landing
         # page's "About this project" region and from each other, and from no other page; and no
-        # page links the /draft/ review page. Both compare the file a root-relative URL resolves to.
+        # page links /draft/ (SPECIFICATION 4.1 item 2). Both compare the file a root-relative URL
+        # resolves to.
         site = (root / SITE).resolve()
-        review = site / REVIEW_PAGE
         about = {site / p for p in ABOUT_TARGETS}
         for line, name, value in parsed.urls:
             if not value.startswith("/") or value.startswith("//") or BAD_URL_CHARS.search(value):
@@ -419,17 +433,26 @@ def check(root):
             if page_rel not in ABOUT_PAGES and target in about:
                 findings.append(f"{rel}:{line}: links {value}; only the landing page, the "
                                 f"Disclosure page and the Licence page link those 2 pages")
-            if target == review and page_rel != REVIEW_PAGE:
-                findings.append(f"{rel}:{line}: links {value}; no page links the /draft/ review "
-                                f"page, which is reached only by its URL")
+            if target is not None and in_draft(target.relative_to(site)):
+                findings.append(f"{rel}:{line}: links {value}; no live page links /draft/, which "
+                                f"the live site does not carry")
         for line, label in parsed.newtab:
             if NEWTAB not in label:
                 findings.append(f"{rel}:{line}: a link that opens a new tab does not say so "
                                 f"with a hidden {NEWTAB!r}")
+    # PART 1: the live site carries no /draft/ tree (SPECIFICATION 4.1 items 0 and 3).
+    if (root / SITE).is_dir():
+        for entry in sorted((root / SITE).iterdir()):
+            if in_draft(Path(entry.name)):
+                kind = "folder" if entry.is_dir() else "file"
+                findings.append(f"{SITE}/{entry.name} exists ({kind}); the live site carries no "
+                                f"/draft/ tree: a draft is built and reviewed on the `draft` branch "
+                                f"at https://draft.secureconfig.pages.dev/draft/ (baseline "
+                                f"SPECIFICATION section 4.1 items 0 and 3)")
     if (root / "site" / "_redirects").exists():
         findings.append("site/_redirects exists; a missing path gets the 404 page with status 404, "
                         "never a redirect (the owner's rule)")
-    # PART 3: the published indexes do not refer to the /draft/ review page (fail-closed).
+    # PART 3: the published indexes do not refer to /draft/ (fail-closed).
     for name in (*STRICT_INDEXES, CORPUS_INDEX):
         path = root / SITE / name
         if path.is_file():
@@ -479,8 +502,8 @@ def main(argv=None):
         return 1
     print(f"  ok    {n} pages are self-contained (every root-relative link names a file under "
           f"site/, external links leave by http(s) on another host with the new-tab hint), only "
-          f"the /draft/ review page and the 404 page carry a robots noindex, each canonical is "
-          f"its page's own URL, no page or published index names /draft/, and there is no "
+          f"the 404 page carries a robots noindex, each canonical is its page's own URL, site/ "
+          f"holds no draft tree, no page or published index names /draft/, and there is no "
           f"_redirects")
     return 0
 

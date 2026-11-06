@@ -13,15 +13,18 @@ count, and the Claude Code install commands on the For AI assistants page; site-
 for the page copy, each entry with its source; and
 tools/version_basis_guides.txt for 1 count on the Disclosure page. Counts are computed, so a new
 guide or rule makes `--check` report the pages stale. Internal links and assets take the base path
-(`/` since promotion; `/draft/` builds the staging form). The "Draft review" page at draft/
-always carries its own canonical URL, its description, the link-preview tags and a robots
-noindex (as auditthis.ai's /draft/ page does), and no other page links it; at the root base every
-other page is indexable except the 404 page, and each indexable page carries its description, its
-canonical URL and the Open Graph (og:site_name after og:type) and Twitter link-preview tags with
-the card at images/secureconfig-card.png (as on auditthis.ai). Every page, the 404 and the review
-page included, carries the light and dark switch as the last child of the top bar, after its
-`nav`, and loads scheme.js in `<head>` before the stylesheets, without `defer` or `async`
-(SPECIFICATION.md section 7.33).
+(`/` since promotion; `/draft/` builds the staging form). The live site carries no /draft/ page
+(baseline 1.11.0 onward, SPECIFICATION.md section 4.1 items 0 and 3): a draft for review is
+built on the `draft` branch with `--base /draft/ --out site/draft`, which Cloudflare Pages deploys
+at https://draft.secureconfig.pages.dev, so the owner reviews
+https://draft.secureconfig.pages.dev/draft/, and `main` never carries site/draft/. The root build
+writes no page under draft/, and its `--check` refuses any file there. A staged build is noindex
+everywhere and carries no canonical or link previews. At the root base every page is indexable
+except the 404 page, and each indexable page carries its description, its canonical URL and the
+Open Graph (og:site_name after og:type) and Twitter link-preview tags with the card at
+images/secureconfig-card.png (as on auditthis.ai). Every page, the 404 included, carries the light
+and dark switch as the last child of the top bar, after its `nav`, and loads scheme.js in
+`<head>` before the stylesheets, without `defer` or `async` (SPECIFICATION.md section 7.33).
 
 The install commands have 1 source, README.md's "Install in Claude Code" section, so
 site-src/content.json carries none of them. The build reads that section with install_blocks()
@@ -348,8 +351,8 @@ class Builder:
         if description is not None:
             parts.append(f'<meta name="description" content="{attr(description)}">')
         if preview:
-            # The link-preview tags auditthis.ai carries on each indexable page and on its /draft/
-            # page, after the description; og:site_name follows og:type, as auditthis.ai orders it.
+            # The link-preview tags auditthis.ai carries on each indexable page, after the
+            # description; og:site_name follows og:type, as auditthis.ai orders it.
             full = f"{title} | SecureConfig.ai"
             og = (("og:type", "website"), ("og:site_name", "SecureConfig.ai"), ("og:url", canonical),
                   ("og:title", full),
@@ -629,24 +632,13 @@ class Builder:
         body = [f'<p class="lead">{self.inline(nf["lead"]["text"])}</p>', self.next_block(nf["next"])]
         return self.page("Page not found", "", self.doc("404", "That page is not here.", self.rail(), body))
 
-    def draft(self):
-        # The "Draft review" page at /draft/ (the owner's instruction of 2026-11-03, like
-        # auditthis.ai's): always noindex, its own canonical, description and link previews, in no
-        # index or top bar, and linked from no page. While a rebuild is staged it is replaced by
-        # the staged tree.
-        dr = self.c["draft"]
-        body = [f'<p class="lead">{self.inline(dr["lead"]["text"])}</p>', self.next_block(dr["next"])]
-        return self.page("Draft review", "",
-                         self.doc(dr["label"]["text"], dr["h1"]["text"], self.rail(), body),
-                         description=dr["description"]["text"], canonical=f"{ORIGIN}/draft/",
-                         preview=True)
-
     def build(self):
+        # No draft/index.html: the live site carries no /draft/ page (SPECIFICATION 4.1 item 0);
+        # the `draft` branch stages the whole site under /draft/ with --base /draft/.
         pages = {"index.html": self.home(), "guides/index.html": self.guides(),
                  "for-ai/index.html": self.for_ai(), "for-humans/index.html": self.for_humans(),
                  "checklist/index.html": self.checklist(), "disclosure/index.html": self.disclosure(),
-                 "license/index.html": self.license(), "404.html": self.notfound(),
-                 "draft/index.html": self.draft()}
+                 "license/index.html": self.license(), "404.html": self.notfound()}
         for name, text in pages.items():
             refuse(name, text)
         return pages

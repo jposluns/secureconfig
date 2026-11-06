@@ -86,7 +86,7 @@ ROOT = TOOLS.parent
 PAGE = (ROOT / "site" / "index.html").read_bytes().decode("utf-8")
 PAGE_404 = (ROOT / "site" / "404.html").read_bytes().decode("utf-8")
 SCRIPTED = (ROOT / "site" / "for-ai" / "index.html").read_bytes().decode("utf-8")
-REVIEW = (ROOT / "site" / "draft" / "index.html").read_bytes().decode("utf-8")
+LICENCE = (ROOT / "site" / "license" / "index.html").read_bytes().decode("utf-8")
 HEADERS = (ROOT / "site" / "_headers").read_text(encoding="utf-8")
 FAVICON = (ROOT / "site" / "favicon.svg").read_bytes()
 COPY_JS = '<script src="/assets/baseline/copy.js" defer></script>'
@@ -111,9 +111,10 @@ SVG_CONTENT = "inside an inline <svg>, where this gate admits only <path> and <c
 STRAY_PAGE = ('<!doctype html>\n<head>\n<meta charset="utf-8">\n' + SCHEME_JS
               + '\n</head>\n<p>x</p>\n')
 # The default fixture pages: the generated home and 404, a page that loads a baseline script, and
-# the /draft/ review page.
+# the Licence page, a folder page with no deferred script (the /draft/ review page held that place
+# until baseline 1.11.0 moved drafts to the `draft` branch).
 FIXTURE = {"index.html": PAGE, "404.html": PAGE_404, "for-ai/index.html": SCRIPTED,
-           "draft/index.html": REVIEW}
+           "license/index.html": LICENCE}
 OK_PAGES = "4 page(s) under site"
 SHARED = "shared template policy"
 # The line of the moon glyph's path on the page that loads copy.js, for a finding that names it.
@@ -352,9 +353,9 @@ CASES = [
      "site/404.html"),
     ("a valued on* handler", edited(PAGE, "<body>", '<body onload="x()">'), None, True, ON_TEXT),
     ("a valueless on* handler", edited(PAGE, "<body>", "<body onclick>"), None, True, ON_RULE),
-    ("an on* handler on the review page names the page",
-     {"draft/index.html": edited(REVIEW, "<body>", "<body ONCLICK=go>")}, None, True,
-     "site/draft/index.html"),
+    ("an on* handler on the Licence page names the page",
+     {"license/index.html": edited(LICENCE, "<body>", "<body ONCLICK=go>")}, None, True,
+     "site/license/index.html"),
     ("a handler with a spaced =", edited(PAGE, "<body>", "<body onload = 'x'>"), None, True, ON_TEXT),
     ("handler-like text in prose",
      edited(PAGE, "</body>", "<p>x onclick=alert(1)</p>\n</body>"), None, True, ON_TEXT),
