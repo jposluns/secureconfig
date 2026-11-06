@@ -28,6 +28,27 @@ if [ "${1:-}" = "--list-inputs" ]; then
   exit 0
 fi
 
+# The checks below read the guides and SKILL.md with the pinned CommonMark parser, through
+# gate_parser() in tools/check_verify_marking.py. When that parser cannot be loaded at all, from a
+# lock it cannot read or parse or from a markdown_it package without the installed version
+# metadata of markdown-it-py or mdurl, gate_parser() raises something other than
+# ParserUnavailable, which would end the first of those checks in a traceback, so the build
+# refuses here first, in one line naming the cause. An absent or mismatched parser, which raises
+# ParserUnavailable, is left to the checks below, which refuse it in their own words.
+python3 - <<'PY'
+import sys
+sys.path.insert(0, "tools")
+from check_verify_marking import ParserUnavailable, gate_parser
+try:
+    gate_parser(required=True)
+except ParserUnavailable:
+    pass
+except Exception as exc:
+    cause = " ".join(f"{type(exc).__name__}: {exc}".split())
+    sys.exit("the pinned parser cannot be loaded from tools/requirements-gates.txt and the "
+             f"installed markdown-it-py and mdurl: {cause}; refusing to build")
+PY
+
 # Each reference is a whole validated guide, in either supported layout.
 python3 tools/version_basis.py --check
 

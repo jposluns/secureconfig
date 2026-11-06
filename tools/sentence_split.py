@@ -21,7 +21,12 @@ What a sentence is, here:
   comments, legacy front matter and the generated version-basis section (its
   summary and claims JSON) are skipped, as the closing measurement recorded in
   DONE 1.385 skipped them. A claim-summary line can be measured on its own with
-  split_sentences().
+  split_sentences(). A code span and a comment are read from left to right, and
+  whichever opens first wins, so a `<!--` inside a code span opens no comment and
+  a backtick inside a comment opens no code span. A backtick run opens a code span
+  only when a run of the same length closes it later in its paragraph, on its own
+  line or a later one, as CommonMark pairs them; a heading or a table row is a
+  paragraph of one line here, and a backslash-escaped backtick opens nothing.
 - Rendering. A link or image renders as its text, and an autolink as its URL,
   before splitting, so a mark in link text counts like any other.
   Backticks, emphasis markers and every other character are kept and counted;
@@ -77,6 +82,13 @@ such run in the guides is a run of source citations, and reading them as
 sentence starts would add a sentence over 400 characters. A possessive
 apostrophe after a final s, as in users', closes a single-quoted phrase left
 open before it, and a leading apostrophe after a space, as in '90s, opens one.
+Outside code spans, a backslash-escaped `<!--`, and a `<!--` in mid-paragraph
+with no `-->` later in that paragraph, still open a comment that hides the text
+up to the next `-->` or the end of the file, where CommonMark reads each as
+text. A paragraph ends, for pairing backtick runs, at a blank line or at a line
+that opens a heading, a list item, a fence, a table, a comment or a deeper block
+quote; other block starts do not end it, and in a table row a code span pairs
+across an unescaped pipe, which GFM reads as the end of a cell.
 """
 import argparse
 import re
@@ -86,7 +98,7 @@ from itertools import accumulate
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _markdown import Fences  # noqa: E402
+from _markdown import FENCE_RE, Fences  # noqa: E402
 
 LIMIT = 400
 START = "<!-- version-basis:start -->"
@@ -99,6 +111,7 @@ LIST_RE = re.compile(r"[ \t]*(?:[-*+]|[0-9]{1,9}[.)])(?:[ \t]+|$)")
 CELL_SPLIT_RE = re.compile(r"(?<!\\)\|")
 DELIMITER_CELL_RE = re.compile(r"[ \t]*:?-+:?[ \t]*")
 BACKTICKS_RE = re.compile(r"`+")
+COMMENT_BLOCK_RE = re.compile(r" {0,3}<!--")
 LINK_RE = re.compile(
     r"!?\[((?:[^\[\]`\\]|\\.|`[^`]*`)*)\]"
     r"\([ \t]*(?:<[^<>]*>|[^\s()]*(?:\([^\s()]*\)[^\s()]*)*)"
@@ -279,21 +292,89 @@ def split_sentences(raw):
     return [sentence for _, sentence in split_rendered(render(raw))]
 
 
-def _strip_comments(line, in_comment):
-    """Remove HTML comment text from a line; return the rest and whether one is open."""
+def _closing_run(n):
+    """A run of exactly n backticks, the only run that closes a code span opened by n."""
+    return re.compile(rf"(?<!`)`{{{n}}}(?!`)")
+
+
+def _block_start(line):
+    """True if line starts a block of its own, so the paragraph before it ends there.
+
+    That is an ATX heading, a list item, a fence (as Fences opens one), a table row
+    that starts with a pipe or a line opening an HTML comment, each read after any
+    block quote markers, the closest this line scanner comes to CommonMark's rule.
+    """
+    line = QUOTE_RE.sub("", line, count=1) if QUOTE_RE.match(line) else line
+    fence = FENCE_RE.match(line)
+    return bool(HEADING_RE.match(line) or LIST_RE.match(line) or COMMENT_BLOCK_RE.match(line)
+                or line.lstrip().startswith("|")
+                or (fence and not (fence[1][0] == "`" and "`" in fence[2])))
+
+
+def _quote_depth_of(line):
+    """How many block quote markers open line."""
+    m = QUOTE_RE.match(line)
+    return m.group().count(">") if m else 0
+
+
+def _paragraph_after(lines, number):
+    """The lines after line number (one-based) that continue its paragraph, joined with LF.
+
+    The paragraph ends at a blank line, at a line that starts a block of its own or a
+    deeper block quote, and at a table header row; a line with fewer quote markers is
+    a lazy continuation and does not end it.
+    """
+    depth, found = _quote_depth_of(lines[number - 1]), []
+    for k in range(number, len(lines)):
+        line = lines[k].rstrip("\r")
+        if (not line.strip() or _block_start(line) or _quote_depth_of(line) > depth
+                or (k + 1 < len(lines) and starts_table(line, lines[k + 1].rstrip("\r")))):
+            break
+        found.append(line)
+    return "\n".join(found)
+
+
+def _strip_comments(line, in_comment, span=0, later=""):
+    """Remove HTML comment text from a line, keeping code spans.
+
+    Returns the rest of the line, whether a comment is still open at its end and, when a
+    code span is, the length of the backtick run that opened it, else 0. A code span
+    and a comment are read from left to right, so whichever opens first wins, as in
+    CommonMark: a "<!--" inside a code span opens no comment, and a backtick inside a
+    comment opens no code span. A backtick run opens a code span only when a run of the
+    same length closes it later in the line or in later, the text of the lines after it
+    that continue its paragraph (_paragraph_after); span carries a code span still open
+    at the end of a line into the next. A backslash-escaped backtick opens nothing.
+    """
     out = ""
     while line:
         if in_comment:
             end = line.find("-->")
             if end < 0:
-                return out, True
+                return out, True, 0
             line, in_comment = line[end + 3:], False
+        elif span:
+            close = _closing_run(span).search(line)
+            if not close:
+                return out + line, False, span
+            out, line, span = out + line[:close.end()], line[close.end():], 0
         else:
-            start = line.find("<!--")
-            if start < 0:
-                return out + line, False
-            out, line, in_comment = out + line[:start], line[start + 4:], True
-    return out, in_comment
+            i = 0
+            while i < len(line) and not line.startswith("<!--", i):
+                if line[i] == "\\" and line[i + 1:i + 2] in ("`", "\\"):
+                    i += 2
+                elif line[i] == "`":
+                    run = BACKTICKS_RE.match(line, i)
+                    close = _closing_run(len(run.group())).search(line + "\n" + later, run.end())
+                    if close and close.end() > len(line):
+                        return out + line, False, len(run.group())
+                    i = close.end() if close else run.end()
+                else:
+                    i += 1
+            if i == len(line):
+                return out + line, False, 0
+            out, line, in_comment = out + line[:i], line[i + 4:], True
+    return out, in_comment, span
 
 
 def table_cells(line):
@@ -337,7 +418,7 @@ def units(markdown):
     fences = Fences()
     front = bool(lines) and lines[0].rstrip("\r") == "---"
     generated = in_comment = False
-    last_row = -1
+    span, last_row = 0, -1
     for number, line in enumerate(lines, 1):
         line = line.rstrip("\r")
         if front:
@@ -355,7 +436,16 @@ def units(markdown):
             continue
         if fences.inside:
             continue
-        line, in_comment = _strip_comments(line, in_comment)
+        later = ""
+        if "`" in line:
+            # A code span may close on a later line of the paragraph, but not past a heading
+            # or a table row, whose inline text is the one line.
+            quoted = QUOTE_RE.sub("", line, count=1) if QUOTE_RE.match(line) else line
+            if not (HEADING_RE.match(quoted) or line.lstrip().startswith("|")
+                    or (last_row == number - 1 and CELL_SPLIT_RE.search(line))
+                    or (number < len(lines) and starts_table(line, lines[number]))):
+                later = _paragraph_after(lines, number)
+        line, in_comment, span = _strip_comments(line, in_comment, span, later)
         if not line.strip():
             flush()
             continue

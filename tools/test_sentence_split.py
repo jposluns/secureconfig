@@ -285,6 +285,49 @@ class Cases1016(unittest.TestCase):
                          ["It ends. Redis", "Sentinel docs say so. source"])
 
 
+class CodeSpanComments(unittest.TestCase):
+    """A `<!--` in a code span opens no comment. Before this was handled, one such opener
+    with no closer hid every later sentence of a pull request body, and one with a later
+    code span holding `-->` joined two sentences into one."""
+
+    def test_code_span_opener_hides_no_later_sentence(self):
+        self.assertEqual(guide("A `<!--` in it opens no comment. The next one is seen.\n\n"
+                               "A later paragraph.\n"),
+                         [(1, "A `<!--` in it opens no comment."), (1, "The next one is seen."),
+                          (3, "A later paragraph.")])
+
+    def test_code_span_opener_and_closer_leave_two_sentences(self):
+        self.assertEqual(guide("Type `<!--` to open one. Type `-->` to close it.\n"),
+                         [(1, "Type `<!--` to open one."), (1, "Type `-->` to close it.")])
+
+    def test_real_comment_after_a_code_span_is_still_hidden(self):
+        self.assertEqual(guide("Run `x`. <!-- Not. Seen. --> Then this.\n<!--\nHidden. Too.\n-->\n"
+                               "After.\n"),
+                         [(1, "Run `x`."), (1, "Then this."), (5, "After.")])
+
+    def test_real_comment_holding_a_backtick_is_still_hidden(self):
+        self.assertEqual(guide("Kept. <!-- a ` b. Not. --> Shown.\n<!-- `\nStill. Hidden. -->\n"
+                               "After `x`.\n"),
+                         [(1, "Kept."), (1, "Shown."), (4, "After `x`.")])
+
+    def test_code_span_may_cross_lines_of_its_paragraph(self):
+        self.assertEqual(guide("Type `<!--\nstill code` here. Then more.\n"),
+                         [(1, "Type `<!-- still code` here."), (2, "Then more.")])
+
+    def test_backtick_with_no_closer_opens_nothing(self):
+        self.assertEqual(guide("A stray ` then <!-- Hidden. Text. --> shown.\n"),
+                         [(1, "A stray ` then  shown.")])
+
+    def test_escaped_backtick_opens_nothing(self):
+        self.assertEqual(guide("An \\` then <!-- Hidden. ` --> shown. Next.\n"),
+                         [(1, "An ` then  shown."), (1, "Next.")])
+
+    def test_code_span_does_not_close_past_a_heading(self):
+        self.assertEqual(guide("Use a ` here.\n# Type `<!--`\n`\nSeen. Also seen.\n"),
+                         [(1, "Use a ` here."), (2, "Type `<!--`"), (3, "` Seen."),
+                          (4, "Also seen.")])
+
+
 class Command(unittest.TestCase):
     def run_cli(self, text, *args):
         with tempfile.TemporaryDirectory() as directory:
