@@ -8,15 +8,15 @@ while the page as generated passes. An on* attribute is a name in a tag: an onlo
 value holding ">" is refused, and the word "on" inside a closed quoted value (a description reading
 "Read on GitHub") is not refused.
 The base path must reach every internal link and asset at / (the default since promotion) and at
-/draft/ (the staging form). At the root, every page is indexable except the 404 page and the
-/draft/ review page, which carry the noindex meta; a staged build is noindex everywhere. The
-review page carries its canonical, description and link previews at every base (as auditthis.ai's
-/draft/ page does), and no other page names /draft/. At the root each indexable page and the
-review page carry their title, description, the link-preview tags (og:site_name after og:type)
-and their canonical in the template's head order, each tag with its full value (the page title with
-" | SecureConfig.ai", the description from site-src/content.json, the card's alt text); the 404
-page and a staged build's other pages carry no previews.
-Every page, the 404 and the review page included, at both bases, carries the light and dark switch
+/draft/ (the staging form the `draft` branch uses). The live site carries no /draft/ page
+(baseline SPECIFICATION section 4.1 item 0): the root build writes no page under draft/, writes
+the same pages as the staged build, and no root page names /draft/. At the root every page is
+indexable except the 404 page, which carries the noindex meta; a staged build is noindex
+everywhere. At the root each indexable page carries its title, description, the link-preview tags
+(og:site_name after og:type) and its canonical in the template's head order, each tag with its
+full value (the page title with " | SecureConfig.ai", the description from site-src/content.json,
+the card's alt text); the 404 page and every page of a staged build carry no previews or canonical.
+Every page, the 404 included, at both bases, carries the light and dark switch
 of baseline 1.6.0 (SPECIFICATION 7.33) exactly as the reference pages write it, once, as the last
 child of the top bar after its nav, and loads scheme.js once, right after the touch icon and
 before the first stylesheet, with data-cfasync="false" before src and no defer or async.
@@ -37,6 +37,8 @@ tools/test_install_blocks.py.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
 page at any base; a stray file outside assets/baseline/ other than assets/site.css is refused at
 both bases, except at the root a published file (PUBLISHED, such as llms.txt) beside the pages.
+At the root it refuses a staged build written under draft/ beside the pages (SPECIFICATION
+section 4.1 item 3: `main` never carries the draft).
 """
 import html
 import importlib.util
@@ -81,7 +83,7 @@ PREVIEWS = {"index.html": ("Home", "home"), "guides/index.html": ("Guides", "gui
             "for-humans/index.html": ("For humans", "for_humans"),
             "checklist/index.html": ("Checklist", "checklist"),
             "disclosure/index.html": ("Disclosure", "disclosure"),
-            "license/index.html": ("Licence", "license"), "draft/index.html": ("Draft review", "draft")}
+            "license/index.html": ("Licence", "license")}
 
 
 def refused(text):
@@ -293,8 +295,8 @@ def main():
                 if needle not in text:
                     failures.append(f"base {base}: {name} lacks {needle}")
 
-    # Baseline 1.6.0 (SPECIFICATION 7.33): the switch on every page, the 404 and the review page
-    # included, as the last child of the top bar, and scheme.js between the touch icon and the
+    # Baseline 1.6.0 (SPECIFICATION 7.33): the switch on every page, the 404 included, as the
+    # last child of the top bar, and scheme.js between the touch icon and the
     # first stylesheet, without defer or async.
     for base, built in (("/draft/", staged_pages), ("/", pages)):
         script = f'<script data-cfasync="false" src="{base}assets/baseline/scheme.js"></script>'
@@ -308,35 +310,32 @@ def main():
                 failures.append(f"base {base}: {name} does not load scheme.js once, after the touch "
                                 f"icon and before the first stylesheet, as {script}")
 
-    # At the root, only the 404 page and the /draft/ review page are noindex; a staged build is
-    # noindex everywhere. The review page carries its canonical, description and link previews at
-    # every base, and no other page names /draft/.
+    # The live site carries no /draft/ page (SPECIFICATION 4.1 item 0): the root build writes no
+    # page under draft/ and the same pages as the staged build, and no root page names /draft/.
+    # At the root only the 404 page is noindex; a staged build is noindex everywhere.
+    for name in pages:
+        if name.casefold().startswith("draft/"):
+            failures.append(f"base /: the build writes {name}; the live site carries no /draft/ page")
+    if sorted(pages) != sorted(staged_pages):
+        failures.append(f"the root and staged builds write different pages: {sorted(pages)} and "
+                        f"{sorted(staged_pages)}")
+    if "draft" in builder.c:
+        failures.append("site-src/content.json still carries a draft entry")
     for name, text in pages.items():
-        hidden = name in ("404.html", "draft/index.html")
+        hidden = name == "404.html"
         if (ROBOTS_META in text) is not hidden:
             failures.append(f"base /: {name} {'lost' if hidden else 'still carries'} the noindex meta")
-        if name != "draft/index.html" and "/draft/" in text:
+        if "/draft/" in text:
             failures.append(f"base /: {name} names /draft/")
     for name, text in staged_pages.items():
         if ROBOTS_META not in text:
             failures.append(f"base /draft/: {name} lacks the noindex meta")
-    for base, built in (("/draft/", staged_pages), ("/", pages)):
-        review = built["draft/index.html"]
-        for needle in ('<link rel="canonical" href="https://secureconfig.ai/draft/">',
-                       '<meta name="description" content="The path where new versions of '
-                       'secureconfig.ai are staged for review before they are published.">',
-                       '<meta property="og:url" content="https://secureconfig.ai/draft/">',
-                       '<meta property="og:title" content="Draft review | SecureConfig.ai">',
-                       '<meta name="twitter:title" content="Draft review | SecureConfig.ai">',
-                       "<h1>Draft review</h1>", '<p class="lbl first">Drafts</p>'):
-            if needle not in review:
-                failures.append(f"base {base}: the review page lacks {needle}")
 
-    # At the root each indexable page and the review page carry their title and description, then
+    # At the root each indexable page carries its title and description, then
     # the link previews (og:site_name after og:type, as auditthis.ai orders it), then the icons and
     # stylesheets, then their canonical URL, each tag with its full value; the 404 page carries no
-    # link previews, canonical or description, and a staged build's other pages no link previews or
-    # canonical.
+    # link previews, canonical or description, and no page of a staged build carries link previews
+    # or a canonical.
     for name, text in pages.items():
         head = text.split("</head>", 1)[0]
         if name == "404.html":
@@ -377,7 +376,7 @@ def main():
             failures.append(f"base /: {name} lacks the head's description, link previews and "
                             f"canonical in order (missing {missing!r})")
     for name, text in staged_pages.items():
-        if name != "draft/index.html" and ('rel="canonical"' in text or 'property="og:' in text):
+        if 'rel="canonical"' in text or 'property="og:' in text or 'name="twitter:' in text:
             failures.append(f"base /draft/: {name} carries a canonical or link-preview tags")
 
     # --check against a build it did not write, at the root base (the default).
@@ -424,6 +423,18 @@ def main():
             if rc != 1 or f"{stray} is neither a page this build writes" not in text:
                 failures.append(f"--check at the root accepted a stray {stray}: {text!r}")
             (out / stray).unlink()
+        # SPECIFICATION 4.1 items 0 and 3: the staged build written under draft/ beside the root
+        # pages, as on the `draft` branch, is refused at the root, page and copied file alike.
+        rc, text = run("--base", "/draft/", "--out", str(out / "draft"))
+        if rc != 0:
+            failures.append(f"a staged build under the root's draft/ failed: {text!r}")
+        (out / "draft" / "assets" / "baseline").mkdir(parents=True)
+        (out / "draft" / "assets" / "baseline" / "baseline.css").write_text("p{}", encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if (rc != 1 or "draft/index.html is not a page this build writes" not in text
+                or "draft/assets/baseline/baseline.css is neither" not in text):
+            failures.append(f"--check at the root accepted a staged tree under draft/: {text!r}")
+        shutil.rmtree(out / "draft")
         (out / "404.html").unlink()
         rc, text = run("--check", "--out", str(out))
         if rc != 1 or "404.html is missing" not in text:
@@ -464,15 +475,15 @@ def main():
             print(f"  FAIL  {f}")
         return 1
     print(f"  ok    {len(plants)} planted refusals and a description using the word on, the base "
-          f"path at / and /draft/ with the root's indexability, link previews at their full values "
-          f"and canonicals and the review page's canonical and link previews, the light and dark "
+          f"path at / and /draft/ with no /draft/ page at the root, the root's indexability, link "
+          f"previews at their full values and canonicals, none on a staged build, the light and dark "
           f"switch and scheme.js on every page at both bases, the landing page's About line, the "
           f"install commands read from README.md only, with {install_cases} install-section cases "
           f"(mismatched fence lengths, an indented fence, a third block, the blocks swapped, the "
           f"shell block edited, CRLF and CR line endings and more), and "
           f"--check on a changed, an extra "
-          f".html and .HTM page, a missing page, a root-base published file and strays, and the "
-          f"staged strays")
+          f".html and .HTM page, a missing page, a root-base published file and strays, a staged "
+          f"tree under the root's draft/, and the staged strays")
     return 0
 
 

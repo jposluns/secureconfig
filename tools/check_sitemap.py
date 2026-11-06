@@ -18,9 +18,11 @@ WHAT IT CHECKS:
     no other element, no attribute and no text outside `loc` and `lastmod` but whitespace;
   - every `loc` is `https://secureconfig.ai` and a path, with no query, fragment, `..`, `.` or
     empty segment and no percent sign, that is `/` or ends with `/`, so it names the folder page
-    `site/<path>index.html` (page_of). That page exists as a regular file, is not under the
-    draft's base path while the site is staged, and carries no robots meta tag whose content
-    includes `noindex` or `none` (which means `noindex, nofollow`), each read as one
+    `site/<path>index.html` (page_of). Its first segment is not `draft` in any case at any base:
+    the live site carries no /draft/ page (baseline SPECIFICATION section 4.1 items 0 and 2; a
+    draft is built and reviewed on the `draft` branch). That page exists as a regular file, is
+    not under the draft's base path while the site is staged, and carries no robots meta tag whose
+    content includes `noindex` or `none` (which means `noindex, nofollow`), each read as one
     comma-separated token in any case. No `loc` is listed twice;
   - every `lastmod` is a calendar date written YYYY-MM-DD;
   - every indexable live page is listed: each `index.html` under site/, outside the draft tree
@@ -32,8 +34,9 @@ WHAT IT CHECKS:
 
 THE BASE PATH: the draft tree (DRAFT, site/draft) and its base path (BASE, /draft/) are imported
 from tools/check_draft.py, so this gate keeps no copy of its own. The site is staged while BASE is
-not `/`. When promotion sets BASE to `/`, the two draft rules above switch off: no `loc` is
-refused as a draft page, and every page under site/ is a live page. That needs no edit here only
+not `/`. At BASE `/` the two staged-draft rules above switch off: no `loc` is refused for lying
+under BASE, and every page under site/ is a live page; a `/draft/` loc is still refused by its
+first segment, and tools/check_draft.py refuses any site/draft/ tree. That needs no edit here only
 while tools/check_draft.py stays importable with BASE = "/". If that gate is retired or rewritten
 and DRAFT and BASE move, the import below must name their new home, still with BASE = "/"; until
 it does, this gate and tools/check_sitemap_lastmod.py fail at import.
@@ -185,6 +188,9 @@ def page_of(loc):
     if path is None or not FOLDER_PATH.fullmatch(path):
         return None, (f"loc {loc!r} is not {ORIGIN} and a folder path ending with /, "
                       f"the only URL form this gate maps to a page")
+    if path.split("/")[1].casefold() == "draft":
+        return None, (f"loc {loc!r} is a /draft/ page; the live site carries no /draft/ page "
+                      f"(drafts are built and reviewed on the `draft` branch)")
     if STAGED and path.startswith(BASE):
         return None, f"loc {loc!r} is a {BASE} page, which stays out of search"
     return (SITE / path.strip("/") / "index.html" if path != "/" else SITE / "index.html"), None

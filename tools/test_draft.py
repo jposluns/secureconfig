@@ -8,16 +8,21 @@ pristine copy among them). A mutation that no longer applies RAISES, so a page e
 case into a pristine run.
 
 The staged-era /draft/* header rule retired with the staging it policed. What carried over is
-retargeted to the generated pages at the root: the robots-meta reading (now on the /draft/ review
-page and the 404, with every other page carrying none), every URL-shape refusal (a
+retargeted to the generated pages at the root: the robots-meta reading (on the 404, with every
+other page carrying none; the cases once read on the /draft/ review page, which baseline 1.11.0
+moved to the `draft` branch, now read the 404's), every URL-shape refusal (a
 browser-normalized host, a trailing-dot, upper-case, percent-encoded or non-ASCII host, a Pages
 alias, https:/// and scheme-relative spellings, a backslash, whitespace, javascript:), the URL
 attributes beyond href and src, http-equiv, the new-tab hint, site/_redirects, CSS @import and
 url() containment and the site.css grammar. New at the root: a root-relative link must name a file
-under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable pages and the
-review page, none on the 404); the "no page links /draft/" and Disclosure and Licence rules compare
+under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable pages, none on
+the 404); the live site carries no draft tree, so a site/draft/ folder (with a page or with any
+other file), a site/Draft/ folder and a site/draft file are each refused while a site/drafts/
+folder is not the draft tree; the "no page links /draft/" and Disclosure and Licence rules compare
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
-percent-encoded letter or a fragment does not get past them; and the published indexes are read
+percent-encoded letter or a fragment does not get past them (the /draft/ link cases plant a draft
+tree, so the link rule itself is read; without one a /draft/ link names no file); and the
+published indexes are read
 by a fail-closed rule after percent-decoding and character-reference decoding (at most 8 rounds),
 NFKC, case folding and `\\` read as `/`: site/llms.txt, site/robots.txt and
 site/.well-known/security.txt are refused for any literal `draft` once tabs and CRs are deleted
@@ -41,7 +46,11 @@ read by that first name, as a browser reads it.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
-setting only the 2 per-site constants is accepted by the build and the gate.
+setting only the 2 per-site constants is accepted by the build and the gate. The staged() case
+builds the `draft` branch's staging form (`--base /draft/ --out site/draft`) beside the root
+build: the staged --check passes, so the staging form keeps working, and on this tree, as on
+`main`, the root --check and this gate each refuse the draft tree (baseline SPECIFICATION
+section 4.1 items 0 and 3).
 """
 import shutil
 import subprocess
@@ -86,13 +95,19 @@ def write(rel, text):
 
 HOME = "site/index.html"
 GUIDES = "site/guides/index.html"
-REVIEW = "site/draft/index.html"
 P404 = "site/404.html"
 META = '<meta name="robots" content="noindex, nofollow">'
 START = 'href="/guides/"'
-OK_LINE = "9 pages are self-contained"
+GUIDES_CANONICAL = 'href="https://secureconfig.ai/guides/"'
+OK_LINE = "8 pages are self-contained"
 STRAY = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>x</title>\n'
          '</head>\n<body><a href="/nowhere/">gone</a></body>\n</html>\n')
+# A page that passes every per-page rule of the gate, for planting where only its path matters.
+PLAIN = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>x</title>\n'
+         '</head>\n<body><p>x</p></body>\n</html>\n')
+# The finding for a draft tree under site/ (PART 1 of the gate).
+NO_TREE = "the live site carries no /draft/ tree"
+LINKS_DRAFT = "no live page links /draft/"
 
 
 def append(rel, text):
@@ -108,6 +123,15 @@ def append(rel, text):
 def link(value):
     """The home page's first /guides/ link pointed at value."""
     return edit(HOME, START, f'href="{value}"')
+
+
+def draft_link(value):
+    """A planted draft tree (site/draft/index.html) and the home page's first /guides/ link
+    pointed at value, so the gate's /draft/ link rule, not only its missing-file rule, reads it."""
+    def mutate(d):
+        write("site/draft/index.html", PLAIN)(d)
+        link(value)(d)
+    return mutate
 
 
 def guides_link(value):
@@ -281,24 +305,34 @@ INDEX_CASES += [("llms.txt prose 'Raft consensus and Raft logs'",
 
 # (description, mutation, expected text, expected exit)
 CASES = [
-    ("the review page without the robots meta", edit(REVIEW, META + "\n", ""),
-     "must carry exactly 1 robots meta", 1),
-    ("the review page with a second robots meta", edit(REVIEW, META, META + META),
-     "must carry exactly 1 robots meta", 1),
-    ("the review page's robots meta only inside a comment", edit(REVIEW, META, f"<!-- {META} -->"),
-     "must carry exactly 1 robots meta", 1),
-    ("a second robots meta on the review page, single-quoted, allowing indexing",
-     edit(REVIEW, META, META + "<meta name='ROBOTS' content='index, follow'>"),
-     "must carry exactly 1 robots meta", 1),
-    ("a duplicate name attribute on a second robots meta on the review page, the first being robots",
-     edit(REVIEW, META, META + '<meta name="robots" name="x" content="index, follow">'),
-     "must carry exactly 1 robots meta", 1),
-    ("the review page's robots meta in upper case with other spacing",
-     edit(REVIEW, META, '<META NAME="Robots" CONTENT="NOINDEX,NOFOLLOW">'), OK_LINE, 0),
     ("the 404 page without its robots meta", edit(P404, META + "\n", ""),
      "must carry exactly 1 robots meta", 1),
+    ("the 404 page with a second robots meta", edit(P404, META, META + META),
+     "must carry exactly 1 robots meta", 1),
+    ("the 404 page's robots meta only inside a comment", edit(P404, META, f"<!-- {META} -->"),
+     "must carry exactly 1 robots meta", 1),
+    ("a second robots meta on the 404 page, single-quoted, allowing indexing",
+     edit(P404, META, META + "<meta name='ROBOTS' content='index, follow'>"),
+     "must carry exactly 1 robots meta", 1),
+    ("a duplicate name attribute on a second robots meta on the 404 page, the first being robots",
+     edit(P404, META, META + '<meta name="robots" name="x" content="index, follow">'),
+     "must carry exactly 1 robots meta", 1),
+    ("the 404 page's robots meta in upper case with other spacing",
+     edit(P404, META, '<META NAME="Robots" CONTENT="NOINDEX,NOFOLLOW">'), OK_LINE, 0),
     ("a robots meta on an indexable page", edit(GUIDES, "<title>Guides", META + "\n<title>Guides"),
      "carries a robots meta element", 1),
+    # The live site carries no draft tree (SPECIFICATION 4.1 items 0 and 3), in any case and
+    # whatever it holds; a folder whose name only begins with draft is not the tree.
+    ("a site/draft/ folder holding a page", write("site/draft/index.html", PLAIN),
+     f"site/draft exists (folder); {NO_TREE}", 1),
+    ("a site/draft/ folder holding no page, only a stylesheet",
+     write("site/draft/assets/baseline/baseline.css", "p{}\n"),
+     f"site/draft exists (folder); {NO_TREE}", 1),
+    ("a site/Draft/ folder in another case", write("site/Draft/notes.txt", "x\n"),
+     f"site/Draft exists (folder); {NO_TREE}", 1),
+    ("a site/draft file", write("site/draft", "x\n"), f"site/draft exists (file); {NO_TREE}", 1),
+    ("a site/drafts/ folder, which is not the draft tree", write("site/drafts/index.html", PLAIN),
+     "9 pages are self-contained", 0),
     ("a link to a page that does not exist", link("/nowhere/"), "names no file", 1),
     ("a ../ path out of site/", link("/../SECURITY.md"), "names no file", 1),
     ("a relative link", link("guides/"), "relative path", 1),
@@ -362,32 +396,33 @@ CASES = [
      guides_link("/guides/../disclosure/index.html?x#y"), "only the landing page", 1),
     ("an inner page linking the Licence page with a percent-encoded letter",
      guides_link("/%6cicense/"), "only the landing page", 1),
-    ("a page linking the /draft/ review page",
+    ("a page linking /draft/, with no draft tree",
      edit(HOME, '<a class="start"', '<a href="/draft/">drafts</a><a class="start"'),
-     "no page links the /draft/ review page", 1),
-    ("a link to /draft/ with a query", link("/draft/?x"), "no page links the /draft/ review page", 1),
-    ("a link to /draft/ with an extra slash", link("/draft//"),
-     "no page links the /draft/ review page", 1),
-    ("a link to /draft/ through a dot segment", link("/guides/../draft/"),
-     "no page links the /draft/ review page", 1),
-    ("a link to /draft/ through a percent-encoded dot segment", link("/guides/%2e%2e/draft/"),
-     "no page links the /draft/ review page", 1),
-    ("a link to /draft/ with a percent-encoded letter", link("/%64raft/"),
-     "no page links the /draft/ review page", 1),
-    ("a link to /draft/index.html with a fragment", link("/draft/index.html#a"),
-     "no page links the /draft/ review page", 1),
-    ("the review page's canonical on another host",
-     edit(REVIEW, 'href="https://secureconfig.ai/draft/"', 'href="https://example.net/draft/"'),
+     "href='/draft/' names no file", 1),
+    ("a page linking /draft/, with a draft tree planted", draft_link("/draft/"), LINKS_DRAFT, 1),
+    ("a link to /draft/ with a query", draft_link("/draft/?x"), LINKS_DRAFT, 1),
+    ("a link to /draft/ with an extra slash", draft_link("/draft//"), LINKS_DRAFT, 1),
+    ("a link to /draft/ through a dot segment", draft_link("/guides/../draft/"), LINKS_DRAFT, 1),
+    ("a link to /draft/ through a percent-encoded dot segment", draft_link("/guides/%2e%2e/draft/"),
+     LINKS_DRAFT, 1),
+    ("a link to /draft/ with a percent-encoded letter", draft_link("/%64raft/"), LINKS_DRAFT, 1),
+    ("a link to /draft/index.html with a fragment", draft_link("/draft/index.html#a"),
+     LINKS_DRAFT, 1),
+    ("an indexable page's canonical on another host",
+     edit(GUIDES, GUIDES_CANONICAL, 'href="https://example.net/guides/"'),
      "is not this page's own URL", 1),
-    ("the review page's canonical naming a missing path",
-     edit(REVIEW, 'href="https://secureconfig.ai/draft/"', 'href="https://secureconfig.ai/nowhere/"'),
+    ("an indexable page's canonical naming a missing path",
+     edit(GUIDES, GUIDES_CANONICAL, 'href="https://secureconfig.ai/nowhere/"'),
      "is not this page's own URL", 1),
     ("a canonical over plain HTTP",
-     edit(REVIEW, 'href="https://secureconfig.ai/draft/"', 'href="http://secureconfig.ai/draft/"'),
+     edit(GUIDES, GUIDES_CANONICAL, 'href="http://secureconfig.ai/guides/"'),
      "is not this page's own URL", 1),
-    ("the review page's canonical resolving to another page, the home page",
-     edit(REVIEW, 'href="https://secureconfig.ai/draft/"', 'href="https://secureconfig.ai/"'),
+    ("an indexable page's canonical resolving to another page, the home page",
+     edit(GUIDES, GUIDES_CANONICAL, 'href="https://secureconfig.ai/"'),
      "the canonical 'https://secureconfig.ai/' is not this page's own URL", 1),
+    ("an indexable page's canonical naming /draft/",
+     edit(GUIDES, GUIDES_CANONICAL, 'href="https://secureconfig.ai/draft/"'),
+     "the canonical 'https://secureconfig.ai/draft/' is not this page's own URL", 1),
     ("an indexable page without its canonical",
      edit(GUIDES, '<link rel="canonical" href="https://secureconfig.ai/guides/">\n', ""),
      "site/guides/index.html must carry exactly 1 canonical", 1),
@@ -455,6 +490,35 @@ def generated(edit_content, extra=None):
         shutil.rmtree(d, ignore_errors=True)
 
 
+def staged():
+    """Build the root pages and, beside them, the `draft` branch's staging form
+    (`--base /draft/ --out site/draft`) from a scratch copy of their sources, then run the staged
+    --check, the root --check and check_draft.py: [(exit, output)] for those 3."""
+    d = Path(tempfile.mkdtemp())
+    try:
+        for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/check_draft.py",
+                    "site-src/content.json", "README.md", "tools/version_basis_guides.txt"):
+            (d / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / rel, d / rel)
+        shutil.copytree(ROOT / "site" / "assets", d / "site" / "assets")
+        build = str(d / "scripts" / "build-site.py")
+        out = []
+        for args in ([], ["--base", "/draft/", "--out", "site/draft"]):
+            r = subprocess.run([sys.executable, "-I", "-B", build, *args], capture_output=True,
+                               text=True, timeout=120)
+            if r.returncode:
+                return [(r.returncode, f"the build {args} failed: {(r.stdout + r.stderr).strip()}")] * 3
+        for cmd in ([build, "--check", "--base", "/draft/", "--out", "site/draft"],
+                    [build, "--check"],
+                    [str(d / "tools" / "check_draft.py"), "--root", str(d)]):
+            r = subprocess.run([sys.executable, "-I", "-B", *cmd], capture_output=True, text=True,
+                               timeout=120)
+            out.append((r.returncode, (r.stdout + r.stderr).strip()))
+        return out
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def main():
     failures = []
     for desc, mutate, expected, want in CASES:
@@ -487,6 +551,17 @@ def main():
     if b or c or g:
         failures.append(f"a site.css setting only --sw was refused: build {b} {bout!r}, check {c} "
                         f"{cout!r}, gate {g} {gout!r}")
+    # The `draft` branch's staging form keeps working (its own --check passes), and a draft tree
+    # beside the root pages, as on `main`, fails the root --check and this gate (SPECIFICATION
+    # 4.1 items 0 and 3).
+    (s, sout), (c, cout), (g, gout) = staged()
+    if s or "match a fresh build (base /draft/)" not in sout:
+        failures.append(f"the staging form --base /draft/ --out site/draft did not pass its own "
+                        f"--check: {sout!r}")
+    if c != 1 or "draft/index.html is not a page this build writes" not in cout:
+        failures.append(f"the root --check accepted a staged draft tree under site/draft/: {cout!r}")
+    if g != 1 or f"site/draft exists (folder); {NO_TREE}" not in gout:
+        failures.append(f"the gate accepted a staged draft tree under site/draft/: {gout!r}")
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
@@ -495,8 +570,9 @@ def main():
     print(f"  ok    {len(CASES)} self-containment, indexability and published-index cases at the "
           f"root ({refusals} refusals and {len(CASES) - refusals} accepted changes, the pristine "
           f"site among them), "
-          f"and 2 generated-page cases (a Unicode host refused, a site.css accepted by the build "
-          f"and the gate)")
+          f"2 generated-page cases (a Unicode host refused, a site.css accepted by the build "
+          f"and the gate), and the staging form built beside the root pages (its own --check "
+          f"passes; the root --check and the gate refuse the draft tree)")
     return 0
 
 

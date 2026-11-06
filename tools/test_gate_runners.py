@@ -201,7 +201,7 @@ PALETTE_CASES = (
 # The overflow section of tools/run_all_checks.sh, to the next section, and its page list.
 OVERFLOW_SECTION = re.compile(r"^# section: overflow\n.*?(?=^# section: )", re.M | re.S)
 OVERFLOW_LIST = re.compile(r"^overflow_pages=\(([^)\n]*)\)$", re.M)
-OVERFLOW_OK = "  ok    check_overflow.js: the 8 site pages pass at every default width in both schemes"
+OVERFLOW_OK = "  ok    check_overflow.js: the 7 site pages pass at every default width in both schemes"
 OVERFLOW_SKIP = ("  SKIP  node, the playwright package or its headless Chromium shell was not found; "
                  "overflow check not run.")
 OVERFLOW_REQUIRED = ("  FAIL  check_overflow.js needs node, the playwright package and its headless "
@@ -216,7 +216,7 @@ OVERFLOW_USAGE = "  FAIL  check_overflow.js exited 2, a usage error; the pages a
 OVERFLOW_MISSING = "  FAIL  the overflow check's page list names page(s) with no generated file:"
 OVERFLOW_UNLISTED = "  FAIL  the overflow check's page list does not name the generated page(s)"
 OVERFLOW_ANY_FAIL = "  FAIL  "
-OVERFLOW_PASS = "RESULT: pass (8 pages, 64 cases, 0 failing)"
+OVERFLOW_PASS = "RESULT: pass (7 pages, 56 cases, 0 failing)"
 EXIT_TRAP = "the EXIT trap set before the section ran"
 # The stand-in node: it records its arguments, answers the Chromium check with STANDIN_BROWSER, and
 # otherwise records its PID and becomes the stand-in check body.
@@ -262,10 +262,15 @@ OVERFLOW_CASES = (
      [OVERFLOW_OK]),
     ("no home page file", "exit 0", 0, True, "", ["site/index.html"], [], True, False,
      [f"{OVERFLOW_MISSING} site/index.html;"], [OVERFLOW_OK, OVERFLOW_SKIP]),
-    ("no section page file", "exit 0", 0, True, "1", ["site/draft/index.html"], [], True, False,
-     [f"{OVERFLOW_MISSING} site/draft/index.html;"], [OVERFLOW_OK, OVERFLOW_REQUIRED]),
+    ("no section page file", "exit 0", 0, True, "1", ["site/license/index.html"], [], True, False,
+     [f"{OVERFLOW_MISSING} site/license/index.html;"], [OVERFLOW_OK, OVERFLOW_REQUIRED]),
     ("an unlisted section page", "exit 0", 0, True, "", [], ["site/extra/index.html"], True, True,
      [f"{OVERFLOW_UNLISTED} site/extra/index.html", OVERFLOW_OK], [OVERFLOW_MISSING]),
+    # The live site carries no /draft/ page (baseline SPECIFICATION 4.1 item 0), so the list does
+    # not name one and a page under site/draft/ is unlisted.
+    ("a site/draft/ page, which the list does not name", "exit 0", 0, True, "", [],
+     ["site/draft/index.html"], True, True,
+     [f"{OVERFLOW_UNLISTED} site/draft/index.html", OVERFLOW_OK], [OVERFLOW_MISSING]),
     ("unlisted nested and top-level pages", "exit 0", 0, True, "", [],
      ["site/guides/aws/index.html", "site/notes.HTM"], True, True,
      [f"{OVERFLOW_UNLISTED} site/guides/aws/index.html site/notes.HTM", OVERFLOW_OK],
