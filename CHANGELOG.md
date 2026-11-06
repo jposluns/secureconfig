@@ -15,6 +15,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-11-06
+
+- `jupyter.md`: moves the JupyterHub basis from 6.1.1 to 6.2.0 and from 5.5.4 to 5.5.5 under the maintainer's standing version-basis policy of 2026-11-04. Section 5 now says 6.2.0 upgrades the database schema at startup by default, with `c.JupyterHub.upgrade_db = False` to opt out, that 5.5.5 keeps `False`, and that both releases print the group-drop error before aborting. 3 LOW fixes from the #1212 QA round 3 report add the OAuth state cookie's random name suffix and the upgrade notes' POST body fallback, and align DONE 1.402 and TODO 1.431 with the guide's state-cookie inference (#1232)
+
 ## 2026-11-05
 
 - `self-hosted-idp.md`: claim `keycloak-security-fixes` restores CVE-2026-96445's full title, "Conditional OTP trusts skip headers on untrusted proxy paths". The section 3 SCIM inference and claim `keycloak-scim-api` now account for the source restriction on `/realms/master/`; section 3 quotes Keycloak's reverse proxy guide, and the claim cites it. Verify step 8's comment no longer assumes a default result cap, and no command changed. TODO 1.435 names the 3 items on which the guide makes no statement. The 4 fixes come from LOW rows of the #1221 fix worker and QA round 2 report (#1225)
