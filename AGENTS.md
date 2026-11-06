@@ -165,15 +165,28 @@ reviews the draft at `https://draft.secureconfig.pages.dev/draft/`. `main` never
 under `site/draft/` but skips folders, so an empty folder there passes it, and
 `tools/check_draft.py` refuses any `site/` entry named `draft` in any case, folder or file, empty
 or not. Those checks refuse the staged tree on the `draft` branch too, and no gate excludes
-`/draft/` today. So the `draft` branch's Pages build (`scripts/pages-build.sh`) fails until that
-branch gives each of these checks an explicit `/draft/` exclusion, or makes it cover the draft
-under the template's rules (item 3): the root `--check`, `tools/check_draft.py` and
-`tools/check_csp_hashes.py`. The last one's head-line and script models refuse the staged pages,
-and it refuses any `X-Robots-Tag` rule, so that branch's exclusion must admit the
-`X-Robots-Tag: noindex` rule for `/draft/*` that item 2 requires. The gate suite's overflow
-page list in `tools/run_all_checks.sh`, which the Pages build does not run, refuses every
-`.html` or `.htm` page under the draft, though not other files or an empty folder, and needs the
-same exclusion on that branch. Promotion follows the template's item 5: only after the owner
+`/draft/` today. The checks found so far to refuse the staged tree are the root `--check`,
+`tools/check_draft.py`, `tools/check_csp_hashes.py`, the gate suite's overflow page list in
+`tools/run_all_checks.sh` and `tools/check_site.py` (the suite's `aiqt-baseline` section); this
+list is not known to be complete. `tools/check_csp_hashes.py`'s head-line and script models refuse
+the staged pages, and it refuses any `X-Robots-Tag` rule, so that branch's exclusion must admit
+the `X-Robots-Tag: noindex` rule for `/draft/*` that item 2 requires. The overflow list refuses
+every `.html` or `.htm` page under the draft, though not other files or an empty folder, and
+`tools/check_site.py` refuses every internal link it cannot resolve. `scripts/pages-build.sh` runs
+the first 3, so the `draft` branch's Pages build fails until they are handled; the other 2 run
+only in the gate suite. Before review, the `draft` branch runs `scripts/pages-build.sh` and the
+whole suite (`tools/run_all_checks.sh`), and gives every check that refuses the staged tree an
+explicit `/draft/` exclusion or makes it cover the draft under the template's rules (item 3),
+removing each exclusion at promotion. The gates' self-tests that copy the real `site/`, for
+example `tools/test_draft.py`, change together with each exclusion. The staged For AI and Guides
+pages link `/draft/llms.txt` and `/draft/llms-full.txt`, which the build and copy above do not
+create, so the `draft` branch must make those links resolve: copy `site/llms.txt` and
+`site/llms-full.txt` under `site/draft/`, or have the staged pages link the live files, which
+item 1 allows. The current build needs the copy: it prefixes every root-relative link with the
+base, so its staged pages link only the `/draft/` paths, and linking the live files needs a build
+change. If the files are copied, the staged `--check` (`--check --base /draft/ --out site/draft`)
+refuses them too, because at that base it refuses every file outside the pages and
+`assets/baseline/`, so it then needs the same handling. Promotion follows the template's item 5: only after the owner
 approves, 1 pull request from `draft` to `main` takes every step that item lists, among them
 rebuilding the draft at base `/` and removing the `/draft/` noindex rules and any gate exclusion.
 
