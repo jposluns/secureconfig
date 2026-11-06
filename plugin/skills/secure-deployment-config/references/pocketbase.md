@@ -1124,7 +1124,7 @@ service result or deployed-bundle scan is claimed.
 
 The November 2026 date in this heading is the guide-wide documentation check, which covers every rolling documentation item: the 9 Appwrite rolling documentation items were rechecked as served on 2026-11-04 and the 5 PocketBase pages as served on 2026-11-05. Items pinned to a release or commit carry no check date, except those marked "checked October 2026" or "checked November 2026", which were checked individually, and some pinned items were first cited in October or November 2026.
 
-The PocketBase source items cite its author's forge at the v0.41.1 tag, because PocketBase moved its source and releases off GitHub at v0.41.0. The forge's line-anchor format is not established, so line ranges are in the link text. The cited files and line ranges were read in the v0.41.1 Go module, whose recorded origin is the forge's v0.41.1 tag at commit f70b24e1; the forge pages themselves were not opened, so that they serve the same text is not established.
+The PocketBase source items cite its author's forge at the v0.41.1 tag, because PocketBase moved its source and releases off GitHub at v0.41.0. The forge's line-anchor format is not established, so line ranges are in the link text. The cited files and line ranges were read in the v0.41.1 Go module, whose recorded origin is the forge's v0.41.1 tag at commit f70b24e1; the forge pages themselves were not opened, so that they serve the same text is not established. The v0.41.0 release notes were read in the forge's public releases collection, but the release-notes link cited below was not opened, so that it resolves to those notes is not established; its form is taken from the author's own links in the forge's Presentator v3.4.72 and v3.4.73 release notes.
 
 - PocketBase going to production (rolling documentation, checked November 2026): https://pocketbase.io/docs/going-to-production/
 - PocketBase API rules and filters (rolling documentation, checked November 2026): https://pocketbase.io/docs/api-rules-and-filters/
@@ -1364,7 +1364,7 @@ Claims (full source mapping in the JSON block below):
 - pb-limit-rules (REASONED; pb): Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s.
 - pb-limit-bypass (REASONED; pb): Superusers and rateLimits.excludedIPs bypass limits; test ordinary non-excluded clients.
 - pb-smtp (REASONED; pb): smtp.enabled and smtp.tls default false; disabled SMTP falls back to sendmail. Configure protected transport and test actual delivery.
-- pb-forge (REASONED; pb): From v0.41.0 PocketBase publishes its source and releases on its author's forge at ganigeorgiev.com, which this guide cites at v0.41.1; the v0.41.0 notes flag only the Go module's move to the new host, and no guide statement depends on the module path.
+- pb-forge (REASONED; pb): From v0.41.0 PocketBase publishes its source and releases on its author's forge at ganigeorgiev.com, which this guide cites at v0.41.1; the v0.41.0 notes flag only one change with a warning sign, the Go module's move to the new host, and no guide statement depends on the module path.
 - appwrite-https (REASONED; appwrite, appwrite-docs): API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.7.0; explicitly enable both despite conflicting rolling deprecation/default documentation.
 - appwrite-hosts (REASONED; appwrite): ROUTER_PROTECTION defaults disabled; configure actual domains and enable rejection of unknown hostnames.
 - appwrite-registration (REASONED; appwrite): Console root-only registration defaults enabled with empty email/IP allowlists; these restrict account creation, not dashboard reachability or login.
@@ -1430,7 +1430,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "325ea5d1c0b70ba017390ef84fa6b7bbab896d136a28dc0e9869eb6253e80460",
+  "body_sha256": "380a934227670b3c89bf2917119fc9421993e6ba66bec88510d178d30be91fad",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -1664,7 +1664,7 @@ Claims (full source mapping in the JSON block below):
     "pb-limit-rules": {"text": "Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s.", "components": ["pb"], "sources": ["pb:s30d6893c77b6"], "status": "REASONED"},
     "pb-limit-bypass": {"text": "Superusers and rateLimits.excludedIPs bypass limits; test ordinary non-excluded clients.", "components": ["pb"], "sources": ["pb:s2ae84f3f32ec"], "status": "REASONED"},
     "pb-smtp": {"text": "smtp.enabled and smtp.tls default false; disabled SMTP falls back to sendmail. Configure protected transport and test actual delivery.", "components": ["pb"], "sources": ["pb:s30d6893c77b6", "pb:sc2c33a37ae40"], "status": "REASONED"},
-    "pb-forge": {"text": "From v0.41.0 PocketBase publishes its source and releases on its author's forge at ganigeorgiev.com, which this guide cites at v0.41.1; the v0.41.0 notes flag only the Go module's move to the new host, and no guide statement depends on the module path.", "components": ["pb"], "sources": ["pb:s958702d638d0"], "status": "REASONED"},
+    "pb-forge": {"text": "From v0.41.0 PocketBase publishes its source and releases on its author's forge at ganigeorgiev.com, which this guide cites at v0.41.1; the v0.41.0 notes flag only one change with a warning sign, the Go module's move to the new host, and no guide statement depends on the module path.", "components": ["pb"], "sources": ["pb:s958702d638d0"], "status": "REASONED"},
     "appwrite-https": {"text": "API FORCE_HTTPS and function/site ROUTER_FORCE_HTTPS default disabled at 2.7.0; explicitly enable both despite conflicting rolling deprecation/default documentation.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:s7a257b8fa05b", "appwrite-docs:s2bf9a4746d28"], "status": "REASONED"},
     "appwrite-hosts": {"text": "ROUTER_PROTECTION defaults disabled; configure actual domains and enable rejection of unknown hostnames.", "components": ["appwrite"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:s7a257b8fa05b"], "status": "REASONED"},
     "appwrite-registration": {"text": "Console root-only registration defaults enabled with empty email/IP allowlists; these restrict account creation, not dashboard reachability or login.", "components": ["appwrite"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:sd96c9b2ddc30"], "status": "REASONED"},
