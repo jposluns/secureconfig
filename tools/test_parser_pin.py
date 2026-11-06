@@ -119,13 +119,14 @@ class Preflight(unittest.TestCase):
                 ("leading space", f" markdown-it-py==4.2.0{HASH}\n", "it has line 1, ")):
             with self.subTest(label=label):
                 result = self.run_case(version("4.2.0"), lock_text=text)
-                self.assert_refusal(result, "the pinned version is unknown: cannot parse",
-                                    fragment)
+                self.assert_refusal(result, "but the lock is invalid: cannot parse", fragment)
+                self.assertNotIn("the pinned version is unknown", result[1])
                 self.assertNotIn(HOST, result[1])
 
     # TODO 3.52: before the preflight shared gate_parser()'s lock reader, it accepted the first
     # two of these locks whenever the installed versions matched every pin, and the suite went
-    # on to gates that refuse them. Each refusal names what the lock holds and the rule.
+    # on to gates that refuse them. Each refusal names what the lock holds and the rule, and
+    # calls the lock invalid, not its pinned version unknown, since the first two pin it.
     REFUSED_LOCKS = (
         ("pins only markdown-it-py", f"markdown-it-py==4.2.0{HASH}\n",
          "it has a pin for markdown-it-py only", "invalid shared parser lock"),
@@ -137,6 +138,10 @@ class Preflight(unittest.TestCase):
         ("lost a hash", LOCK.replace(f"mdurl==0.1.2{HASH}", "mdurl==0.1.2"),
          "it has line 3, 'mdurl==0.1.2', which is not a hashed pin",
          "invalid shared parser lock entry"),
+        # A lock with no pin at all is refused, never read as pinning nothing.
+        ("is empty", "", "it has no pin", "invalid shared parser lock"),
+        ("holds only comments and blank lines", "# one\n\n# two\n", "it has no pin",
+         "invalid shared parser lock"),
     )
     RULE = ("because each line that is not empty and does not start with '#' must be one "
             "'name==version --hash=sha256:<64 lowercase hex digits>' pin, and the lock must "
@@ -149,11 +154,12 @@ class Preflight(unittest.TestCase):
         for label, text, found, message in self.REFUSED_LOCKS:
             with self.subTest(lock=label):
                 result = self.run_case(version("4.2.0"), lock_text=text, installed=installed)
-                self.assert_refusal(result, "has markdown-it-py 4.2.0, but the pinned version is "
-                                    "unknown: cannot parse tools/requirements-gates.txt as "
+                self.assert_refusal(result, "has markdown-it-py 4.2.0, but the lock is invalid: "
+                                    "cannot parse tools/requirements-gates.txt as "
                                     "gate_parser() in tools/check_verify_marking.py does: "
                                     f"{found}; that reader refuses it ({message}) " + self.RULE,
                                     "restore it from main")
+                self.assertNotIn("the pinned version is unknown", result[1])
                 self.assertNotIn(HOST, result[1])
                 self.assertEqual(result[1].count("  FAIL  "), 1, result[1])
 

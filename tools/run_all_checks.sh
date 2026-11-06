@@ -582,7 +582,18 @@ echo "== README's stated guide and category counts match the corpus =="
 # README.md's "## What this is" section states the corpus size in prose ("that is N guides across
 # the M categories indexed below"), and the gates above check category lists and membership but not
 # those numerals. The count sentence is matched in any letter case, with any whitespace between
-# words, after HTML comments are stripped. The "## What this is" section must hold exactly one
+# words, after HTML comment blocks are removed. README.md is read as SKILL.md is, through
+# blank_comment_blocks() in tools/_verify_sections.py and the pinned parser below: it may hold
+# HTML only as HTML blocks outside any list item or block quote, each one whole HTML comment,
+# and each is removed by blanking exactly the lines the parser maps it to once they are confirmed
+# to equal its text. Any other raw HTML, an inline comment or a "<!--" in a tag's attribute
+# included, fails the gate in one line naming the first line of the block, or the table row,
+# that holds it, since raw HTML is not read and so could hide or show text unseen. A "<!--" the
+# parser does not read as HTML (in code, a link destination or title, a reference definition, or
+# after a backslash) is kept as text, so it hides nothing; a code-blind strip once removed a
+# count sentence lying between such a "<!--" and a later "-->". The self-test,
+# tools/test_guide_counts.py, runs this section on fixture READMEs first.
+# The "## What this is" section must hold exactly one
 # match, and any match elsewhere in README.md fails, so a stale copy can neither mask a wrong count
 # nor drift unchecked. The guide count is checked against the root guides that
 # `python3 tools/_verify_sections.py` lists (counted_guides(): every root regular file *.md
@@ -598,6 +609,18 @@ echo "== README's stated guide and category counts match the corpus =="
 # three spaces, or setext), and a heading-shaped line inside a code block is not a heading. The
 # gate fails if the pinned parser is unavailable. A reworded, missing or misplaced count sentence
 # fails closed rather than passing unchecked.
+# The self-test runs this section's text from guide_files=() on, so it never runs itself. The
+# parser preflight above has already required the pin, so a skip line here is a failure.
+if counts_st=$(python3 -I -B tools/test_guide_counts.py 2>&1); then
+  printf '%s\n' "$counts_st"
+  if grep -qE '^  (FAIL|skip)  ' <<< "$counts_st" ||
+     ! grep -qE '^  ok    [0-9]+ recorded cases for the guide-counts gate$' <<< "$counts_st"; then
+    bad "test_guide_counts.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$counts_st"
+  bad "test_guide_counts.py failed"
+fi
 guide_files=()
 guide_list=$(python3 tools/_verify_sections.py) || bad "tools/_verify_sections.py could not list the root guides"
 [ -z "$guide_list" ] || mapfile -t guide_files <<< "$guide_list"
@@ -606,10 +629,10 @@ import re, sys
 
 sys.path.insert(0, "tools")
 from check_verify_marking import ParserUnavailable, gate_parser
+from _verify_sections import RawHtml, blank_comment_blocks
 
 guides = sys.argv[1:]
-readme = open("README.md", encoding="utf-8").read()
-readme = re.sub(r"<!--.*?-->", "", readme, flags=re.S)
+raw = open("README.md", encoding="utf-8").read()
 form = "that is N guides across the M categories indexed below"
 count_re = re.compile(
     r"\bthat\s+is\s+(\d+)\s+guides\s+across\s+the\s+(\d+)\s+categories\s+indexed\s+below\b",
@@ -627,8 +650,14 @@ except Exception as exc:  # noqa: BLE001  any failure to load the parser fails t
           "tools/requirements-gates.txt and the installed markdown-it-py and mdurl: "
           f"{cause}")
     sys.exit(1)
+# The whole HTML comment blocks blanked, as SKILL.md's are; any other raw HTML fails in one line.
+try:
+    lines = blank_comment_blocks(raw, parser, "README.md")
+except RawHtml as exc:
+    print(f"README.md: {exc}")
+    sys.exit(1)
+readme = "\n".join(lines)
 tokens = parser.parse(readme)
-lines = re.sub(r"\r\n?", "\n", readme).split("\n")
 heads = [(t.tag, t.level, t.map, tokens[i + 1].content.strip())
          for i, t in enumerate(tokens) if t.type == "heading_open"]
 
@@ -1306,8 +1335,8 @@ echo "== source citations are pinned, not mutable branch refs =="
 # is main or master (a main/master inside a file path is not flagged). Advisory: it fails only when a
 # NEW mutable citation pushes the count above its recorded baseline, while the corpus-wide pinning
 # sweep proceeds (see the sweep note in CHANGELOG.md). Self-test first, so what runs is the shipped entry point.
-pc_st="$(python3 -I -B tools/check_pinned_citations.py --self-test 2>&1)"
-if [ $? -eq 0 ] && printf '%s\n' "$pc_st" | grep -q '^PASS'; then
+if pc_st="$(python3 -I -B tools/check_pinned_citations.py --self-test 2>&1)" &&
+   printf '%s\n' "$pc_st" | grep -q '^PASS'; then
   ok "pinned-citation self-test"
 else
   bad "pinned-citation self-test failed: $(printf '%s' "$pc_st" | tail -1)"
@@ -1355,8 +1384,8 @@ echo "== every port a guide names is mapped by the exposure index =="
 # reader holding a scan result with nothing to search on. A fixed set of port shapes (listed in the
 # checker's docstring), code blocks included; tools/exposure_index_allowlist.txt excuses non-listener
 # matches with a reason, and a stale or redundant entry fails. Self-test first so what runs is the shipped checker; a failing self-test fails closed.
-ei_st="$(python3 -I -B tools/test_exposure_index.py 2>&1)"
-if [ $? -eq 0 ] && ! printf '%s\n' "$ei_st" | grep -q '^  FAIL  '; then
+if ei_st="$(python3 -I -B tools/test_exposure_index.py 2>&1)" &&
+   ! printf '%s\n' "$ei_st" | grep -q '^  FAIL  '; then
   ok "exposure-index self-test"
   ei="$(python3 -I -B tools/check_exposure_index.py 2>&1)"
   ei_rc=$?
@@ -1562,6 +1591,7 @@ overflow_check_pid=""
 overflow_dir=""
 overflow_starting=""
 overflow_signal=""
+# shellcheck disable=SC2329  # only the HUP, INT and TERM trap strings below call it, unseen by shellcheck
 overflow_trap() {
   overflow_signal=$1
   if [ -z "$overflow_starting" ]; then
