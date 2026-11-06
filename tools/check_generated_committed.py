@@ -23,8 +23,9 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
   version-shaped line elsewhere does not count. Outside HTML comments (`<!-- ... -->`, removed
-  first, as the README guide-counts gate removes them from README.md, and an unclosed `<!--`
-  removed to the end of the file), it states "This skill
+  first by uncommented() in tools/_verify_sections.py, with an unclosed `<!--` removed to the
+  end of the file, and a `<!--` in a code span or a fenced code block left as the literal text
+  it is), it states "This skill
   carries N short guides" exactly once, with N the guide-counts gate's set in the commit, as
   counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts
   nor stands in for a stale or missing visible sentence. That module is this gate's own copy,
@@ -72,7 +73,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _verify_sections import counted_guides  # noqa: E402  the guide-counts gate's guide set
+from _verify_sections import counted_guides, skill_counts  # noqa: E402  shared with the build
 
 LLMS_FULL = "site/llms-full.txt"
 PLUGIN = "plugin"
@@ -81,12 +82,10 @@ SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
 # What scripts/build-plugin.sh rewrites in SKILL.md: the version line of the metadata mapping in
 # the front matter (metadata_versions() below), and the guide count in this sentence.
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
-SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
-# Text inside an HTML comment is not shown to a reader, so the count sentence is searched for only
-# after removing comments, the way the README guide-counts gate in tools/run_all_checks.sh reads
-# README.md. A "<!--" with no "-->" after it hides the rest of the file, as it does in HTML, so it
-# is removed to the end, as scripts/build-plugin.sh removes it.
-HTML_COMMENT = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
+# Text inside an HTML comment is not shown to a reader, so skill_counts() in
+# tools/_verify_sections.py, which scripts/build-plugin.sh also calls, finds the count sentence
+# only after removing comments. A "<!--" with no "-->" after it hides the rest of the file, as it
+# does in HTML, and a "<!--" in a code span or a fenced code block hides nothing.
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")
@@ -236,7 +235,7 @@ def skill_findings(version_text, skill_text, count):
     elif match[1] != version:
         findings.append(f"{SKILL} as committed names version {match[1]!r} but VERSION as "
                         f"committed is {version!r}; {REMEDY}")
-    counts = SKILL_COUNT.findall(HTML_COMMENT.sub("", skill_text))
+    counts = skill_counts(skill_text)
     if len(counts) != 1:
         findings.append(f'{SKILL} as committed states "This skill carries N short guides" '
                         f"{len(counts)} times, not once (text inside HTML comments does not "

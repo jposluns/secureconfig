@@ -78,16 +78,16 @@ sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1
 metadata=$(sed -n -e '1 { /^---$/!q }' -e '2,$ { /^---$/ { p; q }; /^metadata:$/,/^[^ ]/ { /^  version:/p } }' "$skill")
 [ "$metadata" = "  version: \"$version\""$'\n'"---" ] \
   || { echo "SKILL.md version did not update to $version; its front matter must open and close with a \"---\" line and its metadata must hold exactly one line '  version: \"...\"'" >&2; exit 1; }
-# The count is confirmed only outside HTML comments, removed first as the README guide-counts gate
-# removes them from README.md, and the sentence must appear there exactly once, so a commented copy
-# can neither stand in for a missing visible sentence nor sit beside a second one. A "<!--" with no
-# "-->" after it hides the rest of the file, as it does in HTML, so it is removed to the end.
+# The count is confirmed only outside HTML comments, by skill_counts() in tools/_verify_sections.py,
+# which tools/check_generated_committed.py also calls, and the sentence must appear there exactly
+# once, so a commented copy can neither stand in for a missing visible sentence nor sit beside a
+# second one. A "<!--" with no "-->" after it hides the rest of the file, as it does in HTML, so it
+# is removed to the end, and a "<!--" in a code span or a fenced code block hides nothing.
 visible=$(python3 - "$skill" <<'PY'
-import re
 import sys
-text = open(sys.argv[1], encoding="utf-8").read()
-text = re.sub(r"<!--.*?(?:-->|\Z)", "", text, flags=re.S)
-print("\n".join(re.findall(r"This skill carries ([0-9]+) short guides", text)))
+sys.path.insert(0, "tools")
+from _verify_sections import skill_counts
+print("\n".join(skill_counts(open(sys.argv[1], encoding="utf-8").read())))
 PY
 )
 [ "$visible" = "$count" ] \

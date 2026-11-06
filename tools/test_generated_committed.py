@@ -19,13 +19,14 @@ tree is clean passes --rebuild where it needs the rebuild path. The last cases f
 and two record what the gate does not do: read the index, or rebuild a clean tree unasked.
 """
 import os
-import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 GATE = Path(__file__).resolve().parent / "check_generated_committed.py"
+sys.path.insert(0, str(GATE.parent))
+from _verify_sections import skill_counts  # noqa: E402  the count rule the build and gate share
 OK = "  ok    commit "
 REBUILT = "site/llms-full.txt and 4 files under plugin/ match a fresh build of the commit"
 DEFERRED = "the working tree is this commit with no change"
@@ -65,6 +66,11 @@ PLUGIN_JSON = '{\n  "name": "fixture",\n  "version": "1.0.5",\n  "license": "CC0
 SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
 SKILL_MD = ('---\nname: fixture\nmetadata:\n  version: "1.0.5"\n---\n\n'
             "This skill carries 1 short guides.\n")
+# A "<!--" in code is literal text, as CommonMark has it, so a stale count sentence after one in a
+# code span or a fenced code block is visible; a real comment beside such code still hides its text.
+CODE_SPAN = "Type `<!--` to open a comment.\nThis skill carries 3 short guides.\n"
+FENCED = "```html\n<!--\n```\nThis skill carries 3 short guides.\n"
+BESIDE_CODE = "Type `<!--` to open one. <!-- This skill carries 7 short guides. -->\n"
 
 
 def environment(root):
@@ -268,8 +274,7 @@ def real_build(skill_md, expected, needle):
         assert needle in output, (needle, output)
         if expected == 0:
             text = (root / SKILL).read_text(encoding="utf-8")
-            visible = re.sub(r"<!--.*?(?:-->|\Z)", "", text, flags=re.S)
-            assert '  version: "1.0.5"\n' in text and "carries 1 short guides" in visible, text
+            assert '  version: "1.0.5"\n' in text and skill_counts(text) == ["1"], text
     return 1
 
 
@@ -390,6 +395,17 @@ def main():
                       expected=1,
                       needle=SKILL + ' as committed states "This skill carries N short guides" '
                              "0 times, not once (text inside HTML comments does not count)")
+        # A "<!--" in a code span or a fenced code block opens no comment, so the stale sentence
+        # after it is a second statement; a real comment beside a code span still hides its text,
+        # and one holding a backtick still closes at its "-->", so a stale sentence after it shows.
+        count += case(skill_text(SKILL_MD + CODE_SPAN), expected=1,
+                      needle='short guides" 2 times, not once')
+        count += case(skill_text(SKILL_MD + FENCED), expected=1,
+                      needle='short guides" 2 times, not once')
+        count += case(skill_text(SKILL_MD + BESIDE_CODE),
+                      also=("SKILL.md names it and states 1 guides; ",))
+        count += case(skill_text(SKILL_MD + "<!-- `x --> `\nThis skill carries 3 short guides.\n"),
+                      expected=1, needle='short guides" 2 times, not once')
         count += case(skill('  version: "1.0.5"\n', ""), expected=1,
                       needle=SKILL + " as committed has 0 metadata version lines in its front "
                              "matter, not 1")
@@ -462,6 +478,12 @@ def main():
                             1, uncounted)
         count += real_build(SKILL_MD.replace("carries 1 short", "carries 3 short")
                             + "<!-- This skill carries 1 short guides. -->\n", 0,
+                            "wrote plugin/skills/secure-deployment-config/references")
+        # A "<!--" in a code span or a fenced code block hides nothing, so the rewritten sentence
+        # after it is a second visible one and is refused; a real comment beside code still hides.
+        count += real_build(SKILL_MD + CODE_SPAN, 1, uncounted)
+        count += real_build(SKILL_MD + FENCED, 1, uncounted)
+        count += real_build(SKILL_MD + BESIDE_CODE, 0,
                             "wrote plugin/skills/secure-deployment-config/references")
 
         # Fail closed: a revision that is not a commit, an option-shaped revision, a directory

@@ -102,6 +102,67 @@ def counted_guides(root: Path):
     return [path.name for path in guides(root) if path.name != "README.md"]
 
 
+SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
+BACKTICKS = re.compile(r"`+")
+
+
+def uncommented(text):
+    """Return text less its HTML comments, which a reader of the rendered page does not see.
+
+    A comment runs from "<!--" to the next "-->", or to the end of the text when none follows, as
+    an unclosed one does in HTML. A "<!--" inside a fenced code block (_markdown.Fences) or a code
+    span is literal text, as CommonMark has it, so it hides nothing. The text is read from left to
+    right, so whichever of a comment or a code span starts first holds the text up to its end. A
+    code span opens at a backtick run not escaped by a backslash and closes at the next run of the
+    same length before a blank line or a fence; a run with no such close is literal. Indented code
+    blocks are not recognized.
+    """
+    lines = text.split("\n")
+    kept, fences, comment, n = [], Fences(), False, 0
+    while n < len(lines):
+        last = n + 1 == len(lines)
+        if not comment and (fences.feed(lines[n]) or fences.inside):
+            kept.append(lines[n] + ("" if last else "\n"))
+            n += 1
+            continue
+        # This line and the next ones up to a blank line or a fence, where a code span ends.
+        end = n + 1
+        while end < len(lines) and lines[end].strip(" \t\r") and not Fences().feed(lines[end]):
+            end += 1
+        run = "\n".join(lines[n:end]) + ("" if end == len(lines) else "\n")
+        pos = 0
+        while pos < len(run):
+            if comment:
+                close = run.find("-->", pos)
+                pos, comment = (len(run), True) if close < 0 else (close + 3, False)
+                continue
+            opener = run.find("<!--", pos)
+            stop = len(run) if opener < 0 else opener
+            tick = BACKTICKS.search(run, pos, stop)
+            if tick is None:
+                kept.append(run[pos:stop])
+                pos, comment = (stop, False) if opener < 0 else (opener + 4, True)
+                continue
+            before = run[pos:tick.start()]
+            width = len(tick[0]) - (len(before) - len(before.rstrip("\\"))) % 2
+            closing = next((m for m in BACKTICKS.finditer(run, tick.end()) if len(m[0]) == width),
+                           None) if width else None
+            stop = (closing or tick).end()
+            kept.append(run[pos:stop])
+            pos = stop
+        n = end
+    return "".join(kept)
+
+
+def skill_counts(text):
+    """The N of each "This skill carries N short guides" in SKILL.md outside HTML comments.
+
+    scripts/build-plugin.sh and tools/check_generated_committed.py each require exactly one, so a
+    commented copy neither counts nor stands in for a stale or missing visible sentence.
+    """
+    return SKILL_COUNT.findall(uncommented(text))
+
+
 def atx_headings(lines):
     """Return a list parallel to `lines`: (level, title) for each line that is an ATX
     heading OUTSIDE a fenced code block, else None.
