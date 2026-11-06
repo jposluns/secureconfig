@@ -414,6 +414,28 @@ committed `plugin/plugin.json` and the plugin's `SKILL.md` name the committed `V
 `HEAD`, it also rebuilds the export and compares. It reads `HEAD`, so run the suite again after
 committing.
 
+Two files beside the plugin are kept by hand, not built. `.claude-plugin/marketplace.json` makes
+this repository a Claude Code plugin marketplace whose one plugin is `./plugin`; it carries no
+version, so `VERSION` and the builds never touch it, and `plugin/plugin.json` stays the plugin's
+versioned manifest. `plugin/always-on.md` is the always-on snippet that README.md's "Install in
+Claude Code" section offers for a project's `CLAUDE.md` or `AGENTS.md`: the "Rules that apply to
+every deployment" section of the plugin's `SKILL.md`, its heading, lead line and rules as that
+section words them, each rule on one line, and one line pointing at the skill. The only changes
+are to the `references/` paths, which would not resolve from a project: rules 5, 7 and 8 drop
+their parenthesised paths, and rule 2 names its guides by file name without the folder. A pull
+request that changes that section changes the snippet with it; no gate compares the two, and the
+placeholder gate scans the snippet though it skips the rest of `plugin/`. The For AI assistants
+page takes its install commands from README.md's section itself, so the page never carries a
+copy. `scripts/build-site.py` reads the section with a small standard-library fence reader,
+because the Cloudflare Pages build that runs it needs only bash and Python and installs nothing,
+and refuses to build unless the section holds exactly 2 fenced blocks, the in-session block and
+then the shell block, each closed by a fence of the same character and length as its opening
+one. That reader does not know HTML comments or indented code blocks, so
+`tools/check_install_blocks.py`, the suite's `install-blocks` section, reads the same section
+with the pinned parser and fails unless it finds exactly those 2 blocks with the same content.
+Neither reader counts commands that raw HTML shows, such as a `pre` element, and nothing refuses
+raw HTML in the section.
+
 Record the change in `CHANGELOG.md` in the same pull request, not in a later bookkeeping one. A
 required gate checks that every merged pull request is referenced, exempting only the newest. It
 runs on a pull request that changes `CHANGELOG.md`, as each should, and in every whole-suite run:

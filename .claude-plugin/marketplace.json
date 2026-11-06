@@ -1,0 +1,7 @@
+{
+  "name": "secureconfig",
+  "owner": { "name": "Jeff Posluns" },
+  "plugins": [
+    { "name": "secureconfig", "source": "./plugin" }
+  ]
+}

@@ -25,6 +25,7 @@ The guides are dedicated to the public domain under CC0. The exceptions are the 
 ## Use it
 
 - With an AI assistant: tell it to secure your project using the guides at [github.com/jposluns/secureconfig](https://github.com/jposluns/secureconfig), or copy a ready-made task from [secureconfig.ai](https://secureconfig.ai); have it finish with the verification checklist below and report anything it could not test.
+- In Claude Code: install the skill as a plugin, or add its rules to your project instructions, as [Install in Claude Code](#install-in-claude-code) sets out.
 - By hand: start with the decision guide below, apply every guide that fits, and run the verification checklist.
 - To contribute: open a GitHub issue or send a pull request (reaching Jeff any other way also works). To request a guide for an application with no guide yet, add a file to [requests/](requests/README.md) per its template, one application per pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -48,6 +49,26 @@ If you are an AI assistant configuring, generating, or reviewing a service, appl
 Fetch guides raw with `https://raw.githubusercontent.com/jposluns/secureconfig/<default-branch>/<guide>.md` (for example `.../main/nginx.md`). Every guide concatenated into a single file: https://secureconfig.ai/llms-full.txt (also [site/llms-full.txt](site/llms-full.txt) in this repository); the machine-readable index is https://secureconfig.ai/llms.txt
 
 If raw.githubusercontent.com is unreachable, use https://secureconfig.ai/llms-full.txt, which holds every guide; each file in llms-full.txt starts with a line such as `==> nginx.md` between two lines of `=` characters. Every link inside llms-full.txt to a guide or another file in this repository is an absolute GitHub URL on the `main` branch, such as `https://github.com/jposluns/secureconfig/blob/main/mfa.md`, not a page on secureconfig.ai. If GitHub is unreachable too, the same guide is the section of llms-full.txt that starts with that file name (here `==> mfa.md`).
+
+## Install in Claude Code
+
+This repository is a Claude Code plugin marketplace: [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) at its root lists one plugin, `secureconfig`, whose source is [plugin/](plugin/) ([plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)). The plugin has no Claude Code manifest of its own, so Claude Code loads its standard layout, the [secure-deployment-config](plugin/skills/secure-deployment-config/SKILL.md) skill under `plugin/skills/`, and takes the name from the marketplace entry ([plugin manifest](https://code.claude.com/docs/en/plugins/manifest-reference)). In a Claude Code session, add the marketplace and install the plugin ([installing plugins](https://code.claude.com/docs/en/plugins/install)):
+
+```text
+/plugin marketplace add jposluns/secureconfig
+/plugin install secureconfig@secureconfig
+```
+
+The same from a shell:
+
+```bash
+claude plugin marketplace add jposluns/secureconfig
+claude plugin install secureconfig@secureconfig
+```
+
+Without a marketplace, copy the skill's folder, [plugin/skills/secure-deployment-config/](plugin/skills/secure-deployment-config/), to `~/.claude/skills/secure-deployment-config/` for all your projects or to `.claude/skills/secure-deployment-config/` in one project ([skills](https://code.claude.com/docs/en/skills)). Refresh a copied folder by copying it again: its `scripts/update-guides.sh` reads the `plugin.json` two folders above it, which a copied skill folder does not carry, and stops without changing anything.
+
+A skill loads when its description matches the task. To have the rules loaded with your project instructions, paste [plugin/always-on.md](plugin/always-on.md), the skill's rules for every deployment and one line pointing at the skill, into your project's `CLAUDE.md`, which Claude Code reads as project instructions at the start of a session; the [memory](https://code.claude.com/docs/en/memory) page lists the settings that change which files load. If your project keeps its assistant instructions in `AGENTS.md`, you can keep the snippet there and import that file from a `CLAUDE.md` beside it with an `@AGENTS.md` line ([share one file with other coding tools](https://code.claude.com/docs/en/memory#share-one-file-with-other-coding-tools)). Claude Code can also read `AGENTS.md` directly, when there is no `CLAUDE.md` or `CLAUDE.local.md` in the working directory or above it, in supported sessions; the [AGENTS.md section](https://code.claude.com/docs/en/memory#agents-md) of the memory page gives the versions, settings and sessions in which it does.
 
 ## Decision guide
 
