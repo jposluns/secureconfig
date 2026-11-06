@@ -458,10 +458,19 @@ import re, sys
 sys.path.insert(0, "tools")
 from check_verify_marking import ParserUnavailable, gate_parser
 
+# A lock that cannot be read or parsed, or a markdown_it package without the installed version
+# metadata of markdown-it-py or mdurl, makes gate_parser() raise something other than
+# ParserUnavailable; the gate fails on each in one line naming the cause, never a traceback.
 try:
     parser = gate_parser(required=True)
 except ParserUnavailable as exc:
     print(f"README.md's and site/llms.txt's sections need the pinned Markdown parser: {exc}")
+    sys.exit(1)
+except Exception as exc:  # noqa: BLE001  any failure to load the parser fails the gate
+    cause = " ".join(f"{type(exc).__name__}: {exc}".split())
+    print("README.md's and site/llms.txt's sections need the pinned Markdown parser, which "
+          "cannot be loaded from tools/requirements-gates.txt and the installed markdown-it-py "
+          f"and mdurl: {cause}")
     sys.exit(1)
 
 
@@ -605,11 +614,20 @@ form = "that is N guides across the M categories indexed below"
 count_re = re.compile(
     r"\bthat\s+is\s+(\d+)\s+guides\s+across\s+the\s+(\d+)\s+categories\s+indexed\s+below\b",
     re.I)
+# As in the category gate, a parser that cannot be loaded at all fails the gate in one line
+# naming the cause, never a traceback.
 try:
-    tokens = gate_parser(required=True).parse(readme)
+    parser = gate_parser(required=True)
 except ParserUnavailable as exc:
     print(f"README.md's sections need the pinned Markdown parser: {exc}")
     sys.exit(1)
+except Exception as exc:  # noqa: BLE001  any failure to load the parser fails the gate
+    cause = " ".join(f"{type(exc).__name__}: {exc}".split())
+    print("README.md's sections need the pinned Markdown parser, which cannot be loaded from "
+          "tools/requirements-gates.txt and the installed markdown-it-py and mdurl: "
+          f"{cause}")
+    sys.exit(1)
+tokens = parser.parse(readme)
 lines = re.sub(r"\r\n?", "\n", readme).split("\n")
 heads = [(t.tag, t.level, t.map, tokens[i + 1].content.strip())
          for i, t in enumerate(tokens) if t.type == "heading_open"]

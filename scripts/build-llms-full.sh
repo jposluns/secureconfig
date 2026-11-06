@@ -314,10 +314,17 @@ def check(text):
     return list(problems), counts[0]
 
 
+# A lock that cannot be read or parsed, or a markdown_it package without the installed version
+# metadata of markdown-it-py or mdurl, makes gate_parser() raise something other than
+# ParserUnavailable; the check refuses each in one line naming the cause, never a traceback.
 try:
     PARSERS = [gate_parser(required=True), gate_parser(required=True).disable("table")]
 except ParserUnavailable as exc:
     sys.exit(f"the link check needs the pinned parser: {exc}")
+except Exception as exc:  # noqa: BLE001  any failure to load the parser leaves the links unchecked
+    cause = " ".join(f"{type(exc).__name__}: {exc}".split())
+    sys.exit("the link check needs the pinned parser, which cannot be loaded from "
+             f"tools/requirements-gates.txt and the installed markdown-it-py and mdurl: {cause}")
 for parser in PARSERS:
     parser.options["inline_definitions"] = True
 problems = []
@@ -446,10 +453,16 @@ def literal(text):
     return found
 
 
+# As in the link check, a parser that cannot be loaded at all is refused in one line naming the
+# cause, never a traceback.
 try:
     parser = gate_parser(required=True)
 except ParserUnavailable as exc:
     sys.exit(f"{name}: the build needs the pinned parser: {exc}")
+except Exception as exc:  # noqa: BLE001  any failure to load the parser stops the rewrite
+    cause = " ".join(f"{type(exc).__name__}: {exc}".split())
+    sys.exit(f"{name}: the build needs the pinned parser, which cannot be loaded from "
+             f"tools/requirements-gates.txt and the installed markdown-it-py and mdurl: {cause}")
 fences = Fences()
 source = sys.stdin.buffer.read().decode("utf-8")
 lines = source.split("\n")
