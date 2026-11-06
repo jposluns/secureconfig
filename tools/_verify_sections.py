@@ -4,7 +4,6 @@ Only whole canonical titles (optionally numbered) open a root. Descendants
 belong to that root, including headings that happen to contain "verify".
 Legacy parenthesized status suffixes remain section titles, not declarations.
 """
-import html
 import re
 import sys
 from pathlib import Path
@@ -104,12 +103,26 @@ def counted_guides(root: Path):
 
 
 SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
-# Inside a raw HTML block, which the parser passes through unparsed: a comment runs from "<!--" to
-# the next "-->" or "--!>", or to the end of the block when neither follows, and "<!-->" and
-# "<!--->" are empty comments, as an HTML parser reads them. A tag, declaration or processing
-# instruction runs to the next ">". None of them shows text.
-HTML_COMMENT = re.compile(r"<!---?>|<!--.*?(?:--!?>|\Z)", re.S)
-HTML_TAG = re.compile(r"<[A-Za-z/?!][^>]*>")
+HTML_SPACE = " \t\n\f\r"
+
+
+class SkillHtml(ValueError):
+    """SKILL.md holds raw HTML other than whole HTML comments, which skill_counts() cannot read."""
+
+
+def whole_comment(raw):
+    """Whether raw, less surrounding whitespace, is exactly one whole HTML comment.
+
+    The parser passes raw HTML through unread, so this does not decide what an HTML parser would
+    show; it accepts only the one shape whose text plainly shows nothing: "<!--" first, "-->"
+    last, and no earlier "-->" or "--!>", either of which ends a comment in HTML. The abrupt
+    "<!-->" and "<!--->" end where they open, so they are refused too.
+    """
+    text = raw.strip(HTML_SPACE)
+    if not text.startswith("<!--") or text.startswith(("<!-->", "<!--->")):
+        return False
+    ends = [at for at in (text.find("-->", 4), text.find("--!>", 4)) if at >= 0]
+    return bool(ends) and min(ends) == len(text) - 3
 
 
 def front_matter(text):
@@ -122,48 +135,74 @@ def front_matter(text):
     return "", text
 
 
-def visible_text(tokens):
-    """The text a reader sees in parsed Markdown tokens, less HTML comments, with a NUL between
-    blocks.
+def visible_text(tokens, first_line=1):
+    """The text of parsed Markdown tokens that skill_counts() searches, with a NUL between blocks.
 
-    The parser decides what is code, a comment or text, so a "<!--" in a code span, in a fenced or
-    indented code block (in a block quote or list item too) or after a backslash is literal text.
-    Code is kept, since a reader sees it. An inline HTML token (a tag, comment, declaration or
-    processing instruction) shows nothing and is dropped. A raw HTML block keeps its text less
-    HTML_COMMENT and HTML_TAG matches, with character references decoded. Emphasis, links and
-    inline code join the text around them, a line break is a newline, and an image keeps its alt
-    text.
+    The parser decides what is Markdown code, so a "<!--" in a code span, in a fenced or indented
+    code block (in a block quote or list item too) or after a backslash is literal text. Code is
+    kept, since a reader sees it. Raw HTML, which the parser passes through unread, is not read
+    here either: an HTML block or inline HTML token that is one whole HTML comment, as
+    whole_comment() accepts it, is dropped, and any other raises SkillHtml naming its line, counted
+    from first_line, the line the tokens' source starts on. Emphasis, links and inline code join
+    the text around them, a line break is a newline, and an image keeps its alt text. Link and
+    image titles, the titles of link reference definitions (the parser must be set to emit
+    "definition" tokens and to label reference links, as skill_counts() sets it) and fence info
+    strings are searched too, each on its own, as the regex this replaced searched them.
     """
-    parts = []
-    for token in tokens:
-        if token.type in ("text", "text_special", "code_inline", "code_block", "fence"):
-            parts.append(token.content)
-        elif token.type in ("softbreak", "hardbreak"):
-            parts.append("\n")
-        elif token.type == "html_block":
-            parts.append(html.unescape(HTML_TAG.sub("", HTML_COMMENT.sub("", token.content))))
-        elif token.children:
-            parts.append(visible_text(token.children))
-        if token.block:
-            parts.append("\0")
-    return "".join(parts)
+    parts, apart = [], []
+
+    def walk(tokens, line):
+        for token in tokens:
+            if token.map:
+                line = token.map[0]
+            kind = token.type
+            if kind in ("text", "text_special", "code_inline", "code_block"):
+                parts.append(token.content)
+            elif kind == "fence":
+                parts.append(token.content)
+                apart.append(token.info)
+            elif kind in ("softbreak", "hardbreak"):
+                parts.append("\n")
+                line += 1
+            elif kind in ("html_block", "html_inline"):
+                if not whole_comment(token.content):
+                    raise SkillHtml(f"line {first_line + line} holds raw HTML; SKILL.md may hold "
+                                    "HTML only as whole HTML comments")
+                line += token.content.count("\n")
+            elif kind == "definition":
+                apart.append(token.meta.get("title") or "")
+            elif kind in ("link_open", "image") and "label" not in token.meta:
+                # A reference link's title is its definition's, which is searched once there.
+                apart.append(token.attrGet("title") or "")
+            if token.children:
+                walk(token.children, line)
+            if token.block:
+                parts.append("\0")
+
+    walk(tokens, 0)
+    return "".join(parts) + "\0" + "\0".join(apart)
 
 
 def skill_counts(text):
-    """The N of each "This skill carries N short guides" a reader of SKILL.md sees.
+    """The N of each "This skill carries N short guides" a reader of SKILL.md sees, or that sits
+    in a link, image or reference definition title or a fence info string.
 
     The body is parsed with the pinned CommonMark parser, gate_parser(required=True) in
     tools/check_verify_marking.py, and searched in visible_text(); the front matter, which is not
     Markdown, is searched as it stands. Each run of whitespace is read as 1 space, as a rendered
     page shows it, so a sentence wrapped within one block counts; one split across blocks does
-    not. ParserUnavailable is raised when that parser is absent or not the pinned version.
-    scripts/build-plugin.sh and tools/check_generated_committed.py each require exactly one, so a
-    commented copy neither counts nor stands in for a stale or missing visible sentence.
+    not. ParserUnavailable is raised when that parser is absent or not the pinned version, and
+    SkillHtml when the body holds raw HTML other than whole HTML comments, which nothing here
+    reads. scripts/build-plugin.sh and tools/check_generated_committed.py each require exactly
+    one, so a commented copy neither counts nor stands in for a stale or missing visible sentence.
     """
     from check_verify_marking import gate_parser  # here, as that module imports this one
     parser = gate_parser(required=True)
+    parser.options["inline_definitions"] = True
+    parser.options["store_labels"] = True
     head, body = front_matter(text)
-    visible = head + "\0" + visible_text(parser.parse(body))
+    first_line = head.count("\n") + 2 if head else 1
+    visible = head + "\0" + visible_text(parser.parse(body), first_line)
     return SKILL_COUNT.findall(re.sub(r"\s+", " ", visible))
 
 

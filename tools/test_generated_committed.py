@@ -20,14 +20,17 @@ and two record what the gate does not do: read the index, or rebuild a clean tre
 
 The gate and the real build find SKILL.md's count sentence with the pinned CommonMark parser
 (skill_counts() in tools/_verify_sections.py). Where that parser is absent or another version,
-every case that needs it is skipped and counted in a "skip" line naming the reason, and 2 cases
-that run only then confirm that the gate and the real build refuse; where it is present, those
-2 are not run.
+every case that needs it is skipped and counted in a "skip" line naming the reason. 2 cases run
+on every host and confirm that the gate and the real build refuse when the parser is not the
+pinned one: each runs on a copy of the tools whose lock pins a markdown-it-py version other than
+the installed one.
 """
 import os
+import re
 import subprocess
 import sys
 import tempfile
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 GATE = Path(__file__).resolve().parent / "check_generated_committed.py"
@@ -46,6 +49,25 @@ def parser_problem():
 
 
 PARSER_PROBLEM = parser_problem()
+# What gate_parser() reads beside itself, and what the gate and the build import.
+TOOLS = ("_verify_sections.py", "_markdown.py", "check_verify_marking.py",
+         "requirements-gates.txt")
+
+
+def other_lock():
+    """tools/requirements-gates.txt with markdown-it-py pinned to a version that is not the
+    installed one, so a copy of the tools holding it refuses on every host."""
+    try:
+        installed = version("markdown-it-py")
+    except PackageNotFoundError:
+        installed = None
+    other = "0.0.2" if installed == "0.0.1" else "0.0.1"
+    lock, found = re.subn(r"(?m)^markdown-it-py==[0-9.]+ ", f"markdown-it-py=={other} ",
+                          (GATE.parent / "requirements-gates.txt").read_text(encoding="utf-8"))
+    assert found == 1, "tools/requirements-gates.txt holds no single markdown-it-py pin"
+    return lock
+
+
 SKIPPED = []
 OK = "  ok    commit "
 REBUILT = "site/llms-full.txt and 4 files under plugin/ match a fresh build of the commit"
@@ -112,16 +134,50 @@ REAL_COMMENTS = (
     "\n\\<!-- <!-- This skill carries 3 short guides. -->\n",
     "\n> ~~~\n> <!--\n> ~~~\n\n<!-- This skill carries 3 short guides. -->\n",
 )
+# Raw HTML other than a whole comment is not read, so each is refused, naming line 9, where each
+# starts after SKILL_MD. From the round 2 QA reports on #1233: a "<!--" in a quoted attribute or
+# in a textarea, which a browser shows; an apparent tag in a textarea, which a browser shows; a
+# quoted ">" in an attribute, which a browser does not show; a comment opened in a div block and
+# continued past a blank line; and script content, which a browser does not show. Also a style
+# block, a comment ended early by "--!>", the abrupt "<!-->", text after a comment's "-->", and
+# an inline tag.
+RAW_HTML = (
+    '\n<div title="<!--">\nThis skill carries 3 short guides.\n</div>\n',
+    "\n<textarea>\n<!--\nThis skill carries 3 short guides.\n</textarea>\n",
+    "\n<textarea>\n<This skill carries 3 short guides>\n</textarea>\n",
+    '\n<div title="a>This skill carries 3 short guides">\n</div>\n',
+    "\n<div>\n<!--\n\nThis skill carries 3 short guides.\n-->\n</div>\n",
+    "\n<script>\nlet s = 'This skill carries 3 short guides';\n</script>\n",
+    "\n<style>\n/* This skill carries 3 short guides */\n</style>\n",
+    "\n<!-- a --!> This skill carries 3 short guides. -->\n",
+    "\n<!-->\nThis skill carries 3 short guides.\n",
+    "\n<!-- a --> This skill carries 3 short guides.\n",
+    "\nSee <b>this</b>.\n",
+)
+NOT_READ = "line 9 holds raw HTML; SKILL.md may hold HTML only as whole HTML comments"
+# A copy of the sentence in a link title, a link reference definition title, an image title or a
+# fence info string counts, as it did when a regex searched the whole file, so a stale one there
+# is a second statement.
+TITLES = (
+    '\nSee [this](https://example.invalid "This skill carries 3 short guides").\n',
+    '\nSee [this].\n\n[this]: https://example.invalid "This skill carries 3 short guides"\n',
+    '\n![a figure](figure.png "This skill carries 3 short guides")\n',
+    "\n```This skill carries 3 short guides\ncode\n```\n",
+)
+# A whole comment, inline or as a block, still hides its text.
+WHOLE_COMMENTS = (
+    "\nSee <!-- This skill carries 3 short guides. --> this.\n",
+    "\n<!--\nThis skill carries 3 short guides.\n-->\n",
+)
 
 
 def skipped(parser):
-    """Whether a case that needs the pinned parser (True), or needs it absent (False), cannot run
-    here; a skipped case that needs the parser is counted for the skip line."""
-    if parser is None or (PARSER_PROBLEM is None) == parser:
-        return False
-    if parser:
+    """Whether a case that needs the pinned parser (parser True) cannot run here; a skipped case
+    is counted for the skip line."""
+    if parser and PARSER_PROBLEM is not None:
         SKIPPED.append(1)
-    return True
+        return True
+    return False
 
 
 def environment(root):
@@ -172,12 +228,20 @@ def generated(root):
 
 
 def case(change, expected=0, needle=OK, *, also=(), absent=(), worktree_current=False,
-         args=(), init=True, parser=True):
+         args=(), init=True, parser=True, lock=None):
+    """Run the gate on a fixture repository after change; with lock, run a copy of the gate and
+    the modules it imports beside lock as its tools/requirements-gates.txt."""
     if skipped(parser):
         return 0
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory) / "repo"
         root.mkdir()
+        gate = GATE
+        if lock is not None:
+            gate = Path(directory) / "tools" / GATE.name
+            for name in (GATE.name, *TOOLS):
+                write(gate.parent, name, (GATE.parent / name).read_text(encoding="utf-8"))
+            write(gate.parent, "requirements-gates.txt", lock)
         write(root, "scripts/build-llms-full.sh", LLMS_BUILD)
         write(root, "scripts/build-plugin.sh", PLUGIN_BUILD)
         write(root, "guide.md", "first text\n")
@@ -197,7 +261,7 @@ def case(change, expected=0, needle=OK, *, also=(), absent=(), worktree_current=
             before = generated(root)
             build(root)
             assert generated(root) == before, "the working tree was not current"
-        done = subprocess.run([sys.executable, "-I", "-B", str(GATE), str(root), *args],
+        done = subprocess.run([sys.executable, "-I", "-B", str(gate), str(root), *args],
                               capture_output=True, text=True, env=environment(root),
                               timeout=900)
         output = done.stdout + done.stderr
@@ -302,10 +366,10 @@ def not_guides(rebuilt):
     return change
 
 
-def real_build(skill_md, expected, needle, parser=True):
+def real_build(skill_md, expected, needle, parser=True, lock=None):
     """Run the real build-plugin.sh on a fixture holding skill_md, with one guide and two .md
-    names that are not guides; on success, SKILL.md must name VERSION 1.0.5 and, in the text a
-    reader sees, 1 guide."""
+    names that are not guides, and with lock, when given, as its tools/requirements-gates.txt;
+    on success, SKILL.md must name VERSION 1.0.5 and, in the text a reader sees, 1 guide."""
     if skipped(parser):
         return 0
     with tempfile.TemporaryDirectory() as directory:
@@ -314,9 +378,10 @@ def real_build(skill_md, expected, needle, parser=True):
         write(root, "scripts/build-plugin.sh", REAL_BUILD.read_text(encoding="utf-8"))
         write(root, "scripts/build-llms-full.sh", LIST_GUIDES)
         write(root, "tools/version_basis.py", VERSION_BASIS)
-        for name in ("_verify_sections.py", "_markdown.py", "check_verify_marking.py",
-                     "requirements-gates.txt"):
+        for name in TOOLS:
             write(root, "tools/" + name, (GATE.parent / name).read_text(encoding="utf-8"))
+        if lock is not None:
+            write(root, "tools/requirements-gates.txt", lock)
         write(root, "guide.md", "first text\n")
         write(root, ".notes.md", "not a guide\n")
         write(root, "drafts.md/note.txt", "not a guide\n")
@@ -445,30 +510,52 @@ def main():
                       absent=("times, not once",))
         count += case(skill_text(SKILL_MD + "<!-- This skill carries 7 short guides. -->\n"),
                       also=("SKILL.md names it and states 1 guides; ",))
-        # A line opening "<!--" with no "-->" after it starts an HTML block, and its comment, that
-        # runs to the end of the file, so a sentence after it is not there.
+        # A line opening "<!--" with no "-->" after it starts an HTML block that runs to the end
+        # of the file and is not a whole comment, so it is refused, naming its line.
         count += case(skill("This skill carries 1 short guides.",
                             "<!--\nThis skill carries 1 short guides."),
                       expected=1,
-                      needle=SKILL + ' as committed states "This skill carries N short guides" '
-                             "0 times, not once (text inside HTML comments does not count)")
+                      needle=SKILL + " as committed cannot have its guide count checked: line 7 "
+                             "holds raw HTML; SKILL.md may hold HTML only as whole HTML comments",
+                      absent=("times, not once",))
         # A "<!--" in a code span or a fenced code block opens no comment, so the stale sentence
         # after it is a second statement; a real comment beside a code span still hides its text,
-        # and one holding a backtick still closes at its "-->", so a stale sentence after it shows.
+        # and an inline one holding a backtick still closes at its "-->", so a stale sentence
+        # after it shows. As an HTML block, with text after its "-->", it is raw HTML that is not
+        # a whole comment, and is refused.
         count += case(skill_text(SKILL_MD + CODE_SPAN), expected=1,
                       needle='short guides" 2 times, not once')
         count += case(skill_text(SKILL_MD + FENCED), expected=1,
                       needle='short guides" 2 times, not once')
         count += case(skill_text(SKILL_MD + BESIDE_CODE),
                       also=("SKILL.md names it and states 1 guides; ",))
-        count += case(skill_text(SKILL_MD + "<!-- `x --> `\nThis skill carries 3 short guides.\n"),
+        count += case(skill_text(SKILL_MD + "See <!-- `x --> `\nThis skill carries 3 short "
+                                 "guides.\n"),
                       expected=1, needle='short guides" 2 times, not once')
+        count += case(skill_text(SKILL_MD + "<!-- `x --> `\nThis skill carries 3 short guides.\n"),
+                      expected=1,
+                      needle=SKILL + " as committed cannot have its guide count checked: line 8 "
+                             "holds raw HTML; SKILL.md may hold HTML only as whole HTML comments")
         # The QA cases on #1233: each stale sentence, and a wrapped one, is a second statement,
         # and each real comment beside the same constructs still hides its sentence.
         for tail in (*STALE_AFTER, WRAPPED):
             count += case(skill_text(SKILL_MD + tail), expected=1,
                           needle='short guides" 2 times, not once')
         for tail in REAL_COMMENTS:
+            count += case(skill_text(SKILL_MD + tail),
+                          also=("SKILL.md names it and states 1 guides; ",))
+        # The round 2 QA cases on #1233: raw HTML other than a whole comment is a finding, a
+        # failed check and not a commit that could not be checked; a stale copy in a title or an
+        # info string is a second statement; and a whole comment, inline or as a block, still
+        # hides its sentence.
+        for tail in RAW_HTML:
+            count += case(skill_text(SKILL_MD + tail), expected=1,
+                          needle=SKILL + " as committed cannot have its guide count checked: "
+                                 + NOT_READ)
+        for tail in TITLES:
+            count += case(skill_text(SKILL_MD + tail), expected=1,
+                          needle='short guides" 2 times, not once')
+        for tail in WHOLE_COMMENTS:
             count += case(skill_text(SKILL_MD + tail),
                           also=("SKILL.md names it and states 1 guides; ",))
         count += case(skill('  version: "1.0.5"\n', ""), expected=1,
@@ -537,11 +624,13 @@ def main():
                                              "<!-- This skill carries 1 short guides. -->"),
                             1, uncounted)
         count += real_build(SKILL_MD + "This skill carries 1 short guides.\n", 1, uncounted)
-        # A line opening "<!--" with no "-->" after it hides the rest of the file, so a sentence
-        # after it is refused.
+        # A line opening "<!--" with no "-->" after it starts raw HTML that is not a whole
+        # comment, so the build refuses it, naming its line.
+        not_read = "SKILL.md's guide count cannot be checked: "
         count += real_build(SKILL_MD.replace("This skill carries 1 short guides.",
                                              "<!--\nThis skill carries 1 short guides."),
-                            1, uncounted)
+                            1, not_read + "line 7 holds raw HTML; SKILL.md may hold HTML only "
+                            "as whole HTML comments; refusing to build")
         count += real_build(SKILL_MD.replace("carries 1 short", "carries 3 short")
                             + "<!-- This skill carries 1 short guides. -->\n", 0,
                             "wrote plugin/skills/secure-deployment-config/references")
@@ -558,6 +647,16 @@ def main():
         for tail in REAL_COMMENTS:
             count += real_build(SKILL_MD + tail, 0,
                                 "wrote plugin/skills/secure-deployment-config/references")
+        # The round 2 QA cases on #1233: the build refuses raw HTML other than a whole comment,
+        # rewrites a stale copy in a title or an info string and refuses it as a second visible
+        # sentence, and builds beside a whole comment, inline or as a block.
+        for tail in RAW_HTML:
+            count += real_build(SKILL_MD + tail, 1, not_read + NOT_READ)
+        for tail in TITLES:
+            count += real_build(SKILL_MD + tail, 1, uncounted)
+        for tail in WHOLE_COMMENTS:
+            count += real_build(SKILL_MD + tail, 0,
+                                "wrote plugin/skills/secure-deployment-config/references")
 
         # Fail closed: a revision that is not a commit, an option-shaped revision, a directory
         # that is not a repository, and a repository with no commit.
@@ -570,11 +669,13 @@ def main():
                       needle="  FAIL  cannot check the committed generated files: ", parser=None)
         count += case(init_only, expected=2, init=False,
                       needle="'HEAD' does not name a commit", parser=None)
-        # Without the pinned parser, the gate cannot check the count and the build refuses.
-        count += case(nothing, expected=2, parser=False,
+        # Without the pinned parser, the gate cannot check the count and the build refuses: each
+        # runs with a lock pinning a markdown-it-py version other than the installed one, so
+        # both run on every host.
+        count += case(nothing, expected=2, parser=None, lock=other_lock(),
                       needle=SKILL + "'s guide count is checked with the pinned parser: ")
         count += real_build(SKILL_MD, 1, "SKILL.md's guide count is checked with the pinned "
-                            "parser: ", parser=False)
+                            "parser: ", parser=None, lock=other_lock())
 
         # Known limit: the index is not read, so a fix staged and not committed still fails.
         count += case(bump(False, stage_after=True), expected=1,

@@ -82,18 +82,21 @@ metadata=$(sed -n -e '1 { /^---$/!q }' -e '2,$ { /^---$/ { p; q }; /^metadata:$/
 # tools/_verify_sections.py, which tools/check_generated_committed.py also calls, and the sentence
 # must appear there exactly once, so a commented copy can neither stand in for a missing visible
 # sentence nor sit beside a second one. skill_counts() parses SKILL.md's body with the pinned
-# CommonMark parser, so the parser, not a hand-written scan, decides what is an HTML comment and
-# what is code, and a "<!--" in code or after a backslash hides nothing. Without that parser the
-# build refuses.
+# CommonMark parser, so the parser, not a hand-written scan, decides what is Markdown code, and a
+# "<!--" in code or after a backslash hides nothing. Raw HTML is not read: SKILL.md may hold it
+# only as whole HTML comments, which hide their text, and the build refuses any other. Without
+# that parser the build refuses too.
 visible=$(python3 - "$skill" <<'PY'
 import sys
 sys.path.insert(0, "tools")
-from _verify_sections import skill_counts
+from _verify_sections import SkillHtml, skill_counts
 from check_verify_marking import ParserUnavailable
 try:
     counts = skill_counts(open(sys.argv[1], encoding="utf-8").read())
 except ParserUnavailable as exc:
     sys.exit(f"SKILL.md's guide count is checked with the pinned parser: {exc}; refusing to build")
+except SkillHtml as exc:
+    sys.exit(f"SKILL.md's guide count cannot be checked: {exc}; refusing to build")
 print("\n".join(counts))
 PY
 )

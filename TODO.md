@@ -24,7 +24,7 @@ Each row is one physical line. `tools/check_todo_rows.py`, which `tools/run_all_
 fails a line holding two row starts such as `| 3.6 |`, the shape a lost line break leaves when it
 joins two rows.
 
-Next ids: **1.441**, **2.50**, **3.50**, **4.12**.
+Next ids: **1.441**, **2.50**, **3.51**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -143,6 +143,7 @@ marked, and those are the ones worth taking first.
 | ID | Item | Tags |
 | --- | --- | --- |
 | 3.49 | `tools/run_all_checks.sh`: a TERM sent only to the suite's own PID does not stop a running gate in any section on the `--sections` path, or in any section but `overflow` on the whole-suite path, where the `llms-full` build can also rewrite `site/llms-full.txt` after the EXIT trap restored it; this predates #1210, whose CHANGELOG bullet says the gap is tracked separately. #1210 first ran the `--sections` copy in the background; QA found that a Ctrl-C, or a HUP, INT or TERM to the suite's PID, then left the running gate going and let the `llms-full` build rewrite its file. It then tried a process group; QA found an ordinary exit instead of death by signal, a hang under `stty tostop`, and group SIGKILL and Ctrl-Z not reaching the gates. #1210 reverted both. Design a fix that keeps foreground terminal behaviour and death by signal, with tests. (L, M) | `[gap]` |
+| 3.50 | `tools/check_generated_committed.py` and `scripts/build-plugin.sh`: when `gate_parser()` in `tools/check_verify_marking.py` raises anything but `ParserUnavailable`, as it does for a lock it cannot read or parse and, as read from the code, for a `markdown_it` package present without the installed version metadata of markdown-it-py or mdurl, the gate exits 1 with a traceback, not 2 as for a commit it could not check, and the build exits nonzero with a traceback. Neither passes silently. Found by QA round 2 on #1233 (its LOW-5), by reading the code; the case was not run. Report these as a commit that could not be checked, with a one-line message naming the cause, and add tests. (L, S) | `[gap]` |
 
 ## Decisions
 

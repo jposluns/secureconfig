@@ -23,12 +23,14 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
   version-shaped line elsewhere does not count. In the text a reader sees, as skill_counts() in
-  tools/_verify_sections.py finds it with the pinned CommonMark parser (HTML comments dropped,
-  and a `<!--` in code or after a backslash left as the literal text it is), it states "This
+  tools/_verify_sections.py finds it with the pinned CommonMark parser (whole HTML comments
+  dropped, a `<!--` in code or after a backslash left as the literal text it is, and link
+  titles, reference definition titles and fence info strings searched too), it states "This
   skill carries N short guides" exactly once, with N the guide-counts gate's set in the commit,
   as counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts
-  nor stands in for a stale or missing visible sentence. That module is this gate's own copy,
-  not the commit's, and without the pinned parser the commit could not be checked;
+  nor stands in for a stale or missing visible sentence. Raw HTML in SKILL.md other than whole
+  HTML comments is not read and is a finding. That module is this gate's own copy, not the
+  commit's, and without the pinned parser the commit could not be checked;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -72,7 +74,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _verify_sections import counted_guides, skill_counts  # noqa: E402  shared with the build
+from _verify_sections import SkillHtml, counted_guides, skill_counts  # noqa: E402  as the build
 from check_verify_marking import ParserUnavailable  # noqa: E402  skill_counts() needs the parser
 
 LLMS_FULL = "site/llms-full.txt"
@@ -84,7 +86,8 @@ SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
 # Text inside an HTML comment is not shown to a reader, so skill_counts() in
 # tools/_verify_sections.py, which scripts/build-plugin.sh also calls, finds the count sentence
-# only in the text the pinned CommonMark parser leaves outside comments.
+# only outside the whole HTML comments the pinned CommonMark parser marks as raw HTML, and raises
+# SkillHtml, a finding here, for any other raw HTML, which it does not read.
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")
@@ -234,7 +237,11 @@ def skill_findings(version_text, skill_text, count):
     elif match[1] != version:
         findings.append(f"{SKILL} as committed names version {match[1]!r} but VERSION as "
                         f"committed is {version!r}; {REMEDY}")
-    counts = skill_counts(skill_text)
+    try:
+        counts = skill_counts(skill_text)
+    except SkillHtml as exc:
+        findings.append(f"{SKILL} as committed cannot have its guide count checked: {exc}")
+        return findings
     if len(counts) != 1:
         findings.append(f'{SKILL} as committed states "This skill carries N short guides" '
                         f"{len(counts)} times, not once (text inside HTML comments does not "
