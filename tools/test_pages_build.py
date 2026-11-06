@@ -22,8 +22,10 @@ import (by `import`, `from ... import`, or a file name they load, such as script
     would shift every later row);
   - it imports only the standard library (this interpreter's sys.stdlib_module_names) and
     repository modules under tools/ or scripts/, at any depth in the file, a function body
-    included, because the Pages build installs nothing: no markdown-it-py, so scripts/build-site.py
-    reads README.md's install section with its own standard-library reader.
+    included, by an import statement or by a call to __import__ or importlib.import_module
+    (IMPORT_FUNCTIONS), and every such call names its module in a string literal, because the
+    Pages build installs nothing: no markdown-it-py, so scripts/build-site.py reads README.md's
+    install section with its own standard-library reader.
 
 Before the files, it runs its own cases (SELF_CASES): each of those 4 forms is refused, the
 backslash both in a string and as a line continuation (the continuation also after a line
@@ -32,12 +34,17 @@ single-quoted key inside a double-quoted f-string, a line break inside a triple-
 field (also after a form feed, below a line of backslashes), a backslash in literal text, and
 literal backslashes beside escaped `{{` and `}}` (on 1 line, across a backslash-newline, and in a
 triple-quoted f-string) pass. Its IMPORT_CASES report a third-party import at the top of a file
-and inside a function, and pass standard-library and repository imports.
+and inside a function, and one made by __import__, builtins.__import__ with a keyword argument,
+importlib.import_module and import_module under a `from importlib import ... as` name; they report
+a call whose module name is a variable or a relative name, and pass standard-library and
+repository imports, by statement or by those calls.
 
 WHAT IT DOES NOT PROVE: that the files run on 3.11. `feature_version` is a best-effort grammar check,
 the tokenizer used is this interpreter's, nothing checks that every standard-library name the files
-use exists in 3.11 (tomllib does, from 3.11), an import made by other means (importlib or
-__import__ with a computed name) is not seen, and nothing is run. Exit 0 ok, 1 on a finding.
+use exists in 3.11 (tomllib does, from 3.11), and nothing is run. An import made by other means is
+not seen: an import function reached under another name (by assignment or getattr), exec or eval, runpy, an importlib.util loader (a file it loads is followed only
+when the file's name appears as a string, as above), or a module placed in sys.modules. Exit 0 ok,
+1 on a finding.
 """
 import ast
 import io
@@ -76,15 +83,38 @@ def deps(tree):
     return [p for p in out if p]
 
 
+# The import functions foreign_imports() also reads: the builtin __import__ and
+# importlib.import_module, called by these names, as an attribute of any object (builtins.__import__,
+# importlib.import_module) or under a name a `from importlib import ... as` or
+# `from builtins import ... as` gives them.
+IMPORT_FUNCTIONS = ("__import__", "import_module")
+
+
 def foreign_imports(tree):
     """(line, name) for each module a parsed file imports, at any depth, that is neither in the
-    standard library nor a repository module under tools/ or scripts/."""
+    standard library nor a repository module under tools/ or scripts/, by an import statement or
+    by a call to an IMPORT_FUNCTIONS function; name is None for such a call whose first argument
+    is not a string literal naming an absolute module, whose module this test cannot tell."""
+    called = set(IMPORT_FUNCTIONS)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module in ("importlib", "builtins"):
+            called |= {a.asname for a in node.names if a.name in IMPORT_FUNCTIONS and a.asname}
     out = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             names = [a.name for a in node.names]
         elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
             names = [node.module]
+        elif isinstance(node, ast.Call) and (
+                isinstance(node.func, ast.Name) and node.func.id in called
+                or isinstance(node.func, ast.Attribute) and node.func.attr in IMPORT_FUNCTIONS):
+            arg = node.args[0] if node.args else next(
+                (k.value for k in node.keywords if k.arg == "name"), None)
+            if not (isinstance(arg, ast.Constant) and isinstance(arg.value, str) and arg.value
+                    and not arg.value.startswith(".")):
+                out.append((node.lineno, None))
+                continue
+            names = [arg.value]
         else:
             continue
         for name in names:
@@ -100,6 +130,13 @@ IMPORT_CASES = (
     ("from check_csp_hashes import name_suffix\n", []),
     ("from markdown_it import MarkdownIt\n", ["markdown_it"]),
     ("import json\n\n\ndef parse():\n    import mdurl.parse\n", ["mdurl"]),
+    ('import importlib\nimportlib.import_module("json")\n__import__("check_csp_hashes")\n', []),
+    ('__import__("markdown_it")\n', ["markdown_it"]),
+    ('import builtins\n\n\ndef load():\n    builtins.__import__(name="mdurl")\n', ["mdurl"]),
+    ('import importlib\nimportlib.import_module("markdown_it.main")\n', ["markdown_it"]),
+    ('from importlib import import_module as load\nload("markdown_it")\n', ["markdown_it"]),
+    ('import importlib\nname = "json"\nimportlib.import_module(name)\n', [None]),
+    ('import importlib\nimportlib.import_module(".main", "markdown_it")\n', [None]),
 )
 
 
@@ -222,8 +259,14 @@ def main():
         for line, form in pep701_forms(source):
             failures.append(f"{rel}:{line}: an f-string carries {form}, which needs Python 3.12")
         for line, name in foreign_imports(tree):
-            failures.append(f"{rel}:{line}: imports {name}, which is neither the standard library "
-                            f"nor a module of this repository; the Pages build installs nothing")
+            if name is None:
+                failures.append(f"{rel}:{line}: calls __import__ or importlib.import_module with a "
+                                f"module name that is not a string literal, so this test cannot "
+                                f"tell what it imports; the Pages build installs nothing")
+            else:
+                failures.append(f"{rel}:{line}: imports {name}, which is neither the standard "
+                                f"library nor a module of this repository; the Pages build "
+                                f"installs nothing")
         pending += deps(tree)
     if failures:
         for f in failures:
@@ -232,7 +275,8 @@ def main():
     print(f"  ok    {len(SELF_CASES)} f-string and {len(IMPORT_CASES)} import self-test cases, and "
           f"{len(seen)} Python files that scripts/pages-build.sh runs or imports parse with "
           f"feature_version (3, 11), use no 3.12-only f-string form and import only the standard "
-          f"library and this repository: "
+          f"library and this repository, by an import statement, __import__ or "
+          f"importlib.import_module: "
           f"{', '.join(sorted(p.relative_to(ROOT).as_posix() for p in seen))}")
     return 0
 

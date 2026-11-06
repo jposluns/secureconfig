@@ -427,12 +427,14 @@ request that changes that section changes the snippet with it; no gate compares 
 placeholder gate scans the snippet though it skips the rest of `plugin/`. The For AI assistants
 page takes its install commands from README.md's section itself, so the page never carries a
 copy. `scripts/build-site.py` reads the section with a small standard-library fence reader,
-because the Cloudflare Pages build runs it with no Markdown parser, and refuses to build unless
+because the Cloudflare Pages build that runs it needs only bash and Python and installs nothing,
+and refuses to build unless
 the section holds exactly 2 fenced blocks, the in-session block and then the shell block, each
 closed by a fence of the same character and length as its opening one. That reader does not
 know HTML comments or indented code blocks, so `tools/check_install_blocks.py`, the suite's
 `install-blocks` section, reads the same section with the pinned parser and fails unless it
-finds exactly those 2 blocks with the same content.
+finds exactly those 2 blocks with the same content. Neither reader counts commands that raw HTML
+shows, such as a `pre` element, and nothing refuses raw HTML in the section.
 
 Record the change in `CHANGELOG.md` in the same pull request, not in a later bookkeeping one. A
 required gate checks that every merged pull request is referenced, exempting only the newest. It

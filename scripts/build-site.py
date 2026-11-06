@@ -51,8 +51,8 @@ added to PUBLISHED before it ships.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
 or a source the build cannot read as it needs.
-Standard library only, because scripts/pages-build.sh runs `--check` on Cloudflare Pages with no
-parser installed. No network.
+Standard library only, because scripts/pages-build.sh runs `--check` on Cloudflare Pages, needs
+only bash and Python, and installs nothing. No network.
 """
 import argparse
 import html
@@ -141,7 +141,7 @@ def install_blocks(text):
     section; line is the 1-based line of the block's opening fence. SourceError for anything else.
 
     This reader is deliberately simple, because the Cloudflare Pages build (scripts/pages-build.sh)
-    runs this script with the standard library only and has no Markdown parser. It reads lines,
+    runs this script, needs only bash and Python, and installs nothing. It reads lines,
     as CommonMark splits them (at \\n, \\r\\n or a lone \\r). The section runs from the 1 line that
     reads INSTALL, trailing spaces or tabs aside, to the next line, outside a fence, that starts a
     level-1 or level-2 ATX heading. A fence opens at the start of a line with 3 or more backticks or

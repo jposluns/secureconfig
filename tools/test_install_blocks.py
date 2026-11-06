@@ -11,9 +11,11 @@ parser:
     install_blocks() is first shown to accept each, so the gate is what catches it, and each fails
     for its own reason: the in-session block commented out, the in-session block inside an HTML
     block, an indented code block in the section, a fence in a block quote, a setext level-2
-    heading before the shell block, a second install heading in setext form, and the in-session
+    heading before the shell block, a second install heading in setext form, the in-session
     block commented out beside an added indented code block (2 blocks to each reader, not the same
-    2);
+    2), and the in-session block inside an HTML block beside an added fence in a block quote (2
+    blocks to each reader with the same info strings in the same order, which a gate comparing
+    only the number of blocks and their info strings would pass);
   - REFUSED: a layout install_blocks() refuses (a third block, and the in-session block commented
     out beside a visible replacement) fails, naming the build's refusal.
 
@@ -107,6 +109,12 @@ def main():
             (readme.replace(session_block, f"<!--\n{session_block}-->\n", 1)
              .replace(shell_block, shell_block + indented, 1), "code block 1 is, to the pinned "
              "parser, a fence"),
+        # As many blocks to both readers, with the same info strings in the same order, so only
+        # the line, depth and content tell them apart: the parser's first block is the quoted one.
+        "the in-session block inside an HTML block and a quoted fence added after it":
+            (readme.replace(session_block, f"<div>\n{session_block}</div>\n\n> ```text\n> /plugin "
+                            f"install other@other\n> ```\n", 1),
+             "code block 1 is, to the pinned parser, a fence at depth 1"),
     }
     refused = {
         "a third block":

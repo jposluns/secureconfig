@@ -3,8 +3,8 @@
 
 scripts/build-site.py takes the Claude Code install commands on the For AI assistants page from
 README.md's "Install in Claude Code" section with install_blocks(), a small standard-library fence
-reader, because the Cloudflare Pages build (scripts/pages-build.sh) runs it with no Markdown
-parser. That reader knows only lines, so an HTML comment or HTML block, an indented code block, a
+reader, because the Cloudflare Pages build (scripts/pages-build.sh) that runs it needs only bash
+and Python and installs nothing. That reader knows only lines, so an HTML comment or HTML block, an indented code block, a
 setext heading, a list or a block quote can make it read a block that CommonMark hides, or miss
 one that CommonMark shows. This CI gate reads the same README.md with the pinned CommonMark parser
 (gate_parser(required=True) in tools/check_verify_marking.py, pinned by
@@ -16,6 +16,10 @@ tools/requirements-gates.txt) and fails unless:
     code blocks, fenced or indented and at any depth, as install_blocks() extracted, and each in
     turn is a top-level fence that opens on the line install_blocks() gives, with the same info
     string and the same content.
+
+It compares code blocks only. Commands that raw HTML shows, such as a <pre> element in the
+section, are a code block to neither reader, so README.md can show commands that neither the page
+nor this gate counts; nothing refuses raw HTML in the section.
 
 Exit 0 when the two readings agree, 1 on a finding, 2 when README.md cannot be read or the parser
 is absent, not the pinned version or cannot be loaded (1 FAIL line naming the cause, never a
