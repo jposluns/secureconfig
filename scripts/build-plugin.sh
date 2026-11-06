@@ -78,8 +78,19 @@ sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1
 metadata=$(sed -n -e '1 { /^---$/!q }' -e '2,$ { /^---$/ { p; q }; /^metadata:$/,/^[^ ]/ { /^  version:/p } }' "$skill")
 [ "$metadata" = "  version: \"$version\""$'\n'"---" ] \
   || { echo "SKILL.md version did not update to $version; its front matter must open and close with a \"---\" line and its metadata must hold exactly one line '  version: \"...\"'" >&2; exit 1; }
-grep -qF "This skill carries $count short guides" "$skill" \
-  || { echo "SKILL.md guide count did not update to $count; the sentence \"This skill carries N short guides\" may have been reworded or wrapped" >&2; exit 1; }
+# The count is confirmed only outside HTML comments, removed first as the README guide-counts gate
+# removes them from README.md, and the sentence must appear there exactly once, so a commented copy
+# can neither stand in for a missing visible sentence nor sit beside a second one.
+visible=$(python3 - "$skill" <<'PY'
+import re
+import sys
+text = open(sys.argv[1], encoding="utf-8").read()
+text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+print("\n".join(re.findall(r"This skill carries ([0-9]+) short guides", text)))
+PY
+)
+[ "$visible" = "$count" ] \
+  || { echo "SKILL.md guide count did not update to $count; outside HTML comments it must state the sentence \"This skill carries N short guides\" exactly once, not reworded or wrapped" >&2; exit 1; }
 
 # A digest per bundled file, so an adopter's updater can verify what it fetched before replacing
 # anything, and so a partial or corrupted download is a refusal rather than a silent downgrade.

@@ -19,6 +19,7 @@ tree is clean passes --rebuild where it needs the rebuild path. The last cases f
 and two record what the gate does not do: read the index, or rebuild a clean tree unasked.
 """
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -244,7 +245,8 @@ def not_guides(rebuilt):
 
 def real_build(skill_md, expected, needle):
     """Run the real build-plugin.sh on a fixture holding skill_md, with one guide and two .md
-    names that are not guides; on success, SKILL.md must name VERSION 1.0.5 and 1 guide."""
+    names that are not guides; on success, SKILL.md must name VERSION 1.0.5 and, outside HTML
+    comments, 1 guide."""
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory) / "repo"
         root.mkdir()
@@ -266,7 +268,8 @@ def real_build(skill_md, expected, needle):
         assert needle in output, (needle, output)
         if expected == 0:
             text = (root / SKILL).read_text(encoding="utf-8")
-            assert '  version: "1.0.5"\n' in text and "carries 1 short guides" in text, text
+            visible = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+            assert '  version: "1.0.5"\n' in text and "carries 1 short guides" in visible, text
     return 1
 
 
@@ -366,6 +369,21 @@ def main():
                             "This skill carries 1 short guides. This skill carries 1 short "
                             "guides."),
                       expected=1, needle='short guides" 2 times, not once')
+        # Text inside an HTML comment is not the count sentence: a commented sentence with no
+        # visible one fails, a commented current count beside a stale visible one fails, and a
+        # commented copy beside the one current visible sentence is not a second statement.
+        count += case(skill("This skill carries 1 short guides.",
+                            "<!-- This skill carries 1 short guides. -->"),
+                      expected=1,
+                      needle=SKILL + ' as committed states "This skill carries N short guides" '
+                             "0 times, not once (text inside HTML comments does not count)")
+        count += case(skill_text(SKILL_MD.replace("carries 1 short", "carries 3 short")
+                                 + "<!--\nThis skill carries 1 short guides.\n-->\n"),
+                      expected=1,
+                      needle=SKILL + " as committed states 3 guides but the commit has 1",
+                      absent=("times, not once",))
+        count += case(skill_text(SKILL_MD + "<!-- This skill carries 7 short guides. -->\n"),
+                      also=("SKILL.md names it and states 1 guides; ",))
         count += case(skill('  version: "1.0.5"\n', ""), expected=1,
                       needle=SKILL + " as committed has 0 metadata version lines in its front "
                              "matter, not 1")
@@ -405,6 +423,17 @@ def main():
         count += real_build(SKILL_MD.replace("---\n", ""), 1, refused)
         count += real_build(SKILL_MD.replace("This skill carries", "This skill has"), 1,
                             "SKILL.md guide count did not update to 1")
+        # Only text outside HTML comments counts: a commented sentence with no visible one, and
+        # a second visible sentence, are refused; a stale visible count beside a commented
+        # current one is rewritten, which real_build confirms outside comments.
+        uncounted = "SKILL.md guide count did not update to 1; outside HTML comments"
+        count += real_build(SKILL_MD.replace("This skill carries 1 short guides.",
+                                             "<!-- This skill carries 1 short guides. -->"),
+                            1, uncounted)
+        count += real_build(SKILL_MD + "This skill carries 1 short guides.\n", 1, uncounted)
+        count += real_build(SKILL_MD.replace("carries 1 short", "carries 3 short")
+                            + "<!-- This skill carries 1 short guides. -->\n", 0,
+                            "wrote plugin/skills/secure-deployment-config/references")
 
         # Fail closed: a revision that is not a commit, an option-shaped revision, a directory
         # that is not a repository, and a repository with no commit.

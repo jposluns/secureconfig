@@ -22,9 +22,12 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
 - plugin/skills/secure-deployment-config/SKILL.md as committed opens with front matter (line 1
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
-  version-shaped line elsewhere does not count. It states "This skill carries N short guides"
-  exactly once, with N the guide-counts gate's set in the commit, as counted_guides() in
-  tools/_verify_sections.py lists it. That module is this gate's own copy, not the commit's;
+  version-shaped line elsewhere does not count. Outside HTML comments (`<!-- ... -->`, removed
+  first, as the README guide-counts gate removes them from README.md), it states "This skill
+  carries N short guides" exactly once, with N the guide-counts gate's set in the commit, as
+  counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts
+  nor stands in for a stale or missing visible sentence. That module is this gate's own copy,
+  not the commit's;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -78,6 +81,10 @@ SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
 # the front matter (metadata_versions() below), and the guide count in this sentence.
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
 SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
+# Text inside an HTML comment is not shown to a reader, so the count sentence is searched for only
+# after removing comments, the way the README guide-counts gate in tools/run_all_checks.sh reads
+# README.md.
+HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")
@@ -227,10 +234,11 @@ def skill_findings(version_text, skill_text, count):
     elif match[1] != version:
         findings.append(f"{SKILL} as committed names version {match[1]!r} but VERSION as "
                         f"committed is {version!r}; {REMEDY}")
-    counts = SKILL_COUNT.findall(skill_text)
+    counts = SKILL_COUNT.findall(HTML_COMMENT.sub("", skill_text))
     if len(counts) != 1:
         findings.append(f'{SKILL} as committed states "This skill carries N short guides" '
-                        f"{len(counts)} times, not once")
+                        f"{len(counts)} times, not once (text inside HTML comments does not "
+                        "count)")
     elif int(counts[0]) != count:
         findings.append(f"{SKILL} as committed states {counts[0]} guides but the commit has "
                         f"{count} (counted_guides() in tools/_verify_sections.py); {REMEDY}")
