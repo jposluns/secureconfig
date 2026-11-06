@@ -1674,10 +1674,10 @@ run_gate "build-site.py --check" python3 -I -B scripts/build-site.py --check
 echo "== the site build reads README.md's install section as the pinned parser does =="
 # scripts/build-site.py reads the install commands with a small standard-library fence reader,
 # because the Cloudflare Pages build that runs it needs only bash and Python and installs nothing.
-# This gate, CI only, reads the
-# same section with the pinned parser and fails unless it finds exactly the blocks the build read,
-# with the same content, so an HTML comment or an indented block cannot change what the page shows
-# unnoticed. The self-test runs first, so what runs against README.md is the shipped gate.
+# This gate, CI only, reads the same section with the pinned parser and fails unless it finds
+# exactly the blocks the build read, with the same content, so an HTML comment or an indented
+# block cannot change what the page shows unnoticed. The self-test runs first, so what runs
+# against README.md is the shipped gate.
 run_gate test_install_blocks.py python3 -I -B tools/test_install_blocks.py
 run_gate check_install_blocks.py python3 -I -B tools/check_install_blocks.py
 

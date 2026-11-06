@@ -4,11 +4,11 @@
 scripts/build-site.py takes the Claude Code install commands on the For AI assistants page from
 README.md's "Install in Claude Code" section with install_blocks(), a small standard-library fence
 reader, because the Cloudflare Pages build (scripts/pages-build.sh) that runs it needs only bash
-and Python and installs nothing. That reader knows only lines, so an HTML comment or HTML block, an indented code block, a
-setext heading, a list or a block quote can make it read a block that CommonMark hides, or miss
-one that CommonMark shows. This CI gate reads the same README.md with the pinned CommonMark parser
-(gate_parser(required=True) in tools/check_verify_marking.py, pinned by
-tools/requirements-gates.txt) and fails unless:
+and Python and installs nothing. That reader knows only lines, so an HTML comment or HTML block,
+an indented code block, a setext heading, a list or a block quote can make it read a block that
+CommonMark hides, or miss one that CommonMark shows. This CI gate reads the same README.md with
+the pinned CommonMark parser (gate_parser(required=True) in tools/check_verify_marking.py, pinned
+by tools/requirements-gates.txt) and fails unless:
 
   - install_blocks() accepts the section (its refusal is the finding);
   - the parser finds exactly 1 level-2 heading "Install in Claude Code";

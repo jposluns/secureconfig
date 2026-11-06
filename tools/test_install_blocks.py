@@ -15,7 +15,13 @@ parser:
     block commented out beside an added indented code block (2 blocks to each reader, not the same
     2), and the in-session block inside an HTML block beside an added fence in a block quote (2
     blocks to each reader with the same info strings in the same order, which a gate comparing
-    only the number of blocks and their info strings would pass);
+    only the number of blocks and their info strings would pass), both blocks commented out above
+    an HTML block holding a level-2 heading line, with copies of both after it (each pair differs
+    only in its line), and a NUL character in the shell block, which CommonMark reads as U+FFFD
+    (the pair differs only in its content);
+  - FIELD: README.md as it is, read by a parser that changes one field of the first block's token
+    from the pinned parser's reading, fails for each of the 5 fields compare() checks (type, depth,
+    line, info string and content), so dropping any one field from compare() fails a case;
   - REFUSED: a layout install_blocks() refuses (a third block, and the in-session block commented
     out beside a visible replacement) fails, naming the build's refusal.
 
@@ -42,6 +48,18 @@ COPIED = ("tools/check_install_blocks.py", "tools/check_verify_marking.py", "too
           "tools/_verify_sections.py", "tools/check_csp_hashes.py", "scripts/build-site.py",
           "README.md")
 HASH = "--hash=sha256:" + "0" * 64
+
+
+class FieldChanged:
+    """The pinned parser, with one attribute of the first fence token of each reading changed."""
+
+    def __init__(self, parser, attr, value):
+        self.parser, self.attr, self.value = parser, attr, value
+
+    def parse(self, text):
+        tokens = self.parser.parse(text)
+        setattr(next(t for t in tokens if t.type == "fence"), self.attr, self.value)
+        return tokens
 
 
 def run_copy(lock):
@@ -115,6 +133,27 @@ def main():
             (readme.replace(session_block, f"<div>\n{session_block}</div>\n\n> ```text\n> /plugin "
                             f"install other@other\n> ```\n", 1),
              "code block 1 is, to the pinned parser, a fence at depth 1"),
+        # The build's reader ends the section at the heading line inside the HTML block and reads
+        # the 2 commented-out blocks; the parser reads the copies after it. Only the lines differ.
+        "both blocks commented out above an HTML block with a heading line, and copies after it":
+            (readme.replace(session_block, f"<!--\n{session_block}-->\n", 1)
+             .replace(shell_block, f"<!--\n{shell_block}-->\n\n<div>\n## Elsewhere\n</div>\n\n"
+                      f"{session_block}\n{shell_block}", 1),
+             "code block 1 is, to the pinned parser, a fence at depth 0"),
+        # CommonMark replaces U+0000 with U+FFFD; the build's reader keeps it. Only the content
+        # differs.
+        "a NUL character in the shell block":
+            (readme.replace(shell_block, f"```bash\n{shell}\x00\n```\n", 1),
+             "code block 2 is, to the pinned parser, a fence at depth 0"),
+    }
+    # (field, the change to the first block's token): compare() must report each on its own.
+    first = next(t for t in parser.parse(readme) if t.type == "fence")
+    field = {
+        "type": ("type", "code_block"),
+        "depth": ("level", first.level + 1),
+        "line": ("map", [first.map[0] + 1, first.map[1] + 1]),
+        "info string": ("info", first.info + "x"),
+        "content": ("content", first.content + "x\n"),
     }
     refused = {
         "a third block":
@@ -145,6 +184,12 @@ def main():
         if not found or not any(reason in f for f in found):
             failures.append(f"{desc}: the gate should report the parser's different reading "
                             f"({reason!r}): {found!r}")
+    for desc, change in field.items():
+        cases += 1
+        found, _ = gate.compare(readme, FieldChanged(parser, *change))
+        if len(found) != 1 or "code block 1 is, to the pinned parser" not in found[0]:
+            failures.append(f"a block whose {desc} alone differs: the gate should report code "
+                            f"block 1 once: {found!r}")
     for desc, text in refused.items():
         cases += 1
         found, got = gate.compare(text, parser)
@@ -172,8 +217,9 @@ def main():
         return 1
     print(f"  ok    {cases} cases for the install-section gate: {len(agree)} layouts both readers "
           f"agree on, {len(misread)} the site build's reader misreads and the gate catches, "
-          f"{len(refused)} the build refuses, and the gate run on this checkout, on a lock pinning "
-          f"another version and on a lock it cannot parse")
+          f"{len(field)} fields of a block each caught on its own, {len(refused)} the build "
+          f"refuses, and the gate run on this checkout, on a lock pinning another version and on "
+          f"a lock it cannot parse")
     return 0
 
 
