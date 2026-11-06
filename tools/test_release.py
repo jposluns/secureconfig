@@ -81,6 +81,7 @@ WORKFLOW_TAIL = ("\npermissions:\n  contents: read\n\njobs:\n  gates:\n"
                  "          bash tools/run_all_checks.sh\n")
 WORKFLOW = WORKFLOW_HEAD + WORKFLOW_ON + WORKFLOW_TAIL
 SYMLINK = object()
+DIRECTORY = object()
 NEEDS_TRIGGER = ("a release needs the plain `workflow_dispatch:` key directly under the file's "
                  "top-level `on:` block mapping, as at the merge of #1194 and later")
 
@@ -141,8 +142,8 @@ def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plu
           broken=None, checks=WORKFLOW):
     """A repository whose main is `history`; returns each pull request's merge commit.
 
-    `checks` is the text of .github/workflows/checks.yml, None for no such file, or SYMLINK for
-    a symlink to a file holding the stub.
+    `checks` is the text of .github/workflows/checks.yml, its bytes, None for no such file,
+    SYMLINK for a symlink to a file holding the stub, or DIRECTORY for a directory holding it.
     """
     root.mkdir(parents=True)
     git(root, "init", "-q")
@@ -150,6 +151,11 @@ def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plu
     if checks is SYMLINK:
         write(root, ".github/workflows/real.yml", WORKFLOW)
         (root / ".github/workflows/checks.yml").symlink_to("real.yml")
+    elif checks is DIRECTORY:
+        write(root, ".github/workflows/checks.yml/checks.yml", WORKFLOW)
+    elif isinstance(checks, bytes):
+        (root / ".github/workflows").mkdir(parents=True)
+        (root / ".github/workflows/checks.yml").write_bytes(checks)
     elif checks is not None:
         write(root, ".github/workflows/checks.yml", checks)
     write(root, "VERSION", "1.0.9\n")
@@ -319,7 +325,7 @@ def cases(tmp):
 
     # Check 1 again: the target's checks.yml has the workflow_dispatch trigger. The clean
     # releases above pass with `workflow_dispatch: {}`; these other accepted forms pass checks 1
-    # to 6 with --build, and each refused form fails with its own message.
+    # to 6 with --build, and each refused form is checked for the message it expects.
     accepted = [
         ("a bare `workflow_dispatch:` with a comment",
          workflow("on:  # triggers\n  pull_request:\n  workflow_dispatch:  # on demand\n")),
@@ -327,6 +333,14 @@ def cases(tmp):
          workflow("on:\n  workflow_dispatch:\n    inputs:\n      reason:\n"
                   "        description: why\n  pull_request:\n")),
         ("CRLF line endings and a leading ---", "---\r\n" + WORKFLOW.replace("\n", "\r\n")),
+        # Rules of the pins gate that are not the release check's: the word `uses` in a block
+        # scalar, and a quoted `"uses"` key.
+        ("the word `uses` in a block scalar and a quoted `\"uses\"` key",
+         WORKFLOW + "      - \"uses\": ./local\n      - run: |\n          echo uses\n"),
+        ("block sequences at their key's own column and nested deeper",
+         workflow("on:\n  schedule:\n  - cron: \"0 6 * * 1\"\n  pull_request:\n    types:\n"
+                  "    - opened\n    - - nested\n      - key: value\n        other: value\n"
+                  "  workflow_dispatch:\n    inputs: {}\n")),
     ]
     for name, text in accepted:
         other = tmp / f"dispatch{COUNT[0]}"
@@ -404,6 +418,113 @@ def cases(tmp):
          "line 1: the document's top level is not a block mapping at column 0"),
         ("a second document", WORKFLOW + "---\non:\n  pull_request:\n",
          "a YAML directive or document marker"),
+        # The target's path holds something other than a regular file of UTF-8 text.
+        ("a directory at the path of checks.yml", DIRECTORY,
+         "it is not a regular file (mode 040000, tree)"),
+        ("bytes that are not UTF-8", WORKFLOW.encode() + b"# \xff\n", "it is not valid UTF-8"),
+        ("a lone CR", workflow("on:\n  workflow_dispatch: {}\r  pull_request:\n"),
+         "line 5 has the character U+000D, which is outside the YAML subset this check reads"),
+        # Indentation that opens no block: a dedent to a column no open collection uses (the
+        # three examples from QA round 1), and lines deeper than a line that opened no block.
+        ("a key dedenting below `inputs:` to a column no mapping opened",
+         workflow("on:\n  workflow_dispatch:\n      inputs:\n    bogus:\n"),
+         "line 7 is outside the YAML subset this check reads (its indentation, column 5, is not "
+         "that of any block mapping or sequence still open there)"),
+        ("a key dedenting below a flow `inputs:` to a column no mapping opened",
+         workflow("on:\n  workflow_dispatch:\n      inputs: {}\n    foo: {}\n"),
+         "line 7 is outside the YAML subset this check reads (its indentation, column 5, is not"),
+        ("a key in a job dedenting to a column no mapping opened",
+         WORKFLOW_HEAD + "on:\n  workflow_dispatch: {}\n\njobs:\n  gates:\n    a: 1\n   b: 2\n",
+         "line 10 is outside the YAML subset this check reads (its indentation, column 4, is not"),
+        ("a key under `on:` less indented than the first",
+         workflow("on:\n    workflow_dispatch: {}\n  pull_request:\n"),
+         "line 6 is less indented than the first key under `on:`, at column 5"),
+        ("a key under `on:` deeper than a key with a value",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: x\n    types: [opened]\n"),
+         "line 7: a scalar from an earlier line continues onto this more indented line"),
+        ("a key after `on:` deeper than a key with a value",
+         workflow("on:\n  workflow_dispatch: {}\nconcurrency: x\n  group: y\n"),
+         "line 7: a scalar from an earlier line continues onto this more indented line"),
+        ("a line that is neither a key nor a sequence entry",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    opened\n"),
+         "line 7 is outside the YAML subset this check reads (a line that is neither a key nor"),
+        ("a sequence entry among the keys under `on:`",
+         workflow("on:\n  workflow_dispatch: {}\n  - pull_request\n"),
+         "line 6: a sequence entry among the keys of the top-level `on:`"),
+        ("a sequence entry among a deeper mapping's keys",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    types: [opened]\n    - x\n"),
+         "line 8 is outside the YAML subset this check reads (a sequence entry among the keys of "
+         "a block mapping)"),
+        ("a key among a block sequence's entries",
+         workflow("on:\n  workflow_dispatch: {}\n  schedule:\n    - cron: x\n    other: y\n"),
+         "line 8 is outside the YAML subset this check reads (a key among the entries of a block "
+         "sequence)"),
+        ("a sequence entry at the top level", WORKFLOW_HEAD + "- x\n" + WORKFLOW_ON,
+         "line 4: the document's top level is not a block mapping"),
+        ("`on:` with nothing beneath it at the end of the file", WORKFLOW_HEAD + "on:\n",
+         "line 4: the top-level `on:` has nothing beneath it"),
+        # Block scalars.
+        ("a block scalar line less indented than its content but more than its key",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    types: |\n        opened\n"
+                  "      closed\n"),
+         "line 9 is outside the YAML subset this check reads (a line less indented than its "
+         "block scalar's content but more than the key or dash that opened it)"),
+        ("a blank line before a block scalar's content holding more spaces than it",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    types: |\n          \n"
+                  "        opened\n"),
+         "line 8 is outside the YAML subset this check reads (a blank line at the start of a "
+         "block scalar holding more spaces"),
+        ("a block scalar header with an indentation indicator",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: |2\n    x\n"),
+         "line 6 is outside the YAML subset this check reads (a block scalar header with an "
+         "indentation indicator"),
+        # What `workflow_dispatch:` may hold.
+        ("a key other than `inputs:` under `workflow_dispatch:`",
+         workflow("on:\n  workflow_dispatch:\n    bogus: 1\n"),
+         "line 6: the key under `workflow_dispatch:` is written 'bogus'; only the plain key "
+         "`inputs` is read there"),
+        ("a quoted `inputs` key under `workflow_dispatch:`",
+         workflow("on:\n  workflow_dispatch:\n    \"inputs\": {}\n"),
+         "line 6: the key under `workflow_dispatch:` is written '\"inputs\"'"),
+        ("a second `inputs:` under `workflow_dispatch:`",
+         workflow("on:\n  workflow_dispatch:\n    inputs: {}\n    inputs:\n"),
+         "line 7: a second `inputs:` under `workflow_dispatch:`; the first is at line 6"),
+        ("`workflow_dispatch:` holding a block sequence at its own column",
+         workflow("on:\n  workflow_dispatch:\n  - inputs\n"),
+         "line 6: `workflow_dispatch:` holds a block sequence"),
+        # Lines outside the subset.
+        ("a tab", workflow("on:\n  workflow_dispatch: {}\n  pull_request:\t{}\n"),
+         "line 6 is outside the YAML subset this check reads (a tab"),
+        ("a quoted key that is not a plain name",
+         workflow("on:\n  workflow_dispatch: {}\n  \"pull request\": {}\n"),
+         "line 6 is outside the YAML subset this check reads (a quoted key that is not a plain"),
+        ("an alias", workflow("on:\n  workflow_dispatch: *trigger\n"),
+         "line 5 is outside the YAML subset this check reads (an alias (*)"),
+        ("a tag", workflow("on:\n  workflow_dispatch: !!map {}\n"),
+         "line 5 is outside the YAML subset this check reads (a tag (!)"),
+        ("a sequence entry on its key's line",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: - opened\n"),
+         "line 6 is outside the YAML subset this check reads (a value starting with '-'"),
+        ("a quoted scalar running past its line",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: \"opened\n"),
+         "line 6 is outside the YAML subset this check reads (a quoted scalar that runs past"),
+        ("text after a flow collection", workflow("on:\n  workflow_dispatch: {} x\n"),
+         "line 5 is outside the YAML subset this check reads (text follows a flow collection"),
+        ("a quoted scalar in a flow collection running past its line",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: [\"opened]\n"),
+         "line 6 is outside the YAML subset this check reads (a quoted scalar inside a flow "
+         "collection runs past"),
+        ("a flow collection closed by the wrong bracket", workflow("on:\n  workflow_dispatch: {]\n"),
+         "line 5 is outside the YAML subset this check reads (a flow collection closed by ']'"),
+        ("an indicator in a flow collection",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: [*opened]\n"),
+         "line 6 is outside the YAML subset this check reads (a flow collection holding the "
+         "indicator '*'"),
+        ("a flow collection running past its line", workflow("on:\n  workflow_dispatch: {\n"),
+         "line 5 is outside the YAML subset this check reads (a flow collection that runs past"),
+        ("a plain scalar holding ': '",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: a: b\n"),
+         "line 6 is outside the YAML subset this check reads (a plain scalar holding ': '"),
     ]
     for name, text, needle in refused:
         other = tmp / f"dispatch{COUNT[0]}"
