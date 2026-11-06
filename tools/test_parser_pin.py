@@ -109,19 +109,84 @@ class Preflight(unittest.TestCase):
 
     def test_unparsable_pin(self):
         for label, text, fragment in (
-                ("no pin", f"mdurl==0.1.2{HASH}\n", "expected one markdown-it-py pin, found 0"),
+                ("no pin", f"mdurl==0.1.2{HASH}\n", "it has a pin for mdurl only;"),
                 ("two pins", LOCK + f"markdown-it-py==4.2.0{HASH}\n",
-                 "expected one markdown-it-py pin, found 2"),
+                 "it has a second markdown-it-py pin on line 4 (the first is on line 2);"),
                 ("two mdurl pins", LOCK + f"mdurl==0.1.2{HASH}\n",
-                 "expected one mdurl pin, found 2"),
-                ("range, not a pin", f"markdown-it-py>=4.2.0{HASH}\n", "line 1"),
-                ("no hash", "markdown-it-py==4.2.0\n", "line 1"),
-                ("leading space", f" markdown-it-py==4.2.0{HASH}\n", "line 1")):
+                 "it has a second mdurl pin on line 4 (the first is on line 3);"),
+                ("range, not a pin", f"markdown-it-py>=4.2.0{HASH}\n", "it has line 1, "),
+                ("no hash", "markdown-it-py==4.2.0\n", "it has line 1, "),
+                ("leading space", f" markdown-it-py==4.2.0{HASH}\n", "it has line 1, ")):
             with self.subTest(label=label):
                 result = self.run_case(version("4.2.0"), lock_text=text)
                 self.assert_refusal(result, "the pinned version is unknown: cannot parse",
                                     fragment)
                 self.assertNotIn(HOST, result[1])
+
+    # TODO 3.52: before the preflight shared gate_parser()'s lock reader, it accepted the first
+    # two of these locks whenever the installed versions matched every pin, and the suite went
+    # on to gates that refuse them. Each refusal names what the lock holds and the rule.
+    REFUSED_LOCKS = (
+        ("pins only markdown-it-py", f"markdown-it-py==4.2.0{HASH}\n",
+         "it has a pin for markdown-it-py only", "invalid shared parser lock"),
+        ("adds a third pin", LOCK + f"zeta==1.0{HASH}\n",
+         "it has pins for markdown-it-py, mdurl and zeta", "invalid shared parser lock"),
+        ("pins mdurl twice", LOCK + f"mdurl==0.1.2{HASH}\n",
+         "it has a second mdurl pin on line 4 (the first is on line 3)",
+         "invalid shared parser lock entry"),
+        ("lost a hash", LOCK.replace(f"mdurl==0.1.2{HASH}", "mdurl==0.1.2"),
+         "it has line 3, 'mdurl==0.1.2', which is not a hashed pin",
+         "invalid shared parser lock entry"),
+    )
+    RULE = ("because each line that is not empty and does not start with '#' must be one "
+            "'name==version --hash=sha256:<64 lowercase hex digits>' pin, and the lock must "
+            "pin markdown-it-py and mdurl, each once, and nothing else; ")
+
+    def test_locks_gate_parser_refuses(self):
+        # Every package these locks name is installed at its pinned version, so only the lock
+        # rule can refuse them.
+        installed = metadata(zeta="1.0")
+        for label, text, found, message in self.REFUSED_LOCKS:
+            with self.subTest(lock=label):
+                result = self.run_case(version("4.2.0"), lock_text=text, installed=installed)
+                self.assert_refusal(result, "has markdown-it-py 4.2.0, but the pinned version is "
+                                    "unknown: cannot parse tools/requirements-gates.txt as "
+                                    "gate_parser() in tools/check_verify_marking.py does: "
+                                    f"{found}; that reader refuses it ({message}) " + self.RULE,
+                                    "restore it from main")
+                self.assertNotIn(HOST, result[1])
+                self.assertEqual(result[1].count("  FAIL  "), 1, result[1])
+
+    def test_gate_parser_refuses_the_same_locks(self):
+        # gate_parser() itself, from a copy of its module beside each lock, so that the shared
+        # reader cannot drift from what gate_parser() raises: a plain ValueError with its own
+        # message for each lock the preflight refuses above, and no lock error for the shipped
+        # lock form, whatever the parser installed on this host.
+        script = ("import sys\nsys.path.insert(0, sys.argv[1])\n"
+                  "from check_verify_marking import gate_parser\n"
+                  "try:\n    gate_parser()\n"
+                  "except Exception as exc:\n    print(f'{type(exc).__name__}: {exc}')\n"
+                  "else:\n    print('accepted')\n")
+        cases = [(label, text, message) for label, text, _, message in self.REFUSED_LOCKS]
+        cases.append(("the shipped form", LOCK, None))
+        for label, text, message in cases:
+            with self.subTest(lock=label), tempfile.TemporaryDirectory() as directory:
+                copy = Path(directory)
+                for name in ("check_verify_marking.py", "_markdown.py", "_verify_sections.py"):
+                    (copy / name).write_bytes((TOOLS / name).read_bytes())
+                (copy / "requirements-gates.txt").write_text(text, encoding="utf-8")
+                result = subprocess.run([sys.executable, "-I", "-B", "-", str(copy)],
+                                        input=script, capture_output=True, text=True,
+                                        timeout=60)
+                self.assertEqual((result.returncode, result.stderr), (0, ""), result.stdout)
+                if message is None:
+                    self.assertNotIn("invalid shared parser lock", result.stdout)
+                    self.assertEqual(pin.pinned_versions(copy / "requirements-gates.txt"),
+                                     PINNED)
+                else:
+                    self.assertEqual(result.stdout, f"ValueError: {message}\n")
+                    with self.assertRaises(pin.PinError):
+                        pin.pinned_versions(copy / "requirements-gates.txt")
 
     def test_mdurl_mismatch(self):
         result = self.run_case(version("4.2.0"), installed=metadata(mdurl="0.1.1"))
@@ -144,16 +209,6 @@ class Preflight(unittest.TestCase):
         result = self.run_case(version("4.2.0"), installed=metadata(markdown_it_py="4.1.0"))
         self.assert_refusal(result, "has markdown-it-py distribution metadata 4.1.0, but "
                             "tools/requirements-gates.txt pins 4.2.0;", HOST)
-
-    def test_every_lock_pin_is_compared(self):
-        lock = LOCK + f"zeta==1.0{HASH}\n"
-        self.assert_refusal(self.run_case(version("4.2.0"), lock_text=lock),
-                            "has no zeta distribution metadata, but "
-                            "tools/requirements-gates.txt pins 1.0;", HOST)
-        status, line = self.run_case(version("4.2.0"), lock_text=lock,
-                                     installed=metadata(zeta="1.0"))
-        self.assertEqual(status, 0, line)
-        self.assertIn("has markdown-it-py 4.2.0 and mdurl 0.1.2 and zeta 1.0, as ", line)
 
     def test_match(self):
         status, line = self.run_case(version("4.2.0"))

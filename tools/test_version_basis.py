@@ -541,8 +541,10 @@ class ParserLoadTests(unittest.TestCase):
                      'which '),
         ('count_diff', "README.md's sections need the pinned Markdown parser, which "),
     )
-    # The suite's parser preflight, tools/check_parser_pin.py, accepts these two lock forms,
-    # which gate_parser() refuses, so the heredocs meet them too; the newline ends the cause.
+    # Two more lock forms gate_parser() refuses. The suite's parser preflight,
+    # tools/check_parser_pin.py, refuses them too since it shares gate_parser()'s lock reader
+    # (TODO 3.52), but each heredoc still reports them in one line when run on its own; the
+    # newline ends the cause.
     SUITE_CASES = CASES + (
         ('lock pinning only markdown-it-py', f'markdown-it-py==4.2.0{DIGEST}\n', {},
          'ValueError: invalid shared parser lock\n'),

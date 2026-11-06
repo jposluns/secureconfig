@@ -572,6 +572,61 @@ class ParserUnavailable(ValueError):
     """An absent or mismatched dependency; local checks may remain fence-only."""
 
 
+# The one rule set for tools/requirements-gates.txt. gate_parser() below and the suite's
+# parser preflight, tools/check_parser_pin.py, both read the lock through parser_lock_pins(),
+# so the preflight refuses exactly the locks gate_parser() refuses.
+PARSER_LOCK_PACKAGES = ("markdown-it-py", "mdurl")
+PARSER_LOCK_LINE = re.compile(r"([a-z][a-z0-9-]*)==([0-9.]+) --hash=sha256:[0-9a-f]{64}")
+PARSER_LOCK_RULE = ("each line that is not empty and does not start with '#' must be one "
+                    "'name==version --hash=sha256:<64 lowercase hex digits>' pin, and the lock "
+                    "must pin markdown-it-py and mdurl, each once, and nothing else")
+
+
+class ParserLockError(ValueError):
+    """A lock that parser_lock_pins() refuses.
+
+    str() is the message gate_parser() raises as a plain ValueError; found says what the
+    lock holds that breaks PARSER_LOCK_RULE.
+    """
+
+    def __init__(self, message, found):
+        super().__init__(message)
+        self.found = found
+
+
+def parser_lock_pins(text):
+    """Return {package: version}, in lock order, from the text of the parser lock.
+
+    Raise ParserLockError for a line that is not a hashed pin or that pins a package a
+    second time ("invalid shared parser lock entry", at the first such line), or for a lock
+    whose pins are not exactly markdown-it-py and mdurl ("invalid shared parser lock").
+    """
+    pins, lines = {}, {}
+    for number, line in enumerate(text.splitlines(), 1):
+        if not line or line.startswith("#"):
+            continue
+        match = PARSER_LOCK_LINE.fullmatch(line)
+        if not match:
+            raise ParserLockError("invalid shared parser lock entry",
+                                  f"line {number}, {line!r}, which is not a hashed pin")
+        if match[1] in pins:
+            raise ParserLockError("invalid shared parser lock entry",
+                                  f"a second {match[1]} pin on line {number} "
+                                  f"(the first is on line {lines[match[1]]})")
+        pins[match[1]] = match[2]
+        lines[match[1]] = number
+    if set(pins) != set(PARSER_LOCK_PACKAGES):
+        names = list(pins)
+        if not names:
+            found = "no pin"
+        elif len(names) == 1:
+            found = f"a pin for {names[0]} only"
+        else:
+            found = f"pins for {', '.join(names[:-1])} and {names[-1]}"
+        raise ParserLockError("invalid shared parser lock", found)
+    return pins
+
+
 def gate_parser(*, required=False):
     """Return the pinned parser, or None for a local absent/mismatched dependency.
 
@@ -581,16 +636,11 @@ def gate_parser(*, required=False):
     from importlib.metadata import version
     from importlib.util import find_spec
     lock = Path(__file__).with_name("requirements-gates.txt").read_text(encoding="utf-8")
-    pins = {}
-    for line in lock.splitlines():
-        if not line or line.startswith("#"):
-            continue
-        match = re.fullmatch(r"([a-z][a-z0-9-]*)==([0-9.]+) --hash=sha256:[0-9a-f]{64}", line)
-        if not match or match[1] in pins:
-            raise ValueError("invalid shared parser lock entry")
-        pins[match[1]] = match[2]
-    if set(pins) != {"markdown-it-py", "mdurl"}:
-        raise ValueError("invalid shared parser lock")
+    try:
+        pins = parser_lock_pins(lock)
+    except ParserLockError as exc:
+        # A plain ValueError with the same message, as callers report its type name.
+        raise ValueError(str(exc)) from None
     problem = None
     if find_spec("markdown_it") is None:
         problem = "parser absent"
