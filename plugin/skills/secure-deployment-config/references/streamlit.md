@@ -261,7 +261,7 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 - Caddy bind, certificate files, and reverse-proxy configuration (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88, https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go
 - Caddy basic_auth configuration and default bcrypt hashing (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36
 - oauth2-proxy email-domain restriction and wildcard configuration (pinned tag v7.15.6, checked November 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.6/pkg/apis/options/options.go#L141
-- oauth2-proxy email-domain restriction and wildcard configuration at the release the recorded fixture used (pinned tag v7.15.4): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141
+- oauth2-proxy email-domain restriction and wildcard configuration at the release the recorded fixture used (pinned tag v7.15.4, checked November 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141
 - oauth2-proxy v7.15.6 release notes, the unverified-email callback now answering 403 instead of 500 (pinned tag v7.15.6, checked November 2026): https://github.com/oauth2-proxy/oauth2-proxy/releases/tag/v7.15.6
 - Keycloak TOTP policy and user-attribute-to-token-claim mapper used by the recorded fixture (pinned tag 26.7.4): https://raw.githubusercontent.com/keycloak/keycloak/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc, https://github.com/keycloak/keycloak/blob/26.7.4/services/src/main/java/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.java#L96-L104
 
@@ -336,7 +336,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-10",
-  "body_sha256": "6ab1334c3f3b6789dc07515405f80a0675ab47c03bd4afc5beaa396c96dcb5be",
+  "body_sha256": "2e1ad8dc8241c3348abf61393094ca2cdf10e8565f951f037ad72b49726aecda",
   "components": {
     "streamlit": {
       "name": "Streamlit",
