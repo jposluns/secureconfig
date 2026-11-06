@@ -473,7 +473,7 @@ class EmptiedLines(unittest.TestCase):
 
 class KnownDivergences(unittest.TestCase):
     """Layouts the module docstring lists as known to differ from CommonMark, pinned so that a
-    change in them is seen (QA rounds 2 and 3 on #1235). Each expected value is this scanner's
+    change in them is seen (QA rounds 2 to 7 on #1235). Each expected value is this scanner's
     reading, not CommonMark's."""
 
     def test_link_destination_and_title_are_paragraph_text(self):
@@ -507,6 +507,44 @@ class KnownDivergences(unittest.TestCase):
                          [(1, "a"), (3, "<!-- HIDL"), (5, "x -->")])
         self.assertEqual(guide("10. a\n    <!-- HIDW\n\n    more -->\n"),
                          [(1, "a <!-- HIDW"), (4, "more -->")])
+
+    def test_indented_block_quote_marker_ends_a_paragraph(self):
+        # Item 5: CommonMark reads the line as paragraph text, so the code span pairs and its
+        # "<!-- c -->" is shown as code.
+        self.assertEqual(guide("Para `x\n    > b <!-- c --> `\n"), [(1, "Para `x b  `")])
+
+    def test_numbered_item_after_a_block_quote_paragraph_continues_it(self):
+        # Item 11: CommonMark starts a list at the item, so the code span does not pair and the
+        # comment is hidden, and "<!-- x" and "b --> c." are text.
+        for marker in ("2.", "2)", "10."):
+            with self.subTest(marker=marker):
+                self.assertEqual(guide(f"> Para `x\n{marker} b <!-- c --> `\n"),
+                                 [(1, "Para `x"), (2, "b <!-- c --> `")])
+        self.assertEqual(guide(">> Para `x\n2. b <!-- c --> `\n"),
+                         [(1, "Para `x"), (2, "b <!-- c --> `")])
+        self.assertEqual(guide("> Para <!-- x\n2. b --> c.\n"), [(1, "Para c.")])
+
+    def test_marker_in_an_indented_code_block_opens_a_comment_block(self):
+        # Item 12: CommonMark shows the code block and "Shown.".
+        for marker in (">", "-", "1.", "> -"):
+            with self.subTest(marker=marker):
+                self.assertEqual(guide(f"Para.\n\n    {marker} <!-- x\n\nShown.\n"),
+                                 [(1, "Para.")])
+        self.assertEqual(guide("Para.\n\n    code\n    > <!-- x\n\nShown.\n"),
+                         [(1, "Para."), (3, "code")])
+
+    def test_item_indentation_is_read_after_quote_markers_with_a_tab_as_one_column(self):
+        # Item 13: CommonMark reads each "2." line as paragraph text, so it shows "<!-- c" and
+        # "More.", and in the last two it pairs the code span and shows "<!-- c -->" as code.
+        cases = [("- > Para\n  > 2. <!-- c\n\nMore.\n", [(1, "> Para")]),
+                 ("1. > Para\n   > 2. <!-- c\n\nMore.\n", [(1, "> Para")]),
+                 ("- a\n\t2. <!-- c\n\nMore.\n", [(1, "a")]),
+                 ("10. a\n\t2) <!-- c\n\nMore.\n", [(1, "a")]),
+                 ("- > Para `x\n  > 2. b <!-- c --> `\n", [(1, "> Para `x"), (2, "b  `")]),
+                 ("- a `x\n\t2. b <!-- c --> `\n", [(1, "a `x"), (2, "b  `")])]
+        for text, expected in cases:
+            with self.subTest(text=text):
+                self.assertEqual(guide(text), expected)
 
 
 class Command(unittest.TestCase):
