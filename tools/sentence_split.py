@@ -28,10 +28,11 @@ What a sentence is, here:
   line or a later one, as CommonMark pairs them; a heading is a paragraph of one
   line here, each table cell is read on its own, and a backslash-escaped backtick
   or `<` opens nothing. A `<!--` at the start of a line, after any block quote
-  markers and list marker, where a block may start (no paragraph is open, or the
-  line may interrupt the one that is), opens a comment that runs to the next `-->`
-  or the end of the file, as an HTML block outside a container does, and the rest
-  of the line that closes it is a unit of its own, as the end of that block.
+  markers and list marker, where the splitter takes a block to start (no
+  paragraph is open, or the line may interrupt the one that is), opens a comment
+  that runs to the next `-->` or the end of the file, as an HTML block outside a
+  container does, and the rest of the line that closes it is a unit of its own,
+  as the end of that block.
   Anywhere else, a `<!--` opens a comment only when a `-->` follows it in its
   paragraph or table cell, and is text otherwise. As in CommonMark 0.31.2, `<!-->`
   and `<!--->` are whole comments. A line of a paragraph that an inline comment
@@ -121,6 +122,15 @@ and the list is not exhaustive:
 5. Container structure is approximated: any line that opens with a pipe ends a
    paragraph, a list marker indented 4 or more spaces ends one as it does
    unindented, and a list item's column comes from the first line of the unit.
+   Item 13 gives examples of later lines of a list item read against that
+   column. After a paragraph line with no block quote marker, a block quote
+   marker indented 4 spaces can be read as a deeper block quote that ends the
+   paragraph for pairing backtick runs and finding where a block starts. For
+   example, ``Para `x`` then `    > b <!-- c -->`, a space and a backtick, hides
+   `<!-- c -->`, which CommonMark shows in a code span. And `Para` then
+   `    > <!-- x`, a blank line and `More.` opens a comment block that hides
+   `<!-- x` and `More.`, which CommonMark shows as paragraph text; with `-->`
+   and `More.` on the lines after that blank line instead, `More.` is shown.
 6. A block start in a list item whose text starts at column 4 or more, indented
    to that text, as with a `<div>` or a thematic break under `10. `, is read as
    indented 4 spaces and so ends no paragraph.
@@ -134,10 +144,64 @@ and the list is not exhaustive:
     from the item's text, so one indented 4 or more spaces, as on a later line
     of an item under `- ` or `10. `, opens no comment block. With no `-->` later
     in its paragraph it is text, and the comment it opens in CommonMark is shown.
-Where a paragraph ends here and not in CommonMark (items 5 and 7), a code span
-may not pair, and a `<!--` in it then hides text up to a later `-->`; where it
-goes on here and not in CommonMark (items 5, 6 and 8), a code span may pair and
-show a real comment.
+11. After a paragraph in a block quote, a line with no block quote marker can
+    start a new list in CommonMark and be read here as a lazy continuation line
+    of that paragraph when pairing backtick runs and finding a comment's `-->`.
+    For example, ``> Para `x`` then `2. b <!-- c -->`, a space and a backtick,
+    shows `<!-- c -->`, which CommonMark hides, and so do `2)` or `10.` in place
+    of `2.`, and ``>> Para `x`` in place of ``> Para `x``. So does a line of
+    `*`, `1.` or `2.` alone between ``> Para `x`` and `b <!-- c -->`, a space
+    and a backtick. `> Para <!-- x` then `2. b --> c.` hides `<!-- x` and
+    `b -->`, which CommonMark shows. And `> Para` then `2. <!-- x`, a blank line
+    and `More.` shows `<!-- x`, which CommonMark hides as a comment block in the
+    new list item.
+12. A block quote or list marker on a line of an indented code block can be
+    read as one, so a `<!--` after it opens a comment block. For example, after
+    a blank line, `    > <!-- x`, `    - <!-- x`, `    1. <!-- x`,
+    `    2. <!-- x` and `    > - <!-- x` each open one, and after the code line
+    `    code`, all of these but `    2. <!-- x` do. With a blank line and
+    `Shown.` after it, the block hides that line and `Shown.`, which CommonMark
+    shows, and the code line `    code` before it, where there is one, is
+    shown. A code line after it is hidden too, as `    more` after `    code`
+    and `    > <!-- x` is. After a blank line and `    > <!-- x`, a `-->` on the next line as
+    `    -->`, or after a blank line as `-->`, ends the block, and the `Shown.`
+    after it is shown.
+13. In a list item, a later line can be read as a sibling item that ends the
+    paragraph where CommonMark reads paragraph text. In each example below,
+    the marker's indentation, counted after any block quote markers and with
+    a tab as one column, is less than the item's text column, and a `<!--`
+    after the marker opens a comment block where CommonMark reads `2. <!-- c`
+    as paragraph text: `- a` or `10. a` then a tab and `2. <!-- c` (`2)` too
+    after `10. a`),
+    `100. a` or `1.   a` then `    2. <!-- c`, `- > Para` then `  > 2. <!-- c`,
+    and `1. > Para` then `   > 2. <!-- c`. With a blank line and `More.` after
+    it, the block hides `<!-- c` and `More.`, which CommonMark shows; with
+    `-->` and `More.` on the lines after that blank line instead, `More.` is
+    shown. With ``a `x`` or ``> Para `x`` as the item's text and
+    `b <!-- c -->`, a space and a backtick after `2.`, the code span does not
+    pair, and `<!-- c -->` is hidden, which CommonMark shows in a code span. By
+    contrast, `- a` then two tabs and `2. <!-- c`, and `- a` or `10. a` then
+    `    2. <!-- c`, show `<!-- c` and the text after it, as CommonMark does.
+    A `2.` indented 4 spaces on a paragraph continuation line, which
+    CommonMark reads as paragraph text, is read here as an item whose text
+    starts at column 7, and in the examples below a later `3.` indented less
+    than that, counted after any block quote markers, is read as a sibling
+    item, so a `<!--` after it opens a comment block where CommonMark reads
+    `3. <!-- c` as paragraph text: `Para` then `    2. a` and `3. <!-- c` or
+    `      3. <!-- c`, `10. a` then `    2. b` and `    3. <!-- c`, `- a`
+    then `    2. b` and `  3. <!-- c`, and `> Para` then `>     2. a` and
+    `> 3. <!-- c`. With a blank line and `More.` after it, the block hides
+    `<!-- c` and `More.`, which CommonMark shows; with `-->` and `More.` on
+    the lines after that blank line instead, `More.` is shown. With ``a `x``
+    or ``b `x`` as the `2.` line's text and `b <!-- c -->`, a space and a
+    backtick after `3.`, the code span does not pair, and `<!-- c -->` is
+    hidden, which CommonMark shows in a code span. By contrast, with the `3.`
+    indented 7 columns in each of these, `<!-- c` and `More.` are shown and
+    the code span pairs, as in CommonMark.
+Where a paragraph ends here and not in CommonMark (items 5, 7 and 13), a code
+span may not pair, and a `<!--` in it then hides text up to a later `-->`; where
+it goes on here and not in CommonMark (items 5, 6, 8 and 11), a code span may
+pair and show a real comment.
 """
 import argparse
 import re
