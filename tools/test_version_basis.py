@@ -426,11 +426,12 @@ class VersionBasisTests(unittest.TestCase):
 
 
 class ParserLoadTests(unittest.TestCase):
-    """When the pinned parser cannot be loaded at all, tools/version_basis.py and both parser
-    loads in scripts/build-llms-full.sh fail in one line naming the cause, with the exit status
-    each gives a failed check, and print no traceback (TODO 3.51). Each case runs a copy of the
-    tools beside its own lock, or none, under an interpreter run with -E and -S, which sees no
-    installed package, so none needs the pinned parser or reads tools/requirements-gates.txt."""
+    """When the pinned parser cannot be loaded at all, tools/version_basis.py, both parser
+    loads in scripts/build-llms-full.sh and the README category and count heredocs in
+    tools/run_all_checks.sh fail in one line naming the cause, with the exit status each gives a
+    failed check, and print no traceback (TODO 3.51). Each case runs a copy of the tools beside
+    its own lock, or none, under an interpreter run with -E and -S, which sees no installed
+    package, so none needs an installed pinned parser or reads this checkout's lock."""
 
     TOOLS = ('check_verify_marking.py', '_markdown.py', '_verify_sections.py')
     LOAD = ('cannot be loaded from tools/requirements-gates.txt and the installed '
@@ -533,6 +534,47 @@ class ParserLoadTests(unittest.TestCase):
                 self.one_line(result, 'README.md: the build needs the pinned parser, which '
                               + self.LOAD + cause)
                 self.assertFalse((root / 'site/llms-full.txt').exists())
+
+    # (the variable tools/run_all_checks.sh captures the heredoc's output in, the line's start).
+    SUITE_GATES = (
+        ('cat_diff', "README.md's and site/llms.txt's sections need the pinned Markdown parser, "
+                     'which '),
+        ('count_diff', "README.md's sections need the pinned Markdown parser, which "),
+    )
+    # The suite's parser preflight, tools/check_parser_pin.py, accepts these two lock forms,
+    # which gate_parser() refuses, so the heredocs meet them too; the newline ends the cause.
+    SUITE_CASES = CASES + (
+        ('lock pinning only markdown-it-py', f'markdown-it-py==4.2.0{DIGEST}\n', {},
+         'ValueError: invalid shared parser lock\n'),
+        ('lock adding a third pin', f'{LOCK}extra-package==1.0{DIGEST}\n', {},
+         'ValueError: invalid shared parser lock\n'),
+    )
+
+    def suite_heredoc(self, variable):
+        """The Python body of the one heredoc in tools/run_all_checks.sh whose output the suite
+        captures in variable."""
+        lines = (vb.ROOT / 'tools/run_all_checks.sh').read_text(encoding='utf-8').split('\n')
+        starts = [i for i, line in enumerate(lines)
+                  if line.startswith(f'if {variable}=$(python3 - ') and line.endswith("<<'PY'")]
+        self.assertEqual(len(starts), 1, f'{variable} heredocs in tools/run_all_checks.sh')
+        end = lines.index('PY', starts[0] + 1)
+        return '\n'.join(lines[starts[0] + 1:end]) + '\n'
+
+    def test_suite_readme_gates_name_the_cause(self):
+        # The heredoc's Python runs on its own, as the suite runs it with `python3 -`; the suite
+        # prints its output under a FAIL line when it exits nonzero.
+        for variable, start in self.SUITE_GATES:
+            body = self.suite_heredoc(variable)
+            for label, lock, extra, cause in self.SUITE_CASES:
+                with self.subTest(gate=variable, case=label), \
+                        tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    env = self.fixture(root, lock, extra)
+                    (root / 'README.md').write_text('# README\n', encoding='utf-8')
+                    result = subprocess.run([str(root / 'bin/python3'), '-B', '-'], input=body,
+                                            cwd=root, capture_output=True, text=True, env=env,
+                                            timeout=120)
+                    self.one_line(result, start + self.LOAD + cause)
 
 
 class SourcesBasisTests(unittest.TestCase):
