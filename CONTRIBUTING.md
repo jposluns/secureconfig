@@ -414,6 +414,16 @@ committed `plugin/plugin.json` and the plugin's `SKILL.md` name the committed `V
 `HEAD`, it also rebuilds the export and compares. It reads `HEAD`, so run the suite again after
 committing.
 
+Two files beside the plugin are kept by hand, not built. `.claude-plugin/marketplace.json` makes
+this repository a Claude Code plugin marketplace whose one plugin is `./plugin`; it carries no
+version, so `VERSION` and the builds never touch it, and `plugin/plugin.json` stays the plugin's
+versioned manifest. `plugin/always-on.md` is the always-on snippet that README.md's "Install in
+Claude Code" section offers for a project's `CLAUDE.md` or `AGENTS.md`: the rules of the "Rules
+that apply to every deployment" section of the plugin's `SKILL.md`, from no other source, and one
+line pointing at the skill. A pull request that changes that section changes the snippet with it;
+no gate compares the two. The For AI assistants page repeats the install commands, and
+`scripts/build-site.py` refuses to build unless each is a fenced block in README.md's section.
+
 Record the change in `CHANGELOG.md` in the same pull request, not in a later bookkeeping one. A
 required gate checks that every merged pull request is referenced, exempting only the newest. It
 runs on a pull request that changes `CHANGELOG.md`, as each should, and in every whole-suite run:

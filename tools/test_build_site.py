@@ -22,6 +22,9 @@ child of the top bar after its nav, and loads scheme.js once, right after the to
 before the first stylesheet, with data-cfasync="false" before src and no defer or async.
 The landing page carries the About line of baseline 1.7.0 (SPECIFICATION 7.24) exactly once, with
 1 ordinary space after each dot span and none before it.
+The For AI assistants page carries the Claude Code install commands once each, in a copy block,
+and the build refuses a README.md whose install section lacks either block as written in
+site-src/content.json, or that has no install section.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
 page at any base; a stray file outside assets/baseline/ other than assets/site.css is refused at
 both bases, except at the root a published file (PUBLISHED, such as llms.txt) beside the pages.
@@ -144,6 +147,41 @@ def main():
     if home.count(ABOUT_LINE) != 1:
         failures.append("base /: index.html does not carry the About line of SPECIFICATION 7.24 "
                         "(1 space after each dot span, none before it) exactly once")
+
+    # The Claude Code install commands: the For AI assistants page carries each block once, in a
+    # copy block, as the README's fenced block writes it; a README whose block differs from
+    # site-src/content.json, or that has no install section, is refused, so the two cannot drift.
+    for_ai = pages["for-ai/index.html"]
+    install = builder.c["for_ai"]["install"]
+    for key, pid in (("session", "install-session"), ("shell", "install-shell")):
+        commands = install[key]["commands"]
+        if for_ai.count(builder.copyblock(pid, commands)) != 1:
+            failures.append(f"for-ai/index.html does not carry the {key} install commands once "
+                            f"in the copy block {pid}")
+    if for_ai.count('<h2 id="install">Install in Claude Code</h2>') != 1:
+        failures.append("for-ai/index.html does not carry the install heading once")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    first = install["session"]["commands"].split("\n")[0]
+    edited = {"a changed command": readme.replace(first, first + " --extra", 1),
+              "no install section": readme.replace(build_site.INSTALL, "## Installing", 1)}
+    for desc, text in edited.items():
+        if text == readme:
+            failures.append(f"install drift, {desc}: the edit did not change README.md")
+            continue
+        root = Path(tempfile.mkdtemp())
+        try:
+            for rel in (build_site.CONTENT, build_site.VERSIONED):
+                (root / rel).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / rel, root / rel)
+            (root / "README.md").write_text(text, encoding="utf-8")
+            try:
+                build_site.Builder("/", root=root)
+                failures.append(f"install drift, {desc}: the build accepted it")
+            except build_site.SourceError as exc:
+                if "Install in Claude Code" not in str(exc):
+                    failures.append(f"install drift, {desc}: refused for another reason: {exc}")
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
 
     # The base path reaches every internal link and asset, at the root and in the staging form.
     staged_pages = build_site.Builder("/draft/").build()
@@ -327,7 +365,9 @@ def main():
     print(f"  ok    {len(plants)} planted refusals and a description using the word on, the base "
           f"path at / and /draft/ with the root's indexability, link previews at their full values "
           f"and canonicals and the review page's canonical and link previews, the light and dark "
-          f"switch and scheme.js on every page at both bases, the landing page's About line, and "
+          f"switch and scheme.js on every page at both bases, the landing page's About line, the "
+          f"install commands as README.md writes them with a changed block and a missing section "
+          f"refused, and "
           f"--check on a changed, an extra "
           f".html and .HTM page, a missing page, a root-base published file and strays, and the "
           f"staged strays")

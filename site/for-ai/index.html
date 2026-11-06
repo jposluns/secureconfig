@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>For AI assistants | SecureConfig.ai</title>
-<meta name="description" content="The 10 rules an AI assistant applies to every service it configures, generates, or reviews, and the pattern to fetch each guide raw.">
+<meta name="description" content="The 10 rules an AI assistant applies to every service it configures, generates, or reviews, the pattern to fetch each guide raw, and how to install the skill in Claude Code.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="SecureConfig.ai">
 <meta property="og:url" content="https://secureconfig.ai/for-ai/">
 <meta property="og:title" content="For AI assistants | SecureConfig.ai">
-<meta property="og:description" content="The 10 rules an AI assistant applies to every service it configures, generates, or reviews, and the pattern to fetch each guide raw.">
+<meta property="og:description" content="The 10 rules an AI assistant applies to every service it configures, generates, or reviews, the pattern to fetch each guide raw, and how to install the skill in Claude Code.">
 <meta property="og:image" content="https://secureconfig.ai/images/secureconfig-card.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="SecureConfig.ai: The secure option at every decision. TLS, identity, MFA, secrets, network.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="For AI assistants | SecureConfig.ai">
-<meta name="twitter:description" content="The 10 rules an AI assistant applies to every service it configures, generates, or reviews, and the pattern to fetch each guide raw.">
+<meta name="twitter:description" content="The 10 rules an AI assistant applies to every service it configures, generates, or reviews, the pattern to fetch each guide raw, and how to install the skill in Claude Code.">
 <meta name="twitter:image" content="https://secureconfig.ai/images/secureconfig-card.png">
 <meta name="twitter:image:alt" content="SecureConfig.ai: The secure option at every decision. TLS, identity, MFA, secrets, network.">
 <link rel="icon" href="/assets/baseline/logos/secureconfig-favicon.svg" type="image/svg+xml">
@@ -48,6 +48,19 @@
 <p class="lbl blk">Pattern</p>
 <pre id="raw-pattern" class="hascopy"><button class="copy" type="button" data-copy="raw-pattern" hidden>Copy</button>https://raw.githubusercontent.com/jposluns/secureconfig/main/&lt;guide&gt;.md</pre>
 <p>The machine-readable index is at <a href="/llms.txt">/llms.txt</a>, and every guide concatenated into a single file is at <a href="/llms-full.txt">/llms-full.txt</a>. If raw.githubusercontent.com is unreachable, use llms-full.txt: each file in it starts with a line such as <code>==&gt; nginx.md</code>.</p>
+<p class="lbl sec">Install</p>
+<h2 id="install">Install in Claude Code</h2>
+<p>This repository is a Claude Code plugin marketplace: <a href="https://github.com/jposluns/secureconfig/blob/main/.claude-plugin/marketplace.json" target="_blank" rel="noopener noreferrer">.claude-plugin/marketplace.json<span class="vh"> (opens in a new tab)</span></a> lists 1 plugin, <code>secureconfig</code>, whose source is the <a href="https://github.com/jposluns/secureconfig/tree/main/plugin" target="_blank" rel="noopener noreferrer">plugin folder<span class="vh"> (opens in a new tab)</span></a> (<a href="https://code.claude.com/docs/en/plugin-marketplaces" target="_blank" rel="noopener noreferrer">plugin marketplaces<span class="vh"> (opens in a new tab)</span></a>). The plugin has no Claude Code manifest of its own, so Claude Code loads its standard layout, the <a href="https://github.com/jposluns/secureconfig/blob/main/plugin/skills/secure-deployment-config/SKILL.md" target="_blank" rel="noopener noreferrer">secure-deployment-config<span class="vh"> (opens in a new tab)</span></a> skill, and takes the name from the marketplace entry (<a href="https://code.claude.com/docs/en/plugins/manifest-reference" target="_blank" rel="noopener noreferrer">plugin manifest<span class="vh"> (opens in a new tab)</span></a>).</p>
+<p>In a Claude Code session, add the marketplace and install the plugin (<a href="https://code.claude.com/docs/en/plugins/install" target="_blank" rel="noopener noreferrer">installing plugins<span class="vh"> (opens in a new tab)</span></a>):</p>
+<p class="lbl blk">In a session</p>
+<pre id="install-session" class="hascopy"><button class="copy" type="button" data-copy="install-session" hidden>Copy</button>/plugin marketplace add jposluns/secureconfig
+/plugin install secureconfig@secureconfig</pre>
+<p>The same from a shell:</p>
+<p class="lbl blk">In a shell</p>
+<pre id="install-shell" class="hascopy"><button class="copy" type="button" data-copy="install-shell" hidden>Copy</button>claude plugin marketplace add jposluns/secureconfig
+claude plugin install secureconfig@secureconfig</pre>
+<p>Without a marketplace, copy the skill's folder, <a href="https://github.com/jposluns/secureconfig/tree/main/plugin/skills/secure-deployment-config" target="_blank" rel="noopener noreferrer">plugin/skills/secure-deployment-config<span class="vh"> (opens in a new tab)</span></a>, to <code>~/.claude/skills/secure-deployment-config/</code> for all your projects or to <code>.claude/skills/secure-deployment-config/</code> in one project (<a href="https://code.claude.com/docs/en/skills" target="_blank" rel="noopener noreferrer">skills<span class="vh"> (opens in a new tab)</span></a>), and refresh it by copying it again.</p>
+<p>A skill loads when its description matches the task. To have the rules in every session, paste <a href="https://github.com/jposluns/secureconfig/blob/main/plugin/always-on.md" target="_blank" rel="noopener noreferrer">plugin/always-on.md<span class="vh"> (opens in a new tab)</span></a>, the skill's rules for every deployment and 1 line pointing at the skill, into your project's <code>CLAUDE.md</code>, which Claude Code loads into every session (<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener noreferrer">memory<span class="vh"> (opens in a new tab)</span></a>). If your project keeps its assistant instructions in <code>AGENTS.md</code>, the same snippet can go there; the Claude Code pages cited here describe <code>CLAUDE.md</code> only.</p>
 <div class="next"><p class="lbl">Next</p><p>Rule 10 points here: 11 checks to run before reporting completion.</p><a class="start" href="/checklist/">The verification checklist <span class="arrow" aria-hidden="true">&rarr;</span></a></div>
 </div></div>
 </main>
