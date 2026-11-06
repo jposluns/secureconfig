@@ -17,6 +17,12 @@ working tree and finding nothing changed, while the commit is incomplete. Each h
 twin that differs only in the defect and takes the same rebuild path. A case whose working
 tree is clean passes --rebuild where it needs the rebuild path. The last cases fail closed,
 and two record what the gate does not do: read the index, or rebuild a clean tree unasked.
+
+The gate and the real build find SKILL.md's count sentence with the pinned CommonMark parser
+(skill_counts() in tools/_verify_sections.py). Where that parser is absent or another version,
+every case that needs it is skipped and counted in a "skip" line naming the reason, and 2 cases
+that run only then confirm that the gate and the real build refuse; where it is present, those
+2 are not run.
 """
 import os
 import subprocess
@@ -27,6 +33,20 @@ from pathlib import Path
 GATE = Path(__file__).resolve().parent / "check_generated_committed.py"
 sys.path.insert(0, str(GATE.parent))
 from _verify_sections import skill_counts  # noqa: E402  the count rule the build and gate share
+from check_verify_marking import ParserUnavailable, gate_parser  # noqa: E402
+
+
+def parser_problem():
+    """Why the pinned parser cannot run here, or None when it can."""
+    try:
+        gate_parser(required=True)
+    except ParserUnavailable as exc:
+        return str(exc)
+    return None
+
+
+PARSER_PROBLEM = parser_problem()
+SKIPPED = []
 OK = "  ok    commit "
 REBUILT = "site/llms-full.txt and 4 files under plugin/ match a fresh build of the commit"
 DEFERRED = "the working tree is this commit with no change"
@@ -54,8 +74,9 @@ sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1
 """.replace("SECTIONS_PY", str(GATE.parent / "_verify_sections.py"))
 
 # The real scripts/build-plugin.sh runs on a fixture whose guide list and version-basis check are
-# stand-ins, because the real check needs the pinned parser; everything after them is the real
-# script, with the real tools/_verify_sections.py counting the guides.
+# stand-ins, the second because the real check reads the whole repository; everything after them
+# is the real script, with the real tools/_verify_sections.py counting the guides and finding the
+# count sentence with the pinned parser.
 REAL_BUILD = GATE.parent.parent / "scripts" / "build-plugin.sh"
 LIST_GUIDES = r"""#!/usr/bin/env bash
 printf '%s\n' guide.md
@@ -71,6 +92,36 @@ SKILL_MD = ('---\nname: fixture\nmetadata:\n  version: "1.0.5"\n---\n\n'
 CODE_SPAN = "Type `<!--` to open a comment.\nThis skill carries 3 short guides.\n"
 FENCED = "```html\n<!--\n```\nThis skill carries 3 short guides.\n"
 BESIDE_CODE = "Type `<!--` to open one. <!-- This skill carries 7 short guides. -->\n"
+# What the hand-written scan that the parser replaced misread, from the 2 QA reports on #1233: a
+# "<!--" in a fence in a block quote, in a code span on a heading, list item or block quote line
+# after a stray backtick, after a backslash, or in an indented code block, then a stale sentence.
+STALE_AFTER = (
+    "\n> ~~~html\n> <!--\n> ~~~\n\nThis skill carries 3 short guides.\n",
+    "\nUse a ` here.\n# Type `<!--`\n`\nThis skill carries 3 short guides.\n",
+    "\n- a ` b\n- Type `<!--`\n`\nThis skill carries 3 short guides.\n",
+    "\na ` b\n> Type `<!--`\n`\nThis skill carries 3 short guides.\n",
+    "\n\\<!--\nThis skill carries 3 short guides.\n",
+    "\n    <!--\n\nThis skill carries 3 short guides.\n",
+)
+# A sentence wrapped within its paragraph is shown on 1 line, so a stale one counts.
+WRAPPED = "This skill carries\n3 short guides.\n"
+# Beside the same constructs, a real comment still hides its sentence: one after a heading that
+# holds a stray backtick, one after an escaped opener, and one after a fence in a block quote.
+REAL_COMMENTS = (
+    "\n# `heading\n<!-- ` This skill carries 3 short guides. -->\n",
+    "\n\\<!-- <!-- This skill carries 3 short guides. -->\n",
+    "\n> ~~~\n> <!--\n> ~~~\n\n<!-- This skill carries 3 short guides. -->\n",
+)
+
+
+def skipped(parser):
+    """Whether a case that needs the pinned parser (True), or needs it absent (False), cannot run
+    here; a skipped case that needs the parser is counted for the skip line."""
+    if parser is None or (PARSER_PROBLEM is None) == parser:
+        return False
+    if parser:
+        SKIPPED.append(1)
+    return True
 
 
 def environment(root):
@@ -121,7 +172,9 @@ def generated(root):
 
 
 def case(change, expected=0, needle=OK, *, also=(), absent=(), worktree_current=False,
-         args=(), init=True):
+         args=(), init=True, parser=True):
+    if skipped(parser):
+        return 0
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory) / "repo"
         root.mkdir()
@@ -249,17 +302,20 @@ def not_guides(rebuilt):
     return change
 
 
-def real_build(skill_md, expected, needle):
+def real_build(skill_md, expected, needle, parser=True):
     """Run the real build-plugin.sh on a fixture holding skill_md, with one guide and two .md
-    names that are not guides; on success, SKILL.md must name VERSION 1.0.5 and, outside HTML
-    comments, 1 guide."""
+    names that are not guides; on success, SKILL.md must name VERSION 1.0.5 and, in the text a
+    reader sees, 1 guide."""
+    if skipped(parser):
+        return 0
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory) / "repo"
         root.mkdir()
         write(root, "scripts/build-plugin.sh", REAL_BUILD.read_text(encoding="utf-8"))
         write(root, "scripts/build-llms-full.sh", LIST_GUIDES)
         write(root, "tools/version_basis.py", VERSION_BASIS)
-        for name in ("_verify_sections.py", "_markdown.py"):
+        for name in ("_verify_sections.py", "_markdown.py", "check_verify_marking.py",
+                     "requirements-gates.txt"):
             write(root, "tools/" + name, (GATE.parent / name).read_text(encoding="utf-8"))
         write(root, "guide.md", "first text\n")
         write(root, ".notes.md", "not a guide\n")
@@ -389,7 +445,8 @@ def main():
                       absent=("times, not once",))
         count += case(skill_text(SKILL_MD + "<!-- This skill carries 7 short guides. -->\n"),
                       also=("SKILL.md names it and states 1 guides; ",))
-        # A "<!--" with no "-->" hides the rest of the file, so a sentence after it is not there.
+        # A line opening "<!--" with no "-->" after it starts an HTML block, and its comment, that
+        # runs to the end of the file, so a sentence after it is not there.
         count += case(skill("This skill carries 1 short guides.",
                             "<!--\nThis skill carries 1 short guides."),
                       expected=1,
@@ -406,6 +463,14 @@ def main():
                       also=("SKILL.md names it and states 1 guides; ",))
         count += case(skill_text(SKILL_MD + "<!-- `x --> `\nThis skill carries 3 short guides.\n"),
                       expected=1, needle='short guides" 2 times, not once')
+        # The QA cases on #1233: each stale sentence, and a wrapped one, is a second statement,
+        # and each real comment beside the same constructs still hides its sentence.
+        for tail in (*STALE_AFTER, WRAPPED):
+            count += case(skill_text(SKILL_MD + tail), expected=1,
+                          needle='short guides" 2 times, not once')
+        for tail in REAL_COMMENTS:
+            count += case(skill_text(SKILL_MD + tail),
+                          also=("SKILL.md names it and states 1 guides; ",))
         count += case(skill('  version: "1.0.5"\n', ""), expected=1,
                       needle=SKILL + " as committed has 0 metadata version lines in its front "
                              "matter, not 1")
@@ -472,7 +537,8 @@ def main():
                                              "<!-- This skill carries 1 short guides. -->"),
                             1, uncounted)
         count += real_build(SKILL_MD + "This skill carries 1 short guides.\n", 1, uncounted)
-        # A "<!--" with no "-->" hides the rest of the file, so a sentence after it is refused.
+        # A line opening "<!--" with no "-->" after it hides the rest of the file, so a sentence
+        # after it is refused.
         count += real_build(SKILL_MD.replace("This skill carries 1 short guides.",
                                              "<!--\nThis skill carries 1 short guides."),
                             1, uncounted)
@@ -485,18 +551,30 @@ def main():
         count += real_build(SKILL_MD + FENCED, 1, uncounted)
         count += real_build(SKILL_MD + BESIDE_CODE, 0,
                             "wrote plugin/skills/secure-deployment-config/references")
+        # The QA cases on #1233: the build rewrites each stale sentence and refuses the second
+        # visible one, and builds beside each real comment.
+        for tail in (*STALE_AFTER, WRAPPED):
+            count += real_build(SKILL_MD + tail, 1, uncounted)
+        for tail in REAL_COMMENTS:
+            count += real_build(SKILL_MD + tail, 0,
+                                "wrote plugin/skills/secure-deployment-config/references")
 
         # Fail closed: a revision that is not a commit, an option-shaped revision, a directory
         # that is not a repository, and a repository with no commit.
         count += case(nothing, expected=2, args=("--rev", "no-such-revision"),
                       needle="  FAIL  cannot check the committed generated files: "
-                             "'no-such-revision' does not name a commit")
+                             "'no-such-revision' does not name a commit", parser=None)
         count += case(nothing, expected=2, args=("--rev=--output=x",),
-                      needle="'--output=x' is not a revision")
+                      needle="'--output=x' is not a revision", parser=None)
         count += case(nothing, expected=2, init=False,
-                      needle="  FAIL  cannot check the committed generated files: ")
+                      needle="  FAIL  cannot check the committed generated files: ", parser=None)
         count += case(init_only, expected=2, init=False,
-                      needle="'HEAD' does not name a commit")
+                      needle="'HEAD' does not name a commit", parser=None)
+        # Without the pinned parser, the gate cannot check the count and the build refuses.
+        count += case(nothing, expected=2, parser=False,
+                      needle=SKILL + "'s guide count is checked with the pinned parser: ")
+        count += real_build(SKILL_MD, 1, "SKILL.md's guide count is checked with the pinned "
+                            "parser: ", parser=False)
 
         # Known limit: the index is not read, so a fix staged and not committed still fails.
         count += case(bump(False, stage_after=True), expected=1,
@@ -509,6 +587,9 @@ def main():
         print(f"  FAIL  committed-generated-files gate self-test: {exc}")
         return 1
     print(f"  ok    {count} recorded cases for the committed-generated-files gate")
+    if SKIPPED:
+        print(f"  skip  {len(SKIPPED)} recorded cases need the pinned parser, which cannot run "
+              f"here: {PARSER_PROBLEM}")
     return 0
 
 

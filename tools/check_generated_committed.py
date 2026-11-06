@@ -22,14 +22,13 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
 - plugin/skills/secure-deployment-config/SKILL.md as committed opens with front matter (line 1
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
-  version-shaped line elsewhere does not count. Outside HTML comments (`<!-- ... -->`, removed
-  first by uncommented() in tools/_verify_sections.py, with an unclosed `<!--` removed to the
-  end of the file, and a `<!--` in a code span or a fenced code block left as the literal text
-  it is), it states "This skill
-  carries N short guides" exactly once, with N the guide-counts gate's set in the commit, as
-  counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts
+  version-shaped line elsewhere does not count. In the text a reader sees, as skill_counts() in
+  tools/_verify_sections.py finds it with the pinned CommonMark parser (HTML comments dropped,
+  and a `<!--` in code or after a backslash left as the literal text it is), it states "This
+  skill carries N short guides" exactly once, with N the guide-counts gate's set in the commit,
+  as counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts
   nor stands in for a stale or missing visible sentence. That module is this gate's own copy,
-  not the commit's;
+  not the commit's, and without the pinned parser the commit could not be checked;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -74,6 +73,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _verify_sections import counted_guides, skill_counts  # noqa: E402  shared with the build
+from check_verify_marking import ParserUnavailable  # noqa: E402  skill_counts() needs the parser
 
 LLMS_FULL = "site/llms-full.txt"
 PLUGIN = "plugin"
@@ -84,8 +84,7 @@ SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
 # Text inside an HTML comment is not shown to a reader, so skill_counts() in
 # tools/_verify_sections.py, which scripts/build-plugin.sh also calls, finds the count sentence
-# only after removing comments. A "<!--" with no "-->" after it hides the rest of the file, as it
-# does in HTML, and a "<!--" in a code span or a fenced code block hides nothing.
+# only in the text the pinned CommonMark parser leaves outside comments.
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")
@@ -290,7 +289,12 @@ def main(argv=None):
                             f"committed: {exc}")
         else:
             findings += version_findings(version_text, manifest_text)
-            findings += skill_findings(version_text, skill_text, count)
+            try:
+                findings += skill_findings(version_text, skill_text, count)
+            except ParserUnavailable as exc:
+                print(f"  FAIL  cannot check {label}: {SKILL}'s guide count is checked with the "
+                      f"pinned parser: {exc}")
+                return 2
             version = version_text.rstrip("\n")
         rebuild = args.rebuild
         if not rebuild:

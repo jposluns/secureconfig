@@ -78,16 +78,23 @@ sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1
 metadata=$(sed -n -e '1 { /^---$/!q }' -e '2,$ { /^---$/ { p; q }; /^metadata:$/,/^[^ ]/ { /^  version:/p } }' "$skill")
 [ "$metadata" = "  version: \"$version\""$'\n'"---" ] \
   || { echo "SKILL.md version did not update to $version; its front matter must open and close with a \"---\" line and its metadata must hold exactly one line '  version: \"...\"'" >&2; exit 1; }
-# The count is confirmed only outside HTML comments, by skill_counts() in tools/_verify_sections.py,
-# which tools/check_generated_committed.py also calls, and the sentence must appear there exactly
-# once, so a commented copy can neither stand in for a missing visible sentence nor sit beside a
-# second one. A "<!--" with no "-->" after it hides the rest of the file, as it does in HTML, so it
-# is removed to the end, and a "<!--" in a code span or a fenced code block hides nothing.
+# The count is confirmed only in the text a reader sees, by skill_counts() in
+# tools/_verify_sections.py, which tools/check_generated_committed.py also calls, and the sentence
+# must appear there exactly once, so a commented copy can neither stand in for a missing visible
+# sentence nor sit beside a second one. skill_counts() parses SKILL.md's body with the pinned
+# CommonMark parser, so the parser, not a hand-written scan, decides what is an HTML comment and
+# what is code, and a "<!--" in code or after a backslash hides nothing. Without that parser the
+# build refuses.
 visible=$(python3 - "$skill" <<'PY'
 import sys
 sys.path.insert(0, "tools")
 from _verify_sections import skill_counts
-print("\n".join(skill_counts(open(sys.argv[1], encoding="utf-8").read())))
+from check_verify_marking import ParserUnavailable
+try:
+    counts = skill_counts(open(sys.argv[1], encoding="utf-8").read())
+except ParserUnavailable as exc:
+    sys.exit(f"SKILL.md's guide count is checked with the pinned parser: {exc}; refusing to build")
+print("\n".join(counts))
 PY
 )
 [ "$visible" = "$count" ] \

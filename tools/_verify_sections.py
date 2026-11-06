@@ -4,6 +4,7 @@ Only whole canonical titles (optionally numbered) open a root. Descendants
 belong to that root, including headings that happen to contain "verify".
 Legacy parenthesized status suffixes remain section titles, not declarations.
 """
+import html
 import re
 import sys
 from pathlib import Path
@@ -103,64 +104,67 @@ def counted_guides(root: Path):
 
 
 SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
-BACKTICKS = re.compile(r"`+")
+# Inside a raw HTML block, which the parser passes through unparsed: a comment runs from "<!--" to
+# the next "-->" or "--!>", or to the end of the block when neither follows, and "<!-->" and
+# "<!--->" are empty comments, as an HTML parser reads them. A tag, declaration or processing
+# instruction runs to the next ">". None of them shows text.
+HTML_COMMENT = re.compile(r"<!---?>|<!--.*?(?:--!?>|\Z)", re.S)
+HTML_TAG = re.compile(r"<[A-Za-z/?!][^>]*>")
 
 
-def uncommented(text):
-    """Return text less its HTML comments, which a reader of the rendered page does not see.
-
-    A comment runs from "<!--" to the next "-->", or to the end of the text when none follows, as
-    an unclosed one does in HTML. A "<!--" inside a fenced code block (_markdown.Fences) or a code
-    span is literal text, as CommonMark has it, so it hides nothing. The text is read from left to
-    right, so whichever of a comment or a code span starts first holds the text up to its end. A
-    code span opens at a backtick run not escaped by a backslash and closes at the next run of the
-    same length before a blank line or a fence; a run with no such close is literal. Indented code
-    blocks are not recognized.
-    """
+def front_matter(text):
+    """Split SKILL.md into (front matter, body): lines 1 to the next "---" line when line 1 is
+    "---", the scope scripts/build-plugin.sh rewrites; ("", text) when there is none."""
     lines = text.split("\n")
-    kept, fences, comment, n = [], Fences(), False, 0
-    while n < len(lines):
-        last = n + 1 == len(lines)
-        if not comment and (fences.feed(lines[n]) or fences.inside):
-            kept.append(lines[n] + ("" if last else "\n"))
-            n += 1
-            continue
-        # This line and the next ones up to a blank line or a fence, where a code span ends.
-        end = n + 1
-        while end < len(lines) and lines[end].strip(" \t\r") and not Fences().feed(lines[end]):
-            end += 1
-        run = "\n".join(lines[n:end]) + ("" if end == len(lines) else "\n")
-        pos = 0
-        while pos < len(run):
-            if comment:
-                close = run.find("-->", pos)
-                pos, comment = (len(run), True) if close < 0 else (close + 3, False)
-                continue
-            opener = run.find("<!--", pos)
-            stop = len(run) if opener < 0 else opener
-            tick = BACKTICKS.search(run, pos, stop)
-            if tick is None:
-                kept.append(run[pos:stop])
-                pos, comment = (stop, False) if opener < 0 else (opener + 4, True)
-                continue
-            before = run[pos:tick.start()]
-            width = len(tick[0]) - (len(before) - len(before.rstrip("\\"))) % 2
-            closing = next((m for m in BACKTICKS.finditer(run, tick.end()) if len(m[0]) == width),
-                           None) if width else None
-            stop = (closing or tick).end()
-            kept.append(run[pos:stop])
-            pos = stop
-        n = end
-    return "".join(kept)
+    if lines[0] == "---" and "---" in lines[1:]:
+        end = lines.index("---", 1) + 1
+        return "\n".join(lines[:end]), "\n".join(lines[end:])
+    return "", text
+
+
+def visible_text(tokens):
+    """The text a reader sees in parsed Markdown tokens, less HTML comments, with a NUL between
+    blocks.
+
+    The parser decides what is code, a comment or text, so a "<!--" in a code span, in a fenced or
+    indented code block (in a block quote or list item too) or after a backslash is literal text.
+    Code is kept, since a reader sees it. An inline HTML token (a tag, comment, declaration or
+    processing instruction) shows nothing and is dropped. A raw HTML block keeps its text less
+    HTML_COMMENT and HTML_TAG matches, with character references decoded. Emphasis, links and
+    inline code join the text around them, a line break is a newline, and an image keeps its alt
+    text.
+    """
+    parts = []
+    for token in tokens:
+        if token.type in ("text", "text_special", "code_inline", "code_block", "fence"):
+            parts.append(token.content)
+        elif token.type in ("softbreak", "hardbreak"):
+            parts.append("\n")
+        elif token.type == "html_block":
+            parts.append(html.unescape(HTML_TAG.sub("", HTML_COMMENT.sub("", token.content))))
+        elif token.children:
+            parts.append(visible_text(token.children))
+        if token.block:
+            parts.append("\0")
+    return "".join(parts)
 
 
 def skill_counts(text):
-    """The N of each "This skill carries N short guides" in SKILL.md outside HTML comments.
+    """The N of each "This skill carries N short guides" a reader of SKILL.md sees.
 
+    The body is parsed with the pinned CommonMark parser, gate_parser(required=True) in
+    tools/check_verify_marking.py, and searched in visible_text(); the front matter, which is not
+    Markdown, is searched as it stands. Each run of whitespace is read as 1 space, as a rendered
+    page shows it, so a sentence wrapped within one block counts; one split across blocks does
+    not. ParserUnavailable is raised when that parser is absent or not the pinned version.
     scripts/build-plugin.sh and tools/check_generated_committed.py each require exactly one, so a
     commented copy neither counts nor stands in for a stale or missing visible sentence.
     """
-    return SKILL_COUNT.findall(uncommented(text))
+    from check_verify_marking import gate_parser  # here, as that module imports this one
+    parser = gate_parser(required=True)
+    head, body = front_matter(text)
+    visible = head + "\0" + visible_text(parser.parse(body))
+    return SKILL_COUNT.findall(re.sub(r"\s+", " ", visible))
 
 
 def atx_headings(lines):
