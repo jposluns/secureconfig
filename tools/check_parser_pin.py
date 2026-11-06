@@ -21,8 +21,10 @@ does. A match prints one `ok` line and exits 0. A mismatch, a missing package or
 import or metadata lookup prints one FAIL line naming the interpreter, the package and
 version it found and the pin, says that it is a host problem, not a code finding, names the
 fix and exits 2. An unreadable lock, or one `gate_parser()` would refuse, also exits 2 with
-one FAIL line, which says so instead, naming what the lock holds and the rule it breaks,
-because the lock is a file in this checkout and the host fix would not repair it.
+one FAIL line, which says so instead, because the lock is a file in this checkout and the host
+fix would not repair it: an unreadable lock is reported as leaving the pinned version unknown,
+and a refused one, which may well pin markdown-it-py, as invalid, naming what it holds and the
+rule it breaks.
 
 WHAT IT DOES NOT CHECK: it compares versions only, so an install whose version strings
 match the pin but whose files are damaged passes here and fails in the gates. Under `-I`,
@@ -30,8 +32,8 @@ PYTHONPATH and the user site directory are ignored, so a parser reachable only t
 either is reported as missing even where a gate run without `-I` would find it.
 
 Deterministic and offline: it reads one file, imports tools/check_verify_marking.py for
-its lock reader and `markdown_it` for its version, and reads installed distribution
-metadata.
+its lock reader, which in turn imports tools/_markdown.py and tools/_verify_sections.py,
+imports `markdown_it` for its version, and reads installed distribution metadata.
 """
 import sys
 from importlib.metadata import PackageNotFoundError, version as distribution_version
@@ -58,9 +60,13 @@ class PinError(ValueError):
     """The lock cannot be read, or is one gate_parser() refuses."""
 
 
+class LockRefused(PinError):
+    """The lock was read, and gate_parser() refuses it."""
+
+
 def pinned_versions(lock=LOCK):
     """Return {package: version} for the lock's pins, markdown-it-py and mdurl, in lock order,
-    or raise PinError."""
+    or raise PinError (LockRefused for a lock that was read but is refused)."""
     try:
         text = Path(lock).read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
@@ -68,7 +74,7 @@ def pinned_versions(lock=LOCK):
     try:
         return parser_lock_pins(text)
     except ParserLockError as exc:
-        raise PinError(f"cannot parse {LOCK_NAME} as gate_parser() in "
+        raise LockRefused(f"cannot parse {LOCK_NAME} as gate_parser() in "
                        f"tools/check_verify_marking.py does: it has {exc.found}; that reader "
                        f"refuses it ({exc}) because {PARSER_LOCK_RULE}") from exc
 
@@ -122,8 +128,10 @@ def preflight(lock=LOCK, version_source=installed_version, interpreter=None,
     try:
         pins = pinned_versions(lock)
     except PinError as exc:
-        return 2, (f"  FAIL  {PREFIX}{where} has {found_line}, but the pinned version is "
-                   f"unknown: {exc}; {LOCK_FIX}")
+        # A refused lock may pin markdown-it-py, so it is not called a lock with no known pin.
+        problem = ("the lock is invalid" if isinstance(exc, LockRefused)
+                   else "the pinned version is unknown")
+        return 2, f"  FAIL  {PREFIX}{where} has {found_line}, but {problem}: {exc}; {LOCK_FIX}"
     wanted = pins[PACKAGE]
     if found != wanted:
         return 2, (f"  FAIL  {PREFIX}{where} has {found_line}, but {LOCK_NAME} pins "
