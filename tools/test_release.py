@@ -71,6 +71,38 @@ DISPATCH_BODY = ("the publisher confirmed online that `gates` check run 4242 is 
 CONFIRMED = ("succeeded on exactly the target commit. These are the publisher's confirmations; "
              "the offline release check records the id and does not verify them.")
 
+# The target's .github/workflows/checks.yml: a stub with the trigger as checks.yml writes it,
+# and the variants below, each of which replaces only its `on:` block.
+WORKFLOW_HEAD = "name: Checks\n\n# A release runs this on its target.\n"
+WORKFLOW_ON = ('on:\n  pull_request:\n    types: [opened, synchronize]\n  schedule:\n'
+               '    - cron: "0 6 * * 1"\n  workflow_dispatch: {}\n')
+WORKFLOW_TAIL = ("\npermissions:\n  contents: read\n\njobs:\n  gates:\n"
+                 "    runs-on: ubuntu-latest\n    steps:\n      - run: |\n"
+                 "          bash tools/run_all_checks.sh\n")
+WORKFLOW = WORKFLOW_HEAD + WORKFLOW_ON + WORKFLOW_TAIL
+SYMLINK = object()
+DIRECTORY = object()
+NEEDS_TRIGGER = ("a release needs the plain `workflow_dispatch:` key directly under the file's "
+                 "top-level `on:` block mapping, as at the merge of #1194 and later")
+
+
+def workflow(on):
+    """The stub workflow with its `on:` block replaced."""
+    return WORKFLOW_HEAD + on + WORKFLOW_TAIL
+
+
+def valued(value):
+    """The stub workflow with the trigger and, on line 6, `pull_request:` holding value."""
+    return workflow("on:\n  workflow_dispatch: {}\n  pull_request: " + value + "\n")
+
+
+# The start of a refusal of line 6 as a form the line model does not list, and the reason
+# given for every flow collection other than the two forms read.
+FORMS_6 = "line 6 is outside the forms this check reads ("
+FLOW_REFUSED = ("a flow collection other than {} or a one-line [a, b] list of names made of "
+                "letters, digits and _ . / -, which this check does not read")
+
+
 # (pull request, UTC committer time, the date heading its entry sits under). #12 and #13 share
 # 2026-10-03, so #13 is the last merge of that day and #12 is not.
 HISTORY = [
@@ -119,11 +151,25 @@ def changelog(entries, broken=False):
 
 
 def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plugin=None,
-          broken=None):
-    """A repository whose main is `history`; returns each pull request's merge commit."""
+          broken=None, checks=WORKFLOW):
+    """A repository whose main is `history`; returns each pull request's merge commit.
+
+    `checks` is the text of .github/workflows/checks.yml, its bytes, None for no such file,
+    SYMLINK for a symlink to a file holding the stub, or DIRECTORY for a directory holding it.
+    """
     root.mkdir(parents=True)
     git(root, "init", "-q")
     write(root, "tools/run_all_checks.sh", suite)
+    if checks is SYMLINK:
+        write(root, ".github/workflows/real.yml", WORKFLOW)
+        (root / ".github/workflows/checks.yml").symlink_to("real.yml")
+    elif checks is DIRECTORY:
+        write(root, ".github/workflows/checks.yml/checks.yml", WORKFLOW)
+    elif isinstance(checks, bytes):
+        (root / ".github/workflows").mkdir(parents=True)
+        (root / ".github/workflows/checks.yml").write_bytes(checks)
+    elif checks is not None:
+        write(root, ".github/workflows/checks.yml", checks)
     write(root, "VERSION", "1.0.9\n")
     write(root, "plugin/plugin.json", '{\n  "name": "fixture",\n  "version": "1.0.9"\n}\n')
     write(root, "plugin/SKILL.md", "fixture skill\n")
@@ -288,6 +334,298 @@ def cases(tmp):
            "not a full 40-character")
     expect("a non-numeric gates check run id cannot be checked",
            subprocess_result(repo, c[13], "abc"), 2, "not a numeric check run id")
+
+    # Check 1 again: the target's checks.yml has the workflow_dispatch trigger. The clean
+    # releases above pass with `workflow_dispatch: {}`; these other accepted forms pass checks 1
+    # to 6 with --build, and each refused form is checked for the message it expects.
+    accepted = [
+        ("a bare `workflow_dispatch:` with a comment",
+         workflow("on:  # triggers\n  pull_request:\n  workflow_dispatch:  # on demand\n")),
+        ("`workflow_dispatch:` with a nested block mapping",
+         workflow("on:\n  workflow_dispatch:\n    inputs:\n      reason:\n"
+                  "        description: why\n  pull_request:\n")),
+        ("CRLF line endings and a leading ---", "---\r\n" + WORKFLOW.replace("\n", "\r\n")),
+        # Rules of the pins gate that are not the release check's: the word `uses` in a block
+        # scalar, and a quoted `"uses"` key.
+        ("the word `uses` in a block scalar and a quoted `\"uses\"` key",
+         WORKFLOW + "      - \"uses\": ./local\n      - run: |\n          echo uses\n"),
+        ("block sequences at their key's own column and nested deeper",
+         workflow("on:\n  schedule:\n  - cron: \"0 6 * * 1\"\n  pull_request:\n    types:\n"
+                  "    - opened\n    - - nested\n      - key: value\n        other: value\n"
+                  "  workflow_dispatch:\n    inputs:\n      kind:\n        options:\n"
+                  "        - quick\n")),
+        # The longest key read: 1,024 characters from its first to its `:`.
+        ("a key of 1,024 characters",
+         workflow("on:\n  workflow_dispatch: {}\n  " + "k" * 1024 + ": x\n")),
+        # Every flow sequence entry character the line model reads, and a comment after it.
+        ("a flow sequence of names using every character it reads",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n"
+                  "    types: [Opened_1, a.b/c-d, 9]  # c\n")),
+    ]
+    for name, text in accepted:
+        other = tmp / f"dispatch{COUNT[0]}"
+        merges = build(other, checks=text)
+        expect(f"a target whose checks.yml has {name} passes checks 1 to 6",
+               gate(other, merges[11], "v1.0.11", None, tmp / f"dispatch-out{COUNT[0]}",
+                    "--build"), 0, "checks 1 to 6 passed", absent=("FAIL",))
+    refused = [
+        ("no checks.yml", None, "checks.yml at the target: it does not exist"),
+        ("a symlinked checks.yml", SYMLINK, "it is not a regular file (mode 120000, blob)"),
+        ("no workflow_dispatch key",
+         workflow("on:\n  pull_request:\n  schedule:\n    - cron: \"0 6 * * 1\"\n"),
+         "the top-level `on:` has no `workflow_dispatch` key"),
+        ("the key only nested under another trigger",
+         workflow("on:\n  pull_request:\n    workflow_dispatch: {}\n"),
+         "`workflow_dispatch` is a key only at line 6, which is not directly under"),
+        ("the key only at the top level, beside `on:`",
+         workflow("on:\n  pull_request:\nworkflow_dispatch: {}\n"),
+         "`workflow_dispatch` is a key only at line 6, which is not directly under"),
+        ("the key only in a comment",
+         workflow("on:\n  pull_request:\n  # workflow_dispatch: {}\n"),
+         "`workflow_dispatch` appears only in a comment or a scalar, first at line 6"),
+        ("the key only in a string",
+         workflow("on:\n  pull_request:\n    types: \"workflow_dispatch\"\n"),
+         "`workflow_dispatch` appears only in a comment or a scalar, first at line 6"),
+        ("`on:` as a plain string", workflow("on: workflow_dispatch\n"),
+         "line 4: the top-level `on:` is a plain string, 'workflow_dispatch', not a block mapping"),
+        ("`on:` as a quoted string", workflow("on: \"workflow_dispatch\"\n"),
+         "the top-level `on:` is a quoted string"),
+        ("`on:` as a flow sequence", workflow("on: [pull_request, workflow_dispatch]\n"),
+         "the top-level `on:` is a flow sequence"),
+        ("`on:` as a flow mapping", workflow("on: {}\n"),
+         "line 4: the top-level `on:` is a flow mapping, '{}', not a block mapping"),
+        ("`on:` as an indented block sequence",
+         workflow("on:\n  - pull_request\n  - workflow_dispatch\n"),
+         "line 5: the top-level `on:` holds a block sequence"),
+        ("`on:` as a block sequence at column 0",
+         workflow("on:\n- pull_request\n- workflow_dispatch\n"),
+         "line 5: the top-level `on:` holds a block sequence"),
+        ("`on:` as a block scalar", workflow("on: |\n  workflow_dispatch\n"),
+         "the top-level `on:` is a block scalar"),
+        ("`on:` with nothing beneath it", workflow("on:\n"),
+         "line 4: the top-level `on:` has nothing beneath it"),
+        # Refused at the next line, before the second `on:` could be named instead.
+        ("`on:` with nothing beneath it before a second `on:`",
+         workflow("on:\nname: x\non:\n  workflow_dispatch: {}\n"),
+         "line 4: the top-level `on:` has nothing beneath it"),
+        ("no top-level `on:`", workflow(""), "there is no top-level `on:` key"),
+        ("a second top-level `on:`",
+         workflow("on:\n  workflow_dispatch: {}\non:\n  pull_request:\n"),
+         "line 6: a second top-level `on:` key; the first is at line 4"),
+        ("a double-quoted `on` key", workflow("\"on\":\n  workflow_dispatch: {}\n"),
+         "the top-level key is written '\"on\"'; only the plain key `on` is read"),
+        ("an `on` key in another case", workflow("On:\n  workflow_dispatch: {}\n"),
+         "the top-level key is written 'On'; only the plain key `on` is read"),
+        ("a double-quoted `workflow_dispatch` key",
+         workflow("on:\n  \"workflow_dispatch\": {}\n"),
+         "the key under `on:` is written '\"workflow_dispatch\"'; only the plain key"),
+        ("a single-quoted `workflow_dispatch` key",
+         workflow("on:\n  'workflow_dispatch':\n"),
+         "the key under `on:` is written \"'workflow_dispatch'\"; only the plain key"),
+        ("a `workflow_dispatch` key in another case",
+         workflow("on:\n  Workflow_Dispatch: {}\n"),
+         "the key under `on:` is written 'Workflow_Dispatch'"),
+        ("a second `workflow_dispatch` key",
+         workflow("on:\n  workflow_dispatch:\n  workflow_dispatch: {}\n"),
+         "line 6: a second `workflow_dispatch:` under `on:`; the first is at line 5"),
+        ("`workflow_dispatch:` with a plain value", workflow("on:\n  workflow_dispatch: true\n"),
+         "`workflow_dispatch:` under `on:` is a plain string, 'true'; only no value"),
+        ("`workflow_dispatch:` with a flow sequence",
+         workflow("on:\n  workflow_dispatch: [inputs]\n"),
+         "`workflow_dispatch:` under `on:` is a flow sequence, '[inputs]'; only no value"),
+        ("`workflow_dispatch:` holding a block sequence",
+         workflow("on:\n  workflow_dispatch:\n    - inputs\n"),
+         "line 6: `workflow_dispatch:` holds a block sequence"),
+        ("an anchor on `on:`", workflow("on: &triggers\n  workflow_dispatch: {}\n"),
+         "line 4 is outside the forms this check reads (an anchor"),
+        ("a top level indented past column 0", "  on:\n    workflow_dispatch: {}\n",
+         "line 1: the document's top level is not a block mapping at column 0"),
+        ("a second document", WORKFLOW + "---\non:\n  pull_request:\n",
+         "a YAML directive or document marker"),
+        # The target's path holds something other than a regular file of UTF-8 text.
+        ("a directory at the path of checks.yml", DIRECTORY,
+         "it is not a regular file (mode 040000, tree)"),
+        ("bytes that are not UTF-8", WORKFLOW.encode() + b"# \xff\n", "it is not valid UTF-8"),
+        ("a lone CR", workflow("on:\n  workflow_dispatch: {}\r  pull_request:\n"),
+         "line 5 has the character U+000D, which is outside the forms this check reads"),
+        # Indentation that opens no block: a dedent to a column no open collection uses (the
+        # three examples from QA round 1), and lines deeper than a line that opened no block.
+        ("a key dedenting below `inputs:` to a column no mapping opened",
+         workflow("on:\n  workflow_dispatch:\n      inputs:\n    bogus:\n"),
+         "line 7 is outside the forms this check reads (its indentation, column 5, is not "
+         "that of any block mapping or sequence still open there)"),
+        # The second example's `inputs: {}` is now refused first; its variant below keeps the
+        # dedent with a block mapping under `inputs:`.
+        ("a key dedenting below a flow `inputs:` to a column no mapping opened",
+         workflow("on:\n  workflow_dispatch:\n      inputs: {}\n    foo: {}\n"),
+         "line 6: `inputs:` under `workflow_dispatch:` is a flow mapping, '{}'; only a block "
+         "mapping beneath it is read"),
+        ("a key dedenting below a block `inputs:` to a column no mapping opened",
+         workflow("on:\n  workflow_dispatch:\n      inputs:\n        a: {}\n    foo: {}\n"),
+         "line 8 is outside the forms this check reads (its indentation, column 5, is not"),
+        ("a key in a job dedenting to a column no mapping opened",
+         WORKFLOW_HEAD + "on:\n  workflow_dispatch: {}\n\njobs:\n  gates:\n    a: 1\n   b: 2\n",
+         "line 10 is outside the forms this check reads (its indentation, column 4, is not"),
+        ("a key under `on:` less indented than the first",
+         workflow("on:\n    workflow_dispatch: {}\n  pull_request:\n"),
+         "line 6 is less indented than the first key under `on:`, at column 5"),
+        ("a key under `on:` deeper than a key with a value",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: x\n    types: [opened]\n"),
+         "line 7: a scalar from an earlier line continues onto this more indented line"),
+        ("a key after `on:` deeper than a key with a value",
+         workflow("on:\n  workflow_dispatch: {}\nconcurrency: x\n  group: y\n"),
+         "line 7: a scalar from an earlier line continues onto this more indented line"),
+        ("a line that is neither a key nor a sequence entry",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    opened\n"),
+         "line 7 is outside the forms this check reads (a line that is neither a key nor"),
+        ("a sequence entry among the keys under `on:`",
+         workflow("on:\n  workflow_dispatch: {}\n  - pull_request\n"),
+         "line 6: a sequence entry among the keys of the top-level `on:`"),
+        ("a sequence entry among a deeper mapping's keys",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    types: [opened]\n    - x\n"),
+         "line 8 is outside the forms this check reads (a sequence entry among the keys of "
+         "a block mapping)"),
+        ("a key among a block sequence's entries",
+         workflow("on:\n  workflow_dispatch: {}\n  schedule:\n    - cron: x\n    other: y\n"),
+         "line 8 is outside the forms this check reads (a key among the entries of a block "
+         "sequence)"),
+        ("a sequence entry at the top level", WORKFLOW_HEAD + "- x\n" + WORKFLOW_ON,
+         "line 4: the document's top level is not a block mapping"),
+        ("`on:` with nothing beneath it at the end of the file", WORKFLOW_HEAD + "on:\n",
+         "line 4: the top-level `on:` has nothing beneath it"),
+        # Block scalars.
+        ("a block scalar line less indented than its content but more than its key",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    types: |\n        opened\n"
+                  "      closed\n"),
+         "line 9 is outside the forms this check reads (a line less indented than its "
+         "block scalar's content but more than the key or dash that opened it)"),
+        ("a blank line before a block scalar's content holding more spaces than it",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    types: |\n          \n"
+                  "        opened\n"),
+         "line 8 is outside the forms this check reads (a blank line at the start of a "
+         "block scalar holding more spaces"),
+        ("a block scalar header with an indentation indicator",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: |2\n    x\n"),
+         "line 6 is outside the forms this check reads (a block scalar header with an "
+         "indentation indicator"),
+        # What `workflow_dispatch:` may hold.
+        ("a key other than `inputs:` under `workflow_dispatch:`",
+         workflow("on:\n  workflow_dispatch:\n    bogus: 1\n"),
+         "line 6: the key under `workflow_dispatch:` is written 'bogus'; only the plain key "
+         "`inputs` is read there"),
+        ("a quoted `inputs` key under `workflow_dispatch:`",
+         workflow("on:\n  workflow_dispatch:\n    \"inputs\": {}\n"),
+         "line 6: the key under `workflow_dispatch:` is written '\"inputs\"'"),
+        ("a second `inputs:` under `workflow_dispatch:`",
+         workflow("on:\n  workflow_dispatch:\n    inputs:\n      a: {}\n    inputs:\n"),
+         "line 8: a second `inputs:` under `workflow_dispatch:`; the first is at line 6"),
+        ("`inputs:` with a plain value", workflow("on:\n  workflow_dispatch:\n    inputs: foo\n"),
+         "line 6: `inputs:` under `workflow_dispatch:` is a plain string, 'foo'; only a block "
+         "mapping beneath it is read"),
+        ("`inputs:` with a block scalar",
+         workflow("on:\n  workflow_dispatch:\n    inputs: |\n      a\n"),
+         "line 6: `inputs:` under `workflow_dispatch:` is a block scalar"),
+        ("`inputs:` with nothing beneath it before another key",
+         workflow("on:\n  workflow_dispatch:\n    inputs:\n  pull_request:\n"),
+         "line 6: `inputs:` under `workflow_dispatch:` has nothing beneath it"),
+        ("`inputs:` with nothing beneath it at the end of the file",
+         WORKFLOW_HEAD + "on:\n  workflow_dispatch:\n    inputs:\n  # end\n",
+         "line 6: `inputs:` under `workflow_dispatch:` has nothing beneath it"),
+        ("`inputs:` holding a block sequence",
+         workflow("on:\n  workflow_dispatch:\n    inputs:\n      - a\n"),
+         "line 7: `inputs:` under `workflow_dispatch:` holds a block sequence"),
+        ("`inputs:` holding a block sequence at its own column",
+         workflow("on:\n  workflow_dispatch:\n    inputs:\n    - a\n"),
+         "line 7: `inputs:` under `workflow_dispatch:` holds a block sequence"),
+        ("`workflow_dispatch:` holding a block sequence at its own column",
+         workflow("on:\n  workflow_dispatch:\n  - inputs\n"),
+         "line 6: `workflow_dispatch:` holds a block sequence"),
+        # Lines in forms the line model does not list.
+        ("a tab", workflow("on:\n  workflow_dispatch: {}\n  pull_request:\t{}\n"),
+         "line 6 is outside the forms this check reads (a tab"),
+        ("a quoted key that is not a plain name",
+         workflow("on:\n  workflow_dispatch: {}\n  \"pull request\": {}\n"),
+         "line 6 is outside the forms this check reads (a quoted key that is not a plain"),
+        ("an alias", workflow("on:\n  workflow_dispatch: *trigger\n"),
+         "line 5 is outside the forms this check reads (an alias (*)"),
+        ("a tag", workflow("on:\n  workflow_dispatch: !!map {}\n"),
+         "line 5 is outside the forms this check reads (a tag (!)"),
+        ("a sequence entry on its key's line", valued("- opened"),
+         FORMS_6 + "a value starting with '-'"),
+        ("a quoted scalar running past its line", valued("\"opened"),
+         FORMS_6 + "a quoted scalar that runs past"),
+        ("text after a flow collection", workflow("on:\n  workflow_dispatch: {} x\n"),
+         "line 5 is outside the forms this check reads (text follows a flow collection"),
+        ("text after a quoted scalar", valued("\"opened\" x"),
+         FORMS_6 + "text follows a quoted scalar"),
+        ("a plain scalar holding ': '", valued("a: b"),
+         FORMS_6 + "a plain scalar holding ': '"),
+        # QA round 2: each condition below was untested or missing.
+        ("a plain scalar ending in ':'", valued("value:"),
+         FORMS_6 + "a plain scalar holding ': ' or ending in ':'"),
+        ("a '#' in a plain scalar with no space before it", valued("a#b"),
+         FORMS_6 + "a '#' in a plain scalar with no space before it"),
+        ("a '#' right after a closed quoted scalar", valued("'x'#c"),
+         FORMS_6 + "text follows a quoted scalar"),
+        ("a '#' right after `{}`", workflow("on:\n  workflow_dispatch: {}#c\n"),
+         "line 5 is outside the forms this check reads (text follows a flow collection"),
+        ("a '#' right after a flow sequence", valued("[a]#c"),
+         FORMS_6 + "text follows a flow collection"),
+        ("a backslash in a double-quoted value", valued("\"\\q\""),
+         FORMS_6 + "a backslash in a double-quoted scalar"),
+        ("a backslash in a double-quoted sequence entry",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request:\n    - \"C:\\dir\"\n"),
+         "line 7 is outside the forms this check reads (a backslash in a double-quoted scalar"),
+        ("a backslash in a double-quoted key",
+         workflow("on:\n  workflow_dispatch: {}\n  \"a\\b\": x\n"),
+         FORMS_6 + "a backslash in a double-quoted scalar"),
+        ("a plain key of 1,025 characters",
+         workflow("on:\n  workflow_dispatch: {}\n  " + "k" * 1025 + ": x\n"),
+         FORMS_6 + "a key spanning 1025 characters before its ':', more than the 1,024"),
+        ("a quoted key spanning 1,025 characters with the spaces before its ':'",
+         workflow("on:\n  workflow_dispatch: {}\n  \"" + "k" * 1020 + "\"   : x\n"),
+         FORMS_6 + "a key spanning 1025 characters before its ':'"),
+        # Each range or character of the refused set.
+        *[(f"the character U+{c:04X}",
+           workflow("on:\n  workflow_dispatch: {}\n  # a" + chr(c) + "b\n"),
+           f"line 6 has the character U+{c:04X}, which is outside the forms this check reads")
+          for c in (0x00, 0x7F, 0x85, 0x2028, 0x2029, 0xFEFF, 0xFFFE, 0xFFFF)],
+        # Directives and document markers: only one line that is exactly `---`, before the
+        # first structural line, is read.
+        ("a directive", "%YAML 1.2\n---\n" + WORKFLOW,
+         "line 1: a YAML directive or document marker"),
+        ("a `...` marker", WORKFLOW + "...\n", "line 20: a YAML directive or document marker"),
+        ("a `...` marker with a comment", WORKFLOW + "... # end\n",
+         "line 20: a YAML directive or document marker"),
+        ("a leading `---` with a comment", "--- # c\n" + WORKFLOW,
+         "line 1: a YAML directive or document marker"),
+        ("an indented leading `---`", "  ---\n" + WORKFLOW,
+         "line 1: a YAML directive or document marker"),
+        ("a second leading `---`", "---\n---\n" + WORKFLOW,
+         "line 2: a YAML directive or document marker"),
+        # Each indicator a plain scalar may not start with.
+        *[(f"a value starting with {start!r}", valued(start),
+           FORMS_6 + f"a value starting with {start[0]!r}")
+          for start in ("?x", "%x", "@x", "`x", ",x", "]x", "}x", "-", ": x", ":")],
+        # Flow collections: only `{}` and a one-line `[a, b]` list of names are read.
+        *[(f"the flow collection {flow!r}", valued(flow), FORMS_6 + FLOW_REFUSED)
+          for flow in ("[a,,b]", "[a, , b]", "[, a]", "[a, ]", "[- a]", "[]", "[a,b]",
+                       "[a,  b]", "[ a]", "[a ]", "[\"a\"]", "['a']", "[a #b]", "[a, [b]]",
+                       "[a: b]", "[.a]", "[-a]", "[a b]", "[a, b", "[*opened]", "[\"opened]",
+                       "{a: b: c}", "{\"a\" \"b\"}", "{: }", "{ }", "{a: [b,,c]}", "{a: b}",
+                       "{]", "{")],
+        ("a flow sequence over two lines",
+         workflow("on:\n  workflow_dispatch: {}\n  pull_request: [a,\n    b]\n"),
+         FORMS_6 + FLOW_REFUSED),
+        ("`on:` as a non-empty flow mapping", workflow("on: {workflow_dispatch: {}}\n"),
+         "line 4 is outside the forms this check reads (" + FLOW_REFUSED),
+    ]
+    for name, text, needle in refused:
+        other = tmp / f"dispatch{COUNT[0]}"
+        merges = build(other, checks=text)
+        expect(f"a target with {name} in checks.yml is refused",
+               release(other, merges[11], "v1.0.11", None, tmp / f"dispatch-out{COUNT[0]}"), 1,
+               needle, NEEDS_TRIGGER)
 
     # Checks 2 and 3: the tag.
     expect("a tag that is not v plus VERSION at the target is refused",
