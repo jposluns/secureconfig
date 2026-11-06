@@ -628,7 +628,7 @@ except Exception as exc:  # noqa: BLE001  any failure to load the parser fails t
           f"{cause}")
     sys.exit(1)
 tokens = parser.parse(readme)
-lines =re.sub(r"\r\n?", "\n", readme).split("\n")
+lines = re.sub(r"\r\n?", "\n", readme).split("\n")
 heads = [(t.tag, t.level, t.map, tokens[i + 1].content.strip())
          for i, t in enumerate(tokens) if t.type == "heading_open"]
 
