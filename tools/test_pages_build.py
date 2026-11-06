@@ -19,7 +19,11 @@ import (by `import`, `from ... import`, or a file name they load, such as script
     f-string. The source text between 2 tokens is read from the file's lines as the tokenizer
     reads them, broken only after `\\n` (`str.splitlines` also breaks at `\\r` and `\\r\\n`, and at
     `\\x0b`, `\\x0c`, `\\x1c` to `\\x1e`, U+0085, U+2028 and U+2029, any of which but `\\r\\n`
-    would shift every later row).
+    would shift every later row);
+  - it imports only the standard library (this interpreter's sys.stdlib_module_names) and
+    repository modules under tools/ or scripts/, at any depth in the file, a function body
+    included, because the Pages build installs nothing: no markdown-it-py, so scripts/build-site.py
+    reads README.md's install section with its own standard-library reader.
 
 Before the files, it runs its own cases (SELF_CASES): each of those 4 forms is refused, the
 backslash both in a string and as a line continuation (the continuation also after a line
@@ -27,11 +31,13 @@ holding a form feed), while a double-quoted key inside a triple-double-quoted f-
 single-quoted key inside a double-quoted f-string, a line break inside a triple-quoted f-string's
 field (also after a form feed, below a line of backslashes), a backslash in literal text, and
 literal backslashes beside escaped `{{` and `}}` (on 1 line, across a backslash-newline, and in a
-triple-quoted f-string) pass.
+triple-quoted f-string) pass. Its IMPORT_CASES report a third-party import at the top of a file
+and inside a function, and pass standard-library and repository imports.
 
 WHAT IT DOES NOT PROVE: that the files run on 3.11. `feature_version` is a best-effort grammar check,
 the tokenizer used is this interpreter's, nothing checks that every standard-library name the files
-use exists in 3.11 (tomllib does, from 3.11), and nothing is run. Exit 0 ok, 1 on a finding.
+use exists in 3.11 (tomllib does, from 3.11), an import made by other means (importlib or
+__import__ with a computed name) is not seen, and nothing is run. Exit 0 ok, 1 on a finding.
 """
 import ast
 import io
@@ -68,6 +74,33 @@ def deps(tree):
         elif isinstance(node, ast.Constant) and isinstance(node.value, str) and FILE_NAME.match(node.value):
             out.append(local(node.value))
     return [p for p in out if p]
+
+
+def foreign_imports(tree):
+    """(line, name) for each module a parsed file imports, at any depth, that is neither in the
+    standard library nor a repository module under tools/ or scripts/."""
+    out = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names = [a.name for a in node.names]
+        elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
+            names = [node.module]
+        else:
+            continue
+        for name in names:
+            top = name.split(".")[0]
+            if top not in sys.stdlib_module_names and local(top + ".py") is None:
+                out.append((node.lineno, top))
+    return out
+
+
+# (source, the names foreign_imports must report)
+IMPORT_CASES = (
+    ("import json\nfrom pathlib import Path\nimport importlib.util\n", []),
+    ("from check_csp_hashes import name_suffix\n", []),
+    ("from markdown_it import MarkdownIt\n", ["markdown_it"]),
+    ("import json\n\n\ndef parse():\n    import mdurl.parse\n", ["mdurl"]),
+)
 
 
 def delimiter(token_text):
@@ -153,6 +186,11 @@ def self_test():
             failures.append(f"self-test: {source!r} parses on 3.11 but was flagged: {found}")
         elif want is not None and not any(want in form for form in found):
             failures.append(f"self-test: {source!r} needs 3.12 ({want}) but was not flagged: {found}")
+    for source, want in IMPORT_CASES:
+        found = [name for _, name in foreign_imports(ast.parse(source))]
+        if found != want:
+            failures.append(f"self-test: {source!r} should report the imports {want} outside the "
+                            f"standard library and this repository, not {found}")
     return failures
 
 
@@ -183,14 +221,19 @@ def main():
             continue
         for line, form in pep701_forms(source):
             failures.append(f"{rel}:{line}: an f-string carries {form}, which needs Python 3.12")
+        for line, name in foreign_imports(tree):
+            failures.append(f"{rel}:{line}: imports {name}, which is neither the standard library "
+                            f"nor a module of this repository; the Pages build installs nothing")
         pending += deps(tree)
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {len(SELF_CASES)} f-string self-test cases, and {len(seen)} Python files that "
-          f"scripts/pages-build.sh runs or imports parse with feature_version (3, 11) and use no "
-          f"3.12-only f-string form: {', '.join(sorted(p.relative_to(ROOT).as_posix() for p in seen))}")
+    print(f"  ok    {len(SELF_CASES)} f-string and {len(IMPORT_CASES)} import self-test cases, and "
+          f"{len(seen)} Python files that scripts/pages-build.sh runs or imports parse with "
+          f"feature_version (3, 11), use no 3.12-only f-string form and import only the standard "
+          f"library and this repository: "
+          f"{', '.join(sorted(p.relative_to(ROOT).as_posix() for p in seen))}")
     return 0
 
 

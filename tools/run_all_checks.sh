@@ -1670,6 +1670,16 @@ echo "== the site pages are a fresh build of their sources =="
 run_gate test_build_site.py python3 -I -B tools/test_build_site.py
 run_gate "build-site.py --check" python3 -I -B scripts/build-site.py --check
 
+# section: install-blocks
+echo "== the site build reads README.md's install section as the pinned parser does =="
+# scripts/build-site.py reads the install commands with a small standard-library fence reader,
+# because the Cloudflare Pages build runs it with no Markdown parser. This gate, CI only, reads the
+# same section with the pinned parser and fails unless it finds exactly the blocks the build read,
+# with the same content, so an HTML comment or an indented block cannot change what the page shows
+# unnoticed. The self-test runs first, so what runs against README.md is the shipped gate.
+run_gate test_install_blocks.py python3 -I -B tools/test_install_blocks.py
+run_gate check_install_blocks.py python3 -I -B tools/check_install_blocks.py
+
 # section: site-draft
 echo "== the site is self-contained and only /draft/ and the 404 are noindex =="
 run_gate test_draft.py python3 -I -B tools/test_draft.py

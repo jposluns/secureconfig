@@ -35,7 +35,8 @@ Markdown the suite's not_a_guide list names maps as a project record only for th
 every other root Markdown file in this checkout and every file under plugin/, tools/, scripts/,
 .baseline/, .aiqt/ and .github/ selects every section; every file under site/ and site-src/ is
 scoped exactly when it is allowed content (its name ends in an allowed ending in any case, and is
-not `_headers`, `_redirects` or a requirements file), and at least one file under site/ is not.
+not `_headers`, `_redirects` or a requirements file), and at least one file under site/ is not;
+README.md and site-src/content.json each select the install-blocks section.
 
 THE COMMAND: `printf 'site/index.html\\n' | python3 tools/select_gates.py` exits 0 and prints the
 site selection, one name per line; `site/_headers`, `site/assets/baseline/scheme.js`,
@@ -59,8 +60,8 @@ DEPENDS = sg.suite_depends(SUITE_TEXT)
 NOT_A_GUIDE = re.search(r"    (CONTRIBUTING\.md\|.*?)\) return 0", SUITE_TEXT)[1].split("|")
 RECORDS = ("CHANGELOG.md", "TODO.md", "DONE.md", "DECISIONS.md", "PENDING-DECISIONS.md")
 ANY = ("secrets", "local-links", "llms-full-links")
-SITE = ("copy-buttons", "baseline-pin", "palette", "overflow", "site-build", "site-draft",
-        "pages-build", "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories",
+SITE = ("copy-buttons", "baseline-pin", "palette", "overflow", "site-build", "install-blocks",
+        "site-draft", "pages-build", "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories",
         "llms-full", "plugin", "generated-committed", "prose-conventions", "aiqt-baseline") + ANY
 MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "prose-conventions",
             "shell-blocks", "bracket-ranges", "pinned-citations", "placeholders",
@@ -334,6 +335,13 @@ def check_map(failures):
     if not other:
         failures.append("every file under site/ is allowed content, so the refusal cases reach "
                         "nothing in this checkout")
+    # The install-blocks gate compares the site build's reading of README.md's install section
+    # with the pinned parser's: README.md (every section) and the page sources select it.
+    for path in ("README.md", "site-src/content.json"):
+        chosen, _ = sg.select([path], NAMES, DEPENDS)
+        count += 1
+        if "install-blocks" not in NAMES or "install-blocks" not in chosen:
+            failures.append(f"{path} should select the install-blocks section: {chosen!r}")
     chosen, _ = sg.select(["site/index.html", "CHANGELOG.md"], NAMES, DEPENDS)
     count += 1
     if chosen != [n for n in NAMES if n in set(chosen)]:

@@ -431,11 +431,7 @@ def generated(edit_content, extra=None):
     build-site.py --check and check_draft.py on it: the source-to-generated-page path."""
     d = Path(tempfile.mkdtemp())
     try:
-        # build-site.py reads README.md's install section with the pinned parser, so the copy
-        # carries gate_parser(), the modules it imports and the lock it reads.
         for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/check_draft.py",
-                    "tools/check_verify_marking.py", "tools/_markdown.py",
-                    "tools/_verify_sections.py", "tools/requirements-gates.txt",
                     "site-src/content.json", "README.md", "tools/version_basis_guides.txt"):
             (d / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, d / rel)

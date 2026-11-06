@@ -23,14 +23,16 @@ page included, carries the light and dark switch as the last child of the top ba
 `nav`, and loads scheme.js in `<head>` before the stylesheets, without `defer` or `async`
 (SPECIFICATION.md section 7.33).
 
-The install commands have 1 source, README.md's "Install in Claude Code" section, read with the
-pinned CommonMark parser (gate_parser(required=True) in tools/check_verify_marking.py, pinned by
-tools/requirements-gates.txt), so site-src/content.json carries none of them. The section must hold
-exactly 2 code blocks, both fenced at the top level and each closed by its own fence: first the
-in-session block, info string `text`, every line starting `/plugin `; then the shell block, info
-string `bash`, every line starting `claude plugin `. Anything else is refused, and so is a README
-with no such section or more than 1, or a parser that is absent, not the pinned version or cannot
-be loaded (exit 2). A block hidden in an HTML comment is not a code block, so it is never shown.
+The install commands have 1 source, README.md's "Install in Claude Code" section, so
+site-src/content.json carries none of them. The build reads that section with install_blocks()
+below, a small standard-library fence reader, not a Markdown parser. The section must hold exactly
+2 fenced blocks, each opened at the start of a line and closed by a fence of the same character
+and length: first the in-session block, info string `text`, every line starting `/plugin `; then
+the shell block, info string `bash`, every line starting `claude plugin `. Anything else is
+refused (exit 2), and so is a README with no such section or more than 1. The reader does not
+know HTML comments, indented code blocks, lists or block quotes, so tools/check_install_blocks.py,
+a CI gate, reads the same section with the pinned CommonMark parser and fails unless the parser
+finds exactly the 2 blocks this reader extracted, at the same lines, with the same content.
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
@@ -49,7 +51,8 @@ added to PUBLISHED before it ships.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
 or a source the build cannot read as it needs.
-The standard library and the pinned markdown-it-py. No network.
+Standard library only, because scripts/pages-build.sh runs `--check` on Cloudflare Pages with no
+parser installed. No network.
 """
 import argparse
 import html
@@ -61,7 +64,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from check_csp_hashes import STYLE_ATTR, VALUED_HANDLER, name_suffix  # noqa: E402  (shared rules)
-from check_verify_marking import ParserUnavailable, gate_parser  # noqa: E402  (the pinned parser)
 
 CONTENT = Path("site-src") / "content.json"
 README = Path("README.md")
@@ -123,6 +125,74 @@ class Refused(Exception):
 
 class SourceError(Exception):
     """A source file is missing or not in the shape the build reads."""
+
+
+# A fence line as install_blocks() reads one: 3 or more backticks or tildes at the start of the
+# line, then the rest of the line (the info string, on an opening fence).
+FENCE = re.compile(r"(`{3,}|~{3,})(.*)")
+# A level-1 or level-2 ATX heading at the start of a line, which ends the install section.
+SECTION_END = re.compile(r"#{1,2}(?:[ \t]|$)")
+# A fence indented by spaces or tabs, which install_blocks() refuses rather than reads.
+INDENTED_FENCE = re.compile(r"[ \t]+(?:`{3}|~{3})")
+
+
+def install_blocks(text):
+    """[(key, line, commands)] for INSTALL_FENCES, in order, read from README.md's install
+    section; line is the 1-based line of the block's opening fence. SourceError for anything else.
+
+    This reader is deliberately simple, because the Cloudflare Pages build (scripts/pages-build.sh)
+    runs this script with the standard library only and has no Markdown parser. It reads lines,
+    as CommonMark splits them (at \\n, \\r\\n or a lone \\r). The section runs from the 1 line that
+    reads INSTALL, trailing spaces or tabs aside, to the next line, outside a fence, that starts a
+    level-1 or level-2 ATX heading. A fence opens at the start of a line with 3 or more backticks or
+    tildes. The first later line made only of that character, at least as long, with any spaces or
+    tabs around it, ends the fence, and the build refuses it unless it is the opening run exactly,
+    at the start of the line. A fence
+    never closed, and a fence indented by spaces or tabs in the section, are refused. It does not
+    know HTML comments, indented code blocks, setext headings, lists or block quotes, so it can read
+    a block that CommonMark hides or miss one that CommonMark shows: tools/check_install_blocks.py
+    reads the same section with the pinned parser in CI and fails unless both readings agree."""
+    where = f"{README} section {INSTALL!r}"
+    want = " then ".join(f"a `{info}` block of `{prefix.strip()}` lines"
+                         for _, info, prefix in INSTALL_FENCES)
+    lines = re.split(r"\r\n?|\n", text)
+    heads = [i for i, line in enumerate(lines) if line.rstrip(" \t") == INSTALL]
+    if len(heads) != 1:
+        raise SourceError(f"{README} has {len(heads)} lines {INSTALL!r}; the build reads the "
+                          f"install commands from exactly 1 such section")
+    found, i = [], heads[0] + 1
+    while i < len(lines) and not SECTION_END.match(lines[i]):
+        if INDENTED_FENCE.match(lines[i]):
+            raise SourceError(f"{where}: line {i + 1} is an indented fence; the build reads only "
+                              f"fences at the start of a line and needs {want}")
+        opening = FENCE.fullmatch(lines[i])
+        if not opening:
+            i += 1
+            continue
+        run, info, start, body = opening[1], opening[2].strip(), i, []
+        i += 1
+        while i < len(lines):
+            bare = lines[i].strip(" \t")
+            if len(bare) >= len(run) and set(bare) == {run[0]}:
+                break  # CommonMark closes the fence here
+            body.append(lines[i])
+            i += 1
+        if i == len(lines) or lines[i].rstrip(" \t") != run:
+            raise SourceError(f"{where}: the fence {run!r} at line {start + 1} is not closed by a "
+                              f"fence of the same character and length; the build needs {want}")
+        found.append((start + 1, info, "\n".join(body)))
+        i += 1
+    if len(found) != len(INSTALL_FENCES):
+        raise SourceError(f"{where} holds {len(found)} fenced block"
+                          f"{'' if len(found) == 1 else 's'}; the build needs exactly "
+                          f"{len(INSTALL_FENCES)}: {want}")
+    blocks = []
+    for n, ((line, info, body), (key, need, prefix)) in enumerate(zip(found, INSTALL_FENCES), 1):
+        if info != need or not body or not all(b.startswith(prefix) for b in body.split("\n")):
+            raise SourceError(f"{where}: fenced block {n} (line {line}) does not have info string "
+                              f"{need!r} and every line starting {prefix!r}; the build needs {want}")
+        blocks.append((key, line, body))
+    return blocks
 
 
 def esc(text):
@@ -208,55 +278,7 @@ class Builder:
             if row["quote"] not in item:
                 raise SourceError(f"checklist row {i}: its quote {row['quote']!r} is not in "
                                   f"{README} checklist item {i}")
-        self.install = self.install_commands(readme)
-
-    def install_commands(self, text):
-        """{key: commands} for INSTALL_FENCES, read from the README's install section with the
-        pinned parser; the module docstring gives what is refused."""
-        where = f"{README} section {INSTALL!r}"
-        try:
-            parser = gate_parser(required=True)
-        except ParserUnavailable as exc:
-            raise SourceError(f"{where} is read with the pinned parser: {exc}") from None
-        except Exception as exc:  # noqa: BLE001  any failure to load the parser refuses the build
-            # A lock that cannot be read or parsed, or a markdown_it package without the version
-            # metadata of markdown-it-py or mdurl, raises something other than ParserUnavailable;
-            # each is refused in one line naming the cause, never a traceback.
-            cause = " ".join(f"{type(exc).__name__}: {exc}".split())
-            raise SourceError("the pinned parser cannot be loaded from tools/requirements-gates.txt "
-                              f"and the installed markdown-it-py and mdurl: {cause}") from None
-        tokens = parser.parse(text)
-        title = INSTALL[3:]
-        heads = [i for i, t in enumerate(tokens) if t.type == "heading_open" and t.tag == "h2"
-                 and tokens[i + 1].content.strip() == title]
-        if len(heads) != 1:
-            raise SourceError(f"{README} has {len(heads)} level-2 headings {title!r}; the build "
-                              f"reads the install commands from exactly 1")
-        end = next((i for i in range(heads[0] + 1, len(tokens)) if tokens[i].type == "heading_open"
-                    and tokens[i].tag in ("h1", "h2")), len(tokens))
-        blocks = [t for t in tokens[heads[0]:end] if t.type in ("fence", "code_block")]
-        want = " then ".join(f"a `{info}` block of `{prefix.strip()}` lines"
-                             for _, info, prefix in INSTALL_FENCES)
-        if len(blocks) != len(INSTALL_FENCES):
-            raise SourceError(f"{where} holds {len(blocks)} code block"
-                              f"{'' if len(blocks) == 1 else 's'}; the build needs exactly "
-                              f"{len(INSTALL_FENCES)}, fenced: {want}")
-        # The parser's lines: it reads \r\n and a lone \r as \n, and no other line break.
-        lines = re.split(r"\r\n?|\n", text)
-        commands = {}
-        for n, (token, (key, info, prefix)) in enumerate(zip(blocks, INSTALL_FENCES), 1):
-            closing = lines[token.map[1] - 1].strip() if token.map[1] - 1 > token.map[0] else ""
-            closed = (token.type == "fence" and len(closing) >= len(token.markup)
-                      and set(closing) == {token.markup[0]})
-            body = token.content[:-1] if token.content.endswith("\n") else token.content
-            if (not closed or token.level != 0 or token.info.strip() != info or not body
-                    or not all(line.startswith(prefix) for line in body.split("\n"))):
-                raise SourceError(f"{where}: code block {n} (line {token.map[0] + 1}) is not a "
-                                  f"top-level fenced block closed by its own fence, with info "
-                                  f"string {info!r} and every line starting {prefix!r}; the "
-                                  f"build needs {want}")
-            commands[key] = body
-        return commands
+        self.install = {key: body for key, _, body in install_blocks(readme)}
 
     def inputs(self):
         return [p.as_posix() for p in (CONTENT, README, VERSIONED)]

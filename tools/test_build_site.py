@@ -23,12 +23,17 @@ before the first stylesheet, with data-cfasync="false" before src and no defer o
 The landing page carries the About line of baseline 1.7.0 (SPECIFICATION 7.24) exactly once, with
 1 ordinary space after each dot span and none before it.
 The For AI assistants page carries the Claude Code install commands once each, in a copy block,
-read from README.md's install section only (site-src/content.json carries none). A README whose
-shell block is edited, or whose in-session block is commented out beside a visible replacement,
-puts the visible block on the page. The build refuses a section with the in-session block commented
-out, mismatched fence lengths on either block, a third block, the blocks swapped, or the shell
-block holding the in-session commands, and a README with no install section or a second one.
-These cases need the pinned parser; without it the test fails at start-up, naming the cause.
+read from README.md's install section only (site-src/content.json carries none) by the build's
+standard-library reader, install_blocks(). A README whose shell block is edited, or edited and
+fenced with tildes, or whose in-session block is edited, puts that block on the page, and the
+reader reads the same blocks at the same lines with CRLF or CR line endings. The build refuses a
+section with the in-session block commented out beside a visible replacement (which it reads as a
+third block), mismatched fence lengths on either block (an opening fence longer than its closing
+one, or shorter), a third block, the blocks swapped, the shell block holding the in-session
+commands, an empty in-session block, an indented fence, and a README with no install section or a
+second one. None of these cases needs a Markdown parser. What the reader cannot see, such as a
+block hidden in an HTML comment, is for tools/check_install_blocks.py to catch, with its cases in
+tools/test_install_blocks.py.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
 page at any base; a stray file outside assets/baseline/ other than assets/site.css is refused at
 both bases, except at the root a published file (PUBLISHED, such as llms.txt) beside the pages.
@@ -117,7 +122,6 @@ def main():
     try:
         builder = build_site.Builder("/")
     except build_site.SourceError as exc:
-        # Without the pinned parser the build reads no install commands, so no case can run.
         print(f"  FAIL  the site cannot be built from this checkout's sources: {exc}")
         return 1
     pages = builder.build()
@@ -203,42 +207,69 @@ def main():
     else:
         edited_shell = shell + " --scope project"
         wrong = "/plugin install wrong@wrong"
+        # (README text, the part of the refusal that names its reason)
         refused_cases = {
-            "the in-session block commented out":
-                readme.replace(session_block, f"<!--\n{session_block}-->\n", 1),
+            "the in-session block commented out beside a visible replacement":
+                (readme.replace(session_block,
+                                f"<!--\n{session_block}-->\n\n```text\n{wrong}\n```\n", 1),
+                 "holds 3 fenced blocks"),
             "mismatched fence lengths on the in-session block":
-                readme.replace(session_block, f"````text\n{session}\n```\n", 1),
+                (readme.replace(session_block, f"````text\n{session}\n```\n", 1),
+                 "is not closed"),
             "mismatched fence lengths on the shell block":
-                readme.replace(shell_block, f"````bash\n{shell}\n```\n", 1),
+                (readme.replace(shell_block, f"````bash\n{shell}\n```\n", 1), "is not closed"),
+            "a closing fence longer than the opening one":
+                (readme.replace(session_block, f"```text\n{session}\n````\n", 1),
+                 "is not closed"),
+            "an empty in-session block":
+                (readme.replace(session_block, "```text\n```\n", 1), "fenced block 1"),
+            "the shell block indented in a list item":
+                (readme.replace(shell_block, "- From a shell:\n\n  " + shell_block.replace(
+                    "\n", "\n  ").rstrip(" ") + "\n", 1), "is an indented fence"),
             "a third block":
-                readme.replace(shell_block, shell_block + "\n```bash\nclaude plugin install "
-                               "other@other\n```\n", 1),
+                (readme.replace(shell_block, shell_block + "\n```bash\nclaude plugin install "
+                                "other@other\n```\n", 1), "holds 3 fenced blocks"),
             "the blocks swapped":
-                readme.replace(session_block, "\0", 1).replace(shell_block, session_block, 1)
-                .replace("\0", shell_block, 1),
+                (readme.replace(session_block, "\0", 1).replace(shell_block, session_block, 1)
+                 .replace("\0", shell_block, 1), "fenced block 1"),
             "the shell block given the in-session commands":
-                readme.replace(shell_block, f"```bash\n{session}\n```\n", 1),
-            "no install section": readme.replace(build_site.INSTALL + "\n", "## Installing\n", 1),
+                (readme.replace(shell_block, f"```bash\n{session}\n```\n", 1), "fenced block 2"),
+            "no install section":
+                (readme.replace(build_site.INSTALL + "\n", "## Installing\n", 1), "has 0 lines"),
             "a second install section":
-                readme + f"\n{build_site.INSTALL}\n\n{session_block}\n{shell_block}",
+                (readme + f"\n{build_site.INSTALL}\n\n{session_block}\n{shell_block}",
+                 "has 2 lines"),
         }
         # (README text, key, the commands the page must then carry for that key)
         followed_cases = {
             "the shell block edited":
                 (readme.replace(shell_block, f"```bash\n{edited_shell}\n```\n", 1), "shell",
                  edited_shell),
-            "the in-session block commented out beside a visible replacement":
-                (readme.replace(session_block,
-                                f"<!--\n{session_block}-->\n\n```text\n{wrong}\n```\n", 1),
-                 "session", wrong),
+            "the shell block edited and fenced with tildes":
+                (readme.replace(shell_block, f"~~~bash\n{edited_shell}\n~~~\n", 1), "shell",
+                 edited_shell),
+            "the in-session block edited":
+                (readme.replace(session_block, f"```text\n{wrong}\n```\n", 1), "session", wrong),
         }
-        for desc, text in refused_cases.items():
+        # The build reads README.md with universal newlines, so the reader itself is given each
+        # line ending CommonMark knows: it must read the same blocks, at the same lines.
+        for ending in ("\r\n", "\r"):
+            install_cases += 1
+            try:
+                got = build_site.install_blocks(readme.replace("\n", ending))
+            except build_site.SourceError as exc:
+                got = str(exc)
+            if got != build_site.install_blocks(readme):
+                failures.append(f"install source, line endings {ending!r}: install_blocks() read "
+                                f"{got!r}")
+        for desc, (text, reason) in refused_cases.items():
             install_cases += 1
             built, error = build_from_readme(text, readme)
             if error is None:
                 failures.append(f"install source, {desc}: the build accepted it")
-            elif "Install in Claude Code" not in error:
-                failures.append(f"install source, {desc}: refused for another reason: {error}")
+            elif "Install in Claude Code" not in error or reason not in error:
+                failures.append(f"install source, {desc}: refused for another reason than "
+                                f"{reason!r}: {error}")
         for desc, (text, key, want) in followed_cases.items():
             install_cases += 1
             built, error = build_from_readme(text, readme)
@@ -437,8 +468,8 @@ def main():
           f"and canonicals and the review page's canonical and link previews, the light and dark "
           f"switch and scheme.js on every page at both bases, the landing page's About line, the "
           f"install commands read from README.md only, with {install_cases} install-section cases "
-          f"(a commented-out block, mismatched fence lengths, a third block, the blocks swapped, the "
-          f"shell block edited and more), and "
+          f"(mismatched fence lengths, an indented fence, a third block, the blocks swapped, the "
+          f"shell block edited, CRLF and CR line endings and more), and "
           f"--check on a changed, an extra "
           f".html and .HTM page, a missing page, a root-base published file and strays, and the "
           f"staged strays")

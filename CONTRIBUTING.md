@@ -425,9 +425,14 @@ are to the `references/` paths, which would not resolve from a project: rules 5,
 their parenthesised paths, and rule 2 names its guides by file name without the folder. A pull
 request that changes that section changes the snippet with it; no gate compares the two, and the
 placeholder gate scans the snippet though it skips the rest of `plugin/`. The For AI assistants
-page takes its install commands from README.md's section itself: `scripts/build-site.py` reads
-the section with the pinned parser and refuses to build unless it holds exactly 2 code blocks,
-the fenced in-session block and then the fenced shell block, so the page never carries a copy.
+page takes its install commands from README.md's section itself, so the page never carries a
+copy. `scripts/build-site.py` reads the section with a small standard-library fence reader,
+because the Cloudflare Pages build runs it with no Markdown parser, and refuses to build unless
+the section holds exactly 2 fenced blocks, the in-session block and then the shell block, each
+closed by a fence of the same character and length as its opening one. That reader does not
+know HTML comments or indented code blocks, so `tools/check_install_blocks.py`, the suite's
+`install-blocks` section, reads the same section with the pinned parser and fails unless it
+finds exactly those 2 blocks with the same content.
 
 Record the change in `CHANGELOG.md` in the same pull request, not in a later bookkeeping one. A
 required gate checks that every merged pull request is referenced, exempting only the newest. It
