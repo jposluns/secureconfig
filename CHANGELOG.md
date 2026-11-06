@@ -17,6 +17,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-11-06
 
+- `ollama.md`: section 6 now gives each documented v0.40.14 `num_ctx` default and says where the FAQ's 4096 and the Modelfile table's 2048 disagree with the code. Section 5 quotes the installer's `ollama` group step and says, as the guide's inference, how it interacts with the `0700` store. The system-prompt statement is labelled as source reading. Section 7 says what `insecure` does despite its "Deprecated: ignored" comment. `server/download.go` lines 131 to 186 get a Sources item and claim key (#1229)
 - `surrealdb.md`: section 3 and its Sources item now give GHSA-ffvm-mqh3-7986's severity as "medium" from the advisory record and as "High" from the 4.0 release page. Section 4, its Sources and claim `capability-mcp-3x` now say the v3.3.5 `surreal mcp` arguments are named through the `cli::mcp` module, which was not read (`use mcp::McpCommandArguments;`), and cite `cli/mod.rs` lines 37 and 38. TODO 1.438 also asks whether v3.3.5 release builds enable the `mcp` cargo feature. The 3 fixes come from LOW rows of the v3.3.5 source pass and the #1219 QA round 3 report (#1226)
 
 ## 2026-11-05
