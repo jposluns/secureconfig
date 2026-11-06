@@ -36,7 +36,9 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   Any `<!--` in the front matter, which is not parsed, and any other HTML in SKILL.md's body,
   inline HTML included, is not read and is a finding naming the front matter's line, or the
   first line of the block, or the table row, that holds it. That module is this gate's own
-  copy, not the commit's, and without the pinned parser the commit could not be checked;
+  copy, not the commit's. Without the pinned parser the commit could not be checked, and nor
+  could it when that parser cannot be loaded at all, from a lock beside this gate that cannot
+  be read or parsed or from an install without its version metadata; each is one line;
 - unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
   scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
   and each must exit 0;
@@ -81,7 +83,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _verify_sections import SkillHtml, counted_guides, skill_counts  # noqa: E402  as the build
-from check_verify_marking import ParserUnavailable  # noqa: E402  skill_counts() needs the parser
+from check_verify_marking import ParserUnavailable, gate_parser  # noqa: E402  as skill_counts()
 
 LLMS_FULL = "site/llms-full.txt"
 PLUGIN = "plugin"
@@ -266,6 +268,27 @@ def skill_findings(version_text, skill_text, count):
     return findings
 
 
+def parser_failure():
+    """Why the pinned parser that skill_counts() needs cannot run here, in one line, or None.
+
+    gate_parser() in tools/check_verify_marking.py raises ParserUnavailable when the parser is
+    absent or not the pinned version, and other exceptions when the lock beside it cannot be read
+    or parsed or when a markdown_it package is present without the installed version metadata of
+    markdown-it-py or mdurl. Each leaves the guide count unchecked, so each is reported as a commit
+    that could not be checked, naming the cause, and none as a traceback.
+    """
+    try:
+        gate_parser(required=True)
+    except ParserUnavailable as exc:
+        return f"{SKILL}'s guide count is checked with the pinned parser: {exc}"
+    except Exception as exc:  # noqa: BLE001  any failure to load the parser leaves it unchecked
+        cause = " ".join(f"{type(exc).__name__}: {exc}".split())
+        return (f"{SKILL}'s guide count is checked with the pinned parser, which cannot be loaded "
+                "from tools/requirements-gates.txt and the installed markdown-it-py and mdurl: "
+                f"{cause}")
+    return None
+
+
 def build_findings(tree):
     """Run both builds in the export; a finding for the first one that does not exit 0."""
     for script in BUILDS:
@@ -310,12 +333,11 @@ def main(argv=None):
                             f"committed: {exc}")
         else:
             findings += version_findings(version_text, manifest_text)
-            try:
-                findings += skill_findings(version_text, skill_text, count)
-            except ParserUnavailable as exc:
-                print(f"  FAIL  cannot check {label}: {SKILL}'s guide count is checked with the "
-                      f"pinned parser: {exc}")
+            problem = parser_failure()
+            if problem:
+                print(f"  FAIL  cannot check {label}: {problem}")
                 return 2
+            findings += skill_findings(version_text, skill_text, count)
             version = version_text.rstrip("\n")
         rebuild = args.rebuild
         if not rebuild:
