@@ -658,7 +658,7 @@ except RawHtml as exc:
     sys.exit(1)
 readme = "\n".join(lines)
 tokens = parser.parse(readme)
-heads =[(t.tag, t.level, t.map, tokens[i + 1].content.strip())
+heads = [(t.tag, t.level, t.map, tokens[i + 1].content.strip())
          for i, t in enumerate(tokens) if t.type == "heading_open"]
 
 

@@ -11,7 +11,7 @@ The README cases pin how HTML is read, by blank_comment_blocks() in tools/_verif
 rule SKILL.md's count is read by. A whole HTML comment that stands as an HTML block of its own
 outside any list item or block quote is removed before the count sentence is matched, so a stale
 copy inside one neither counts nor fails. Any other raw HTML is refused in one line naming the
-first line of the block that holds it: an inline comment, a comment in a block quote, a comment
+first line of the block, or the table row, that holds it: an inline comment, a comment in a block quote, a comment
 inside another HTML block, an inline HTML tag, and a "<!--" in a quoted attribute of a tag that
 opens an HTML block. A "<!--" the parser does not read as HTML (in a code span, a fenced or
 indented code block, a link destination, a reference definition or after a backslash) is kept as

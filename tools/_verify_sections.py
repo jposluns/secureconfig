@@ -153,7 +153,7 @@ def blank_comment_blocks(text, parser, name, first_line=1, error=RawHtml):
     """
     # The parser reads "\r\n" and "\r" as "\n" and NUL as U+FFFD before it parses, so the same is
     # done here, and its line numbers and token text then match these lines.
-    text = re.sub(r"\r\n?", "\n", text).replace("\0", "�")
+    text = re.sub(r"\r\n?", "\n", text).replace("\0", "\ufffd")
     lines = text.split("\n")
 
     def walk(tokens, block):
