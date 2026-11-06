@@ -185,8 +185,8 @@ create, so the `draft` branch must make those links resolve: copy `site/llms.txt
 item 1 allows. The current build needs the copy: it prefixes every root-relative link with the
 base, so its staged pages link only the `/draft/` paths, and linking the live files needs a build
 change. If the files are copied, the staged `--check` (`--check --base /draft/ --out site/draft`)
-refuses them too, because at that base it refuses every file outside the pages and
-`assets/baseline/`, so it then needs the same handling. Promotion follows the template's item 5: only after the owner
+refuses them too, because at that base it refuses every file outside the pages,
+`assets/baseline/` and the optional `assets/site.css`, so it then needs the same handling. Promotion follows the template's item 5: only after the owner
 approves, 1 pull request from `draft` to `main` takes every step that item lists, among them
 rebuilding the draft at base `/` and removing the `/draft/` noindex rules and any gate exclusion.
 
