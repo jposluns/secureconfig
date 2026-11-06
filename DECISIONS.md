@@ -17,6 +17,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-05 on `pocketbase.md` TODO 1.414 (#1234).** The maintainer ruled through
+  AskUserQuestion at 2026-11-05T23:27Z, and the orchestrator recorded the ruling in its store as: "move pocketbase.md
+  to v0.41.1 and cite the forge (ganigeorgiev.com) tagged pages, reading source from the Go module proxy zip that
+  sum.golang.org checksums." No reasoning reached this entry beyond its terms. Its effect (applied by #1234):
+  `pocketbase.md`'s PocketBase basis moves from v0.40.4 to v0.41.1, every PocketBase citation moves to the forge's
+  `files/<path>?rev=v0.41.1` form with line ranges in the link text, and the cited files are read in the v0.41.1
+  module zip from the Go module proxy. What that could not settle about the forge pages is tracked in TODO 1.439.
+  The revert path is a later maintainer ruling for another basis or citation host, which re-pins the sources again.
+- **Maintainer ruling of 2026-11-04: the 0.x rule (#1234).** The maintainer ruled through AskUserQuestion at
+  2026-11-04T23:08:03Z, and the orchestrator recorded the ruling in its store as: "decide per product; if a 0.x minor
+  jump's release notes list breaking changes, cover both the old line's last release and the latest; otherwise move
+  automatically; record the call in each PR." No reasoning reached this entry beyond its terms. Its effect: for a
+  product still on 0.x, a version-currency row that crosses a minor release is decided per product from the release
+  notes it crosses; where they list breaking changes, the guide covers both the last release of the old minor line
+  and the latest, otherwise the basis moves without a further ruling, and each pull request records the call. #1224
+  applied it to `ollama.md` (TODO 1.413), and #1234 applies it to `pocketbase.md` (TODO 1.414). The revert path is
+  a later maintainer ruling that replaces the rule; guides moved under it keep their recorded bases until a row
+  moves them again.
 - **Maintainer ruling of 2026-11-04: standing version-currency policy across major releases (#1212).** The maintainer
   gave this standing policy on 2026-11-04, after the `jupyter.md` ruling below, and the orchestrator recorded it in
   its store; the time was not recorded with it here. In the maintainer's words: "Automatically increase version when
