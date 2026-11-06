@@ -23,7 +23,8 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
   version-shaped line elsewhere does not count. Outside HTML comments (`<!-- ... -->`, removed
-  first, as the README guide-counts gate removes them from README.md), it states "This skill
+  first, as the README guide-counts gate removes them from README.md, and an unclosed `<!--`
+  removed to the end of the file), it states "This skill
   carries N short guides" exactly once, with N the guide-counts gate's set in the commit, as
   counted_guides() in tools/_verify_sections.py lists it, so a commented copy neither counts
   nor stands in for a stale or missing visible sentence. That module is this gate's own copy,
@@ -83,8 +84,9 @@ SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
 SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
 # Text inside an HTML comment is not shown to a reader, so the count sentence is searched for only
 # after removing comments, the way the README guide-counts gate in tools/run_all_checks.sh reads
-# README.md.
-HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
+# README.md. A "<!--" with no "-->" after it hides the rest of the file, as it does in HTML, so it
+# is removed to the end, as scripts/build-plugin.sh removes it.
+HTML_COMMENT = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
 BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
 REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
           "every file they change")

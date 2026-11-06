@@ -268,7 +268,7 @@ def real_build(skill_md, expected, needle):
         assert needle in output, (needle, output)
         if expected == 0:
             text = (root / SKILL).read_text(encoding="utf-8")
-            visible = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+            visible = re.sub(r"<!--.*?(?:-->|\Z)", "", text, flags=re.S)
             assert '  version: "1.0.5"\n' in text and "carries 1 short guides" in visible, text
     return 1
 
@@ -384,9 +384,27 @@ def main():
                       absent=("times, not once",))
         count += case(skill_text(SKILL_MD + "<!-- This skill carries 7 short guides. -->\n"),
                       also=("SKILL.md names it and states 1 guides; ",))
+        # A "<!--" with no "-->" hides the rest of the file, so a sentence after it is not there.
+        count += case(skill("This skill carries 1 short guides.",
+                            "<!--\nThis skill carries 1 short guides."),
+                      expected=1,
+                      needle=SKILL + ' as committed states "This skill carries N short guides" '
+                             "0 times, not once (text inside HTML comments does not count)")
         count += case(skill('  version: "1.0.5"\n', ""), expected=1,
                       needle=SKILL + " as committed has 0 metadata version lines in its front "
                              "matter, not 1")
+        # An unquoted metadata version, two metadata version lines, and front matter that opens
+        # with "---" and never closes.
+        count += case(skill('"1.0.5"', "1.0.5"), expected=1,
+                      needle=SKILL + " as committed has the metadata version line '  version: "
+                             "1.0.5', not in the form")
+        count += case(skill('  version: "1.0.5"\n', '  version: "1.0.5"\n  version: "1.0.5"\n'),
+                      expected=1,
+                      needle=SKILL + " as committed has 2 metadata version lines in its front "
+                             "matter, not 1")
+        count += case(skill_text(SKILL_MD.replace("\n---\n", "\n", 1)), expected=1,
+                      needle=SKILL + ' as committed has no front matter between a "---" first '
+                             'line and a closing "---" line')
         # A version-shaped line after the front matter is not the metadata line, to the build's
         # sed range or to the gate.
         count += case(skill("short guides.\n", 'short guides.\n  version: "1.0.4"\n'),
@@ -421,6 +439,13 @@ def main():
                             + '  version: "1.0.5"\n', 1, refused)
         count += real_build(SKILL_MD.replace("metadata:\n", "other:\n"), 1, refused)
         count += real_build(SKILL_MD.replace("---\n", ""), 1, refused)
+        # An unquoted metadata version, two metadata version lines, and front matter that opens
+        # with "---" and never closes.
+        count += real_build(SKILL_MD.replace('"1.0.5"', "1.0.5"), 1, refused)
+        count += real_build(SKILL_MD.replace('  version: "1.0.5"\n',
+                                             '  version: "1.0.5"\n  version: "1.0.5"\n'),
+                            1, refused)
+        count += real_build(SKILL_MD.replace("\n---\n", "\n", 1), 1, refused)
         count += real_build(SKILL_MD.replace("This skill carries", "This skill has"), 1,
                             "SKILL.md guide count did not update to 1")
         # Only text outside HTML comments counts: a commented sentence with no visible one, and
@@ -431,6 +456,10 @@ def main():
                                              "<!-- This skill carries 1 short guides. -->"),
                             1, uncounted)
         count += real_build(SKILL_MD + "This skill carries 1 short guides.\n", 1, uncounted)
+        # A "<!--" with no "-->" hides the rest of the file, so a sentence after it is refused.
+        count += real_build(SKILL_MD.replace("This skill carries 1 short guides.",
+                                             "<!--\nThis skill carries 1 short guides."),
+                            1, uncounted)
         count += real_build(SKILL_MD.replace("carries 1 short", "carries 3 short")
                             + "<!-- This skill carries 1 short guides. -->\n", 0,
                             "wrote plugin/skills/secure-deployment-config/references")
