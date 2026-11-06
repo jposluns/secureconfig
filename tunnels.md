@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against frps source v0.71.0, frp TLS default minimum v0.50.0, Linux source v6.8, and iproute2 manuals v6.12.0; 2 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
+Written against frps source v0.72.0, frpc source v0.72.0, frp compare diff v0.71.0...v0.72.0, frp TLS default minimum v0.50.0, go-oidc source v3.21.0, Linux source v6.8, and iproute2 manuals v6.12.0; 2 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -26,7 +26,7 @@ All three expose a private host to the internet without a public IP, the same jo
 
 ## frp
 
-`frps` (the server) listens for client connections on `bindPort`, default `7000` (as of v0.71.0). Authentication is token-based by default: set the identical `auth.token` in `frps.toml` and every `frpc.toml`, since "client needs to set the same value to pass authentication":
+`frps` (the server) listens for client connections on `bindPort`, default `7000` (as of v0.72.0). Authentication is token-based by default: set the identical `auth.token` in `frps.toml` and every `frpc.toml`, since "client needs to set the same value to pass authentication":
 
 ```toml
 # frps.toml
@@ -41,13 +41,15 @@ serverPort = 7000
 auth.token = "REPLACE_WITH_LONG_RANDOM_VALUE"
 ```
 
-frp also supports `auth.method = "oidc"`: frpc obtains a token from an OIDC provider through the Client Credentials Grant and frps validates it by issuer and audience, authenticating frpc to frps instead of using a shared token, useful for centralizing frp auth behind an identity provider. Audience validation is conditional, though: frps skips it when `auth.oidc.audience` is left empty (it sets the token verifier's `SkipClientIDCheck` in that case), so set a nonempty `auth.oidc.audience` and the intended `auth.oidc.issuer` explicitly rather than assuming that selecting `auth.method = "oidc"` binds the token to your server.
+frp also supports `auth.method = "oidc"`: frpc obtains a token from an OIDC provider through the Client Credentials Grant and frps validates it by issuer and audience, authenticating frpc to frps instead of using a shared token, useful for centralizing frp auth behind an identity provider. In frp v0.72.0, the OIDC auth setter for the client configuration builds a `golang.org/x/oauth2/clientcredentials` configuration from the client ID, client secret, scope and token endpoint URL. Audience validation is conditional, though: frps skips it when `auth.oidc.audience` is left empty (it sets the token verifier's `SkipClientIDCheck` in that case), so set a nonempty `auth.oidc.audience` and the intended `auth.oidc.issuer` explicitly rather than assuming that selecting `auth.method = "oidc"` binds the token to your server. In go-oidc v3.21.0, the ID token verifier performs no audience check when `SkipClientIDCheck` is set, and otherwise requires a nonempty client ID that the token's audience contains. GitHub's compare diff from frp v0.71.0 to v0.72.0 shows frp's `go.mod` moving `github.com/coreos/go-oidc/v3` from v3.18.0 to v3.21.0.
 
-Both the shared token and OIDC authenticate `frpc` to `frps`; neither authenticates the callers who reach a service you publish through the tunnel. A registered tcp, udp, http, https or tcpmux proxy listens on `proxyBindAddr`, which defaults to the server's `bindAddr` of `0.0.0.0` (as of v0.71.0), so once the proxy is up anyone who can reach that listener reaches the service behind it, exactly as if the app faced a public port directly. An stcp, sudp or xtcp proxy opens no listener of its own on frps. Give the published service its own authentication, or keep the proxy on loopback and front it with an authenticated TLS proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)); a strong `auth.token` protects the tunnel, not the service.
+Both the shared token and OIDC authenticate `frpc` to `frps`; neither authenticates the callers who reach a service you publish through the tunnel. A registered tcp, udp, http, https or tcpmux proxy listens on `proxyBindAddr`, which defaults to the server's `bindAddr` of `0.0.0.0` (as of v0.72.0), so once the proxy is up anyone who can reach that listener reaches the service behind it, exactly as if the app faced a public port directly. An stcp, sudp or xtcp proxy opens no listener of its own on frps. Give the published service its own authentication, or keep the proxy on loopback and front it with an authenticated TLS proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)); a strong `auth.token` protects the tunnel, not the service.
 
-From frp v0.50.0, `transport.tls.enable` defaults to `true`, so the connection between `frpc` and `frps` is encrypted out of the box; the gap is verification, not encryption. `frpc` still does not verify `frps`'s certificate by default, so it will encrypt to whatever server answers on `serverAddr`, genuine or not. Set `transport.tls.certFile`/`transport.tls.keyFile` on the server and `transport.tls.trustedCaFile` on every client so `frpc` verifies the server's certificate against a trusted CA, and set `transport.tls.force = true` on the server so it refuses any client that did not negotiate TLS at all.
+From frp v0.50.0, `transport.tls.enable` defaults to `true`, so the connection between `frpc` and `frps` is encrypted out of the box; the gap is verification, not encryption. `frpc` still does not verify `frps`'s certificate by default, so it will encrypt to whatever server answers on `serverAddr`, genuine or not. frp v0.72.0 adds an frpc setting, `transport.tls.useSystemCa`, that turns on verification against the system CAs, and its source comment says frpc skips verification when neither it nor `trustedCaFile` is set. Set `transport.tls.certFile`/`transport.tls.keyFile` on the server and `transport.tls.trustedCaFile` on every client so `frpc` verifies the server's certificate against a trusted CA, and set `transport.tls.force = true` on the server so it refuses any client that did not negotiate TLS at all.
 
 The `auth` block is schema-optional, and omitting it does not fail closed: frp defaults to the token method with an empty token, and `frps` derives its auth key from that empty string, so a client presenting an empty token authenticates. An unconfigured token is an open door, not a safe default: always set a long random `auth.token` (or OIDC) before exposing `bindPort` to the internet, and never rely on frp for anything without one.
+
+The gofrp.org pages cited here, as served on 2026-11-05, do not say which frp release they describe and each shows "Last modified October 21, 2026", so whether they describe frp v0.72.0 is not established. The statements resting on them alone are the `transport.tls.enable` default, `transport.tls.force` and the server's certificate setup, `transport.tls.certFile` and `transport.tls.keyFile`. The client's `transport.tls.trustedCaFile` verification rests on frp's source instead: GitHub's compare diff from v0.71.0 to v0.72.0 shows frpc passing that file to `NewClientTLSConfigWithSystemCA` (`client/connector.go` L111-L117 and L198-L203 at v0.72.0). With the file set and `useSystemCa` unset, the client TLS configuration that function builds takes `RootCAs` from that file and sets `InsecureSkipVerify` to false (`pkg/transport/tls.go` L182-L185 and L188-L189); with neither trust source it sets `InsecureSkipVerify` to true (L194-L195).
 
 ## WireGuard
 
@@ -235,21 +237,21 @@ REASONED: following block; the ssh -R check follows the cited OpenSSH sshd_confi
 
 ## Sources (checked September 2026)
 
-- frp documentation (setup, server reference): https://gofrp.org/en/docs/
+- frp documentation (setup, server reference) (rolling documentation, checked November 2026): https://gofrp.org/en/docs/
 - OpenSSH `sshd_config` (`GatewayPorts` default `no`, `yes` binds all interfaces, `clientspecified`): https://man.openbsd.org/sshd_config#GatewayPorts
 - OpenSSH `ssh` (`-R [bind_address:]port:host:hostport` remote forwarding): https://man.openbsd.org/ssh#R
-- frp server configuration reference (`bindPort`, `auth.token`, `transport.tls.force`): https://gofrp.org/en/docs/reference/server-configures/
-- frp authentication (`auth.token`, `auth.method = "oidc"`): https://gofrp.org/en/docs/features/common/authentication/
+- frp server configuration reference (`bindPort`, `auth.token`, `transport.tls.force`) (rolling documentation, checked November 2026): https://gofrp.org/en/docs/reference/server-configures/
+- frp authentication (`auth.token`, `auth.method = "oidc"`) (rolling documentation, checked November 2026): https://gofrp.org/en/docs/features/common/authentication/
 - WireGuard quickstart (`wg genkey`, `wg pubkey`, `wg set`, silent-protocol behavior): https://www.wireguard.com/quickstart/
 - WireGuard Cryptokey Routing (`AllowedIPs` on send and receive): https://www.wireguard.com/
-- frp TLS (`transport.tls.enable` default from v0.50.0, `transport.tls.force`, cert/key/CA roles): https://gofrp.org/en/docs/features/common/network/network-tls/
+- frp TLS (`transport.tls.enable` default from v0.50.0, `transport.tls.force`, cert/key/CA roles) (rolling documentation, checked November 2026): https://gofrp.org/en/docs/features/common/network/network-tls/
 - nftables manual (forward/input hooks, verdicts, and rule counters): https://netfilter.org/projects/nftables/manpage.html
-- frps `bindAddr` default `0.0.0.0` and `bindPort` default `7000`, and an empty `proxyBindAddr` takes `bindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114
-- frps TCP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/tcp.go#L76
-- frps UDP proxies listen on `proxyBindAddr` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92-L97
-- frps HTTP and HTTPS vhost listeners bind `proxyBindAddr` (L303 and L334), sharing the main listener only when `bindAddr` equals `proxyBindAddr` (L229-L235) (pinned tag v0.71.0). Sources for this item (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303-L321, https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L329-L340 and https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L229-L235
-- frps tcpmux HTTP CONNECT listener binds `proxyBindAddr` at `tcpmuxHTTPConnectPort` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L193-L194
-- frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.71.0). Sources for this item (pinned tag v0.71.0, 1 of 2): https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46 and https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215. Sources for this item (pinned tag v0.71.0, 2 of 2): https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63 and https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139
+- frps `bindAddr` default `0.0.0.0` and `bindPort` default `7000`, and an empty `proxyBindAddr` takes `bindAddr` (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/server.go#L112-L116
+- frps TCP proxies listen on `proxyBindAddr` (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/tcp.go#L76
+- frps UDP proxies listen on `proxyBindAddr` (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/udp.go#L92-L97
+- frps HTTP and HTTPS vhost listeners bind `proxyBindAddr` (L289 and L322), sharing the main listener only when `bindAddr` equals `proxyBindAddr` (L215-L221) (pinned tag v0.72.0, checked November 2026). Sources for this item (pinned tag v0.72.0): https://github.com/fatedier/frp/blob/v0.72.0/server/service.go#L289-L307, https://github.com/fatedier/frp/blob/v0.72.0/server/service.go#L317-L328 and https://github.com/fatedier/frp/blob/v0.72.0/server/service.go#L215-L221
+- frps tcpmux HTTP CONNECT listener binds `proxyBindAddr` at `tcpmuxHTTPConnectPort` (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/server/service.go#L182-L183
+- frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.72.0, checked November 2026). Sources for this item (pinned tag v0.72.0, 1 of 2): https://github.com/fatedier/frp/blob/v0.72.0/server/visitor/visitor.go#L49-L57, https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/stcp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/sudp.go#L43-L46 and https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/proxy.go#L202-L215. Sources for this item (pinned tag v0.72.0, 2 of 2): https://github.com/fatedier/frp/blob/v0.72.0/pkg/util/net/listener.go#L25-L37, https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/xtcp.go#L63 and https://github.com/fatedier/frp/blob/v0.72.0/pkg/nathole/controller.go#L125-L139
 - autossh SSH monitoring and restart (pinned commit 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476, checked October 2026): https://github.com/Autossh/autossh/blob/90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476/README#L25-L26
 - Ubuntu Noble ufw manual, status verbose, show raw and IPv4/IPv6 rule visibility (rolling documentation, checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
 - Ubuntu Noble ufw manual, status and status verbose (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 70-93, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n70
@@ -265,10 +267,14 @@ REASONED: following block; the ssh -R check follows the cited OpenSSH sshd_confi
 - iproute2 ss manual, UDP/TCP listeners (`-l`: "Display only listening sockets"), numeric output (`-n`: "Do not try to resolve service names.") and process display (`-p`: "Show process using socket.") (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ss.8
 - Linux WireGuard UDP socket creation (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/drivers/net/wireguard/socket.c#L387-L393
 - Linux UDP tunnel kernel socket creation (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/net/ipv4/udp_tunnel_core.c#L17-L19
-- frps OIDC verifier skips audience checking when Audience is empty (pinned tag v0.71.0, checked October 2026): https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/oidc.go#L281-L287
-- frps optional token field and default token method (pinned tag v0.71.0, checked October 2026): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L128-L139
-- frps login auth-key comparison (pinned tag v0.71.0, checked October 2026; empty-token acceptance is REASONED with the configuration and key derivation): https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/token.go#L64-L69
-- frp auth-key derivation from token and timestamp (pinned tag v0.71.0, checked October 2026; predictable empty-token keys are REASONED from this implementation): https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/util/util.go#L50-L56
+- frps OIDC verifier sets `SkipClientIDCheck` when `Audience` is empty (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/oidc.go#L281-L287
+- frps optional token field and default token method (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/server.go#L130-L141
+- frps login auth-key comparison (pinned tag v0.72.0, checked November 2026; empty-token acceptance is REASONED with the configuration and key derivation): https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/token.go#L64-L69
+- frp auth-key derivation from token and timestamp (pinned tag v0.72.0, checked November 2026; predictable empty-token keys are REASONED from this implementation): https://github.com/fatedier/frp/blob/v0.72.0/pkg/util/util/util.go#L50-L56
+- go-oidc ID token verifier, no audience check when `SkipClientIDCheck` is set, otherwise a nonempty `ClientID` that the token's audience must contain (pinned tag v3.21.0, checked November 2026): https://github.com/coreos/go-oidc/blob/v3.21.0/oidc/verify.go#L248-L257
+- frp compare diff from v0.71.0 to v0.72.0: its `go.mod` hunk moves `github.com/coreos/go-oidc/v3` from v3.18.0 to v3.21.0, and its `client/connector.go` (L111-L117, L198-L203) and `pkg/transport/tls.go` (L182-L185, L188-L189, L194-L195) hunks give frpc's `trustedCaFile` verification (tags v0.71.0 and v0.72.0, checked November 2026): https://github.com/fatedier/frp/compare/v0.71.0...v0.72.0
+- frpc `transport.tls.useSystemCa` field and its comment: verification using system CAs, supported only in frpc's `transport.tls`, and no verification with neither trust source (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/common.go#L102-L105
+- frp OIDC auth setter (`NewOidcAuthSetter`, taking `AuthOIDCClientConfig`) builds a `golang.org/x/oauth2/clientcredentials` configuration from the client ID, client secret, scope and token endpoint URL (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/oidc.go#L132-L152
 
 
 <!-- version-basis:start -->
@@ -284,9 +290,12 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- frps: frps source (v0.71.0)
+- frps: frps source (v0.72.0)
+- frpc: frpc source (v0.72.0)
+- frp-compare: frp compare diff (v0.71.0...v0.72.0)
 - tls-min: frp TLS default minimum (v0.50.0)
 - frp: frp documentation (unknown)
+- go-oidc: go-oidc source (v3.21.0)
 - wg: WireGuard (unknown)
 - ssh: OpenSSH (unknown)
 - autossh-source: autossh source (90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476)
@@ -301,7 +310,7 @@ Claims (full source mapping in the JSON block below):
 - frps-port (REASONED; frps): frps bindPort defaults to 7000.
 - frp-token (REASONED; frp, frps): Token authentication is the default; set the same long random auth.token on frps and every frpc.
 - frp-empty (REASONED; frp, frps): Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure.
-- frp-oidc (REASONED; frp, frps): auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation.
+- frp-oidc (REASONED; frp, frps, frp-compare, go-oidc): auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience sets SkipClientIDCheck, under which go-oidc v3.21.0 performs no audience check.
 - proxy-bind (REASONED; frps): proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0.
 - proxy-tcp (REASONED; frps): Registered TCP proxies listen on proxyBindAddr.
 - proxy-udp (REASONED; frps): Registered UDP proxies listen on proxyBindAddr.
@@ -310,8 +319,10 @@ Claims (full source mapping in the JSON block below):
 - proxy-visitors (REASONED; frps): stcp, sudp and xtcp open no listener of their own on frps.
 - service-auth (REASONED; frp, frps): frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy.
 - tls-default (REASONED; tls-min): transport.tls.enable defaults true from v0.50.0, encrypting frpc-to-frps traffic.
-- tls-verify (REASONED; frp): frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile.
+- tls-verify (REASONED; frp, frp-compare): frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile.
 - tls-force (REASONED; frp): Set server transport.tls.force=true to reject clients that do not negotiate TLS.
+- tls-system-ca (REASONED; frpc, frp-compare): frp v0.72.0 adds the frpc setting transport.tls.useSystemCa for verification against system CAs; its source comment says frpc skips verification when neither it nor trustedCaFile is set.
+- frp-docs-release (REASONED; frp): The cited gofrp.org pages, as served on 2026-11-05, do not say which frp release they describe and show Last modified October 21, 2026; whether they describe v0.72.0 is not established.
 - wg-keys (REASONED; wg): WireGuard uses per-peer key pairs, not passwords; generate under umask 077 and share only public keys.
 - wg-endpoint (REASONED; wg): wg set configures wg0 listen-port 51820, private key, peer public key, AllowedIPs and UDP endpoint 203.0.113.10:51820.
 - wg-send (REASONED; wg): AllowedIPs selects the sending peer by destination; scope to the peer subnet, using 0.0.0.0/0 only for a full-tunnel gateway.
@@ -337,32 +348,47 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-18",
+  "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "38fef617cf0b60d7d3d3bba02155dc191b85505f84dea27423a525c110957fa6",
+  "body_sha256": "db108054b842d14f8b129304d9d9dd62ce456194515019c018d20685957d112a",
   "components": {
     "frps": {
       "name": "frps source",
-      "basis": "v0.71.0",
+      "basis": "v0.72.0",
       "sources": {
-        "s89885e642b0b": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L110-L114",
-        "s2cbb0ac0ce1d": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/tcp.go#L76",
-        "s0d14a82746a7": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L193-L194",
-        "s4660388fcc97": "https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57",
-        "sf9bd235cd56f": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/udp.go#L92-L97",
-        "sf34f64f9f242": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303-L321",
-        "scc414a949e04": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L329-L340",
-        "sc8820327b4be": "https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L229-L235",
-        "s4ee7a04bc22b": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46",
-        "s1ab713dcffdf": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46",
-        "sba4684b85dea": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215",
-        "sb5db43210eff": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37",
-        "sa3237f5cd553": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63",
-        "s9bcd6f277557": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139",
-        "s43d2e3e185b7": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/oidc.go#L281-L287",
-        "sc1e3e11b0618": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L128-L139",
-        "s72151a3006dc": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/token.go#L64-L69",
-        "sc982b975a190": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/util/util.go#L50-L56"
+        "s09030000422a": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/server.go#L112-L116",
+        "s85dce7c56c14": "https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/tcp.go#L76",
+        "s1d991aeee006": "https://github.com/fatedier/frp/blob/v0.72.0/server/service.go#L182-L183",
+        "s959d15a56615": "https://github.com/fatedier/frp/blob/v0.72.0/server/visitor/visitor.go#L49-L57",
+        "sbe6b9105aa7a": "https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/udp.go#L92-L97",
+        "s9f51a3249b0e": "https://github.com/fatedier/frp/blob/v0.72.0/server/service.go#L289-L307",
+        "sf06509e4716f": "https://github.com/fatedier/frp/blob/v0.72.0/server/service.go#L317-L328",
+        "s011587ee9ab7": "https://github.com/fatedier/frp/blob/v0.72.0/server/service.go#L215-L221",
+        "s0cbd427864b6": "https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/stcp.go#L43-L46",
+        "s611fe7dd2c05": "https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/sudp.go#L43-L46",
+        "s83240f2fb530": "https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/proxy.go#L202-L215",
+        "sb9b4fc07642f": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/util/net/listener.go#L25-L37",
+        "s4bc4bedb9a2c": "https://github.com/fatedier/frp/blob/v0.72.0/server/proxy/xtcp.go#L63",
+        "s939e55614f6a": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/nathole/controller.go#L125-L139",
+        "sa66bdab13188": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/oidc.go#L281-L287",
+        "sabb455b48565": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/server.go#L130-L141",
+        "sb112ed616c95": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/token.go#L64-L69",
+        "sf34ab9020639": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/util/util/util.go#L50-L56",
+        "sebaf70b5f00f": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/oidc.go#L132-L152"
+      }
+    },
+    "frpc": {
+      "name": "frpc source",
+      "basis": "v0.72.0",
+      "sources": {
+        "sf4fc148ec2ca": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/common.go#L102-L105"
+      }
+    },
+    "frp-compare": {
+      "name": "frp compare diff",
+      "basis": "v0.71.0...v0.72.0",
+      "sources": {
+        "sd31f2e5a7705": "https://github.com/fatedier/frp/compare/v0.71.0...v0.72.0"
       }
     },
     "tls-min": {
@@ -376,9 +402,17 @@ Claims (full source mapping in the JSON block below):
       "name": "frp documentation",
       "basis": "unknown",
       "sources": {
+        "s7800b0cbd057": "https://gofrp.org/en/docs/",
         "seaee50f5c2ba": "https://gofrp.org/en/docs/reference/server-configures/",
         "s7479bbde986d": "https://gofrp.org/en/docs/features/common/authentication/",
         "sdd126f42c07d": "https://gofrp.org/en/docs/features/common/network/network-tls/"
+      }
+    },
+    "go-oidc": {
+      "name": "go-oidc source",
+      "basis": "v3.21.0",
+      "sources": {
+        "s074c31f14cf8": "https://github.com/coreos/go-oidc/blob/v3.21.0/oidc/verify.go#L248-L257"
       }
     },
     "wg": {
@@ -451,20 +485,22 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "frps-port": {"text": "frps bindPort defaults to 7000.", "components": ["frps"], "sources": ["frps:s89885e642b0b"], "status": "REASONED"},
-    "frp-token": {"text": "Token authentication is the default; set the same long random auth.token on frps and every frpc.", "components": ["frp", "frps"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc"], "status": "REASONED"},
-    "frp-empty": {"text": "Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure.", "components": ["frp", "frps"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc", "frps:sc982b975a190"], "status": "REASONED"},
-    "frp-oidc": {"text": "auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:s43d2e3e185b7"], "status": "REASONED"},
-    "proxy-bind": {"text": "proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0.", "components": ["frps"], "sources": ["frps:s89885e642b0b"], "status": "REASONED"},
-    "proxy-tcp": {"text": "Registered TCP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s2cbb0ac0ce1d"], "status": "REASONED"},
-    "proxy-udp": {"text": "Registered UDP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:sf9bd235cd56f"], "status": "REASONED"},
-    "proxy-http": {"text": "HTTP and HTTPS proxy listeners bind proxyBindAddr.", "components": ["frps"], "sources": ["frps:sf34f64f9f242", "frps:scc414a949e04", "frps:sc8820327b4be"], "status": "REASONED"},
-    "proxy-tcpmux": {"text": "tcpmux proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s0d14a82746a7"], "status": "REASONED"},
-    "proxy-visitors": {"text": "stcp, sudp and xtcp open no listener of their own on frps.", "components": ["frps"], "sources": ["frps:s4660388fcc97", "frps:s4ee7a04bc22b", "frps:s1ab713dcffdf", "frps:sba4684b85dea", "frps:sb5db43210eff", "frps:sa3237f5cd553", "frps:s9bcd6f277557"], "status": "REASONED"},
-    "service-auth": {"text": "frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:s2cbb0ac0ce1d", "frps:sf9bd235cd56f", "frps:sf34f64f9f242", "frps:s0d14a82746a7"], "status": "REASONED"},
+    "frps-port": {"text": "frps bindPort defaults to 7000.", "components": ["frps"], "sources": ["frps:s09030000422a"], "status": "REASONED"},
+    "frp-token": {"text": "Token authentication is the default; set the same long random auth.token on frps and every frpc.", "components": ["frp", "frps"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d", "frps:sabb455b48565", "frps:sb112ed616c95"], "status": "REASONED"},
+    "frp-empty": {"text": "Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure.", "components": ["frp", "frps"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d", "frps:sabb455b48565", "frps:sb112ed616c95", "frps:sf34ab9020639"], "status": "REASONED"},
+    "frp-oidc": {"text": "auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience sets SkipClientIDCheck, under which go-oidc v3.21.0 performs no audience check.", "components": ["frp", "frps", "frp-compare", "go-oidc"], "sources": ["frp:s7479bbde986d", "frps:sa66bdab13188", "frp-compare:sd31f2e5a7705", "frps:sebaf70b5f00f", "go-oidc:s074c31f14cf8"], "status": "REASONED"},
+    "proxy-bind": {"text": "proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0.", "components": ["frps"], "sources": ["frps:s09030000422a"], "status": "REASONED"},
+    "proxy-tcp": {"text": "Registered TCP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s85dce7c56c14"], "status": "REASONED"},
+    "proxy-udp": {"text": "Registered UDP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:sbe6b9105aa7a"], "status": "REASONED"},
+    "proxy-http": {"text": "HTTP and HTTPS proxy listeners bind proxyBindAddr.", "components": ["frps"], "sources": ["frps:s9f51a3249b0e", "frps:sf06509e4716f", "frps:s011587ee9ab7"], "status": "REASONED"},
+    "proxy-tcpmux": {"text": "tcpmux proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s1d991aeee006"], "status": "REASONED"},
+    "proxy-visitors": {"text": "stcp, sudp and xtcp open no listener of their own on frps.", "components": ["frps"], "sources": ["frps:s959d15a56615", "frps:s0cbd427864b6", "frps:s611fe7dd2c05", "frps:s83240f2fb530", "frps:sb9b4fc07642f", "frps:s4bc4bedb9a2c", "frps:s939e55614f6a"], "status": "REASONED"},
+    "service-auth": {"text": "frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:s85dce7c56c14", "frps:sbe6b9105aa7a", "frps:s9f51a3249b0e", "frps:s1d991aeee006"], "status": "REASONED"},
     "tls-default": {"text": "transport.tls.enable defaults true from v0.50.0, encrypting frpc-to-frps traffic.", "components": ["tls-min"], "sources": ["tls-min:sdd126f42c07d"], "status": "REASONED"},
-    "tls-verify": {"text": "frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile.", "components": ["frp"], "sources": ["frp:sdd126f42c07d"], "status": "REASONED"},
+    "tls-verify": {"text": "frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile.", "components": ["frp", "frp-compare"], "sources": ["frp:sdd126f42c07d", "frp-compare:sd31f2e5a7705"], "status": "REASONED"},
     "tls-force": {"text": "Set server transport.tls.force=true to reject clients that do not negotiate TLS.", "components": ["frp"], "sources": ["frp:seaee50f5c2ba", "frp:sdd126f42c07d"], "status": "REASONED"},
+    "tls-system-ca": {"text": "frp v0.72.0 adds the frpc setting transport.tls.useSystemCa for verification against system CAs; its source comment says frpc skips verification when neither it nor trustedCaFile is set.", "components": ["frpc", "frp-compare"], "sources": ["frpc:sf4fc148ec2ca", "frp-compare:sd31f2e5a7705"], "status": "REASONED"},
+    "frp-docs-release": {"text": "The cited gofrp.org pages, as served on 2026-11-05, do not say which frp release they describe and show Last modified October 21, 2026; whether they describe v0.72.0 is not established.", "components": ["frp"], "sources": ["frp:s7800b0cbd057", "frp:seaee50f5c2ba", "frp:s7479bbde986d", "frp:sdd126f42c07d"], "status": "REASONED"},
     "wg-keys": {"text": "WireGuard uses per-peer key pairs, not passwords; generate under umask 077 and share only public keys.", "components": ["wg"], "sources": ["wg:sd41c4b487466"], "status": "REASONED"},
     "wg-endpoint": {"text": "wg set configures wg0 listen-port 51820, private key, peer public key, AllowedIPs and UDP endpoint 203.0.113.10:51820.", "components": ["wg"], "sources": ["wg:sd41c4b487466"], "status": "REASONED"},
     "wg-send": {"text": "AllowedIPs selects the sending peer by destination; scope to the peer subnet, using 0.0.0.0/0 only for a full-tunnel gateway.", "components": ["wg"], "sources": ["wg:sf75d6938d30e"], "status": "REASONED"},
@@ -480,7 +516,7 @@ Claims (full source mapping in the JSON block below):
     "ssh-client": {"text": "GatewayPorts clientspecified honours requested wildcard or loopback binding.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
     "ssh-auth": {"text": "SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
     "ssh-persist": {"text": "Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding.", "components": ["ssh", "autossh-source"], "sources": ["ssh:s1f80cf6ae7f5", "autossh-source:s6398847a2896"], "status": "REASONED"},
-    "verify-token": {"text": "Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc", "frps:sc982b975a190"], "status": "REASONED", "verify": [1]},
+    "verify-token": {"text": "Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:sabb455b48565", "frps:sb112ed616c95", "frps:sf34ab9020639"], "status": "REASONED", "verify": [1]},
     "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "iproute2-docs:s8aa0d96d25e7", "linux-source:sc7cb2448145d", "linux-source:sdfc1a2d0c3cc"], "status": "REASONED", "verify": [2]},
     "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned manual describes ufw show raw as displaying filter, nat, mangle and raw tables using iptables and ip6tables; the pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables. Confirm nothing admits unauthorized external traffic to the tunneled service beyond the intended tunnel or proxy path, for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection.", "components": ["wg", "nft", "ufw-docs", "iproute2-docs", "linux-source", "ufw-source"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b", "ufw-docs:scff3a017f30b", "iproute2-docs:s5d50117b1a36", "linux-source:scd9d50cf72b7", "linux-source:sb02ea8702b2a", "ufw-source:sa61919e3296d", "ufw-source:sf5e201b3987a", "ufw-source:s0b0f73700e57", "ufw-source:s6161b0ad44f0", "ufw-source:s4470c8632bc7", "ufw-source:s1fe29ea7aa5f", "ufw-source:s0dacc2148041"], "status": "REASONED", "verify": [2]},
     "verify-route": {"text": "An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [3]},

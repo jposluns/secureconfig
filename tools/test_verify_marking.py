@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _verify_sections import META_EXCLUDE, verify_sections_text
+from _verify_sections import META_EXCLUDE, counted_guides, verify_sections_text
 from check_verify_marking import gate_parser, scan_guide
 
 HAS_PARSER = gate_parser() is not None
@@ -601,6 +601,26 @@ def main():
     suite = (TOOLS / "run_all_checks.sh").read_text(encoding="utf-8")
     excluded = re.search(r"    (CONTRIBUTING\.md\|.*?)\) return 0", suite)[1]
     check("guide set matches suite", set(excluded.split("|")) == META_EXCLUDE)
+
+    # One count definition. The suite's guide-counts section once globbed *.md, which takes a
+    # directory named *.md and skips a dot-named file, and guides() did the reverse; both now
+    # read counted_guides(), as scripts/build-plugin.sh and check_generated_committed.py do.
+    with tempfile.TemporaryDirectory(prefix="guide-count-test-") as directory:
+        root = Path(directory)
+        for name in ("a.md", "README.md", "CLAUDE.md", ".hidden.md", "notes.txt"):
+            (root / name).write_text("x\n", encoding="utf-8")
+        (root / "dir.md").mkdir()
+        check("counted guides skip dot-named files and directories",
+              counted_guides(root) == ["a.md"])
+        listed = subprocess.run([sys.executable, "-B", str(TOOLS / "_verify_sections.py"),
+                                 str(root)], capture_output=True, text=True, encoding="utf-8")
+        check("module lists counted guides", (listed.returncode, listed.stdout) == (0, "a.md\n"))
+    section = suite.split("# section: guide-counts", 1)[1].split("# section: ", 1)[0]
+    check("guide-counts reads counted guides",
+          "guide_list=$(python3 tools/_verify_sections.py)" in section
+          and "for f in *.md" not in section)
+    build = (TOOLS.parent / "scripts/build-plugin.sh").read_text(encoding="utf-8")
+    check("build-plugin counts counted guides", "len(counted_guides(" in build)
     print(f"  ok    {count} Verify-marking fixture cases")
     return 0
 

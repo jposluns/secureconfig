@@ -5,6 +5,7 @@ belong to that root, including headings that happen to contain "verify".
 Legacy parenthesized status suffixes remain section titles, not declarations.
 """
 import re
+import sys
 from pathlib import Path
 
 from _markdown import Fences
@@ -80,10 +81,25 @@ HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
 
 
 def guides(root: Path):
-    """Yield each root-level guide path, sorted, meta files excluded."""
-    for path in sorted(p for p in root.iterdir() if p.is_file() and p.suffix == ".md"):
+    """Yield each root-level guide path, sorted, meta files excluded.
+
+    A guide is a regular file at the root whose name ends in ".md" and does not start with ".",
+    as the shell glob *.md matches it, so neither a dot-named file nor a directory is a guide.
+    """
+    for path in sorted(p for p in root.iterdir()
+                       if p.suffix == ".md" and not p.name.startswith(".") and p.is_file()):
         if path.name not in META_EXCLUDE:
             yield path
+
+
+def counted_guides(root: Path):
+    """The names of the guides that README.md and SKILL.md count: guides() less README.md.
+
+    The guide-counts gate in tools/run_all_checks.sh reads this list by running this module,
+    and scripts/build-plugin.sh and tools/check_generated_committed.py call this function, so
+    the three counts have one definition.
+    """
+    return [path.name for path in guides(root) if path.name != "README.md"]
 
 
 def atx_headings(lines):
@@ -125,3 +141,10 @@ def verify_sections_text(text: str) -> str:
         "\n".join([heads[start][1], *lines[start + 1:end]])
         for start, end in verify_ranges(heads)
     )
+
+
+if __name__ == "__main__":
+    # `python3 tools/_verify_sections.py [ROOT]` prints counted_guides(ROOT), one name per line,
+    # for the shell gates; ROOT defaults to the current directory.
+    for name in counted_guides(Path(sys.argv[1] if len(sys.argv) > 1 else ".")):
+        print(name)
