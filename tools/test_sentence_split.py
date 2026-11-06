@@ -96,6 +96,26 @@ class Units(unittest.TestCase):
         self.assertEqual(guide("One.\r\nTwo.\r\n"), [(1, "One."), (2, "Two.")])
 
 
+class IndentedNumberedItems(unittest.TestCase):
+    """A "2." indented 4 spaces on a paragraph continuation line, outside a list item or in
+    one whose text starts at column 4 or less (QA round 1 on #1240). CommonMark reads it as
+    paragraph text. In the inputs pinned here, the splitter starts a new unit there and does
+    not count "2.", but shows the same text, so the module docstring does not list them.
+    Item 13 of the module docstring lists examples in which a later "3." indented less than
+    column 7 after such a line is read as a sibling item and hides text that CommonMark shows
+    (QA round 2 on #1240), and KnownDivergences pins them."""
+
+    def test_indented_numbered_item_starts_a_unit(self):
+        self.assertEqual(guide("Alpha\n    2. Beta\n"), [(1, "Alpha"), (2, "Beta")])
+        for first, marker, head in (("Para", "    2.", "Para"), ("> Para", ">     2.", "Para"),
+                                    ("- a", "    2.", "a"), ("10. a", "    2.", "a")):
+            with self.subTest(first=first):
+                self.assertEqual(guide(f"{first}\n{marker} <!-- c\n\nMore.\n"),
+                                 [(1, head), (2, "<!-- c"), (4, "More.")])
+                self.assertEqual(guide(f"{first} `x\n{marker} b <!-- c --> `\n"),
+                                 [(1, f"{head} `x"), (2, "b <!-- c --> `")])
+
+
 class Boundaries(unittest.TestCase):
     def test_each_mark_before_each_opener(self):
         for mark in ".?!":
@@ -473,7 +493,7 @@ class EmptiedLines(unittest.TestCase):
 
 class KnownDivergences(unittest.TestCase):
     """Layouts the module docstring lists as known to differ from CommonMark, pinned so that a
-    change in them is seen (QA rounds 2 and 3 on #1235). Each expected value is this scanner's
+    change in them is seen (QA rounds 2 to 7 on #1235). Each expected value is this scanner's
     reading, not CommonMark's."""
 
     def test_link_destination_and_title_are_paragraph_text(self):
@@ -507,6 +527,99 @@ class KnownDivergences(unittest.TestCase):
                          [(1, "a"), (3, "<!-- HIDL"), (5, "x -->")])
         self.assertEqual(guide("10. a\n    <!-- HIDW\n\n    more -->\n"),
                          [(1, "a <!-- HIDW"), (4, "more -->")])
+
+    def test_indented_block_quote_marker_ends_a_paragraph(self):
+        # Item 5: CommonMark reads each "    >" line as paragraph text, so it pairs the code
+        # span and shows "<!-- c -->" as code, and it shows "<!-- x" and "More.".
+        self.assertEqual(guide("Para `x\n    > b <!-- c --> `\n"), [(1, "Para `x b  `")])
+        self.assertEqual(guide("Para\n    > <!-- x\n\nMore.\n"), [(1, "Para")])
+        self.assertEqual(guide("Para\n    > <!-- x\n\n-->\nMore.\n"),
+                         [(1, "Para"), (5, "More.")])
+
+    def test_numbered_item_after_a_block_quote_paragraph_continues_it(self):
+        # Item 11: CommonMark starts a list at the "2." line or the lone marker, so the code span
+        # does not pair and "<!-- c -->" is hidden, "<!-- x" and "b --> c." are text, and the
+        # "<!-- x" after "2." opens a comment block in the new item.
+        for marker in ("2.", "2)", "10."):
+            with self.subTest(marker=marker):
+                self.assertEqual(guide(f"> Para `x\n{marker} b <!-- c --> `\n"),
+                                 [(1, "Para `x"), (2, "b <!-- c --> `")])
+        self.assertEqual(guide(">> Para `x\n2. b <!-- c --> `\n"),
+                         [(1, "Para `x"), (2, "b <!-- c --> `")])
+        for marker in ("*", "1.", "2."):
+            with self.subTest(marker=marker):
+                self.assertEqual(guide(f"> Para `x\n{marker}\nb <!-- c --> `\n"),
+                                 [(1, "Para `x"), (3, "b <!-- c --> `")])
+        self.assertEqual(guide("> Para <!-- x\n2. b --> c.\n"), [(1, "Para c.")])
+        self.assertEqual(guide("> Para\n2. <!-- x\n\nMore.\n"),
+                         [(1, "Para"), (2, "<!-- x"), (4, "More.")])
+
+    def test_marker_in_an_indented_code_block_opens_a_comment_block(self):
+        # Item 12: CommonMark shows the code block and "Shown.".
+        for marker in (">", "-", "1.", "2.", "> -"):
+            with self.subTest(marker=marker):
+                self.assertEqual(guide(f"Para.\n\n    {marker} <!-- x\n\nShown.\n"),
+                                 [(1, "Para.")])
+        for marker in (">", "-", "1.", "> -"):
+            with self.subTest(marker=marker, after="code"):
+                self.assertEqual(guide(f"Para.\n\n    code\n    {marker} <!-- x\n\nShown.\n"),
+                                 [(1, "Para."), (3, "code")])
+        # After a code line, "    2. <!--" opens no comment block, and "<!-- x" is text.
+        self.assertEqual(guide("Para.\n\n    code\n    2. <!-- x\n\nShown.\n"),
+                         [(1, "Para."), (3, "code"), (4, "<!-- x"), (6, "Shown.")])
+        self.assertEqual(guide("Para.\n\n    code\n    > <!-- x\n    more\n\nShown.\n"),
+                         [(1, "Para."), (3, "code")])
+        # A "-->" on the next line, or after a blank line, ends the block.
+        self.assertEqual(guide("Para.\n\n    > <!-- x\n    -->\nShown.\n"),
+                         [(1, "Para."), (5, "Shown.")])
+        self.assertEqual(guide("Para.\n\n    > <!-- x\n\n-->\nShown.\n"),
+                         [(1, "Para."), (6, "Shown.")])
+
+    def test_item_indentation_is_read_after_quote_markers_with_a_tab_as_one_column(self):
+        # Item 13: CommonMark reads each "2." line as paragraph text, so it shows "<!-- c" and
+        # "More.", and it pairs the code span and shows "<!-- c -->" as code.
+        forms = [("- a", "\t2.", "a"), ("10. a", "\t2.", "a"), ("10. a", "\t2)", "a"),
+                 ("100. a", "    2.", "a"), ("1.   a", "    2.", "a"),
+                 ("- > Para", "  > 2.", "> Para"), ("1. > Para", "   > 2.", "> Para")]
+        for first, marker, head in forms:
+            with self.subTest(first=first, marker=marker):
+                self.assertEqual(guide(f"{first}\n{marker} <!-- c\n\nMore.\n"), [(1, head)])
+                self.assertEqual(guide(f"{first}\n{marker} <!-- c\n\n-->\nMore.\n"),
+                                 [(1, head), (5, "More.")])
+                self.assertEqual(guide(f"{first} `x\n{marker} b <!-- c --> `\n"),
+                                 [(1, f"{head} `x"), (2, "b  `")])
+        # By contrast, these are read as paragraph text, as CommonMark reads them.
+        for first, marker in (("- a", "\t\t2."), ("- a", "    2."), ("10. a", "    2.")):
+            with self.subTest(first=first, marker=marker):
+                self.assertEqual(guide(f"{first}\n{marker} <!-- c\n\nMore.\n"),
+                                 [(1, "a"), (2, "<!-- c"), (4, "More.")])
+        # Item 13, after a "2." indented 4 spaces (QA round 2 on #1240): the splitter takes
+        # that line's text column, 7, for the "3." line, and CommonMark reads both as
+        # paragraph text, so it shows "<!-- c" and "More.", and it pairs the code span.
+        forms = [("Para", "    2. a", "3.", "Para", "a"),
+                 ("Para", "    2. a", "      3.", "Para", "a"),
+                 ("10. a", "    2. b", "    3.", "a", "b"),
+                 ("- a", "    2. b", "  3.", "a", "b"),
+                 ("> Para", ">     2. a", "> 3.", "Para", "a")]
+        for first, second, third, head, text in forms:
+            with self.subTest(first=first, second=second, third=third):
+                self.assertEqual(guide(f"{first}\n{second}\n{third} <!-- c\n\nMore.\n"),
+                                 [(1, head), (2, text)])
+                self.assertEqual(guide(f"{first}\n{second}\n{third} <!-- c\n\n-->\nMore.\n"),
+                                 [(1, head), (2, text), (6, "More.")])
+                self.assertEqual(guide(f"{first}\n{second} `x\n{third} b <!-- c --> `\n"),
+                                 [(1, head), (2, f"{text} `x"), (3, "b  `")])
+        # By contrast, with the "3." indented 7 columns, both readers show the text.
+        for first, second, third, head, text in (
+                ("Para", "    2. a", "       3.", "Para", "a"),
+                ("10. a", "    2. b", "       3.", "a", "b"),
+                ("- a", "    2. b", "       3.", "a", "b"),
+                ("> Para", ">     2. a", ">        3.", "Para", "a")):
+            with self.subTest(first=first, second=second, third=third):
+                self.assertEqual(guide(f"{first}\n{second}\n{third} <!-- c\n\nMore.\n"),
+                                 [(1, head), (2, text), (3, "<!-- c"), (5, "More.")])
+                self.assertEqual(guide(f"{first}\n{second} `x\n{third} b <!-- c --> `\n"),
+                                 [(1, head), (2, f"{text} `x"), (3, "b <!-- c --> `")])
 
 
 class Command(unittest.TestCase):
