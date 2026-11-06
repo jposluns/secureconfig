@@ -582,14 +582,16 @@ echo "== README's stated guide and category counts match the corpus =="
 # README.md's "## What this is" section states the corpus size in prose ("that is N guides across
 # the M categories indexed below"), and the gates above check category lists and membership but not
 # those numerals. The count sentence is matched in any letter case, with any whitespace between
-# words, after HTML comments are stripped. Only a real comment is stripped, as the pinned parser
-# below reads README.md: a "<!--" on a line of an HTML block, one that opens an inline HTML
-# comment (replacing it changes the inline comments the parser finds), and one in text the
-# parser never reads (replacing it changes nothing the parser makes, as in a table cell past the
-# header's columns) are each removed through the first "-->" after it, as before. A "<!--" the
-# parser reads as literal text (in code, a link destination or title, an inline HTML tag, or
-# after a backslash) is text a reader sees, so it hides nothing; a code-blind strip once removed
-# a count sentence lying between such a "<!--" and a later "-->". The self-test,
+# words, after HTML comment blocks are removed. README.md is read as SKILL.md is, through
+# blank_comment_blocks() in tools/_verify_sections.py and the pinned parser below: it may hold
+# HTML only as HTML blocks outside any list item or block quote, each one whole HTML comment,
+# and each is removed by blanking exactly the lines the parser maps it to once they are confirmed
+# to equal its text. Any other raw HTML, an inline comment or a "<!--" in a tag's attribute
+# included, fails the gate in one line naming the first line of the block, or the table row,
+# that holds it, since raw HTML is not read and so could hide or show text unseen. A "<!--" the
+# parser does not read as HTML (in code, a link destination or title, a reference definition, or
+# after a backslash) is kept as text, so it hides nothing; a code-blind strip once removed a
+# count sentence lying between such a "<!--" and a later "-->". The self-test,
 # tools/test_guide_counts.py, runs this section on fixture READMEs first.
 # The "## What this is" section must hold exactly one
 # match, and any match elsewhere in README.md fails, so a stale copy can neither mask a wrong count
@@ -623,10 +625,11 @@ guide_files=()
 guide_list=$(python3 tools/_verify_sections.py) || bad "tools/_verify_sections.py could not list the root guides"
 [ -z "$guide_list" ] || mapfile -t guide_files <<< "$guide_list"
 if count_diff=$(python3 - "${guide_files[@]}" <<'PY'
-import bisect, re, sys
+import re, sys
 
 sys.path.insert(0, "tools")
 from check_verify_marking import ParserUnavailable, gate_parser
+from _verify_sections import RawHtml, blank_comment_blocks
 
 guides = sys.argv[1:]
 raw = open("README.md", encoding="utf-8").read()
@@ -647,71 +650,15 @@ except Exception as exc:  # noqa: BLE001  any failure to load the parser fails t
           "tools/requirements-gates.txt and the installed markdown-it-py and mdurl: "
           f"{cause}")
     sys.exit(1)
-
-
-def inline_comments(tokens):
-    # The inline HTML comments the parser read, children (image alt text) included, in order.
-    found = []
-    for token in tokens:
-        if token.type == "html_inline" and token.content.startswith("<!--"):
-            found.append(token.content)
-        if token.children:
-            found.extend(inline_comments(token.children))
-    return found
-
-
-def read(tokens):
-    # What the parser made of the text: every token's type, content, info and attributes, and
-    # its children's, less an inline block's raw source, which holds all of its text read or not.
-    return [(t.type, None if t.type == "inline" else t.content, t.info,
-             sorted((t.attrs or {}).items()), read(t.children or [])) for t in tokens]
-
-
-def without_comments(raw):
-    # raw less each comment, from its "<!--" through the first "-->" after it, exactly as
-    # re.sub(r"<!--.*?-->", "", raw, flags=re.S) removed it, but for each "<!--" the parser reads
-    # as literal text, which stays. The parser reads "\r\n" and "\r" as "\n" and NUL as U+FFFD,
-    # so the same is done here and its line numbers match these lines; no "<!--" spans a line
-    # break, so each is found by line and column.
-    if "<!--" not in raw:
-        return raw
-    raw_starts = [0] + [m.end() for m in re.finditer(r"\r\n?|\n", raw)]
-    text = re.sub(r"\r\n?", "\n", raw).replace("\0", chr(0xFFFD))
-    starts = [0] + [m.end() for m in re.finditer(r"\n", text)]
-    tokens = parser.parse(text)
-    block_lines = {n for t in tokens if t.type == "html_block" for n in range(*t.map)}
-    inline, whole = inline_comments(tokens), read(tokens)
-
-    def real(at):
-        # True unless the parser reads this "<!--" as literal text. "<!-" then U+E000 opens
-        # nothing, so the probe ends a comment only where one opened; a probe that changes
-        # nothing the parser makes lies in text it never reads, such as a table cell past the
-        # header's columns, which is stripped as before.
-        line = bisect.bisect_right(raw_starts, at) - 1
-        if line in block_lines:
-            return True
-        spot = starts[line] + at - raw_starts[line]
-        probed = parser.parse(text[:spot] + "<!-" + chr(0xE000) + text[spot + 4:])
-        return inline_comments(probed) != inline or read(probed) == whole
-
-    kept, done, at = [], 0, raw.find("<!--")
-    while at != -1:
-        if not real(at):
-            at = raw.find("<!--", at + 1)
-            continue
-        end = raw.find("-->", at + 4)
-        if end == -1:
-            break
-        kept.append(raw[done:at])
-        done = end + 3
-        at = raw.find("<!--", done)
-    return "".join(kept) + raw[done:]
-
-
-readme = without_comments(raw)
+# The whole HTML comment blocks blanked, as SKILL.md's are; any other raw HTML fails in one line.
+try:
+    lines = blank_comment_blocks(raw, parser, "README.md")
+except RawHtml as exc:
+    print(f"README.md: {exc}")
+    sys.exit(1)
+readme = "\n".join(lines)
 tokens = parser.parse(readme)
-lines = re.sub(r"\r\n?", "\n", readme).split("\n")
-heads = [(t.tag, t.level, t.map, tokens[i + 1].content.strip())
+heads =[(t.tag, t.level, t.map, tokens[i + 1].content.strip())
          for i, t in enumerate(tokens) if t.type == "heading_open"]
 
 

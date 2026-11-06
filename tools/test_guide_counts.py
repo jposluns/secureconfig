@@ -7,13 +7,17 @@ beside a parser lock, then runs the section's own text, from its guide_files=() 
 section, with bash in that tree and python3 bound to this interpreter, and checks the ok or FAIL
 line it prints.
 
-The README cases pin how HTML comments are read. A real comment, an HTML block or an inline HTML
-comment as the pinned parser reads it, or one in text the parser drops unread (a table cell past
-the header's columns), is still stripped before the count sentence is matched, so a stale copy
-inside one neither counts nor fails. A "<!--" the parser reads as literal text (in a code span, a
-fenced or indented code block, a link destination, an inline HTML tag's attribute or after a
-backslash) is text and is kept, so a count sentence between it and a later "-->" is still read,
-and a visible stale copy inside a code span is found. The README cases need the pinned parser;
+The README cases pin how HTML is read, by blank_comment_blocks() in tools/_verify_sections.py, the
+rule SKILL.md's count is read by. A whole HTML comment that stands as an HTML block of its own
+outside any list item or block quote is removed before the count sentence is matched, so a stale
+copy inside one neither counts nor fails. Any other raw HTML is refused in one line naming the
+first line of the block that holds it: an inline comment, a comment in a block quote, a comment
+inside another HTML block, an inline HTML tag, and a "<!--" in a quoted attribute of a tag that
+opens an HTML block. A "<!--" the parser does not read as HTML (in a code span, a fenced or
+indented code block, a link destination, a reference definition or after a backslash) is kept as
+text, so a count sentence between it and a later "-->" is still read, and a stale copy there is
+found. So is one in a table cell past the header's columns, which the parser drops unread, since
+nothing is removed there. The README cases need the pinned parser;
 where it is absent or another version they are skipped and counted in a "skip" line naming the
 reason. One case runs on every host: a copy of the tools whose lock pins a markdown-it-py version
 other than the installed one must fail the gate in one line naming the parser.
@@ -36,6 +40,15 @@ SENTENCE = "that is 2 guides across the 1 categories indexed below"
 STALE = "that is 9 guides across the 1 categories indexed below"
 OK = "  ok    README.md's stated counts match the corpus: 2 guides across 1 categories\n"
 FAIL = "  FAIL  README.md's stated guide or category count does not match the corpus\n"
+ELSEWHERE = ("states its counts as 'that is N guides across the M categories indexed below' 1 "
+             "more time(s) outside '## What this is'")
+
+
+def refused(line):
+    """The gate's line for raw HTML in the block, or table row, starting at line."""
+    return (f"README.md: raw HTML in the block, or the table row, starting at line {line} is not "
+            "a whole HTML comment in an HTML block of its own outside any list item or block "
+            "quote, the only HTML README.md may hold")
 
 
 def parser_problem():
@@ -96,24 +109,57 @@ KEPT = (
      readme(f"<!-- {STALE} -->\n\nThe corpus, {SENTENCE}."), True, OK),
     ("a multi-line comment block hides a stale copy elsewhere",
      readme(f"The corpus, {SENTENCE}.", f"\n<!--\n{STALE}\n-->\n"), True, OK),
-    ("an inline comment inside the sentence is removed",
-     readme("The corpus, that is 2 guides <!-- a note --> across the 1 categories indexed "
-            "below."), True, OK),
-    ("an inline comment hides a stale copy elsewhere",
-     readme(f"The corpus, {SENTENCE}.", f"\n## Notes\n\nOld text <!-- {STALE} --> ends.\n"),
-     True, OK),
-    ("a comment inside an HTML block is removed",
-     readme(f"The corpus, {SENTENCE}.",
-            f"\n<details>\n<summary>Old</summary>\n<!-- {STALE} -->\n</details>\n"), True, OK),
-    ("a comment in a table cell past the header's columns, which the parser drops, is removed",
-     readme(f"The corpus, {SENTENCE}.",
-            f"\n## Notes\n\n| A |\n| --- |\n| shown | <!-- {STALE} --> |\n"), True, OK),
-    ("a real comment after a code-span opener is still removed",
-     readme(f"Write `<!--` to open one. <!-- {STALE} --> The corpus, {SENTENCE}."), True, OK),
     ("CRLF line endings",
      readme(f"<!-- {STALE} -->\n\nThe corpus, {SENTENCE}.").replace("\n", "\r\n"), True, OK),
     ("a stale count still fails",
      readme(STALE + "."), False, "README.md states 9 guides but the root has 2 guides"),
+    ("a stale count beside a comment block still fails",
+     readme(f"<!-- a note -->\n\nThe corpus, {STALE}."), False,
+     "README.md states 9 guides but the root has 2 guides"),
+)
+# Each of these passed before this rule, which now refuses the raw HTML in it (an inline comment,
+# a comment in a block quote or inside another HTML block, an inline HTML tag) or, for the table
+# cell, finds the stale copy, since nothing in text the parser drops is removed.
+CHANGED = (
+    ("an inline comment inside the sentence is refused",
+     readme("The corpus, that is 2 guides <!-- a note --> across the 1 categories indexed "
+            "below."), False, refused(5)),
+    ("an inline comment holding a stale copy elsewhere is refused",
+     readme(f"The corpus, {SENTENCE}.", f"\n## Notes\n\nOld text <!-- {STALE} --> ends.\n"),
+     False, refused(18)),
+    ("a comment inside an HTML block is refused",
+     readme(f"The corpus, {SENTENCE}.",
+            f"\n<details>\n<summary>Old</summary>\n<!-- {STALE} -->\n</details>\n"), False,
+     refused(16)),
+    ("a stale copy in a comment in a table cell past the header's columns is found",
+     readme(f"The corpus, {SENTENCE}.",
+            f"\n## Notes\n\n| A |\n| --- |\n| shown | <!-- {STALE} --> |\n"), False, ELSEWHERE),
+    ("an inline comment after a code-span opener is refused",
+     readme(f"Write `<!--` to open one. <!-- {STALE} --> The corpus, {SENTENCE}."), False,
+     refused(5)),
+    ("inline HTML tag attributes holding an opener and a closer are refused",
+     readme(f'The corpus, <span title="<!--">x</span> {SENTENCE} <span title="-->">y</span>.'),
+     False, refused(5)),
+    ("a comment block in a block quote is refused",
+     readme(f"The corpus, {SENTENCE}.", f"\n> <!-- {STALE} -->\n"), False, refused(16)),
+)
+# The round 1 QA inputs on #1242, each of which passed with a visible stale copy, or hid the
+# visible sentence, under the token-comparison classifier this rule replaced. A "<!--" in a
+# quoted attribute of a tag that opens an HTML block is raw HTML, so it is refused; one in an
+# unused reference definition's destination is not HTML, so nothing is removed and the stale
+# copy after it is found.
+REVIEWED = (
+    ("a div block whose attribute holds an opener is refused",
+     readme(f"The corpus, {SENTENCE}.", f'\n<div title="<!--">\n\n{STALE}\n\n-->\n'), False,
+     refused(16)),
+    ("a span block whose attribute holds an opener is refused",
+     readme(f"The corpus, {SENTENCE}.", f'\n<span title="<!--">\n\n{STALE}\n\n-->\n'), False,
+     refused(16)),
+    ("a span block whose attribute holds an opener before the sentence is refused",
+     readme(f'<span title="<!--">\n\nThe corpus, {SENTENCE}.\n\n-->'), False, refused(5)),
+    ("an opener in an unused reference definition hides no stale copy",
+     readme(f"The corpus, {SENTENCE}.",
+            f"\n[unused]: https://example.com/<!--\n\n{STALE}\n\n-->\n"), False, ELSEWHERE),
 )
 # Each of these failed at ffffa1c3567c5da673989a9a87ce5cbe5b7d961c, whose code-blind strip
 # removed text from a "<!--" that is not a comment through the next "-->".
@@ -129,13 +175,9 @@ FIXED = (
     ("link destinations holding an opener and a closer",
      readme(f"See [the opener](https://example.com/<!--); {SENTENCE}; see "
             "[the closer](https://example.com/-->)."), True, OK),
-    ("inline HTML tag attributes holding an opener and a closer",
-     readme(f'The corpus, <span title="<!--">x</span> {SENTENCE} <span title="-->">y</span>.'),
-     True, OK),
     ("a visible stale copy in a code span is found",
      readme(f"The corpus, {SENTENCE}.", f"\n## Notes\n\n`<!-- {STALE} -->`\n"), False,
-     "states its counts as 'that is N guides across the M categories indexed below' 1 more "
-     "time(s) outside '## What this is'"),
+     ELSEWHERE),
 )
 
 
@@ -153,7 +195,7 @@ def other_lock():
 def main():
     failures, count, skipped = [], 0, 0
     problem = parser_problem()
-    for label, text, passes, fragment in KEPT + FIXED:
+    for label, text, passes, fragment in KEPT + CHANGED + REVIEWED + FIXED:
         if problem is not None:
             skipped += 1
             continue

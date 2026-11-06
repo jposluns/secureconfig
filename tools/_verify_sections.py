@@ -106,7 +106,13 @@ SKILL_COUNT = re.compile(r"This skill carries ([0-9]+) short guides")
 HTML_SPACE = " \t\n\f\r"
 
 
-class SkillHtml(ValueError):
+class RawHtml(ValueError):
+    """A Markdown file holds HTML other than whole HTML comments that stand as HTML blocks of their
+    own outside any list item or block quote, or such a comment whose source lines are not its
+    text as the parser read it, so blank_comment_blocks() cannot tell which text it hides."""
+
+
+class SkillHtml(RawHtml):
     """SKILL.md's front matter holds "<!--", or its body holds HTML other than whole HTML comments
     that stand as HTML blocks of their own outside any list item or block quote, or such a comment
     whose source lines are not its text as the parser read it, so skill_counts() cannot find the
@@ -126,6 +132,60 @@ def whole_comment(raw):
         return False
     ends = [at for at in (text.find("-->", 4), text.find("--!>", 4)) if at >= 0]
     return bool(ends) and min(ends) == len(text) - 3
+
+
+def blank_comment_blocks(text, parser, name, first_line=1, error=RawHtml):
+    """text's lines, with each whole HTML comment block blanked, as parser reads text.
+
+    parser is the pinned CommonMark parser, gate_parser(required=True) in
+    tools/check_verify_marking.py, and only which lines are a comment is taken from it: a "<!--"
+    in code, in a link destination, title or label, or after a backslash is not an HTML token,
+    so it hides nothing and stays. Raw HTML, which the parser passes through unread, is not read.
+    text may hold HTML only as HTML blocks at nesting level 0, so in no list item or block quote,
+    each of them one whole HTML comment as whole_comment() accepts it. Any inline HTML token,
+    children included, any HTML block in a list item or block quote, and any HTML block that is
+    not one whole comment raise error, naming the first line of the block, or the table row, that
+    holds it, not the line of the HTML itself. Each accepted comment is removed by blanking
+    exactly the source lines the parser maps it to, after confirming that those lines, joined, are
+    the token's text, or error is raised. "\\r\\n" and "\\r" are read as "\\n" and NUL as U+FFFD,
+    as the parser reads them. name is the file's name in error's message, and first_line is the
+    file's line number of text's first line.
+    """
+    # The parser reads "\r\n" and "\r" as "\n" and NUL as U+FFFD before it parses, so the same is
+    # done here, and its line numbers and token text then match these lines.
+    text = re.sub(r"\r\n?", "\n", text).replace("\0", "�")
+    lines = text.split("\n")
+
+    def walk(tokens, block):
+        for token in tokens:
+            if token.type == "html_inline" or (token.type == "html_block" and (
+                    token.level != 0 or not whole_comment(token.content))):
+                # An inline token's map is its block's lines, and a table cell's is its row's.
+                where = token.map if token.type == "html_block" else block
+                raise error(f"raw HTML in the block, or the table row, starting at line "
+                            f"{first_line + where[0]} is not a whole HTML comment in an HTML "
+                            "block of its own outside any list item or block quote, the only "
+                            f"HTML {name} may hold")
+            if token.type == "html_block":
+                start, end = token.map
+                # The block's text is its lines, the last with its line ending when one follows.
+                source = "\n".join(lines[start:end]) + ("\n" if end < len(lines) else "")
+                # No input is known to reach this refusal: at nesting level 0 no list item or
+                # block quote has moved a line's start, and the parser's html_block rule takes its
+                # text with getLines() at indent 0, which cuts each line from the source as it
+                # stands. It stays so that a parser that read these lines otherwise would fail
+                # closed rather than blank other text, and it has no test case for that reason.
+                if source != token.content:
+                    raise error(f"the HTML comment block starting at line "
+                                f"{first_line + start} is not its source lines as written, "
+                                "so it cannot be removed")
+                lines[start:end] = [""] * (end - start)
+            if token.children:
+                # An image's alt text has no map, so its image's block is named.
+                walk(token.children, token.map or block)
+
+    walk(parser.parse(text), [0, len(lines)])
+    return lines
 
 
 def front_matter(text):
@@ -181,40 +241,9 @@ def skill_counts(text):
                         "parsed, so no comment in it is removed, and SKILL.md may hold \"<!--\" "
                         "only in its body")
     first_line = head.count("\n") + 2 if head else 1
-    # The parser reads "\r\n" and "\r" as "\n" and NUL as U+FFFD before it parses, so the same is
-    # done here, and its line numbers and token text then match these lines.
-    body = re.sub(r"\r\n?", "\n", body).replace("\0", "\ufffd")
-    lines = body.split("\n")
-
-    def walk(tokens, block):
-        for token in tokens:
-            if token.type == "html_inline" or (token.type == "html_block" and (
-                    token.level != 0 or not whole_comment(token.content))):
-                # An inline token's map is its block's lines, and a table cell's is its row's.
-                where = token.map if token.type == "html_block" else block
-                raise SkillHtml(f"raw HTML in the block, or the table row, starting at line "
-                                f"{first_line + where[0]} is not a whole HTML comment in an HTML "
-                                "block of its own outside any list item or block quote, the only "
-                                "HTML SKILL.md may hold")
-            if token.type == "html_block":
-                start, end = token.map
-                # The block's text is its lines, the last with its line ending when one follows.
-                source = "\n".join(lines[start:end]) + ("\n" if end < len(lines) else "")
-                # No input is known to reach this refusal: at nesting level 0 no list item or
-                # block quote has moved a line's start, and the parser's html_block rule takes its
-                # text with getLines() at indent 0, which cuts each line from the source as it
-                # stands. It stays so that a parser that read these lines otherwise would fail
-                # closed rather than blank other text, and it has no test case for that reason.
-                if source != token.content:
-                    raise SkillHtml(f"the HTML comment block starting at line "
-                                    f"{first_line + start} is not its source lines as written, "
-                                    "so it cannot be removed")
-                lines[start:end] = [""] * (end - start)
-            if token.children:
-                # An image's alt text has no map, so its image's block is named.
-                walk(token.children, token.map or block)
-
-    walk(parser.parse(body), [0, len(lines)])
+    # The body's comment blocks, and the refusal of any other HTML, as README.md's guide-counts
+    # gate in tools/run_all_checks.sh reads them too.
+    lines = blank_comment_blocks(body, parser, "SKILL.md", first_line, SkillHtml)
     rest = (head + "\n" if head else "") + "\n".join(lines)
     # SKILL_COUNT holds no newline, so each match in rest as it stands lies on one line.
     return SKILL_COUNT.findall(re.sub(r"\s+", " ", rest)), SKILL_COUNT.findall(rest)
