@@ -23,12 +23,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
-VERSION = "1.9.2"
+VERSION = "1.11.0"
 UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # The archive's digest in https://posluns.ca/baseline/SHA256SUMS, and the digest of the version's
-# SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.9.2" row, commit 45f8317, 2026-11-05).
-ARCHIVE_SHA256 = "c9d369cab7bb10182755b1f5f4c2788b2bc40547e751206e037004108816cfed"
-SUMS_SHA256 = "d6f9875b12270be2e8661fb624872ea8f104d02ee4582efd433342053885f0f4"
+# SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.11.0" row, commit 9e0f6a4, 2026-11-06).
+ARCHIVE_SHA256 = "71462e0ad91ecc29372fdfebff6dcf70666ec59df9571d43d44cc74fc518dc50"
+SUMS_SHA256 = "1586eed5560b52436c0983fcecad1c6b3b3f576a8cc28ea51765904f8f0674da"
 # Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
 # The runtime and licence files the site publishes. The reference pages, tools/measure.js,
@@ -47,7 +47,7 @@ RUNTIME = (
     "logos/secureconfig.svg", "logos/secureconfig-mono.svg", "logos/secureconfig-favicon.svg",
     "logos/secureconfig-card.svg", "logos/secureconfig-touch.png",
     "logos/opfiles.svg", "logos/auditthis.svg", "logos/cleanlanguage.svg", "logos/aiqt.svg",
-    "logos/grclibrary.svg",
+    "logos/grclibrary.svg", "logos/vendorreplies.png",
     "marks/NOTICE.md", "marks/github-invertocat-black.svg", "marks/github-invertocat-white.svg",
     "marks/linkedin-in-bug.png", "marks/orcid-id.svg",
 )
