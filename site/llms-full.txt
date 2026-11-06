@@ -2206,7 +2206,7 @@ serverPort = 7000
 auth.token = "REPLACE_WITH_LONG_RANDOM_VALUE"
 ```
 
-frp also supports `auth.method = "oidc"`: frpc obtains a token from an OIDC provider through the Client Credentials Grant and frps validates it by issuer and audience, authenticating frpc to frps instead of using a shared token, useful for centralizing frp auth behind an identity provider. Audience validation is conditional, though: frps skips it when `auth.oidc.audience` is left empty (it sets the token verifier's `SkipClientIDCheck` in that case), so set a nonempty `auth.oidc.audience` and the intended `auth.oidc.issuer` explicitly rather than assuming that selecting `auth.method = "oidc"` binds the token to your server. In go-oidc v3.21.0, the ID token verifier performs no audience check when `SkipClientIDCheck` is set, and otherwise requires a nonempty client ID that the token's audience contains. GitHub's compare diff from frp v0.71.0 to v0.72.0 shows frp's `go.mod` moving `github.com/coreos/go-oidc/v3` from v3.18.0 to v3.21.0.
+frp also supports `auth.method = "oidc"`: frpc obtains a token from an OIDC provider through the Client Credentials Grant and frps validates it by issuer and audience, authenticating frpc to frps instead of using a shared token, useful for centralizing frp auth behind an identity provider. In frp v0.72.0, the OIDC auth setter for the client configuration builds a `golang.org/x/oauth2/clientcredentials` configuration from the client ID, client secret, scope and token endpoint URL. Audience validation is conditional, though: frps skips it when `auth.oidc.audience` is left empty (it sets the token verifier's `SkipClientIDCheck` in that case), so set a nonempty `auth.oidc.audience` and the intended `auth.oidc.issuer` explicitly rather than assuming that selecting `auth.method = "oidc"` binds the token to your server. In go-oidc v3.21.0, the ID token verifier performs no audience check when `SkipClientIDCheck` is set, and otherwise requires a nonempty client ID that the token's audience contains. GitHub's compare diff from frp v0.71.0 to v0.72.0 shows frp's `go.mod` moving `github.com/coreos/go-oidc/v3` from v3.18.0 to v3.21.0.
 
 Both the shared token and OIDC authenticate `frpc` to `frps`; neither authenticates the callers who reach a service you publish through the tunnel. A registered tcp, udp, http, https or tcpmux proxy listens on `proxyBindAddr`, which defaults to the server's `bindAddr` of `0.0.0.0` (as of v0.72.0), so once the proxy is up anyone who can reach that listener reaches the service behind it, exactly as if the app faced a public port directly. An stcp, sudp or xtcp proxy opens no listener of its own on frps. Give the published service its own authentication, or keep the proxy on loopback and front it with an authenticated TLS proxy ([caddy.md](https://github.com/jposluns/secureconfig/blob/main/caddy.md), [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md)); a strong `auth.token` protects the tunnel, not the service.
 
@@ -2214,7 +2214,7 @@ From frp v0.50.0, `transport.tls.enable` defaults to `true`, so the connection b
 
 The `auth` block is schema-optional, and omitting it does not fail closed: frp defaults to the token method with an empty token, and `frps` derives its auth key from that empty string, so a client presenting an empty token authenticates. An unconfigured token is an open door, not a safe default: always set a long random `auth.token` (or OIDC) before exposing `bindPort` to the internet, and never rely on frp for anything without one.
 
-The gofrp.org pages cited here, as served on 2026-11-05, do not say which frp release they describe and each shows "Last modified October 21, 2026", so whether they describe frp v0.72.0 is not established; the statements resting on them alone are the Client Credentials Grant flow, the `transport.tls.enable` default and `transport.tls.force`.
+The gofrp.org pages cited here, as served on 2026-11-05, do not say which frp release they describe and each shows "Last modified October 21, 2026", so whether they describe frp v0.72.0 is not established. The statements resting on them alone are the `transport.tls.enable` default, `transport.tls.force` and the certificate setup: `transport.tls.certFile` and `transport.tls.keyFile` on the server, and `transport.tls.trustedCaFile` on every client so `frpc` verifies the server's certificate against a trusted CA.
 
 ## WireGuard
 
@@ -2439,6 +2439,7 @@ REASONED: following block; the ssh -R check follows the cited OpenSSH sshd_confi
 - go-oidc ID token verifier, no audience check when `SkipClientIDCheck` is set, otherwise a nonempty `ClientID` that the token's audience must contain (pinned tag v3.21.0, checked November 2026): https://github.com/coreos/go-oidc/blob/v3.21.0/oidc/verify.go#L248-L257
 - frp compare diff from v0.71.0 to v0.72.0, whose `go.mod` hunk moves `github.com/coreos/go-oidc/v3` from v3.18.0 to v3.21.0 (tags v0.71.0 and v0.72.0, checked November 2026): https://github.com/fatedier/frp/compare/v0.71.0...v0.72.0
 - frpc `transport.tls.useSystemCa` field and its comment: verification using system CAs, supported only in frpc's `transport.tls`, and no verification with neither trust source (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/common.go#L102-L105
+- frp OIDC auth setter (`NewOidcAuthSetter`, taking `AuthOIDCClientConfig`) builds a `golang.org/x/oauth2/clientcredentials` configuration from the client ID, client secret, scope and token endpoint URL (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/oidc.go#L132-L152
 
 
 <!-- version-basis:start -->
@@ -2512,7 +2513,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2af2f16d884c7fa911b3101999093589f9a6d448c0ea1c04894f9bd01a7283a2",
+  "body_sha256": "f790ba4ddcb11c0129146ea95136a2d5aee640162d37d5c34b4ffee15056a346",
   "components": {
     "frps": {
       "name": "frps source",
@@ -2537,7 +2538,8 @@ Claims (full source mapping in the JSON block below):
         "sb112ed616c95": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/token.go#L64-L69",
         "sf34ab9020639": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/util/util/util.go#L50-L56",
         "sd31f2e5a7705": "https://github.com/fatedier/frp/compare/v0.71.0...v0.72.0",
-        "sf4fc148ec2ca": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/common.go#L102-L105"
+        "sf4fc148ec2ca": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/common.go#L102-L105",
+        "sebaf70b5f00f": "https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/oidc.go#L132-L152"
       }
     },
     "tls-min": {
@@ -2636,7 +2638,7 @@ Claims (full source mapping in the JSON block below):
     "frps-port": {"text": "frps bindPort defaults to 7000.", "components": ["frps"], "sources": ["frps:s09030000422a"], "status": "REASONED"},
     "frp-token": {"text": "Token authentication is the default; set the same long random auth.token on frps and every frpc.", "components": ["frp", "frps"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d", "frps:sabb455b48565", "frps:sb112ed616c95"], "status": "REASONED"},
     "frp-empty": {"text": "Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure.", "components": ["frp", "frps"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d", "frps:sabb455b48565", "frps:sb112ed616c95", "frps:sf34ab9020639"], "status": "REASONED"},
-    "frp-oidc": {"text": "auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience sets SkipClientIDCheck, under which go-oidc v3.21.0 performs no audience check.", "components": ["frp", "frps", "go-oidc"], "sources": ["frp:s7479bbde986d", "frps:sa66bdab13188", "frps:sd31f2e5a7705", "go-oidc:s074c31f14cf8"], "status": "REASONED"},
+    "frp-oidc": {"text": "auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience sets SkipClientIDCheck, under which go-oidc v3.21.0 performs no audience check.", "components": ["frp", "frps", "go-oidc"], "sources": ["frp:s7479bbde986d", "frps:sa66bdab13188", "frps:sd31f2e5a7705", "frps:sebaf70b5f00f", "go-oidc:s074c31f14cf8"], "status": "REASONED"},
     "proxy-bind": {"text": "proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0.", "components": ["frps"], "sources": ["frps:s09030000422a"], "status": "REASONED"},
     "proxy-tcp": {"text": "Registered TCP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s85dce7c56c14"], "status": "REASONED"},
     "proxy-udp": {"text": "Registered UDP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:sbe6b9105aa7a"], "status": "REASONED"},
