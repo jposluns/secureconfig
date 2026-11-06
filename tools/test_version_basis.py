@@ -7,6 +7,7 @@ import io
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -422,6 +423,116 @@ class VersionBasisTests(unittest.TestCase):
             build = (vb.ROOT / 'scripts/build-llms-full.sh').read_text(encoding='utf-8')
             self.assertIn('python3 tools/version_basis.py --check', build)
             self.assertIn('python3 tools/version_basis.py --no-advisory --bundle "$f"', build)
+
+
+class ParserLoadTests(unittest.TestCase):
+    """When the pinned parser cannot be loaded at all, tools/version_basis.py and both parser
+    loads in scripts/build-llms-full.sh fail in one line naming the cause, with the exit status
+    each gives a failed check, and print no traceback (TODO 3.51). Each case runs a copy of the
+    tools beside its own lock, or none, under an interpreter run with -E and -S, which sees no
+    installed package, so none needs the pinned parser or reads tools/requirements-gates.txt."""
+
+    TOOLS = ('check_verify_marking.py', '_markdown.py', '_verify_sections.py')
+    LOAD = ('cannot be loaded from tools/requirements-gates.txt and the installed '
+            'markdown-it-py and mdurl: ')
+    MISSING = 'FileNotFoundError: [Errno 2] No such file or directory: '
+    DIGEST = ' --hash=sha256:' + '0' * 64
+    LOCK = f'markdown-it-py==4.2.0{DIGEST}\nmdurl==0.1.2{DIGEST}\n'
+    NO_METADATA = {'markdown_it/__init__.py': ''}
+    NO_MDURL_METADATA = {**NO_METADATA, 'markdown_it_py-4.2.0.dist-info/METADATA':
+                         'Metadata-Version: 2.1\nName: markdown-it-py\nVersion: 4.2.0\n'}
+    # (label, lock text or None for no lock, files beside the tools, cause named).
+    CASES = (
+        ('no lock', None, {}, MISSING),
+        ('unparsable lock', '# hashes lost\nmarkdown-it-py==4.2.0\nmdurl==0.1.2\n', {},
+         'ValueError: invalid shared parser lock entry'),
+        ('no markdown-it-py metadata', LOCK, NO_METADATA,
+         'PackageNotFoundError: No package metadata was found for markdown-it-py'),
+        ('no mdurl metadata', LOCK, NO_MDURL_METADATA,
+         'PackageNotFoundError: No package metadata was found for mdurl'),
+    )
+
+    def fixture(self, root, lock, extra, tools=TOOLS):
+        """A checkout holding copies of tools, the lock (none for None) and extra under tools/,
+        and bin/python3, which runs this interpreter with -E and -S."""
+        for name in tools:
+            target = root / 'tools' / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text((vb.ROOT / 'tools' / name).read_text(encoding='utf-8'),
+                              encoding='utf-8')
+        if lock is not None:
+            (root / 'tools/requirements-gates.txt').write_text(lock, encoding='utf-8')
+        for name, text in extra.items():
+            target = root / 'tools' / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text, encoding='utf-8')
+        python = root / 'bin/python3'
+        python.parent.mkdir()
+        python.write_text(f'#!/bin/sh\nexec {shlex.quote(sys.executable)} -E -S "$@"\n',
+                          encoding='utf-8')
+        python.chmod(0o755)
+        env = {key: value for key, value in os.environ.items() if key != 'CI'}
+        env['PATH'] = f"{python.parent}{os.pathsep}{env.get('PATH', '')}"
+        return env
+
+    def one_line(self, result, expected):
+        output = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 1, output)
+        self.assertNotIn('Traceback', output)
+        self.assertEqual(len(output.splitlines()), 1, output)
+        self.assertIn(expected, output)
+
+    def test_version_basis_names_the_cause(self):
+        for label, lock, extra, cause in self.CASES:
+            for mode in (['--check'], ['--no-advisory', '--bundle', 'guide.md']):
+                with self.subTest(case=label, mode=mode[-1]), \
+                        tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    env = self.fixture(root, lock, extra, self.TOOLS + ('version_basis.py',))
+                    (root / 'guide.md').write_text('# Guide\n', encoding='utf-8')
+                    result = subprocess.run([str(root / 'bin/python3'), '-B',
+                                             'tools/version_basis.py', *mode],
+                                            cwd=root, capture_output=True, text=True, env=env,
+                                            timeout=120)
+                    self.one_line(result, '  FAIL  version basis: the pinned parser '
+                                  + self.LOAD + cause)
+
+    def test_llms_full_link_check_names_the_cause(self):
+        for label, lock, extra, cause in self.CASES:
+            with self.subTest(case=label), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                env = self.fixture(root, lock, extra)
+                (root / 'scripts').mkdir()
+                (root / 'scripts/build-llms-full.sh').write_text(
+                    (vb.ROOT / 'scripts/build-llms-full.sh').read_text(encoding='utf-8'),
+                    encoding='utf-8')
+                (root / 'site').mkdir()
+                (root / 'site/llms-full.txt').write_text('# Bundle\n', encoding='utf-8')
+                result = subprocess.run(['bash', 'scripts/build-llms-full.sh', '--check-links'],
+                                        cwd=root, capture_output=True, text=True, env=env,
+                                        timeout=120)
+                self.one_line(result, 'the link check needs the pinned parser, which '
+                              + self.LOAD + cause)
+
+    def test_llms_full_rewrite_names_the_cause(self):
+        # tools/version_basis.py is a stub here, which passes --check and prints nothing for a
+        # --bundle guide, so the build reaches the rewrite's own parser load and no write can
+        # meet a pipe the rewrite has closed.
+        stub = 'import sys\nsys.exit(0)\n'
+        for label, lock, extra, cause in self.CASES:
+            with self.subTest(case=label), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                env = self.fixture(root, lock, {**extra, 'version_basis.py': stub})
+                (root / 'scripts').mkdir()
+                (root / 'scripts/build-llms-full.sh').write_text(
+                    (vb.ROOT / 'scripts/build-llms-full.sh').read_text(encoding='utf-8'),
+                    encoding='utf-8')
+                (root / 'site').mkdir()
+                result = subprocess.run(['bash', 'scripts/build-llms-full.sh'], cwd=root,
+                                        capture_output=True, text=True, env=env, timeout=120)
+                self.one_line(result, 'README.md: the build needs the pinned parser, which '
+                              + self.LOAD + cause)
+                self.assertFalse((root / 'site/llms-full.txt').exists())
 
 
 class SourcesBasisTests(unittest.TestCase):

@@ -1271,6 +1271,15 @@ def main():
             if not args.no_advisory:
                 print(f'  SKIP  version basis rendered Sources checks: {exc} '
                       '(line grammar still runs)', file=sys.stderr)
+        except Exception as exc:  # noqa: BLE001  any failure to load the parser fails the check
+            # gate_parser() raises something other than ParserUnavailable when the parser cannot
+            # be loaded at all: a lock it cannot read or parse, or a markdown_it package without
+            # the installed version metadata of markdown-it-py or mdurl, whose
+            # PackageNotFoundError the handler below does not catch. Each fails in one line
+            # naming the cause, never a traceback.
+            cause = ' '.join(f'{type(exc).__name__}: {exc}'.split())
+            raise ValueError('the pinned parser cannot be loaded from tools/requirements-gates.txt '
+                             f'and the installed markdown-it-py and mdurl: {cause}') from exc
         selected = paths()
         baseline = load_source_baseline()
         require({name for name, _ in baseline} <= {path.name for path in selected},
