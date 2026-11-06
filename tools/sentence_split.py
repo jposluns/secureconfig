@@ -161,9 +161,9 @@ and the list is not exhaustive:
     `    2. <!-- x` and `    > - <!-- x` each open one, and after the code line
     `    code`, all of these but `    2. <!-- x` do. With a blank line and
     `Shown.` after it, the block hides that line and `Shown.`, which CommonMark
-    shows, and a code line before it, such as `code`, is shown. A code line
-    after it is hidden too, as `    more` after `    code` and `    > <!-- x`
-    is. After a blank line and `    > <!-- x`, a `-->` on the next line as
+    shows, and the code line `    code` before it, where there is one, is
+    shown. A code line after it is hidden too, as `    more` after `    code`
+    and `    > <!-- x` is. After a blank line and `    > <!-- x`, a `-->` on the next line as
     `    -->`, or after a blank line as `-->`, ends the block, and the `Shown.`
     after it is shown.
 13. In a list item, a later line can be read as a sibling item that ends the
@@ -182,6 +182,22 @@ and the list is not exhaustive:
     pair, and `<!-- c -->` is hidden, which CommonMark shows in a code span. By
     contrast, `- a` then two tabs and `2. <!-- c`, and `- a` or `10. a` then
     `    2. <!-- c`, show `<!-- c` and the text after it, as CommonMark does.
+    A `2.` indented 4 spaces on a paragraph continuation line, which
+    CommonMark reads as paragraph text, is read here as an item whose text
+    starts at column 7, and in the examples below a later `3.` indented less
+    than that, counted after any block quote markers, is read as a sibling
+    item, so a `<!--` after it opens a comment block where CommonMark reads
+    `3. <!-- c` as paragraph text: `Para` then `    2. a` and `3. <!-- c` or
+    `      3. <!-- c`, `10. a` then `    2. b` and `    3. <!-- c`, `- a`
+    then `    2. b` and `  3. <!-- c`, and `> Para` then `>     2. a` and
+    `> 3. <!-- c`. With a blank line and `More.` after it, the block hides
+    `<!-- c` and `More.`, which CommonMark shows; with `-->` and `More.` on
+    the lines after that blank line instead, `More.` is shown. With ``a `x``
+    or ``b `x`` as the `2.` line's text and `b <!-- c -->`, a space and a
+    backtick after `3.`, the code span does not pair, and `<!-- c -->` is
+    hidden, which CommonMark shows in a code span. By contrast, with the `3.`
+    indented 7 columns in each of these, `<!-- c` and `More.` are shown and
+    the code span pairs, as in CommonMark.
 Where a paragraph ends here and not in CommonMark (items 5, 7 and 13), a code
 span may not pair, and a `<!--` in it then hides text up to a later `-->`; where
 it goes on here and not in CommonMark (items 5, 6, 8 and 11), a code span may

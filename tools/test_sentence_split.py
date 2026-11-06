@@ -99,8 +99,11 @@ class Units(unittest.TestCase):
 class IndentedNumberedItems(unittest.TestCase):
     """A "2." indented 4 spaces on a paragraph continuation line, outside a list item or in
     one whose text starts at column 4 or less (QA round 1 on #1240). CommonMark reads it as
-    paragraph text; the splitter starts a new unit there and does not count "2.", but shows
-    the same text, so the module docstring does not list it."""
+    paragraph text. In the inputs pinned here, the splitter starts a new unit there and does
+    not count "2.", but shows the same text, so the module docstring does not list them.
+    Item 13 of the module docstring lists examples in which a later "3." indented less than
+    column 7 after such a line is read as a sibling item and hides text that CommonMark shows
+    (QA round 2 on #1240), and KnownDivergences pins them."""
 
     def test_indented_numbered_item_starts_a_unit(self):
         self.assertEqual(guide("Alpha\n    2. Beta\n"), [(1, "Alpha"), (2, "Beta")])
@@ -590,6 +593,33 @@ class KnownDivergences(unittest.TestCase):
             with self.subTest(first=first, marker=marker):
                 self.assertEqual(guide(f"{first}\n{marker} <!-- c\n\nMore.\n"),
                                  [(1, "a"), (2, "<!-- c"), (4, "More.")])
+        # Item 13, after a "2." indented 4 spaces (QA round 2 on #1240): the splitter takes
+        # that line's text column, 7, for the "3." line, and CommonMark reads both as
+        # paragraph text, so it shows "<!-- c" and "More.", and it pairs the code span.
+        forms = [("Para", "    2. a", "3.", "Para", "a"),
+                 ("Para", "    2. a", "      3.", "Para", "a"),
+                 ("10. a", "    2. b", "    3.", "a", "b"),
+                 ("- a", "    2. b", "  3.", "a", "b"),
+                 ("> Para", ">     2. a", "> 3.", "Para", "a")]
+        for first, second, third, head, text in forms:
+            with self.subTest(first=first, second=second, third=third):
+                self.assertEqual(guide(f"{first}\n{second}\n{third} <!-- c\n\nMore.\n"),
+                                 [(1, head), (2, text)])
+                self.assertEqual(guide(f"{first}\n{second}\n{third} <!-- c\n\n-->\nMore.\n"),
+                                 [(1, head), (2, text), (6, "More.")])
+                self.assertEqual(guide(f"{first}\n{second} `x\n{third} b <!-- c --> `\n"),
+                                 [(1, head), (2, f"{text} `x"), (3, "b  `")])
+        # By contrast, with the "3." indented 7 columns, both readers show the text.
+        for first, second, third, head, text in (
+                ("Para", "    2. a", "       3.", "Para", "a"),
+                ("10. a", "    2. b", "       3.", "a", "b"),
+                ("- a", "    2. b", "       3.", "a", "b"),
+                ("> Para", ">     2. a", ">        3.", "Para", "a")):
+            with self.subTest(first=first, second=second, third=third):
+                self.assertEqual(guide(f"{first}\n{second}\n{third} <!-- c\n\nMore.\n"),
+                                 [(1, head), (2, text), (3, "<!-- c"), (5, "More.")])
+                self.assertEqual(guide(f"{first}\n{second} `x\n{third} b <!-- c --> `\n"),
+                                 [(1, head), (2, f"{text} `x"), (3, "b <!-- c --> `")])
 
 
 class Command(unittest.TestCase):
