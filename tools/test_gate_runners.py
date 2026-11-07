@@ -201,7 +201,7 @@ PALETTE_CASES = (
 # The overflow section of tools/run_all_checks.sh, to the next section, and its page list.
 OVERFLOW_SECTION = re.compile(r"^# section: overflow\n.*?(?=^# section: )", re.M | re.S)
 OVERFLOW_LIST = re.compile(r"^overflow_pages=\(([^)\n]*)\)$", re.M)
-OVERFLOW_OK = "  ok    check_overflow.js: the 7 site pages pass at every default width in both schemes"
+OVERFLOW_OK = "  ok    check_overflow.js: the 8 site pages pass at every default width in both schemes"
 OVERFLOW_SKIP = ("  SKIP  node, the playwright package or its headless Chromium shell was not found; "
                  "overflow check not run.")
 OVERFLOW_REQUIRED = ("  FAIL  check_overflow.js needs node, the playwright package and its headless "
@@ -216,7 +216,7 @@ OVERFLOW_USAGE = "  FAIL  check_overflow.js exited 2, a usage error; the pages a
 OVERFLOW_MISSING = "  FAIL  the overflow check's page list names page(s) with no generated file:"
 OVERFLOW_UNLISTED = "  FAIL  the overflow check's page list does not name the generated page(s)"
 OVERFLOW_ANY_FAIL = "  FAIL  "
-OVERFLOW_PASS = "RESULT: pass (7 pages, 56 cases, 0 failing)"
+OVERFLOW_PASS = "RESULT: pass (8 pages, 64 cases, 0 failing)"
 EXIT_TRAP = "the EXIT trap set before the section ran"
 # The stand-in node: it records its arguments, answers the Chromium check with STANDIN_BROWSER, and
 # otherwise records its PID and becomes the stand-in check body.
@@ -264,6 +264,10 @@ OVERFLOW_CASES = (
      [f"{OVERFLOW_MISSING} site/index.html;"], [OVERFLOW_OK, OVERFLOW_SKIP]),
     ("no section page file", "exit 0", 0, True, "1", ["site/license/index.html"], [], True, False,
      [f"{OVERFLOW_MISSING} site/license/index.html;"], [OVERFLOW_OK, OVERFLOW_REQUIRED]),
+    # The list's one non-folder page, /advisories/n8n.html, names its own file (the `*)` branch).
+    ("no advisory page file, the non-folder page", "exit 0", 0, True, "",
+     ["site/advisories/n8n.html"], [], True, False,
+     [f"{OVERFLOW_MISSING} site/advisories/n8n.html;"], [OVERFLOW_OK, OVERFLOW_SKIP]),
     ("an unlisted section page", "exit 0", 0, True, "", [], ["site/extra/index.html"], True, True,
      [f"{OVERFLOW_UNLISTED} site/extra/index.html", OVERFLOW_OK], [OVERFLOW_MISSING]),
     # The live site carries no /draft/ page (baseline SPECIFICATION 4.1 item 0), so the list does
@@ -632,11 +636,16 @@ def overflow_source():
 
 
 def overflow_tree(d, pages, remove=(), add=()):
-    """A scratch tree under d with a generated file for each page, 404.html, and the changes."""
+    """A scratch tree under d with a generated file for each page, 404.html, and the changes. A
+    folder path (ending with /) gets its index.html; a non-folder page, such as the unlisted
+    /advisories/n8n.html, gets its own file."""
     for page in pages:
-        (d / f"site{page}").mkdir(parents=True, exist_ok=True)
-        (d / f"site{page}index.html").write_text("<!doctype html><title>page</title>\n",
-                                                encoding="utf-8")
+        if page.endswith("/"):
+            target = d / f"site{page}index.html"
+        else:
+            target = d / f"site{page}"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("<!doctype html><title>page</title>\n", encoding="utf-8")
     (d / "site" / "404.html").write_text("<!doctype html><title>404</title>\n", encoding="utf-8")
     for name in remove:
         (d / name).unlink()

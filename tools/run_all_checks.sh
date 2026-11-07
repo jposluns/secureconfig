@@ -1554,16 +1554,24 @@ echo "== no site page scrolls sideways at the template's widths =="
 # The pages, the one place they are listed: every generated page that answers 200; 404.html is the
 # not-found page and is not listed, and the live site carries no /draft/ page (baseline
 # SPECIFICATION section 4.1 item 0: drafts are built on the `draft` branch), so a page under
-# site/draft/ is unlisted and fails here as well as in the site-draft section. A listed page whose
-# index.html is missing fails before the server starts, since http.server would answer its path
-# with a directory listing. Every other .html or .htm file under site/ (in any case, at any depth,
-# outside assets/, whose files scripts/build-site.py does not write) that is not a listed page's
-# index.html fails, so a new page cannot go unchecked.
-overflow_pages=(/ /checklist/ /disclosure/ /for-ai/ /for-humans/ /guides/ /license/)
+# site/draft/ is unlisted and fails here as well as in the site-draft section. The unlisted advisory
+# page /advisories/n8n.html is a real generated page that answers 200, so it IS listed and checked;
+# it is the one non-folder path in the list, named by its own file rather than an index.html. A
+# listed folder page whose index.html is missing fails before the server starts, since http.server
+# would answer its path with a directory listing. Every other .html or .htm file under site/ (in any
+# case, at any depth, outside assets/, whose files scripts/build-site.py does not write) that is not
+# a listed page fails, so a new page cannot go unchecked.
+overflow_pages=(/ /advisories/n8n.html /checklist/ /disclosure/ /for-ai/ /for-humans/ /guides/ /license/)
 overflow_missing=""
 for overflow_path in "${overflow_pages[@]}"; do
-  if [ ! -f "site${overflow_path}index.html" ]; then
-    overflow_missing+=" site${overflow_path}index.html"
+  # A folder path (ending with /) names its index.html; the one non-folder page, the unlisted
+  # /advisories/n8n.html, names its own file. Either way a missing file is reported, by exact path.
+  case $overflow_path in
+    */) overflow_file="site${overflow_path}index.html" ;;
+    *)  overflow_file="site${overflow_path}" ;;
+  esac
+  if [ ! -f "$overflow_file" ]; then
+    overflow_missing+=" $overflow_file"
   fi
 done
 overflow_unlisted=""
