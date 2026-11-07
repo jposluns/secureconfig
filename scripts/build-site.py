@@ -632,13 +632,52 @@ class Builder:
         body = [f'<p class="lead">{self.inline(nf["lead"]["text"])}</p>', self.next_block(nf["next"])]
         return self.page("Page not found", "", self.doc("404", "That page is not here.", self.rail(), body))
 
+    def advisory(self):
+        # The unlisted n8n security advisory (the maintainer's instruction). Like the 404 page it is
+        # noindex, carries no canonical and no link previews (self.page defaults), and no page links
+        # it; tools/check_draft.py admits advisories/n8n.html as a noindex page by that exact path,
+        # and site/_headers sends X-Robots-Tag: noindex for /advisories/*.
+        a = self.c["advisory_n8n"]
+
+        def items(key, ordered=False):
+            tag = "ol" if ordered else "ul"
+            lis = "\n".join(f"<li>{self.inline(x['text'])}</li>" for x in a[key])
+            return f"<{tag}>\n{lis}\n</{tag}>"
+
+        body = [f'<p class="lead">{self.inline(a["status"]["text"])}</p>',
+                f'<p>{self.inline(a["intro"]["text"])}</p>',
+                '<p class="lbl sec">Title</p>', '<h2 id="title">Title</h2>',
+                f'<p>{self.inline(a["report_title"]["text"])}</p>',
+                '<p class="lbl sec">Affected versions</p>', '<h2 id="affected">Affected versions</h2>',
+                items("affected"),
+                '<p class="lbl sec">Description</p>', '<h2 id="description">Description</h2>',
+                '<p class="lbl blk">Vulnerable code locations</p>', items("locations"),
+                '<p class="lbl blk">Read path, observed in source</p>', items("observed"),
+                '<p class="lbl blk">Read path, inference</p>', items("inferred"),
+                '<p class="lbl blk">Steps a reviewer would take</p>', items("steps", ordered=True),
+                '<p class="lbl blk">Proof of concept</p>', f'<p>{self.inline(a["poc"]["text"])}</p>',
+                '<p class="lbl blk">Impact</p>', f'<p>{self.inline(a["impact"]["text"])}</p>',
+                '<p class="lbl sec">Reporter</p>', '<h2 id="reporter">Reporter</h2>',
+                f'<p>{self.inline(a["reporter_note"]["text"])}</p>', items("reporter"),
+                '<p class="lbl sec">CVSS 4.0, provisional</p>',
+                '<h2 id="cvss">CVSS 4.0, provisional</h2>',
+                f'<p>{self.inline(a["cvss_vector"]["text"])}</p>',
+                f'<p>{self.inline(a["cvss_derivation"]["text"])}</p>',
+                '<p class="lbl sec">Mitigations</p>', '<h2 id="mitigations">Mitigations</h2>',
+                items("mitigations")]
+        return self.page("Security advisory: n8n", "",
+                         self.doc(a["label"]["text"], a["h1"]["text"], self.rail(), body))
+
     def build(self):
         # No draft/index.html: the live site carries no /draft/ page (SPECIFICATION 4.1 item 0);
         # the `draft` branch stages the whole site under /draft/ with --base /draft/.
+        # advisories/n8n.html is the one unlisted noindex page beside the 404 (the maintainer's
+        # instruction): noindex, no canonical, linked from nowhere, and in no index or menu.
         pages = {"index.html": self.home(), "guides/index.html": self.guides(),
                  "for-ai/index.html": self.for_ai(), "for-humans/index.html": self.for_humans(),
                  "checklist/index.html": self.checklist(), "disclosure/index.html": self.disclosure(),
-                 "license/index.html": self.license(), "404.html": self.notfound()}
+                 "license/index.html": self.license(), "404.html": self.notfound(),
+                 "advisories/n8n.html": self.advisory()}
         for name, text in pages.items():
             refuse(name, text)
         return pages

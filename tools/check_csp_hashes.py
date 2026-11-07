@@ -119,10 +119,12 @@ the indented lines under it; `#` is a comment; `! Name` DETACHES a header. This 
     'unsafe-inline'` for Cloudflare's JavaScript Detections loader, which this gate's page model
     never relies on: no page carries an inline block for it to permit. A comma, which would make
     the value more than one policy, gets its own message;
-  - no rule sets or detaches X-Robots-Tag: the 404 page carries its own robots meta, the live
-    site carries no /draft/ page for a `/draft/*` noindex rule to cover (baseline SPECIFICATION
-    section 4.1 items 0 and 2: that rule belongs on the `draft` branch), and a header-level noindex
-    would silently deindex whatever its rule matches;
+  - exactly ONE X-Robots-Tag, `X-Robots-Tag: noindex` under the `/advisories/*` rule, which keeps
+    the unlisted advisory pages (site/advisories/n8n.html) out of search besides their own robots
+    meta; every OTHER X-Robots-Tag is refused, by rule, value, or a detach, so a header-level
+    noindex cannot silently deindex anything else. The 404 page carries its own robots meta, and the
+    live site carries no /draft/ page for a `/draft/*` noindex rule to cover (baseline SPECIFICATION
+    section 4.1 items 0 and 2: that rule belongs on the `draft` branch);
   - section 9's other headers (PINNED_HEADERS): X-Frame-Options, Permissions-Policy and
     Cross-Origin-Opener-Policy are each set exactly once across the whole file, under the bare
     `/*` rule, to exactly section 9's value, and no rule detaches one;
@@ -230,6 +232,12 @@ ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstu
 CHARSET = re.compile(r"charset\s*=", re.I)
 META_UTF8 = '<meta charset="utf-8">'
 CSP = "content-security-policy"
+# The one X-Robots-Tag this gate admits: `X-Robots-Tag: noindex` under /advisories/*, which keeps
+# the unlisted advisory pages out of search (each also carries its own robots meta). Every other
+# X-Robots-Tag, by rule, value, or a detach, is refused.
+X_ROBOTS_TAG = "x-robots-tag"
+ADVISORIES_RULE = "/advisories/*"
+ADVISORIES_NOINDEX = "noindex"
 # Row 3.18: suffixes refused under site/ in any case, with the reason a reader sees. See THE REST OF
 # `site/` in the docstring.
 XHTML_WHY = ("is XHTML, which a browser parses as XML and whose scripts it runs under the site's /* "
@@ -820,21 +828,33 @@ def header_values(blocks, key):
 
 def header_findings(headers_text):
     """Reasons site/_headers is outside the model: one CSP, under the bare /*, exactly the shared
-    policy; no detach; no X-Robots-Tag anywhere; each PINNED_HEADERS header once, under the bare
-    /*, exactly section 9's value, never detached; no CLOUDFLARE_HEADERS header anywhere."""
+    policy; no detach; exactly one X-Robots-Tag, `noindex` under /advisories/*, and no other
+    X-Robots-Tag anywhere; each PINNED_HEADERS header once, under the bare /*, exactly section 9's
+    value, never detached; no CLOUDFLARE_HEADERS header anywhere."""
     blocks = all_rule_blocks(headers_text)
     out = []
+    advisories_noindex = []  # the allowed `X-Robots-Tag: noindex` lines under /advisories/*
     for rule, lines in blocks:
         for line in lines:
             name = line.lstrip("!").split(":", 1)[0].strip().lower()
             if line.startswith("!") and name == CSP:
                 out.append(f"{HEADERS} detaches the Content-Security-Policy under {rule}, so a "
                            f"page served under that rule has no policy at all")
-            elif name == "x-robots-tag":
-                out.append(f"{HEADERS} rule {rule} sets or detaches X-Robots-Tag, which reaches "
-                           f"every page its rule matches; the 404 page carries its own robots "
-                           f"meta, the live site carries no /draft/ page, and this gate models no "
-                           f"header-level noindex")
+            elif name == X_ROBOTS_TAG:
+                # The ONE exception to the no-header-noindex rule: `X-Robots-Tag: noindex` under
+                # /advisories/*, which keeps the unlisted advisory pages out of search (each also
+                # carries its own robots meta). Any other X-Robots-Tag, by rule, value, or a detach,
+                # is refused, so a header-level noindex cannot silently deindex anything else.
+                value = "" if ":" not in line else line.split(":", 1)[1].strip()
+                if not line.startswith("!") and rule == ADVISORIES_RULE and value == ADVISORIES_NOINDEX:
+                    advisories_noindex.append(rule)
+                else:
+                    out.append(f"{HEADERS} rule {rule} sets or detaches X-Robots-Tag other than the "
+                               f"one `X-Robots-Tag: {ADVISORIES_NOINDEX}` under {ADVISORIES_RULE} "
+                               f"that keeps the unlisted advisory pages out of search; the 404 page "
+                               f"carries its own robots meta, the live site carries no /draft/ page, "
+                               f"and a header-level noindex on any other rule or value would "
+                               f"silently deindex whatever it matches")
             elif name in CLOUDFLARE_HEADERS:
                 out.append(f"{HEADERS} rule {rule} sets or detaches {name}, which Cloudflare "
                            f"sends itself (baseline SPECIFICATION section 9: never set "
@@ -844,6 +864,13 @@ def header_findings(headers_text):
                 out.append(f"{HEADERS} detaches {PINNED_HEADERS[name][0]} under {rule}, so a page "
                            f"served under that rule goes without the header baseline SPECIFICATION "
                            f"section 9 sets on every page")
+    # Exactly one X-Robots-Tag, and it is the allowed `noindex` under /advisories/*: a missing one
+    # would leave the unlisted advisory pages without their header-level noindex, and a duplicate is
+    # refused like any other stray X-Robots-Tag.
+    if len(advisories_noindex) != 1:
+        out.append(f"{HEADERS} must carry exactly one `X-Robots-Tag: {ADVISORIES_NOINDEX}` under "
+                   f"{ADVISORIES_RULE}, which keeps the unlisted advisory pages out of search; it "
+                   f"carries {len(advisories_noindex)}")
     for key, (shown, value) in PINNED_HEADERS.items():
         sets = header_values(blocks, key)
         if len(sets) != 1:
@@ -1068,10 +1095,10 @@ def main() -> int:
           f"and the 1 scheme.js head script), and use only the template's elements; {inspected} "
           f"SVG document(s) carry no <script>, on* handler, javascript: URL or inline style")
     print(f"  ok    {HEADERS} serves exactly the shared template policy (SPECIFICATION section 9) "
-          f"under the 1 /* rule, with no other Content-Security-Policy, no detach and no "
-          f"X-Robots-Tag, and section 9's X-Frame-Options, Permissions-Policy and "
-          f"Cross-Origin-Opener-Policy once each under /*, with none of the headers Cloudflare "
-          f"sends itself")
+          f"under the 1 /* rule, with no other Content-Security-Policy and no detach, exactly one "
+          f"X-Robots-Tag: noindex under /advisories/* and no other X-Robots-Tag, and section 9's "
+          f"X-Frame-Options, Permissions-Policy and Cross-Origin-Opener-Policy once each under /*, "
+          f"with none of the headers Cloudflare sends itself")
     return 0
 
 

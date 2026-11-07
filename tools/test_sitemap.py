@@ -119,6 +119,14 @@ CASES = [
       "sitemap.xml": with_entry("/extra/")}, None, "carries a robots noindex"),
     ("a folder page whose robots meta is none, left out of the sitemap",
      {"extra/index.html": HIDDEN.replace(b'content="noindex"', b'content="none"')}, None, None),
+    # The unlisted advisory page is noindex and is not a folder index.html, so the gate neither
+    # requires it in the sitemap nor flags it, and the sitemap cannot list it: its URL is not a
+    # folder path ending with /.
+    ("the noindex advisory page, not a folder index, left out of the sitemap",
+     {"advisories/n8n.html": HIDDEN}, None, None),
+    ("a sitemap listing the advisory page by its exact path",
+     {"advisories/n8n.html": HIDDEN, "sitemap.xml": with_entry("/advisories/n8n.html")}, None,
+     "folder path"),
     ("a /draft/ loc, with no draft tree", {"sitemap.xml": with_entry("/draft/")}, None,
      "is a /draft/ page; the live site carries no /draft/ page"),
     ("a /Draft/ loc in another case", {"sitemap.xml": with_entry("/Draft/")}, None,

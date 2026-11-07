@@ -4,3 +4,6 @@
   X-Frame-Options: DENY
   Permissions-Policy: accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(), display-capture=(), fullscreen=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
+# The unlisted advisories are kept out of search at the header level too, besides their own robots meta. tools/check_csp_hashes.py requires exactly this one X-Robots-Tag: noindex rule, under /advisories/*, and refuses any other X-Robots-Tag.
+/advisories/*
+  X-Robots-Tag: noindex

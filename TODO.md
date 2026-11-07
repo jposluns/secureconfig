@@ -24,7 +24,7 @@ Each row is one physical line. `tools/check_todo_rows.py`, which `tools/run_all_
 fails a line holding two row starts such as `| 3.6 |`, the shape a lost line break leaves when it
 joins two rows.
 
-Next ids: **1.446**, **2.50**, **3.53**, **4.12**.
+Next ids: **1.446**, **2.50**, **3.53**, **4.13**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 

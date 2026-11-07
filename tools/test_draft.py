@@ -96,10 +96,11 @@ def write(rel, text):
 HOME = "site/index.html"
 GUIDES = "site/guides/index.html"
 P404 = "site/404.html"
+ADVISORY = "site/advisories/n8n.html"
 META = '<meta name="robots" content="noindex, nofollow">'
 START = 'href="/guides/"'
 GUIDES_CANONICAL = 'href="https://secureconfig.ai/guides/"'
-OK_LINE = "8 pages are self-contained"
+OK_LINE = "9 pages are self-contained"
 STRAY = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>x</title>\n'
          '</head>\n<body><a href="/nowhere/">gone</a></body>\n</html>\n')
 # A page that passes every per-page rule of the gate, for planting where only its path matters.
@@ -321,6 +322,17 @@ CASES = [
      edit(P404, META, '<META NAME="Robots" CONTENT="NOINDEX,NOFOLLOW">'), OK_LINE, 0),
     ("a robots meta on an indexable page", edit(GUIDES, "<title>Guides", META + "\n<title>Guides"),
      "carries a robots meta element", 1),
+    # The one unlisted advisory is admitted as a noindex page by its exact path: the pristine site
+    # (it is noindex and carries no canonical) is accepted below, losing or doubling its noindex is
+    # refused, and any OTHER unexpected noindex page is still refused.
+    ("the advisory page without its robots meta", edit(ADVISORY, META + "\n", ""),
+     "must carry exactly 1 robots meta", 1),
+    ("the advisory page with a second robots meta", edit(ADVISORY, META, META + META),
+     "must carry exactly 1 robots meta", 1),
+    ("a stray noindex page other than the 404 and the advisory",
+     write("site/extra.html", PLAIN.replace('<meta charset="utf-8">',
+                                            '<meta charset="utf-8">\n' + META)),
+     "carries a robots meta element", 1),
     # The live site carries no draft tree (SPECIFICATION 4.1 items 0 and 3), in any case and
     # whatever it holds; a folder whose name only begins with draft is not the tree.
     ("a site/draft/ folder holding a page", write("site/draft/index.html", PLAIN),
@@ -332,7 +344,7 @@ CASES = [
      f"site/Draft exists (folder); {NO_TREE}", 1),
     ("a site/draft file", write("site/draft", "x\n"), f"site/draft exists (file); {NO_TREE}", 1),
     ("a site/drafts/ folder, which is not the draft tree", write("site/drafts/index.html", PLAIN),
-     "9 pages are self-contained", 0),
+     "10 pages are self-contained", 0),
     ("a link to a page that does not exist", link("/nowhere/"), "names no file", 1),
     ("a ../ path out of site/", link("/../SECURITY.md"), "names no file", 1),
     ("a relative link", link("guides/"), "relative path", 1),

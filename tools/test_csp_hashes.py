@@ -60,8 +60,11 @@ a textarea, noscript or xmp holding `<`, a <math>, and each SVG integration poin
 foreignObject, style, script) inside a glyph.
 
 HEADER CASES. site/_headers must carry exactly the shared template policy under the bare /*:
-widened, reordered, comma-split, duplicated, detached, path-scoped or host-scoped policies fail,
-as does any X-Robots-Tag; a comment between the rule and its headers passes, as Cloudflare allows.
+widened, reordered, comma-split, duplicated, detached, path-scoped or host-scoped policies fail. The
+gate admits exactly one X-Robots-Tag, `noindex` under /advisories/*, which keeps the unlisted
+advisory pages out of search; removing it, giving it another value, duplicating it, detaching it, or
+any X-Robots-Tag under another rule or under /* fails. A comment between the rule and its headers
+passes, as Cloudflare allows.
 X-Frame-Options, Permissions-Policy and Cross-Origin-Opener-Policy each fail when missing or
 changed, and X-Frame-Options also when set twice, set only under a narrower rule or detached;
 X-Content-Type-Options, Referrer-Policy and Strict-Transport-Security fail when set, and
@@ -538,6 +541,21 @@ CASES = [
      None, HEADERS + "\n/draft/*\n  X-Robots-Tag: noindex\n", True, "X-Robots-Tag"),
     ("an X-Robots-Tag detached",
      None, HEADERS + "\n/guides/*\n  ! X-Robots-Tag\n", True, "X-Robots-Tag"),
+    # The one X-Robots-Tag the gate admits: `noindex` under /advisories/*, which the real file
+    # carries (the pristine case above passes). Removing it, giving it another value, duplicating it
+    # or detaching it each fails, so a header-level noindex cannot go missing or spread.
+    ("the /advisories/* X-Robots-Tag removed",
+     None, HEADERS.replace("  X-Robots-Tag: noindex\n", "", 1), True,
+     "exactly one `X-Robots-Tag: noindex`"),
+    ("the /advisories/* X-Robots-Tag with another value",
+     None, HEADERS.replace("  X-Robots-Tag: noindex\n", "  X-Robots-Tag: all\n", 1), True,
+     "X-Robots-Tag"),
+    ("the /advisories/* X-Robots-Tag duplicated",
+     None, HEADERS + "\n/advisories/*\n  X-Robots-Tag: noindex\n", True,
+     "exactly one `X-Robots-Tag: noindex`"),
+    ("the /advisories/* X-Robots-Tag detached",
+     None, HEADERS.replace("  X-Robots-Tag: noindex\n", "  ! X-Robots-Tag\n", 1), True,
+     "X-Robots-Tag"),
     ("the only CSP under a non-root rule",
      None, HEADERS.replace("\n/*\n", "\n/assets/*\n", 1), True, "not the /* rule"),
     ("the CSP under a bare / rule only",

@@ -84,6 +84,9 @@ PREVIEWS = {"index.html": ("Home", "home"), "guides/index.html": ("Guides", "gui
             "checklist/index.html": ("Checklist", "checklist"),
             "disclosure/index.html": ("Disclosure", "disclosure"),
             "license/index.html": ("Licence", "license")}
+# The pages that are noindex at the root and carry no link previews, canonical or description: the
+# 404 page and the one unlisted advisory (the maintainer's instruction), both built like the 404.
+NOINDEX_NAMES = {"404.html", "advisories/n8n.html"}
 
 
 def refused(text):
@@ -322,7 +325,7 @@ def main():
     if "draft" in builder.c:
         failures.append("site-src/content.json still carries a draft entry")
     for name, text in pages.items():
-        hidden = name == "404.html"
+        hidden = name in NOINDEX_NAMES
         if (ROBOTS_META in text) is not hidden:
             failures.append(f"base /: {name} {'lost' if hidden else 'still carries'} the noindex meta")
         if "/draft/" in text:
@@ -338,11 +341,11 @@ def main():
     # or a canonical.
     for name, text in pages.items():
         head = text.split("</head>", 1)[0]
-        if name == "404.html":
+        if name in NOINDEX_NAMES:
             if 'property="og:' in head or 'name="twitter:' in head:
                 failures.append(f"base /: {name} carries link-preview tags")
             if 'rel="canonical"' in head or 'name="description"' in head:
-                failures.append("base /: 404.html carries a canonical or a description")
+                failures.append(f"base /: {name} carries a canonical or a description")
             continue
         url = build_site.ORIGIN + "/" + name[:-len("index.html")]
         # #1189 QA: the full value of each tag, not its prefix.
