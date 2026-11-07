@@ -7,7 +7,7 @@ This is a source-code review finding in n8n 2.40.6, not an executed exploit. Not
 The facts come only from the finding pack: its source review of n8n 2.40.6 at that commit, and its by-reading comparison of three files at n8n 2.47.2. This page carries the full read-path detail. It is reachable only by its own URL, and no other page on this site links it.
 
 SUMMARY
-n8n 2.40.6: a Code node can read another execution's stored binary data via a caller-built binary-data id that no layer scopes to the running workflow or execution (source review, not run).
+n8n 2.40.6, inferred from a source review (nothing was run): a Code node that already knows another execution's full binary-data id may read that execution's stored binary data, because no layer on the reviewed path scopes a caller-built id to the running workflow or execution.
 
 TITLE
 Inference from a source review of n8n 2.40.6, not observed in a run: a JavaScript Code node task that already knows another execution's full binary-data id, including its uuid v4, may read that binary data, because no layer on the path checks that a caller-built binary-data id belongs to the running workflow or execution. Inference: in the non-default filesystem, s3 or azure value of N8N_EXECUTION_DATA_STORAGE_MODE, while that store shares one root, bucket or container with the binary store, such a task that knows another execution's id and its workflow id, with no binary-data id, may also read that execution's whole bundle.
