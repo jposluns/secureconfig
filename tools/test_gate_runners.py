@@ -264,6 +264,10 @@ OVERFLOW_CASES = (
      [f"{OVERFLOW_MISSING} site/index.html;"], [OVERFLOW_OK, OVERFLOW_SKIP]),
     ("no section page file", "exit 0", 0, True, "1", ["site/license/index.html"], [], True, False,
      [f"{OVERFLOW_MISSING} site/license/index.html;"], [OVERFLOW_OK, OVERFLOW_REQUIRED]),
+    # The list's one non-folder page, /advisories/n8n.html, names its own file (the `*)` branch).
+    ("no advisory page file, the non-folder page", "exit 0", 0, True, "",
+     ["site/advisories/n8n.html"], [], True, False,
+     [f"{OVERFLOW_MISSING} site/advisories/n8n.html;"], [OVERFLOW_OK, OVERFLOW_SKIP]),
     ("an unlisted section page", "exit 0", 0, True, "", [], ["site/extra/index.html"], True, True,
      [f"{OVERFLOW_UNLISTED} site/extra/index.html", OVERFLOW_OK], [OVERFLOW_MISSING]),
     # The live site carries no /draft/ page (baseline SPECIFICATION 4.1 item 0), so the list does

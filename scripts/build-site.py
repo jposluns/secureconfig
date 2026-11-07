@@ -20,9 +20,10 @@ at https://draft.secureconfig.pages.dev, so the owner reviews
 https://draft.secureconfig.pages.dev/draft/, and `main` never carries site/draft/. The root build
 writes no page under draft/, and its `--check` refuses any file there. A staged build is noindex
 everywhere and carries no canonical or link previews. At the root base every page is indexable
-except the 404 page, and each indexable page carries its description, its canonical URL and the
-Open Graph (og:site_name after og:type) and Twitter link-preview tags with the card at
-images/secureconfig-card.png (as on auditthis.ai). Every page, the 404 included, carries the light
+except the 404 page and the unlisted advisory advisories/n8n.html, which are noindex and carry no
+canonical, description or link previews. Each indexable page carries its description, its
+canonical URL and the Open Graph (og:site_name after og:type) and Twitter link-preview tags with
+the card at images/secureconfig-card.png (as on auditthis.ai). Every page, the 404 included, carries the light
 and dark switch as the last child of the top bar, after its `nav`, and loads scheme.js in
 `<head>` before the stylesheets, without `defer` or `async` (SPECIFICATION.md section 7.33).
 
@@ -651,7 +652,8 @@ class Builder:
                 '<p class="lbl sec">Affected versions</p>', '<h2 id="affected">Affected versions</h2>',
                 items("affected"),
                 '<p class="lbl sec">Description</p>', '<h2 id="description">Description</h2>',
-                '<p class="lbl blk">Vulnerable code locations</p>', items("locations"),
+                '<p class="lbl blk">Vulnerable code locations, observed in source</p>',
+                items("locations"),
                 '<p class="lbl blk">Read path, observed in source</p>', items("observed"),
                 '<p class="lbl blk">Read path, inference</p>', items("inferred"),
                 '<p class="lbl blk">Steps a reviewer would take</p>', items("steps", ordered=True),

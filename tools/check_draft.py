@@ -51,7 +51,8 @@ PART 2, SELF-CONTAINED:
   - a `<link rel="canonical">` href, which is required to be absolute, has its own rule instead:
     each of the 7 indexable pages (INDEXABLE below) carries exactly 1, equal byte for byte to
     `https://secureconfig.ai` plus that page's own root path (`/`, `/guides/`, ...,
-    `/license/`); the 404 page carries none; any other page carries at most its own;
+    `/license/`); the 404 page and the unlisted site/advisories/n8n.html (NO_CANONICAL_PAGES, by
+    exact path) carry none, not even their own; any other page carries at most its own;
   - any `http-equiv` attribute is refused (a refresh would navigate away without a link);
   - every link that opens a new tab carries the visually hidden "(opens in a new tab)";
   - only the landing page, the Disclosure page and the Licence page link the Disclosure and Licence
@@ -144,6 +145,11 @@ ABOUT_TARGETS = ("disclosure/index.html", "license/index.html")
 INDEXABLE = ("index.html", "guides/index.html", "for-ai/index.html", "for-humans/index.html",
              "checklist/index.html", "disclosure/index.html", "license/index.html")
 NOTFOUND = "404.html"
+# The pages that carry NO canonical, not even their own URL, by exact path, with the name a finding
+# gives each: the 404 page, and the unlisted advisory, which is kept out of search and must not
+# name its URL as one to index. Any other page carries at most its own canonical.
+NO_CANONICAL_PAGES = {NOTFOUND: "the 404 page",
+                      "advisories/n8n.html": "the unlisted advisory page"}
 # The published indexes (PART 3): the hand-written ones refuse the word, the guide corpus refuses
 # each form of the draft path, both read after normalized().
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
@@ -412,12 +418,13 @@ def check(root):
             if why:
                 findings.append(f"{rel}:{line}: {name}={value!r} {why}")
         # A canonical is this page's own absolute URL, byte for byte: exactly 1 on each indexable
-        # page, none on the 404, and at most its own on any other page.
+        # page, none on the 404 or the unlisted advisory (NO_CANONICAL_PAGES), and at most its own
+        # on any other page.
         expected = own_url(page_rel)
-        if page_rel == NOTFOUND:
+        if page_rel in NO_CANONICAL_PAGES:
             for line, value in parsed.canonicals:
-                findings.append(f"{rel}:{line}: carries the canonical {value!r}; the 404 page "
-                                f"carries none")
+                findings.append(f"{rel}:{line}: carries the canonical {value!r}; "
+                                f"{NO_CANONICAL_PAGES[page_rel]} carries none")
         else:
             required = page_rel in INDEXABLE
             if (required and len(parsed.canonicals) != 1) or len(parsed.canonicals) > 1:
@@ -509,9 +516,9 @@ def main(argv=None):
         return 1
     print(f"  ok    {n} pages are self-contained (every root-relative link names a file under "
           f"site/, external links leave by http(s) on another host with the new-tab hint), only "
-          f"the 404 page and the unlisted advisories/n8n.html carry a robots noindex, each "
-          f"canonical is its page's own URL, site/ holds no draft tree, no page or published index "
-          f"names /draft/, and there is no _redirects")
+          f"the 404 page and the unlisted advisories/n8n.html carry a robots noindex and no "
+          f"canonical, each other canonical is its page's own URL, site/ holds no draft tree, no "
+          f"page or published index names /draft/, and there is no _redirects")
     return 0
 
 

@@ -16,7 +16,8 @@ alias, https:/// and scheme-relative spellings, a backslash, whitespace, javascr
 attributes beyond href and src, http-equiv, the new-tab hint, site/_redirects, CSS @import and
 url() containment and the site.css grammar. New at the root: a root-relative link must name a file
 under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable pages, none on
-the 404); the live site carries no draft tree, so a site/draft/ folder (with a page or with any
+the 404 or the unlisted advisory, not even its own); the noindex admission is the exact path
+advisories/n8n.html, so a noindex site/advisories/other.html is still refused; the live site carries no draft tree, so a site/draft/ folder (with a page or with any
 other file), a site/Draft/ folder and a site/draft file are each refused while a site/drafts/
 folder is not the draft tree; the "no page links /draft/" and Disclosure and Licence rules compare
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
@@ -333,6 +334,12 @@ CASES = [
      write("site/extra.html", PLAIN.replace('<meta charset="utf-8">',
                                             '<meta charset="utf-8">\n' + META)),
      "carries a robots meta element", 1),
+    # #1252 QA: the admission is the exact path, not the advisories/ folder, so a noindex page
+    # beside the advisory is refused; NOINDEX_PAGES widened to a prefix fails this case.
+    ("a noindex page beside the advisory, under site/advisories/",
+     write("site/advisories/other.html", PLAIN.replace('<meta charset="utf-8">',
+                                                       '<meta charset="utf-8">\n' + META)),
+     "site/advisories/other.html carries a robots meta element", 1),
     # The live site carries no draft tree (SPECIFICATION 4.1 items 0 and 3), in any case and
     # whatever it holds; a folder whose name only begins with draft is not the tree.
     ("a site/draft/ folder holding a page", write("site/draft/index.html", PLAIN),
@@ -446,6 +453,12 @@ CASES = [
     ("a canonical on the 404 page",
      edit(P404, "</head>", '<link rel="canonical" href="https://secureconfig.ai/404.html">\n</head>'),
      "the 404 page carries none", 1),
+    # #1252 QA: the unlisted advisory carries no canonical, not even its own URL, which the rule
+    # for any other page would accept.
+    ("a canonical on the unlisted advisory page, its own URL",
+     edit(ADVISORY, "</head>",
+          '<link rel="canonical" href="https://secureconfig.ai/advisories/n8n.html">\n</head>'),
+     "the unlisted advisory page carries none", 1),
     *INDEX_CASES,
     ("llms-full.txt prose that merely says draft",
      append("site/llms-full.txt", "Write a draft of the policy first; the Draft review comes "
