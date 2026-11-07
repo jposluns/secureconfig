@@ -10,9 +10,9 @@ so a request that slipped past a stub would fail, never be sent. Every online pa
     a duplicate key, a NaN, no components object, a fence that does not close at the end marker,
     and two start markers;
   - REPO: github.com blob, tree and releases URLs give OWNER/REPO, and other URLs (raw, gist,
-    issues, a bare repository, gitlab, http, a port, userinfo, a .git name) give None; a sources
-    map gives its first such repository, the same repository in another case once, and none or
-    two different repositories a skip reason;
+    issues, a bare repository, gitlab, http, any explicit port, 443 included, userinfo, a .git
+    name) give None; a sources map gives its first such repository, the same repository in
+    another case once, and none or two different repositories a skip reason;
   - BASIS: clean releases (4.4.0, v4.4.0, 26.8.0, 2026.09.0, 2.4.20.3, n8n@2.47.2 and
     @sveltejs/kit@2.70.3, keeping the prefix apart) and every skip (a commit hash, a commit
     prefixed "commit", unknown, empty, a date, ranges, series such as 2.4, 15, v262 and 4.x,
@@ -25,13 +25,16 @@ so a request that slipped past a stub would fail, never be sent. Every online pa
     skipped as covered), a duplicate, a docs-only and a commit component, an unparseable block
     and a guide with no block; --guide limits the guides read;
   - NETWORK: fetch_latest() on a stub opener for a 200, 404, 403 rate limit, 429, 500, a
-    connection error, a timeout, invalid JSON, a list, no tag_name, a pre-release flag and an
-    oversized body, and check_online() asking once per repository and, after a rate limit,
-    sending no further request; the redirect handler refuses a redirect off api.github.com;
+    connection error, a timeout, invalid JSON, a list, no tag_name, a draft flag, a pre-release
+    flag and an oversized body, and check_online() asking once per repository, after a rate
+    limit sending no further request, and putting a newer draft or pre-release under "could not
+    check", never drift; the redirect handler refuses a redirect off api.github.com;
   - ISSUE: the exact title and prefilled URL for a fixture row, decoded back to its title and body;
   - RUN: run() offline prints what it would check and opens nothing, online prints all four
     groups and an issue link per drift or major row, and exits 0 either way; usage errors exit 2;
-    --file without authentication files nothing, and with a stub gh files only on yes.
+    --file without authentication files nothing, and with a stub gh files only on yes; with
+    standard input not a terminal (a stub isatty, or no standard input), --file asks nothing,
+    files nothing, even with a piped yes waiting, and says why.
 
 Exit 0 ok, 1 on a finding.
 """
@@ -173,6 +176,7 @@ for url, want in {
         'https://gitlab.com/a/b/-/blob/v1.0.0/x': None,
         'http://github.com/a/b/blob/v1/x': None,
         'https://github.com:8443/a/b/blob/v1/x': None,
+        'https://github.com:443/owner/repo/blob/v1/x': None,
         'https://user@github.com/a/b/blob/v1/x': None,
         'https://github.com/a/b.git/blob/v1/x': None,
         'https://github.com/-a/b/blob/v1/x': None,
@@ -322,6 +326,18 @@ with tempfile.TemporaryDirectory() as tmp:
         check(rc == 2, f'RUN: {desc} should exit 2: {rc}')
 
     # ------------------------------------------------------------ --file
+    class StubStdin(io.StringIO):
+        """Standard input holding a piped yes, with a stubbed isatty answer."""
+
+        def __init__(self, tty):
+            super().__init__('yes\n')
+            self.tty = tty
+
+        def isatty(self):
+            return self.tty
+
+    saved_stdin = sys.stdin
+    sys.stdin = StubStdin(True)  # the consent cases below run as if at a terminal
     calls = []
     out = io.StringIO()
     rc = cu.run(['--references', str(refs), '--check-online', '--file'], out=out,
@@ -360,6 +376,41 @@ with tempfile.TemporaryDirectory() as tmp:
                 token_file=lambda title, body, token, opener: calls.append(token) or ('u', None))
     check(calls == ['test-token'], f'RUN: --file with a token and no gh should use the token: {calls!r}')
 
+    # Standard input that is not a terminal: a piped yes waits on it, and the real input() is the
+    # prompt, so a missing check would read that yes and file.
+    sys.stdin = StubStdin(False)
+    calls, gh_checks = [], []
+    out = io.StringIO()
+    rc = cu.run(['--references', str(refs), '--check-online', '--file'], out=out,
+                opener=StubOpener({'keycloak/keycloak': release('26.9.0'), 'x/y': release('v1.0.0')}),
+                environ={}, ask=input, gh_check=lambda: gh_checks.append(1) or True,
+                gh_file=lambda *a: calls.append(a) or ('url', None))
+    check(rc == 0 and not calls and not gh_checks
+          and 'Not filing: issues are filed only from an interactive terminal' in out.getvalue()
+          and 'Share the report links above instead.' in out.getvalue(),
+          'RUN: --file with standard input not a terminal should file nothing and say so: '
+          + out.getvalue())
+    check(sys.stdin.read() == 'yes\n' and 'Type yes' not in out.getvalue(),
+          'RUN: --file with standard input not a terminal should not prompt or read the piped yes')
+    calls = []
+    sys.stdin = StubStdin(False)
+    rc = cu.run(['--references', str(refs), '--check-online', '--file'], out=io.StringIO(),
+                opener=StubOpener({'keycloak/keycloak': release('26.9.0'), 'x/y': release('v1.0.0')}),
+                environ={'GITHUB_TOKEN': 'test-token'}, ask=lambda prompt: 'yes',
+                gh_check=lambda: False,
+                token_file=lambda title, body, token, opener: calls.append(token) or ('u', None))
+    check(rc == 0 and not calls, f'RUN: --file with a token and no terminal should file nothing: {calls!r}')
+    calls = []
+    sys.stdin = None
+    out = io.StringIO()
+    rc = cu.run(['--references', str(refs), '--check-online', '--file'], out=out,
+                opener=StubOpener({'keycloak/keycloak': release('26.9.0'), 'x/y': release('v1.0.0')}),
+                environ={}, ask=lambda prompt: 'yes', gh_check=lambda: True,
+                gh_file=lambda *a: calls.append(a) or ('url', None))
+    check(rc == 0 and not calls and 'only from an interactive terminal' in out.getvalue(),
+          'RUN: --file with no standard input should file nothing: ' + out.getvalue())
+    sys.stdin = saved_stdin
+
 # ---------------------------------------------------------------- NETWORK
 
 for desc, answer, want in (
@@ -374,6 +425,7 @@ for desc, answer, want in (
         ('invalid JSON', b'{not json', (None, 'not JSON', False)),
         ('a JSON list', b'[]', (None, 'no tag_name', False)),
         ('no tag_name', b'{"name": "x"}', (None, 'no tag_name', False)),
+        ('a draft flag', release('v2.0.0', draft=True), (None, 'draft', False)),
         ('a pre-release flag', release('v2.0.0', prerelease=True), (None, 'pre-release', False)),
         ('an oversized body', b' ' * (cu.MAX_BYTES + 1), (None, 'larger than', False))):
     tag, reason, limited = cu.fetch_latest('a/b', StubOpener({'a/b': answer}), None)
@@ -391,6 +443,15 @@ check(len(groups[cu.DRIFT]) == 2 and not groups[cu.MAJOR] and len(groups[cu.COUL
       f'NETWORK: groups after a rate limit: { {k: len(v) for k, v in groups.items()} }')
 check('earlier in this run' in groups[cu.COULD_NOT][-1]['reason'],
       'NETWORK: a repository after the rate limit should say it was not requested')
+for flag in ('draft', 'prerelease'):
+    rows = [entry('v1.0.0', repo='a/flagged')]
+    groups, current = cu.check_online(rows, StubOpener({'a/flagged': release('v1.1.0', **{flag: True})}),
+                                      None)
+    check(not groups[cu.DRIFT] and not groups[cu.MAJOR] and not current
+          and len(groups[cu.COULD_NOT]) == 1
+          and 'draft or pre-release' in groups[cu.COULD_NOT][0]['reason'],
+          f'NETWORK: a newer release marked {flag} should be could not check, never drift: '
+          f'{ {k: len(v) for k, v in groups.items()} }')
 opener = StubOpener({'a/b': release('v1.0.0')})
 cu.fetch_latest('a/b', opener, 'tok')
 check(opener.requests[0].get_header('Authorization') == 'Bearer tok'

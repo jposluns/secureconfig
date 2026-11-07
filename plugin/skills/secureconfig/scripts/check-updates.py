@@ -13,21 +13,29 @@ repository to https://api.github.com/repos/OWNER/REPO/releases/latest, with GITH
 GH_TOKEN as a bearer token when either is set. --guide NAME, which can be repeated, limits the
 run to the named guides, and --references DIR reads another folder of guides.
 
-It never reports drift it cannot establish. A component is skipped, and listed under "Not
-automatically checkable", when no source is a github.com blob, tree or releases URL, when its
-sources name more than one GitHub repository, or when its basis is not a clean dotted-numeric
-release of at least three parts (a commit, a range, a date, a series such as 2.4 or 4.x, a
-pre-release or packaging suffix, or unknown). Any network, HTTP, JSON or rate-limit problem, and
-any latest-release tag that is not a clean release with the same tool prefix as the basis, is
-listed under "Could not check", never as drift.
+It skips the cases it can detect that it cannot establish. A component is skipped, and listed
+under "Not automatically checkable", when no source is a github.com blob, tree or releases URL
+with no explicit port, when its sources name more than one GitHub repository, or when its basis
+is not a clean dotted-numeric release of at least three parts (a commit, a range, a date, a
+series such as 2.4 or 4.x, a pre-release or packaging suffix, or unknown). Any network, HTTP,
+JSON or rate-limit problem, a latest release marked draft or pre-release, and any latest-release
+tag that is not a clean release with the same tool prefix as the basis are listed under "Could
+not check", never as drift.
+
+A reported drift is a prompt to verify, not a certainty. A repository that releases several
+packages under plain version tags with no package prefix passes those checks, but its latest
+release may be another package's, and the script cannot tell that it is not this component's.
+The script also does not look for an issue that is already open for the same drift.
 
 Drift means only that upstream published a newer release than the recorded basis. It does not
 mean the guide is wrong; nobody has yet checked whether the newer release changes its guidance.
 
 With --file, after the report, each drift or major row can be opened as an issue on the
 secureconfig repository, through an authenticated gh or a token, and only after the person
-running the script types yes at a prompt for that issue. Without authentication or that answer,
-nothing is filed and the prefilled links in the report are the way to report it.
+running the script types yes at a prompt for that issue. Filing needs an interactive terminal:
+when standard input is not a terminal, the script asks nothing and files nothing. Without an
+interactive terminal, authentication or that answer, nothing is filed and the prefilled links
+in the report are the way to report it.
 
 Exit status: 0 whether or not drift is found, since drift is information and not an error; 2 on
 a usage error: an unknown option, --file without --check-online, a references folder that does
@@ -126,7 +134,10 @@ _REPO = re.compile(r'[A-Za-z0-9._-]{1,100}')
 
 
 def github_repo(url):
-    """OWNER/REPO for an https://github.com/OWNER/REPO/(blob|tree|releases)/... URL, else None."""
+    """OWNER/REPO for an https://github.com/OWNER/REPO/(blob|tree|releases)/... URL, else None.
+
+    A URL with any explicit port, 443 included, gives None: a canonical github.com URL has none.
+    """
     if not isinstance(url, str):
         return None
     try:
@@ -135,7 +146,7 @@ def github_repo(url):
     except ValueError:
         return None
     if (parts.scheme != 'https' or (parts.hostname or '') not in ('github.com', 'www.github.com')
-            or parts.username is not None or port not in (None, 443)):
+            or parts.username is not None or port is not None):
         return None
     segments = parts.path.split('/')
     # '', OWNER, REPO, VIEW, ... : the view must be followed by something or end the path.
@@ -527,12 +538,29 @@ def file_with_token(title, body, token, opener):
     return (url if isinstance(url, str) else 'filed'), None
 
 
+def stdin_is_terminal():
+    """True only when standard input is an open interactive terminal."""
+    try:
+        return sys.stdin is not None and sys.stdin.isatty()
+    except (AttributeError, ValueError, OSError):
+        return False
+
+
 def file_issues(rows, out, ask, token, opener, gh_check=gh_ready, gh_file=file_with_gh,
-                token_file=file_with_token, version='unknown'):
-    """Offer each (entry, group) row as an issue; file it only on an answer of yes."""
+                token_file=file_with_token, version='unknown', interactive=stdin_is_terminal):
+    """Offer each (entry, group) row as an issue; file it only on an answer of yes.
+
+    The answer must come from a person at an interactive terminal, so when standard input is not
+    one, nothing is asked and nothing is filed.
+    """
     if not rows:
         print('', file=out)
         print('Nothing to file: no drift or major row.', file=out)
+        return 0
+    if not interactive():
+        print('', file=out)
+        print('Not filing: issues are filed only from an interactive terminal, and standard input '
+              'is not one. Share the report links above instead.', file=out)
         return 0
     use_gh = gh_check()
     if not use_gh and not token:
@@ -576,8 +604,9 @@ def parse_args(argv):
                              '(network egress)')
     parser.add_argument('--file', action='store_true',
                         help='after the report, offer to open each drift or major row as an '
-                             'issue, filing only after you type yes (needs --check-online and '
-                             'an authenticated gh or GITHUB_TOKEN/GH_TOKEN)')
+                             'issue, filing only after you type yes (needs --check-online, an '
+                             'interactive terminal and an authenticated gh or '
+                             'GITHUB_TOKEN/GH_TOKEN)')
     parser.add_argument('--guide', metavar='NAME', action='append',
                         help='check only this guide, such as nginx.md; repeat for more')
     parser.add_argument('--references', metavar='DIR', default=str(DEFAULT_REFERENCES),

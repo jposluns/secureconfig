@@ -111,15 +111,25 @@ With it, the script asks GitHub's API for each upstream repository's latest rele
 that matter to the deployment.
 
 It prints a report in four groups (currency drift, major available, could not check, and not
-automatically checkable) with a prefilled issue link for each drift or major row. Anything it
-cannot establish, such as a commit or range basis, a source outside GitHub or a failed request,
-is listed for a manual check and never reported as drift.
+automatically checkable) with a prefilled issue link for each drift or major row. It skips the
+cases it can detect that it cannot establish: no github.com blob, tree or releases source,
+sources in more than one GitHub repository, a basis that is not a clean dotted-numeric release
+(such as a commit or a range), and a failed, rate-limited, draft or pre-release answer. Those
+are listed for a manual check and never reported as drift.
+
+A reported drift is a prompt to verify, not a certainty. A repository that releases several
+packages under plain version tags with no package prefix can return a latest release that is
+not this component's, and the script does not look for an issue that is already open for the
+same drift.
 
 Drift means only that a newer upstream release exists, not that the guide is wrong. Tell the user
-which guides it affects, check any default that matters against the vendor page as above, and
-share the issue links so the maintainer can update the guide. Run it with `--file` as well only
-when the user asks for the issues to be filed with their own authenticated `gh` or token; the
-script then asks for a typed `yes` before each issue and otherwise files nothing.
+which guides it affects, confirm that the newer release is this component's, check any default
+that matters against the vendor page as above, and share the issue links so the maintainer can
+update the guide. The script files issues only from an interactive terminal: when standard input
+is not one, `--file` asks nothing, files nothing and points to the report links. So when the
+user asks for the issues to be filed with their own authenticated `gh` or token, give them the
+`--check-online --file` command to run in their own terminal; the script then asks for a typed
+`yes` before each issue and otherwise files nothing.
 
 ## What this skill does not do
 
