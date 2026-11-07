@@ -332,7 +332,18 @@
     },
     {
       "kind": "file",
-      "target": "site/advisories/n8n.html",
+      "target": "site/advisories/n8n-2026-11-07-jposluns.html",
+      "regenerate": "python3 scripts/build-site.py",
+      "sources": [
+        "scripts/build-site.py",
+        "site-src/content.json",
+        "README.md",
+        "tools/version_basis_guides.txt"
+      ]
+    },
+    {
+      "kind": "file",
+      "target": "site/advisories/n8n-2026-11-07-jposluns.txt",
       "regenerate": "python3 scripts/build-site.py",
       "sources": [
         "scripts/build-site.py",

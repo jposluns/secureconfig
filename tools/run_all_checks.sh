@@ -1555,17 +1555,19 @@ echo "== no site page scrolls sideways at the template's widths =="
 # not-found page and is not listed, and the live site carries no /draft/ page (baseline
 # SPECIFICATION section 4.1 item 0: drafts are built on the `draft` branch), so a page under
 # site/draft/ is unlisted and fails here as well as in the site-draft section. The unlisted advisory
-# page /advisories/n8n.html is a real generated page that answers 200, so it IS listed and checked;
-# it is the one non-folder path in the list, named by its own file rather than an index.html. A
+# page /advisories/n8n-2026-11-07-jposluns.html is a real generated page that answers 200, so it IS
+# listed and checked; it is the one non-folder path in the list, named by its own file rather than
+# an index.html. Its plain-text copy (.txt) is not a page, so this list neither names nor reads it. A
 # listed folder page whose index.html is missing fails before the server starts, since http.server
 # would answer its path with a directory listing. Every other .html or .htm file under site/ (in any
 # case, at any depth, outside assets/, whose files scripts/build-site.py does not write) that is not
 # a listed page fails, so a new page cannot go unchecked.
-overflow_pages=(/ /advisories/n8n.html /checklist/ /disclosure/ /for-ai/ /for-humans/ /guides/ /license/)
+overflow_pages=(/ /advisories/n8n-2026-11-07-jposluns.html /checklist/ /disclosure/ /for-ai/ /for-humans/ /guides/ /license/)
 overflow_missing=""
 for overflow_path in "${overflow_pages[@]}"; do
   # A folder path (ending with /) names its index.html; the one non-folder page, the unlisted
-  # /advisories/n8n.html, names its own file. Either way a missing file is reported, by exact path.
+  # /advisories/n8n-2026-11-07-jposluns.html, names its own file. Either way a missing file is
+  # reported, by exact path.
   case $overflow_path in
     */) overflow_file="site${overflow_path}index.html" ;;
     *)  overflow_file="site${overflow_path}" ;;

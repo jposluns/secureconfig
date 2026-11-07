@@ -17,7 +17,10 @@ attributes beyond href and src, http-equiv, the new-tab hint, site/_redirects, C
 url() containment and the site.css grammar. New at the root: a root-relative link must name a file
 under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable pages, none on
 the 404 or the unlisted advisory, not even its own); the noindex admission is the exact path
-advisories/n8n.html, so a noindex site/advisories/other.html is still refused; the live site carries no draft tree, so a site/draft/ folder (with a page or with any
+advisories/n8n-2026-11-07-jposluns.html, so a noindex site/advisories/other.html, and a noindex
+page at the advisory's old path advisories/n8n.html, are still refused, while the advisory's
+build-written plain-text copy beside it, which is not a page, is in the pristine copy the gate
+accepts; the live site carries no draft tree, so a site/draft/ folder (with a page or with any
 other file), a site/Draft/ folder and a site/draft file are each refused while a site/drafts/
 folder is not the draft tree; the "no page links /draft/" and Disclosure and Licence rules compare
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
@@ -97,7 +100,9 @@ def write(rel, text):
 HOME = "site/index.html"
 GUIDES = "site/guides/index.html"
 P404 = "site/404.html"
-ADVISORY = "site/advisories/n8n.html"
+ADVISORY = "site/advisories/n8n-2026-11-07-jposluns.html"
+# The advisory's plain-text copy, which scripts/build-site.py writes beside it.
+ADVISORY_TEXT = "site/advisories/n8n-2026-11-07-jposluns.txt"
 META = '<meta name="robots" content="noindex, nofollow">'
 START = 'href="/guides/"'
 GUIDES_CANONICAL = 'href="https://secureconfig.ai/guides/"'
@@ -340,6 +345,12 @@ CASES = [
      write("site/advisories/other.html", PLAIN.replace('<meta charset="utf-8">',
                                                        '<meta charset="utf-8">\n' + META)),
      "site/advisories/other.html carries a robots meta element", 1),
+    # The advisory moved to a dated name (the maintainer's instruction of 2026-11-07): a noindex
+    # page at its old path is no longer admitted.
+    ("a noindex page at the advisory's old path, site/advisories/n8n.html",
+     write("site/advisories/n8n.html", PLAIN.replace('<meta charset="utf-8">',
+                                                     '<meta charset="utf-8">\n' + META)),
+     "site/advisories/n8n.html carries a robots meta element", 1),
     # The live site carries no draft tree (SPECIFICATION 4.1 items 0 and 3), in any case and
     # whatever it holds; a folder whose name only begins with draft is not the tree.
     ("a site/draft/ folder holding a page", write("site/draft/index.html", PLAIN),
@@ -457,7 +468,8 @@ CASES = [
     # for any other page would accept.
     ("a canonical on the unlisted advisory page, its own URL",
      edit(ADVISORY, "</head>",
-          '<link rel="canonical" href="https://secureconfig.ai/advisories/n8n.html">\n</head>'),
+          '<link rel="canonical" '
+          'href="https://secureconfig.ai/advisories/n8n-2026-11-07-jposluns.html">\n</head>'),
      "the unlisted advisory page carries none", 1),
     *INDEX_CASES,
     ("llms-full.txt prose that merely says draft",
@@ -546,6 +558,11 @@ def staged():
 
 def main():
     failures = []
+    # The pristine copy carries the advisory's plain-text copy, so the pristine case below shows the
+    # gate accepts a build-written .txt under site/advisories/.
+    if not (ROOT / ADVISORY_TEXT).is_file():
+        failures.append(f"{ADVISORY_TEXT} is missing, so the pristine case does not show the gate "
+                        f"accepts it; rerun python3 -I -B scripts/build-site.py")
     for desc, mutate, expected, want in CASES:
         rc, out = run(mutate)
         if rc != want:

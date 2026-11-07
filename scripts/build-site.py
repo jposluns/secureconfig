@@ -20,8 +20,11 @@ at https://draft.secureconfig.pages.dev, so the owner reviews
 https://draft.secureconfig.pages.dev/draft/, and `main` never carries site/draft/. The root build
 writes no page under draft/, and its `--check` refuses any file there. A staged build is noindex
 everywhere and carries no canonical or link previews. At the root base every page is indexable
-except the 404 page and the unlisted advisory advisories/n8n.html, which are noindex and carry no
-canonical, description or link previews. Each indexable page carries its description, its
+except the 404 page and the unlisted advisory advisories/n8n-2026-11-07-jposluns.html, which are
+noindex and carry no canonical, description or link previews. The build also writes that
+advisory's plain-text copy, advisories/n8n-2026-11-07-jposluns.txt (Builder.texts), with no
+HTML and no Markdown, for attaching to a report; it carries the same facts and labels as the
+page. Each indexable page carries its description, its
 canonical URL and the Open Graph (og:site_name after og:type) and Twitter link-preview tags with
 the card at images/secureconfig-card.png (as on auditthis.ai). Every page, the 404 included, carries the light
 and dark switch as the last child of the top bar, after its `nav`, and loads scheme.js in
@@ -45,8 +48,12 @@ with a body, an `on*` attribute, or "what this is" framing (SPECIFICATION.md sec
 that begins with "on" after whitespace; a word inside a closed quoted attribute value is not a
 name, so a description may say "read on GitHub". It does not write the copied baseline files
 under assets/baseline/ (scripts/copy-baseline.py does).
-`--check` compares every page it writes with the file on disk, byte for byte, and also fails on
-any other file under the output folder outside assets/baseline/ and the optional assets/site.css:
+The plain-text copy is refused when it would contain one of those dash characters, "what this is"
+framing, a backtick, a Markdown link, a character reference such as `&lt;`, or a tag of the
+markup the pages use.
+`--check` compares every page and plain-text copy it writes with the file on disk, byte for byte,
+and also fails on any other file under the output folder outside assets/baseline/ and the optional
+assets/site.css:
 an extra page (a .html or .htm file in any case, as the CSP gate names one) at any base, and any
 other file except, at base `/` only, the published files the root holds beside the pages
 (PUBLISHED: llms.txt, llms-full.txt, robots.txt, sitemap.xml, _headers, .well-known/security.txt,
@@ -82,6 +89,11 @@ SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline R
 # every other file, so a stray file cannot ship unnoticed.
 PUBLISHED = (".well-known/security.txt", "_headers", "apple-touch-icon.png", "favicon.svg",
              "images/secureconfig-card.png", "llms-full.txt", "llms.txt", "robots.txt", "sitemap.xml")
+# The unlisted n8n advisory (the maintainer's instruction of 2026-11-07: a dated name) and its
+# plain-text copy. tools/check_draft.py admits the page as noindex with no canonical by this exact
+# path, and the overflow page list in tools/run_all_checks.sh names it.
+ADVISORY_PAGE = "advisories/n8n-2026-11-07-jposluns.html"
+ADVISORY_TEXT = "advisories/n8n-2026-11-07-jposluns.txt"
 REPO = "https://github.com/jposluns/secureconfig"
 BLOB = REPO + "/blob/main/"
 ORIGIN = "https://secureconfig.ai"
@@ -330,6 +342,29 @@ class Builder:
                 out.append(self.link(esc(bare), bare))
             pos = m.end()
         out.append(esc(text[pos:]))
+        return "".join(out)
+
+    def plain(self, text):
+        """The inline syntax as plain text, for the advisory's plain-text copy: code without its
+        backticks, emphasis without its asterisks, and a link as its label followed by its URL in
+        parentheses, a root-relative one made absolute on this site's origin. Nothing is
+        HTML-escaped."""
+        text = self.n(text)
+        out, pos = [], 0
+        for m in INLINE.finditer(text):
+            code, label, target, em, bare = m.groups()
+            if bare is not None:
+                continue
+            out.append(text[pos:m.start()])
+            if code is not None:
+                out.append(code)
+            elif label is not None:
+                href = ORIGIN + target if target.startswith("/") else self.url(target)[0]
+                out.append(f"{label.strip('`')} ({href})")
+            else:
+                out.append(em)
+            pos = m.end()
+        out.append(text[pos:])
         return "".join(out)
 
     # ---- page parts ----
@@ -636,8 +671,8 @@ class Builder:
     def advisory(self):
         # The unlisted n8n security advisory (the maintainer's instruction). Like the 404 page it is
         # noindex, carries no canonical and no link previews (self.page defaults), and no page links
-        # it; tools/check_draft.py admits advisories/n8n.html as a noindex page by that exact path,
-        # and site/_headers sends X-Robots-Tag: noindex for /advisories/*.
+        # it; tools/check_draft.py admits ADVISORY_PAGE as a noindex page by that exact path, and
+        # site/_headers sends X-Robots-Tag: noindex for /advisories/*.
         a = self.c["advisory_n8n"]
 
         def items(key, ordered=False):
@@ -648,6 +683,7 @@ class Builder:
         body = [f'<p class="lead">{self.inline(a["status"]["text"])}</p>',
                 f'<p>{self.inline(a["intro"]["text"])}</p>',
                 '<p class="lbl sec">Title</p>', '<h2 id="title">Title</h2>',
+                f'<p><strong>Summary:</strong> {self.inline(a["report_summary"]["text"])}</p>',
                 f'<p>{self.inline(a["report_title"]["text"])}</p>',
                 '<p class="lbl sec">Affected versions</p>', '<h2 id="affected">Affected versions</h2>',
                 items("affected"),
@@ -670,19 +706,63 @@ class Builder:
         return self.page("Security advisory: n8n", "",
                          self.doc(a["label"]["text"], a["h1"]["text"], self.rail(), body))
 
+    def advisory_text(self):
+        # The advisory's plain-text copy, for attaching to a report (the maintainer's instruction
+        # of 2026-11-07): the same content.json entries as advisory(), in the same order and under
+        # the same labels, with no HTML and no Markdown. Each paragraph or list item is 1 line.
+        a = self.c["advisory_n8n"]
+
+        def items(key, ordered=False):
+            return [f"{f'{i}.' if ordered else '-'} {self.plain(x['text'])}"
+                    for i, x in enumerate(a[key], 1)]
+
+        def section(title, *blocks):
+            return [title.upper(), *blocks]
+
+        def sub(label, *lines):
+            return [f"{label}:", *lines]
+
+        parts = [
+            [f"{a['label']['text']}: n8n"], [self.plain(a["h1"]["text"])],
+            [self.plain(a["status"]["text"])], [self.plain(a["intro"]["text"])],
+            section("Summary", self.plain(a["report_summary"]["text"])),
+            section("Title", self.plain(a["report_title"]["text"])),
+            section("Affected versions", *items("affected")),
+            section("Description"),
+            sub("Vulnerable code locations, observed in source", *items("locations")),
+            sub("Read path, observed in source", *items("observed")),
+            sub("Read path, inference", *items("inferred")),
+            sub("Steps a reviewer would take", *items("steps", ordered=True)),
+            sub("Proof of concept", self.plain(a["poc"]["text"])),
+            sub("Impact", self.plain(a["impact"]["text"])),
+            section("Reporter", self.plain(a["reporter_note"]["text"]), *items("reporter")),
+            section("CVSS 4.0, provisional", self.plain(a["cvss_vector"]["text"]),
+                    self.plain(a["cvss_derivation"]["text"])),
+            section("Mitigations", *items("mitigations")),
+        ]
+        return "\n\n".join("\n".join(p) for p in parts) + "\n"
+
     def build(self):
         # No draft/index.html: the live site carries no /draft/ page (SPECIFICATION 4.1 item 0);
         # the `draft` branch stages the whole site under /draft/ with --base /draft/.
-        # advisories/n8n.html is the one unlisted noindex page beside the 404 (the maintainer's
+        # ADVISORY_PAGE is the one unlisted noindex page beside the 404 (the maintainer's
         # instruction): noindex, no canonical, linked from nowhere, and in no index or menu.
         pages = {"index.html": self.home(), "guides/index.html": self.guides(),
                  "for-ai/index.html": self.for_ai(), "for-humans/index.html": self.for_humans(),
                  "checklist/index.html": self.checklist(), "disclosure/index.html": self.disclosure(),
                  "license/index.html": self.license(), "404.html": self.notfound(),
-                 "advisories/n8n.html": self.advisory()}
+                 ADVISORY_PAGE: self.advisory()}
         for name, text in pages.items():
             refuse(name, text)
         return pages
+
+    def texts(self):
+        """The plain-text files the build writes beside the pages, by path, each refused as
+        refuse_text() says; build() returns the pages only."""
+        texts = {ADVISORY_TEXT: self.advisory_text()}
+        for name, text in texts.items():
+            refuse_text(name, text)
+        return texts
 
 
 def blank_values(text, start):
@@ -750,6 +830,32 @@ def refuse(name, text):
         raise Refused(f"{name} would contain " + ", ".join(why))
 
 
+# A tag of the markup the pages use, and a character reference: neither belongs in a plain-text
+# copy. A placeholder such as `<wf>` in a key layout is text, not a tag, so it is not matched.
+TEXT_TAG = re.compile(r"</?(?:a|br|code|div|em|h[1-6]|li|ol|p|pre|span|strong|ul)\b[^>]*>", re.I)
+CHAR_REF = re.compile(r"&(?:[a-z][a-z0-9]*|#[0-9]+|#x[0-9a-f]+);", re.I)
+
+
+def refuse_text(name, text):
+    """Raise Refused when a plain-text copy carries a dash character, "what this is" framing, a
+    backtick, a Markdown link, a character reference or a tag of the pages' markup."""
+    why = []
+    if any(d in text for d in DASHES):
+        why.append("a dash character (U+2010 to U+2015 or U+2212)")
+    if FRAMING.search(text):
+        why.append('"what this is" framing')
+    if "`" in text:
+        why.append("a backtick")
+    if "](" in text:
+        why.append("a Markdown link")
+    if CHAR_REF.search(text):
+        why.append("a character reference")
+    if TEXT_TAG.search(text):
+        why.append("an HTML tag")
+    if why:
+        raise Refused(f"{name} would contain " + ", ".join(why))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--base", default="/")
@@ -763,6 +869,7 @@ def main(argv=None):
             print("\n".join(b.inputs()))
             return 0
         pages = b.build()
+        texts = b.texts()
     except SourceError as exc:
         print(f"  FAIL  {exc}")
         return 2
@@ -771,9 +878,10 @@ def main(argv=None):
         return 1
     out = args.out or Path("site") / args.base.lstrip("/")
     out = out if out.is_absolute() else ROOT / out
+    written = {**pages, **texts}  # every file this build writes, pages and plain-text copies
     if args.check:
         problems = []
-        for name, text in pages.items():
+        for name, text in written.items():
             path = out / name
             try:
                 if path.read_bytes() != text.encode("utf-8"):
@@ -783,16 +891,17 @@ def main(argv=None):
             except OSError as exc:
                 print(f"  FAIL  cannot read {path}: {exc}")
                 return 2
-        # Every file under the output folder is a page this build writes, a copied template file
-        # under assets/baseline/ (scripts/copy-baseline.py, pinned by tools/check_baseline_pin.py),
-        # or the optional assets/site.css that the baseline README allows for the 2 per-site
+        # Every file under the output folder is a page or plain-text copy this build writes, a
+        # copied template file under assets/baseline/ (scripts/copy-baseline.py, pinned by
+        # tools/check_baseline_pin.py), or the optional assets/site.css that the baseline README
+        # allows for the 2 per-site
         # constants (its grammar is held by tools/check_draft.py). A page is .html or .htm in any
         # case, read as the CSP gate reads one (name_suffix). At the root after promotion the folder
         # also holds the published files, named one by one in PUBLISHED.
         if out.is_dir():
             for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
-                if rel in pages or rel.startswith(COPIED) or rel == SITE_CSS:
+                if rel in written or rel.startswith(COPIED) or rel == SITE_CSS:
                     continue
                 if name_suffix(path.name) in (".html", ".htm"):
                     problems.append(f"{rel} is not a page this build writes")
@@ -807,14 +916,16 @@ def main(argv=None):
                 print(f"  FAIL  {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}/{p}; "
                       f"rerun python3 -I -B scripts/build-site.py")
             return 1
-        print(f"  ok    the {len(pages)} pages under {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out} "
+        print(f"  ok    the {len(pages)} pages and {len(texts)} plain-text copy under "
+              f"{out.relative_to(ROOT) if out.is_relative_to(ROOT) else out} "
               f"match a fresh build (base {args.base})")
         return 0
-    for name, text in pages.items():
+    for name, text in written.items():
         path = out / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(text.encode("utf-8"))
-    print(f"  ok    wrote {len(pages)} pages under {out} (base {args.base})")
+    print(f"  ok    wrote {len(pages)} pages and {len(texts)} plain-text copy under {out} "
+          f"(base {args.base})")
     return 0
 
 

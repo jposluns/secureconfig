@@ -120,8 +120,8 @@ the indented lines under it; `#` is a comment; `! Name` DETACHES a header. This 
     never relies on: no page carries an inline block for it to permit. A comma, which would make
     the value more than one policy, gets its own message;
   - exactly ONE X-Robots-Tag, `X-Robots-Tag: noindex` under the `/advisories/*` rule, which keeps
-    the unlisted advisory pages (site/advisories/n8n.html) out of search besides their own robots
-    meta; every OTHER X-Robots-Tag is refused, by rule, value, or a detach, so a header-level
+    the unlisted advisory (site/advisories/n8n-2026-11-07-jposluns.html and its plain-text copy)
+    out of search besides the page's own robots meta; every OTHER X-Robots-Tag is refused, by rule, value, or a detach, so a header-level
     noindex cannot silently deindex anything else. The 404 page carries its own robots meta, and the
     live site carries no /draft/ page for a `/draft/*` noindex rule to cover (baseline SPECIFICATION
     section 4.1 items 0 and 2: that rule belongs on the `draft` branch);

@@ -20,12 +20,15 @@ A PAGE is any file under site/ named .html or .htm in any case, read by the CSP 
 rule (check_csp_hashes.name_suffix), so a page the CSP gate checks is a page this gate checks too.
 
 PART 1, INDEXABILITY AND NO DRAFT TREE:
-  - site/404.html and site/advisories/n8n.html (NOINDEX_PAGES) each carry exactly 1 robots meta
-    element, read by html.parser (so a commented-out one does not count, attribute case and quoting
-    do not matter, and of duplicate attributes the first counts, as in a browser), whose content is
-    `noindex, nofollow` (case and spacing aside). advisories/n8n.html is the one unlisted advisory
-    the maintainer keeps out of search, reachable only by its URL and linked from no page; it is
-    admitted by that exact path, and any OTHER noindex page is still refused;
+  - site/404.html and site/advisories/n8n-2026-11-07-jposluns.html (NOINDEX_PAGES) each carry
+    exactly 1 robots meta element, read by html.parser (so a commented-out one does not count,
+    attribute case and quoting do not matter, and of duplicate attributes the first counts, as in a
+    browser), whose content is `noindex, nofollow` (case and spacing aside).
+    advisories/n8n-2026-11-07-jposluns.html (ADVISORY) is the one unlisted advisory the maintainer
+    keeps out of search, reachable only by its URL and linked from no page; it is admitted by that
+    exact path, and any OTHER noindex page, the old advisories/n8n.html included, is still refused.
+    Its plain-text copy, advisories/n8n-2026-11-07-jposluns.txt, is not a page, so this gate does
+    not read it;
   - every other page carries NO robots meta element at all: the generated pages are indexable and
     carry none, so one appearing is an edit this gate refuses rather than guesses about;
   - site/ holds no entry named `draft` in any case (a folder, with any file in it, or a file): the
@@ -51,8 +54,9 @@ PART 2, SELF-CONTAINED:
   - a `<link rel="canonical">` href, which is required to be absolute, has its own rule instead:
     each of the 7 indexable pages (INDEXABLE below) carries exactly 1, equal byte for byte to
     `https://secureconfig.ai` plus that page's own root path (`/`, `/guides/`, ...,
-    `/license/`); the 404 page and the unlisted site/advisories/n8n.html (NO_CANONICAL_PAGES, by
-    exact path) carry none, not even their own; any other page carries at most its own;
+    `/license/`); the 404 page and the unlisted site/advisories/n8n-2026-11-07-jposluns.html
+    (NO_CANONICAL_PAGES, by exact path) carry none, not even their own; any other page carries at
+    most its own;
   - any `http-equiv` attribute is refused (a refresh would navigate away without a link);
   - every link that opens a new tab carries the visually hidden "(opens in a new tab)";
   - only the landing page, the Disclosure page and the Licence page link the Disclosure and Licence
@@ -145,11 +149,14 @@ ABOUT_TARGETS = ("disclosure/index.html", "license/index.html")
 INDEXABLE = ("index.html", "guides/index.html", "for-ai/index.html", "for-humans/index.html",
              "checklist/index.html", "disclosure/index.html", "license/index.html")
 NOTFOUND = "404.html"
+# The one unlisted advisory page (the maintainer's instruction of 2026-11-07 gave it this dated
+# name), as scripts/build-site.py ADVISORY_PAGE writes it.
+ADVISORY = "advisories/n8n-2026-11-07-jposluns.html"
 # The pages that carry NO canonical, not even their own URL, by exact path, with the name a finding
 # gives each: the 404 page, and the unlisted advisory, which is kept out of search and must not
 # name its URL as one to index. Any other page carries at most its own canonical.
 NO_CANONICAL_PAGES = {NOTFOUND: "the 404 page",
-                      "advisories/n8n.html": "the unlisted advisory page"}
+                      ADVISORY: "the unlisted advisory page"}
 # The published indexes (PART 3): the hand-written ones refuse the word, the guide corpus refuses
 # each form of the draft path, both read after normalized().
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
@@ -165,10 +172,10 @@ DRAFT_REFS = (
 )
 DECODE_ROUNDS = 8
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
-# must not carry at all. The 404 page is the not-found page; advisories/n8n.html is the one
-# unlisted advisory the maintainer keeps out of search (reachable only by its URL, linked from no
-# page, and absent from every index). Any OTHER noindex page is still refused, by exact path.
-NOINDEX_PAGES = {"404.html", "advisories/n8n.html"}
+# must not carry at all. The 404 page is the not-found page; ADVISORY is the one unlisted
+# advisory the maintainer keeps out of search (reachable only by its URL, linked from no page, and
+# absent from every index). Any OTHER noindex page is still refused, by exact path.
+NOINDEX_PAGES = {NOTFOUND, ADVISORY}
 URL_LISTS = {"srcset", "imagesrcset"}
 URL_NAMES = {"formaction", "action", "ping", "poster", "background"}
 BAD_URL_CHARS = re.compile(r"[\x00-\x20\x7f\\]")
@@ -408,7 +415,7 @@ def check(root):
         elif parsed.robots:
             findings.append(f"{rel} carries a robots meta element "
                             f"({[c for _, c in parsed.robots]!r}); only the 404 page and the "
-                            f"unlisted advisories/n8n.html are noindex, and every other page "
+                            f"unlisted {ADVISORY} are noindex, and every other page "
                             f"carries none")
         for line in parsed.http_equiv:
             findings.append(f"{rel}:{line}: carries http-equiv, which can refresh or redirect the "
@@ -516,7 +523,7 @@ def main(argv=None):
         return 1
     print(f"  ok    {n} pages are self-contained (every root-relative link names a file under "
           f"site/, external links leave by http(s) on another host with the new-tab hint), only "
-          f"the 404 page and the unlisted advisories/n8n.html carry a robots noindex and no "
+          f"the 404 page and the unlisted {ADVISORY} carry a robots noindex and no "
           f"canonical, each other canonical is its page's own URL, site/ holds no draft tree, no "
           f"page or published index names /draft/, and there is no _redirects")
     return 0

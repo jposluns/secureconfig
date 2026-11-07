@@ -123,10 +123,19 @@ CASES = [
     # requires it in the sitemap nor flags it, and the sitemap cannot list it: its URL is not a
     # folder path ending with /.
     ("the noindex advisory page, not a folder index, left out of the sitemap",
-     {"advisories/n8n.html": HIDDEN}, None, None),
+     {"advisories/n8n-2026-11-07-jposluns.html": HIDDEN}, None, None),
     ("a sitemap listing the advisory page by its exact path",
-     {"advisories/n8n.html": HIDDEN, "sitemap.xml": with_entry("/advisories/n8n.html")}, None,
+     {"advisories/n8n-2026-11-07-jposluns.html": HIDDEN,
+      "sitemap.xml": with_entry("/advisories/n8n-2026-11-07-jposluns.html")}, None,
      "folder path"),
+    ("a sitemap listing the advisory page by the URL it is served at, without .html",
+     {"advisories/n8n-2026-11-07-jposluns.html": HIDDEN,
+      "sitemap.xml": with_entry("/advisories/n8n-2026-11-07-jposluns")}, None, "folder path"),
+    # Its build-written plain-text copy is not an HTML page, so this gate neither requires nor
+    # flags it.
+    ("the advisory's plain-text copy beside it, left out of the sitemap",
+     {"advisories/n8n-2026-11-07-jposluns.html": HIDDEN,
+      "advisories/n8n-2026-11-07-jposluns.txt": b"SUMMARY\nx\n"}, None, None),
     ("a /draft/ loc, with no draft tree", {"sitemap.xml": with_entry("/draft/")}, None,
      "is a /draft/ page; the live site carries no /draft/ page"),
     ("a /Draft/ loc in another case", {"sitemap.xml": with_entry("/Draft/")}, None,

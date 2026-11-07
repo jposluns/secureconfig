@@ -1,0 +1,85 @@
+Security advisory: n8n
+
+n8n: a Code node that knows another execution's full binary-data id, uuid v4 included, may read that binary data (inference from a source review)
+
+This is a source-code review finding in n8n 2.40.6, not an executed exploit. Nothing from n8n was built or run. Every statement below about n8n's code or behaviour is either observed in source, carrying a file and line citation at commit 024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827 (the n8n 2.40.6 tag) or, in Affected versions, at the n8n 2.47.2 tag, or labelled as inference.
+
+The facts come only from the finding pack: its source review of n8n 2.40.6 at that commit, and its by-reading comparison of three files at n8n 2.47.2. This page carries the full read-path detail. It is reachable only by its own URL, and no other page on this site links it.
+
+SUMMARY
+n8n 2.40.6, inferred from a source review (nothing was run): a Code node that already knows another execution's full binary-data id may read that execution's stored binary data, because no layer on the reviewed path scopes a caller-built id to the running workflow or execution.
+
+TITLE
+Inference from a source review of n8n 2.40.6, not observed in a run: a JavaScript Code node task that already knows another execution's full binary-data id, including its uuid v4, may read that binary data, because no layer on the path checks that a caller-built binary-data id belongs to the running workflow or execution. Inference: in the non-default filesystem, s3 or azure value of N8N_EXECUTION_DATA_STORAGE_MODE, while that store shares one root, bucket or container with the binary store, such a task that knows another execution's id and its workflow id, with no binary-data id, may also read that execution's whole bundle.
+
+AFFECTED VERSIONS
+- n8n 2.40.6, reviewed at commit 024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827. Nothing was run.
+- Observed by reading only, at the n8n 2.47.2 tag (commit 626a58e55ccc2078dfc7a32486c09134fd059fa3), three of the reviewed files; the pack made no mechanical diff and did not check its 2.47.2 SHA256SUMS. At 2.47.2, packages/core/src/binary-data/binary-data.service.ts lines 133 to 159 match 2.40.6, including 141 to 143, and only deleteMany changed (2.47.2 lines 161 to 189).
+- At 2.47.2, packages/core/src/binary-data/blob.manager.ts has the same getAsBuffer body at lines 67 to 71, with only deletion handling changed (2.47.2 lines 14 to 15 and 195 to 225), and packages/core/src/execution-engine/node-execution-context/utils/binary-helper-functions.ts lines 1 to 237 read the same, including 128 to 153 and 137 to 138.
+- Inference: the read behaviour in those three files is unchanged at 2.47.2. The runner, broker, requester and managers were not available at 2.47.2, so this advisory does not state their 2.47.2 behaviour.
+
+DESCRIPTION
+
+Vulnerable code locations, observed in source:
+- The getBinaryDataBuffer helper exposed to Code tasks (packages/core/src/execution-engine/node-execution-context/execute-context.ts:101-108; packages/@n8n/task-runner/src/runner-types.ts:107-128).
+- The binary-data service's id split and manager dispatch (packages/core/src/binary-data/binary-data.service.ts:139-147, 283-289).
+- The blob manager's read with no parsing (packages/core/src/binary-data/blob.manager.ts:63-66) and the database manager's lookup by fileId alone (packages/cli/src/binary-data/database.manager.ts:66-73).
+
+Read path, observed in source:
+- getBinaryDataBuffer is one of seven helper RPC methods exposed to Code user code (packages/@n8n/task-runner/src/runner-types.ts:107-128), bound to makeRpcCall (packages/@n8n/task-runner/src/js-task-runner/js-task-runner.ts:589-607, 653) and sent unchanged in a runner:rpc message (packages/@n8n/task-runner/src/task-runner.ts:510-536).
+- The broker checks only that the task exists, then forwards the message (packages/cli/src/task-runners/task-broker/task-broker.service.ts:336-353).
+- The requester checks that the job exists and the method is on its allow-list, converts serialized Buffers, then calls the method on the task's executeFunctions (packages/cli/src/task-runners/task-managers/task-requester.ts:402-418, 444-452), which is the Code node's own execution context (packages/core/src/execution-engine/node-execution-context/base-execute-context.ts:429-433).
+- getBinaryDataBuffer(itemIndex, propertyName) passes the argument through (packages/core/src/execution-engine/node-execution-context/execute-context.ts:101-108). Any object with mimeType plus data or id passes isBinaryValue (packages/workflow/src/type-guards.ts:103-110) and is used as given (packages/core/src/execution-engine/node-execution-context/utils/binary-helper-functions.ts:137-138).
+- The service splits the id on a colon and picks the manager by that prefix (packages/core/src/binary-data/binary-data.service.ts:139-147, 283-289), and the blob manager calls byteStore.read(fileId) with no parsing (packages/core/src/binary-data/blob.manager.ts:63-66). In that file, parseFileId is used only for deletion (packages/core/src/binary-data/blob.manager.ts:93-110, 168-183). EXECUTION_PATH_MATCHER (packages/core/src/binary-data/blob.manager.ts:14) is also used by parseExecutionFileId (packages/core/src/binary-data/blob.manager.ts:21-26), which the editor's access check calls (packages/cli/src/binary-data/binary-data-access.service.ts:65). getAsBuffer (packages/core/src/binary-data/blob.manager.ts:63-66) calls neither function and does not use the matcher.
+- The database manager looks a row up by fileId alone, with no sourceId filter (packages/cli/src/binary-data/database.manager.ts:66-73).
+- Binary keys in the filesystem, s3 and azure managers are workflows/<wf>/executions/<ex>/binary_data/<uuid v4> (packages/core/src/binary-data/blob.manager.ts:151-160), and database ids are bare uuid v4 values (packages/cli/src/binary-data/database.manager.ts:36).
+- The filesystem manager is always created (packages/core/src/binary-data/binary-data.service.ts:41-47), the database manager always registered (packages/cli/src/commands/base-command.ts:359-360), and the s3 and azure managers registered whenever their store is configured (packages/cli/src/commands/base-command.ts:426-448).
+- FsByteStore.read resolves every key through getAbsolutePath, which refuses a key whose path relative to the resolved storage root is empty, absolute or starts with .. (packages/@n8n/blob-storage/src/fs-byte-store.ts:46-54, 101-113).
+- S3ByteStore.read and AzureByteStore.read pass the key on unchanged (packages/@n8n/blob-storage/src/s3-byte-store.ee.ts:21-28; packages/@n8n/blob-storage/src/azure-byte-store.ee.ts:24-31). The S3 service sends it as the object key in the configured bucket (packages/@n8n/blob-storage/src/object-store/object-store.service.ee.ts:157-166), and the Azure service uses it as the blob name in the configured container (packages/@n8n/blob-storage/src/azure-blob/azure-blob.service.ee.ts:32-48, 94-100).
+- The editor's GET /binary-data handler rejects .. segments, its comment noting that the reader resolves the whole path so traversal could read another execution's file (packages/cli/src/controllers/binary-data.controller.ts:58-87).
+- That handler also checks workflow:read access to the execution or workflow behind the id before it reads (packages/cli/src/controllers/binary-data.controller.ts:30-35; packages/cli/src/binary-data/binary-data-access.service.ts:28-73).
+- N8N_EXECUTION_DATA_STORAGE_MODE takes database, the default, or filesystem, s3 or azure, tagged db, fs, s3 and az (packages/core/src/storage.config.ts:10-24).
+- A new execution's data is written with the configured mode's tag (packages/cli/src/executions/execution-persistence.ts:103, 115-121): to the database in db mode, and otherwise to the JSON store (packages/cli/src/executions/execution-persistence.ts:979-981).
+- The JSON store writes each bundle, holding the execution's data, workflow snapshot and version id (packages/cli/src/executions/execution-persistence.ts:116-120), at workflows/<wf>/executions/<n>/execution_data/bundle.json (packages/cli/src/executions/execution-data/execution-data-json-store.ts:16-28; packages/cli/src/executions/execution-data/constants.ts:5).
+- That key adds no random part of its own, unlike a binary key's uuid v4: beside the workflow id it holds fixed strings and <n>, the execution row's database insert id converted to a string (packages/cli/src/executions/execution-persistence.ts:111-113).
+- The fs JSON store is rooted at StorageConfig.storagePath (packages/core/src/fs-byte-store.service.ts:14-16; packages/cli/src/executions/execution-data/execution-data-json-store.ts:16-18). The binary filesystem store is rooted at N8N_BINARY_DATA_STORAGE_PATH or, when that is unset, the same storagePath (packages/core/src/binary-data/binary-data.config.ts:50-59; packages/core/src/binary-data/binary-data.service.ts:41-46).
+- The s3 and az JSON stores are registered on the same ObjectStoreService and AzureBlobService instances that back the binary s3 and azure managers (packages/cli/src/commands/base-command.ts:426-448, 461-489).
+- A JS or Python Code task's output binary object is passed through unchanged (packages/@n8n/task-runner/src/js-task-runner/js-task-runner.ts:445-454; packages/@n8n/task-runner-python/src/task_executor.py:389-390), and the Code node's result check only requires binary to be an object (packages/nodes-base/nodes/Code/result-validation.ts:48-58).
+
+Read path, inference:
+- Inference, from the layers cited above: no layer on the Code-node path checks that the id belongs to the current workflow or execution, and no layer above the byte store rejects .. segments; in filesystem mode FsByteStore refuses only a key that resolves outside its root.
+- Inference, from those layers and a search of the pack for hasReadAccess and parseExecutionFileId: neither of the editor's checks is reached from the Code-node path.
+- Inference: since the manager is picked by the id's own prefix, the prefix can select any registered manager, so no value of N8N_DEFAULT_BINARY_DATA_MODE by itself removes the filesystem or database read path.
+- Inference: FsByteStore's check compares resolved path text with no realpath step, so a .. that stays inside the root passes and symlinks are outside the check.
+- Inference: reaching another execution's binary file needs its full id, including a uuid v4, which would have to leak to the attacker; guessing a uuid v4 is not practical, and where such an id could leak was not established.
+- Inference: a task that already knows another execution's binary-data id can read that execution's binary file. No run observed this.
+- Inference: in filesystem, s3 or azure execution-data mode, a task that knows another execution's workflow id and execution id could read that execution's whole bundle.json by passing its key with the matching manager prefix, while the execution-data store and the binary store share one root, bucket or container. No run observed this.
+- Inference: with the default paths the two filesystem roots are the same; whether setting only N8N_BINARY_DATA_STORAGE_PATH gives two roots was not traced, so the filesystem bundle read is claimed only while both stores share one root.
+- Inference: the execution id in the bundle key is a database insert id, which may be sequential and so guessable; whether it is, and whether a workflow id is guessable, was not established.
+- Inference: a later node in the same workflow that reads a binary property by name (packages/core/src/execution-engine/node-execution-context/utils/binary-helper-functions.ts:139-140) would read whatever id the Code node supplied.
+
+Steps a reviewer would take:
+1. Read the JS Code-node RPC path from getBinaryDataBuffer through the broker and requester to the binary-data service and the blob or database manager, at the lines the observed read path above cites, and check this advisory's inference that no layer ties the id to the running workflow or execution.
+2. Read the editor's GET /binary-data download, which the observed read path above cites as checking workflow:read access and rejecting .., and check this advisory's inference that neither check is reached from the Code-node path.
+3. Check the configured N8N_EXECUTION_DATA_STORAGE_MODE; in filesystem, s3 or azure mode, check whether the execution-data store and the binary store share one root, bucket or container, and read how the bundle key is formed (packages/cli/src/executions/execution-data/execution-data-json-store.ts:20-28).
+4. Note, without running an exploit, which ids each read needs, from the binary and bundle key layouts cited above, and that the pack established neither where such ids could leak nor whether they can be guessed.
+
+Proof of concept:
+None run. This is a source review; nothing from n8n was built or executed, and no read of another execution's data was observed. The impact below is inference from the source.
+
+Impact:
+Inference: a user who can create or edit a JavaScript Code node, and who already knows another execution's binary-data id, could read that execution's stored binary data. Inference: in filesystem, s3 or azure execution-data mode, while the execution-data store and the binary store share one root, bucket or container, such a user who knows another execution's workflow id and execution id could read its whole bundle.json, which holds that execution's data and workflow snapshot. Confidentiality only; no write or denial of service is claimed. No run observed this.
+
+REPORTER
+The maintainer provided the reporter details below.
+- Name: Jeff Posluns
+- Email: jeff@posluns.ca
+- GitHub handle: jposluns
+
+CVSS 4.0, PROVISIONAL
+PROVISIONAL CVSS 4.0 vector for the worst case this page states, the bundle read: CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N. It is provisional: it is not computed to a numeric score, it rests on source review with no run, and this page asserts no numeric severity.
+Derivation of AT:P, from the inferences above: the bundle read needs a deployment condition the attacker does not control, a non-default N8N_EXECUTION_DATA_STORAGE_MODE whose store shares the binary store's root, bucket or container, and with that met its key needs only a workflow id and an execution id, whose guessability was not established. By the same inferences, the binary-file read needs a leaked uuid v4 key instead. This review did not have the CVSS 4.0 specification, so no metric here was checked against it: in particular, neither whether the bundle read's non-default configuration is rated AT:P, nor whether the binary read's leaked key is rated AT:P or AC:H, and either read's vector may differ. The other metrics: a network-reachable editor (AV:N); an authenticated user who can edit a Code node (PR:L); no other user's action and, by inference, no security-enhancing condition to evade on the path (UI:N, AC:L); another execution's data and workflow snapshot (VC:H); and no write, denial of service or subsequent-system impact claimed (VI:N, VA:N, SC:N, SI:N, SA:N).
+
+MITIGATIONS
+- Keep N8N_EXECUTION_DATA_STORAGE_MODE at its database default (packages/core/src/storage.config.ts:18-20), under which a new execution's data is written to the database, not the JSON store (packages/cli/src/executions/execution-persistence.ts:103, 979-981). Inference: new bundles then do not reach the filesystem root, bucket or container that the binary managers read. The persistence class's comment says reads follow each execution's recorded storedAt value (packages/cli/src/executions/execution-persistence.ts:61-64). Inference: switching back to database leaves bundles already written in place.
+- Where people you do not trust can edit workflows, exclude the Code node (n8n-nodes-base.code) with NODES_EXCLUDE. n8n's security audit lists the Code node among its official risky node types (packages/cli/src/security-audit/constants.ts:51-53) and recommends not loading unneeded node types with NODES_EXCLUDE (packages/cli/src/security-audit/risk-reporters/nodes-risk-reporter.ts:48-58). Inference: AI Transform and Code Tool tasks may get the same RPC helpers, so excluding the Code node alone may not close the path. No setting limiting who can edit Code nodes was read.
