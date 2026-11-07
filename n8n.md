@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against n8n listener source n8n@2.40.6, n8n runtime source n8n@2.40.6, n8n environment policy minimum 2.18.0, n8n SSRF filter minimum 2.12.0, n8n 2.0 default exclusion source n8n@2.0.0, n8n 1.x default exclusion source n8n@1.123.85, and express-openapi-validator v5.5.3, plus 8 more recorded bases; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked October 2026. The guide records 92 claims, all reasoned from cited sources.
+Written against n8n listener source n8n@2.47.2, n8n runtime source n8n@2.47.2, n8n environment policy minimum 2.18.0, n8n SSRF filter minimum 2.12.0, n8n 2.0 default exclusion source n8n@2.0.0, n8n 1.x default exclusion source n8n@1.123.85, and n8n later 2.x default exclusion source n8n@2.43.8, plus 7 more recorded bases; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-11-07; documentation checked October 2026. The guide records 92 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -552,7 +552,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-10",
-  "body_sha256": "c3e5ba534f8c311532166eded2cc2ad1b74fe02055460382eec3061ded02e6ca",
+  "body_sha256": "2e25f725b4d85b468b3b227e86c8d369ffe93954210f0793ff250c24cbc44c96",
   "components": {
     "server": {
       "name": "n8n listener source",
