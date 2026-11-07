@@ -2,10 +2,10 @@
 name: secureconfig
 description: Configure TLS, authentication, MFA, secrets and network exposure for a service you are deploying, or review one that is already running. Use when setting up or changing nginx, Apache, Caddy, HAProxy, Traefik, Docker, Kubernetes, PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch, MinIO, Kafka, RabbitMQ, Ollama, vLLM, Jupyter, Gradio, Streamlit, n8n, Supabase, Firebase, a model server, a vector database, an MCP server, an agent builder, a chat or image UI, a dashboard, or any service that will listen on a port. Also use when asked to make something "production ready", to expose a local service, to add a login, to put a domain in front of an app, or to check whether a deployment is safe.
 license: CC0-1.0
-compatibility: Every guide is bundled, so no network access is needed to use this skill. scripts/update-guides.sh needs network, and only when you choose to run it. Commands in the guides are run by you against the user's own systems.
+compatibility: Every guide is bundled, so no network access is needed to use this skill. scripts/update-guides.sh and scripts/check-updates.py --check-online need network, and only when you choose to run them. Commands in the guides are run by you against the user's own systems.
 metadata:
   source: https://github.com/jposluns/secureconfig
-  version: "1.0.1257"
+  version: "1.0.1258"
 ---
 
 # Secure deployment configuration
@@ -97,6 +97,29 @@ Two references answer questions rather than covering a tool:
 
 `references/README.md` carries the full index of every guide by category, and the verification
 checklist to run at the end of a deployment.
+
+## Keeping the guides current
+
+The bundled guides are frozen at the version in `plugin.json`, and each guide's version-basis
+block records the release of each component it was written against. When the user permits
+network egress, run `python3 scripts/check-updates.py --check-online` from this skill's folder to
+find the guides whose upstream has published a newer release than that recorded basis.
+
+Without `--check-online` the script makes no network request and only lists what it would check.
+With it, the script asks GitHub's API for each upstream repository's latest release, using
+`GITHUB_TOKEN` or `GH_TOKEN` when either is set, and `--guide NAME` limits the run to the guides
+that matter to the deployment.
+
+It prints a report in four groups (currency drift, major available, could not check, and not
+automatically checkable) with a prefilled issue link for each drift or major row. Anything it
+cannot establish, such as a commit or range basis, a source outside GitHub or a failed request,
+is listed for a manual check and never reported as drift.
+
+Drift means only that a newer upstream release exists, not that the guide is wrong. Tell the user
+which guides it affects, check any default that matters against the vendor page as above, and
+share the issue links so the maintainer can update the guide. Run it with `--file` as well only
+when the user asks for the issues to be filed with their own authenticated `gh` or token; the
+script then asks for a typed `yes` before each issue and otherwise files nothing.
 
 ## What this skill does not do
 
