@@ -1,11 +1,11 @@
 ---
-name: secure-deployment-config
+name: secureconfig
 description: Configure TLS, authentication, MFA, secrets and network exposure for a service you are deploying, or review one that is already running. Use when setting up or changing nginx, Apache, Caddy, HAProxy, Traefik, Docker, Kubernetes, PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch, MinIO, Kafka, RabbitMQ, Ollama, vLLM, Jupyter, Gradio, Streamlit, n8n, Supabase, Firebase, a model server, a vector database, an MCP server, an agent builder, a chat or image UI, a dashboard, or any service that will listen on a port. Also use when asked to make something "production ready", to expose a local service, to add a login, to put a domain in front of an app, or to check whether a deployment is safe.
 license: CC0-1.0
 compatibility: Every guide is bundled, so no network access is needed to use this skill. scripts/update-guides.sh needs network, and only when you choose to run it. Commands in the guides are run by you against the user's own systems.
 metadata:
   source: https://github.com/jposluns/secureconfig
-  version: "1.0.1256"
+  version: "1.0.1257"
 ---
 
 # Secure deployment configuration

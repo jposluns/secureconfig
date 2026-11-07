@@ -570,7 +570,7 @@ link to `CHANGELOG.md` at the tag.
 
 The released `llms-full.txt` is the committed file, so its repository links point at `main`,
 not at the tag, and the body says so. The bundled
-`plugin/skills/secure-deployment-config/scripts/update-guides.sh` still reads `main`, not a
+`plugin/skills/secureconfig/scripts/update-guides.sh` still reads `main`, not a
 release.
 
 ## Licence

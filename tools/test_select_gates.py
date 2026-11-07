@@ -154,7 +154,7 @@ EVERY = (
     ("README.md", ["README.md"], None),
     ("controls-reference.md", ["controls-reference.md"], None),
     ("the plugin manifest", ["plugin/plugin.json"], None),
-    ("a plugin reference", ["plugin/skills/secure-deployment-config/references/nginx.md"], None),
+    ("a plugin reference", ["plugin/skills/secureconfig/references/nginx.md"], None),
     ("the runner", ["tools/run_all_checks.sh"], None),
     ("the selector", ["tools/select_gates.py"], None),
     ("the selector's test", ["tools/test_select_gates.py"], None),

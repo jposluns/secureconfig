@@ -122,7 +122,7 @@
     },
     {
       "kind": "directory",
-      "target": "plugin/skills/secure-deployment-config/references",
+      "target": "plugin/skills/secureconfig/references",
       "regenerate": "bash scripts/build-plugin.sh",
       "sources": [
         "README.md",

@@ -36,7 +36,7 @@ trap 'rm -rf "$work"' EXIT
 # The publisher's digest list for the new version. Every file below is checked against it, so a
 # truncated download or a file that changed in transit is a refusal rather than a bad guide.
 curl -fsS --max-time 30 -o "$work/MANIFEST.sha256" \
-  "$RAW/plugin/skills/secure-deployment-config/references/MANIFEST.sha256"
+  "$RAW/plugin/skills/secureconfig/references/MANIFEST.sha256"
 
 count=0
 while read -r _digest name; do
