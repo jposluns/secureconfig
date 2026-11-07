@@ -39,6 +39,13 @@ page at any base; a stray file outside assets/baseline/ other than assets/site.c
 both bases, except at the root a published file (PUBLISHED, such as llms.txt) beside the pages.
 At the root it refuses a staged build written under draft/ beside the pages (SPECIFICATION
 section 4.1 item 3: `main` never carries the draft).
+The unlisted advisory is written at advisories/n8n-2026-11-07-jposluns.html only, with its
+one-line summary as the first paragraph under the Title heading and the maintainer's reporter
+details. Its plain-text copy, advisories/n8n-2026-11-07-jposluns.txt, is the one text file the
+build writes: it carries no HTML or Markdown, the page's section labels in order and every
+content.json entry of the advisory; a backtick, a dash character, a tag, a character reference, a
+Markdown link or "what this is" framing planted in it is refused; and --check reports a change to
+it, its absence and a stray advisories/other.txt beside it.
 """
 import html
 import importlib.util
@@ -86,7 +93,10 @@ PREVIEWS = {"index.html": ("Home", "home"), "guides/index.html": ("Guides", "gui
             "license/index.html": ("Licence", "license")}
 # The pages that are noindex at the root and carry no link previews, canonical or description: the
 # 404 page and the one unlisted advisory (the maintainer's instruction), both built like the 404.
-NOINDEX_NAMES = {"404.html", "advisories/n8n.html"}
+ADVISORY = "advisories/n8n-2026-11-07-jposluns.html"
+NOINDEX_NAMES = {"404.html", ADVISORY}
+# The advisory's plain-text copy, which the build writes beside the pages (Builder.texts).
+ADVISORY_TEXT = "advisories/n8n-2026-11-07-jposluns.txt"
 
 
 def refused(text):
@@ -174,6 +184,60 @@ def main():
     for name, text in pages.items():
         if refused(text) is not None:
             failures.append(f"{name} as generated is refused: {refused(text)}")
+    # The unlisted advisory (the maintainer's instruction of 2026-11-07): written at its dated name
+    # only, with the one-line summary as the first paragraph under the Title heading, before the
+    # detailed title, and the reporter details the maintainer gave.
+    a = builder.c["advisory_n8n"]
+    if ADVISORY not in pages or "advisories/n8n.html" in pages:
+        failures.append(f"the build does not write the advisory at {ADVISORY} only: {sorted(pages)}")
+    else:
+        adv = pages[ADVISORY]
+        title_block = ('<h2 id="title">Title</h2>\n<p><strong>Summary:</strong> '
+                       f'{builder.inline(a["report_summary"]["text"])}</p>\n'
+                       f'<p>{builder.inline(a["report_title"]["text"])}</p>')
+        if adv.count(title_block) != 1:
+            failures.append(f"{ADVISORY} does not carry the Summary paragraph first under the "
+                            f"Title heading, before the detailed title, exactly once")
+        for item in ("Name: Jeff Posluns", "Email: jeff@posluns.ca", "GitHub handle: jposluns"):
+            if adv.count(f"<li>{item}</li>") != 1:
+                failures.append(f"{ADVISORY} does not carry the reporter item {item!r} once")
+        if "left blank" in adv:
+            failures.append(f"{ADVISORY} still carries a blank reporter field")
+    # Its plain-text copy: the only text the build writes, refused by nothing, with no HTML and no
+    # Markdown, the same labels in the page's order, and every content.json entry of the advisory.
+    texts = builder.texts()
+    if sorted(texts) != [ADVISORY_TEXT]:
+        failures.append(f"the build's plain-text copies are {sorted(texts)}, not [{ADVISORY_TEXT!r}]")
+    txt = texts.get(ADVISORY_TEXT, "")
+    for bad in ("`", "<p>", "<li>", "<strong>", "<code>", "&lt;", "&gt;", "&amp;", "](", "**"):
+        if bad in txt:
+            failures.append(f"{ADVISORY_TEXT} carries {bad!r}, which a plain-text copy does not")
+    labels = ("SUMMARY\n", "TITLE\n", "AFFECTED VERSIONS\n", "DESCRIPTION\n",
+              "Vulnerable code locations, observed in source:\n", "Read path, observed in source:\n",
+              "Read path, inference:\n", "Steps a reviewer would take:\n", "Proof of concept:\n",
+              "Impact:\n", "REPORTER\n", "CVSS 4.0, PROVISIONAL\n", "MITIGATIONS\n")
+    at = [txt.find("\n\n" + label) for label in labels]
+    if -1 in at or at != sorted(at):
+        failures.append(f"{ADVISORY_TEXT} lacks its section labels in the page's order "
+                        f"(missing {[lb for lb, i in zip(labels, at) if i == -1]!r})")
+    entries = [v for v in a.values() if isinstance(v, dict)] + [
+        x for v in a.values() if isinstance(v, list) for x in v]
+    for entry in entries:
+        if builder.plain(entry["text"]) not in txt:
+            failures.append(f"{ADVISORY_TEXT} lacks the advisory entry {entry['text'][:60]!r}")
+    for desc, plant, expected in (
+            ("a backtick", txt + "`x`\n", "a backtick"),
+            ("an en dash", txt + "a–b\n", "dash character"),
+            ("a paragraph tag", txt + "<p>x</p>\n", "an HTML tag"),
+            ("a character reference", txt + "a &lt; b\n", "a character reference"),
+            ("a Markdown link", txt + "[x](https://example.com/)\n", "a Markdown link"),
+            ('"what this is" framing', txt + "What this is\n", "what this is")):
+        try:
+            build_site.refuse_text(ADVISORY_TEXT, plant)
+            failures.append(f"{ADVISORY_TEXT} with {desc} was not refused")
+        except build_site.Refused as exc:
+            if expected not in str(exc):
+                failures.append(f"{ADVISORY_TEXT} with {desc} was refused for another reason: {exc}")
     # #1189 drafting: a description may use the word "on" inside its quoted value.
     worded = home.replace('<meta name="description" content="',
                           '<meta name="description" content="Read on GitHub. ', 1)
@@ -400,6 +464,27 @@ def main():
         if rc != 1 or "guides/index.html differs" not in text:
             failures.append(f"--check missed a one-byte change: {text!r}")
         run("--out", str(out))
+        # The advisory's plain-text copy is written and verified like a page.
+        copy = out / ADVISORY_TEXT
+        if not copy.is_file() or copy.read_bytes() != texts.get(ADVISORY_TEXT, "").encode("utf-8"):
+            failures.append(f"the build did not write {ADVISORY_TEXT} as Builder.texts() gives it")
+        else:
+            copy.write_bytes(copy.read_bytes() + b"x")
+            rc, text = run("--check", "--out", str(out))
+            if rc != 1 or f"{ADVISORY_TEXT} differs from a fresh build" not in text:
+                failures.append(f"--check missed a change to the plain-text copy: {text!r}")
+            copy.unlink()
+            rc, text = run("--check", "--out", str(out))
+            if rc != 1 or f"{ADVISORY_TEXT} is missing" not in text:
+                failures.append(f"--check missed a missing plain-text copy: {text!r}")
+            # Only that exact .txt is admitted: another file beside it is a stray.
+            (out / "advisories" / "other.txt").write_text("x\n", encoding="utf-8")
+            run("--out", str(out))
+            rc, text = run("--check", "--out", str(out))
+            if rc != 1 or "advisories/other.txt is neither a page this build writes" not in text:
+                failures.append(f"--check at the root accepted a stray advisories/other.txt: {text!r}")
+            (out / "advisories" / "other.txt").unlink()
+        run("--out", str(out))
         (out / "extra").mkdir()
         (out / "extra" / "index.html").write_text("<p>x</p>", encoding="utf-8")
         rc, text = run("--check", "--out", str(out))
@@ -486,7 +571,10 @@ def main():
           f"shell block edited, CRLF and CR line endings and more), and "
           f"--check on a changed, an extra "
           f".html and .HTM page, a missing page, a root-base published file and strays, a staged "
-          f"tree under the root's draft/, and the staged strays")
+          f"tree under the root's draft/, and the staged strays; the advisory at its dated name "
+          f"with its summary and reporter details, and its plain-text copy (no markup, the "
+          f"page's labels in order, every entry, 6 planted refusals, and --check on its change, "
+          f"its absence and a stray .txt beside it)")
     return 0
 
 

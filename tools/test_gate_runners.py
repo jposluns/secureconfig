@@ -264,10 +264,20 @@ OVERFLOW_CASES = (
      [f"{OVERFLOW_MISSING} site/index.html;"], [OVERFLOW_OK, OVERFLOW_SKIP]),
     ("no section page file", "exit 0", 0, True, "1", ["site/license/index.html"], [], True, False,
      [f"{OVERFLOW_MISSING} site/license/index.html;"], [OVERFLOW_OK, OVERFLOW_REQUIRED]),
-    # The list's one non-folder page, /advisories/n8n.html, names its own file (the `*)` branch).
+    # The list's one non-folder page, /advisories/n8n-2026-11-07-jposluns.html, names its own file
+    # (the `*)` branch).
     ("no advisory page file, the non-folder page", "exit 0", 0, True, "",
-     ["site/advisories/n8n.html"], [], True, False,
-     [f"{OVERFLOW_MISSING} site/advisories/n8n.html;"], [OVERFLOW_OK, OVERFLOW_SKIP]),
+     ["site/advisories/n8n-2026-11-07-jposluns.html"], [], True, False,
+     [f"{OVERFLOW_MISSING} site/advisories/n8n-2026-11-07-jposluns.html;"],
+     [OVERFLOW_OK, OVERFLOW_SKIP]),
+    # The advisory moved to a dated name, so a page left at its old path is unlisted.
+    ("a page left at the advisory's old path", "exit 0", 0, True, "", [],
+     ["site/advisories/n8n.html"], True, True,
+     [f"{OVERFLOW_UNLISTED} site/advisories/n8n.html", OVERFLOW_OK], [OVERFLOW_MISSING]),
+    # The advisory's build-written plain-text copy is not a page, so the list need not name it.
+    ("the advisory's plain-text copy, which is not a page", "exit 0", 0, True, "", [],
+     ["site/advisories/n8n-2026-11-07-jposluns.txt"], False, True, [OVERFLOW_OK],
+     [OVERFLOW_ANY_FAIL]),
     ("an unlisted section page", "exit 0", 0, True, "", [], ["site/extra/index.html"], True, True,
      [f"{OVERFLOW_UNLISTED} site/extra/index.html", OVERFLOW_OK], [OVERFLOW_MISSING]),
     # The live site carries no /draft/ page (baseline SPECIFICATION 4.1 item 0), so the list does
@@ -638,7 +648,7 @@ def overflow_source():
 def overflow_tree(d, pages, remove=(), add=()):
     """A scratch tree under d with a generated file for each page, 404.html, and the changes. A
     folder path (ending with /) gets its index.html; a non-folder page, such as the unlisted
-    /advisories/n8n.html, gets its own file."""
+    /advisories/n8n-2026-11-07-jposluns.html, gets its own file."""
     for page in pages:
         if page.endswith("/"):
             target = d / f"site{page}index.html"
