@@ -11,7 +11,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-dest="plugin/skills/secure-deployment-config/references"
+dest="plugin/skills/secureconfig/references"
 
 mapfile -t files < <(bash scripts/build-llms-full.sh --list-guides)
 if [ "${#files[@]}" -eq 0 ]; then
@@ -90,7 +90,7 @@ grep -qF "  \"version\": \"$version\"," plugin/plugin.json \
 # to the next line that does not start with a space). Each value is confirmed afterwards for the
 # reason given for plugin.json above, and the version in that same scope, so a version-shaped
 # line elsewhere in the file neither takes the rewrite nor passes the confirmation.
-skill="plugin/skills/secure-deployment-config/SKILL.md"
+skill="plugin/skills/secureconfig/SKILL.md"
 count=$(python3 -c 'import sys; from pathlib import Path; sys.path.insert(0, "tools"); from _verify_sections import counted_guides; print(len(counted_guides(Path("."))))')
 printf '%s' "$count" | grep -qxE '[1-9][0-9]*' \
   || { echo "the guide count is '$count', not a positive number; refusing to build" >&2; exit 1; }

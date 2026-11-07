@@ -19,7 +19,7 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   to VERSION as committed, read the way scripts/build-plugin.sh reads it (`$(cat VERSION)`,
   which drops trailing newlines). This runs before any build, so a bump without a rebuild is
   reported in those words and not only as a changed file;
-- plugin/skills/secure-deployment-config/SKILL.md as committed opens with front matter (line 1
+- plugin/skills/secureconfig/SKILL.md as committed opens with front matter (line 1
   is "---", closed by the next "---" line) whose "metadata:" mapping holds exactly 1 line
   `  version: "..."`, naming that VERSION, the scope scripts/build-plugin.sh rewrites, so a
   version-shaped line elsewhere does not count. In its source, front matter included, less the
@@ -88,7 +88,7 @@ from check_verify_marking import ParserUnavailable, gate_parser  # noqa: E402  a
 LLMS_FULL = "site/llms-full.txt"
 PLUGIN = "plugin"
 MANIFEST = "plugin/plugin.json"
-SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
+SKILL = "plugin/skills/secureconfig/SKILL.md"
 # What scripts/build-plugin.sh rewrites in SKILL.md: the version line of the metadata mapping in
 # the front matter (metadata_versions() below), and the guide count in this sentence.
 SKILL_VERSION = re.compile(r'  version: "([^"]*)"')

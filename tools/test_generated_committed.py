@@ -132,7 +132,7 @@ rm -rf "$dest"
 mkdir -p "$dest"
 cp guide.md "$dest/guide.md"
 sed -i "s/^\(  \"version\": \)\"[^\"]*\"/\1\"$version\"/" plugin/plugin.json
-skill=plugin/skills/secure-deployment-config/SKILL.md
+skill=plugin/skills/secureconfig/SKILL.md
 count=$(python3 "SECTIONS_PY" | wc -l)
 sed -i -e "1,/^---\$/ { /^metadata:\$/,/^[^ ]/ s/^\(  version: \)\"[^\"]*\"\$/\1\"$version\"/ }" \
   -e "s/\(This skill carries \)[0-9][0-9]*\( short guides\)/\1$count\2/" "$skill"
@@ -151,7 +151,7 @@ printf '%s\n' guide.md
 VERSION_BASIS = "import sys\nsys.exit(0)\n"
 
 PLUGIN_JSON = '{\n  "name": "fixture",\n  "version": "1.0.5",\n  "license": "CC0-1.0"\n}\n'
-SKILL = "plugin/skills/secure-deployment-config/SKILL.md"
+SKILL = "plugin/skills/secureconfig/SKILL.md"
 SKILL_MD = ('---\nname: fixture\nmetadata:\n  version: "1.0.5"\n---\n\n'
             "This skill carries 1 short guides.\n")
 # A "<!--" in code is literal text, as CommonMark has it, so a stale count sentence after one in a
@@ -824,9 +824,9 @@ def main():
 
         # The real build-plugin.sh rewrites only the metadata version in the front matter and
         # the count sentence, and refuses when either is not there to rewrite, decoy or not.
-        count += real_build(stale, 0, "wrote plugin/skills/secure-deployment-config/references")
+        count += real_build(stale, 0, "wrote plugin/skills/secureconfig/references")
         count += real_build((GATE.parent.parent / SKILL).read_text(encoding="utf-8"), 0,
-                            "wrote plugin/skills/secure-deployment-config/references")
+                            "wrote plugin/skills/secureconfig/references")
         refused = "SKILL.md version did not update to 1.0.5"
         count += real_build(SKILL_MD.replace('"1.0.5"', "1.0.4") + '  version: "1.0.5"\n', 1,
                             refused)
@@ -870,7 +870,7 @@ def main():
                             1, cannot + not_read(7) + "; refusing to build")
         count += real_build(SKILL_MD.replace("carries 1 short", "carries 3 short")
                             + "<!-- This skill carries 1 short guides. -->\n", 0,
-                            "wrote plugin/skills/secure-deployment-config/references")
+                            "wrote plugin/skills/secureconfig/references")
         # A "<!--" in a code span or a fenced code block hides nothing, so the rewritten sentence
         # after it is a second visible one and is refused. A comment inline beside code is
         # refused as inline HTML; a comment block beside code holding its text hides only itself,
@@ -885,7 +885,7 @@ def main():
             count += real_build(SKILL_MD + tail, 1, uncounted)
         for tail in REAL_COMMENTS:
             count += real_build(SKILL_MD + tail, 0,
-                                "wrote plugin/skills/secure-deployment-config/references")
+                                "wrote plugin/skills/secureconfig/references")
         # The round 2 QA cases on #1233: the build refuses raw HTML other than a whole comment,
         # rewrites a stale copy in a title or an info string and refuses it as a second visible
         # sentence, and builds beside a whole comment block.
@@ -895,7 +895,7 @@ def main():
             count += real_build(SKILL_MD + tail, 1, uncounted)
         for tail in WHOLE_COMMENTS:
             count += real_build(SKILL_MD + tail, 0,
-                                "wrote plugin/skills/secure-deployment-config/references")
+                                "wrote plugin/skills/secureconfig/references")
         # The round 3 and round 4 QA cases on #1233: the build refuses a second copy of the
         # current sentence in a definition label, a destination or a full reference label, and
         # refuses inline HTML and an HTML block in a list item or block quote, naming the first
