@@ -170,12 +170,5 @@
   "notfound": {
     "lead": {"text": "The guide index, the rules for AI assistants, the ready-made tasks and the checklist are linked from the bar above.", "source": "The top bar of every page; mockup 404.html"},
     "next": {"text": "Home", "href": "/", "source": "SPECIFICATION section 7.17"}
-  },
-  "draft": {
-    "label": {"text": "Drafts", "source": "auditthis.ai/draft/ as served on 2026-11-03 (the owner's instruction: a similar page)"},
-    "h1": {"text": "Draft review", "source": "auditthis.ai/draft/ as served on 2026-11-03"},
-    "lead": {"text": "This path holds new versions of the site for review before they are published. Nothing is staged here now; the published site is at the home page.", "source": "auditthis.ai/draft/ as served on 2026-11-03; baseline SPECIFICATION section 4.1"},
-    "description": {"text": "The path where new versions of secureconfig.ai are staged for review before they are published.", "source": "auditthis.ai/draft/ description meta, with this site's name"},
-    "next": {"text": "Home", "href": "/", "source": "auditthis.ai/draft/ Next block"}
   }
 }

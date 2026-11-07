@@ -13,13 +13,14 @@ Each run sets the BASE line of the fixture's copy of check_draft.py to the case'
 cases hold whichever base the shipped file names. The base-path cases take their pages from
 scripts/build-site.py. At base /draft/ the staged build sits under site/draft/, unlisted and
 undated, beside a live root page. At base /, the shipped value since promotion, the promoted
-build (`--base / --out <fixture>/site`) puts the template pages at the root, where the sitemap
-lists the 7 indexable folder pages (INDEXABLE in check_draft.py), each dated by its own file, and
-not the noindex /draft/ review page, which check_sitemap.py refuses in a sitemap. One case adds
-the review page to that sitemap with a stale lastmod: this gate dates it like any other path.
-check_sitemap.py also runs on 3 fixtures: it accepts the stale one, so the staleness is caught
-only by this gate; it accepts the promoted one, so that sitemap is one the site could ship; and it
-refuses the one listing the review page.
+build (`--base / --out <fixture>/site`) puts the template pages at the root, and writes no page
+under draft/ (the live site carries no /draft/ page, baseline SPECIFICATION section 4.1 item 0),
+where the sitemap lists the 7 indexable folder pages (INDEXABLE in check_draft.py), each dated by
+its own file. One case adds a /draft/ loc with a stale lastmod, and a committed page at
+site/draft/index.html, to that sitemap: check_sitemap.page_of refuses the loc by its first segment
+at any base, so this gate does not date it. check_sitemap.py also runs on 3 fixtures: it accepts
+the stale one, so the staleness is caught only by this gate; it accepts the promoted one, so that
+sitemap is one the site could ship; and it refuses the one listing /draft/.
 """
 import os
 import re
@@ -32,7 +33,7 @@ from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
-from check_draft import INDEXABLE, REVIEW_PAGE  # noqa: E402  (the pages a shipped sitemap lists)
+from check_draft import INDEXABLE  # noqa: E402  (the pages a shipped sitemap lists)
 
 BUILD = TOOLS.parent / "scripts" / "build-site.py"
 GATES = ("check_sitemap_lastmod.py", "check_sitemap.py", "check_draft.py", "check_csp_hashes.py")
@@ -289,14 +290,15 @@ def staged_draft_listed(tmp):
 def promote(tmp, lastmod=lambda loc: "2026-10-08"):
     """Base /: on 2026-10-08 the draft is removed and the promoted build is written at the root.
 
-    The sitemap lists the build's 7 indexable folder pages, `lastmod(loc path)` each, and not its
-    noindex /draft/ review page, as check_sitemap.py requires; returns the repo.
+    The sitemap lists the build's 7 indexable folder pages, `lastmod(loc path)` each; the root
+    build writes no page under draft/. Returns the repo.
     """
     repo = staged_repo(tmp)
     repo.git("rm", "-r", "-q", "site/draft", "site/index.html")
     pages = build("/", repo.root / "site")
-    folders = [p for p in pages if p.endswith("index.html") and p != REVIEW_PAGE]
-    assert REVIEW_PAGE in pages and sorted(folders) == sorted(INDEXABLE), pages
+    folders = [p for p in pages if p.endswith("index.html")]
+    assert not any(p.startswith("draft/") for p in pages), pages
+    assert sorted(folders) == sorted(INDEXABLE), pages
     paths = ["/" + p[:-len("index.html")] for p in folders]
     repo.commit("2026-10-08T12:00:00+00:00",
                 {"site/sitemap.xml": sitemap(*((p, lastmod(p)) for p in paths))})
@@ -333,17 +335,17 @@ def promoted_subpage_current(tmp):
 
 
 def promoted_draft_loc(tmp):
-    # At base / a /draft/ loc is an ordinary path to this gate; the promoted build writes the
-    # review page at site/draft/index.html (committed 2026-10-08 here), so a wrong lastmod on it is
-    # a mismatch like any other. promote() leaves it out, as check_sitemap.py refuses the noindex
-    # page in a sitemap; this adds it, stale.
+    # The live site carries no /draft/ page, so at base / check_sitemap.page_of refuses a /draft/
+    # loc by its first segment and this gate does not date it, even with a page committed at
+    # site/draft/index.html (2026-10-09 here) and a stale lastmod on the loc.
     repo = promote(tmp)
     text = (repo.root / "site" / "sitemap.xml").read_text(encoding="utf-8")
     assert "/draft/</loc>" not in text and text.count("</urlset>") == 1, text
     entry = ("  <url>\n    <loc>https://secureconfig.ai/draft/</loc>\n"
              "    <lastmod>2026-10-06</lastmod>\n  </url>\n")
     repo.commit("2026-10-09T12:00:00+00:00",
-                {"site/sitemap.xml": text.replace("</urlset>\n", entry + "</urlset>\n")})
+                {"site/draft/index.html": page("draft"),
+                 "site/sitemap.xml": text.replace("</urlset>\n", entry + "</urlset>\n")})
     return repo.root
 
 
@@ -396,17 +398,17 @@ CASES = [
       "set the lastmod of https://secureconfig.ai/guides/ to 2026-10-10")),
     ("base /: a promoted subpage edited later, with its lastmod", promoted_subpage_current, "/",
      0, ()),
-    ("base /: a /draft/ loc added is an ordinary path, dated by the review page like any other",
+    ("base /: a /draft/ loc is refused, not dated, even with a page under site/draft/",
      promoted_draft_loc, "/", 1,
-     ("site/draft/index.html last changed", "on 2026-10-08", "its lastmod is '2026-10-06'")),
+     ("is a /draft/ page; the live site carries no /draft/ page", "cannot be dated")),
 ]
 # check_sitemap.py, which reads no history, on 3 of the fixtures above (same columns as CASES).
 FORM_CASES = [
     ("check_sitemap.py on the stale lastmod, which only this gate catches", stale, "/draft/", 0,
      ()),
     ("check_sitemap.py on the promoted sitemap, one the site could ship", promoted, "/", 0, ()),
-    ("check_sitemap.py on a promoted sitemap listing the review page", promoted_draft_loc, "/", 1,
-     ("site/draft/index.html", "so it must not be in the sitemap")),
+    ("check_sitemap.py on a promoted sitemap listing /draft/", promoted_draft_loc, "/", 1,
+     ("is a /draft/ page; the live site carries no /draft/ page",)),
 ]
 
 
