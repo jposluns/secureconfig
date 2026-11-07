@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against RabbitMQ source v4.3.6, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, Erlang/OTP distribution 27, and Pika source 1.3.2; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
+Written against RabbitMQ source v4.4.0, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, Erlang/OTP distribution 27, and Pika source 1.3.2; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-11-07; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -771,7 +771,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "4dd4667118e768510142581699323653c35cc976934653a4e5d4dbdb6084802a",
+  "body_sha256": "827e8f253c2455dc18dc845a54d8015cd0eea915fc6eb6ac13ae7ee913a06d5a",
   "components": {
     "source": {
       "name": "RabbitMQ source",
