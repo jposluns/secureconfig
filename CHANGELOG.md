@@ -15,6 +15,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-11-07
+
+- `n8n.md`: adds operator advice, from source reading at n8n 2.40.6 with nothing run, for this guide's inference that a Code task is not confined to its own execution's stored data when `N8N_EXECUTION_DATA_STORAGE_MODE` is `filesystem`, `s3` or `azure`. It advises keeping that variable at its `database` default, records that in the other modes execution data's byte store uses the filesystem root or the S3 or Azure service that binary data's filesystem, s3 and azure managers use, and advises excluding the Code node with `NODES_EXCLUDE` where untrusted people can edit workflows. 6 REASONED claims are added, and what is unsettled is in TODO 1.446 (#1250)
+
 ## 2026-11-06
 
 - `tools/check_release.py` now refuses a release unless `.github/workflows/checks.yml` at the target, read from local git objects, has a plain `workflow_dispatch:` key directly under its top-level `on:` block mapping, with no value, `{}` or a block mapping whose only key is `inputs:`, which itself holds a block mapping. It reads the file with its own standard-library strict line model, which tracks block indentation across the whole file. The model is not a YAML parser: it accepts only the forms its docstring lists, among them a one-line flow sequence of plain names, `{}` and double-quoted scalars with no backslash, and refuses every other form. It runs neither GitHub's workflow parser nor its schema, so whether GitHub loads the file and offers the trigger still rests on the publisher's online confirmation of a successful `workflow_dispatch` run. `tools/test_release.py` gains 140 cases, and each refusal case checks the message it expects (#1248)
