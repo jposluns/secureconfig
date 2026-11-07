@@ -34032,7 +34032,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against RabbitMQ source v4.3.6, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, Erlang/OTP distribution 27, and Pika source 1.3.2; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
+Written against RabbitMQ source v4.4.0, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, Erlang/OTP distribution 27, and Pika source 1.3.2; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-11-07; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -34161,7 +34161,7 @@ management.ssl.certfile = /etc/rabbitmq/tls/management.pem
 management.ssl.keyfile = /etc/rabbitmq/tls/management.key
 ```
 
-Start or restart the node through your deployment's service manager with this configuration in place BEFORE enabling the plugin. `rabbitmq.conf` changes require a node restart; editing the file alone does not update a running node. The plugin reads the effective listener configuration when it starts. Enabling it on a running broker starts it immediately; as of v4.3.6, with no management listener configured, the plugin starts a plain HTTP listener on port `15672`. The v4.3.6 source sets no address, and an example configuration in the RabbitMQ 4.3 management documentation, described as setting some parameters to their default values, includes `management.tcp.ip = 0.0.0.0` (all IPv4 interfaces); set `management.tcp.ip` before enabling the plugin and check the actual listener with `ss` after startup. See [configuration application](https://www.rabbitmq.com/docs/configure#when-will-configuration-file-changes-be-applied) and [plugin activation](https://www.rabbitmq.com/docs/plugins#different-ways-to-enable-plugins).
+Start or restart the node through your deployment's service manager with this configuration in place BEFORE enabling the plugin. `rabbitmq.conf` changes require a node restart; editing the file alone does not update a running node. The plugin reads the effective listener configuration when it starts. Enabling it on a running broker starts it immediately; as of v4.4.0, with no management listener configured, the plugin starts a plain HTTP listener on port `15672`. That listener has no configured address, so at v4.4.0 `rabbit_networking:listener_per_ip_address/1` opens one socket per wildcard address, chosen by test binds when the listener starts. On a dual-stack host, where an IPv6 wildcard socket does not take IPv4 connections, it opens two sockets, `[::]:15672` and `0.0.0.0:15672`. On a single-stack host it opens `[::]:15672` alone, which also accepts IPv4 connections, and on an IPv4-only host `0.0.0.0:15672`. An example configuration in the RabbitMQ 4.3 management documentation, described as setting some parameters to their default values, includes `management.tcp.ip = 0.0.0.0` (all IPv4 interfaces). Set `management.tcp.ip` to an explicit loopback or private address before enabling the plugin, and check the actual listeners, IPv6 sockets included, with `ss` after startup. See [configuration application](https://www.rabbitmq.com/docs/configure#when-will-configuration-file-changes-be-applied) and [plugin activation](https://www.rabbitmq.com/docs/plugins#different-ways-to-enable-plugins).
 
 Only after that start/restart succeeds, enable the plugin if it is not already enabled:
 
@@ -34171,13 +34171,15 @@ sudo rabbitmq-plugins enable rabbitmq_management
 
 If the plugin is already enabled, apply the restricted configuration and restart the node before it becomes reachable, or keep management access firewalled until the restart and listener verification in check 2 are complete.
 
-This deliberately retains HTTP on loopback and exposes HTTPS only on the selected private address. Restrict HTTPS reachability to administration hosts. The management certificate must cover the management hostname. AMQP `ssl_options` do not configure management TLS.
+This deliberately retains HTTP on loopback and exposes HTTPS only on the selected private address. At v4.4.0, `management.ssl.ip` is what limits the HTTPS listener to that one address; without it, the HTTPS listener binds the same wildcard addresses as the default HTTP listener above. Restrict HTTPS reachability to administration hosts. The management certificate must cover the management hostname. AMQP `ssl_options` do not configure management TLS.
+
+RabbitMQ 4.4.0 adds `management.listeners.tcp.<name>` and `management.listeners.ssl.<name>` entries, which start extra management listeners on top of the default ones. They do not disable the default listener: with only these entries set and no `management.tcp.*`, `management.ssl.*` or legacy `management.listener.*` settings, the plain HTTP listener on `15672` still starts on the wildcard addresses described above. An entry that gives only a port also drops `management.tcp.ip` or `management.ssl.ip` for that listener, which then binds without an address limit. Give each such entry an explicit private address as well as a port, and keep `management.tcp.ip` set so that the default HTTP listener stays on its chosen address, or leave these entries unset.
 
 Standard internal-user HTTP authentication uses RabbitMQ credentials. Use the observer role from section 1 for monitoring and keep `ops` separate. Human MFA guidance remains in [admin-uis.md](https://github.com/jposluns/secureconfig/blob/main/admin-uis.md) and [mfa.md](https://github.com/jposluns/secureconfig/blob/main/mfa.md). See [management HTTPS and listener configuration](https://www.rabbitmq.com/docs/management) and [HTTP API authentication](https://www.rabbitmq.com/docs/http-api-reference).
 
 ## 4. epmd and the Erlang distribution port
 
-Two more listeners exist beyond AMQP and management: epmd, the Erlang Port Mapper Daemon, defaults to `4369`; the distribution listener defaults to `25672`, derived from `RABBITMQ_NODE_PORT` plus 20000 (as of v4.3.6). The environment (a non-empty `RABBITMQ_DIST_PORT`, or its unprefixed form `DIST_PORT`) or the configuration (the `distribution.listener.port_range` keys set below) can replace that distribution listener default. The distribution listener carries clustering and CLI traffic. Pin its private IPv4 address and port in `rabbitmq.conf`:
+Two more listeners exist beyond AMQP and management: epmd, the Erlang Port Mapper Daemon, defaults to `4369`; the distribution listener defaults to `25672`, derived from `RABBITMQ_NODE_PORT` plus 20000 (as of v4.4.0). A non-empty `RABBITMQ_DIST_PORT`, or its unprefixed form `DIST_PORT`, replaces that derived port, and RabbitMQ pins the distribution listener to the resulting single port by setting the Erlang kernel's `inet_dist_listen_min` and `inet_dist_listen_max` both to it. The `distribution.listener.port_range.min` and `.max` keys set below map to those same two kernel settings. This guide has not established which value applies when they differ from the derived port, so keep them equal to the port you intend. The distribution listener carries clustering and CLI traffic. Pin its private IPv4 address and port in `rabbitmq.conf`:
 
 ```ini
 distribution.listener.interface = REPLACE_WITH_BROKER_PRIVATE_IP
@@ -34193,7 +34195,7 @@ export ERL_EPMD_ADDRESS='REPLACE_WITH_BROKER_PRIVATE_IP'
 
 Changing `ERL_EPMD_ADDRESS` requires stopping both RabbitMQ and epmd before starting them with the new environment. Restarting RabbitMQ alone is insufficient. Socket-activated epmd instead needs its `epmd.socket` binding configured. epmd implicitly retains loopback access. Use a private address reachable by cluster peers; loopback-only distribution suits a single node with local CLI access.
 
-Bindings do not replace firewall rules. Allow these ports only from cluster peers and authorized CLI hosts; do not publish them publicly in Compose port mappings. Remote CLI tools also use their own distribution-port range, by default `35672` through `35682` (as of v4.3.6, from `RABBITMQ_CTL_DIST_PORT_MIN` through ten above it unless `RABBITMQ_CTL_DIST_PORT_MAX` is set, where an empty value counts as unset and the unprefixed `CTL_DIST_PORT_MIN` or `CTL_DIST_PORT_MAX` then applies); restrict the actual range to the necessary peers. See [networking and epmd lifecycle](https://www.rabbitmq.com/docs/networking).
+Bindings do not replace firewall rules. Allow these ports only from cluster peers and authorized CLI hosts; do not publish them publicly in Compose port mappings. Remote CLI tools also use their own distribution-port range, by default `35672` through `35682` (as of v4.4.0, from `RABBITMQ_CTL_DIST_PORT_MIN` through ten above it unless `RABBITMQ_CTL_DIST_PORT_MAX` is set, where an empty value counts as unset and the unprefixed `CTL_DIST_PORT_MIN` or `CTL_DIST_PORT_MAX` then applies); restrict the actual range to the necessary peers. See [networking and epmd lifecycle](https://www.rabbitmq.com/docs/networking).
 
 The Erlang cookie is a shared secret granting powerful node and CLI access. On typical Unix installations the server uses `/var/lib/rabbitmq/.erlang.cookie`, and CLI users use `$HOME/.erlang.cookie`. Keep matching copies owner-only, normally mode `600`, with a long random value supplied through secret management. Keep it out of images and Compose files, and never pass its value through command-line arguments. Cookie possession plus distribution reachability can give full broker control. See [CLI authentication](https://www.rabbitmq.com/docs/cli).
 
@@ -34618,7 +34620,7 @@ Historical authoring record: no broker, container, or whole-corpus gate suite wa
 
 ## 6. Encrypt inter-node and CLI distribution traffic with TLS
 
-Section 4 binds the Erlang distribution port privately but leaves that traffic in plaintext. Distribution carries clustering messages and the full authority of `rabbitmqctl` and `rabbitmq-diagnostics`, so encrypt it with mutually authenticated TLS across every node and CLI host. This is an Erlang runtime mechanism, not a `rabbitmq.conf` setting: it is selected through `rabbitmq-env.conf` and a separate Erlang-term options file, and requires at least Erlang/OTP 27 for RabbitMQ 4.3 (this example targets OTP 27). See the [inter-node TLS guide](https://www.rabbitmq.com/docs/clustering-ssl) and the [OTP distribution-over-TLS reference](https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html).
+Section 4 binds the Erlang distribution port privately but leaves that traffic in plaintext. Distribution carries clustering messages and the full authority of `rabbitmqctl` and `rabbitmq-diagnostics`, so encrypt it with mutually authenticated TLS across every node and CLI host. This is an Erlang runtime mechanism, not a `rabbitmq.conf` setting: it is selected through `rabbitmq-env.conf` and a separate Erlang-term options file. RabbitMQ 4.4.0 fully supports the Erlang/OTP 28 and 29 series, per the [v4.4.0 release notes](https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.4.0); this guide does not state a minimum Erlang/OTP version. This example was written against the OTP 27 references this section cites, so check them against the OTP release you run. See the [inter-node TLS guide](https://www.rabbitmq.com/docs/clustering-ssl) and the [OTP distribution-over-TLS reference](https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html).
 
 In `/etc/rabbitmq/rabbitmq-env.conf`, select the TLS distribution module for both the server and the CLI tools, pointing each at the options file:
 
@@ -34629,7 +34631,7 @@ SERVER_ADDITIONAL_ERL_ARGS="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_opt
 RABBITMQ_CTL_ERL_ARGS="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_optfile /etc/rabbitmq/inter_node_tls.config"
 ```
 
-Determine the installed Erlang `ssl` application `ebin` directory on the host rather than copying a version-specific example. `SERVER_ADDITIONAL_ERL_ARGS` configures the broker's distribution; `RABBITMQ_CTL_ERL_ARGS` gives `rabbitmqctl` and `rabbitmq-diagnostics` the matching configuration so CLI connections are not refused. In a systemd or container launch environment the server variable's prefixed form is `RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS`. See the [pinned launch-variable handling](https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env).
+Determine the installed Erlang `ssl` application `ebin` directory on the host rather than copying a version-specific example. `SERVER_ADDITIONAL_ERL_ARGS` configures the broker's distribution; `RABBITMQ_CTL_ERL_ARGS` gives `rabbitmqctl` and `rabbitmq-diagnostics` the matching configuration so CLI connections are not refused. In a systemd or container launch environment the server variable's prefixed form is `RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS`. See the [pinned launch-variable handling](https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.4.0/deps/rabbit/scripts/rabbitmq-env).
 
 In `/etc/rabbitmq/inter_node_tls.config`, require and verify peer certificates in both directions, because a node both accepts and initiates distribution connections:
 
@@ -34676,10 +34678,13 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - RabbitMQ inter-node TLS (distribution over TLS): https://www.rabbitmq.com/docs/clustering-ssl
 - Erlang/OTP 27 distribution over TLS: https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html
 - OTP 27 distribution TLS implementation (hostname verification): https://raw.githubusercontent.com/erlang/otp/OTP-27.0/lib/ssl/src/inet_tls_dist.erl
-- RabbitMQ v4.3.6 launch-variable handling (rabbitmq-env): https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env
-- RabbitMQ v4.3.6 release notes (minimum supported Erlang/OTP version 27.0): https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6
-- RabbitMQ v4.3.6 web dispatch listener transport options (an `ip` option is passed only when configured): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118
-- RabbitMQ v4.3.6 management schema `management.tcp.ip` mapping (no default value): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60
+- RabbitMQ v4.4.0 launch-variable handling (rabbitmq-env): https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.4.0/deps/rabbit/scripts/rabbitmq-env
+- RabbitMQ v4.4.0 release notes (fully supports the Erlang/OTP 28 and 29 series; they state no minimum Erlang/OTP version): https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.4.0
+- RabbitMQ v4.4.0 web dispatch listeners, split into one socket per address, each socket's `ip` becoming its bind address. RabbitMQ v4.4.0 web dispatch sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L39-L46 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L174-L188
+- RabbitMQ v4.4.0 per-address listener split: a listener with no `ip` gets the IPv6 wildcard, the IPv4 wildcard or both, by the host's IPv6 behaviour. RabbitMQ v4.4.0 networking sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_networking.erl#L226-L248 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_networking.erl#L775-L795
+- RabbitMQ v4.4.0 management schema `management.tcp.ip` mapping (no default value): https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60
+- RabbitMQ v4.4.0 management schema `management.ssl.ip` mapping: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L104-L105
+- RabbitMQ v4.4.0 management schema `management.listeners.tcp.<name>` and `management.listeners.ssl.<name>` settings: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L187-L203
 - RabbitMQ 3.7.0 release notes (topic authorization introduction): https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0
 - RabbitMQ management listeners, HTTPS, and roles: https://www.rabbitmq.com/docs/management
 - RabbitMQ 4.3 management documentation source, example configuration described as setting some parameters to their default values, which includes `management.tcp.ip = 0.0.0.0` (rabbitmq-website commit db23826e): https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381
@@ -34689,10 +34694,12 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - RabbitMQ HTTP API authentication and endpoints: https://www.rabbitmq.com/docs/http-api-reference
 - RabbitMQ TLS, peer verification, certificate usage, and verification depth: https://www.rabbitmq.com/docs/ssl
 - RabbitMQ networking, epmd lifecycle, private bindings, and distribution ports: https://www.rabbitmq.com/docs/networking
-- RabbitMQ management plugin default port 15672 and the plain HTTP listener it starts when no management listener is configured (pinned tag v4.3.6). RabbitMQ management plugin sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71. More RabbitMQ management plugin sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186
-- RabbitMQ Erlang distribution port: `RABBITMQ_NODE_PORT` (default 5672) plus 20000 unless `RABBITMQ_DIST_PORT` is set (the environment-derived default, which the configuration's `distribution.listener.port_range` can also replace), with each `RABBITMQ_*` variable falling back to its unprefixed form and an empty value treated as unset (pinned tag v4.3.6). RabbitMQ Erlang distribution port sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025
-- RabbitMQ CLI distribution port range `RABBITMQ_CTL_DIST_PORT_MIN` (default 35672) to `RABBITMQ_CTL_DIST_PORT_MAX` (default ten above it), each empty-as-unset and falling back to the unprefixed `CTL_DIST_PORT_MIN`/`CTL_DIST_PORT_MAX` (pinned tag v4.3.6): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146
-- RabbitMQ `default_user`/`default_pass` guest/guest with the administrator tag, and `loopback_users` [guest] (pinned tag v4.3.6): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38
+- RabbitMQ management plugin default port 15672 and the plain HTTP listener it starts when no management listener is configured (pinned tag v4.4.0). RabbitMQ management plugin sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L23 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L102-L108. More RabbitMQ management plugin sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L203-L208 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L234-L242
+- RabbitMQ management plugin extra listeners from `management.listeners.*`, added after the default listeners, with a port-only entry dropping the configured `ip`, and the HTTPS listener's `ip` as its bind address (pinned tag v4.4.0). RabbitMQ management listener sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L134-L152 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L164-L177. More RabbitMQ management listener sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L188-L201
+- RabbitMQ Erlang distribution port: `RABBITMQ_NODE_PORT` (default 5672) plus 20000 unless `RABBITMQ_DIST_PORT` is set, pinned as both `inet_dist_listen_min` and `inet_dist_listen_max`, with each `RABBITMQ_*` variable falling back to its unprefixed form and an empty value treated as unset (pinned tag v4.4.0). RabbitMQ Erlang distribution port sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit_common/src/rabbit_env.erl#L1247-L1283 and https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit_common/src/rabbit_env.erl#L2083-L2099. More RabbitMQ Erlang distribution port sources: https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit_common/src/rabbit_env.erl#L361-L369
+- RabbitMQ `distribution.listener.port_range.min` and `.max` mapped to the Erlang kernel's `inet_dist_listen_min` and `inet_dist_listen_max` (pinned tag v4.4.0): https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/priv/schema/rabbit.schema#L2287-L2293
+- RabbitMQ CLI distribution port range `RABBITMQ_CTL_DIST_PORT_MIN` (default 35672) to `RABBITMQ_CTL_DIST_PORT_MAX` (default ten above it), each empty-as-unset and falling back to the unprefixed `CTL_DIST_PORT_MIN`/`CTL_DIST_PORT_MAX` (pinned tag v4.4.0): https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/scripts/rabbitmq-env#L143-L146
+- RabbitMQ `default_user`/`default_pass` guest/guest with the administrator tag, and `loopback_users` [guest] (pinned tag v4.4.0): https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/Makefile#L33-L38
 - Official RabbitMQ 4.3 Docker image: `10-defaults.conf` sets `loopback_users.guest = false`, and both variants copy it into `/etc/rabbitmq/conf.d/` (pinned commit 76efb370838e36e4b120e252e75cf0dac70a7d55). Official RabbitMQ 4.3 Docker image sources: https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/10-defaults.conf#L8 and https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/Dockerfile#L321. More official RabbitMQ 4.3 Docker image sources: https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/10-defaults.conf#L8 and https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/Dockerfile#L327
 - RabbitMQ diagnostics, remote node selection, and authenticated ping: https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8
 - RabbitMQ CLI authentication and Erlang cookie handling: https://www.rabbitmq.com/docs/cli
@@ -34722,7 +34729,7 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- source: RabbitMQ source (v4.3.6)
+- source: RabbitMQ source (v4.4.0)
 - admin: rabbitmqadmin (v2)
 - topic-min: RabbitMQ topic authorization introduction (3.7.0)
 - docs: RabbitMQ documentation (unknown)
@@ -34747,13 +34754,15 @@ Claims (full source mapping in the JSON block below):
 - tls-depth (REASONED; docs): ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.
 - tls-identity (REASONED; docs): mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.
 - management-bind (REASONED; docs): Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.
-- management-default (REASONED; source, management-source): v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.
+- management-default (REASONED; source, management-source): v4.4.0 starts plain HTTP 15672 when no management listener is configured; with no address set it binds the IPv6 and IPv4 wildcards on dual stack, the IPv6 wildcard alone on single stack and the IPv4 wildcard on IPv4-only hosts; a 4.3 docs example includes management.tcp.ip = 0.0.0.0.
+- management-listeners (REASONED; source): v4.4.0 management.listeners.tcp and .ssl entries add listeners on top of the defaults, so default HTTP 15672 still starts; a port-only entry drops management.tcp.ip or management.ssl.ip and binds without an address limit.
+- management-ssl-ip (REASONED; source): At v4.4.0 management.ssl.ip limits the HTTPS listener to that address; without it, HTTPS binds the same wildcard addresses as the default HTTP listener.
 - management-auth (REASONED; docs): Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.
 - epmd (REASONED; docs): epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.
-- distribution-port (REASONED; source, docs): Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.
+- distribution-port (REASONED; source, docs): Distribution defaults to node port plus 20000 (25672), pinned as equal kernel min and max; nonempty DIST_PORT replaces it; port_range keys map to the same kernel settings, with precedence not established.
 - cli-ports (REASONED; source, docs): CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.
 - cookie (REASONED; docs): Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.
-- distribution-tls (REASONED; docs, otp, source): Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.
+- distribution-tls (REASONED; docs, otp, source): Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.4.0 fully supports OTP 28 and 29, and no minimum is stated.
 - distribution-identity (REASONED; otp): Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.
 - topic-default (REASONED; docs, topic-min): Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.
 - topic-patterns (REASONED; docs): Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.
@@ -34774,26 +34783,36 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "4dd4667118e768510142581699323653c35cc976934653a4e5d4dbdb6084802a",
+  "body_sha256": "827e8f253c2455dc18dc845a54d8015cd0eea915fc6eb6ac13ae7ee913a06d5a",
   "components": {
     "source": {
       "name": "RabbitMQ source",
-      "basis": "v4.3.6",
+      "basis": "v4.4.0",
       "sources": {
-        "sd358fada6993": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38",
-        "s23753cce5d91": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22",
-        "s776b41dfa37a": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71",
-        "s2373a87402c7": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154",
-        "scde094099cd2": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186",
-        "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
-        "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
-        "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
-        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env",
-        "s9977401b5976": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6",
-        "s314eda502b64": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118",
-        "s8dd5ade37995": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60"
+        "s9f1f8db14acc": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/Makefile#L33-L38",
+        "s3e14b93fd407": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L23",
+        "sfcd87fb1a469": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L102-L108",
+        "s19c597b9b0c4": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L203-L208",
+        "s55fa6710ead4": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L234-L242",
+        "sfecb265794ac": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L134-L152",
+        "s7e312a375671": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L164-L177",
+        "s58bda198ac55": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L188-L201",
+        "s70d7b769d1de": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit_common/src/rabbit_env.erl#L1247-L1283",
+        "s752f79a56561": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit_common/src/rabbit_env.erl#L2083-L2099",
+        "sc0a5d56dfcce": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit_common/src/rabbit_env.erl#L361-L369",
+        "s22313020f9fb": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/priv/schema/rabbit.schema#L2287-L2293",
+        "s2b3127ddf2a9": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/scripts/rabbitmq-env#L143-L146",
+        "s0ac4ba8e9551": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.4.0/deps/rabbit/scripts/rabbitmq-env",
+        "s815b3e32b081": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.4.0",
+        "s176c9d9d819c": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L39-L46",
+        "s108676baa88f": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L174-L188",
+        "s5c31104b0807": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_networking.erl#L226-L248",
+        "s38f7e5ca992d": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbit/src/rabbit_networking.erl#L775-L795",
+        "s886babdfc3ec": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60",
+        "s85b75e716115": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L104-L105",
+        "s256c6b44600f": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.4.0/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L187-L203"
       }
     },
     "admin": {
@@ -34884,7 +34903,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "guest": {"text": "Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest.", "components": ["docs", "source"], "sources": ["docs:s8f066afff416", "source:sd358fada6993"], "status": "REASONED"},
+    "guest": {"text": "Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest.", "components": ["docs", "source"], "sources": ["docs:s8f066afff416", "source:s9f1f8db14acc"], "status": "REASONED"},
     "docker-guest": {"text": "Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it.", "components": ["image"], "sources": ["image:s9d5790722619", "image:s6e9f51045566", "image:se5da6700ffd7", "image:sb5b8462e18fd"], "status": "REASONED"},
     "vhosts": {"text": "Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:s348b5e1d08ae", "docs:sf81e470be6fa"], "status": "REASONED"},
     "resource-grants": {"text": "Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
@@ -34896,13 +34915,15 @@ Claims (full source mapping in the JSON block below):
     "tls-depth": {"text": "ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
     "tls-identity": {"text": "mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sffc9f05633d5"], "status": "REASONED"},
     "management-bind": {"text": "Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s7d28cf5cc259", "docs:s73c5514e15ab", "docs:s5a539132e128"], "status": "REASONED"},
-    "management-default": {"text": "v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.", "components": ["source", "management-source"], "sources": ["source:s23753cce5d91", "source:s776b41dfa37a", "source:s2373a87402c7", "source:scde094099cd2", "source:s314eda502b64", "source:s8dd5ade37995", "management-source:s0aa37c76e851"], "status": "REASONED"},
+    "management-default": {"text": "v4.4.0 starts plain HTTP 15672 when no management listener is configured; with no address set it binds the IPv6 and IPv4 wildcards on dual stack, the IPv6 wildcard alone on single stack and the IPv4 wildcard on IPv4-only hosts; a 4.3 docs example includes management.tcp.ip = 0.0.0.0.", "components": ["source", "management-source"], "sources": ["source:s3e14b93fd407", "source:sfcd87fb1a469", "source:s19c597b9b0c4", "source:s55fa6710ead4", "source:s176c9d9d819c", "source:s108676baa88f", "source:s5c31104b0807", "source:s38f7e5ca992d", "source:s886babdfc3ec", "management-source:s0aa37c76e851"], "status": "REASONED"},
+    "management-listeners": {"text": "v4.4.0 management.listeners.tcp and .ssl entries add listeners on top of the defaults, so default HTTP 15672 still starts; a port-only entry drops management.tcp.ip or management.ssl.ip and binds without an address limit.", "components": ["source"], "sources": ["source:s256c6b44600f", "source:sfecb265794ac", "source:s7e312a375671", "source:sfcd87fb1a469"], "status": "REASONED"},
+    "management-ssl-ip": {"text": "At v4.4.0 management.ssl.ip limits the HTTPS listener to that address; without it, HTTPS binds the same wildcard addresses as the default HTTP listener.", "components": ["source"], "sources": ["source:s85b75e716115", "source:s58bda198ac55", "source:s5c31104b0807", "source:s38f7e5ca992d", "source:s108676baa88f"], "status": "REASONED"},
     "management-auth": {"text": "Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad"], "status": "REASONED"},
     "epmd": {"text": "epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED"},
-    "distribution-port": {"text": "Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.", "components": ["source", "docs"], "sources": ["source:s429261f04d72", "source:s3db3e9410319", "docs:sc3e3083ffb2f"], "status": "REASONED"},
-    "cli-ports": {"text": "CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.", "components": ["source", "docs"], "sources": ["source:s631a5974cf74", "docs:sc3e3083ffb2f"], "status": "REASONED"},
+    "distribution-port": {"text": "Distribution defaults to node port plus 20000 (25672), pinned as equal kernel min and max; nonempty DIST_PORT replaces it; port_range keys map to the same kernel settings, with precedence not established.", "components": ["source", "docs"], "sources": ["source:s70d7b769d1de", "source:s752f79a56561", "source:sc0a5d56dfcce", "source:s22313020f9fb", "docs:sc3e3083ffb2f"], "status": "REASONED"},
+    "cli-ports": {"text": "CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.", "components": ["source", "docs"], "sources": ["source:s2b3127ddf2a9", "docs:sc3e3083ffb2f"], "status": "REASONED"},
     "cookie": {"text": "Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.", "components": ["docs"], "sources": ["docs:sa40d365d073f"], "status": "REASONED"},
-    "distribution-tls": {"text": "Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.", "components": ["docs", "otp", "source"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522", "source:sb2136f9c4d1a", "source:s9977401b5976"], "status": "REASONED"},
+    "distribution-tls": {"text": "Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.4.0 fully supports OTP 28 and 29, and no minimum is stated.", "components": ["docs", "otp", "source"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522", "source:s0ac4ba8e9551", "source:s815b3e32b081"], "status": "REASONED"},
     "distribution-identity": {"text": "Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.", "components": ["otp"], "sources": ["otp:s18749583e522", "otp:s2e4092cc0780"], "status": "REASONED"},
     "topic-default": {"text": "Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.", "components": ["docs", "topic-min"], "sources": ["docs:s8f066afff416", "topic-min:se34f4e7886f1"], "status": "REASONED"},
     "topic-patterns": {"text": "Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
