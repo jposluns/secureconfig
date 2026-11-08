@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Qdrant source v1.20.0, Weaviate source v1.40.3, Milvus v2.6.26 and v3.0.5, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.2, plus 4 more recorded bases; 3 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked October 2026. The guide records 83 claims, all reasoned from cited sources.
+Written against Qdrant source v1.20.0, Weaviate source v1.40.3, Milvus v2.6.26 and v3.0.5, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.7, plus 4 more recorded bases; 3 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked October 2026. The guide records 83 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -467,7 +467,7 @@ The October 2026 date records the guide-wide documentation check. Items, or part
 - Chroma 1.5.9 `chroma run` unit authenticator, default-identity authentication and authorization, and server delegation: https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L102-L164 and https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/lib.rs#L60-L156. Chroma 1.5.9 `chroma run` unit authenticator, default-identity authentication and authorization, and server delegation, continued: https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L229-L255, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, and the server's bind of `listen_address:port`. Chroma `chroma run`, continued: the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9). Chroma `chroma run` sources (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73. Chroma `chroma run` sources (pinned tag 1.5.9), continued: https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179. Chroma `chroma run` sources (pinned tag 1.5.9), continued: https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93. Chroma `chroma run` sources (pinned tag 1.5.9), continued: https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
-- pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later; v0.8.2 README): https://github.com/pgvector/pgvector/blob/v0.8.2/README.md
+- pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later; v0.8.7 README): https://github.com/pgvector/pgvector/blob/v0.8.7/README.md
 - PostgreSQL row security policies (a superuser and a `BYPASSRLS` role always bypass; the table owner bypasses unless the table has `FORCE ROW LEVEL SECURITY`): https://www.postgresql.org/docs/current/ddl-rowsecurity.html
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0; rolling documentation, checked October 2026): https://curl.se/docs/manpage.html
 - sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
@@ -494,7 +494,7 @@ Components (recorded basis):
 - milvus-operator: Milvus Operator (v1.3.11)
 - chroma: Chroma source (1.5.9)
 - cd: Chroma migration documentation (v1.0.0)
-- pgvector-source: pgvector source (v0.8.2)
+- pgvector-source: pgvector source (v0.8.7)
 - qd: Qdrant security documentation (unknown)
 - qc: Qdrant Cloud documentation (unknown)
 - wd: Weaviate documentation (unknown)
@@ -603,7 +603,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-10",
-  "body_sha256": "1e6d0961b5e404d6e0c32eb96fed7ccced46e7d9bb7c7197dc0e7cbbf5989f6c",
+  "body_sha256": "9538ecb6a27d85dcb132e81d1e3204fe42af2eb09084296558e4e0afe2dfb138",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -821,9 +821,9 @@ Claims (full source mapping in the JSON block below):
     },
     "pgvector-source": {
       "name": "pgvector source",
-      "basis": "v0.8.2",
+      "basis": "v0.8.7",
       "sources": {
-        "saab3b3092223": "https://github.com/pgvector/pgvector/blob/v0.8.2/README.md"
+        "s13e1ca059e33": "https://github.com/pgvector/pgvector/blob/v0.8.7/README.md"
       }
     },
     "qd": {
@@ -1039,7 +1039,7 @@ Claims (full source mapping in the JSON block below):
     "milvus-open-questions": {"text": "Not established: the Go pprof patterns and other default-mux handlers served by default, whether the v3.0.5 gate can verify root with authorizationEnabled off, which proxy code registers its verifier, what revokes cached root hashes on notification, other callers of its checks, and managementMetricsOnly's first release; v3.0.3 notes add adminAuthEnabled.", "components": ["m2", "m3"], "sources": ["m2:s236dba1672cd", "m3:s599ca2efbe5d", "m3:s6a00ac9c991b", "m3:s90be0eb93a49", "m3:s896663f32f5b"], "status": "REASONED"},
     "chroma-bind": {"text": "Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.", "components": ["chroma"], "sources": ["chroma:s7eb7610f68c1", "chroma:s6d6708278bef", "chroma:s59912a4c7e11", "chroma:sed8aad199780", "chroma:s3a1c76cdd7f8", "chroma:s09652c32f56a", "chroma:s784a0e779949"], "status": "REASONED"},
     "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.", "components": ["cd", "chroma"], "sources": ["cd:s60ad33c4b715", "chroma:se936b62a1a3d", "chroma:sbc1dd27a9bf2", "chroma:s62cd8db9e61a", "chroma:s50b8158f3388", "chroma:s6eb0ff350d15"], "status": "REASONED"},
-    "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pgvector-source"], "sources": ["pgvector-source:saab3b3092223"], "status": "REASONED"},
+    "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pgvector-source"], "sources": ["pgvector-source:s13e1ca059e33"], "status": "REASONED"},
     "pgvector-rls": {"text": "Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.", "components": ["pg"], "sources": ["pg:se9846041ce1f"], "status": "REASONED"},
     "hosted-mfa": {"text": "This guide assesses that Qdrant Cloud's documented API keys and, at the time of writing, Pinecone SSO do not establish human MFA. It advises self-hosted Weaviate's database OIDC settings with an MFA-enforcing IdP, or MFA-capable fronting; this is not Weaviate Cloud console SSO and establishes no hosted-console control. Wherever SSO is used, require an MFA-enforcing IdP and confirm enforcement.", "components": ["qc", "pc", "wd", "qc-pinned"], "sources": ["qc:sc72e09d8f7e6", "pc:s95422bfab587", "wd:s51c9c4c6b4c0", "qc-pinned:sac497c4d41f5"], "status": "REASONED"},
     "hosted-pinecone": {"text": "At the time of writing, Pinecone documents organization SSO through an organization's identity management solution on Standard and Enterprise plans; SSO console sessions are re-authenticated at least every 24 hours. This guide assesses that this does not establish MFA enforcement and advises requiring and confirming MFA through the SSO identity provider.", "components": ["pc"], "sources": ["pc:s95422bfab587"], "status": "REASONED"},
