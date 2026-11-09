@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Sentry and self-hosted distribution 26.8.0 and GlitchTip backend v6.2.6; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources.
+Written against Sentry and self-hosted distribution 26.10.1, Sentry prior-release frontend-migrated reference 26.8.0, and GlitchTip backend v6.2.6; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -159,18 +159,18 @@ Point that block, with `web`, at Sentry's `http://tracker.example.com:9000/`: be
 
 ## Sources (checked September 2026)
 
-- Sentry self-hosted Docker Compose (`SENTRY_BIND`, the bundled nginx publication): https://github.com/getsentry/self-hosted/blob/26.8.0/docker-compose.yml
-- Sentry self-hosted `.env` (`SENTRY_BIND=9000` default): https://github.com/getsentry/self-hosted/blob/26.8.0/.env
-- Sentry `auth.allow-registration` default `False`: https://github.com/getsentry/sentry/blob/26.8.0/src/sentry/options/defaults.py
-- Sentry `createuser` (explicit `--superuser`): https://github.com/getsentry/sentry/blob/26.8.0/src/sentry/runner/commands/createuser.py
+- Sentry self-hosted Docker Compose (`SENTRY_BIND`, the bundled nginx publication): https://github.com/getsentry/self-hosted/blob/26.10.1/docker-compose.yml
+- Sentry self-hosted `.env` (`SENTRY_BIND=9000` default): https://github.com/getsentry/self-hosted/blob/26.10.1/.env
+- Sentry `auth.allow-registration` default `False`: https://github.com/getsentry/sentry/blob/26.10.1/src/sentry/options/defaults.py
+- Sentry `createuser` (explicit `--superuser`): https://github.com/getsentry/sentry/blob/26.10.1/src/sentry/runner/commands/createuser.py
 - Sentry organization update API (`require2FA`, data scrubbing fields): https://docs.sentry.io/api/organizations/update-an-organization/
-- Sentry bundled configuration (`SENTRY_SINGLE_ORGANIZATION`, the commented-out `SECURE_PROXY_SSL_HEADER`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`): https://github.com/getsentry/self-hosted/blob/26.8.0/sentry/sentry.conf.example.py
+- Sentry bundled configuration (`SENTRY_SINGLE_ORGANIZATION`, the commented-out `SECURE_PROXY_SSL_HEADER`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`): https://github.com/getsentry/self-hosted/blob/26.10.1/sentry/sentry.conf.example.py
 - Sentry DSN explainer (a DSN is public and allows only event submission, not read access): https://docs.sentry.io/concepts/key-terms/dsn-explainer/
 - GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install/
 - GlitchTip two-factor authentication (available since v1.8): https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/
 - [GlitchTip backend v6.2.6 organization membership on login for a user with a linked social account (checked October 2026)](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45).
-- [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
-- [Sentry self-hosted 26.8.0 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63).
+- [Sentry 26.10.1 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.10.1/src/sentry/runner/commands/config.py).
+- [Sentry self-hosted 26.10.1 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.10.1/nginx.conf#L63).
 - [Sentry 26.8.0 registration and single-organization membership (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py).
 - [sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026)](https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655).
 
@@ -188,7 +188,8 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- sentry: Sentry and self-hosted distribution (26.8.0)
+- sentry: Sentry and self-hosted distribution (26.10.1)
+- sentry-prev: Sentry prior-release frontend-migrated reference (26.8.0)
 - glitchtip-backend: GlitchTip backend (v6.2.6)
 - sentry-docs: Sentry documentation (unknown)
 - glitchtip: GlitchTip documentation (unknown)
@@ -213,7 +214,7 @@ Claims (full source mapping in the JSON block below):
 - glitchtip-secret (REASONED; glitchtip): Use a unique SECRET_KEY for Django signing and keep it out of version control.
 - glitchtip-mfa (REASONED; glitchtip-mfa): Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version.
 - glitchtip-stores (REASONED; glitchtip): Keep PostgreSQL and optional Valkey or Redis internal.
-- membership (REASONED; sentry, glitchtip-backend): Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner.
+- membership (REASONED; sentry, sentry-prev, glitchtip-backend): Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner.
 - verify-listeners (REASONED; sentry, glitchtip): Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets.
 - verify-sentry (REASONED; sentry): Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration.
 - verify-glitchtip (REASONED; glitchtip): On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user.
@@ -225,19 +226,25 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "bf08d8ccb68d7172c334bd62968c0b5c74669dbed084c584025cb570e8554318",
+  "body_sha256": "e040118e55c58831292f9d5ce298a2c2cbeeaf5712b0e7bd95062f44c9393924",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",
+      "basis": "26.10.1",
+      "sources": {
+        "s8c9ef6c47c63": "https://github.com/getsentry/self-hosted/blob/26.10.1/docker-compose.yml",
+        "s6b3008b7ce70": "https://github.com/getsentry/self-hosted/blob/26.10.1/.env",
+        "s8cfd1816bebc": "https://github.com/getsentry/sentry/blob/26.10.1/src/sentry/options/defaults.py",
+        "s9dc4a5a38dd5": "https://github.com/getsentry/sentry/blob/26.10.1/src/sentry/runner/commands/createuser.py",
+        "sffc6218f3e60": "https://github.com/getsentry/self-hosted/blob/26.10.1/sentry/sentry.conf.example.py",
+        "s34e00f944b78": "https://raw.githubusercontent.com/getsentry/sentry/26.10.1/src/sentry/runner/commands/config.py",
+        "s8448c8ef78cc": "https://github.com/getsentry/self-hosted/blob/26.10.1/nginx.conf#L63"
+      }
+    },
+    "sentry-prev": {
+      "name": "Sentry prior-release frontend-migrated reference",
       "basis": "26.8.0",
       "sources": {
-        "sd29b3662378f": "https://github.com/getsentry/self-hosted/blob/26.8.0/docker-compose.yml",
-        "s82b919d5116e": "https://github.com/getsentry/self-hosted/blob/26.8.0/.env",
-        "sd576440e137e": "https://github.com/getsentry/sentry/blob/26.8.0/src/sentry/options/defaults.py",
-        "s667e27476aba": "https://github.com/getsentry/sentry/blob/26.8.0/src/sentry/runner/commands/createuser.py",
-        "sf2294c9468b9": "https://github.com/getsentry/self-hosted/blob/26.8.0/sentry/sentry.conf.example.py",
-        "se2c4a137cc29": "https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py",
-        "s9d3c3d6f7a19": "https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63",
         "se4a92c571e6f": "https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py"
       }
     },
@@ -273,28 +280,28 @@ Claims (full source mapping in the JSON block below):
   },
   "claims": {
     "dsn": {"text": "Client DSNs authorize event submission, not reading tracker data.", "components": ["sentry-docs"], "sources": ["sentry-docs:s5e15f3959620"], "status": "REASONED"},
-    "sentry-bind": {"text": "SENTRY_BIND=9000 publishes nginx on all interfaces; set 127.0.0.1:9000 behind a TLS proxy.", "components": ["sentry"], "sources": ["sentry:sd29b3662378f", "sentry:s82b919d5116e"], "status": "REASONED"},
-    "sentry-stores": {"text": "Leave web, relay and backing stores unpublished; their internal credentials are not a public boundary.", "components": ["sentry"], "sources": ["sentry:sd29b3662378f"], "status": "REASONED"},
-    "sentry-registration": {"text": "auth.allow-registration defaults False; keep it false on an internet-facing tracker.", "components": ["sentry"], "sources": ["sentry:sd576440e137e"], "status": "REASONED"},
-    "sentry-admin": {"text": "createuser --superuser explicitly creates an administrator; plain createuser defaults its superuser prompt to no.", "components": ["sentry"], "sources": ["sentry:s667e27476aba"], "status": "REASONED"},
-    "sentry-url": {"text": "Set system.url-prefix to the public HTTPS origin.", "components": ["sentry"], "sources": ["sentry:sf2294c9468b9", "sentry:sd576440e137e"], "status": "REASONED"},
-    "sentry-secret": {"text": "Generate system.secret-key once and keep it out of version control.", "components": ["sentry"], "sources": ["sentry:sd576440e137e", "sentry:sf2294c9468b9", "sentry:se2c4a137cc29"], "status": "REASONED"},
-    "sentry-cookies": {"text": "Enable forwarded scheme/host recognition and secure session/CSRF cookies; bundled settings are commented out.", "components": ["sentry"], "sources": ["sentry:sf2294c9468b9"], "status": "REASONED"},
-    "sentry-nginx": {"text": "Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme.", "components": ["sentry"], "sources": ["sentry:sd29b3662378f", "sentry:sf2294c9468b9", "sentry:s9d3c3d6f7a19"], "status": "REASONED"},
+    "sentry-bind": {"text": "SENTRY_BIND=9000 publishes nginx on all interfaces; set 127.0.0.1:9000 behind a TLS proxy.", "components": ["sentry"], "sources": ["sentry:s8c9ef6c47c63", "sentry:s6b3008b7ce70"], "status": "REASONED"},
+    "sentry-stores": {"text": "Leave web, relay and backing stores unpublished; their internal credentials are not a public boundary.", "components": ["sentry"], "sources": ["sentry:s8c9ef6c47c63"], "status": "REASONED"},
+    "sentry-registration": {"text": "auth.allow-registration defaults False; keep it false on an internet-facing tracker.", "components": ["sentry"], "sources": ["sentry:s8cfd1816bebc"], "status": "REASONED"},
+    "sentry-admin": {"text": "createuser --superuser explicitly creates an administrator; plain createuser defaults its superuser prompt to no.", "components": ["sentry"], "sources": ["sentry:s9dc4a5a38dd5"], "status": "REASONED"},
+    "sentry-url": {"text": "Set system.url-prefix to the public HTTPS origin.", "components": ["sentry"], "sources": ["sentry:sffc6218f3e60", "sentry:s8cfd1816bebc"], "status": "REASONED"},
+    "sentry-secret": {"text": "Generate system.secret-key once and keep it out of version control.", "components": ["sentry"], "sources": ["sentry:s8cfd1816bebc", "sentry:sffc6218f3e60", "sentry:s34e00f944b78"], "status": "REASONED"},
+    "sentry-cookies": {"text": "Enable forwarded scheme/host recognition and secure session/CSRF cookies; bundled settings are commented out.", "components": ["sentry"], "sources": ["sentry:sffc6218f3e60"], "status": "REASONED"},
+    "sentry-nginx": {"text": "Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme.", "components": ["sentry"], "sources": ["sentry:s8c9ef6c47c63", "sentry:sffc6218f3e60", "sentry:s8448c8ef78cc"], "status": "REASONED"},
     "sentry-mfa": {"text": "Enforce organization member MFA with require2FA.", "components": ["sentry-docs"], "sources": ["sentry-docs:see399d43779f"], "status": "REASONED"},
     "sentry-scrubbing": {"text": "Use dataScrubber, dataScrubberDefaults and scrubIPAddresses to reduce sensitive intake.", "components": ["sentry-docs"], "sources": ["sentry-docs:see399d43779f"], "status": "REASONED"},
-    "sentry-precedence": {"text": "auth.allow-registration prioritizes config.yml over the database; verify SSO provisioning and effective scrubbing separately.", "components": ["sentry", "sentry-docs"], "sources": ["sentry:sd576440e137e", "sentry-docs:see399d43779f"], "status": "REASONED"},
+    "sentry-precedence": {"text": "auth.allow-registration prioritizes config.yml over the database; verify SSO provisioning and effective scrubbing separately.", "components": ["sentry", "sentry-docs"], "sources": ["sentry:s8cfd1816bebc", "sentry-docs:see399d43779f"], "status": "REASONED"},
     "glitchtip-port": {"text": "GlitchTip Compose publishes 8000; bind privately behind TLS and verify the actual sample host bind.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED"},
     "glitchtip-registration": {"text": "ENABLE_USER_REGISTRATION defaults True; False disables self-signup after the first user exists.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED"},
     "glitchtip-secret": {"text": "Use a unique SECRET_KEY for Django signing and keep it out of version control.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED"},
     "glitchtip-mfa": {"text": "Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version.", "components": ["glitchtip-mfa"], "sources": ["glitchtip-mfa:sb4f6be6e6b48"], "status": "REASONED"},
     "glitchtip-stores": {"text": "Keep PostgreSQL and optional Valkey or Redis internal.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED"},
-    "membership": {"text": "Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner.", "components": ["sentry", "glitchtip-backend"], "sources": ["sentry:sf2294c9468b9", "sentry:se4a92c571e6f", "glitchtip-backend:s32daf6ef6011"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sd29b3662378f", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [1]},
-    "verify-sentry": {"text": "Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration.", "components": ["sentry"], "sources": ["sentry:sd576440e137e", "sentry:sf2294c9468b9"], "status": "REASONED", "verify": [2]},
+    "membership": {"text": "Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner.", "components": ["sentry", "sentry-prev", "glitchtip-backend"], "sources": ["sentry:sffc6218f3e60", "sentry-prev:se4a92c571e6f", "glitchtip-backend:s32daf6ef6011"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets.", "components": ["sentry", "glitchtip"], "sources": ["sentry:s8c9ef6c47c63", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [1]},
+    "verify-sentry": {"text": "Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration.", "components": ["sentry"], "sources": ["sentry:s8cfd1816bebc", "sentry:sffc6218f3e60"], "status": "REASONED", "verify": [2]},
     "verify-glitchtip": {"text": "On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user.", "components": ["glitchtip"], "sources": ["glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [2]},
-    "verify-stores": {"text": "Off-host backing-port probes judge TCP connection outcomes, not HTTP codes; distinguish the public HTTPS proxy and backend ports.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sd29b3662378f", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [2]},
-    "verify-https": {"text": "Confirm plaintext web requests redirect to the HTTPS proxy; login pages, 404s and TLS errors do not prove controls.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sf2294c9468b9", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [2]}
+    "verify-stores": {"text": "Off-host backing-port probes judge TCP connection outcomes, not HTTP codes; distinguish the public HTTPS proxy and backend ports.", "components": ["sentry", "glitchtip"], "sources": ["sentry:s8c9ef6c47c63", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [2]},
+    "verify-https": {"text": "Confirm plaintext web requests redirect to the HTTPS proxy; login pages, 404s and TLS errors do not prove controls.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sffc6218f3e60", "glitchtip:scaee058a19e4"], "status": "REASONED", "verify": [2]}
   }
 }
 ````
