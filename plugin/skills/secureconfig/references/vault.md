@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Vault loopback run 2.1.1, Vault handler source v1.21.0, Vault forwarding source v1.20.0, Vault JWT audience minimum 1.17, Vault historical wrapping qualification 0.8, and curl minimum write-out version 7.75.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 36 claims: 16 demonstrated by a check that ran and 20 reasoned from cited sources.
+Written against Vault loopback run 2.1.1, Vault handler source v2.2.1, Vault forwarding source v2.2.1, Vault JWT audience minimum 1.17, Vault historical wrapping qualification 0.8, and curl minimum write-out version 7.75.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 36 claims: 16 demonstrated by a check that ran and 20 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -843,14 +843,14 @@ read policy got `200` on the inventory secret: the exposed outcomes. In the run 
 configuration and its anonymous-access settings left `false`, a collector whose policy added
 `kv/data/*` got `200` on the payments secret, the collector-isolation exposed outcome.
 
-REASONED: HA monitoring: expect an ordinary standby's 307 redirect or the documented local-only forwarding rejection, neither an authentication pass; repeat on the active node for anonymous 403 and authorized 200. No multi-node environment was available. Per the guide's cited Vault HA redirect implementation (pinned v1.21.0); Vault local-only forwarding implementation (pinned v1.20.0); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture or live run of it is recorded, while the HA standby block's leading comment records its stub runs. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **REASONED (no multi-node cluster was set up for these runs):** authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
+REASONED: HA monitoring: expect an ordinary standby's 307 redirect or the documented local-only forwarding rejection, neither an authentication pass; repeat on the active node for anonymous 403 and authorized 200. No multi-node environment was available. Per the guide's cited Vault HA redirect implementation (pinned v2.2.1); Vault local-only forwarding implementation (pinned v2.2.1); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture or live run of it is recorded, while the HA standby block's leading comment records its stub runs. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **REASONED (no multi-node cluster was set up for these runs):** authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
 `307` to the active node's advertised API address when a leader is available; that redirect is not
 an authentication result. Performance standbys can serve local requests, but the local-only handler
 rejects requests that require forwarding with `400` in the inspected implementation. Do not follow
 redirects with the token or count redirects, forwarding errors, or missing positive controls as
 passes; reconfirm the active node and repeat the pair. See the
-[HTTP route and standby redirect implementation](https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go)
-and [local-only forwarding handling](https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go).
+[HTTP route and standby redirect implementation](https://raw.githubusercontent.com/hashicorp/vault/v2.2.1/http/handler.go)
+and [local-only forwarding handling](https://raw.githubusercontent.com/hashicorp/vault/v2.2.1/http/logical.go).
 Keep both anonymous-access settings disabled on every node's API listeners. Inspect each listener's
 configuration and repeat the paired checks on each node when it is active during an authorized HA
 test; a pair on the current active node does not verify other nodes' listener settings.
@@ -1356,7 +1356,7 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 | Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| REASONED: deployment comparisons in this row: require the specified HA responses, delivery to both independent audit destinations, intended binds, unexpected-path rejection by the recipient, and denied external access with a working permitted-source control; missing delivery, unintended binds, accepted unexpected paths and forbidden-source connectivity are findings. No multi-node deployment, recipient implementation or external source pair was available. The guide's cited sources for the deployment comparisons in this row (part 1 of 2): Vault sys/health status codes; Vault HA redirect implementation (pinned v1.21.0); Vault local-only forwarding implementation (pinned v1.20.0); Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault TCP listener (address defaults, tls_disable, cluster_address). The guide's cited sources for the deployment comparisons in this row (part 2 of 2): Vault response wrapping (single use, delivery, validation, and historical 0.8 version note); Vault wrapping lookup API (creation path, time, and original TTL); Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Checks beyond the recorded loopback runs | REASONED from the cited Vault documentation; not demonstrated | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot (part 1 of 2): HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root. The demonstration in that authorized isolated Vault deployment, of what a single loopback node cannot demonstrate, is to cover (part 2 of 2): recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
+| REASONED: deployment comparisons in this row: require the specified HA responses, delivery to both independent audit destinations, intended binds, unexpected-path rejection by the recipient, and denied external access with a working permitted-source control; missing delivery, unintended binds, accepted unexpected paths and forbidden-source connectivity are findings. No multi-node deployment, recipient implementation or external source pair was available. The guide's cited sources for the deployment comparisons in this row (part 1 of 2): Vault sys/health status codes; Vault HA redirect implementation (pinned v2.2.1); Vault local-only forwarding implementation (pinned v2.2.1); Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault TCP listener (address defaults, tls_disable, cluster_address). The guide's cited sources for the deployment comparisons in this row (part 2 of 2): Vault response wrapping (single use, delivery, validation, and historical 0.8 version note); Vault wrapping lookup API (creation path, time, and original TTL); Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). The bash -n, ShellCheck and stub runs recorded here covered an earlier form of the Verify blocks, whose guard refusals exited with status 1; the gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, whose guard refusals exit with status 2, and no fixture, stub or live run of it is recorded. This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Checks beyond the recorded loopback runs | REASONED from the cited Vault documentation; not demonstrated | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot (part 1 of 2): HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root. The demonstration in that authorized isolated Vault deployment, of what a single loopback node cannot demonstrate, is to cover (part 2 of 2): recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
 
 ## Sources (checked September 2026)
 
@@ -1412,8 +1412,8 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 - Vault 2.1.1 AppRole expired-SecretID tidy (once a minute; a SecretID may live up to a minute past expiry): https://github.com/hashicorp/vault/blob/v2.1.1/builtin/credential/approle/backend.go
 - Vault token lookup command (selected-token lookup and JSON output): https://developer.hashicorp.com/vault/docs/commands/token/lookup
 - curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields): https://curl.se/docs/manpage.html
-- Vault HA redirect implementation (pinned v1.21.0): https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go
-- Vault local-only forwarding implementation (pinned v1.20.0): https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go
+- Vault HA redirect implementation (pinned v2.2.1): https://raw.githubusercontent.com/hashicorp/vault/v2.2.1/http/handler.go
+- Vault local-only forwarding implementation (pinned v2.2.1): https://raw.githubusercontent.com/hashicorp/vault/v2.2.1/http/logical.go
 - sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudoers.man.in#L5650-L5655
 
 
@@ -1431,8 +1431,8 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 Components (recorded basis):
 
 - run: Vault loopback run (2.1.1)
-- ha: Vault handler source (v1.21.0)
-- forward: Vault forwarding source (v1.20.0)
+- ha: Vault handler source (v2.2.1)
+- forward: Vault forwarding source (v2.2.1)
 - jwt-min: Vault JWT audience minimum (1.17)
 - wrap-history: Vault historical wrapping qualification (0.8)
 - docs: Vault documentation (unknown)
@@ -1482,7 +1482,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8f0a41b3e9185d03f4f64224707689a0e3f28e0441e70706304a589439d1a27c",
+  "body_sha256": "022349ca91831b2529cafa503eb58de4b7a08164ad52413b60e1c236738edbc9",
   "components": {
     "run": {
       "name": "Vault loopback run",
@@ -1493,16 +1493,16 @@ Claims (full source mapping in the JSON block below):
     },
     "ha": {
       "name": "Vault handler source",
-      "basis": "v1.21.0",
+      "basis": "v2.2.1",
       "sources": {
-        "s8c81f240066a": "https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go"
+        "s277fb66ef17f": "https://raw.githubusercontent.com/hashicorp/vault/v2.2.1/http/handler.go"
       }
     },
     "forward": {
       "name": "Vault forwarding source",
-      "basis": "v1.20.0",
+      "basis": "v2.2.1",
       "sources": {
-        "sfdb628929b01": "https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go"
+        "s2c568094f4a5": "https://raw.githubusercontent.com/hashicorp/vault/v2.2.1/http/logical.go"
       }
     },
     "jwt-min": {
@@ -1608,7 +1608,7 @@ Claims (full source mapping in the JSON block below):
     "root-test": {"text": "Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue. The recorded live loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs, which do not establish live Vault behavior.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s923f5369652b", "docs:sdb9905c2f649", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "A scoped admin created as a child of the root token lost access with it, while an orphan token and a userpass login kept working.", "verify": [1]},
     "acl-test": {"text": "Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has no recorded run.", "components": ["docs", "run"], "sources": ["docs:sfbfbd7179dca", "docs:sf7640abb07c2", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "the payments token `200` on its own secret and `403` on the inventory secret, where the fixture reader got `200`", "verify": [3]},
     "monitor-test": {"text": "Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has no recorded run.", "components": ["docs", "run"], "sources": ["docs:sbfb9c60f21c1", "docs:s1437757f255b", "docs:s84bf68313c5d", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "anonymous requests got `200` on `sys/metrics` and `sys/pprof/`", "verify": [3]},
-    "monitor-ha": {"text": "Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks.", "components": ["docs", "ha", "forward"], "sources": ["docs:s1437757f255b", "docs:s84bf68313c5d", "ha:s8c81f240066a", "forward:sfdb628929b01"], "status": "REASONED", "verify": [4]},
+    "monitor-ha": {"text": "Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks.", "components": ["docs", "ha", "forward"], "sources": ["docs:s1437757f255b", "docs:s84bf68313c5d", "ha:s277fb66ef17f", "forward:s2c568094f4a5"], "status": "REASONED", "verify": [4]},
     "secretid": {"text": "SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has no recorded run.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "SecretIDs 10 seconds past their TTL logged in, while one 70 seconds past it was refused", "verify": [5]},
     "cidr": {"text": "SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has no recorded run.", "components": ["docs", "run"], "sources": ["docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "a login from 127.0.0.1 succeeded, and its token read the payments secret with `200` from 127.0.0.1 and `403` from 127.0.0.2", "verify": [5]},
     "token": {"text": "Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls. The recorded loopback runs used an earlier form of the block, whose guard refusals exited with status 1; the current form has no recorded run.", "components": ["docs", "run"], "sources": ["docs:s449e83b31426", "docs:s553adec7c375", "run:sd936be5e4c41"], "status": "DEMONSTRATED", "evidence": "100 reads returned `200` before read 101 got `403`; with `token_num_uses=0`, all 101 reads returned `200`.", "verify": [5]},
