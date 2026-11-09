@@ -6,7 +6,7 @@ Security guides that tell your AI assistant what to apply, how to verify the res
 
 ## What this is
 
-A library of short, generic, copy-ready guides covering the full deployment surface of a modern project: certificates and tunnels; human and machine identity, MFA, and secrets; web servers and proxies; language runtimes and frameworks; containers and Kubernetes; hosts, cloud firewalls, PaaS, and rented GPU clouds; databases, storage, and messaging; the AI stack itself (model servers, vector databases, MCP servers, agent and chat UIs, LLM observability); and the operational controls around a deployment, from first run through teardown. At the time of writing that is 102 guides across the 12 categories indexed below, plus [controls-reference.md](controls-reference.md) for any service that has no guide yet.
+A library of short, generic, copy-ready guides covering the full deployment surface of a modern project: certificates and tunnels; human and machine identity, MFA, and secrets; web servers and proxies; language runtimes and frameworks; containers and Kubernetes; hosts, cloud firewalls, PaaS, and rented GPU clouds; databases, storage, and messaging; the AI stack itself (model servers, vector databases, MCP servers, agent and chat UIs, LLM observability); and the operational controls around a deployment, from first run through teardown. At the time of writing that is 103 guides across the 12 categories indexed below, plus [controls-reference.md](controls-reference.md) for any service that has no guide yet.
 
 ## The gap and the standard
 
@@ -212,6 +212,7 @@ Choose every route that applies; a deployment usually needs both service-specifi
 |---|---|
 | [open-webui.md](open-webui.md) | Open WebUI: signup control, pending role, fronting TLS, persistent signing key, trusted-proxy and OAuth boundaries, tool and code-execution limits, model and admin-data access control, API-key restrictions, and retrieval/SSRF limits |
 | [chat-uis.md](chat-uis.md) | AnythingLLM, LobeChat, Chainlit, OpenHands: open by default; front with login |
+| [openclaw.md](openclaw.md) | OpenClaw: loopback binding and the container 0.0.0.0 auto-bind, non-loopback fail-closed guard, token or password auth, TLS, the always-on /tools/invoke endpoint and its default deny list, agent sandboxing, Control UI allowed origins, Tailscale or trusted-proxy access, and secrets at rest |
 | [image-gen-uis.md](image-gen-uis.md) | ComfyUI, A1111, InvokeAI, Fooocus: keep on loopback and add a login before exposing |
 | [gradio.md](gradio.md) | Gradio: launch() auth and TLS, share-link risks, file-access and cache isolation, optional-execution-surface and API-visibility controls, queue and resource limits, URL-fetch SSRF limits, external auth, and flagging/telemetry controls |
 | [streamlit.md](streamlit.md) | Streamlit: TLS options, native OIDC login, reverse proxy deployment |
