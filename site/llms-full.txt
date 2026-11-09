@@ -69603,7 +69603,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Metabase v0.63.18, Redash v26.9.0, environ 1.2.0, Ring Jetty adapter 1.15.3, and Jetty 12.1.13; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 25 claims, all reasoned from cited sources.
+Written against Metabase v0.65.3, Redash v26.9.0, environ 1.2.0, Ring Jetty adapter 1.15.3, and Jetty 12.1.13; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 25 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -69621,7 +69621,7 @@ The first account created during setup becomes the admin account, so an instance
 network before you finish the setup wizard lets whoever gets there first claim admin. Complete
 setup before the instance is reachable from anywhere but you.
 
-Metabase binds a wildcard address by default (as of v0.63.18). It reads each `MB_` setting
+Metabase binds a wildcard address by default (as of v0.65.3). It reads each `MB_` setting
 from a `.lein-env` file in the working directory (and a `.boot-env` classpath resource), then the
 environment, then JVM options such as `-Dmb.jetty.host`, each overriding the one before. The jar
 leaves Jetty's host unset unless the last of those layers to set `MB_JETTY_HOST` gives it a non-blank
@@ -69742,7 +69742,7 @@ connection string or the tool's own login is not enough.
 - Metabase setting up Metabase (first account is admin): https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase
 - Metabase public links and embeds: https://www.metabase.com/docs/latest/embedding/public-links
 - Metabase data permissions (row and column security is Pro/Enterprise): https://www.metabase.com/docs/latest/permissions/data
-- Metabase Jetty host and port (`:mb-jetty-port` default "3000", no host default, blank values treated as unset, nil values dropped from the Jetty options), ring-jetty-adapter 1.15.3 passing the host to `setHost`, and Jetty 12.1.13 binding the wildcard address for a null host (pinned tags v0.63.18, ring 1.15.3, jetty-12.1.13, environ 1.2.0). The same Sources item also covers environ 1.2.0 merging `.lein-env`, `.boot-env`, the environment and JVM properties in that order, keeping empty values, so the last layer to set a key wins, and the image entrypoint's `MB_JETTY_HOST=0.0.0.0` default (pinned tags v0.63.18, ring 1.15.3, jetty-12.1.13, environ 1.2.0). The item's sources (1 of 4): https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L54, https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L76-L88, https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/server/instance.clj#L36-L41, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L79. The item's sources (2 of 4): https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L32-L43, https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L64-L79, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L164, https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L195. The item's sources (3 of 4): https://github.com/ring-clojure/ring/blob/1.15.3/ring-jetty-adapter/src/ring/adapter/jetty.clj#L202-L207, https://github.com/jetty/jetty.project/blob/jetty-12.1.13/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/ServerConnector.java#L338-L344. The item's sources (4 of 4): https://github.com/metabase/metabase/blob/v0.63.18/bin/docker/run_metabase.sh#L2-L5 and https://github.com/metabase/metabase/blob/v0.63.18/Dockerfile#L66-L69
+- Metabase Jetty host and port (`:mb-jetty-port` default "3000", no host default, blank values treated as unset, nil values dropped from the Jetty options), ring-jetty-adapter 1.15.3 passing the host to `setHost`, and Jetty 12.1.13 binding the wildcard address for a null host (pinned tags v0.65.3, ring 1.15.3, jetty-12.1.13, environ 1.2.0). The same Sources item also covers environ 1.2.0 merging `.lein-env`, `.boot-env`, the environment and JVM properties in that order, keeping empty values, so the last layer to set a key wins, and the image entrypoint's `MB_JETTY_HOST=0.0.0.0` default (pinned tags v0.65.3, ring 1.15.3, jetty-12.1.13, environ 1.2.0). The item's sources (1 of 4): https://github.com/metabase/metabase/blob/v0.65.3/src/metabase/config/core.clj#L54, https://github.com/metabase/metabase/blob/v0.65.3/src/metabase/config/core.clj#L76-L88, https://github.com/metabase/metabase/blob/v0.65.3/src/metabase/server/instance.clj#L36-L41, https://github.com/metabase/metabase/blob/v0.65.3/deps.edn#L82. The item's sources (2 of 4): https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L32-L43, https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L64-L79, https://github.com/metabase/metabase/blob/v0.65.3/deps.edn#L181, https://github.com/metabase/metabase/blob/v0.65.3/deps.edn#L213. The item's sources (3 of 4): https://github.com/ring-clojure/ring/blob/1.15.3/ring-jetty-adapter/src/ring/adapter/jetty.clj#L202-L207, https://github.com/jetty/jetty.project/blob/jetty-12.1.13/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/ServerConnector.java#L338-L344. The item's sources (4 of 4): https://github.com/metabase/metabase/blob/v0.65.3/bin/docker/run_metabase.sh#L2-L5 and https://github.com/metabase/metabase/blob/v0.65.3/Dockerfile#L72-L75
 - Superset security: https://superset.apache.org/admin-docs/security/
 - Superset docker-compose.yml (production warning): https://github.com/apache/superset/blob/3d01094d231712e3470eb625be3f9925aeaeadb5/docker-compose.yml
 - Redash help center: https://redash.io/help/
@@ -69766,7 +69766,7 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- metabase: Metabase (v0.63.18)
+- metabase: Metabase (v0.65.3)
 - redash: Redash (v26.9.0)
 - metabase-docs: Metabase docs (unknown)
 - superset: Superset docs (unknown)
@@ -69810,20 +69810,20 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "34ecb8a2d2d00de254b9a16c27dd7e70da88e0f5cdcb7d4418104cb146c4c366",
+  "body_sha256": "180c4ae543cf1f23864fea3ca297582455c76d2365c721cb440b1da09da168fd",
   "components": {
     "metabase": {
       "name": "Metabase",
-      "basis": "v0.63.18",
+      "basis": "v0.65.3",
       "sources": {
-        "s8df4cbf03036": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L54",
-        "s7dbf92797642": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L76-L88",
-        "s7e71ce4cff1b": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/server/instance.clj#L36-L41",
-        "sed761829c85c": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L79",
-        "sea59c4ef7f2e": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L164",
-        "sabe1aa2cf0a9": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L195",
-        "s18f6f2188fe9": "https://github.com/metabase/metabase/blob/v0.63.18/bin/docker/run_metabase.sh#L2-L5",
-        "s9b0c73c666ff": "https://github.com/metabase/metabase/blob/v0.63.18/Dockerfile#L66-L69"
+        "sdc9a71065756": "https://github.com/metabase/metabase/blob/v0.65.3/src/metabase/config/core.clj#L54",
+        "sc404f3a2e81b": "https://github.com/metabase/metabase/blob/v0.65.3/src/metabase/config/core.clj#L76-L88",
+        "sfacbf36d3c3a": "https://github.com/metabase/metabase/blob/v0.65.3/src/metabase/server/instance.clj#L36-L41",
+        "s6a973772ebe5": "https://github.com/metabase/metabase/blob/v0.65.3/deps.edn#L82",
+        "sefe4e2a91acd": "https://github.com/metabase/metabase/blob/v0.65.3/deps.edn#L181",
+        "s58ab8269b060": "https://github.com/metabase/metabase/blob/v0.65.3/deps.edn#L213",
+        "s40c188997580": "https://github.com/metabase/metabase/blob/v0.65.3/bin/docker/run_metabase.sh#L2-L5",
+        "s83a1fd1e4dd6": "https://github.com/metabase/metabase/blob/v0.65.3/Dockerfile#L72-L75"
       }
     },
     "redash": {
@@ -69899,10 +69899,10 @@ Claims (full source mapping in the JSON block below):
   "claims": {
     "private": {"text": "Keep BI tools private with fronting MFA and least-privilege read-only DB accounts unless write-back is needed.", "components": ["redash-docs", "metabase-docs"], "sources": ["redash-docs:s4c72252b5447", "metabase-docs:s434abdb1aaef"], "status": "REASONED"},
     "metabase-setup": {"text": "First account is admin; finish setup before anyone else can reach it.", "components": ["metabase-docs"], "sources": ["metabase-docs:s5e2251b3184d"], "status": "REASONED"},
-    "metabase-precedence": {"text": "Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings.", "components": ["metabase", "environ"], "sources": ["metabase:s8df4cbf03036", "metabase:s7dbf92797642", "environ:s37ed6de2d80d", "environ:s9754f7c47384"], "status": "REASONED"},
-    "metabase-bind": {"text": "Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy.", "components": ["metabase", "ring", "jetty"], "sources": ["metabase:s7e71ce4cff1b", "metabase:sed761829c85c", "metabase:sea59c4ef7f2e", "metabase:sabe1aa2cf0a9", "ring:s0455b1b1fb12", "jetty:s8f9e4989175e"], "status": "REASONED"},
-    "metabase-image": {"text": "Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start.", "components": ["metabase", "docker"], "sources": ["metabase:s18f6f2188fe9", "metabase:s9b0c73c666ff", "docker:s1e53417c513d"], "status": "REASONED"},
-    "metabase-port": {"text": "Port defaults 3000 unless the final MB_JETTY_PORT is nonblank.", "components": ["metabase"], "sources": ["metabase:s8df4cbf03036", "metabase:s7dbf92797642", "metabase:s7e71ce4cff1b"], "status": "REASONED"},
+    "metabase-precedence": {"text": "Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings.", "components": ["metabase", "environ"], "sources": ["metabase:sdc9a71065756", "metabase:sc404f3a2e81b", "environ:s37ed6de2d80d", "environ:s9754f7c47384"], "status": "REASONED"},
+    "metabase-bind": {"text": "Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy.", "components": ["metabase", "ring", "jetty"], "sources": ["metabase:sfacbf36d3c3a", "metabase:s6a973772ebe5", "metabase:sefe4e2a91acd", "metabase:s58ab8269b060", "ring:s0455b1b1fb12", "jetty:s8f9e4989175e"], "status": "REASONED"},
+    "metabase-image": {"text": "Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start.", "components": ["metabase", "docker"], "sources": ["metabase:s40c188997580", "metabase:s83a1fd1e4dd6", "docker:s1e53417c513d"], "status": "REASONED"},
+    "metabase-port": {"text": "Port defaults 3000 unless the final MB_JETTY_PORT is nonblank.", "components": ["metabase"], "sources": ["metabase:sdc9a71065756", "metabase:sc404f3a2e81b", "metabase:sfacbf36d3c3a"], "status": "REASONED"},
     "metabase-sharing": {"text": "Public links/embeds default enabled and expose view-only question/dashboard/document results without login; disable unneeded sharing.", "components": ["metabase-docs"], "sources": ["metabase-docs:s521b3063e9f0"], "status": "REASONED"},
     "metabase-embed": {"text": "Public embed URLs are recoverable; embeds do not strengthen the public-link boundary.", "components": ["metabase-docs"], "sources": ["metabase-docs:s521b3063e9f0"], "status": "REASONED"},
     "metabase-sandbox": {"text": "Row/column security is Pro/Enterprise; free-tier sharing exposes the rows/columns the question queries.", "components": ["metabase-docs"], "sources": ["metabase-docs:s02b7797b6ffe"], "status": "REASONED"},
@@ -69918,8 +69918,8 @@ Claims (full source mapping in the JSON block below):
     "redash-bind": {"text": "Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately.", "components": ["redash"], "sources": ["redash:se93d7c47b037", "redash:s9f1ef7237804"], "status": "REASONED"},
     "verify-credentials": {"text": "Confirm no default admin/admin or example credentials work.", "components": ["metabase-docs", "superset-compose", "redash-docs"], "sources": ["metabase-docs:s5e2251b3184d", "superset-compose:s0ceca7af7f79", "redash-docs:s4c72252b5447"], "status": "REASONED"},
     "verify-db": {"text": "Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately.", "components": ["metabase-docs"], "sources": ["metabase-docs:s434abdb1aaef"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.", "components": ["metabase", "superset-compose", "redash", "docker"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037", "docker:s1e53417c513d"], "status": "REASONED"},
-    "verify-ports": {"text": "Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.", "components": ["metabase", "superset-compose", "redash"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.", "components": ["metabase", "superset-compose", "redash", "docker"], "sources": ["metabase:sdc9a71065756", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037", "docker:s1e53417c513d"], "status": "REASONED"},
+    "verify-ports": {"text": "Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.", "components": ["metabase", "superset-compose", "redash"], "sources": ["metabase:sdc9a71065756", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037"], "status": "REASONED"},
     "verify-data": {"text": "Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive.", "components": ["metabase-docs", "superset", "redash-docs"], "sources": ["metabase-docs:s521b3063e9f0", "superset:se97be7353585", "redash-docs:s4c72252b5447"], "status": "REASONED", "verify": [1]},
     "verify-private": {"text": "For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path.", "components": ["redash-docs", "docker"], "sources": ["redash-docs:s4c72252b5447", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]}
   }
