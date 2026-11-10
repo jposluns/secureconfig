@@ -1,6 +1,6 @@
 # DevOps panels: Portainer, Coolify, Dokploy, Nginx Proxy Manager, Vaultwarden, Kubernetes Dashboard, Jenkins, Gitea, Uptime Kuma, and the Docker API
 
-Portainer, Coolify, Dokploy, Nginx Proxy Manager, Vaultwarden, Kubernetes Dashboard, Jenkins, Gitea, GitLab CE, Uptime Kuma, Dozzle, Docker Registry, Filebrowser, Node-RED and Docker's API handle infrastructure, monitoring or secrets. This guide helps your AI assistant secure each, including private access, authentication, human MFA and any first-visit admin account claimed before exposure.
+Portainer, Coolify, Dokploy, Nginx Proxy Manager, Vaultwarden, Kubernetes Dashboard, Jenkins, Gitea, Uptime Kuma, Dozzle, Docker Registry, Filebrowser, Node-RED and Docker's API handle infrastructure, monitoring or secrets. This guide helps your AI assistant secure each, including private access, authentication, human MFA and any first-visit admin account claimed before exposure.
 
 <a id="ai-assistant-prompt"></a>
 
@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Portainer (no recorded version), Dashboard arguments v2.7.0, Gitea source v28.3.0, Gitea 1.x source v1.27.3, Gitea MFA minimum 1.24, and Apache htpasswd 2.4; 2 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked September 2026. The guide records 63 claims, all reasoned from cited sources.
+Written against Portainer (no recorded version), Dashboard arguments v2.7.0, Gitea source v28.3.0, Gitea 1.x source v1.27.3, Gitea MFA minimum 1.24, and Apache htpasswd 2.4; 2 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -74,10 +74,7 @@ The admin UI is on port `81`; the proxy itself is on `80`/`443`. Port `81` is ne
 
 ## GitLab CE
 
-- First run auto-generates the root password into `/etc/gitlab/initial_root_password` (read it with `docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password`); GitLab deletes the file in the first container restart after 24 hours. Change it immediately on first sign-in, since until you do the generated password is the only thing guarding the root account; or preset it with `gitlab_rails['initial_root_password']` in `gitlab.rb` or `GITLAB_OMNIBUS_CONFIG`.
-- `signup_enabled` defaults to `true`, so any visitor can register. New instances hold registrants pending approval (`require_admin_approval_after_user_signup` is on by default), but for a private forge clear "Allow new user accounts" under Admin > Settings > General > New user account restrictions (`signup_enabled = false`) rather than relying on approval discipline.
-- `default_project_visibility` and `default_group_visibility` both default to `private`; keep them there. "Internal" means visible to every signed-in non-external user, so on an instance that allows sign-up, internal is not private.
-- GitLab can enforce two-factor authentication for every user (all tiers) from Admin > Settings > General > Sign-in restrictions; turn it on so local accounts are not password-only.
+GitLab CE has its own guide now: [gitlab.md](gitlab.md). It covers the forced-random root password and the Omnibus `/etc/gitlab/initial_root_password` file, the plain-HTTP `external_url` listener, TLS, registration and admin approval, 2FA and the password policy, private visibility, the CI/CD runner as a code-execution host, the container registry, the SSH surface, the webhook and system-hook SSRF defaults, and the secrets at rest.
 
 ## Uptime Kuma
 
@@ -125,7 +122,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 
 ## Verify
 
-REASONED: following block; listener check, per the panel, Docker daemon and GitLab sources below, which also support the panel-login, 2375/2376 and password-file checks in the three blocks after it; each of the four blocks carries its own marker and exit status. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; that guard and the Docker block's address and certificate-file guards have been run only under stubs, without network access.
+REASONED: following block; listener check, per the panel and Docker daemon sources below, which also support the panel-login and 2375/2376 checks in the two blocks after it; each of the three blocks carries its own marker and exit status. No deployed panels, certificate fixture or external test network is available here. Comments give expected outcomes and limits; no live run is recorded. The panel-login curl takes one panel's host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains; that guard and the Docker block's address and certificate-file guards have been run only under stubs, without network access.
 
 ```bash
 (                                                   # a subshell, so the exits below end only this check
@@ -234,27 +231,7 @@ REASONED: following block; listener check, per the panel, Docker daemon and GitL
 )
 ```
 
-```bash
-# GitLab CE: initial root password file check (needs Docker access; the container is named gitlab)
-# absence does not prove the password was rotated; presence means rotate root now
-# status: 1 when the file is present, 3 when the check did not run, 0 when the file is absent
-(                                                   # a subshell, so the exit below ends only this check
-  set -- "$(if docker exec gitlab sh -c 'test -f /etc/gitlab/initial_root_password && echo PRESENT || echo ABSENT' 2>/dev/null; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "${1%%$'\n'*}" "${1##*$'\n'}"              # the container's reply, then docker exec's exit status
-  if [ "$2" = 0 ]; then
-    case "$1" in
-      PRESENT) echo 'initial_root_password present: rotate root and remove it'; exit 1 ;;
-      ABSENT)  echo 'initial_root_password absent' ;;
-      *)       echo 'the check did not run (unexpected reply from the gitlab container): not a result'; exit 3 ;;
-    esac
-  else
-    echo 'the check did not run (docker exec failed for the gitlab container): fix the container, this is not a result'
-    exit 3
-  fi
-)
-```
-
-REASONED: preceding block; the GitLab initial-password-file check follows the cited GitLab source, and the listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons in the blocks above follow the cited panel and Docker daemon sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding. Each of the four blocks exits 1 for a finding, 3 for a failed or inconclusive check and otherwise 0, and a guard refusal exits 2, as the listener block does when ss is not installed; the Docker block also reports 2 when its certificate files are missing and nothing else in it was found or inconclusive. The last line of the listener, panel-login and Docker blocks names what each leaves for you to judge.
+REASONED: preceding blocks; the listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons in the blocks above follow the cited panel and Docker daemon sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding. Each of the three blocks exits 1 for a finding, 3 for a failed or inconclusive check and otherwise 0, and a guard refusal exits 2, as the listener block does when ss is not installed; the Docker block also reports 2 when its certificate files are missing and nothing else in it was found or inconclusive. The last line of the listener, panel-login and Docker blocks names what each leaves for you to judge.
 
 ## Sources (checked September 2026)
 
@@ -268,10 +245,6 @@ REASONED: preceding block; the GitLab initial-password-file check follows the ci
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
 - Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet/ and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
-- GitLab CE initial root password (Docker install): https://docs.gitlab.com/install/docker/installation/
-- GitLab CE sign-up restrictions: https://docs.gitlab.com/administration/settings/sign_up_restrictions/
-- GitLab CE default visibility and access controls: https://docs.gitlab.com/administration/settings/visibility_and_access_controls/
-- GitLab CE enforce two-factor authentication for all users: https://docs.gitlab.com/security/two_factor_authentication/
 - Uptime Kuma README and reverse proxy wiki: https://github.com/louislam/uptime-kuma and https://github.com/louislam/uptime-kuma/wiki/Reverse-Proxy
 - Docker: protect the daemon socket https://docs.docker.com/engine/security/protect-access/ and remote access https://docs.docker.com/engine/daemon/remote-access/
 - Dozzle authentication (DOZZLE_AUTH_PROVIDER, users.yml, actions and shell): https://dozzle.dev/guide/authentication
@@ -318,7 +291,6 @@ Components (recorded basis):
 - gitea: Gitea docs (unknown)
 - kuma: Uptime Kuma (unknown)
 - docker: Docker Engine (unknown)
-- gitlab: GitLab CE (unknown)
 - dozzle: Dozzle (unknown)
 - filebrowser: Filebrowser (unknown)
 - nodered: Node-RED (unknown)
@@ -364,11 +336,6 @@ Claims (full source mapping in the JSON block below):
 - gitea-mfa (REASONED; gitea, gitea-mfa-min, gitea-pin): Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later. Source reads it at v1.24.0 and v28.3.0, not at v1.23.8; a later 1.23.x is not established.
 - gitea-tokens (REASONED; gitea): With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens.
 - gitea-basic-auth (REASONED; gitea-pin, gitea-1): At v28.3.0, and the same at v1.27.3, Basic auth tries tokens first, with no 2FA check; a password needs ENABLE_BASIC_AUTHENTICATION and, unless its sign-in source skips 2FA, is refused with WebAuthn enrolled and needs a valid X-Gitea-OTP with TOTP. Git HTTP use and enforced-2FA token refusal are not established.
-- gitlab-root (REASONED; gitlab): Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG.
-- gitlab-signup (REASONED; gitlab): signup_enabled defaults true; disable for a private forge.
-- gitlab-approval (REASONED; gitlab): New instances require admin approval after signup by default; do not rely on approval alone.
-- gitlab-visibility (REASONED; gitlab): Project/group visibility default private; internal admits every signed-in non-external user, including allowed registrants.
-- gitlab-mfa (REASONED; gitlab): Enforce two-factor authentication for every user; available on all tiers.
 - kuma-proxy (REASONED; kuma): Port 3001 uses WebSockets; proxy Upgrade/Connection headers are required.
 - kuma-admin (REASONED; kuma): Finish account setup before others, enable 2FA and keep dashboard private even if status pages are public.
 - docker-root (REASONED; docker): Docker socket grants host-root power; never expose unauthenticated 0.0.0.0:2375.
@@ -390,14 +357,13 @@ Claims (full source mapping in the JSON block below):
 - verify-panel (REASONED; portainer, jenkins, gitea): Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.
 - verify-docker-plain (REASONED; docker): Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.
 - verify-docker-mtls (REASONED; docker): 2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.
-- verify-gitlab (REASONED; gitlab): Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "d5ef4cd66ecbd15111a0b168f137b7851be6e0e73373b7e1964e6522e290b0bb",
+  "body_sha256": "9d3fc3d3fd27a2f52538bf4e3cd4b88eb9b7ee738c9656611fd4dd0e76966079",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -538,16 +504,6 @@ Claims (full source mapping in the JSON block below):
         "s1b5ec54421b0": "https://docs.docker.com/engine/daemon/remote-access/"
       }
     },
-    "gitlab": {
-      "name": "GitLab CE",
-      "basis": "unknown",
-      "sources": {
-        "s3b7ac561a92e": "https://docs.gitlab.com/install/docker/installation/",
-        "s6e8d16cad2ef": "https://docs.gitlab.com/administration/settings/sign_up_restrictions/",
-        "s6b8a68a77e17": "https://docs.gitlab.com/administration/settings/visibility_and_access_controls/",
-        "s0347014ce554": "https://docs.gitlab.com/security/two_factor_authentication/"
-      }
-    },
     "dozzle": {
       "name": "Dozzle",
       "basis": "unknown",
@@ -628,11 +584,6 @@ Claims (full source mapping in the JSON block below):
     "gitea-mfa": {"text": "Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later. Source reads it at v1.24.0 and v28.3.0, not at v1.23.8; a later 1.23.x is not established.", "components": ["gitea", "gitea-mfa-min", "gitea-pin"], "sources": ["gitea:sfec17fde7bb0", "gitea:s3b7060d58383", "gitea-mfa-min:sfec17fde7bb0", "gitea-mfa-min:sa5869c041fc5", "gitea-mfa-min:s023053a8ef10", "gitea-pin:s17f07be814d4"], "status": "REASONED"},
     "gitea-tokens": {"text": "With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens.", "components": ["gitea"], "sources": ["gitea:s3b7060d58383"], "status": "REASONED"},
     "gitea-basic-auth": {"text": "At v28.3.0, and the same at v1.27.3, Basic auth tries tokens first, with no 2FA check; a password needs ENABLE_BASIC_AUTHENTICATION and, unless its sign-in source skips 2FA, is refused with WebAuthn enrolled and needs a valid X-Gitea-OTP with TOTP. Git HTTP use and enforced-2FA token refusal are not established.", "components": ["gitea-pin", "gitea-1"], "sources": ["gitea-pin:s11c58c9a7056", "gitea-pin:sa1a585c22f58", "gitea-pin:s57a09b15fc30", "gitea-1:s44ea7417ec5a", "gitea-1:saed8434d7dff"], "status": "REASONED"},
-    "gitlab-root": {"text": "Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED"},
-    "gitlab-signup": {"text": "signup_enabled defaults true; disable for a private forge.", "components": ["gitlab"], "sources": ["gitlab:s6e8d16cad2ef"], "status": "REASONED"},
-    "gitlab-approval": {"text": "New instances require admin approval after signup by default; do not rely on approval alone.", "components": ["gitlab"], "sources": ["gitlab:s6e8d16cad2ef"], "status": "REASONED"},
-    "gitlab-visibility": {"text": "Project/group visibility default private; internal admits every signed-in non-external user, including allowed registrants.", "components": ["gitlab"], "sources": ["gitlab:s6b8a68a77e17"], "status": "REASONED"},
-    "gitlab-mfa": {"text": "Enforce two-factor authentication for every user; available on all tiers.", "components": ["gitlab"], "sources": ["gitlab:s0347014ce554"], "status": "REASONED"},
     "kuma-proxy": {"text": "Port 3001 uses WebSockets; proxy Upgrade/Connection headers are required.", "components": ["kuma"], "sources": ["kuma:s05b853ba300b", "kuma:sed52bfca4039"], "status": "REASONED"},
     "kuma-admin": {"text": "Finish account setup before others, enable 2FA and keep dashboard private even if status pages are public.", "components": ["kuma"], "sources": ["kuma:s05b853ba300b"], "status": "REASONED"},
     "docker-root": {"text": "Docker socket grants host-root power; never expose unauthenticated 0.0.0.0:2375.", "components": ["docker"], "sources": ["docker:sfe15a8156c18", "docker:s1b5ec54421b0"], "status": "REASONED"},
@@ -653,8 +604,7 @@ Claims (full source mapping in the JSON block below):
     "verify-listeners": {"text": "Read every panel/API listener; expect loopback or absence, never wildcard exposure.", "components": ["portainer", "dokploy", "npm", "kuma", "docker"], "sources": ["portainer:s3e163c7d3c38", "dokploy:sc2cc854c9b7e", "npm:se553d384e783", "kuma:s05b853ba300b", "docker:s1b5ec54421b0"], "status": "REASONED", "verify": [1]},
     "verify-panel": {"text": "Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.", "components": ["portainer", "jenkins", "gitea"], "sources": ["portainer:s3e163c7d3c38", "jenkins:sdfee751aeeee", "gitea:sfec17fde7bb0"], "status": "REASONED", "verify": [2]},
     "verify-docker-plain": {"text": "Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.", "components": ["docker"], "sources": ["docker:s1b5ec54421b0"], "status": "REASONED", "verify": [3]},
-    "verify-docker-mtls": {"text": "2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.", "components": ["docker"], "sources": ["docker:sfe15a8156c18"], "status": "REASONED", "verify": [3]},
-    "verify-gitlab": {"text": "Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.", "components": ["gitlab"], "sources": ["gitlab:s3b7ac561a92e"], "status": "REASONED", "verify": [4]}
+    "verify-docker-mtls": {"text": "2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.", "components": ["docker"], "sources": ["docker:sfe15a8156c18"], "status": "REASONED", "verify": [3]}
   }
 }
 ````

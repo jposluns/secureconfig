@@ -11,6 +11,7 @@ clickhouse.md 443  # outbound: the HTTPS fixture URLs in the url() allow-list te
 cloudflare.md 65535  # HTTPS probe port validation upper bound, not a configured origin listener
 common-mistakes.md 3000  # illustrative number: the `ufw deny 3000` and `-p 3000:3000` example in the Docker item, which links docker.md (cited on row 3000)
 egress-metadata.md 443  # outbound: the destination port of the NetworkPolicy egress rule; not a listener
+gitlab.md 5000  # the bundled container registry process on loopback 127.0.0.1:5000, behind the 5050 nginx vhost; the external listener is row 5050, not a GitLab listener reachable off-host
 litellm.md 5432  # outbound: LiteLLM's DATABASE_URL connection to its PostgreSQL; the database listener is postgresql.md's
 llm-observability.md 5432  # container port behind the 0.0.0.0:54388 publication; the host listener is row 54388
 llm-observability.md 8123  # container port behind the 0.0.0.0:18123 publication; the host listener is row 18123
