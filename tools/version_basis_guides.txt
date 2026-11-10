@@ -99,3 +99,4 @@ sqlite.md
 sqlite-http-frontends.md
 transactional-email-posture.md
 openclaw.md
+forgejo.md
