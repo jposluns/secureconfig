@@ -23,13 +23,13 @@ docker.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	f40702b6f597c06a0367b4
 dotnet.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	491cc1c3bc0a7bf2272de9ea1c5c47d04f5cd7a8202aedafa9b844145ff851f0	2026-11-10	tool	current
 egress-metadata.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	a57fad00a152a13dc92f3ae4b35ab36434878f88ea76a082bf8dcd3426d10cf7	2026-11-10	tool	current
 elasticsearch.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	88051e81b7452bd74ca2783ee714ad6ac4952c3a3c1872006309dd77fb3df0ec	2026-11-10	tool	current
-exposure-index.md	K	PARTIAL(M1)	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	6057fd9c2f7ef28133bf179d03aeda55baabf353589ce17aca45ab92b23f7b0b	2026-11-10	tool	current
+exposure-index.md	K	PARTIAL(M1)	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	08d9815c33d05a7a63cd2203a84773f6a02fa267dfbe40f8386f90f0f08f79f8	2026-11-10	tool	current
 firebase-supabase.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	123ba439da8cac4dcfc5cbd4168affb2597f99eb8b09e31193a4e9523bab3428	2026-11-10	tool	current
 forgejo.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	af053bd6acf0fa7a84f1d8fb958379dd6c1651ef0c6f9d2f02b012c0daf78b5a	2026-11-10	tool	current
 free-certificates.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	bed8dac4fafafa6320e064ee47b8b4c3f811b3643b7ebf7ee12af64394603624	2026-11-10	tool	current
 frontend-frameworks.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	796c9b7dff8bcb7e4bc3e49e9e9d5cc60ef6d44329bae0b6044fe2a413807ad5	2026-11-10	tool	current
 fronting-auth.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	f3864ccb3882a8572a5802bd328723e49e7c49a32f3bff4a48184c7be4e090c5	2026-11-10	tool	current
-gitlab.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	70975cd91d6e590208ea35dca514c61d8612705c6d4b8dc5c3d9fbad82f006ff	2026-11-10	tool	current
+gitlab.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	ef8b9ff48d5cfec21d17cf6a2f3dff2ae8db74fc715f51e6d83e7c6516d93fc1	2026-11-10	tool	current
 gitops-controllers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	b93332fac2381126c55dd1cf869f3ff85ee57aa99959e15fc102c28f872a09af	2026-11-10	tool	current
 go.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	5c4b33e6d16d118aaf133645b369cb3b46099ff732119bf81755e5b05f7b12a5	2026-11-10	tool	current
 gpu-clouds.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	987e395d78900fcb8f247ee334e70cf832f1d272bbd202d0f2200133369a4335	2026-11-10	tool	current
