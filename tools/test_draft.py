@@ -106,7 +106,7 @@ ADVISORY_TEXT = "site/advisories/n8n-2026-11-07-jposluns.txt"
 META = '<meta name="robots" content="noindex, nofollow">'
 START = 'href="/guides/"'
 GUIDES_CANONICAL = 'href="https://secureconfig.ai/guides/"'
-OK_LINE = "9 pages are self-contained"
+OK_LINE = "10 pages are self-contained"
 STRAY = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>x</title>\n'
          '</head>\n<body><a href="/nowhere/">gone</a></body>\n</html>\n')
 # A page that passes every per-page rule of the gate, for planting where only its path matters.
@@ -362,7 +362,7 @@ CASES = [
      f"site/Draft exists (folder); {NO_TREE}", 1),
     ("a site/draft file", write("site/draft", "x\n"), f"site/draft exists (file); {NO_TREE}", 1),
     ("a site/drafts/ folder, which is not the draft tree", write("site/drafts/index.html", PLAIN),
-     "10 pages are self-contained", 0),
+     "11 pages are self-contained", 0),
     ("a link to a page that does not exist", link("/nowhere/"), "names no file", 1),
     ("a ../ path out of site/", link("/../SECURITY.md"), "names no file", 1),
     ("a relative link", link("guides/"), "relative path", 1),
@@ -504,7 +504,8 @@ def generated(edit_content, extra=None):
     d = Path(tempfile.mkdtemp())
     try:
         for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/check_draft.py",
-                    "site-src/content.json", "README.md", "tools/version_basis_guides.txt"):
+                    "site-src/content.json", "README.md", "tools/version_basis_guides.txt",
+                    "tools/guide_quality.tsv"):
             (d / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, d / rel)
         shutil.copytree(ROOT / "site" / "assets", d / "site" / "assets")
@@ -534,7 +535,8 @@ def staged():
     d = Path(tempfile.mkdtemp())
     try:
         for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/check_draft.py",
-                    "site-src/content.json", "README.md", "tools/version_basis_guides.txt"):
+                    "site-src/content.json", "README.md", "tools/version_basis_guides.txt",
+                    "tools/guide_quality.tsv"):
             (d / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, d / rel)
         shutil.copytree(ROOT / "site" / "assets", d / "site" / "assets")

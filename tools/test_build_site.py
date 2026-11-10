@@ -94,7 +94,9 @@ PREVIEWS = {"index.html": ("Home", "home"), "guides/index.html": ("Guides", "gui
 # The pages that are noindex at the root and carry no link previews, canonical or description: the
 # 404 page and the one unlisted advisory (the maintainer's instruction), both built like the 404.
 ADVISORY = "advisories/n8n-2026-11-07-jposluns.html"
-NOINDEX_NAMES = {"404.html", ADVISORY}
+# The quality matrix page is noindex by the GQS-ADOPT decision: no canonical, previews, menu entry
+# or sitemap row, built like the 404 and the advisory.
+NOINDEX_NAMES = {"404.html", ADVISORY, "quality/index.html"}
 # The advisory's plain-text copy, which the build writes beside the pages (Builder.texts).
 ADVISORY_TEXT = "advisories/n8n-2026-11-07-jposluns.txt"
 

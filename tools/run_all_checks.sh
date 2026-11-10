@@ -122,7 +122,7 @@ bad() { printf '  FAIL  %s\n' "$1"; fail=1; }
 # of the README so the front page stays readable, and is therefore NOT carried in llms-full.txt.
 not_a_guide() {
   case "$1" in
-    CONTRIBUTING.md|SECURITY.md|CLAUDE.md|AGENTS.md|CHANGELOG.md|README.sources.md|TODO.md|DONE.md|DECISIONS.md|PENDING-DECISIONS.md|controls-reference.md) return 0 ;;
+    CONTRIBUTING.md|SECURITY.md|QUALITY.md|CLAUDE.md|AGENTS.md|CHANGELOG.md|README.sources.md|TODO.md|DONE.md|DECISIONS.md|PENDING-DECISIONS.md|controls-reference.md) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -1399,6 +1399,31 @@ else
   bad "exposure-index self-test failed: $(printf '%s' "$ei_st" | tail -1)"
 fi
 
+# section: guide-quality
+echo "== every guide has a well-formed guide-quality row with a computed verdict =="
+# tools/check_guide_quality.py holds tools/guide_quality.tsv (the GQS 1.0 compliance matrix,
+# QUALITY.md) well-formed: a known header, exactly one row per enrolled guide, valid types with K
+# reserved for the two index guides, each group cell in the QUALITY.md 3.2 grammar, the verdict
+# column equal to the 3.3 rule computation (a `?` cell counts as PARTIAL and blocks EXEMPLARY), and
+# each row's body digest matching the guide's recorded body_sha256 (or the K file's whole-file
+# sha256) unless the row is marked stale. Deterministic, offline, tree-only. The findings ledger
+# (tools/guide_quality_ledger.tsv) is advisory in GQS 1.0 and is not checked here. Self-test first
+# so what runs is the shipped checker; a failing self-test fails closed.
+if gq_st="$(python3 -I -B tools/test_guide_quality.py 2>&1)" &&
+   ! printf '%s\n' "$gq_st" | grep -q '^  FAIL  '; then
+  ok "guide-quality self-test"
+  gq="$(python3 -I -B tools/check_guide_quality.py 2>&1)"
+  gq_rc=$?
+  if [ "$gq_rc" -eq 0 ]; then
+    ok "$(printf '%s\n' "$gq" | tail -1)"
+  else
+    bad "guide-quality findings (exit $gq_rc):"
+    printf '%s\n' "$gq" | sed 's/^/          /'
+  fi
+else
+  bad "guide-quality self-test failed: $(printf '%s' "$gq_st" | tail -1)"
+fi
+
 # section: walker
 echo "== shared walker scans tracked files only =="
 if walker=$(python3 -B tools/test_walk.py 2>&1); then
@@ -1569,7 +1594,7 @@ echo "== no site page scrolls sideways at the template's widths =="
 # would answer its path with a directory listing. Every other .html or .htm file under site/ (in any
 # case, at any depth, outside assets/, whose files scripts/build-site.py does not write) that is not
 # a listed page fails, so a new page cannot go unchecked.
-overflow_pages=(/ /advisories/n8n-2026-11-07-jposluns.html /checklist/ /disclosure/ /for-ai/ /for-humans/ /guides/ /license/)
+overflow_pages=(/ /advisories/n8n-2026-11-07-jposluns.html /checklist/ /disclosure/ /for-ai/ /for-humans/ /guides/ /license/ /quality/)
 overflow_missing=""
 for overflow_path in "${overflow_pages[@]}"; do
   # A folder path (ending with /) names its index.html; the one non-folder page, the unlisted

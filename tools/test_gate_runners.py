@@ -201,7 +201,7 @@ PALETTE_CASES = (
 # The overflow section of tools/run_all_checks.sh, to the next section, and its page list.
 OVERFLOW_SECTION = re.compile(r"^# section: overflow\n.*?(?=^# section: )", re.M | re.S)
 OVERFLOW_LIST = re.compile(r"^overflow_pages=\(([^)\n]*)\)$", re.M)
-OVERFLOW_OK = "  ok    check_overflow.js: the 8 site pages pass at every default width in both schemes"
+OVERFLOW_OK = "  ok    check_overflow.js: the 9 site pages pass at every default width in both schemes"
 OVERFLOW_SKIP = ("  SKIP  node, the playwright package or its headless Chromium shell was not found; "
                  "overflow check not run.")
 OVERFLOW_REQUIRED = ("  FAIL  check_overflow.js needs node, the playwright package and its headless "
@@ -216,7 +216,7 @@ OVERFLOW_USAGE = "  FAIL  check_overflow.js exited 2, a usage error; the pages a
 OVERFLOW_MISSING = "  FAIL  the overflow check's page list names page(s) with no generated file:"
 OVERFLOW_UNLISTED = "  FAIL  the overflow check's page list does not name the generated page(s)"
 OVERFLOW_ANY_FAIL = "  FAIL  "
-OVERFLOW_PASS = "RESULT: pass (8 pages, 64 cases, 0 failing)"
+OVERFLOW_PASS = "RESULT: pass (9 pages, 72 cases, 0 failing)"
 EXIT_TRAP = "the EXIT trap set before the section ran"
 # The stand-in node: it records its arguments, answers the Chromium check with STANDIN_BROWSER, and
 # otherwise records its PID and becomes the stand-in check body.

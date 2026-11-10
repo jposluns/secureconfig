@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Check that the site is self-contained, only the 404 and the unlisted advisory are noindex, and
-no /draft/ exists.
+"""Check that the site is self-contained, only the 404 page, the unlisted advisory and the quality
+matrix page are noindex, and no /draft/ exists.
 
 WHY: since promotion (baseline SPECIFICATION section 4.1 item 5) the generated pages are served
 from the site root. A root-relative link that names no file ships a broken page; an absolute URL
@@ -28,7 +28,8 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     keeps out of search, reachable only by its URL and linked from no page; it is admitted by that
     exact path, and any OTHER noindex page, the old advisories/n8n.html included, is still refused.
     Its plain-text copy, advisories/n8n-2026-11-07-jposluns.txt, is not a page, so this gate does
-    not read it;
+    not read it; quality/index.html (QUALITY) is the GQS 1.0 compliance matrix, kept out of search
+    by the GQS-ADOPT decision and admitted by that exact path like the advisory;
   - every other page carries NO robots meta element at all: the generated pages are indexable and
     carry none, so one appearing is an edit this gate refuses rather than guesses about;
   - site/ holds no entry named `draft` in any case (a folder, with any file in it, or a file): the
@@ -152,11 +153,15 @@ NOTFOUND = "404.html"
 # The one unlisted advisory page (the maintainer's instruction of 2026-11-07 gave it this dated
 # name), as scripts/build-site.py ADVISORY_PAGE writes it.
 ADVISORY = "advisories/n8n-2026-11-07-jposluns.html"
+# The GQS 1.0 compliance matrix page, noindex by the GQS-ADOPT decision, as scripts/build-site.py
+# writes it; kept out of search, in no menu or sitemap, and reachable by its URL.
+QUALITY = "quality/index.html"
 # The pages that carry NO canonical, not even their own URL, by exact path, with the name a finding
-# gives each: the 404 page, and the unlisted advisory, which is kept out of search and must not
-# name its URL as one to index. Any other page carries at most its own canonical.
+# gives each: the 404 page, the unlisted advisory and the quality matrix page, each kept out of
+# search and not naming its URL as one to index. Any other page carries at most its own canonical.
 NO_CANONICAL_PAGES = {NOTFOUND: "the 404 page",
-                      ADVISORY: "the unlisted advisory page"}
+                      ADVISORY: "the unlisted advisory page",
+                      QUALITY: "the quality matrix page"}
 # The published indexes (PART 3): the hand-written ones refuse the word, the guide corpus refuses
 # each form of the draft path, both read after normalized().
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
@@ -174,8 +179,9 @@ DECODE_ROUNDS = 8
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
 # must not carry at all. The 404 page is the not-found page; ADVISORY is the one unlisted
 # advisory the maintainer keeps out of search (reachable only by its URL, linked from no page, and
-# absent from every index). Any OTHER noindex page is still refused, by exact path.
-NOINDEX_PAGES = {NOTFOUND, ADVISORY}
+# absent from every index); QUALITY is the compliance matrix page, noindex by the GQS-ADOPT
+# decision. Any OTHER noindex page is still refused, by exact path.
+NOINDEX_PAGES = {NOTFOUND, ADVISORY, QUALITY}
 URL_LISTS = {"srcset", "imagesrcset"}
 URL_NAMES = {"formaction", "action", "ping", "poster", "background"}
 BAD_URL_CHARS = re.compile(r"[\x00-\x20\x7f\\]")

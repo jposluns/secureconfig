@@ -1,0 +1,182 @@
+# gqs	1.0 ledger (advisory)
+# columns: guide	criterion	level	high_class	lines	finding	fix	todo_row	opened	closed_by_pr	basis
+admin-uis.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+admin-uis.md	D3	PARTIAL	no		15 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+agent-builders.md	D3	PARTIAL	no		41 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+ai-infra-services.md	M1	PARTIAL	no		3 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+ai-infra-services.md	D3	PARTIAL	no		73 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+ai-infra-services.md	G1	PARTIAL	no		10 sentence(s) repeated, max 13 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+apache.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+apache.md	D3	PARTIAL	no		8 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+authentication.md	M1	PARTIAL	no		6 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+authentication.md	D3	PARTIAL	no		112 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+caddy.md	D3	PARTIAL	no		5 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+caddy.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+clickhouse.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+clickhouse.md	G1	PARTIAL	no		1 sentence(s) repeated, max 5 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+cloud-firewalls.md	M1	PARTIAL	no		4 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+cloud-firewalls.md	D3	PARTIAL	no		17 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+cloud-identity-proxies.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+cloudflare.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+cloudflare.md	D3	PARTIAL	no		15 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+cloudflare.md	G1	PARTIAL	no		2 sentence(s) repeated, max 8 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+common-mistakes.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+connection-poolers.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+container-hardening.md	M1	PARTIAL	no		3 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+container-hardening.md	D3	PARTIAL	no		32 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+deployment-lifecycle.md	M1	PARTIAL	no		8 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+deployment-lifecycle.md	D3	PARTIAL	no		41 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+devops-uis.md	D3	PARTIAL	no		10 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+docker.md	M1	PARTIAL	no		7 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+docker.md	D3	PARTIAL	no		48 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+dotnet.md	D3	PARTIAL	no		5 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+dotnet.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+egress-metadata.md	M1	PARTIAL	no		4 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+egress-metadata.md	D3	PARTIAL	no		12 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+elasticsearch.md	M1	PARTIAL	no		6 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+elasticsearch.md	D3	PARTIAL	no		52 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+exposure-index.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+firebase-supabase.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+firebase-supabase.md	D3	PARTIAL	no		3 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+firebase-supabase.md	G1	PARTIAL	no		5 sentence(s) repeated, max 10 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+forgejo.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+free-certificates.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+free-certificates.md	D3	PARTIAL	no		31 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+frontend-frameworks.md	M1	PARTIAL	no		4 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+frontend-frameworks.md	D3	PARTIAL	no		29 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+fronting-auth.md	D3	PARTIAL	no		12 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+gitops-controllers.md	D3	PARTIAL	no		27 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+gitops-controllers.md	G1	PARTIAL	no		1 sentence(s) repeated, max 3 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+go.md	D3	PARTIAL	no		5 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+go.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+gpu-clouds.md	D3	PARTIAL	no		63 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+gradio.md	G1	PARTIAL	no		1 sentence(s) repeated, max 3 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+haproxy.md	D3	PARTIAL	no		3 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+headers.md	D3	PARTIAL	no		32 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+headless-browser-services.md	D3	GAP	no		2 item(s) dated earlier than the heading	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+headless-cms-instant-api.md	D3	PARTIAL	no		8 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+headless-cms-instant-api.md	G1	PARTIAL	no		5 sentence(s) repeated, max 11 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+host.md	M1	PARTIAL	no		4 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+host.md	D3	PARTIAL	no		58 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+identity-providers.md	M1	PARTIAL	no		5 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+identity-providers.md	D3	PARTIAL	no		58 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+image-gen-uis.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+java.md	D3	PARTIAL	no		15 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+java.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+jupyter.md	D3	PARTIAL	no		41 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+jupyter.md	G1	PARTIAL	no		8 sentence(s) repeated, max 20 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+kafka.md	G1	PARTIAL	no		11 sentence(s) repeated, max 16 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+kubernetes.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+lighttpd.md	M1	PARTIAL	no		4 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+lighttpd.md	D3	PARTIAL	no		38 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+litellm.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+llm-observability.md	M1	PARTIAL	no		5 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+llm-observability.md	D3	PARTIAL	no		31 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+low-code-builders.md	M1	PARTIAL	no		5 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+low-code-builders.md	D3	PARTIAL	no		32 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+low-code-builders.md	G1	PARTIAL	no		12 sentence(s) repeated, max 6 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+machine-auth.md	D3	PARTIAL	no		39 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+mcp-clients.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+mcp-clients.md	D3	PARTIAL	no		3 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+mcp-clients.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+mcp-servers.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+memcached.md	D3	PARTIAL	no		2 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+memcached.md	G1	PARTIAL	no		2 sentence(s) repeated, max 4 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+mfa.md	M1	PARTIAL	no		8 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+minio.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+minio.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+minio.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+minio.md	G1	PARTIAL	no		1 sentence(s) repeated, max 23 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+mlflow.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+mlflow.md	D3	PARTIAL	no		13 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+model-servers.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+model-servers.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+mongodb.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+mongodb.md	G1	PARTIAL	no		1 sentence(s) repeated, max 15 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+mosquitto.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+mosquitto.md	G1	PARTIAL	no		5 sentence(s) repeated, max 5 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+nats.md	D3	PARTIAL	no		54 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+nats.md	G1	PARTIAL	no		1 sentence(s) repeated, max 3 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+neo4j.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+nginx.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+nginx.md	D3	PARTIAL	no		29 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+nginx.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+nodejs.md	D3	PARTIAL	no		42 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+nodejs.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+nomad-consul.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+nomad-consul.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+nomad-consul.md	G1	PARTIAL	no		6 sentence(s) repeated, max 6 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+object-storage.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+object-storage.md	G1	PARTIAL	no		4 sentence(s) repeated, max 5 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+observability-components.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+observability-components.md	D3	PARTIAL	no		5 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+oidc-integration.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+oidc-integration.md	D3	PARTIAL	no		22 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+ollama.md	D3	PARTIAL	no		255 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+open-webui.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+open-webui.md	G1	PARTIAL	no		1 sentence(s) repeated, max 14 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+openclaw.md	M1	PARTIAL	no		3 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+paas.md	M1	PARTIAL	no		4 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+paas.md	D3	PARTIAL	no		65 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+php.md	D3	PARTIAL	no		4 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+php.md	G1	PARTIAL	no		5 sentence(s) repeated, max 6 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+pocketbase.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+pocketbase.md	D3	GAP	no		4 item(s) dated earlier than the heading	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+pocketbase.md	G1	PARTIAL	no		7 sentence(s) repeated, max 8 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+postgresql.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+python.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+python.md	D3	PARTIAL	no		89 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+python.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+rabbitmq.md	M1	PARTIAL	no		3 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+rabbitmq.md	D3	PARTIAL	no		3 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+rabbitmq.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+ray.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+ray.md	D3	PARTIAL	no		8 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+realtime-voice-infra.md	D3	PARTIAL	no		26 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+realtime-voice-infra.md	G1	PARTIAL	no		6 sentence(s) repeated, max 11 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+realtime-webhooks.md	M1	PARTIAL	no		4 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+realtime-webhooks.md	D3	PARTIAL	no		9 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+redis.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+search-engines.md	M1	PARTIAL	no		3 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+search-engines.md	D3	GAP	no		8 item(s) dated earlier than the heading	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+search-engines.md	G1	PARTIAL	no		8 sentence(s) repeated, max 7 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+secrets.md	D3	PARTIAL	no		38 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+secrets.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+self-hosted-ci-runners.md	M1	PARTIAL	no		5 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+self-hosted-ci-runners.md	D3	PARTIAL	no		2 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+self-hosted-error-trackers.md	D3	PARTIAL	no		5 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+self-hosted-error-trackers.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+self-hosted-idp.md	M1	PARTIAL	no		7 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+self-hosted-idp.md	D3	PARTIAL	no		134 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+self-hosted-idp.md	G1	PARTIAL	no		1 sentence(s) repeated, max 3 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+self-signed.md	D3	PARTIAL	no		41 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+self-signed.md	G1	PARTIAL	no		2 sentence(s) repeated, max 6 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+server-admin-panels.md	D3	PARTIAL	no		12 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+server-admin-panels.md	G1	PARTIAL	no		7 sentence(s) repeated, max 7 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+sqlite-http-frontends.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+sqlite-http-frontends.md	D3	PARTIAL	no		4 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+sqlite-http-frontends.md	G1	PARTIAL	no		3 sentence(s) repeated, max 6 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+sqlite.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+sqlite.md	D3	PARTIAL	no		16 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+sqlite.md	G1	PARTIAL	no		3 sentence(s) repeated, max 5 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+streamlit.md	M1	PARTIAL	no		36 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+streamlit.md	D3	GAP	no		11 item(s) dated earlier than the heading	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+streamlit.md	G1	PARTIAL	no		9 sentence(s) repeated, max 4 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+supabase-self-hosted.md	D3	PARTIAL	no		3 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+surrealdb.md	D3	PARTIAL	no		76 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+tailscale.md	D3	PARTIAL	no		7 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+time-series-metrics-stores.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+traefik.md	D3	PARTIAL	no		18 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+traefik.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
+transactional-email-posture.md	D3	PARTIAL	no		4 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+tunnels.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+tunnels.md	D3	PARTIAL	no		33 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+vault.md	M1	PARTIAL	no		18 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+vault.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+vault.md	G1	PARTIAL	no		12 sentence(s) repeated, max 20 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+vector-databases.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+vector-databases.md	D3	PARTIAL	no		29 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+vector-databases.md	G1	PARTIAL	no		5 sentence(s) repeated, max 9 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+web-exposure.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
+web-exposure.md	D3	PARTIAL	no		15 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+workflow-orchestrators.md	D3	GAP	no		10 item(s) dated earlier than the heading	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed

@@ -239,6 +239,11 @@
       {"text": "Where people you do not trust can edit workflows, exclude the Code node (`n8n-nodes-base.code`) with `NODES_EXCLUDE`. n8n's security audit lists the Code node among its official risky node types (`packages/cli/src/security-audit/constants.ts:51-53`) and recommends not loading unneeded node types with `NODES_EXCLUDE` (`packages/cli/src/security-audit/risk-reporters/nodes-risk-reporter.ts:48-58`). Inference: AI Transform and Code Tool tasks may get the same RPC helpers, so excluding the Code node alone may not close the path. No setting limiting who can edit Code nodes was read.", "source": "finding-draft.out Body ('NODES_EXCLUDE'); n8n.md as merged in #1250 gives the same advice"}
     ]
   },
+  "quality": {
+    "meta": {"text": "The Guide Quality Standard ([QUALITY.md](QUALITY.md)) scores every guide against thirty criteria in ten groups, from the mechanical floor to coverage, honesty, version basis and readability. This page renders the matrix; the scored source is [tools/guide_quality.tsv](tools/guide_quality.tsv) and the long-form findings are in [tools/guide_quality_ledger.tsv](tools/guide_quality_ledger.tsv).", "source": "QUALITY.md sections 1, 3.5 and 3.6; tools/guide_quality.tsv header"},
+    "scope": {"text": "A cell holds the worst level in its group followed by the ids of every criterion not at PASS: `P`, `PARTIAL(A3)`, `GAP(A2) PARTIAL(A3)`, `?` for a criterion not yet scored, or `n/a`. A `?` counts as PARTIAL and blocks EXEMPLARY, so a guide reaches EXEMPLARY only once a second reader has scored every cell to PASS or `n/a`.", "source": "QUALITY.md sections 0, 3.2 and 3.3"},
+    "note": {"text": "The judgment criteria are scored by two readers by hand; this build fills the tool-computed cells and leaves every judgment cell at `?`. The verdict column is the rule computation from the ten cells (QUALITY.md 3.3), and the `guide-quality` gate holds the matrix well-formed and each row bound to the guide it scored.", "source": "QUALITY.md 3.3 and 3.6; tools/check_guide_quality.py"}
+  },
   "notfound": {
     "lead": {"text": "The guide index, the rules for AI assistants, the ready-made tasks and the checklist are linked from the bar above.", "source": "The top bar of every page; mockup 404.html"},
     "next": {"text": "Home", "href": "/", "source": "SPECIFICATION section 7.17"}

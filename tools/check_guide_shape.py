@@ -40,6 +40,9 @@ NOT_A_GUIDE = {
     # The security policy: a reporting-and-scope document, not a per-service guide, so a Verify
     # section and dated Sources would be ceremony.
     "SECURITY.md",
+    # The published Guide Quality Standard: criteria and decisions, not a per-service guide, so a
+    # Verify section and dated Sources would be ceremony.
+    "QUALITY.md",
     "CLAUDE.md",
     "AGENTS.md",
     "CHANGELOG.md",
