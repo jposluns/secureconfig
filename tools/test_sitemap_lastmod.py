@@ -33,7 +33,7 @@ from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
-from check_draft import INDEXABLE  # noqa: E402  (the pages a shipped sitemap lists)
+from check_draft import INDEXABLE, QUALITY  # noqa: E402  (the pages a shipped sitemap lists; the noindex quality page is not one)
 
 BUILD = TOOLS.parent / "scripts" / "build-site.py"
 GATES = ("check_sitemap_lastmod.py", "check_sitemap.py", "check_draft.py", "check_csp_hashes.py")
@@ -296,7 +296,7 @@ def promote(tmp, lastmod=lambda loc: "2026-10-08"):
     repo = staged_repo(tmp)
     repo.git("rm", "-r", "-q", "site/draft", "site/index.html")
     pages = build("/", repo.root / "site")
-    folders = [p for p in pages if p.endswith("index.html")]
+    folders = [p for p in pages if p.endswith("index.html") and p != QUALITY]
     assert not any(p.startswith("draft/") for p in pages), pages
     assert sorted(folders) == sorted(INDEXABLE), pages
     paths = ["/" + p[:-len("index.html")] for p in folders]

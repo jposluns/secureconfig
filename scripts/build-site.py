@@ -79,6 +79,7 @@ from check_csp_hashes import STYLE_ATTR, VALUED_HANDLER, name_suffix  # noqa: E4
 CONTENT = Path("site-src") / "content.json"
 README = Path("README.md")
 VERSIONED = Path("tools") / "version_basis_guides.txt"
+QUALITY_TSV = Path("tools") / "guide_quality.tsv"
 # The README section that is the only source of the install commands on the For AI assistants
 # page, and its 2 fenced blocks in order: (key, info string, the start of every line).
 INSTALL = "## Install in Claude Code"
@@ -297,7 +298,7 @@ class Builder:
         self.install = {key: body for key, _, body in install_blocks(readme)}
 
     def inputs(self):
-        return [p.as_posix() for p in (CONTENT, README, VERSIONED)]
+        return [p.as_posix() for p in (CONTENT, README, VERSIONED, QUALITY_TSV)]
 
     # ---- inline text ----
     def n(self, text):
@@ -742,6 +743,50 @@ class Builder:
         ]
         return "\n\n".join("\n".join(p) for p in parts) + "\n"
 
+    def quality(self):
+        # The published view of the GQS 1.0 compliance matrix (QUALITY.md 3.5). It is noindex (the
+        # self.page default), carries no canonical or link previews, and is in no menu or sitemap;
+        # the standard, the matrix and the ledger are read on GitHub. The matrix is read from
+        # tools/guide_quality.tsv with the standard library, so the page is a fresh build of the
+        # TSV and a stale page fails --check, as the guide and rule counts already do. The wide
+        # matrix sits in the baseline's scrollable table wrapper so the page itself never scrolls
+        # sideways at the overflow check's widths.
+        q = self.c["quality"]
+        rows = []
+        verdicts = []
+        for line in self.read(QUALITY_TSV).splitlines():
+            if line.startswith("#") or not line.strip():
+                continue
+            f = line.split("\t")
+            rows.append((f[0], f[1], f[2:12], f[12]))
+            verdicts.append(f[12])
+        ladder = ("EXEMPLARY", "SOLID+", "SOLID", "MINOR-GAPS", "NEEDS-WORK")
+        counts = {v: verdicts.count(v) for v in ladder}
+        groups = ("M", "A", "B", "C", "D", "E", "F", "G", "H", "I")
+        head = ("<th>Guide</th><th>Type</th>"
+                + "".join(f"<th>{g}</th>" for g in groups) + "<th>Verdict</th>")
+        trs = []
+        for guide, gtype, cells, verdict in rows:
+            tds = (f'<td><code>{esc(guide)}</code></td><td>{esc(gtype)}</td>'
+                   + "".join(f"<td>{esc(c)}</td>" for c in cells)
+                   + f"<td>{esc(verdict)}</td>")
+            trs.append(f"<tr>{tds}</tr>")
+        table = (f'<div class="wide"><div class="tablewrap" tabindex="0"><table><caption class="vh">'
+                 f"GQS 1.0 compliance matrix</caption><thead><tr>{head}</tr></thead><tbody>"
+                 f"{''.join(trs)}</tbody></table></div></div>")
+        dist = "".join(f'<li>{esc(v)}<span class="n">{counts[v]}</span></li>' for v in ladder)
+        body = [f'<p class="meta">{self.inline(q["meta"]["text"])}</p>',
+                '<p class="lbl blk">Scope</p>', f'<p>{self.inline(q["scope"]["text"])}</p>',
+                '<p class="lbl blk">At a glance</p>',
+                self.figures(((len(rows), "guides scored"), (counts["EXEMPLARY"], "EXEMPLARY"),
+                              (counts["SOLID"], "SOLID"), (counts["MINOR-GAPS"], "MINOR-GAPS"))),
+                '<p class="lbl blk">Verdict distribution</p>',
+                f'<div class="wide"><ul class="plan">\n{dist}\n</ul></div>',
+                f'<p class="lbl sec">Matrix</p>', f'<h2 id="matrix">{len(rows)} guides scored</h2>',
+                table, f'<p>{self.inline(q["note"]["text"])}</p>']
+        return self.page("Quality", "", self.doc("Guide quality", "The Guide Quality Standard",
+                                                 self.rail(), body))
+
     def build(self):
         # No draft/index.html: the live site carries no /draft/ page (SPECIFICATION 4.1 item 0);
         # the `draft` branch stages the whole site under /draft/ with --base /draft/.
@@ -751,7 +796,7 @@ class Builder:
                  "for-ai/index.html": self.for_ai(), "for-humans/index.html": self.for_humans(),
                  "checklist/index.html": self.checklist(), "disclosure/index.html": self.disclosure(),
                  "license/index.html": self.license(), "404.html": self.notfound(),
-                 ADVISORY_PAGE: self.advisory()}
+                 "quality/index.html": self.quality(), ADVISORY_PAGE: self.advisory()}
         for name, text in pages.items():
             refuse(name, text)
         return pages

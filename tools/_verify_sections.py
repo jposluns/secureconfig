@@ -71,7 +71,7 @@ def verify_ranges(heads):
 
 # Keep the guide exclude set aligned with not_a_guide() in run_all_checks.sh.
 META_EXCLUDE = frozenset({
-    "CONTRIBUTING.md", "SECURITY.md", "CLAUDE.md", "AGENTS.md", "CHANGELOG.md",
+    "CONTRIBUTING.md", "SECURITY.md", "QUALITY.md", "CLAUDE.md", "AGENTS.md", "CHANGELOG.md",
     "README.sources.md", "TODO.md", "DONE.md", "DECISIONS.md",
     "PENDING-DECISIONS.md", "controls-reference.md",
 })
