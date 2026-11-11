@@ -72065,7 +72065,7 @@ REASONED: The login block passed bash -n, its JSON parsed, and a curl stub recei
 published default, not a secret, so it is fine in the request body. Substitute the base URL (for
 example the Caddy address on port 80) inside the single quotes.
 
-REASONED: following block; no live Windmill deployment was available and the authoring host forbids opening a listener without an isolated network namespace, so the current form was not run against a service. Post the vendor's published default credentials (admin@windmill.dev with password changeme) to `/api/auth/login`. The guide's cited Windmill v1.864.1 README gives these default credentials, so a deployment that still has them accepts them (exposed) until they are rotated (fixed). The codes `200` with a token (exposed) and `400` (fixed) were observed only in the v1.817.0 loopback run of an earlier block form, recorded in the next sentence; they are neither source reasoning nor a v1.864.1 fact, and no cited source gives the v1.864.1 fixed-state code. The current form exits 1 on a `200`, 0 on a `400` and 3 otherwise, so if v1.864.1 rejects a rotated default login with a code other than `400`, the block reports inconclusive (status 3, its `*)` arm) rather than a pass. An earlier form of the block, run against Windmill v1.817.0 on loopback rather than the cited v1.864.1, returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password; its result was curl's own exit status, it was not re-run on the current form, and it does not demonstrate external isolation. The current form passed bash -n, local stub runs and the gate suite's ShellCheck 0.11.0.
+REASONED: following block; no live Windmill deployment was available and the authoring host forbids opening a listener without an isolated network namespace, so the current form was not run against a service. Post the vendor's published default credentials (admin@windmill.dev with password changeme) to `/api/auth/login`. The guide's cited Windmill v1.864.1 README gives these default credentials, so a deployment that still has them accepts them (exposed) until they are rotated (fixed). The codes `200` with a token (exposed) and `400` (fixed) were observed only in the v1.817.0 loopback run of an earlier block form, recorded later in this paragraph; they are neither source reasoning nor a v1.864.1 fact, and no cited source gives the v1.864.1 fixed-state code. The current form exits 1 on a `200`, 0 on a `400` and 3 otherwise, so if v1.864.1 rejects a rotated default login with a code other than `400`, the block reports inconclusive (status 3, its `*)` arm) rather than a pass. An earlier form of the block, run against Windmill v1.817.0 on loopback rather than the cited v1.864.1, returned 200 for changeme before rotation, 400 afterwards and 200 for the replacement password; its result was curl's own exit status, it was not re-run on the current form, and it does not demonstrate external isolation. The current form passed bash -n, local stub runs and the gate suite's ShellCheck 0.11.0.
 
 ```bash
 (
@@ -72391,7 +72391,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "0aa01e8278f70dcd320bd8b02e83abd57a17eead9e13a2f4ad51d3e52833f5f3",
+  "body_sha256": "dde0863ca13f78b0cf818e50be0f071807720ebc667fe8255f5cc308b03c3733",
   "components": {
     "nocodb": {
       "name": "NocoDB",
