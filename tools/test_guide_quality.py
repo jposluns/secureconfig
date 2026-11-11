@@ -12,6 +12,7 @@ import sys
 
 sys.path.insert(0, "tools")
 import check_guide_quality as c  # noqa: E402
+import gen_guide_quality as gen  # noqa: E402
 
 DIGEST = {"a.md": "a" * 64, "b.md": "b" * 64,
           "common-mistakes.md": "c" * 64, "exposure-index.md": "e" * 64}
@@ -155,7 +156,54 @@ def main():
         + VALID_ROWS[1:]
     check("a bad status fails", fails_with(bad_status, "is not one of"))
 
-    total = 36
+    # gen_guide_quality merge: the mechanical leads (M1, D3, F1, G1) are recomputed from the tree,
+    # every judgment criterion keeps its recorded value, and a guide with no prior row gets `?`.
+    # These cases FAIL on the old behaviour, which hardcoded `?` for every judgment cell and
+    # overwrote the matrix on every run.
+    # A freshly computed row for a non-K guide: judgment groups `?`, the leads from the tree.
+    FRESH = {"M": "PARTIAL(M1)", "A": "?", "B": "?", "C": "?", "D": "PARTIAL(D3)",
+             "E": "?", "F": "?", "G": "?", "H": "?", "I": "?"}
+    # A recorded row carrying hand-entered judgment scores (and a now-stale D3 lead).
+    OLD = {"M": "P", "A": "GAP(A2)", "B": "PARTIAL(B1)", "C": "?", "D": "GAP(D1) PARTIAL(D3)",
+           "E": "?", "F": "?", "G": "?", "H": "?", "I": "?"}
+
+    # (a) A hand-entered judgment cell survives a gen run unchanged.
+    merged = gen.merge_cells(FRESH, OLD)
+    check("a hand-entered A judgment cell survives the merge", merged["A"] == "GAP(A2)")
+    check("a hand-entered B judgment cell survives the merge", merged["B"] == "PARTIAL(B1)")
+
+    # (b) A mechanical lead is recomputed from the tree, never left stale.
+    fresh_gap = dict(FRESH, D="GAP(D3)")
+    check("the D3 lead is recomputed from the tree, not preserved stale",
+          gen.merge_cells(fresh_gap, OLD)["D"] == "GAP(D1,D3)")
+    check("the M1 lead takes the freshly computed value",
+          gen.merge_cells(FRESH, dict(OLD, M="PARTIAL(M1)"))["M"] == "PARTIAL(M1)")
+
+    # (c) A newly enrolled guide with no prior row gets `?` judgment cells, leads from the tree.
+    new = gen.merge_cells(FRESH, None)
+    check("a new guide's A cell is unscored", new["A"] == "?")
+    check("a new guide's B cell is unscored", new["B"] == "?")
+    check("a new guide's D3 lead still comes from the tree", new["D"] == "PARTIAL(D3)")
+
+    # (d) The verdict is recomputed from the merged cells (GAP(A2) is HIGH-class -> NEEDS-WORK;
+    # the all-fresh row with only PARTIAL leads is SOLID).
+    def verdict_of(cells):
+        return c.compute_verdict({g: c.parse_cell(cells[g], g) for g in c.GROUPS})
+    check("a preserved HIGH-class GAP drives the merged verdict to NEEDS-WORK",
+          verdict_of(gen.merge_cells(FRESH, OLD)) == "NEEDS-WORK")
+    check("an all-fresh non-K row is SOLID", verdict_of(gen.merge_cells(FRESH, None)) == "SOLID")
+
+    # Cell round-trips: the serializer reproduces each grammar shape (byte-stability).
+    for group, text in [("M", "P"), ("A", "?"), ("F", "PARTIAL(F1)"),
+                        ("A", "GAP(A2) PARTIAL(A3) ?(A5)"), ("D", "GAP(D1,D3)")]:
+        check(f"serialize round-trips {text!r} in {group}",
+              gen.serialize_cell(gen.cell_levels(text, group), group) == text)
+
+    # A structural n/a from the tree wins over any recorded cell.
+    check("a tree n/a wins over a recorded judgment cell",
+          gen.merge_group("A", "n/a", "GAP(A2)") == "n/a")
+
+    total = 50
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")

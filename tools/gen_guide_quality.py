@@ -1,12 +1,23 @@
 #!/usr/bin/env python3
-"""Seed or refresh the mechanical cells of tools/guide_quality.tsv (GQS 1.0, Phase A).
+"""Merge the mechanical cells of tools/guide_quality.tsv with its hand-entered judgment scores.
 
-This computes the four tool-derived group cells for every enrolled guide and leaves every
-judgment cell as `?` (unscored). It is the committed, offline port of the audit's gen_table.py;
-it reads the tree only. The judgment cells (groups A, B, C, E, H, I, and the non-tool parts of
-the rest) are NOT scored here: two families score those by hand and edit the TSV directly
-(QUALITY.md section 1, 3.6). So this regenerates a Phase-A seed; once a judgment cell is filled,
-the TSV is the source of truth and is not overwritten by a rerun.
+This computes the four tool-derived lead criteria for every enrolled guide and MERGES them into the
+existing matrix: it recomputes the mechanical leads from the tree on every run, and it preserves the
+hand-entered judgment cell values already in tools/guide_quality.tsv. It is the committed, offline
+port of the audit's gen_table.py; it reads the tree and the existing matrix only.
+
+The mechanical leads this tool owns (QUALITY.md 3.6) are the criteria M1, D3, F1 and G1. Every other
+criterion is JUDGMENT: two families score those by hand and edit the TSV directly (QUALITY.md 1,
+3.6). Those judgment scores are the source of truth; a rerun recomputes only the four leads, keeps
+each judgment criterion at its recorded value, and uses `?` (unscored) for a judgment criterion only
+when there is no existing value (a newly enrolled guide, or a guide absent from the current matrix).
+Because the leads sit in the same group cells as judgment criteria (group D holds D1, D2 and the lead
+D3; group F holds the lead F1 and F2; group G holds the lead G1 and G2, G3), the merge is per
+criterion, not per cell: it rewrites a cell from the merged per-criterion levels. The verdict is then
+recomputed from the merged cells (QUALITY.md 3.3) and each row's body_sha256 is kept current.
+
+The output is byte-stable when nothing changed, so a run after a guide edit that moved no judgment
+score produces no diff. `fix_round` runs this on every guide edit, so that property matters.
 
 The four mechanical leads (QUALITY.md 3.6):
   M (M1): the count of entries across the five baseline and allow files; zero is P, else PARTIAL(M1).
@@ -15,8 +26,15 @@ The four mechanical leads (QUALITY.md 3.6):
   F (F1): PARTIAL(F1) when a Verify H2 carries its declaration, else `?` (the rest is judgment).
   G (G1): PARTIAL(G1) when a sentence of 80+ characters repeats more than twice, else `?`.
 
-Usage: python3 -I -B tools/gen_guide_quality.py            writes the TSV and the ledger
-       python3 -I -B tools/gen_guide_quality.py --stdout   prints the TSV, writes nothing
+The findings ledger (tools/guide_quality_ledger.tsv) is advisory in GQS 1.0: no gate reads it, and
+every row it writes is derived from the four mechanical leads (basis `computed`). It is regenerated
+in full on every run; any hand-entered row (a basis other than `computed`) is carried forward
+unchanged after the regenerated rows, so a future advisory note is not lost.
+
+Usage: python3 -I -B tools/gen_guide_quality.py            merge and write the TSV and the ledger
+       python3 -I -B tools/gen_guide_quality.py --stdout   print the merged TSV, write nothing
+       python3 -I -B tools/gen_guide_quality.py --rebuild  ignore existing judgment scores, reset
+                                                            every judgment criterion to `?`
 """
 import re
 import sys
@@ -31,6 +49,10 @@ TSV = c.TSV
 LEDGER = ROOT / "tools" / "guide_quality_ledger.tsv"
 SCORED_ON = "2026-11-10"
 SCORED_BY = "tool"
+
+# The lead criteria this tool computes, grouped by their compliance-matrix group. Every other
+# criterion in these groups, and every criterion in the other groups, is judgment and is preserved.
+MECH_LEADS = {"M": {"M1"}, "D": {"D3"}, "F": {"F1"}, "G": {"G1"}}
 
 MONTHS = {m: i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July", "August",
@@ -136,7 +158,11 @@ def g1(text):
 
 
 def cells_for(guide, text):
-    """The ten group cells and the ledger facts for one guide."""
+    """The ten fresh group cells and the ledger facts for one guide, computed from the tree.
+
+    Judgment groups and judgment criteria carry `?` here; the merge later overlays any recorded
+    judgment value. The mechanical lead in each of groups M, D, F and G is authoritative.
+    """
     t = gtype(guide)
     m_cell, m_n = m1(guide)
     facts = {}
@@ -160,6 +186,122 @@ def cells_for(guide, text):
     return cells, facts
 
 
+def cell_levels(cell, group):
+    """Map each criterion in `group` to its level in `cell`, or None when the cell is n/a.
+
+    Levels are `GAP`, `PARTIAL`, `?` (unscored) or `PASS` (listed in no segment). A bare `?`
+    expands to every criterion in the group (QUALITY.md 3.2). Raises CellError on a malformed cell.
+    """
+    if cell is None or cell == "n/a":
+        return None
+    gaps, partials, unknowns = c.parse_cell(cell, group)
+    levels = {}
+    for crit in c.GROUP_CRITERIA[group]:
+        if crit in gaps:
+            levels[crit] = "GAP"
+        elif crit in partials:
+            levels[crit] = "PARTIAL"
+        elif crit in unknowns:
+            levels[crit] = "?"
+        else:
+            levels[crit] = "PASS"
+    return levels
+
+
+def serialize_cell(levels, group):
+    """Render per-criterion levels back to a QUALITY.md 3.2 cell string.
+
+    All PASS is `P`; a whole group unscored is a bare `?`; otherwise GAP ids, then PARTIAL ids,
+    then `?` ids, each segment listing its criteria in group order.
+    """
+    criteria = c.GROUP_CRITERIA[group]
+    gaps = [k for k in criteria if levels[k] == "GAP"]
+    partials = [k for k in criteria if levels[k] == "PARTIAL"]
+    unknowns = [k for k in criteria if levels[k] == "?"]
+    if not gaps and not partials and not unknowns:
+        return "P"
+    if not gaps and not partials and len(unknowns) == len(criteria):
+        return "?"
+    segs = []
+    if gaps:
+        segs.append("GAP(" + ",".join(gaps) + ")")
+    if partials:
+        segs.append("PARTIAL(" + ",".join(partials) + ")")
+    if unknowns:
+        segs.append("?(" + ",".join(unknowns) + ")")
+    return " ".join(segs)
+
+
+def merge_group(group, fresh_cell, old_cell):
+    """One merged group cell: the mechanical lead from `fresh_cell`, judgment from `old_cell`.
+
+    `fresh_cell` is this run's computed cell (the lead is authoritative); `old_cell` is the recorded
+    cell (None for a guide with no prior row). A structural n/a from the tree wins outright. A
+    judgment criterion takes its recorded level, or the fresh default (`?`) when no row is recorded.
+    """
+    if fresh_cell == "n/a":
+        return "n/a"
+    fresh_levels = cell_levels(fresh_cell, group)
+    try:
+        old_levels = cell_levels(old_cell, group)
+    except c.CellError:
+        old_levels = None
+    leads = MECH_LEADS.get(group, set())
+    merged = {}
+    for crit in c.GROUP_CRITERIA[group]:
+        if crit in leads or old_levels is None:
+            merged[crit] = fresh_levels[crit]
+        else:
+            merged[crit] = old_levels[crit]
+    return serialize_cell(merged, group)
+
+
+def merge_cells(fresh_cells, old_cells):
+    """Merge the ten fresh group cells with the recorded ones (old_cells may be None)."""
+    return {g: merge_group(g, fresh_cells[g], old_cells[g] if old_cells else None)
+            for g in c.GROUPS}
+
+
+def load_existing(path):
+    """Read the current matrix into {guide: {"cells": {group: cell}, "meta": {...}}}.
+
+    Returns {} when the file is absent. Rows that do not have the expected column count are skipped,
+    so a partly written or malformed file degrades to a rebuild of the affected rows, not a crash.
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    out = {}
+    for line in text.split("\n"):
+        if not line or line.startswith("#"):
+            continue
+        fields = line.split("\t")
+        if len(fields) != c.COLUMNS:
+            continue
+        guide = fields[0]
+        cells = {g: fields[2 + i] for i, g in enumerate(c.GROUPS)}
+        out[guide] = {"cells": cells,
+                      "meta": {"scored_on": fields[14], "scored_by": fields[15]}}
+    return out
+
+
+def load_ledger_extras(path):
+    """Hand-entered ledger rows (basis other than `computed`), to carry forward past the rebuild."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    extras = []
+    for line in text.split("\n"):
+        if not line or line.startswith("#"):
+            continue
+        fields = line.split("\t")
+        if len(fields) >= 11 and fields[10] != "computed":
+            extras.append(line)
+    return extras
+
+
 LEDGER_FINDING = {
     "M1": "entries across the five baseline and allow files, to sort into deferred work and reasoned waivers",
     "D3": "Sources item month(s) out of step with the heading month",
@@ -174,17 +316,23 @@ LEDGER_FIX = {
 }
 
 
-def build():
+def build(rebuild=False):
     enrolled = c.enrolled_guides()
+    existing = {} if rebuild else load_existing(TSV)
+    ledger_extras = [] if rebuild else load_ledger_extras(LEDGER)
     rows, ledger = [], []
     for guide in sorted(enrolled):
         text = (ROOT / guide).read_text(encoding="utf-8")
-        cells, facts = cells_for(guide, text)
-        parsed = {g: c.parse_cell(cells[g], g) for g in c.GROUPS}
+        fresh_cells, facts = cells_for(guide, text)
+        old = existing.get(guide)
+        merged = merge_cells(fresh_cells, old["cells"] if old else None)
+        parsed = {g: c.parse_cell(merged[g], g) for g in c.GROUPS}
         verdict = c.compute_verdict(parsed)
         body = c.recorded_digest(guide)
-        rows.append("\t".join([guide, gtype(guide), *[cells[g] for g in c.GROUPS],
-                               verdict, body, SCORED_ON, SCORED_BY, "current"]))
+        scored_on = old["meta"]["scored_on"] if old else SCORED_ON
+        scored_by = old["meta"]["scored_by"] if old else SCORED_BY
+        rows.append("\t".join([guide, gtype(guide), *[merged[g] for g in c.GROUPS],
+                               verdict, body, scored_on, scored_by, "current"]))
         for crit in ("M1", "D3", "F1", "G1"):
             if crit not in facts:
                 continue
@@ -205,13 +353,14 @@ def build():
     tsv = "\n".join([c.HEADER1, c.HEADER2, *rows]) + "\n"
     ledger_header = ("# gqs\t1.0 ledger (advisory)\n# columns: guide\tcriterion\tlevel\t"
                      "high_class\tlines\tfinding\tfix\ttodo_row\topened\tclosed_by_pr\tbasis")
-    ledger_tsv = "\n".join([ledger_header, *ledger]) + "\n"
+    ledger_tsv = "\n".join([ledger_header, *ledger, *ledger_extras]) + "\n"
     return tsv, ledger_tsv
 
 
 def main():
-    tsv, ledger_tsv = build()
-    if "--stdout" in sys.argv[1:]:
+    args = sys.argv[1:]
+    tsv, ledger_tsv = build(rebuild="--rebuild" in args)
+    if "--stdout" in args:
         sys.stdout.write(tsv)
         return 0
     TSV.write_text(tsv, encoding="utf-8")
