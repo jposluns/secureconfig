@@ -29,7 +29,7 @@ forgejo.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	af053bd6acf0fa7a84f1d8fb958379d
 free-certificates.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	bed8dac4fafafa6320e064ee47b8b4c3f811b3643b7ebf7ee12af64394603624	2026-11-10	tool	current
 frontend-frameworks.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	796c9b7dff8bcb7e4bc3e49e9e9d5cc60ef6d44329bae0b6044fe2a413807ad5	2026-11-10	tool	current
 fronting-auth.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	f3864ccb3882a8572a5802bd328723e49e7c49a32f3bff4a48184c7be4e090c5	2026-11-10	tool	current
-gitlab.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	42fe0138871ada35588952e68b14f4398cdf2fcbce14eaa0f86c42b84e4a1aea	2026-11-10	tool	current
+gitlab.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	33847a992ac1079e1b78c026357603136dd1e2afd074ae038d543102b1d79a10	2026-11-10	tool	current
 gitops-controllers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	b93332fac2381126c55dd1cf869f3ff85ee57aa99959e15fc102c28f872a09af	2026-11-10	tool	current
 go.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	5c4b33e6d16d118aaf133645b369cb3b46099ff732119bf81755e5b05f7b12a5	2026-11-10	tool	current
 gpu-clouds.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	987e395d78900fcb8f247ee334e70cf832f1d272bbd202d0f2200133369a4335	2026-11-10	tool	current
