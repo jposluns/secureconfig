@@ -17674,11 +17674,11 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SvelteKit adapter-node @sveltejs/adapter-node@5.5.7, SvelteKit routing and hooks documentation @sveltejs/kit@2.70.3, Nuxt lockfile v4.0.0, Nuxt documentation 4.x, Nuxt output source v4.0.0, Vite bind source v8.3.1, and h3 request and Node adapter source at release commit 1.15.3, plus 2 more recorded bases; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources.
+Written against SvelteKit adapter-node @sveltejs/adapter-node@5.5.7, SvelteKit routing and hooks documentation @sveltejs/kit@2.70.3, Nuxt lockfile v4.0.0, Nuxt documentation 4.x, Nuxt output source v4.0.0, Vite bind source v8.3.1, and h3 request and Node adapter source at release commit 1.15.3, plus 2 more recorded bases; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 21 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
-SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](https://github.com/jposluns/secureconfig/blob/main/nextjs.md): a server bind that can default wide open, a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions. The server-bind defaults are that SvelteKit's Node adapter binds `0.0.0.0` as of adapter-node 5.5.7, though Vite's dev server defaults to `localhost` as of Vite 8.3.1.
+SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](https://github.com/jposluns/secureconfig/blob/main/nextjs.md): a server bind that can default wide open, a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions. The server-bind defaults are that SvelteKit's Node adapter binds `0.0.0.0` as of adapter-node 5.5.7, Nuxt's Nitro `node-server` sets no listen host by default so Node listens on all interfaces, and Vite's dev server defaults to `localhost` as of Vite 8.3.1.
 
 ## SvelteKit (`adapter-node`)
 
@@ -17708,6 +17708,12 @@ export default defineEventHandler((event) => {
     return { message: 'Not authenticated' }
   }
 })
+```
+
+Nuxt's production server is Nitro's `node-server` preset (the fallback when no preset is named). It reads the listen host from `NITRO_HOST` or `HOST` with no default (nitropack 2.12.0), so with neither set Node listens on all interfaces. Bind it to loopback behind your reverse proxy with `NITRO_HOST=127.0.0.1`, and set `NITRO_PORT`:
+
+```bash
+NITRO_HOST=127.0.0.1 NITRO_PORT=3000 node .output/server/index.mjs
 ```
 
 `runtimeConfig` splits the same way as Next's env prefix: keys directly on `runtimeConfig` are "only available within server-side"; keys under `runtimeConfig.public` are "also exposed to the client-side." Environment variables override both, using an uppercase `NUXT_` prefix with underscores between key segments: private keys just need `NUXT_` (for example `NUXT_API_SECRET`), public keys need `NUXT_PUBLIC_` (for example `NUXT_PUBLIC_API_BASE`). The docs warn not to "expose runtime config keys to the client-side by either rendering them or passing them to `useState`" even when they are private on the server.
@@ -17846,6 +17852,7 @@ REASONED: Host, proxy cookie, redirect and trusted-proxy checks per the cited Sv
 - nitropack 2.12.0 h3 dependency range (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/package.json#L131
 - nitropack 2.12.0 node-server preset entry (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/preset.ts#L16-L29
 - nitropack 2.12.0 node-server uses h3 toNodeListener with Node HTTP or HTTPS server (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/runtime/node-server.ts#L1-L23
+- nitropack 2.12.0 node-server listen host from NITRO_HOST or HOST with no default, and listen call (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked November 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/runtime/node-server.ts#L25-L32
 - nitropack 2.12.0 h3 app construction and request hook (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/runtime/internal/app.ts#L59-L128
 - SvelteKit pinned routing: +layout has no effect on +server.js (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/10-routing.md#L291-L332
 - SvelteKit pinned load: layout/page concurrency and auth implications (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/20-load.md#L702-L714
@@ -17938,6 +17945,7 @@ Claims (full source mapping in the JSON block below):
 - nuxt-auth (REASONED; nuxt): Nuxt ships no built-in authentication; enforce access server-side, not with client redirects.
 - nuxt-private (REASONED; nuxt): Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.
 - nuxt-public (REASONED; nuxt): runtimeConfig.public is client-exposed with NUXT_PUBLIC_ overrides, not proxy/cookie configuration.
+- nuxt-bind (REASONED; nitro-node): nitropack 2.12.0 node-server reads the listen host from NITRO_HOST or HOST with no default, so with neither set Node listens on all interfaces; set NITRO_HOST=127.0.0.1 and NITRO_PORT to bind loopback.
 - vite-production (REASONED; vite): Vite dev/preview is development tooling; deploy dist through a production server, CDN or platform.
 - vite-bind (REASONED; vite-pin, vite): Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests.
 - vite-hosts (REASONED; vite): server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.
@@ -17951,7 +17959,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "796c9b7dff8bcb7e4bc3e49e9e9d5cc60ef6d44329bae0b6044fe2a413807ad5",
+  "body_sha256": "ed5d4a7dacc7214df7587b30c920d92d9408ca3a8386675bf5c099c1d3474df1",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -18076,7 +18084,8 @@ Claims (full source mapping in the JSON block below):
         "sdfda9cd3ce7b": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/runtime/node-server.ts#L1-L23",
         "sdf38c24e1f80": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/runtime/internal/app.ts#L59-L128",
         "s91ab58ddc148": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/core/config/loader.ts#L134-L141",
-        "s0c8ca22542d2": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/package.json#L131"
+        "s0c8ca22542d2": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/package.json#L131",
+        "s68e3655562f1": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/runtime/node-server.ts#L25-L32"
       }
     },
     "nitro-output-docs": {
@@ -18111,6 +18120,7 @@ Claims (full source mapping in the JSON block below):
     "nuxt-auth": {"text": "Nuxt ships no built-in authentication; enforce access server-side, not with client redirects.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED"},
     "nuxt-private": {"text": "Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
     "nuxt-public": {"text": "runtimeConfig.public is client-exposed with NUXT_PUBLIC_ overrides, not proxy/cookie configuration.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
+    "nuxt-bind": {"text": "nitropack 2.12.0 node-server reads the listen host from NITRO_HOST or HOST with no default, so with neither set Node listens on all interfaces; set NITRO_HOST=127.0.0.1 and NITRO_PORT to bind loopback.", "components": ["nitro-node"], "sources": ["nitro-node:s68e3655562f1"], "status": "REASONED"},
     "vite-production": {"text": "Vite dev/preview is development tooling; deploy dist through a production server, CDN or platform.", "components": ["vite"], "sources": ["vite:s16927b810cff"], "status": "REASONED"},
     "vite-bind": {"text": "Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests.", "components": ["vite-pin", "vite"], "sources": ["vite-pin:s36532f775f7f", "vite:sae9dd90908fc"], "status": "REASONED"},
     "vite-hosts": {"text": "server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED"},
