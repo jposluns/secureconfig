@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Let's Encrypt documentation (no recorded version), Certbot reconfigure minimum 2.3.0, Certbot user guide and source v2.3.0, Certbot Cloudflare DNS plugin v2.3.0, Caddy automatic HTTPS v2.11.4, certmagic ACME implementation v0.25.3, and Traefik ACME documentation v3.5, plus 3 more recorded bases; 3 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 31 claims, all reasoned from cited sources.
+Written against Let's Encrypt documentation (no recorded version), Certbot reconfigure minimum 2.3.0, Certbot user guide and source v2.3.0, Certbot Cloudflare DNS plugin v2.3.0, Caddy automatic HTTPS v2.11.4, certmagic ACME implementation v0.25.3, and Traefik ACME documentation v3.5, plus 5 more recorded bases; 3 further sources carry no recorded version. Metadata reviewed 2026-11-12; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -97,18 +97,18 @@ Let's Encrypt enforces per-domain issuance limits. Test against the staging envi
 
 ## CAA records
 
-A CAA DNS record restricts which certificate authorities may issue for your domain, limiting mis-issuance. Set it to the CA you use, for example `example.com. CAA 0 issue "letsencrypt.org"` for Let's Encrypt. Certificate-transparency monitoring detects mis-issuance after the fact; CAA constrains it beforehand, so treat the two as complementary, not as alternatives.
+A CAA DNS record restricts which certificate authorities may issue for your domain, limiting mis-issuance. Set it to the CA you use, for example `example.com. CAA 0 issue "letsencrypt.org"` for Let's Encrypt. Certificate-transparency monitoring detects mis-issuance after the fact; CAA constrains it beforehand, so treat the two as complementary, not as alternatives. A CA checks the closest CAA record set: it looks up the requested name, following any alias (CNAME), and climbs one label at a time toward, but not including, the DNS root until it finds a set, so a set on your registered domain also covers its subdomains unless a subdomain has its own. Properties tagged `issuewild`, when present, control wildcard issuance. The second block under Verify finds that set for your host name with `dig`.
 
 ## Alternatives
 
 - **ZeroSSL**: free certificates over ACME. Some clients need External Account Binding (EAB) credentials from the ZeroSSL dashboard; the acme.sh client registers with ZeroSSL by default.
 - **acme.sh**: a dependency-light shell ACME client supporting many DNS providers, useful where certbot is unavailable. Install from the repository release rather than piping a downloaded script straight into a shell. https://github.com/acmesh-official/acme.sh
 - **Caddy and Traefik**: obtain and renew certificates themselves with no external client; see [caddy.md](caddy.md) and [traefik.md](traefik.md). This guide assesses it as the lowest-effort correct option for new deployments.
-- **Cloudflare origin certificates**: available on Cloudflare's Free plan; Cloudflare's page refers to long-lived origin CA certificates and says the validity period is chosen at creation. Cloudflare says they only encrypt traffic between Cloudflare and the origin server, not traffic from client browsers to the origin, and that visitors may see untrusted certificate errors if Cloudflare is paused or proxying is disabled; use them only for origins that receive traffic only through Cloudflare-proxied records; see [cloudflare.md](cloudflare.md).
+- **Cloudflare origin certificates**: at the time of writing, Cloudflare's Origin CA page (checked October 2026, cited in Sources) lists them as available on its Free plan, and plan features can change, so confirm there before relying on it; Cloudflare's page refers to long-lived origin CA certificates and says the validity period is chosen at creation. Cloudflare says they only encrypt traffic between Cloudflare and the origin server, not traffic from client browsers to the origin, and that visitors may see untrusted certificate errors if Cloudflare is paused or proxying is disabled; use them only for origins that receive traffic only through Cloudflare-proxied records; see [cloudflare.md](cloudflare.md).
 
 ## Verify
 
-REASONED: certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, no live result is recorded, and this guide records no run. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
+REASONED: certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, no live result is recorded, and no run of this block is recorded. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -145,19 +145,153 @@ REASONED: certificate inventory, HTTPS access and served-certificate hostname, t
 )
 ```
 
+REASONED: following block; the CAA check for the CAA records section above, per RFC 8659 sections 3, 4.1, 4.1.1, 4.2 and 4.3, the Let's Encrypt CAA page and the BIND v9.20.24 `dig` manual and source cited in Sources. No deployment was run, so no live result for a reader's deployment is recorded. The final block passed `bash -n` and ShellCheck 0.11.0, and on 2026-11-12 it ran with real `dig` 9.20.24 through the host's systemd-resolved resolver against public domains: two Let's Encrypt sets, a CNAME whose target has CAA lines and one that falls back to its parent, another CA only, no CAA set at two names, NXDOMAIN and SERVFAIL. The no-reply case did not use that resolver: it ran the real `dig` through a wrapper that added `+time=1 +tries=1` and sent the query to a closed port on 127.0.0.1. Each exited with its expected status, as did the reserved-name refusal. A fake `dig` supplied the iodef-only and issuewild-only cases, an `issuewild "letsencrypt.org; %%%"`-only set, which exited 1 with a FINDING and a wildcard line that names letsencrypt.org and says its parameters are not checked, two iodef-only sets at a child name under a parent whose set authorizes Let's Encrypt, one whose owner name starts with a raw `;` and one whose owner name starts with an escaped `\;`, each of which exited 1 with a FINDING, three replies without the `ra` flag (one holding only a CNAME) and one with `ra` and `ad`, `issue`, `issuewild` and `iodef` tags in upper and mixed case, spaces and parameters around the CA name, a CA name in mixed case, an `issue ";"` beside `issuewild`, `iodef` with an unknown tag and a critical unknown tag beside a Let's Encrypt `issue`, and, for exit 3, an `issue` value holding `\009` and one holding `\"`, a `TYPE257` generic line, in `IN` and in `CLASS1` form, at a child name under a parent whose set authorizes Let's Encrypt, and an RRSIG line beside a Let's Encrypt `issue`; for exit 0 with NOT LET'S ENCRYPT, `issue "letsencrypt.org; %%%"` in two reply forms, parameters that end in `;`, whose tag starts with a hyphen or whose value holds a space or a non-ASCII character, and a word after the CA name; for exit 0 with PASS, that malformed value beside a well-formed Let's Encrypt `issue`, well-formed parameters, among them an `accounturi=` parameter, punctuation-only parameters, nothing after the `;`, a DNAME and CNAME before the target's set, and a CNAME to a set with an upper-case tag; and, for exit 3, replies with no flags line, an empty flags line, two reply headers, an upper-case `RA` and a lower-case status. Each exited with its expected status and result. Run it on any host whose resolver offers recursion and answers as public DNS does. It runs `dig -r +noall +comments +answer NAME. CAA` for your host name and then for each parent name up to the top-level domain, stopping at the first reply that holds CAA lines, which is the set a CA checks. With `-r`, `dig` reads no options from `~/.digrc`, so a setting there cannot change the output the block reads. The recursive resolver follows an alias (CNAME), so the block exits 3 for any reply whose flags lack `ra` (recursion available), before it classifies that reply or climbs past it. It also exits 3, before it climbs, for an answer line that is not a comment (a line whose first word is `;` or `;;`) or an `IN CAA`, `IN CNAME` or `IN DNAME` line, such as the generic form `TYPE257 \# ...`: BIND `dig` 9.20.24 printed CAA in that form when given `+unknownformat`, which the block does not pass; a `dig` without CAA support or a non-BIND `dig` may print it. The block never reads `+short` output, which is empty alike for no records, NXDOMAIN and SERVFAIL. Exposed: no name up to the top-level domain has a CAA set, or the set has no `issue` property and has either `issuewild` (a CA ignores `issuewild` for a name that is not a wildcard) or only `iodef`, so any public CA may issue for your host name; it prints FINDING and exits 1. Fixed: an `issue` property, its tag in any letter case, whose value names `letsencrypt.org`, alone or before well-formed `;` parameters, with any spaces around it; it prints PASS and exits 0. A parameter such as `accounturi=` or `validationmethods=` limits only the `issue` property it is on, and the issuer alone defines what a parameter means (RFC 8659 section 4.2 and the Let's Encrypt CAA page); authorizations add up, so another `issue` property naming `letsencrypt.org` without that parameter authorizes Let's Encrypt without the limit. The block does not check parameters against your account or challenge. The block compares the CA name itself exactly, so a value such as `LetsEncrypt.org` counts as another CA. BIND's CAA text form, cited in Sources, prints a tab, another control byte or a non-ASCII byte in a value as a `\` and three digits, such as `\009`, and prints a `"` or `\` after a `\`; the block does not read a value holding a `\`, so it exits 3. RFC 8659 section 4.2 treats an `issue` value that breaks its grammar as one with an empty issuer, which authorizes no CA. The block therefore counts the parameters after `letsencrypt.org;` as well formed only when each is a tag of letters and digits, with hyphens only between them, then `=` and a value of printable ASCII characters other than space and `;`, with optional spaces around each `=` and `;`, no empty parameter and no `;` after the last. Otherwise it counts the property as an empty issuer, as it does `issue ";"`. Under the same section authorizations add up, so an empty or malformed `issue` beside a well-formed one naming `letsencrypt.org` still gives PASS. A set that has `issue` properties but no well-formed one naming `letsencrypt.org` (they name other CAs, are empty or break the grammar) also exits 0, printed as NOT LET'S ENCRYPT and not classified: it is not the exposure, but it does not authorize Let's Encrypt, so issuance and renewal from Let's Encrypt fail; on another CA, check that the set names that CA. The wildcard line reports `issuewild`, which controls wildcard issuance when present, and is not classified; it does not check `issuewild` parameters, not even against the section 4.2 grammar, so when an `issuewild` value names `letsencrypt.org`, the line adds that its parameters are not checked. The block exits 3 when `dig` exits nonzero, when a reply has no single header, when the reply status is not NOERROR (the `dig` manual gives exit 0 for NXDOMAIN, and `dig` 9.20.24 exited 0 on SERVFAIL when observed on 2026-11-11), when a reply has no flags line or no `ra` flag, when an answer line is not a comment or an `IN CAA`, `IN CNAME` or `IN DNAME` line, when a CAA line's flags or value is in a form it does not read (including a value holding a `\`), when a critical property has a tag it does not classify, and when the set has no `issue` or `issuewild` property but has a tag other than `iodef` that it does not classify; it exits 2 when a guard refuses or `dig` is missing. It reads your own resolver, so a split-horizon or filtering resolver or a cached answer can make it differ from what a CA sees. It takes your host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, needs no sudo, and assumes a clean shell.
+
+```bash
+(                                       # the whole block in one subshell, so one exit status covers it
+  trap - DEBUG RETURN ERR               # assumes a clean shell (CONTRIBUTING rule 7)
+  set +x +a +e                          # no tracing, no allexport, errexit off, so each lookup's result is classified below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_HOSTNAME'   # the public host name you request certificates for (for a wildcard *.name, the name after "*."), not example.com, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
+  case "$1" in
+    ""|*REPLACE_WITH_*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your public host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+  esac
+  case "$1" in
+    *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*|.*|*..*|-*|*.-*) echo "use letters, digits, dots and hyphens only, with no empty label and no label that starts with a hyphen (dig would read it as an option); not probing"; exit 2 ;;
+    *.*) ;;
+    *) echo "a single-label name is not a public host name: substitute the full name; not probing"; exit 2 ;;
+  esac
+  shopt -s nocasematch || { echo "this block needs bash; run it in bash; not probing"; exit 2; }   # host names ignore letter case, so this case matches them in any case through a bash option, not an outside command that could fail
+  case "$1" in
+    example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
+  esac
+  shopt -u nocasematch   # letter case counts again in every match below, except the CAA tag match, which turns this option on for its one case statement
+  command -v dig >/dev/null 2>&1 || { echo "dig is not on PATH: install BIND's dig, or run this where it is installed; not probing"; exit 2; }
+  { unset -n IFS o t c y f g v p q seen && unset -v IFS o t c y f g v p q seen; } 2>/dev/null || { echo "IFS or a name this block uses (o t c y f g v p q seen) is readonly in this shell: run the block in a fresh bash; not probing"; exit 2; }   # with IFS unset, read splits on any run of spaces and tabs, as dig's columns need
+  set -- "$1" "$1" 0                    # the 2nd value is the name looked up now, starting at your host; the 3rd is the block's status
+  while :; do
+    set -- "$1" "$2" "$3" "$(if dig -r +noall +comments +answer "$2." CAA; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # -r: dig reads no options from ~/.digrc, which its manual calls useful for scripts that need predictable behavior; dig's search list is off by default, and no option here turns it on
+    set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the host, the name, the status, dig's output, then dig's exit status
+    printf '%s\n' "-- dig -r +noall +comments +answer $2. CAA, exit $5:" "$4"
+    [ "$5" = 0 ] || { echo "dig exit $5 for $2. is not 0, the status dig's manual gives for a DNS response received, so this block reads no reply; inconclusive"; set -- "$1" "$2" 3; break; }
+    seen=" "
+    while read -r o t c y f g v; do     # dig's header and flags lines, then answer lines: name, TTL, class, type, CAA flags, tag, value
+      case "$o $t $c $f" in
+        ';; ->>HEADER<<- opcode: status:') seen="${seen}header:$g "; continue ;;   # g is the status and its comma, as dig prints the header
+      esac
+      case "$o $t" in
+        ';; flags:'*)                   # the reply's flag words end at the first ";", and dig prints ra among them when the reply says recursion is available
+          v=" $c $y $f $g $v"
+          case "${v%%;*} " in *' ra '*) seen="${seen}ra " ;; *) seen="${seen}nora " ;; esac
+          continue ;;
+      esac
+      case "$o" in ''|';'|';;') continue ;; esac   # blank lines and dig's other comment lines, whose first word is ; or ;; alone, are printed above, not classified; every other line, including one whose owner name starts with ;, is classified below
+      case "$c $y" in
+        'IN CAA') seen="${seen}caa " ;;
+        'IN CNAME'|'IN DNAME') continue ;;   # alias lines are printed above, not classified
+        *) seen="${seen}unread "; continue ;;   # any other answer line, such as a CAA record in the generic form (TYPE257), is a form this block does not read
+      esac
+      case "$f" in 0|128) ;; *) seen="${seen}badflags " ;; esac
+      case "$v" in
+        *\\*) seen="${seen}badvalue "; v="" ;;   # dig prints a control byte in a value as \ and three digits (a tab as \009), and a " or \ after a \; this block does not read a value holding a \
+        '"'*'"') v="${v#?}"; v="${v%?}"; p="${v#"${v%%;*}"}"; p="${p#;}"; v="${v%%;*}"; read -r v <<< "$v" ;;   # v is the CA identifier: the quoted value up to any ";" parameters, without the spaces RFC 8659 section 4.2 allows around it, which read drops because IFS is unset (it would drop raw tabs too, which dig does not print); p is the text after the first ";"
+        *) seen="${seen}badvalue "; v="" ;;
+      esac
+      shopt -s nocasematch              # RFC 8659 section 4.1: tags match in any letter case, so this case writes each tag it knows in lower case
+      case "$g" in issue) g=issue ;; issuewild) g=issuewild ;; iodef) g=iodef ;; esac
+      shopt -u nocasematch              # the CA identifier below is compared exactly, letter case included
+      case "$g" in
+        issue)
+          if [ "$v" = letsencrypt.org ]; then   # RFC 8659 section 4.2: after the ";" come nothing or parameters, each tag *WSP "=" *WSP value, separated by *WSP ";" *WSP; an issue value that breaks this grammar counts as an empty issuer, which authorizes no CA, so v is emptied
+            read -r p <<< "$p"          # the parameters, without the spaces around them
+            while [ -n "$p" ]; do
+              q="${p%%;*}"; p="${p#"$q"}"   # q is the next parameter; p keeps the rest, from its ";"
+              read -r o t c <<< "${q/=/ = }"   # o, t and c are free once the line is classified: here they take the tag, the first "=" and the value
+              case "$o" in ""|-*|*-|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-]*) v=""; break ;; esac   # a tag: letters and digits, with hyphens only between them
+              [ "$t" = '=' ] || { v=""; break; }
+              case "$c" in *[[:space:][:cntrl:]]*|*[![:ascii:]]*) v=""; break ;; esac   # a value: printable ASCII other than space and ";" (q holds no ";", and a \ was refused above), so it refuses a space, a control character or a non-ASCII character
+              [ -z "$p" ] || { read -r p <<< "${p#;}"; [ -n "$p" ] || { v=""; break; }; }   # a ";" must be followed by another parameter
+            done
+          fi
+          if [ "$v" = letsencrypt.org ]; then seen="${seen}issue-le "; else seen="${seen}issue-other "; fi ;;
+        issuewild) if [ "$v" = letsencrypt.org ]; then seen="${seen}wild-le "; else seen="${seen}wild-other "; fi ;;
+        iodef) ;;
+        *) if [ "$f" = 128 ]; then seen="${seen}critical-other "; else seen="${seen}other "; fi ;;
+      esac
+    done <<< "$4"
+    case "$seen" in
+      *' header:'*' header:'*) echo "dig printed more than one reply header for $2.; this block reads a single reply only; inconclusive"; set -- "$1" "$2" 3; break ;;
+      *' header:NOERROR, '*) ;;
+      *' header:'*) echo "the reply status for $2. is not NOERROR, and this block does not classify any other status (dig's manual gives exit 0 for NXDOMAIN, and dig 9.20.24 exited 0 on SERVFAIL when observed on 2026-11-11); inconclusive"; set -- "$1" "$2" 3; break ;;
+      *) echo "dig printed no reply header for $2., so this block cannot read the reply; inconclusive"; set -- "$1" "$2" 3; break ;;
+    esac
+    case "$seen" in
+      *' nora '*) echo "the reply for $2. lacks the ra flag, so recursion was not available and an alias (CNAME) in it may come without its target's records; this block reads only a recursive resolver's reply; inconclusive"; set -- "$1" "$2" 3; break ;;
+      *' ra '*) ;;
+      *) echo "dig printed no flags line for $2., so whether recursion was available is unknown; inconclusive"; set -- "$1" "$2" 3; break ;;
+    esac
+    case "$seen" in
+      *' unread '*) echo "an answer line in the reply for $2. is in a form this block does not read (it reads IN CAA lines and passes over comments and IN CNAME and IN DNAME alias lines); inconclusive"; set -- "$1" "$2" 3; break ;;
+    esac
+    case "$seen" in
+      *' caa '*) ;;
+      *) case "$2" in
+           *.*) set -- "$1" "${2#*.}" "$3"; continue ;;   # no CAA set at this name: climb one label toward the root
+           *) echo "FINDING: no CAA record set at $1. or at any parent name up to $2., so any public CA may issue for $1"; set -- "$1" "$2" 1; break ;;
+         esac ;;
+    esac
+    echo "the relevant CAA set is the one in the reply for $2. (this block does not check the owner names of its CAA lines)"
+    case "$seen" in
+      *' badflags '*|*' badvalue '*) echo "a CAA line's flags or value is in a form this block does not read; inconclusive"; set -- "$1" "$2" 3 ;;
+      *' critical-other '*) echo "a CAA property marked critical (flags 128) has a tag other than issue, issuewild or iodef; a CA that does not recognize it must not issue, and this block does not classify it; inconclusive"; set -- "$1" "$2" 3 ;;
+      *' issue-le '*) echo "PASS: a well-formed issue property names letsencrypt.org, so the set restricts which CAs may issue and authorizes Let's Encrypt for $1; a parameter such as accounturi= (ACME account) or validationmethods= (validation methods) limits only the property it is on, and authorizations add up, so another issue property naming letsencrypt.org without that parameter lifts the limit; this block does not check parameters against your account or challenge"; set -- "$1" "$2" 0 ;;
+      *' issue-other '*) echo "NOT LET'S ENCRYPT: the set restricts issuance, but no well-formed issue property names letsencrypt.org (RFC 8659 section 4.2 treats an issue value that breaks its grammar as an empty issuer, which authorizes no CA), so it does not authorize Let's Encrypt to issue or renew for $1; if you use another CA, check that the set names that CA; not classified"; set -- "$1" "$2" 0 ;;
+      *' wild-'*) echo "FINDING: the set has issuewild but no issue property, and a CA ignores issuewild for a name that is not a wildcard, so CAA does not restrict issuance for $1"; set -- "$1" "$2" 1 ;;
+      *' other '*) echo "the set has no issue or issuewild property, and it has a tag other than iodef that this block does not classify; inconclusive"; set -- "$1" "$2" 3 ;;
+      *) echo "FINDING: the set has no issue or issuewild property (iodef only), so CAA does not restrict issuance for $1"; set -- "$1" "$2" 1 ;;
+    esac
+    case "$seen" in
+      *' wild-le '*) echo "wildcard *.$1: an issuewild property names letsencrypt.org (its parameters are not checked)" ;;
+      *' wild-other '*) echo "wildcard *.$1: the set has issuewild properties and none names letsencrypt.org, so it does not authorize Let's Encrypt for a wildcard" ;;
+      *) echo "wildcard *.$1: no issuewild property, so the issue result above governs wildcard issuance too" ;;
+    esac
+    break
+  done
+  echo "block exit $3; the dig output and the wildcard line are not classified, so judge them yourself"
+  exit "$3"
+)
+```
+
 ## Sources (checked September 2026)
 
-- Let's Encrypt documentation: https://letsencrypt.org/docs/
+- Let's Encrypt documentation (rolling documentation, checked September 2026): https://letsencrypt.org/docs/
 - Certbot instructions (rolling documentation, checked September 2026): https://certbot.eff.org/
 - Certbot reconfigure (2.3.0 and later; v2.3.0 user guide): https://raw.githubusercontent.com/certbot/certbot/v2.3.0/certbot/docs/using.rst
-- Certbot manual DNS-01 and renewal hooks: https://eff-certbot.readthedocs.io/en/stable/using.html#manual
-- Certbot DNS plugins: https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
-- ZeroSSL: https://zerossl.com/
-- acme.sh: https://github.com/acmesh-official/acme.sh
-- Let's Encrypt certificate lifetimes: https://letsencrypt.org/docs/cert-lifetimes/
-- Let's Encrypt lifetime reduction schedule: https://letsencrypt.org/2025/12/02/from-90-to-45
-- Let's Encrypt OCSP end of life: https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life
-- Let's Encrypt CAA requirements: https://letsencrypt.org/docs/caa/
+- Certbot manual DNS-01 and renewal hooks (rolling documentation, checked September 2026): https://eff-certbot.readthedocs.io/en/stable/using.html#manual
+- Certbot DNS plugins (rolling documentation, checked September 2026): https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
+- ZeroSSL (rolling documentation, checked September 2026): https://zerossl.com/
+- acme.sh (rolling documentation, checked September 2026): https://github.com/acmesh-official/acme.sh
+- Let's Encrypt certificate lifetimes (rolling documentation, checked September 2026): https://letsencrypt.org/docs/cert-lifetimes/
+- Let's Encrypt lifetime reduction schedule (announcement dated 2025-12-02, checked September 2026): https://letsencrypt.org/2025/12/02/from-90-to-45
+- Let's Encrypt OCSP end of life (announcement dated 2025-08-06, checked September 2026): https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life
+- Let's Encrypt CAA requirements (rolling documentation, checked November 2026): https://letsencrypt.org/docs/caa/
+- RFC 8659 CAA relevant record set, its climb toward the root and alias chasing, section 3 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-3
+- RFC 8659 CAA tags match case-insensitively, section 4.1 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-4.1
+- RFC 8659 CAA canonical presentation format, section 4.1.1 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-4.1.1
+- RFC 8659 CAA issue value grammar, with optional whitespace (WSP) around the issuer domain name, section 4.2 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-4.2
+- RFC 8659 CAA issuewild ignored for a name that is not a wildcard, section 4.3 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-4.3
+- BIND v9.20.24 `dig` return codes, with exit 0 on NXDOMAIN (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L788-L806
+- BIND v9.20.24 `dig` `+noall` and `+answer` display options (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L255-L262
+- BIND v9.20.24 `dig` `+comments` header display (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L308-L312
+- BIND v9.20.24 `dig` search list off by default (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L598-L606
+- BIND v9.20.24 `dig` `-r` reads no options from `${HOME}/.digrc` (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L160-L163
+- BIND v9.20.24 `dig` reply header line format (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884
+- BIND v9.20.24 `dig` reply flags line, including `ra`, and its recursion-not-available warning (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924
+- BIND v9.20.24 `dig` `+short` prints every answer record, aliases included (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L586-L630
+- BIND v9.20.24 CAA text form prints the value as a quoted string (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/lib/dns/rdata/generic/caa_257.c#L331-L362
+- BIND v9.20.24 quoted-string text form escapes a byte below 0x20 or from 0x7f as a backslash and three decimal digits, and a double quote or backslash with a backslash (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/lib/dns/rdata.c#L1886-L1944
 - Caddy v2.11.4 automatic certificate acquisition and renewal (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63
 - Caddy v2.11.4 ACME TLS-ALPN challenge settings (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L280-L296
 - Caddy v2.11.4 builds its ACME issuer template at provisioning (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L245-L249
@@ -188,7 +322,7 @@ REASONED: certificate inventory, HTTPS access and served-certificate hostname, t
 - Certbot v2.3.0 renewed configuration (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1243-L1249
 - Certbot v2.3.0 Cloudflare DNS credentials (checked October 2026): <https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L24-L39>
 - Certbot v2.3.0 Cloudflare DNS credential permissions (checked October 2026): <https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L61-L78>
-- Cloudflare Origin CA (checked October 2026): https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/
+- Cloudflare Origin CA (rolling documentation, checked October 2026): https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/
 
 
 <!-- version-basis:start -->
@@ -217,6 +351,8 @@ Components (recorded basis):
 - cloudflare-origin-ca: Cloudflare Origin CA documentation (checked October 2026)
 - openssl-cli: OpenSSL certificate commands (3.0)
 - curl-source: curl command documentation (curl-8_12_1)
+- bind-dig: BIND dig manual and source (v9.20.24)
+- rfc8659: CAA specification (RFC 8659)
 
 Claims (full source mapping in the JSON block below):
 
@@ -239,15 +375,16 @@ Claims (full source mapping in the JSON block below):
 - lifetime-schedule (REASONED; le): The classic profile moves to 64 days on 2027-02-10 and 45 days on 2028-02-16; industry rules cap publicly trusted certificates at 47 days from 2029-03-15.
 - revocation (REASONED; le): Let's Encrypt ended OCSP on 2025-08-06 and publishes revocation through CRLs only; do not add OCSP stapling directives for its certificates.
 - staging (REASONED; le, certbot): Let's Encrypt limits per-domain issuance; test with certbot --staging or --test-cert before real issuance.
-- caa (REASONED; le): CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA.
+- caa (REASONED; le, rfc8659): CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA. A CA uses the closest CAA set, following aliases and climbing from the requested name toward the root, so a registered-domain set covers subdomains without their own; issuewild, when present, controls wildcard issuance.
 - zerossl-eab (REASONED; zerossl): ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials.
 - acme-default (REASONED; acme): acme.sh registers with ZeroSSL by default.
 - acme-install (REASONED; acme): acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell.
 - server-automation (REASONED; le, caddy, traefik): This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments.
-- origin-certificates (REASONED; le, cloudflare-origin-ca): Cloudflare lists Origin CA certificates on its Free plan, says they only encrypt traffic between Cloudflare and the origin, and warns that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide requires using Origin CA certificates only for origins that receive traffic only through Cloudflare-proxied records.
+- origin-certificates (REASONED; le, cloudflare-origin-ca): At the guide's October 2026 check, Cloudflare listed Origin CA certificates on its Free plan, which can change; it says they only encrypt traffic between Cloudflare and the origin, and that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide restricts their use to origins that receive traffic only through Cloudflare-proxied records.
 - verify-inventory (REASONED; certbot): certbot certificates lists issued certificates and their expiry dates.
 - verify-https (REASONED; le, curl-source): Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k.
 - verify-certificate (REASONED; le, openssl-cli): The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates.
+- verify-caa (REASONED; le, bind-dig, rfc8659): dig -r +noall +comments +answer CAA for the host, then each parent to the TLD, until a reply has CAA lines. Exit 1 (exposed): no set, or only iodef or issuewild. Exit 0: a well-formed letsencrypt.org issue (fixed), or other issues only (not classified). Exit 3: dig exit not 0, no single NOERROR header, no ra flag, an unread form, a critical unknown tag, or an unknown tag and no issue or issuewild.
 - authentication (REASONED; le): A certificate alone is insufficient protection; continue with server controls and authentication.
 - dns-automation (REASONED; certbot, certbot-v230): For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge.
 - dns-manual (REASONED; certbot, certbot-v230): certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge.
@@ -255,9 +392,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-17",
+  "checked": "2026-11-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "bed8dac4fafafa6320e064ee47b8b4c3f811b3643b7ebf7ee12af64394603624",
+  "body_sha256": "b6b3602573dfa47ca4cf97a71ed90192057d15d83a44931bf16b416b5c0d7b12",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -378,6 +515,33 @@ Claims (full source mapping in the JSON block below):
         "s76f69702c9d5": "https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/head.md#L21-L22",
         "s60820cd231e1": "https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28"
       }
+    },
+    "bind-dig": {
+      "name": "BIND dig manual and source",
+      "basis": "v9.20.24",
+      "sources": {
+        "s4a49b2a8a61e": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L788-L806",
+        "s2d161ece08ff": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L255-L262",
+        "sda67db889c0e": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L308-L312",
+        "s9cd3fcf628fb": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L598-L606",
+        "s5d98e69756c9": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L160-L163",
+        "sac989d3132f5": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884",
+        "sf70f634493d1": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924",
+        "sfc53128fa456": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L586-L630",
+        "s57229d0dad3c": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/lib/dns/rdata/generic/caa_257.c#L331-L362",
+        "s05438cee29a6": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/lib/dns/rdata.c#L1886-L1944"
+      }
+    },
+    "rfc8659": {
+      "name": "CAA specification",
+      "basis": "RFC 8659",
+      "sources": {
+        "s8aedfb08aff2": "https://www.rfc-editor.org/rfc/rfc8659#section-3",
+        "s25ad17065812": "https://www.rfc-editor.org/rfc/rfc8659#section-4.1",
+        "se86efc2c3dd3": "https://www.rfc-editor.org/rfc/rfc8659#section-4.1.1",
+        "s547d1c56334d": "https://www.rfc-editor.org/rfc/rfc8659#section-4.2",
+        "s27775a13cb28": "https://www.rfc-editor.org/rfc/rfc8659#section-4.3"
+      }
     }
   },
   "claims": {
@@ -400,15 +564,16 @@ Claims (full source mapping in the JSON block below):
     "lifetime-schedule": {"text": "The classic profile moves to 64 days on 2027-02-10 and 45 days on 2028-02-16; industry rules cap publicly trusted certificates at 47 days from 2029-03-15.", "components": ["le"], "sources": ["le:s01388c85c5d6", "le:s4406ef210fff"], "status": "REASONED"},
     "revocation": {"text": "Let's Encrypt ended OCSP on 2025-08-06 and publishes revocation through CRLs only; do not add OCSP stapling directives for its certificates.", "components": ["le"], "sources": ["le:s21efa5995c48"], "status": "REASONED"},
     "staging": {"text": "Let's Encrypt limits per-domain issuance; test with certbot --staging or --test-cert before real issuance.", "components": ["le", "certbot"], "sources": ["le:s9ff2d787c618", "certbot:s44faaf4eb7d7"], "status": "REASONED"},
-    "caa": {"text": "CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA.", "components": ["le"], "sources": ["le:saf908bcd2143", "le:s9ff2d787c618"], "status": "REASONED"},
+    "caa": {"text": "CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA. A CA uses the closest CAA set, following aliases and climbing from the requested name toward the root, so a registered-domain set covers subdomains without their own; issuewild, when present, controls wildcard issuance.", "components": ["le", "rfc8659"], "sources": ["le:saf908bcd2143", "le:s9ff2d787c618", "rfc8659:s8aedfb08aff2"], "status": "REASONED"},
     "zerossl-eab": {"text": "ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials.", "components": ["zerossl"], "sources": ["zerossl:sddca28a3381b"], "status": "REASONED"},
     "acme-default": {"text": "acme.sh registers with ZeroSSL by default.", "components": ["acme"], "sources": ["acme:sa635c50fc1f9"], "status": "REASONED"},
     "acme-install": {"text": "acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell.", "components": ["acme"], "sources": ["acme:sa635c50fc1f9"], "status": "REASONED"},
     "server-automation": {"text": "This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments.", "components": ["le", "caddy", "traefik"], "sources": ["le:s9ff2d787c618", "caddy:s9683cb8d689f", "traefik:s418a6b1ad09b"], "status": "REASONED"},
-    "origin-certificates": {"text": "Cloudflare lists Origin CA certificates on its Free plan, says they only encrypt traffic between Cloudflare and the origin, and warns that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide requires using Origin CA certificates only for origins that receive traffic only through Cloudflare-proxied records.", "components": ["le", "cloudflare-origin-ca"], "sources": ["le:s9ff2d787c618", "cloudflare-origin-ca:s1e15de5c9f36"], "status": "REASONED"},
+    "origin-certificates": {"text": "At the guide's October 2026 check, Cloudflare listed Origin CA certificates on its Free plan, which can change; it says they only encrypt traffic between Cloudflare and the origin, and that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide restricts their use to origins that receive traffic only through Cloudflare-proxied records.", "components": ["le", "cloudflare-origin-ca"], "sources": ["le:s9ff2d787c618", "cloudflare-origin-ca:s1e15de5c9f36"], "status": "REASONED"},
     "verify-inventory": {"text": "certbot certificates lists issued certificates and their expiry dates.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED", "verify": [1]},
     "verify-https": {"text": "Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k.", "components": ["le", "curl-source"], "sources": ["le:s9ff2d787c618", "curl-source:s76f69702c9d5", "curl-source:s60820cd231e1"], "status": "REASONED", "verify": [1]},
     "verify-certificate": {"text": "The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates.", "components": ["le", "openssl-cli"], "sources": ["le:s9ff2d787c618", "openssl-cli:s00aaf106164f", "openssl-cli:s0856f4a58574"], "status": "REASONED", "verify": [1]},
+    "verify-caa": {"text": "dig -r +noall +comments +answer CAA for the host, then each parent to the TLD, until a reply has CAA lines. Exit 1 (exposed): no set, or only iodef or issuewild. Exit 0: a well-formed letsencrypt.org issue (fixed), or other issues only (not classified). Exit 3: dig exit not 0, no single NOERROR header, no ra flag, an unread form, a critical unknown tag, or an unknown tag and no issue or issuewild.", "components": ["le", "bind-dig", "rfc8659"], "sources": ["le:saf908bcd2143", "bind-dig:s4a49b2a8a61e", "bind-dig:s2d161ece08ff", "bind-dig:sda67db889c0e", "bind-dig:s9cd3fcf628fb", "bind-dig:s5d98e69756c9", "bind-dig:sac989d3132f5", "bind-dig:sf70f634493d1", "bind-dig:sfc53128fa456", "bind-dig:s57229d0dad3c", "bind-dig:s05438cee29a6", "rfc8659:s8aedfb08aff2", "rfc8659:s25ad17065812", "rfc8659:se86efc2c3dd3", "rfc8659:s547d1c56334d", "rfc8659:s27775a13cb28"], "status": "REASONED", "verify": [2]},
     "authentication": {"text": "A certificate alone is insufficient protection; continue with server controls and authentication.", "components": ["le"], "sources": ["le:s9ff2d787c618"], "status": "REASONED"},
     "dns-automation": {"text": "For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge.", "components": ["certbot", "certbot-v230"], "sources": ["certbot:s875be163b4c1", "certbot:s7b60a00cadf3", "certbot-v230:s55ec19f37395", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"},
     "dns-manual": {"text": "certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge.", "components": ["certbot", "certbot-v230"], "sources": ["certbot:s7b60a00cadf3", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"}
