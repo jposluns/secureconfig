@@ -1524,11 +1524,14 @@ else
 fi
 
 # section: check-updates-tests
-echo "== the skill's version-currency check reads the guides and reports offline =="
+echo "== the skill's version-currency check and guide updater, tested offline =="
 # tools/test_check_updates.py runs plugin/skills/secureconfig/scripts/check-updates.py on fixture
 # guides and on stub answers for the GitHub API. It refuses every real connection, so this section
 # stays offline like the rest of the suite; the script's own --check-online run is never tested here.
 run_gate test_check_updates.py python3 -I -B tools/test_check_updates.py
+# tools/test_update_guides.py runs plugin/skills/secureconfig/scripts/update-guides.sh in a temporary
+# plugin tree with a curl shim first on PATH that serves fixture files; no socket or listener opens.
+run_gate test_update_guides.py python3 -I -B tools/test_update_guides.py
 
 # section: baseline-pin
 echo "== the copied site template files match their pin =="

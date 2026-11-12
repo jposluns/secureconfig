@@ -14,13 +14,37 @@ RAW="https://raw.githubusercontent.com/jposluns/secureconfig/main"
 here="$(cd "$(dirname "$0")/.." && pwd)"
 refs="$here/references"
 
+# A version is three dot-separated runs of decimal digits, N.N.N, and nothing else. The installed
+# and the published version are both matched against it before either is compared, printed or
+# written, and a value that fails is refused without being shown, since it may carry a terminal
+# escape or be very long. [[ =~ ]] anchors to the whole value, so a second line cannot slip past.
+version_re='^[0-9]+(\.[0-9]+){2}$'
+
+# Each python3 -I below runs in isolated mode: the current directory and the PYTHON* variables
+# stay out of the import path, so a json.py where this is run from is never imported.
 plugin_json="$(cd "$here/../.." && pwd)/plugin.json"
-current=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("version","0"))' \
-  "$plugin_json")
+current=$(python3 -I -c '
+import json, sys
+try:
+    with open(sys.argv[1], encoding="utf-8") as fh:
+        version = json.load(fh).get("version")
+except (OSError, ValueError, AttributeError):
+    version = None
+ok = isinstance(version, str) and version.isascii() and version.isprintable()
+print(version if ok else "")
+' "$plugin_json")
+if ! [[ $current =~ $version_re ]]; then
+  echo "plugin.json records no version of the form N.N.N; refusing to update, nothing changed" >&2
+  exit 1
+fi
 
 latest=$(curl -fsS --max-time 30 "$RAW/VERSION" | tr -d '[:space:]')
 if [ -z "$latest" ]; then
   echo "could not read the published version; nothing changed" >&2
+  exit 1
+fi
+if ! [[ $latest =~ $version_re ]]; then
+  echo "the published version is not of the form N.N.N; refusing to update, nothing changed" >&2
   exit 1
 fi
 
@@ -66,7 +90,7 @@ cp "$work"/*.md "$work/MANIFEST.sha256" "$refs.new/"
 rm -rf "$refs"
 mv "$refs.new" "$refs"
 
-python3 - "$plugin_json" "$latest" <<'PY'
+python3 -I - "$plugin_json" "$latest" <<'PY'
 import json, sys
 path, version = sys.argv[1], sys.argv[2]
 with open(path) as fh:
