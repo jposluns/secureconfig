@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against NocoDB 2026.09.0, Baserow 2.3.4, Appsmith v2.4.1, Budibase v3.50.0 and v3.46.0, Windmill v1.864.1, Docker CLI v27.2.0 and v27.1.2, Node.js v22.22.1, and CouchDB 3.5.2; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 51 claims: 3 demonstrated by a check that ran and 48 reasoned from cited sources.
+Written against NocoDB 2026.09.0, Baserow 2.3.4, Appsmith v2.4.1, Budibase v3.50.0 and v3.46.0, Windmill v1.864.1, Docker CLI v27.2.0 and v27.1.2, Node.js v22.22.1, and CouchDB 3.5.2, plus 1 more recorded basis; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 64 claims: 3 demonstrated by a check that ran and 61 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -33,6 +33,23 @@ admin account before the instance is reachable, and front the web UI per
 behind each tool as a store of every connected system's credentials ([secrets.md](secrets.md)).
 Versions checked: NocoDB 2026.09.0, Baserow 2.3.4, Appsmith v2.4.1, Budibase v3.50.0 and Windmill
 v1.864.1.
+
+Each tool's password login also needs a brute-force control. What the tools do themselves ranges from
+nothing (NocoDB, Baserow) to per-account lockouts (Appsmith, Budibase), as each section below says, so
+rate-limit the login endpoints at the reverse proxy in front of the tool, keyed per client address.
+[nginx.md](nginx.md#4-bound-the-expensive-endpoints) shows a per-address request limit, which answers
+503 once its burst is spent. Caddy's standard build has no rate limiting
+([caddy.md](caddy.md#4-bound-the-expensive-endpoints)), so do not assume the Caddy that Baserow,
+Appsmith and Windmill bundle can do it: put the limit in a proxy that can, or check that the binary
+carries the community module. A per-address key is only as good as the address the proxy sees: behind a
+CDN or another proxy, recover the client address first, as nginx.md describes, or every client shares
+one bucket. Then add fail2ban on the proxy's access log, per rule 9 of
+[authentication.md](authentication.md). The shipped jails it lists do not cover these tools' login
+failures, so write a filter that matches each tool's login path and failure status, treat the shipped
+entries as starting points, and check the filter against your own log so that it matches failed logins
+and not successful ones (this guide's advice). A per-account lockout also lets anyone who knows a
+username lock that user out, so it does not replace the per-address limit. The last two checks under
+Verify test the proxy limit and then the fail2ban jail.
 
 ## NocoDB
 
@@ -60,6 +77,19 @@ resets that from `NC_TRUST_PROXY`, which trusts no proxy unless you set it; once
 set it to that proxy's hop count or subnet, and never to `true` on a server clients can reach directly. The 2026.09.0 tag's README says binaries are only for quick local testing ([README, line 95](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95)).
 The GitHub release API record listed no assets when checked in October 2026 ([release record](https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0)); this guide assesses that record as showing no 2026.09.0 GitHub release binary assets, without establishing what other download services provide. The tag carries NocoDB package version `0.301.3` ([package manifest](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3)); `2026.09.0` is the tag name, not that package version. The README documents the `nocodb/nocodb:latest` Docker image ([Docker examples](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75)) and calls Auto-upstall a server production installation that generates Docker Compose ([Auto-upstall section](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90)). For production, use the container image or the vendor's install script (this guide's advice based on those README paths). The README's Auto-upstall command fetches the script over plain `http://` and runs it with Bash ([README command](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L82)); its source link points to the `develop` branch ([README source link](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L90)). This guide advises fetching the script over HTTPS from a pinned, reviewed source and reading it before running it, rather than running the plain-HTTP response directly with Bash.
 
+NocoDB does not limit login attempts itself. Its 2026.09.0 API limiter guard always lets a request
+through, and its comment says "Rate limiting is intentionally not enforced at the application layer.
+Deployments are expected to apply rate limits at the network layer (reverse proxy, load balancer, WAF,
+or API gateway)". Sign-in is served on four paths, `/auth/user/signin`, `/api/v1/db/auth/user/signin`,
+`/api/v1/auth/user/signin` and `/api/v2/auth/user/signin`, so the proxy limit has to cover all four,
+for example by matching the shared `/auth/user/signin` suffix. NocoDB's two-factor authentication page
+says "Two-factor authentication is available on all NocoDB Cloud plans and on licensed self-hosted
+deployments (Business plan and above)." That page is not tied to a release. At the 2026.09.0 tag, a
+migration adds the `totp_secret`, `totp_enabled` and `totp_backup_codes` columns, but this guide's
+search of `packages/nocodb/src` at the tag found no TOTP setup or verification endpoint, so the open
+build carries the schema only. Without that licence, put MFA in front of NocoDB
+([fronting-auth.md](fronting-auth.md)).
+
 ## Baserow
 
 Baserow's default Compose file publishes the bundled Caddy on 80 and 443 at
@@ -73,6 +103,15 @@ settings; a refused signup then fails with "Sign up is disabled."
 The Compose file refuses to start without `SECRET_KEY`, `DATABASE_PASSWORD` and `REDIS_PASSWORD`
 (`${SECRET_KEY:?}`), and `.env.example` leaves them empty rather than shipping examples, so the secrets
 are yours to generate. Baserow's core registers a TOTP two-factor authentication provider.
+
+The login view, `ObtainJSONWebToken`, documents that an account protected by two-factor authentication
+gets a temporary token with which to finish verification. Whether an administrator can require TOTP for
+every account was not established, so do not rely on it as instance-wide MFA. The same view, served at
+`/api/user/token-auth/`, has no throttle or failed-attempt counter, and it answers bad credentials with
+401 (`ERROR_INVALID_CREDENTIALS`). The optional throttle in Baserow's settings
+(`BASEROW_MAX_CONCURRENT_USER_REQUESTS`, default `-1`, which is off) limits concurrent requests; it does
+not count failed logins or lock accounts. The proxy limit is therefore the only brute-force control in
+front of Baserow's login (this guide's reading of those sources).
 
 ## Appsmith
 
@@ -91,6 +130,16 @@ override the generated ones. Anyone who copies that file encrypts every stored d
 with a published key. Remove those two lines, or set long random values, before the first start. On an
 instance that already stored credentials under `abcd`, changing the pair presumably leaves them
 unreadable, so plan to re-enter them (inferred from the encryption design, not tested).
+
+Appsmith limits form logins at `/api/v1/login` per submitted username: 5 attempts per day, after which
+the login redirects to `/user/login?error=true` with a message instead of answering 429. Because the
+limit is keyed on the username and not on the client, one client can try many usernames, and anyone
+who knows a username can lock it out of form login for up to a day. This guide found no setting that
+changes the limit. Rate-limit the login path per client address at the proxy as well. This guide's
+search of the v2.4.1 server and client sources found no native MFA. The vendor's authentication
+documentation lists Google, GitHub, OIDC and SAML sign-in besides form login; this guide has not
+established which edition includes each. Put MFA in an identity provider that enforces it, or in front
+of Appsmith ([fronting-auth.md](fronting-auth.md)).
 
 ## Budibase
 
@@ -141,6 +190,20 @@ non-empty; in the `tenancy.getTenantId()` context, it calls `createAdminUser` wh
 That call sets `hashPassword`, `requirePassword` and `skipPasswordValidation` to `true`
 (startup admin seeding conditions source below).
 
+At v3.46.0, Budibase's login route, `/api/global/auth/:tenantId/login`, carries two lockouts; the same
+files exist at v3.50.0 but were not compared. After `LOGIN_MAX_FAILED_ATTEMPTS` failures (default 5)
+for one email, it locks that email for `LOGIN_LOCKOUT_SECONDS` (default 900, so 15 minutes) and answers
+403 "Account temporarily locked. Try again later." with `Retry-After`. Once one client address
+(`ctx.ip`) has sent more than `LOGIN_IP_LOCKOUT_LIMIT` login requests (default 10) in that window, it
+answers 429 "Too many login attempts. Try again later."; that count includes every login request, not
+only failures. The email lockout lets anyone who knows a user's email lock that user out, 15 minutes at
+a time. How `ctx.ip` resolves behind the bundled nginx proxy was not verified: if it is the proxy's
+address, every client shares one count, and 11 login requests from anyone would block every login for
+up to 15 minutes (this guide's inference, not tested). This guide's search of the v3.46.0 packages and
+of a v3.50.0 source tree found no native MFA. Put MFA in front of Budibase
+([fronting-auth.md](fronting-auth.md)), or, if users sign in through an identity provider, have that
+provider enforce it.
+
 ## Windmill
 
 Windmill runs scripts in Python, TypeScript, Go, Bash and more on its workers, so a Windmill login is
@@ -165,6 +228,18 @@ available". The vendor's Compose file runs the worker with `privileged: true` an
 email triggers. Its debugger setting carries the vendor's warning: `REQUIRE_SIGNED_DEBUG_REQUESTS`
 "Do NOT set to false on any internet-reachable deployment: it exposes an unauthenticated code-execution
 debugger". Do not publish 25 unless you use email triggers.
+
+Windmill's login, `/api/auth/login`, is always under a global cap (`LOGIN_RATE_LIMIT_GLOBAL`, default
+10000 login attempts a minute per server process). A per-address limit (`LOGIN_RATE_LIMIT_PER_IP`,
+default 120 a minute) and a per-account limit (`LOGIN_RATE_LIMIT_PER_ACCOUNT`, default 30 failures a
+minute) apply only when `CLOUD_HOSTED` is on or the variable is set to a number; a rejected login gets
+429 with "Too many login attempts. Please try again later." The per-address key comes from `X-Real-IP`,
+else the first `X-Forwarded-For` entry, and without either there is no per-address limit. Set
+`LOGIN_RATE_LIMIT_PER_IP` only behind a proxy that overwrites `X-Real-IP` with the peer address;
+otherwise a client picks its own bucket by sending the header. This guide's search of the v1.864.1
+backend and frontend sources found no native MFA. Put MFA in front of Windmill
+([fronting-auth.md](fronting-auth.md)), or, if users sign in through an identity provider, have that
+provider enforce it.
 
 ## Verify
 
@@ -467,6 +542,68 @@ address and was probed as that different address, while `2001:db8::1:10000` and 
 not, and each failed the name lookup at the control and stopped. A "connected" on a port you did not
 mean to publish is the finding.
 
+REASONED: following block; the login paths and outcomes follow the guide's cited NocoDB 2026.09.0 sign-in routes, Baserow 2.3.4 login view, Appsmith v2.4.1 login rate limit filter and login URL, Budibase v3.46.0 login lockouts and login route, and Windmill v1.864.1 login rate limit and login route, and the 503 default that [nginx.md](nginx.md) records for its request limit's rejections. It was not run against any deployment: no deployment of these tools or of a fronting proxy was available to this review. On 2026-11-11 the block passed bash -n in bash 5.3.9, and local runs with a curl stub refused placeholder, missing-marker, missing `set --` line, short-assignment, empty, option-like, spaced and tab-bearing URLs and malformed or out-of-range counts and statuses with status 2 and no curl call; with six attempts, a stub answering 401 throughout, or 302 throughout, exited 1, one answering 401 three times and then 503 exited 0, and one answering 503 from the first attempt, failing to connect, or timing out once exited 3. The same day, a local run of the gate suite's shell-block section passed it with bash -n and ShellCheck 0.11.0. For the proxy login limit in the introduction, run it from a host that reaches the instance through the proxy, the way a user does. It sends the given number of failed JSON logins, one after another, to one login URL, for an account that should not exist (`no-such-user@invalid`), and prints each answer. Never put a real account in it: Appsmith locks a username for up to a day and Budibase an email for 15 minutes. Substitute, inside the single quotes, the full login URL, an attempt count above the burst your limit allows (at most 99), and the status your proxy rejects with: 503 is nginx's default, per nginx.md, and it must be one the tool does not return itself, since Budibase and Windmill answer their own limits with 429. The login paths are NocoDB's `/api/v2/auth/user/signin` (run it once for each of the four sign-in paths), Baserow's `/api/user/token-auth/`, Appsmith's `/api/v1/login`, Budibase's `/api/global/auth/TENANT_ID/login` with your tenant ID, and Windmill's `/api/auth/login`. Exposed, every attempt gets the application's own answer, such as 400, 401 or a redirect, and the block exits 1. Fixed, the proxy's status appears after the application has answered and before the attempts run out, and the block exits 0. The limit status before any application answer, or a failed request, is inconclusive (3): wait for the limit window and run it again. A fail2ban jail already watching the login path can ban the testing address partway through, and the failed requests that follow make the run inconclusive. On Budibase, more than 10 login requests from one address within 15 minutes trip its own address lockout; if Budibase sees the proxy's address for every client (not verified), that blocks every user's login for up to 15 minutes, so keep the count at 10 or below with a burst below it, or run it when that outage is acceptable. Once the limit window has passed, sign in with a real account as the positive control.
+
+```bash
+(
+  set +e                                # errexit off here, so every attempt is recorded instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_LOGIN_URL' 'REPLACE_WITH_ATTEMPTS' 'REPLACE_WITH_LIMIT_STATUS'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 3 ] || { echo "the set -- line needs exactly 3 values; not probing"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|""|-*|*" "*|*[[:cntrl:]]*) echo "substitute the login URL on the set -- line above; not probing"; exit 2 ;; esac
+  case "$2" in ""|0*|*[!0123456789]*|???*) echo "the attempt count must be a whole number from 1 to 99; not probing"; exit 2 ;; esac
+  case "$3" in [12345][0123456789][0123456789]) ;; *) echo "the limit status must be a three-digit HTTP status such as 503; not probing"; exit 2 ;; esac
+  set -- "$1" "$2" "$3" 0 0 0           # the URL, the attempts left, the limit status, then 1 once: the app answered, the limit answered after it, an attempt was inconclusive
+  while [ "$2" -gt 0 ]; do
+    set -- "$1" "$(($2 - 1))" "$3" "$4" "$5" "$6" "$(printf '%s' '{"email":"no-such-user@invalid","username":"no-such-user@invalid","password":"not-a-real-password"}' | \
+         curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 -H 'Content-Type: application/json' \
+           --data-binary @- -w 'attempt: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n%{http_code} %{exitcode}' "$1")"
+    printf '%s\n' "${7%$'\n'*}"
+    case "${7##*$'\n'}" in
+      "$3 0") if [ "$4" = 1 ]; then set -- "$1" "$2" "$3" 1 1 "$6"; else set -- "$1" "$2" "$3" "$4" "$5" 1; fi ;;
+      "000 "*|*" "[123456789]*) set -- "$1" "$2" "$3" "$4" "$5" 1 ;;
+      *) set -- "$1" "$2" "$3" 1 "$5" "$6" ;;
+    esac
+  done
+  [ "$5" = 0 ] || { echo "the proxy answered $3 after the application had answered: this login path is rate limited here"; exit 0; }
+  [ "$6" = 0 ] || { echo "no $3 followed an application answer, and at least one attempt was inconclusive; inconclusive"; exit 3; }
+  echo "FINDING: every attempt got the application's own answer and none got $3; this login path is not rate limited here"; exit 1
+)
+```
+
+REASONED: following block; the fail2ban jail check for the brute-force control in the introduction, reasoned from the fail2ban 1.1.1 client and server sources listed under Sources and from a local run of fail2ban 1.1.1 itself. No deployment was available: fail2ban is not installed on the authoring host, and no proxy or low-code tool was available to send real logins through, so the check has not run against a real jail with a real ban action. What ran, on 2026-11-11: fail2ban 1.1.1's own client and server from the 1.1.1 tag's source tarball, without root, on a Unix socket, with the shipped dummy ban action and a test jail reading a hand-written access log. Four failed-login lines from `198.51.100.7`, above the jail's maxretry of 3, got that address banned, and `fail2ban-client status JAIL` printed the forms this block matches. The block passed bash -n in bash 5.3.9 and ShellCheck 0.11.0, and it ran against that client through a pass-through sudo stub. A banned IPv4 and a banned IPv6 address exited 0. An address that was not banned, an empty list, `203.0.113.50` while `203.0.113.5` was banned, and a missing jail exited 1. A socket the account could not open and a stopped server exited 3. Stubs replaying the recorded output with one change each also exited 3: the missing-jail answer with status 0, the status with status 255, another jail's header, a trailing line, a space in place of the tab, no output, and a failing sudo. The guards refused, with status 2, placeholders, a missing marker, wrong value counts, jail names with a space or a leading hyphen or empty, `999.1.1.1`, `01.2.3.4`, `1.2.3.4:22`, a host name, uppercase, bracketed or dotted IPv6, and a missing sudo or fail2ban-client. Run it on the host where fail2ban runs, after a burst of failed logins from a test address: the previous block with an attempt count above the jail's maxretry (`sudo fail2ban-client get JAIL maxretry` prints it), or failed logins by hand. That block may end inconclusive once the ban takes effect, as its own paragraph says. The jail counts only the log lines its filter matches, and it bans an address once the failures counted for it reach maxretry, so if the proxy's limit answers before the application has refused that many attempts, send the failed logins by hand instead. Use a test address you can afford to have banned and that is not your only way in: depending on the jail's ban action, which this guide has not traced, the ban can cut that address off from the host. An address in the jail's ignoreip list, or one of the host's own while ignoreself is on, is never counted. fail2ban bans the address it reads from the proxy's access log, so behind a CDN or another proxy that log must carry the recovered client address, as the introduction says, or the jail sees the CDN's address instead; give the address as that log writes it. Substitute the jail name and the address inside the single quotes. The block runs `sudo fail2ban-client status JAIL`, because without access to the server's socket the client logs "Permission denied to socket" and "(you must be root)", as it did in the local run. sudo exits with the status of the command it ran, per the sudo manual's exit value section. Where sudoers sets `secure_path`, sudo looks `fail2ban-client` up in that path instead of your PATH, so the `command -v fail2ban-client` check can refuse although sudo would find it, or pass and then end with status 3 when sudo cannot run it, per the guide's cited sudo sudoers manual, secure_path entry. The client prints its answer on standard output, logs errors on standard error, and exits 0 when the server accepts the command and 255 otherwise. Exposed: the client exits 255 and prints "Sorry but the jail 'JAIL' does not exist" (the man page says a stopped jail is removed), or the jail's status does not list the test address on its last line, which holds `Banned IP list:`, a tab and the space-separated addresses; the block exits 1 for either. Fixed: the address is in that list, and the block exits 0. A server that is not running, a socket the account cannot open, a failed sudo and any output not in one of those forms end with status 3. fail2ban lists an IPv6 address in its compressed lowercase form (measured: `2001:DB8:0:0:0:0:0:6` was listed as `2001:db8::6`), so give it in that form; another spelling of the same address reports a finding. The list shows fail2ban's record: the jail records a ban before it runs the ban actions, and it only logs an action that fails, so confirm the ban took effect by checking that the test address can no longer reach the proxy. Lift the ban afterwards with `sudo fail2ban-client set JAIL unbanip ADDRESS`.
+
+```bash
+(
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JAIL_NAME' 'REPLACE_WITH_TEST_ADDRESS'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not checking"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not checking"; exit 2; }
+  case "$1" in *REPLACE_WITH_*|""|-*|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo "substitute the jail name (letters, digits, dots, underscores and hyphens) on the set -- line above; not checking"; exit 2 ;; esac
+  set -- "$1" "$2" '^((25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])[.]){3}(25[012345]|2[01234][0123456789]|1[0123456789][0123456789]|[123456789]?[0123456789])$'   # the jail, the address, then the IPv4 pattern, held here rather than in a named variable
+  case "$2" in
+    *:*:*) case "$2" in *[!0123456789abcdef:]*) echo "give an IPv6 address in lowercase hex digits and colons only; not checking"; exit 2 ;; esac ;;
+    *) [[ $2 =~ $3 ]] || { echo "substitute one IPv4 address (four numbers, 0 to 255, joined by dots) or one IPv6 address, with no host name, port or brackets; not checking"; exit 2; } ;;
+  esac
+  { command -v sudo && command -v fail2ban-client; } >/dev/null || { echo "sudo and fail2ban-client must both be installed here; run this on the host where fail2ban runs; not checking"; exit 2; }
+  set -- "$1" "$2" "$(if sudo fail2ban-client status "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # the jail, the address, the client's exit status, then its standard output
+  set -- "$1" "$2" "$3" "${4%$'\n'}"              # the output without its final line break
+  printf '%s\n' "$4"
+  case "$3:$4" in
+    "255:Sorry but the jail '$1' does not exist") echo "FINDING: fail2ban has no jail named $1"; exit 1 ;;
+    "0:Status for the jail: $1"$'\n'*$'\n''`- Actions'$'\n''   |- Currently banned:'$'\t'*$'\n''   |- Total banned:'$'\t'*$'\n''   `- Banned IP list:'$'\t'*) ;;
+    *) echo "fail2ban-client exit $3 without a jail status or missing-jail answer this block recognizes (see any message above); inconclusive"; exit 3 ;;
+  esac
+  case "${4##*$'\n'}" in '   `- Banned IP list:'$'\t'*) ;; *) echo "the status does not end with the jail's banned list; inconclusive"; exit 3 ;; esac
+  case " ${4##*$'\t'} " in                        # the banned list: the text after the status's last tab, space-separated
+    *" $2 "*) echo "$2 is in jail $1's banned list: fail2ban recorded the ban"; exit 0 ;;
+    *) echo "FINDING: jail $1 exists but $2 is not in its banned list"; exit 1 ;;
+  esac
+)
+```
+
 ## Sources (checked September 2026)
 
 - NocoDB 2026.09.0 port default, JWT secret generation and proxy-trust reset: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts
@@ -490,6 +627,10 @@ mean to publish is the finding.
 - NocoDB 2026.09.0 GitHub release API record (no assets listed when checked October 2026): https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0
 - NocoDB 2026.09.0 tag package manifest (`0.301.3`; checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3
 - NocoDB 2026.09.0 sample environment without an encryption key: https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env
+- NocoDB 2026.09.0 API limiter guard (rate limiting left to the network layer; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/guards/meta-api-limiter.guard.ts
+- NocoDB 2026.09.0 sign-in routes (checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/modules/auth/auth.controller.ts#L83-L86
+- NocoDB 2026.09.0 MFA columns migration (checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/meta/migrations/v0/nc_202603180000_user_mfa.ts
+- NocoDB two-factor authentication documentation (licence requirement; rolling documentation not tied to a release, checked November 2026): https://nocodb.com/docs/product-docs/account-settings/authentication/two-factor-authentication
 - Node.js v22 `server.listen` with an omitted host: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md
 - Baserow 2.3.4 Compose file: https://github.com/baserow/baserow/blob/2.3.4/docker-compose.yml
 - Baserow 2.3.4 install with Docker (ufw warning): https://github.com/baserow/baserow/blob/2.3.4/docs/installation/install-with-docker.md
@@ -497,12 +638,19 @@ mean to publish is the finding.
 - Baserow 2.3.4 settings model (`allow_new_signups`): https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/models.py
 - Baserow 2.3.4 TOTP provider registration: https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/apps.py
 - Baserow 2.3.4 sample environment: https://github.com/baserow/baserow/blob/2.3.4/.env.example
+- Baserow 2.3.4 login view (`ObtainJSONWebToken`: two-factor temporary token, no throttle, 401 for bad credentials; checked November 2026): https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/api/user/views.py
+- Baserow 2.3.4 settings (`BASEROW_MAX_CONCURRENT_USER_REQUESTS` concurrency throttle; checked November 2026): https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/config/settings/base.py
 - Appsmith v2.4.1 server properties (bind address, signup): https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/resources/application-ce.properties
 - Appsmith v2.4.1 first super user: https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/solutions/ce/UserSignupCEImpl.java
 - Appsmith v2.4.1 `SIGNUP_DISABLED` error: https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/exceptions/AppsmithError.java
 - Appsmith v2.4.1 image entrypoint (generated encryption values): https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/docker/fs/opt/appsmith/entrypoint.sh
 - Appsmith v2.4.1 development Compose file: https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/docker/docker-compose.yml
 - Appsmith v2.4.1 AWS Compose example: https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/aws_ami/docker-compose.yml
+- Appsmith v2.4.1 login rate limit filter (per-username key, redirect when spent; checked November 2026): https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/filters/LoginRateLimitFilter.java
+- Appsmith v2.4.1 login bucket (5 attempts a day; checked November 2026): https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/ratelimiting/RateLimitConfig.java#L40
+- Appsmith v2.4.1 login rate limit wiring (checked November 2026): https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/configurations/SecurityConfig.java#L322
+- Appsmith v2.4.1 login URL (`/api/v1/login`; checked November 2026): https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/constants/ce/UrlCE.java#L6-L9
+- Appsmith authentication documentation (sign-in methods; rolling documentation, checked November 2026): https://docs.appsmith.com/getting-started/setup/instance-configuration/authentication
 - Budibase v3.46.0 sample environment: https://github.com/Budibase/budibase/blob/v3.46.0/hosting/.env
 - Budibase v3.50.0 Compose file: https://github.com/Budibase/budibase/blob/v3.50.0/hosting/docker-compose.yaml
 - Budibase v3.50.0 proxy configuration (`/db/`): https://github.com/Budibase/budibase/blob/v3.50.0/hosting/proxy/nginx.prod.conf
@@ -531,6 +679,10 @@ mean to publish is the finding.
 - Budibase v3.46.0 first-boot sample substitution (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot#L11-L15
 - Budibase v3.46.0 test secret assignments (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/tests/jestEnv.ts#L9-L10
 - Budibase v3.46.0 development secret entries (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/scripts/dev/manage.js#L11-L12
+- Budibase v3.46.0 email lockout (checked November 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/middleware/emailLockout.ts
+- Budibase v3.46.0 address lockout (checked November 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/middleware/ipLockout.ts
+- Budibase v3.46.0 login route and its lockouts (checked November 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/auth.ts#L33-L36
+- Budibase v3.46.0 lockout defaults (checked November 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/environment.ts#L91-L95
 - Apache CouchDB 3.5.2 `/_session` reference: https://github.com/apache/couchdb/blob/3.5.2/src/docs/src/api/server/authn.rst
 - LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026): https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py
 - Windmill v1.864.1 README (default credentials): https://github.com/windmill-labs/windmill/blob/v1.864.1/README.md
@@ -538,6 +690,17 @@ mean to publish is the finding.
 - Windmill v1.864.1 worker (`DISABLE_NSJAIL`): https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/windmill-worker/src/worker.rs
 - Windmill v1.864.1 Compose file: https://github.com/windmill-labs/windmill/blob/v1.864.1/docker-compose.yml
 - Windmill v1.864.1 seeded-user migrations: https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/migrations/20220123221903_first.up.sql and https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/migrations/20220816185849_remove_non_admin_users.up.sql
+- Windmill v1.864.1 login rate limit (checked November 2026): https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/windmill-common/src/login_rate_limit.rs
+- Windmill v1.864.1 login route and login handler (checked November 2026): https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/windmill-api-users/src/users.rs
+- fail2ban 1.1.1 client exit status and output streams (answers printed to standard output, errors logged to standard error, 0 on success and 255 otherwise; checked November 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2banclient.py#L85-L133, https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2banclient.py#L447-L458, https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2banclient.py#L510-L516, https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2bancmdline.py#L35-L40 and https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2bancmdline.py#L219-L227
+- fail2ban 1.1.1 client socket errors (server not running, permission denied; checked November 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2banclient.py#L135-L157
+- fail2ban 1.1.1 jail status format (a tab after each field name, Banned IP list last; checked November 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/beautifier.py#L80-L112, https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/transmitter.py#L513-L522, https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/server.py#L628-L629, https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/jail.py#L186-L197 and https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/actions.py#L721-L746
+- fail2ban 1.1.1 missing-jail message and failed-command answer (checked November 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/beautifier.py#L263-L272 and https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/transmitter.py#L54-L65
+- fail2ban 1.1.1 ignore rules, failure counting and the maxretry ban (checked November 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/filter.py#L593-L607 and https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/filter.py#L718-L738
+- fail2ban 1.1.1 ban recorded before its actions run, action failures only logged (checked November 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/actions.py#L502-L520
+- fail2ban 1.1.1 client commands `status JAIL`, `stop JAIL` (jail removed) and `set JAIL unbanip` (checked November 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/man/fail2ban-client.1#L214-L223, https://github.com/fail2ban/fail2ban/blob/1.1.1/man/fail2ban-client.1#L310-L311 and https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/protocol.py#L109
+- fail2ban 1.1.1 `get JAIL maxretry` (checked November 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/protocol.py#L141
+- sudo SUDO_1_9_16p2 sudo manual, exit value (checked November 2026): https://github.com/sudo-project/sudo/blob/SUDO_1_9_16p2/docs/sudo.man.in#L1168-L1173
 
 
 <!-- version-basis:start -->
@@ -559,12 +722,15 @@ Components (recorded basis):
 - budibase: Budibase (v3.50.0)
 - budibase-prev: Budibase (v3.46.0)
 - windmill: Windmill (v1.864.1)
+- nocodb-docs: NocoDB docs (unknown)
+- appsmith-docs: Appsmith docs (unknown)
 - docker: Docker docs (unknown)
 - docker-new: Docker CLI (v27.2.0)
 - docker-old: Docker CLI (v27.1.2)
 - node: Node.js (v22.22.1)
 - couchdb: CouchDB (3.5.2)
 - litellm: LiteLLM authentication source (6ef7b86748118ceecd95271727c2fa167ce55fec)
+- fail2ban: fail2ban (1.1.1)
 
 Claims (full source mapping in the JSON block below):
 
@@ -601,6 +767,19 @@ Claims (full source mapping in the JSON block below):
 - windmill-privileged (REASONED; windmill): Shipped worker uses privileged=true.
 - windmill-smtp (REASONED; windmill): Port 25 serves email triggers; do not publish unless used.
 - windmill-debugger (REASONED; windmill): Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments.
+- login-limit (REASONED; nocodb, baserow, appsmith, budibase-prev, windmill): Tool limits range from none (NocoDB, Baserow) to per-account lockouts (Appsmith, Budibase), so rate-limit login endpoints per client address at the fronting proxy, recovering the client address behind a CDN or second proxy, and add a fail2ban filter for each login path and failure status (guide advice).
+- nocodb-login-limit (REASONED; nocodb): The API limiter guard always allows requests; its comment leaves rate limiting to the network layer. Sign-in is served on four paths ending in /auth/user/signin, so a proxy limit must cover all four.
+- nocodb-mfa (REASONED; nocodb, nocodb-docs): Rolling vendor docs make two-factor authentication a Cloud or licensed self-hosted (Business plan and above) feature. The 2026.09.0 migration adds TOTP columns; this guide's search of packages/nocodb/src found no TOTP setup or verify endpoint. Front the open build with MFA (guide advice).
+- baserow-totp-login (REASONED; baserow): The login view documents a temporary token for finishing verification on 2FA-protected accounts; whether TOTP can be required for every account was not established.
+- baserow-login-limit (REASONED; baserow): The token-auth login view has no throttle or failed-attempt counter and answers bad credentials with 401 ERROR_INVALID_CREDENTIALS. BASEROW_MAX_CONCURRENT_USER_REQUESTS (default -1, off) limits concurrent requests, not failed logins, and locks no account.
+- appsmith-login-limit (REASONED; appsmith): Form login at /api/v1/login allows 5 attempts per submitted username per day, then redirects to /user/login?error=true instead of answering 429. Keyed per username, it lets one client try many usernames and anyone lock a known username out for up to a day. No setting for it was found.
+- appsmith-mfa (REASONED; appsmith-docs): This guide's search of the v2.4.1 server and client sources found no native MFA. Rolling vendor docs list Google, GitHub, OIDC and SAML sign-in besides form login; edition availability was not established. Put MFA in an enforcing identity provider or fronting proxy (guide advice).
+- budibase-login-limit (REASONED; budibase-prev): At v3.46.0, login locks an email for 900 s after 5 failures (403, Retry-After) and answers 429 once one ctx.ip exceeds 10 login requests in that window, counting every request. Anyone knowing an email can lock that user out; ctx.ip behind the bundled proxy was not verified.
+- budibase-mfa (REASONED; budibase-prev): This guide's search of v3.46.0 packages and a v3.50.0 source tree found no native MFA; put MFA in a fronting proxy or in the identity provider users sign in through (guide advice).
+- windmill-login-limit (REASONED; windmill): Login at /api/auth/login has an always-on global cap (default 10000 a minute per process); per-IP (120/min) and per-account (30 failures/min) limits apply only with CLOUD_HOSTED or when set. Per-IP reads X-Real-IP, else the first X-Forwarded-For entry, so the proxy must overwrite X-Real-IP. Rejections are 429.
+- windmill-mfa (REASONED; windmill): This guide's search of v1.864.1 backend and frontend sources found no native MFA; put MFA in a fronting proxy or in the identity provider users sign in through (guide advice).
+- verify-login-limit (REASONED; nocodb, baserow, appsmith, budibase-prev, windmill): Send repeated failed JSON logins for a nonexistent account to one login URL through the proxy: exposed, every attempt gets the app's own answer (exit 1); fixed, the proxy's limit status follows an app answer (exit 0). Never use a real account. Not run against any deployment.
+- verify-fail2ban (REASONED; fail2ban): On the fail2ban host, after failed logins above the jail's maxretry from a test address, fail2ban-client status JAIL: exposed, no such jail or the address absent from its Banned IP list (exit 1); fixed, the address listed (exit 0); unrecognized output is inconclusive (3). A listed ban is fail2ban's record, not proof its action blocked the address. Not run against any deployment.
 - verify-nocodb-signup (REASONED; nocodb): Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login.
 - verify-baserow-signup (REASONED; baserow): Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.
 - verify-appsmith-signup (REASONED; appsmith): Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.
@@ -625,7 +804,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "48acb3488b6322b63c6a5c88fbb35dc2b246522e1e4ca000c5e535084a825a57",
+  "body_sha256": "ee8b709e3f16d213e4fa51e53ec2c15e13a629974ffc911b4347a6b87518760a",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -648,7 +827,10 @@ Claims (full source mapping in the JSON block below):
         "s2b16e2c93606": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L90",
         "s118384fa1d9f": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95",
         "s9bee4adc612e": "https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0",
-        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3"
+        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3",
+        "se9e2589dc6c2": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/guards/meta-api-limiter.guard.ts",
+        "sdd5b3322fe9f": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/modules/auth/auth.controller.ts#L83-L86",
+        "s31941e502c14": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/meta/migrations/v0/nc_202603180000_user_mfa.ts"
       }
     },
     "baserow": {
@@ -660,7 +842,9 @@ Claims (full source mapping in the JSON block below):
         "s34b87f60dcc6": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/user/handler.py",
         "s4588448964a2": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/models.py",
         "sd858f9ee45e0": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/apps.py",
-        "s1a472d828699": "https://github.com/baserow/baserow/blob/2.3.4/.env.example"
+        "s1a472d828699": "https://github.com/baserow/baserow/blob/2.3.4/.env.example",
+        "s9de0cfbd461a": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/api/user/views.py",
+        "s1973090f6cb9": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/config/settings/base.py"
       }
     },
     "appsmith": {
@@ -672,7 +856,11 @@ Claims (full source mapping in the JSON block below):
         "se3cd894dc579": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/exceptions/AppsmithError.java",
         "sa68daf87cde7": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/docker/fs/opt/appsmith/entrypoint.sh",
         "s9fdcff5a28a4": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/docker/docker-compose.yml",
-        "sfa551c344e8b": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/aws_ami/docker-compose.yml"
+        "sfa551c344e8b": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/aws_ami/docker-compose.yml",
+        "se40e49cd9de3": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/filters/LoginRateLimitFilter.java",
+        "s06eac9e0a51a": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/ratelimiting/RateLimitConfig.java#L40",
+        "sc1f1abd600b0": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/configurations/SecurityConfig.java#L322",
+        "s3a9e231ca746": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/constants/ce/UrlCE.java#L6-L9"
       }
     },
     "budibase": {
@@ -712,7 +900,11 @@ Claims (full source mapping in the JSON block below):
         "se993218560de": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/hosting.properties#L4-L18",
         "s6179ec0d9abd": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot#L11-L15",
         "s9cc27222e133": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/tests/jestEnv.ts#L9-L10",
-        "sbe7e0469e7a8": "https://github.com/Budibase/budibase/blob/v3.46.0/scripts/dev/manage.js#L11-L12"
+        "sbe7e0469e7a8": "https://github.com/Budibase/budibase/blob/v3.46.0/scripts/dev/manage.js#L11-L12",
+        "s7a6a28283a3f": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/middleware/emailLockout.ts",
+        "s5be4af8a88a0": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/middleware/ipLockout.ts",
+        "s77630f32e4e1": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/auth.ts#L33-L36",
+        "sc8e055c73778": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/environment.ts#L91-L95"
       }
     },
     "windmill": {
@@ -724,7 +916,23 @@ Claims (full source mapping in the JSON block below):
         "s6a71d3938c7a": "https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/windmill-worker/src/worker.rs",
         "s6a7eeac413b7": "https://github.com/windmill-labs/windmill/blob/v1.864.1/docker-compose.yml",
         "sdcc9601405df": "https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/migrations/20220123221903_first.up.sql",
-        "s8927ade6b336": "https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/migrations/20220816185849_remove_non_admin_users.up.sql"
+        "s8927ade6b336": "https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/migrations/20220816185849_remove_non_admin_users.up.sql",
+        "s197472c83650": "https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/windmill-common/src/login_rate_limit.rs",
+        "s95545eb64ae3": "https://github.com/windmill-labs/windmill/blob/v1.864.1/backend/windmill-api-users/src/users.rs"
+      }
+    },
+    "nocodb-docs": {
+      "name": "NocoDB docs",
+      "basis": "unknown",
+      "sources": {
+        "sf5c4bcd686ad": "https://nocodb.com/docs/product-docs/account-settings/authentication/two-factor-authentication"
+      }
+    },
+    "appsmith-docs": {
+      "name": "Appsmith docs",
+      "basis": "unknown",
+      "sources": {
+        "sab210f0928ea": "https://docs.appsmith.com/getting-started/setup/instance-configuration/authentication"
       }
     },
     "docker": {
@@ -769,6 +977,32 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "sbe6fa0b81017": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py"
       }
+    },
+    "fail2ban": {
+      "name": "fail2ban",
+      "basis": "1.1.1",
+      "sources": {
+        "s305d56ee7f00": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2banclient.py#L85-L133",
+        "s0718dcd4c275": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2banclient.py#L447-L458",
+        "s95d03bfa0c4c": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2banclient.py#L510-L516",
+        "s435857e88b8a": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2bancmdline.py#L35-L40",
+        "s5009ca00e04b": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2bancmdline.py#L219-L227",
+        "sea0d79ea51a4": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/fail2banclient.py#L135-L157",
+        "sb98177243103": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/beautifier.py#L80-L112",
+        "sa1bc4a6810c8": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/transmitter.py#L513-L522",
+        "s973481062b5f": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/server.py#L628-L629",
+        "s68908eb140b3": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/jail.py#L186-L197",
+        "s5e27812bcd29": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/actions.py#L721-L746",
+        "s77d6a8606bc3": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/client/beautifier.py#L263-L272",
+        "s103cd4af8836": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/transmitter.py#L54-L65",
+        "s47cab52e5be8": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/filter.py#L593-L607",
+        "s393413f9e190": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/filter.py#L718-L738",
+        "sfa12cc939a5f": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/server/actions.py#L502-L520",
+        "s6820347df7f0": "https://github.com/fail2ban/fail2ban/blob/1.1.1/man/fail2ban-client.1#L214-L223",
+        "s3f7ddb23eb75": "https://github.com/fail2ban/fail2ban/blob/1.1.1/man/fail2ban-client.1#L310-L311",
+        "sccaa39ad1045": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/protocol.py#L109",
+        "s0fa658a17fef": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/protocol.py#L141"
+      }
     }
   },
   "claims": {
@@ -805,6 +1039,19 @@ Claims (full source mapping in the JSON block below):
     "windmill-privileged": {"text": "Shipped worker uses privileged=true.", "components": ["windmill"], "sources": ["windmill:s6a7eeac413b7"], "status": "REASONED"},
     "windmill-smtp": {"text": "Port 25 serves email triggers; do not publish unless used.", "components": ["windmill"], "sources": ["windmill:s6a7eeac413b7"], "status": "REASONED"},
     "windmill-debugger": {"text": "Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments.", "components": ["windmill"], "sources": ["windmill:s6a7eeac413b7"], "status": "REASONED"},
+    "login-limit": {"text": "Tool limits range from none (NocoDB, Baserow) to per-account lockouts (Appsmith, Budibase), so rate-limit login endpoints per client address at the fronting proxy, recovering the client address behind a CDN or second proxy, and add a fail2ban filter for each login path and failure status (guide advice).", "components": ["nocodb", "baserow", "appsmith", "budibase-prev", "windmill"], "sources": ["nocodb:se9e2589dc6c2", "baserow:s9de0cfbd461a", "baserow:s1973090f6cb9", "appsmith:se40e49cd9de3", "budibase-prev:s7a6a28283a3f", "budibase-prev:s5be4af8a88a0", "windmill:s197472c83650"], "status": "REASONED"},
+    "nocodb-login-limit": {"text": "The API limiter guard always allows requests; its comment leaves rate limiting to the network layer. Sign-in is served on four paths ending in /auth/user/signin, so a proxy limit must cover all four.", "components": ["nocodb"], "sources": ["nocodb:se9e2589dc6c2", "nocodb:sdd5b3322fe9f"], "status": "REASONED"},
+    "nocodb-mfa": {"text": "Rolling vendor docs make two-factor authentication a Cloud or licensed self-hosted (Business plan and above) feature. The 2026.09.0 migration adds TOTP columns; this guide's search of packages/nocodb/src found no TOTP setup or verify endpoint. Front the open build with MFA (guide advice).", "components": ["nocodb", "nocodb-docs"], "sources": ["nocodb:s31941e502c14", "nocodb-docs:sf5c4bcd686ad"], "status": "REASONED"},
+    "baserow-totp-login": {"text": "The login view documents a temporary token for finishing verification on 2FA-protected accounts; whether TOTP can be required for every account was not established.", "components": ["baserow"], "sources": ["baserow:s9de0cfbd461a"], "status": "REASONED"},
+    "baserow-login-limit": {"text": "The token-auth login view has no throttle or failed-attempt counter and answers bad credentials with 401 ERROR_INVALID_CREDENTIALS. BASEROW_MAX_CONCURRENT_USER_REQUESTS (default -1, off) limits concurrent requests, not failed logins, and locks no account.", "components": ["baserow"], "sources": ["baserow:s9de0cfbd461a", "baserow:s1973090f6cb9"], "status": "REASONED"},
+    "appsmith-login-limit": {"text": "Form login at /api/v1/login allows 5 attempts per submitted username per day, then redirects to /user/login?error=true instead of answering 429. Keyed per username, it lets one client try many usernames and anyone lock a known username out for up to a day. No setting for it was found.", "components": ["appsmith"], "sources": ["appsmith:se40e49cd9de3", "appsmith:s06eac9e0a51a", "appsmith:sc1f1abd600b0", "appsmith:s3a9e231ca746"], "status": "REASONED"},
+    "appsmith-mfa": {"text": "This guide's search of the v2.4.1 server and client sources found no native MFA. Rolling vendor docs list Google, GitHub, OIDC and SAML sign-in besides form login; edition availability was not established. Put MFA in an enforcing identity provider or fronting proxy (guide advice).", "components": ["appsmith-docs"], "sources": ["appsmith-docs:sab210f0928ea"], "status": "REASONED"},
+    "budibase-login-limit": {"text": "At v3.46.0, login locks an email for 900 s after 5 failures (403, Retry-After) and answers 429 once one ctx.ip exceeds 10 login requests in that window, counting every request. Anyone knowing an email can lock that user out; ctx.ip behind the bundled proxy was not verified.", "components": ["budibase-prev"], "sources": ["budibase-prev:s7a6a28283a3f", "budibase-prev:s5be4af8a88a0", "budibase-prev:s77630f32e4e1", "budibase-prev:sc8e055c73778"], "status": "REASONED"},
+    "budibase-mfa": {"text": "This guide's search of v3.46.0 packages and a v3.50.0 source tree found no native MFA; put MFA in a fronting proxy or in the identity provider users sign in through (guide advice).", "components": ["budibase-prev"], "sources": ["budibase-prev:s77630f32e4e1"], "status": "REASONED"},
+    "windmill-login-limit": {"text": "Login at /api/auth/login has an always-on global cap (default 10000 a minute per process); per-IP (120/min) and per-account (30 failures/min) limits apply only with CLOUD_HOSTED or when set. Per-IP reads X-Real-IP, else the first X-Forwarded-For entry, so the proxy must overwrite X-Real-IP. Rejections are 429.", "components": ["windmill"], "sources": ["windmill:s197472c83650", "windmill:s95545eb64ae3"], "status": "REASONED"},
+    "windmill-mfa": {"text": "This guide's search of v1.864.1 backend and frontend sources found no native MFA; put MFA in a fronting proxy or in the identity provider users sign in through (guide advice).", "components": ["windmill"], "sources": ["windmill:s95545eb64ae3"], "status": "REASONED"},
+    "verify-login-limit": {"text": "Send repeated failed JSON logins for a nonexistent account to one login URL through the proxy: exposed, every attempt gets the app's own answer (exit 1); fixed, the proxy's limit status follows an app answer (exit 0). Never use a real account. Not run against any deployment.", "components": ["nocodb", "baserow", "appsmith", "budibase-prev", "windmill"], "sources": ["nocodb:sdd5b3322fe9f", "baserow:s9de0cfbd461a", "appsmith:s3a9e231ca746", "appsmith:se40e49cd9de3", "budibase-prev:s77630f32e4e1", "budibase-prev:s5be4af8a88a0", "windmill:s95545eb64ae3"], "status": "REASONED", "verify": [7]},
+    "verify-fail2ban": {"text": "On the fail2ban host, after failed logins above the jail's maxretry from a test address, fail2ban-client status JAIL: exposed, no such jail or the address absent from its Banned IP list (exit 1); fixed, the address listed (exit 0); unrecognized output is inconclusive (3). A listed ban is fail2ban's record, not proof its action blocked the address. Not run against any deployment.", "components": ["fail2ban"], "sources": ["fail2ban:s305d56ee7f00", "fail2ban:s0718dcd4c275", "fail2ban:s95d03bfa0c4c", "fail2ban:s435857e88b8a", "fail2ban:s5009ca00e04b", "fail2ban:sea0d79ea51a4", "fail2ban:sb98177243103", "fail2ban:sa1bc4a6810c8", "fail2ban:s973481062b5f", "fail2ban:s68908eb140b3", "fail2ban:s5e27812bcd29", "fail2ban:s77d6a8606bc3", "fail2ban:s103cd4af8836", "fail2ban:s47cab52e5be8", "fail2ban:s393413f9e190", "fail2ban:sfa12cc939a5f", "fail2ban:s6820347df7f0", "fail2ban:s3f7ddb23eb75", "fail2ban:sccaa39ad1045", "fail2ban:s0fa658a17fef"], "status": "REASONED", "verify": [8]},
     "verify-nocodb-signup": {"text": "Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login.", "components": ["nocodb"], "sources": ["nocodb:s5ea55dc5f0d9", "nocodb:sd0e9f451673f"], "status": "REASONED"},
     "verify-baserow-signup": {"text": "Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6", "baserow:s4588448964a2"], "status": "REASONED"},
     "verify-appsmith-signup": {"text": "Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1", "appsmith:sd1c55be91e30", "appsmith:se3cd894dc579"], "status": "REASONED"},
