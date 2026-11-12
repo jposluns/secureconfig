@@ -144,7 +144,7 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
   set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 3 (inconclusive) outranks 0
   for q in "TXT $1. MAIL" "TXT $2. SPF" "TXT $3._domainkey.$1. DKIM" "CNAME $3._domainkey.$1. DKIM" "TXT _dmarc.$1. DMARC" "TXT _mta-sts.$1. MTA-STS" "TXT _smtp._tls.$1. TLS-RPT" "TXT default._bimi.$1. BIMI"; do   # one lookup each: the record type, the name with a trailing dot and what the lookup is for; MAIL, first, asks only whether the mail domain itself exists, before the six lookups under it
     read -r k n w <<< "$q"              # the guards above refuse spaces, tabs and control characters in every name, so each entry splits into exactly these 3 words
-    set -- "$1" "$2" "$3" "$4" "$5" "$(if dig -r +noall +comments +answer "$n" "$k"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # -r: dig reads no options from ~/.digrc, which its manual calls useful for scripts that need predictable behavior, so no +search set there applies, and its manual says the search list is not used by default; dig tries each non-option argument as a type, then a class, before it takes it as the name, and the trailing dot, which no type or class name carries, keeps the name a name, while a name starting ixfr= (such as selector ixfr=1) is read as an IXFR serial that fails to parse, so dig exits before any query and this block gives 3
+    set -- "$1" "$2" "$3" "$4" "$5" "$(if dig -r +noall +comments +answer "$n" "$k"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # -r: dig reads no options from ~/.digrc, which its manual calls useful for scripts that need predictable behavior, so no +search set there applies, and its manual says the search list is not used by default; dig tries each non-option argument as a type, then a class, before it takes it as the name, and the trailing dot keeps the name a name, while a name starting ixfr= (such as selector ixfr=1) is read as an IXFR serial that fails to parse, so dig exits before any query and this block gives 3
     set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"   # the four names, the status, dig's output, then dig's exit status
     printf '%s\n' "-- $w: dig -r +noall +comments +answer $n $k, exit $7:" "$6"
     case "$7" in
@@ -251,6 +251,7 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
 - BIND v9.20.24 `dig` reply header line format (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884
 - BIND v9.20.24 `dig` reply flags line, including `ra`, and its recursion-not-available warning (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924
 - BIND v9.20.24 `dig` command-line argument dispatch: a leading `%` ends parsing, `@` names a server and `+` is a query option (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3090-L3123
+- BIND v9.20.24 `dig` reads a non-option argument as an `ixfr=` serial, a type, then a class, before it takes it as the name (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3148-L3237
 - OpenSSL 3.0 `s_client` (checked October 2026; SMTP STARTTLS, TLS connections, hostname verification, and verification errors): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 protocol configuration (checked October 2026; `-min_protocol TLSv1.2`): https://docs.openssl.org/3.0/man3/SSL_CONF_cmd/
 
@@ -325,7 +326,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "b6999c6f90fa476ccee8413b6f5fec521b9dae0d75f6aea4e7cb89a099b90b2d",
+  "body_sha256": "9a84a2a89b7b7b0289b39b33d94a7f161dce5c8f71efa5b1c0823bb4ae753807",
   "components": {
     "spf": {
       "name": "SPF",
@@ -450,7 +451,8 @@ Claims (full source mapping in the JSON block below):
         "s4a49b2a8a61e": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L788-L806",
         "sac989d3132f5": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884",
         "sf70f634493d1": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924",
-        "s22625818a6a8": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3090-L3123"
+        "s22625818a6a8": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3090-L3123",
+        "sf3a5d3d72a10": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3148-L3237"
       }
     }
   },
@@ -482,7 +484,7 @@ Claims (full source mapping in the JSON block below):
     "sts-refresh": {"text": "Update the MTA-STS TXT id whenever the policy changes.", "components": ["sts"], "sources": ["sts:s39819f3ea93a"], "status": "REASONED"},
     "tls-reports": {"text": "TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement.", "components": ["rpt"], "sources": ["rpt:se80da0f5e0c8"], "status": "REASONED"},
     "bimi": {"text": "BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last.", "components": ["bimi"], "sources": ["bimi:sd18b1e0134bd"], "status": "REASONED"},
-    "verify-dns": {"text": "Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. Each reply's status and ra flag are read: NOERROR, NODATA and NXDOMAIN print unclassified, but NXDOMAIN at the mail or bounce domain, SERVFAIL, other statuses, no ra and no reply are inconclusive. No DNS control was available.", "components": ["spf", "dkim", "dmarc", "sts", "rpt", "bimi", "bind", "bind-dig"], "sources": ["spf:sea6ac206b034", "dkim:s13ee1bc66dfc", "dmarc:s5da292ff1b92", "sts:s39819f3ea93a", "rpt:se80da0f5e0c8", "bimi:sd18b1e0134bd", "bind:s54cff06bb882", "bind-dig:s5d98e69756c9", "bind-dig:sda67db889c0e", "bind-dig:s9cd3fcf628fb", "bind-dig:s4a49b2a8a61e", "bind-dig:sac989d3132f5", "bind-dig:sf70f634493d1", "bind-dig:s22625818a6a8"], "status": "REASONED", "verify": [1]},
+    "verify-dns": {"text": "Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. Each reply's status and ra flag are read: NOERROR, NODATA and NXDOMAIN print unclassified, but NXDOMAIN at the mail or bounce domain, SERVFAIL, other statuses, no ra and no reply are inconclusive. No DNS control was available.", "components": ["spf", "dkim", "dmarc", "sts", "rpt", "bimi", "bind", "bind-dig"], "sources": ["spf:sea6ac206b034", "dkim:s13ee1bc66dfc", "dmarc:s5da292ff1b92", "sts:s39819f3ea93a", "rpt:se80da0f5e0c8", "bimi:sd18b1e0134bd", "bind:s54cff06bb882", "bind-dig:s5d98e69756c9", "bind-dig:sda67db889c0e", "bind-dig:s9cd3fcf628fb", "bind-dig:s4a49b2a8a61e", "bind-dig:sac989d3132f5", "bind-dig:sf70f634493d1", "bind-dig:s22625818a6a8", "bind-dig:sf3a5d3d72a10"], "status": "REASONED", "verify": [1]},
     "verify-tls": {"text": "587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available.", "components": ["submission", "submission-update", "openssl"], "sources": ["submission:sd78efc15555c", "submission-update:sb5ca35fe0d1b", "openssl:s00aaf106164f", "openssl:s2a2127a2c79b"], "status": "REASONED", "verify": [1]},
     "verify-alignment": {"text": "Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling.", "components": ["results", "dmarc"], "sources": ["results:s46f8392d93fd", "dmarc:s5da292ff1b92"], "status": "REASONED"},
     "verify-relay": {"text": "In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved.", "components": ["relay", "roles"], "sources": ["relay:s1b9349dd99bc", "roles:s3f9972faf8ff"], "status": "REASONED"}
