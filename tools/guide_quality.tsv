@@ -26,7 +26,7 @@ elasticsearch.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	88051e81b7452bd
 exposure-index.md	K	PARTIAL(M1)	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	08d9815c33d05a7a63cd2203a84773f6a02fa267dfbe40f8386f90f0f08f79f8	2026-11-10	tool	current
 firebase-supabase.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	123ba439da8cac4dcfc5cbd4168affb2597f99eb8b09e31193a4e9523bab3428	2026-11-10	tool	current
 forgejo.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	af053bd6acf0fa7a84f1d8fb958379dd6c1651ef0c6f9d2f02b012c0daf78b5a	2026-11-10	tool	current
-free-certificates.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	663bdd05670f30855aafbb3f3e2a25a20f3d10e3b75e6061f7fb8f2ec5a9debd	2026-11-10	tool	current
+free-certificates.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	7342fd22888597ffdc64075e5f6995be808f832aa724032f985da3100bb013e3	2026-11-10	tool	current
 frontend-frameworks.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	cac0ccc6898fbfeac3d2ef275cbf00939c572804dd17669a44a5764f117db077	2026-11-10	tool	current
 fronting-auth.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	f3864ccb3882a8572a5802bd328723e49e7c49a32f3bff4a48184c7be4e090c5	2026-11-10	tool	current
 gitlab.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	33847a992ac1079e1b78c026357603136dd1e2afd074ae038d543102b1d79a10	2026-11-10	tool	current
