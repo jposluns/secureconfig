@@ -18,18 +18,18 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 ## Rulings
 
 - **Maintainer ruling of 2026-11-11 on the demonstration-form remedy, GQS O5 (#1282).** The orchestrator's store
-  records this ruling as resolved by the Architect, the maintainer in this project's records, on 2026-11-11 (UTC)
+  records this ruling as resolved by the Architect, the maintainer in this project's records, on 2026-11-11
   while the fleet's operating mode was attended-autonomous, and #1288 enters it here. The store does not record the
   channel or the time, and
   no reasoning was recorded beyond its terms. The ruling settles O5, the demonstration-form remedy question raised
-  in GQS (guide quality scorecard) Phase B gating. Its terms, paraphrased: a Verify unit marked DEMONSTRATED whose
+  in GQS (guide quality scorecard) Phase B gating. Its terms, paraphrased: a DEMONSTRATED Verify fence whose
   shipped form, or whose current binary, was not re-run against a service is downgraded to REASONED, with the
-  limitation stated; re-demonstrating such a unit is a separate hardening pass, not part of the downgrade. Its
-  effect (applied by #1282 to `low-code-builders.md`): four fence declarations and the claims
+  limitation stated; such a fence is re-demonstrated later as a separate hardening pass, not part of the downgrade.
+  Its effect (applied by #1282 to `low-code-builders.md`): four fence declarations and the claims
   `windmill-default-login`, `verify-tcp-outcomes`, `verify-tcp-inputs` and `nocodb-key-logic` became REASONED, and
   the Verify introduction no longer overclaims demonstration. `windmill-loopback` and `windmill-sandbox-run`, which
-  record observed binary behaviour, stay DEMONSTRATED, and the sample-token unit and `verify-sample-tokens` stay
-  DEMONSTRATED because #1282 re-ran that unit's current form. `CONTRIBUTING.md` accepts a labelled REASONED unit as
+  record observed binary behaviour, stay DEMONSTRATED. #1282 changed the sample-token unit's declaration from
+  REASONED to DEMONSTRATED after re-running its current form, and `verify-sample-tokens` is now DEMONSTRATED. `CONTRIBUTING.md` accepts a labelled REASONED unit as
   an end state with no demonstration backlog row, so no row tracks the hardening pass. The revert path is a later
   maintainer ruling that replaces the remedy; units downgraded under it stay REASONED until a later change
   re-demonstrates them.
@@ -1116,13 +1116,14 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   later review (#1288).** Decided at 2026-11-11T21:30:21Z, when the last vote arrived, under the unattended
   decision rule of 2026-10-31, not under the directive described above. The maintainer set that rule at about 13:04Z
   on 2026-10-31 in an attended session with guardrails, and confirmed it to secureconfig directly through
-  AskUserQuestion at 2026-10-31T13:22Z; it replaced the two-of-three majority rule. Under it, while the maintainer is
-  away, secureconfig presents a decision that blocks progress with its options, marks one as its predicted option,
-  what the maintainer would decide, and one as best for the project, and casts no vote itself. lab_infra and
-  guardrails vote, with grc copied. An option both voters pick is taken. When one picks the predicted option and the
-  other the option best for the project, grc breaks the tie. Any other split, or a voter declining the question as
-  out of its scope, parks the step for the maintainer. Votes cover only actions that are reversible and not
-  outward-facing, and each option, vote and outcome is recorded for the maintainer's review. The question, raised at
+  AskUserQuestion at 2026-10-31T13:22Z; it replaced the two-of-three majority rule of 2026-10-30. Under it, while the
+  maintainer is away, secureconfig presents a decision that blocks progress with its options, marks one as its
+  predicted option, what the maintainer would decide, and one as best for the project, and casts no vote itself.
+  lab_infra and guardrails vote, with grc copied. An option both voters pick is taken. When one picks the predicted
+  option and the other the option best for the project, grc breaks the tie. Any other split, or a voter declining
+  the question as out of its scope, parks the step for the maintainer. Votes cover only actions that are reversible
+  and not outward-facing, "never a merge or the acceptance of a residual", and each option, vote and outcome is
+  recorded for the maintainer's review. The question, raised at
   2026-11-11T21:29:31Z, was how to settle open-findings row 40, on a gate's docstring versus its code. The options,
   paraphrased rather than quoted: option 1, marked as the predicted option, closes row 40 as fixed and adds one
   CONTRIBUTING.md sentence saying that a gate's docstring states only what its code does, checked in QA briefs.
@@ -1134,7 +1135,8 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   gate checks as a false statement to fix before merge, and a docstring-versus-code lint is a lexical heuristic, so
   defence in depth only (20261111T213021Z.from-lab_infra.b35d744a239e.msg). grc voted for option 2, breaking the tie
   between the predicted option and the option best for the project
-  (20261111T213018Z.from-grc.5dc0348daa33.msg). The outcome is option 2. The record first gave this as a majority of
+  (20261111T213018Z.from-grc.5dc0348daa33.msg). The vote request and the lab_infra and grc votes cited D-1096, and
+  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. The record first gave this as a majority of
   three voters; on 2026-11-12 it was corrected to the rule's own method, a tie that grc broke, with the same
   outcome. Its effect so far: the guardrail seed went to guardrails at 2026-11-11T21:30:33Z, and guardrails decides
   whether a lint labelled as defence in depth ships. Pull request #1287 added the CONTRIBUTING.md sentence and merged
@@ -1142,7 +1144,7 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   covers a gate's help text as well as its docstring, which goes beyond the option text above. This decision is not a
   maintainer ruling and
   awaits the maintainer's ratification, and none is recorded yet; the operating mode returned to attended-autonomous
-  at 2026-11-12T00:30Z. The revert path is the maintainer's review: a different ruling changes or removes the
+  at 2026-11-12T00:30Z and went back to unattended at 00:55Z. The revert path is the maintainer's review: a different ruling changes or removes the
   CONTRIBUTING.md sentence that #1287 added, so row 40 reopens or stays closed on that ruling's terms, and guardrails
   is asked to withdraw the seed and any lint built from it.
 - **Proxy decision of 2026-11-11 on the REASONED definition (#1282), for the maintainer's later review (#1288).**
@@ -1158,9 +1160,11 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   that, in paraphrase, option 1 makes the claim texts true against the widened definition and keeps the O5 history,
   and the check adds little cost to a sweep that runs anyway (20261111T231152Z.from-lab_infra.589eda3fe03e.msg).
   Since both voters agreed, grc's vote was not needed; it is recorded, for option 2
-  (20261111T231116Z.from-grc.b867ceb2400c.msg). The outcome is option 2. Its effect so far: none in this repository.
-  The definition is generated for the whole corpus, so the change is a later corpus-wide pull request, tracked as a
-  backlog row, with the consistency check at the O3 sweep. Like the entry above, this decision is not a maintainer
+  (20261111T231116Z.from-grc.b867ceb2400c.msg). The vote request and the lab_infra and grc votes cited D-1096, and
+  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. Its effect so far: none in this repository.
+  The definition is generated for the whole corpus, so the change is a later corpus-wide pull request,
+  with the consistency check at the O3 sweep. That change is tracked in the maintainer-side orchestrator's private
+  backlog, not in a `TODO.md` row of this repository. Like the entry above, this decision is not a maintainer
   ruling and awaits the maintainer's ratification, and none is recorded yet. The revert path is the maintainer's
   review: a different ruling changes or drops the definition change and the consistency check before they land, or
   replaces them after.
