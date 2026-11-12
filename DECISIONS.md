@@ -17,6 +17,17 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-12 on the REASONED definition (#1290).** The maintainer gave it through
+  AskUserQuestion in an attended session at about 14:09Z. No reasoning was recorded beyond the terms below. It
+  confirms the 2026-11-11 REASONED proxy decision that "Proxy decisions awaiting maintainer review" below records.
+  That decision took option 2 and is now a maintainer ruling; that entry keeps its wording, and this entry records
+  the outcome. The definition that `tools/version_basis.py` renders reads "REASONED records source reasoning, and any
+  earlier-form run it rests on, not a live demonstration of the shipped form." CONTRIBUTING.md rule 5 gets the
+  matching clause: a reasoned step records that nobody has yet observed the behaviour in its shipped form, and any
+  earlier-form run it rests on. Pull request #1290 applies both. The consistency check of REASONED claim texts
+  follows at the O3 sweep. The revert path is a later maintainer ruling for other wording, which changes the
+  definition in `tools/version_basis.py`, regenerates the guides, changes the CONTRIBUTING.md clause to match, and
+  changes or drops the O3 consistency check and the expectation in `tools/test_version_basis.py`.
 - **Maintainer ruling of 2026-11-11 on the demonstration-form remedy, GQS O5 (#1282).** The orchestrator's store
   records this ruling as resolved by the Architect, the maintainer in this project's records, on 2026-11-11
   while the fleet's operating mode was attended-autonomous, and #1288 enters it here. The store does not record the
