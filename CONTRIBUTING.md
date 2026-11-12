@@ -468,8 +468,9 @@ fallback. Selected tracked paths that are missing or inaccessible also fail clos
 This does not change independent scanners or explicitly named inputs such as the
 no-dashes gate's optional `NOTICE` and `.aiqt/attribution.toml`.
 
-A gate's docstring and help text state only what the gate's code does, and the review brief for a
-pull request that adds or changes a gate checks that they do.
+A gate's docstring and help text state only what the gate's code does, and for a pull request
+that adds or changes a gate, its docstring or help text, or code it imports or runs, the review
+brief checks that they do. No gate enforces this; it stays with the author and the reviewer.
 
 ## Releasing
 
