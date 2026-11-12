@@ -14,7 +14,8 @@ WHAT IT CHECKS, offline, with the standard library only:
     site/ and so starting with assets/baseline/ (the baseline README's form), to a
     64-character SHA-256; the only other keys are the repository paths of the build tools the
     copy script copies outside the served tree (BUILD_TOOLS: .baseline/check_palette.py, from
-    baseline 1.6.0, and .baseline/check_overflow.js, from baseline 1.8.0), each pinned, a regular
+    baseline 1.6.0, .baseline/check_overflow.js, from baseline 1.8.0, and .baseline/build_card.js
+    with its 4 files under .baseline/card-fonts/, from baseline 1.9.0), each pinned, a regular
     file (never a link) and hashing to its pin;
   - every pinned path is a plain relative path inside the copy folder (no `..`, no absolute path,
     no backslash);
@@ -22,8 +23,11 @@ WHAT IT CHECKS, offline, with the standard library only:
   - every entry under the destination is a regular file or directory (no symbolic link, which the
     walk never follows) and every file is pinned exactly once;
   - .baseline/ is a real directory, never a symbolic link, checked before the pin is read through
-    it, and holds nothing but pin.toml and the pinned build tools, each a regular file: any other
-    entry, a subdirectory included, is refused;
+    it, and holds nothing but pin.toml, the pinned build tools, each a regular file, the
+    subdirectories that hold a pinned build tool (.baseline/card-fonts), each a real directory,
+    and optionally the site's own card data file, .baseline/site-card.toml, a regular file and
+    not pinned: any other entry, any other subdirectory included, is refused, and so is a link in
+    place of any of them;
   - the pin is the copy script's: its version, its upstream URL for that version and its 2
     provenance digests equal scripts/copy-baseline.py's VERSION, ARCHIVE_SHA256 and SUMS_SHA256,
     and the pinned set is exactly that script's RUNTIME list and BUILD_TOOLS;
@@ -50,6 +54,9 @@ from pathlib import Path, PurePosixPath
 PIN = Path(".baseline") / "pin.toml"
 DEST = "site/assets/baseline"
 KEY_PREFIX = "assets/baseline/"
+# The site's own data file for the card builder (baseline 1.9.0), written by the site from the
+# template's example and never pinned; the only unpinned file .baseline/ may hold.
+SITE_CARD = Path(".baseline") / "site-card.toml"
 HEX64 = re.compile(r"[0-9a-f]{64}")
 
 
@@ -174,8 +181,12 @@ def check(root):
         if actual != digest:
             findings.append(f"{path} differs from its pin (sha256 {actual}, pinned {digest}); a "
                             f"copied baseline file must never be edited")
-    # .baseline/ holds pin.toml and the pinned build tools, and nothing else.
+    # .baseline/ holds pin.toml, the pinned build tools, the directories that hold them, the
+    # site's card data file, and nothing else. The walk reads over lstat and follows no link.
     folder = PIN.parent.as_posix()
+    tool_dirs = {parent.as_posix() for path in tools
+                 for parent in PurePosixPath(path).parents
+                 if parent.as_posix() not in (".", folder)}
     try:
         held = walk(root / PIN.parent)
     except OSError as exc:
@@ -185,10 +196,18 @@ def check(root):
         if path == PIN.as_posix():
             if not stat.S_ISREG(mode):
                 findings.append(f"{PIN} is not a regular file")
+        elif path == SITE_CARD.as_posix():
+            if not stat.S_ISREG(mode):
+                findings.append(f"{SITE_CARD} is not a regular file; it is the site's card data "
+                                f"file, never a link or a directory")
+        elif path in tool_dirs:
+            if not stat.S_ISDIR(mode):
+                findings.append(f"{path} is not a real directory; it holds pinned build tools and "
+                                f"is never a link")
         elif path not in tools:
-            findings.append(f"{path} is not {PIN} or a pinned build tool "
-                            f"({', '.join(sorted(tools)) or 'none pinned'}), and {folder}/ holds "
-                            f"nothing else")
+            findings.append(f"{path} is not {PIN}, {SITE_CARD} or a pinned build tool "
+                            f"({', '.join(sorted(tools)) or 'none pinned'}) or a folder holding "
+                            f"one, and {folder}/ holds nothing else")
     dest = root / DEST
     for name, digest in sorted(files.items()):
         pure = PurePosixPath(name)

@@ -1,4 +1,4 @@
-/* baseline.css 1.11.3: the shared stylesheet of the 7 project sites (the Atrium direction).
+/* baseline.css 1.12.4: the shared stylesheet of the sites that use this template (the Atrium direction).
    Newsreader for text and headings, Public Sans for labels and navigation, JetBrains Mono for code,
    Dancing Script for the signature; the fonts are declared in fonts.css.
    Scale: perfect fourth (1.333) on a 1.1875rem base. No rules except the table header hairline.
@@ -578,8 +578,10 @@ dl.record.cols div { break-inside: avoid; }
    changes. :not(.band-dark) keeps a dark band's headings on --band-dark-heading (a dark band's markup is
    class="band band-dark", which .band alone would match). The selector also reaches an h3 inside a card-grid box
    in such a band (until 1.11.2 that h3 took var(--text) from the .boxes h3 rule, so the default changes nothing
-   there either). */
-:is(.band, .band-tint):not(.band-dark) :is(h2, h3) { color: var(--heading-fg); }
+   there either). From 1.11.4 :where(:not(.band-dark *)) keeps the headings of a dark band nested inside a plain or
+   tinted band (markup section 7.37 forbids: a band is a direct child of main) on --band-dark-heading; :where adds no
+   specificity, so on valid markup nothing changes. */
+:is(.band, .band-tint):not(.band-dark) :is(h2, h3):where(:not(.band-dark *)) { color: var(--heading-fg); }
 .band > .wrap > :first-child, .band .doc > :first-child { margin-top: 0; }
 
 /* Card grid (from 1.11.0, owner, 2026-11-06): a list of short boxes set side by side, as many as fit at 15rem or wider
