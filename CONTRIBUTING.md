@@ -491,8 +491,15 @@ link to `CHANGELOG.md` at the tag.
 1. Fetch `main` and the release tags with `git fetch origin main 'refs/tags/v*:refs/tags/v*'`,
    and confirm that `git rev-parse main origin/main` prints one commit twice and that the
    working tree is clean.
-2. Choose the target: the last first-parent merge on `main` of a UTC day that has ended,
-   normally the day before the cut. `TZ=UTC git log --first-parent --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%H %cd %s' main`
+2. Choose the target: the last first-parent merge on `main` so far of a UTC date. That date
+   may be today's: the maintainer ruled on 2026-11-12 that a release can be cut on the day of
+   its target, which then covers that date only up to the target commit, and the release body
+   and notes say so. A merge that lands on that date after the target is covered by the next
+   release, whose check counts the merges after the previous target on the previous target's
+   date, requires each one's `CHANGELOG.md` bullet under that date's heading, and takes that
+   date's section into its notes too, so the section also holds entries the previous release
+   covered. A second release cannot target the same UTC date as the previous one.
+   `TZ=UTC git log --first-parent --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%H %cd %s' main`
    lists the merges with their UTC times. The target's subject begins
    `Merge pull request #N from `, and the tag is `v` plus `git show <sha>:VERSION`. The target
    is the merge of #1194 or a later one, as step 3 explains.
@@ -566,7 +573,9 @@ link to `CHANGELOG.md` at the tag.
    publish command's exit status and the `git ls-remote` check still show any of them failing
    on a later release.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
-   bullet naming the tag, its target commit and the UTC dates it covers. The next release
+   bullet naming the tag, its target commit and the UTC dates it covers, saying that the
+   target's date is covered only up to the target commit, and also saying when the release covers
+   the previous release's date after that previous target. The next release
    passes this tag as `--previous`.
 10. Ask lab_infra, which maintains https://posluns.dev/hashes.txt, to add the release: send the
     tag, its target commit and the SHA-256 of the release's `SHA256SUMS` asset, which
