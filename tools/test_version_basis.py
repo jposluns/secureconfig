@@ -92,7 +92,7 @@ class VersionBasisTests(unittest.TestCase):
             vb.START, '**Version basis**', '', vb.ADVICE, '',
             'Metadata reviewed 2026-09-26; documentation checked 2026-09 '
             '(exact day unknown). DEMONSTRATED refers to historical evidence in this guide; '
-            'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.',
+            'REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.',
             '', 'Components (recorded basis):', '',
             f'- product: Product ({sha})', '- aux: Aux &lt;&amp;&#124;&#96;&gt; (unknown)',
             '', 'Claims (full source mapping in the front matter):', '',
