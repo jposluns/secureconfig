@@ -19,7 +19,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 - **Maintainer ruling of 2026-11-11 on the demonstration-form remedy, GQS O5 (#1282).** The orchestrator's store
   records this ruling as resolved by the Architect, the maintainer in this project's records, on 2026-11-11 (UTC)
-  while the fleet's operating mode was attended-autonomous. The store does not record the channel or the time, and
+  while the fleet's operating mode was attended-autonomous, and #1288 enters it here. The store does not record the
+  channel or the time, and
   no reasoning was recorded beyond its terms. The ruling settles O5, the demonstration-form remedy question raised
   in GQS (guide quality scorecard) Phase B gating. Its terms, paraphrased: a Verify unit marked DEMONSTRATED whose
   shipped form, or whose current binary, was not re-run against a service is downgraded to REASONED, with the
@@ -1112,7 +1113,7 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   recoded in later pull requests. The revert path is the maintainer's review: a different ruling replaces the rule 6
   sentences on the fence as the unit, and any fence recoded under this decision is recoded again.
 - **Proxy decision of 2026-11-11 on a gate's docstring versus its code, open-findings row 40, for the maintainer's
-  later review.** Decided at 2026-11-11T21:30:21Z, when the last vote arrived, under the unattended
+  later review (#1288).** Decided at 2026-11-11T21:30:21Z, when the last vote arrived, under the unattended
   decision rule of 2026-10-31, not under the directive described above. The maintainer set that rule at about 13:04Z
   on 2026-10-31 in an attended session with guardrails, and confirmed it to secureconfig directly through
   AskUserQuestion at 2026-10-31T13:22Z; it replaced the two-of-three majority rule. Under it, while the maintainer is
@@ -1142,7 +1143,7 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   at 2026-11-12T00:30Z. The revert path is the maintainer's review: a different ruling stops or replaces the
   CONTRIBUTING.md sentence, so row 40 stays open or closes on that ruling's terms, and guardrails is asked to
   withdraw the seed and any lint built from it.
-- **Proxy decision of 2026-11-11 on the REASONED definition (#1282), for the maintainer's later review.**
+- **Proxy decision of 2026-11-11 on the REASONED definition (#1282), for the maintainer's later review (#1288).**
   Decided at 2026-11-11T23:11:52Z, when the last vote arrived, under the unattended decision rule of 2026-10-31 that
   the entry above states. The question, raised at 2026-11-11T23:10:53Z, was how REASONED claim texts that record
   past runs fit the generated REASONED definition. The options, paraphrased rather than quoted: option 1, marked as
