@@ -18,10 +18,11 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
 
 1. The target is a full commit id on the first-parent chain of `main` (--main), and its
    subject begins `Merge pull request #N from `. It is the last first-parent merge of its UTC
-   date on that chain, and that UTC date is before today's, so every CHANGELOG date section
-   falls wholly in one release. `.github/workflows/checks.yml` exists at the target as a
-   regular file and its top-level `on:` block mapping has a `workflow_dispatch` key, read as
-   THE DISPATCH TRIGGER below says.
+   date on that chain so far. That date may be today's: a release covers the merges on the
+   target's date only up to the target, and a merge that lands on that date afterwards is
+   covered by the next release, as check 6 requires. `.github/workflows/checks.yml` exists at
+   the target as a regular file and its top-level `on:` block mapping has a `workflow_dispatch`
+   key, read as THE DISPATCH TRIGGER below says.
 2. The tag is `v` plus `VERSION` at the target, `VERSION` is `1.0.<digits>` once trailing
    newlines are dropped (as scripts/build-plugin.sh reads it), and `plugin/plugin.json` at the
    target carries the same version.
@@ -34,10 +35,13 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    first release) to the target is referenced, with no newest-PR exemption, so a target whose
    own entry is missing is refused.
 6. With --previous, each pull request merged in the range is referenced under the dated
-   heading equal to its merge commit's UTC committer date, and that date is after the
-   previous release's UTC date and on or before the target's, so the notes, which take only
-   those dates, leave none of them out. A first release extracts no sections, so this is not
-   applied to it.
+   heading equal to its merge commit's UTC committer date, and that date is on or after the
+   previous release's UTC date and on or before the target's. A merge on the previous
+   release's own date came after its target, so the previous release did not cover it; the
+   notes then also take that date's section, which also holds entries the previous release
+   covered. The notes otherwise take only the dates after the previous release's and up to the
+   target's, so they leave none of the range out. A first release extracts no sections, so
+   this is not applied to it.
 7. The notes asset and `body.md` equal, byte for byte, the ones regenerated from the target;
    the body holds the range's merged pull requests, so its list cannot drift from the range.
 8. `llms-full.txt` equals `site/llms-full.txt` at the target, the tarball equals a rebuild from
@@ -677,7 +681,8 @@ def examine(root, main_ref, target, tag, previous, gates_run):
     if not RUN_ID.fullmatch(gates_run):
         raise CannotCheck(f"--gates-check-run {gates_run!r} is not a numeric check run id")
 
-    # 1. On main's first-parent chain, a pull request merge, and the last merge of its UTC day.
+    # 1. On main's first-parent chain, a pull request merge, and the last merge of its UTC date
+    # so far. The date may be today's; the next release picks up any later merge on it (6).
     chain = first_parent(root, main_ref)
     position = next((i for i, (commit, _, _) in enumerate(chain) if commit == target), None)
     subject = git(root, "log", "-1", "--format=%s", target, "--").strip()
@@ -695,10 +700,6 @@ def examine(root, main_ref, target, tag, previous, gates_run):
                 findings.append(f"the target is not the last merge of {target_date} UTC on "
                                 f"{main_ref}: {commit[:12]} {later!r} merged later that day")
                 break
-    today = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
-    if target_date >= today:
-        findings.append(f"the target's UTC date {target_date} has not ended (today is {today} "
-                        "UTC), so a later merge could still land under that date")
     findings += dispatch_findings(root, target)
 
     # 2. The tag, VERSION and plugin.json agree.
@@ -783,10 +784,10 @@ def examine(root, main_ref, target, tag, previous, gates_run):
         elif previous is not None and pr not in referenced("\n".join(sections.get(date, []))):
             findings.append(f"#{pr} ({commit[:12]}) merged on {date} UTC but is not referenced "
                             f"under `## {date}`; move its entry in a records pull request first")
-        if previous_date is not None and not previous_date < date <= target_date:
-            findings.append(f"#{pr} ({commit[:12]}) merged on {date} UTC, which is not after the "
-                            f"previous release's {previous_date} and on or before the target's "
-                            f"{target_date}, so the notes would leave it out")
+        if previous_date is not None and not previous_date <= date <= target_date:
+            findings.append(f"#{pr} ({commit[:12]}) merged on {date} UTC, which is not on or "
+                            f"after the previous release's {previous_date} and on or before the "
+                            f"target's {target_date}, so the notes would leave it out")
 
     if findings:
         return findings, None
@@ -798,25 +799,39 @@ def examine(root, main_ref, target, tag, previous, gates_run):
     llms, tar_name, notes_name, sums_name = names(tag)
     own = f"pull request #{merge.group(1)}"
     if previous is None:
-        covered = f"up to and including {target_date}"
+        covered = f"up to {target_date} UTC (that date only up to the target)"
         notes = (f"# secureconfig {tag} release notes\n\n"
                  f"This is the first tagged release of secureconfig. Its target commit is "
                  f"`{target}`, the merge of {own} on {target_date} UTC. These notes extract no "
                  f"`{CHANGELOG}` sections: the whole history up to this release is in "
                  f"`{CHANGELOG}` at the tag, {changelog_url}.\n")
-        scope = (f"- This is the first tagged release. It covers the history up to and including "
-                 f"{target_date} UTC, all of it in `{CHANGELOG}` at the tag.\n")
+        scope = (f"- This is the first tagged release. It covers the history up to the target, "
+                 f"{target_date} UTC being the target's date: {target_date} only up to `{target}`, "
+                 f"and a merge after the target on that date belongs to the next release. All of "
+                 f"it is in `{CHANGELOG}` at the tag.\n")
     else:
-        dates = [d for d in sections if previous_date < d <= target_date]
-        covered = f"after {previous_date} up to and including {target_date}"
+        # A range merge on the previous release's date came after its target, so that date's
+        # section is taken too; it also holds entries the previous release covered.
+        again = any(date == previous_date for _, _, date in merged)
+        dates = [d for d in sections if previous_date < d <= target_date
+                 or again and d == previous_date]
+        start = (f"from {previous_date} UTC after the previous target" if again
+                 else f"after {previous_date} UTC")
+        covered = f"{start} up to {target_date} UTC (that date only up to the target)"
+        reach = (f"the UTC dates after {previous_date}, the date of {previous}, up to "
+                 f"{target_date}, {target_date} only up to the target")
+        again_note = (f" It also takes {previous_date} itself, because merges after the "
+                      f"previous target landed on that date and the previous release did not "
+                      f"cover them; that section also holds entries the previous release "
+                      f"covered." if again else "")
         parts = [f"# secureconfig {tag} release notes\n\n"
                  f"Target commit `{target}`, the merge of {own}. These are the sections of "
-                 f"`{CHANGELOG}` at the target for the UTC dates after {previous_date}, the date "
-                 f"of {previous}, up to and including {target_date}, copied unchanged.\n"]
+                 f"`{CHANGELOG}` at the target for {reach}, copied unchanged. A merge after the "
+                 f"target on {target_date} belongs to the next release.{again_note}\n"]
         parts += ["\n".join(sections[d]) + "\n" for d in dates]
         notes = "\n".join(parts)
-        scope = (f"- It covers the UTC dates after {previous_date}, the date of `{previous}`, up "
-                 f"to and including {target_date}.\n")
+        scope = (f"- It covers {reach}. A merge after the target on {target_date} belongs to the "
+                 f"next release.{again_note}\n")
     body = (f"secureconfig {tag} is a checksummed snapshot of `main` at `{target}`, the merge "
             f"of {own}.\n\n"
             f"- Tag `{tag}`. `VERSION` and the plugin version at the target are both "
@@ -984,7 +999,7 @@ def main(argv=None):
                 "not compare with CI's pinned SHELLCHECK_VERSION; CI's pinned shellcheck is "
                 "covered by the online gates check on the target.")
     print(f"  ok    {args.tag} at {args.target[:12]}: {len(release['prs'])} pull requests "
-          f"merged {release['covered']} UTC, all in {CHANGELOG}, {dated}; notes, body and "
+          f"merged {release['covered']}, all in {CHANGELOG}, {dated}; notes, body and "
           f"assets match a rebuild of the target and {SUITE} passed in its worktree.{runtime} "
           f"The online gates result, check run {args.gates_check_run}, is recorded, not "
           "verified: confirm it on GitHub before publishing")

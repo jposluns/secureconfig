@@ -265,7 +265,9 @@ def cases(tmp):
     notes = (later / "assets" / "RELEASE-NOTES-v1.0.13.md").read_text(encoding="utf-8")
     expect("the later notes hold exactly the sections after the previous release's date",
            (0, notes), 0, "## 2026-10-03\n\n- Change 12 (#12).\n- Change 13 (#13).\n",
-           "after 2026-10-02, the date of v1.0.11", absent=("## 2026-10-02", "## 2026-10-04"))
+           "after 2026-10-02, the date of v1.0.11, up to 2026-10-03, 2026-10-03 only up to the "
+           "target",
+           absent=("## 2026-10-02", "## 2026-10-04"))
     body = (later / "body.md").read_text(encoding="utf-8")
     expect("the later body lists exactly the range's pull requests",
            (0, body), 0, "Pull requests merged in that range (2): #12, #13.")
@@ -669,19 +671,48 @@ def cases(tmp):
     expect("a CHANGELOG.md at the target that fails the format rules is refused",
            release(repo, c[13], "v1.0.13", "v1.0.11", tmp / "f"), 1,
            "at the target: `## 2026-10-03` is not followed by a blank line")
-    # A previous release that was not the last merge of its UTC day: #12 merged after it on
-    # 2026-10-02 and sits under that date, which the later notes, taking only the dates after
-    # the previous release's, would leave out.
+    # A previous release that was the last merge of its UTC date when cut, with #12 merging
+    # after it on that date: the later release must cover #12, take that date's section and say
+    # so, and refuse when #12's entry is missing or filed under another date.
+    sameday = [HISTORY[0], HISTORY[1], (12, "2026-10-02T10:00:00Z", "2026-10-02"),
+               HISTORY[3], HISTORY[4]]
     repo = tmp / "sameday"
-    c = build(repo, history=[HISTORY[0], HISTORY[1], (12, "2026-10-02T10:00:00Z", "2026-10-02"),
+    c = build(repo, history=sameday)
+    sameday_commits = c
+    git(repo, "tag", "v1.0.11", c[11])
+    sd = tmp / "sd"
+    expect("a range pull request merged on the previous release's UTC date, after its target, "
+           "passes",
+           release(repo, c[13], "v1.0.13", "v1.0.11", sd), 0, OK, RECORDED,
+           "from 2026-10-02 UTC after the previous target up to 2026-10-03 UTC")
+    notes = (sd / "assets" / "RELEASE-NOTES-v1.0.13.md").read_text(encoding="utf-8")
+    expect("the notes then take the previous date's section too and say why",
+           (0, notes), 0, "## 2026-10-02\n\n- Change 11 (#11).\n- Change 12 (#12).\n",
+           "## 2026-10-03\n\n- Change 13 (#13).\n",
+           "It also takes 2026-10-02 itself, because merges after the previous target landed on "
+           "that date and the previous release did not cover them",
+           "A merge after the target on 2026-10-03 belongs to the next release.",
+           absent=("## 2026-10-04",))
+    body = (sd / "body.md").read_text(encoding="utf-8")
+    expect("the body lists the later same-date merge and says the date is taken again",
+           (0, body), 0, "Pull requests merged in that range (2): #12, #13.",
+           "2026-10-03 only up to the target", "It also takes 2026-10-02 itself")
+    repo = tmp / "samedayomit"
+    c = build(repo, history=sameday, omit=(12,))
+    git(repo, "tag", "v1.0.11", c[11])
+    expect("a later same-date merge with no entry is refused by the next release",
+           release(repo, c[13], "v1.0.13", "v1.0.11", tmp / "sdo"), 1,
+           "#12 (", "never referenced")
+    repo = tmp / "samedaymisdated"
+    c = build(repo, history=[HISTORY[0], HISTORY[1], (12, "2026-10-02T10:00:00Z", "2026-10-03"),
                              HISTORY[3], HISTORY[4]])
     git(repo, "tag", "v1.0.11", c[11])
-    expect("a range pull request merged on the previous release's UTC date is refused",
-           release(repo, c[13], "v1.0.13", "v1.0.11", tmp / "sd"), 1,
-           "#12 (", "merged on 2026-10-02 UTC, which is not after the previous release's "
-           "2026-10-02 and on or before the target's 2026-10-03", absent=("#13 (",))
+    expect("a later same-date merge filed under another date is refused by the next release",
+           release(repo, c[13], "v1.0.13", "v1.0.11", tmp / "sdm"), 1,
+           "#12 (", "merged on 2026-10-02 UTC but is not referenced under `## 2026-10-02`")
+    repo = tmp / "sameday"
     expect("a target whose UTC date is not after the previous release's is refused",
-           release(repo, c[12], "v1.0.12", "v1.0.11", tmp / "sd12"), 1,
+           release(repo, sameday_commits[12], "v1.0.12", "v1.0.11", tmp / "sd12"), 1,
            "the target's UTC date 2026-10-02 is not after the previous release's 2026-10-02")
 
     # Checks 2 and 3 again: out-of-order merges that share one VERSION, and a lagging manifest.
@@ -704,11 +735,35 @@ def cases(tmp):
            release(repo, c[11], "v1.0.11-rc", None, tmp / "b"), 2,
            "is not shaped v1.0.<digits>", "VERSION at the target is '1.0.11-rc'")
 
-    # Check 1 again: a UTC day that has not ended.
+    # Check 1 again: a UTC date that has not ended (2099 stands for one) is no longer refused;
+    # the release covers that date only up to its target, and says so.
     repo = tmp / "future"
     c = build(repo, history=[*HISTORY, (15, "2099-01-01T12:00:00Z", "2099-01-01")])
-    expect("a target whose UTC date has not ended is refused",
-           release(repo, c[15], "v1.0.15", None, tmp / "future-out"), 1, "has not ended")
+    future = tmp / "future-out"
+    expect("a first release whose target date has not ended passes",
+           release(repo, c[15], "v1.0.15", None, future), 0, OK, RECORDED,
+           "up to 2099-01-01 UTC (that date only up to the target)", absent=("has not ended",))
+    body = (future / "body.md").read_text(encoding="utf-8")
+    expect("its body says the date is covered only up to the target",
+           (0, body), 0, "2099-01-01 only up to `" + c[15] + "`",
+           "a merge after the target on that date belongs to the next release")
+    # A later merge on the same date: the first target is no longer the last merge of its date,
+    # so it is still refused; and a release of the later merge itself shares the previous date,
+    # so it is still refused too (the next date's release takes it, as the sameday cases show).
+    repo = tmp / "future2"
+    c = build(repo, history=[*HISTORY, (15, "2099-01-01T12:00:00Z", "2099-01-01"),
+                             (16, "2099-01-01T18:00:00Z", "2099-01-01"),
+                             (17, "2099-01-02T08:00:00Z", "2099-01-02")])
+    expect("a same-day target that is no longer the last merge of its date is still refused",
+           release(repo, c[15], "v1.0.15", None, tmp / "future2-late"), 1,
+           "is not the last merge of 2099-01-01 UTC")
+    repo = tmp / "future3"
+    c = build(repo, history=[*HISTORY, (15, "2099-01-01T12:00:00Z", "2099-01-01"),
+                             (16, "2099-01-01T18:00:00Z", "2099-01-01")])
+    git(repo, "tag", "v1.0.15", c[15])
+    expect("a second release on the date of the previous one is still refused",
+           release(repo, c[16], "v1.0.16", "v1.0.15", tmp / "future3-next"), 1,
+           "the target's UTC date 2099-01-01 is not after the previous release's 2099-01-01")
 
     # Check 9: the suite in a worktree of the target.
     for name, suite, needle in [
