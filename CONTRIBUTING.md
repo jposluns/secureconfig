@@ -468,6 +468,9 @@ fallback. Selected tracked paths that are missing or inaccessible also fail clos
 This does not change independent scanners or explicitly named inputs such as the
 no-dashes gate's optional `NOTICE` and `.aiqt/attribution.toml`.
 
+A gate's docstring and help text state only what the gate's code does, and the review brief for a
+pull request that adds or changes a gate checks that they do.
+
 ## Releasing
 
 A release is a GitHub release on a tag `v1.0.<N>` that names one merge commit on `main`, where
