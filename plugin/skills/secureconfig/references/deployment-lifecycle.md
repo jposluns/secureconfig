@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Nmap documentation (no recorded version), BIND dig documentation 9.18.39, OpenSSL command documentation 3.0, OpenBSD nc manual 7.6, OWASP Web Security Testing Guide v4.2, OAuth2 Proxy v7.15.6, Authelia v4.39.28, and NIST digital identity guidelines SP 800-63B-4, plus 2 more recorded bases; 9 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against Nmap documentation (no recorded version), BIND dig documentation 9.18.39, OpenSSL command documentation 3.0, OpenBSD nc manual 7.6, OWASP Web Security Testing Guide v4.2, OAuth2 Proxy v7.15.6, Authelia v4.39.28, and NIST digital identity guidelines SP 800-63B-4, plus 3 more recorded bases; 9 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -138,7 +138,7 @@ REASONED: following block; outside-network IPv6 scan, per the cited Nmap documen
 )
 ```
 
-REASONED: following block; retired-name DNS check, per the cited dig documentation and DNS RFCs, including RFC 2308 section 2; no retired host name or authoritative DNS zone was supplied, and no live run is recorded. This block cannot exit 0 by design: it reads your configured resolver only, so it exits 1 when that resolver returns any A, AAAA or CNAME answer and 3 otherwise, including empty answers and a failed lookup or request. Removal is decided by the authoritative check in its comment, `dig @AUTH_NS name TYPE +norecurse` against each authoritative nameserver, which must give NXDOMAIN or NOERROR/NODATA with no CNAME.
+REASONED: following block; retired-name DNS check, per the cited dig documentation, the BIND v9.20.24 `dig` manual and source, and DNS RFCs, including RFC 2308 section 2; no retired host name or authoritative DNS zone was supplied, and no live run is recorded. The reply-reading form below passed bash -n and ShellCheck 0.11.0, and on 2026-11-12, from 05:30:36Z to 05:30:37Z UTC, it ran in bash with real `dig` 9.20.24 through the host's local stub resolver, with `curl` stubbed so that no request was made: `www.github.com` exited 1, each of the A, AAAA and CNAME replies carrying a mapping line; `_dmarc.gmail.com` exited 3 with three NOERROR/NODATA replies; a nonexistent name under `gmail.com` exited 3 with three NXDOMAIN replies; and `dnssec-failed.org` exited 3 with three SERVFAIL replies, each with `dig` exit 0. Stub replies gave 3 for no `ra`, upper-case `RA`, two headers, a `TYPE16` line, a lower-case status, REFUSED and `dig` exit 9, and 1 for an NXDOMAIN reply carrying a CNAME line. This block cannot exit 0 by design: it reads your configured resolver only, so it exits 1 when that resolver returns any A, AAAA or CNAME answer and 3 otherwise, including a reply with no such answer and a failed lookup or request. Each lookup runs `dig -r +noall +comments +answer NAME. TYPE` and reads the reply's status and its `ra` flag (recursion available), not `dig`'s exit status alone, because `dig`'s manual gives exit 0 for any DNS response received, NXDOMAIN included, and none of its nonzero statuses is for a SERVFAIL reply. With `-r`, `dig` reads no options from `~/.digrc`, and the trailing dot keeps any search list or `ndots` setting from changing the name. An A, AAAA or alias (CNAME) line in a NOERROR or NXDOMAIN reply is a finding (1). A NOERROR/NODATA or NXDOMAIN reply without one prints which it was and is inconclusive (3), and so are SERVFAIL, any other status, more than one reply header, no header or flags line, a reply without `ra`, an answer line in a form the block does not read, a nonzero `dig` exit and no reply (exit 9); a finding outranks them. Removal is decided by the authoritative check in its comment, `dig @AUTH_NS name TYPE +norecurse` against each authoritative nameserver, which must give NXDOMAIN or NOERROR/NODATA with no CNAME.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -154,37 +154,59 @@ REASONED: following block; retired-name DNS check, per the cited dig documentati
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   shopt -u nocasematch   # every match below compares letter case exactly again
+  { unset -n IFS k o t c y f g v seen && unset -v IFS k o t c y f g v seen; } 2>/dev/null || { echo "IFS or a name this block uses (k o t c y f g v seen) is readonly in this shell: run the block in a fresh bash; not probing"; exit 2; }   # with IFS unset, read splits on any run of spaces and tabs, as dig's columns need
   set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), and no lookup returns it to 0
   curl -q -g -sI "https://$1/" ||       # a connection/DNS/TLS failure here is NOT proof the record is gone (a dangling record to a released target fails the same way); use the dig check below, and confirm at the authoritative nameservers, to establish removal
     { echo "curl exit $?: the request failed, which is not proof the record is gone; inconclusive"; set -- "$1" 3; }
-  # The three dig lookups below check your configured resolver only, so they are not authoritative: any A/AAAA/CNAME answer means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and empty output is inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
-  echo "A:"
-  set -- "$1" "$2" "$(if dig +short "$1" A; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the block's status, dig's answer, then dig's exit status
-  printf '%s' "$3"
-  case "$4:$3" in
-    0:) [ "$2" = 1 ] || set -- "$1" 3 ;;          # no answer: inconclusive on its own
-    0:*) set -- "$1" 1 ;;                          # an answer: that resolver still returns a mapping
-    *) echo "dig exit $4: the A lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-  esac
-  echo "AAAA:"
-  set -- "$1" "$2" "$(if dig +short "$1" AAAA; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"
-  printf '%s' "$3"
-  case "$4:$3" in
-    0:) [ "$2" = 1 ] || set -- "$1" 3 ;;
-    0:*) set -- "$1" 1 ;;
-    *) echo "dig exit $4: the AAAA lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-  esac
-  echo "CNAME:"
-  set -- "$1" "$2" "$(if dig +short "$1" CNAME; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"
-  printf '%s' "$3"
-  case "$4:$3" in
-    0:) [ "$2" = 1 ] || set -- "$1" 3 ;;
-    0:*) set -- "$1" 1 ;;
-    *) echo "dig exit $4: the CNAME lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-  esac
+  # The three dig lookups below check your configured resolver only, so they are not authoritative: any A/AAAA/CNAME line in a NOERROR or NXDOMAIN reply means that resolver still returns a mapping (investigate before release; an answer alone does not prove the target is dangling), and a reply with no such line (NOERROR/NODATA or NXDOMAIN), SERVFAIL, any other status, a reply without the ra flag and no reply are inconclusive. Confirm removal against each authoritative nameserver directly (dig @AUTH_NS name TYPE +norecurse), requiring NXDOMAIN or NOERROR/NODATA with no CNAME; treat SERVFAIL/referral/timeout as inconclusive
+  for k in A AAAA CNAME; do
+    set -- "$1" "$2" "$(if dig -r +noall +comments +answer "$1." "$k"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # -r: dig reads no options from ~/.digrc, which its manual calls useful for scripts that need predictable behavior; the trailing dot stops any search list or ndots setting from changing the name
+    set -- "$1" "$2" "${3%$'\n'*}" "${3##*$'\n'}"   # the host, the block's status, dig's output, then dig's exit status
+    printf '%s\n' "$k: dig -r +noall +comments +answer $1. $k, exit $4:" "$3"
+    case "$4" in
+      0) ;;
+      9) echo "$k: no reply (dig exit 9, which dig's manual gives for no reply from server); inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; continue ;;
+      *) echo "dig exit $4: the $k lookup failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; continue ;;
+    esac
+    seen=" "
+    while read -r o t c y f g v; do     # dig's header and flags lines, then answer lines: name, TTL, class, type, then the record data
+      case "$o $t $c $f" in
+        ';; ->>HEADER<<- opcode: status:') seen="${seen}header:$g "; continue ;;   # g is the status and its comma, as dig prints the header
+      esac
+      case "$o $t" in
+        ';; flags:'*)                   # the reply's flag words end at the first ";", and dig prints ra among them when the reply says recursion is available
+          v=" $c $y $f $g $v"
+          case "${v%%;*} " in *' ra '*) seen="${seen}flags:ra " ;; *) seen="${seen}flags:nora " ;; esac
+          continue ;;
+      esac
+      case "$o" in ''|';'*) continue ;; esac   # blank lines and dig's other comment lines
+      case "$t" in ''|*[!0123456789]*) seen="${seen}unread "; continue ;; esac   # an answer line's TTL is digits only
+      case "$c $y" in
+        "IN $k"|'IN CNAME') seen="${seen}rr " ;;   # a record of the type looked up, or an alias line
+        *) seen="${seen}unread " ;;     # any other class or type, including a generic TYPEnnn or CLASSnnn form, is not read
+      esac
+    done <<< "$3"
+    case "$seen" in
+      *' header:'*' header:'*) echo "$k: dig printed more than one reply header; this block reads a single reply only; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; continue ;;
+      *' header:'*) ;;
+      *) echo "$k: dig printed no reply header, so this block cannot read the reply; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; continue ;;
+    esac
+    case "$seen" in
+      *' flags:'*' flags:'*) echo "$k: dig printed more than one flags line; this block reads a single reply only; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; continue ;;
+      *' flags:ra '*) ;;
+      *' flags:nora '*) echo "$k: the reply lacks the ra flag, so recursion was not available and the reply may not hold the records; this block reads only a recursive resolver's reply; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; continue ;;
+      *) echo "$k: dig printed no flags line, so whether recursion was available is unknown; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; continue ;;
+    esac
+    g="${seen#* header:}"; g="${g%% *}"   # the reply status with the comma dig prints after it; a status without that comma matches none of the names below
+    case "$g$seen" in
+      'NOERROR, '*' rr '*|'NXDOMAIN, '*' rr '*) echo "$k: ${g%,} with an A, AAAA or alias (CNAME) line: your resolver still returns a mapping for $1"; set -- "$1" 1 ;;
+      *' unread '*) echo "$k: status ${g%,}, but an answer line is in a form this block does not read; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      'NOERROR, '*) echo "$k: NOERROR/NODATA: your resolver returned no $k or alias (CNAME) line for $1; inconclusive on its own"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      'NXDOMAIN, '*) echo "$k: NXDOMAIN: your resolver says $1 does not exist; inconclusive on its own"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      'SERVFAIL, '*) echo "$k: SERVFAIL: your resolver could not answer, so this lookup read no records; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "$k: status ${g%,}, which this block does not read; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+  done
   case "$2" in
     1) echo "FINDING: your resolver still returns a mapping for $1; investigate before you release the target" ;;
     *) echo "no answer from your resolver, or a failed lookup or request: inconclusive, so confirm removal at each authoritative nameserver as the comment above says" ;;
@@ -235,6 +257,12 @@ REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 d
 - Let's Encrypt documentation (challenge requirements as cited in free-certificates.md): https://letsencrypt.org/docs/
 - nmap host discovery (`-Pn` "skips the host discovery stage altogether"): https://nmap.org/book/man-host-discovery.html
 - BIND 9.18.39 dig DNS lookup utility (querying a specific nameserver with `@server` and `+norecurse`): https://bind9.readthedocs.io/en/v9.18.39/manpages.html
+- BIND v9.20.24 `dig` `-r` reads no options from `${HOME}/.digrc` (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L160-L163
+- BIND v9.20.24 `dig` `+comments` header display (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L308-L312
+- BIND v9.20.24 `dig` search list off by default (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L598-L606
+- BIND v9.20.24 `dig` return codes, with exit 0 on NXDOMAIN (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L788-L806
+- BIND v9.20.24 `dig` reply header line format (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884
+- BIND v9.20.24 `dig` reply flags line, including `ra`, and its recursion-not-available warning (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924
 - OpenSSL 3.0 `s_client` (checked October 2026; connection, hostname verification, and verification errors): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 `x509` (checked October 2026; `-noout -enddate` certificate expiry inspection): https://docs.openssl.org/3.0/man1/openssl-x509/
 - OpenBSD 7.6 `nc` (checked October 2026; OpenBSD netcat implementation of `-v`, `-z`, and `-w`): https://man.openbsd.org/OpenBSD-7.6/nc.1
@@ -314,6 +342,7 @@ Components (recorded basis):
 - webui: Open WebUI (0a7c15832fb30b1903753e83f81dc7d27e5b0944)
 - certbot-v230: Certbot user guide and source (v2.3.0)
 - le: Let's Encrypt documentation (unknown)
+- bind-dig: BIND dig manual and source (v9.20.24)
 
 Claims (full source mapping in the JSON block below):
 
@@ -337,7 +366,7 @@ Claims (full source mapping in the JSON block below):
 - offboarding (REASONED; access, owasp-docs, entra-docs, cloudflare-access, oauth2-proxy, authelia, oauth-revocation, nist): When a person leaves, revoke every touched layer, not only the password: identity-provider membership, proxy/app sessions on each service, personal tokens and API keys (this guide's recommendation), and revoke the second factor alongside the account. Entra documents blocking sign-ins and revoking refresh tokens; application sessions require application revocation, access-token lifetimes vary, and supported-service CAE critical-event enforcement can take up to 15 minutes. Cloudflare documents per-user revocation, but an active IdP profile can start a new session; user logout stops acceptance of issued tokens in 20-30 seconds. OAuth2 Proxy documents cookie expiry/refresh; Authelia documents cookie expiry and session destruction, overridden by remember-me; neither passage establishes immediate per-user revocation. RFC 7009 specifies immediate invalidation with possible propagation delay and conditional access-token revocation support. OWASP requires secure revocation of unneeded or potentially compromised secrets. NIST requires CSPs to promptly invalidate authenticators when the CSP determines that the subscriber no longer meets its eligibility requirements. Where immediate revocation is unavailable, measure and shrink maximum time-to-revoke (this guide's recommendation). Provider-membership removal, every application's session-revocation mechanism and this deployment's measured maximum time-to-revoke remain unestablished. Follow authentication.md's REASONED replay check: matched requests must succeed before revocation, then old credentials must be refused without protected data within each configured maximum; these are test expectations, not observations.
 - verify-ipv4 (REASONED; nmap): From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive.
 - verify-ipv6 (REASONED; nmap): Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive.
-- verify-dns (REASONED; dns, dns-rfcs): curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive.
+- verify-dns (REASONED; dns, dns-rfcs, bind-dig): curl failure does not prove DNS removal. Reading each reply's status and ra flag, A/AAAA/CNAME lines in a NOERROR or NXDOMAIN reply need investigation; NODATA, NXDOMAIN, SERVFAIL, other statuses, no ra and no reply are inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive.
 - verify-certificate (REASONED; nmap, openssl): The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No observed outcome is recorded; Nmap is outside-check context only.
 
 ````json
@@ -345,7 +374,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "27faf94b933259be394e81a22e1312540d77f5f9ac2c5c6af961c812b70eaa51",
+  "body_sha256": "c064a2a102cb4a18275f4af5352732bc273d5eeac21ce0ff815c69590608a22f",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
@@ -546,6 +575,18 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s9ff2d787c618": "https://letsencrypt.org/docs/"
       }
+    },
+    "bind-dig": {
+      "name": "BIND dig manual and source",
+      "basis": "v9.20.24",
+      "sources": {
+        "s5d98e69756c9": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L160-L163",
+        "sda67db889c0e": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L308-L312",
+        "s9cd3fcf628fb": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L598-L606",
+        "s4a49b2a8a61e": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L788-L806",
+        "sac989d3132f5": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884",
+        "sf70f634493d1": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924"
+      }
     }
   },
   "claims": {
@@ -569,7 +610,7 @@ Claims (full source mapping in the JSON block below):
     "offboarding": {"text": "When a person leaves, revoke every touched layer, not only the password: identity-provider membership, proxy/app sessions on each service, personal tokens and API keys (this guide's recommendation), and revoke the second factor alongside the account. Entra documents blocking sign-ins and revoking refresh tokens; application sessions require application revocation, access-token lifetimes vary, and supported-service CAE critical-event enforcement can take up to 15 minutes. Cloudflare documents per-user revocation, but an active IdP profile can start a new session; user logout stops acceptance of issued tokens in 20-30 seconds. OAuth2 Proxy documents cookie expiry/refresh; Authelia documents cookie expiry and session destruction, overridden by remember-me; neither passage establishes immediate per-user revocation. RFC 7009 specifies immediate invalidation with possible propagation delay and conditional access-token revocation support. OWASP requires secure revocation of unneeded or potentially compromised secrets. NIST requires CSPs to promptly invalidate authenticators when the CSP determines that the subscriber no longer meets its eligibility requirements. Where immediate revocation is unavailable, measure and shrink maximum time-to-revoke (this guide's recommendation). Provider-membership removal, every application's session-revocation mechanism and this deployment's measured maximum time-to-revoke remain unestablished. Follow authentication.md's REASONED replay check: matched requests must succeed before revocation, then old credentials must be refused without protected data within each configured maximum; these are test expectations, not observations.", "components": ["access", "owasp-docs", "entra-docs", "cloudflare-access", "oauth2-proxy", "authelia", "oauth-revocation", "nist"], "sources": ["access:s7cafe1b17afd", "owasp-docs:seb866a1f94e9", "entra-docs:s983f45259faa", "entra-docs:scb38e683ae3f", "entra-docs:s9ff4d6ed4cfe", "entra-docs:sca6feea4b601", "cloudflare-access:sf2dbab0fc574", "cloudflare-access:sa0e3eb928f4a", "oauth2-proxy:sa4c6097e2686", "authelia:sc844fe82794f", "oauth-revocation:s3383c9f41cc2", "nist:s2a689905c161"], "status": "REASONED"},
     "verify-ipv4": {"text": "From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [1]},
     "verify-ipv6": {"text": "Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [2]},
-    "verify-dns": {"text": "curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive.", "components": ["dns", "dns-rfcs"], "sources": ["dns:s54cff06bb882", "dns-rfcs:s1d32db254435"], "status": "REASONED", "verify": [3]},
+    "verify-dns": {"text": "curl failure does not prove DNS removal. Reading each reply's status and ra flag, A/AAAA/CNAME lines in a NOERROR or NXDOMAIN reply need investigation; NODATA, NXDOMAIN, SERVFAIL, other statuses, no ra and no reply are inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive.", "components": ["dns", "dns-rfcs", "bind-dig"], "sources": ["dns:s54cff06bb882", "dns-rfcs:s1d32db254435", "bind-dig:s5d98e69756c9", "bind-dig:sda67db889c0e", "bind-dig:s9cd3fcf628fb", "bind-dig:s4a49b2a8a61e", "bind-dig:sac989d3132f5", "bind-dig:sf70f634493d1"], "status": "REASONED", "verify": [3]},
     "verify-certificate": {"text": "The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No observed outcome is recorded; Nmap is outside-check context only.", "components": ["nmap", "openssl"], "sources": ["nmap:sf8404f695ccd", "openssl:s00aaf106164f", "openssl:s0856f4a58574"], "status": "REASONED", "verify": [4]}
   }
 }
