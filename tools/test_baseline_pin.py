@@ -9,7 +9,11 @@ digests and RUNTIME list, and keep excluded template material out whether pinned
 baseline 1.6.0 cases hold .baseline/check_palette.py, the copied palette gate, to its pin. The cases
 added in QA round 1 of #1190 refuse a .baseline/ that is a symbolic link or not a directory, a
 pin.toml that is a link, and any other entry in .baseline/ (a file, a subdirectory, a link). The
-baseline 1.8.0 cases hold .baseline/check_overflow.js, the copied overflow check, to its pin.
+baseline 1.8.0 cases hold .baseline/check_overflow.js, the copied overflow check, to its pin. The
+baseline 1.12.4 cases hold .baseline/build_card.js and its fonts under .baseline/card-fonts/ to
+their pins, admit .baseline/card-fonts only as a real directory holding pinned tools and nothing
+else, admit the site's own .baseline/site-card.toml only as a regular file, and refuse the 1.11.3
+Dancing Script woff2 left behind unpinned.
 """
 import hashlib
 import os
@@ -25,16 +29,17 @@ DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
 PALETTE_GATE = Path(".baseline") / "check_palette.py"
 OVERFLOW_CHECK = Path(".baseline") / "check_overflow.js"
+CARD_BUILDER = Path(".baseline") / "build_card.js"
+CARD_FONTS = Path(".baseline") / "card-fonts"
+SITE_CARD = Path(".baseline") / "site-card.toml"
 
 
 def run(mutate=None):
     d = Path(tempfile.mkdtemp())
     try:
         shutil.copytree(ROOT / DEST, d / DEST)
-        (d / PIN).parent.mkdir(parents=True)
-        shutil.copyfile(ROOT / PIN, d / PIN)
-        shutil.copyfile(ROOT / PALETTE_GATE, d / PALETTE_GATE)
-        shutil.copyfile(ROOT / OVERFLOW_CHECK, d / OVERFLOW_CHECK)
+        # The whole real .baseline/: the pin, every pinned build tool and the site's card data.
+        shutil.copytree(ROOT / ".baseline", d / ".baseline", symlinks=True)
         if mutate is not None:
             mutate(d)
         r = subprocess.run([sys.executable, "-I", "-B", str(TOOLS / "check_baseline_pin.py"),
@@ -53,11 +58,33 @@ def edit_pin(old, new):
     return mutate
 
 
+def flip(relative):
+    """Change the last byte of the file at relative under the copy."""
+    def mutate(d):
+        target = d / relative
+        data = bytearray(target.read_bytes())
+        data[-1] ^= 1
+        target.write_bytes(bytes(data))
+    return mutate
+
+
 def one_byte(d):
-    target = d / DEST / "baseline.css"
-    data = bytearray(target.read_bytes())
-    data[-1] ^= 1
-    target.write_bytes(bytes(data))
+    flip(DEST / "baseline.css")(d)
+
+
+def card_fonts_link(d):
+    (d / CARD_FONTS).rename(d / "real-card-fonts")
+    os.symlink("../real-card-fonts", d / CARD_FONTS, target_is_directory=True)
+
+
+def site_card_link(d):
+    (d / SITE_CARD).rename(d / ".baseline" / "saved-card.toml")
+    os.symlink("saved-card.toml", d / SITE_CARD)
+
+
+def site_card_dir(d):
+    (d / SITE_CARD).unlink()
+    (d / SITE_CARD).mkdir()
 
 
 def link(d):
@@ -137,16 +164,16 @@ CASES = [
      edit_pin('"assets/baseline/copy.js" = "', '"assets/baseline/copy.js" = "x'), 1, "not a SHA-256"),
     ("a pin key outside assets/baseline/", edit_pin('"assets/baseline/copy.js" =', '"copy.js" ='), 1,
      "is not under assets/baseline/"),
-    ("a pin with no version", edit_pin('version = "1.11.3"', 'release = "1.11.3"'), 1,
+    ("a pin with no version", edit_pin('version = "1.12.4"', 'release = "1.12.4"'), 1,
      "no version"),
     ("a pin that is not TOML", edit_pin("[files]", "[files"), 1, "not valid TOML"),
     # QA round 1 of #1182: the pin must be the copy script's, and excluded material stays out.
     ("a pin at another version than the copy script's",
-     lambda d: (edit_pin('version = "1.11.3"', 'version = "1.3.1"')(d),
-                edit_pin("/baseline/1.11.3/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.11.3"),
-    ("an upstream URL for another version", edit_pin("/baseline/1.11.3/", "/baseline/1.3.1/"), 1,
-     "is not the URL of version 1.11.3"),
-    ("another archive digest", edit_pin('archive_sha256 = "d', 'archive_sha256 = "0'), 1,
+     lambda d: (edit_pin('version = "1.12.4"', 'version = "1.3.1"')(d),
+                edit_pin("/baseline/1.12.4/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.12.4"),
+    ("an upstream URL for another version", edit_pin("/baseline/1.12.4/", "/baseline/1.3.1/"), 1,
+     "is not the URL of version 1.12.4"),
+    ("another archive digest", edit_pin('archive_sha256 = "6', 'archive_sha256 = "0'), 1,
      "archive_sha256 is"),
     ("a copied, pinned file outside the copy script's list",
      pinned("extra.js", b"(function(){})();\n"), 1, "not in scripts/copy-baseline.py's RUNTIME list"),
@@ -180,7 +207,7 @@ CASES = [
      1, ".baseline is not a directory"),
     ("pin.toml replaced by a symbolic link", pin_link, 1, ".baseline/pin.toml is not a regular file"),
     ("another file in .baseline/", baseline_extra("notes.txt"), 1,
-     ".baseline/notes.txt is not .baseline/pin.toml or a pinned build tool"),
+     ".baseline/notes.txt is not .baseline/pin.toml, .baseline/site-card.toml or a pinned build tool"),
     ("a second copy of the palette gate in .baseline/",
      baseline_extra("check_palette_old.py", (ROOT / PALETTE_GATE).read_bytes()), 1,
      ".baseline/check_palette_old.py is not"),
@@ -198,7 +225,32 @@ CASES = [
      ".baseline/check_overflow.js is pinned but missing"),
     ("the overflow check's pin line removed", edit_pin_line('".baseline/check_overflow.js" ='), 1,
      "does not pin .baseline/check_overflow.js"),
-    ("the pristine copy", None, 0, "match baseline 1.11.3"),
+    # Baseline 1.12.4: the card builder and its fonts are copied to .baseline/ and pinned; the
+    # site's own card data file is admitted unpinned, as a regular file only.
+    ("one byte changed in .baseline/build_card.js", flip(CARD_BUILDER), 1,
+     ".baseline/build_card.js differs from its pin"),
+    ("one byte changed in a card font", flip(CARD_FONTS / "Inter-Bold.otf"), 1,
+     ".baseline/card-fonts/Inter-Bold.otf differs from its pin"),
+    ("a card font deleted", lambda d: (d / CARD_FONTS / "Inter-Regular.otf").unlink(), 1,
+     ".baseline/card-fonts/Inter-Regular.otf is pinned but missing"),
+    ("a card font's pin line removed", edit_pin_line('".baseline/card-fonts/Inter-ExtraBold.otf" ='), 1,
+     "does not pin .baseline/card-fonts/Inter-ExtraBold.otf"),
+    ("an extra file in .baseline/card-fonts/", baseline_extra("card-fonts/Extra.otf"), 1,
+     ".baseline/card-fonts/Extra.otf is not"),
+    (".baseline/card-fonts replaced by a symbolic link to a good copy", card_fonts_link, 1,
+     ".baseline/card-fonts is not a real directory"),
+    ("the template's card example copied into .baseline/",
+     baseline_extra("site-card.example.toml", b'site = "secureconfig"\n'), 1,
+     ".baseline/site-card.example.toml is not"),
+    ("no .baseline/site-card.toml", lambda d: (d / SITE_CARD).unlink(), 0, "match baseline 1.12.4"),
+    (".baseline/site-card.toml replaced by a symbolic link", site_card_link, 1,
+     ".baseline/site-card.toml is not a regular file"),
+    (".baseline/site-card.toml replaced by a directory", site_card_dir, 1,
+     ".baseline/site-card.toml is not a regular file"),
+    ("the 1.11.3 Dancing Script woff2 left behind unpinned",
+     lambda d: (d / DEST / "fonts" / "dancing-script-latin-wght-normal.woff2").write_bytes(b"wOF2"), 1,
+     "fonts/dancing-script-latin-wght-normal.woff2 is not pinned"),
+    ("the pristine copy", None, 0, "match baseline 1.12.4"),
 ]
 
 
@@ -216,7 +268,9 @@ def main():
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {len(CASES)} baseline pin cases ({len(CASES) - 1} refusals and the pristine copy)")
+    refusals = sum(1 for case in CASES if case[2] != 0)
+    print(f"  ok    {len(CASES)} baseline pin cases ({refusals} refusals and {len(CASES) - refusals} "
+          f"accepted trees, the pristine copy among them)")
     return 0
 
 
