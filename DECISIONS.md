@@ -18,26 +18,33 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 ## Rulings
 
 - **Maintainer ruling of 2026-11-12 on the day-end rule for releases (#1294).** The maintainer gave this ruling in an
-  attended session at 20:24Z that day: "Change the day-end rule", so that a release can be cut on the same UTC day as
-  its target merge. No reasoning was recorded beyond that. It amends the 2026-11-01 rulings on tagged releases below
+  attended session at about 20:24Z that day, where he chose the option labelled "Change the day-end rule" in an
+  AskUserQuestion, so that a release can be cut on the same UTC day as its target merge. No reasoning was recorded
+  beyond that choice. It amends the 2026-11-01 rulings on tagged releases below
   in one respect only, and the rest of them stands.
   - Effect, applied in the same change as this entry. `tools/check_release.py` no longer refuses a target whose UTC
     date has not ended. A target covers the merges on its own UTC date only up to and including the target commit,
     and the release body and notes say so. With `--previous`, the next release treats the previous target's date as
     partly covered: each pull request merged after the previous target on that date is accepted into the range, must
     still be referenced under that date's `CHANGELOG.md` heading, and brings that date's section into the notes.
-    CONTRIBUTING.md "Releasing" step 2 says so, and `tools/test_release.py` records the cases.
-  - The guarantee kept by other means. A release never misstates which changes it covers: the body lists the pull
-    requests in the range and says where the target's date stops, and a merge after the target on that date is
-    caught by the next release, which refuses it when its entry is missing or filed under another date.
+    CONTRIBUTING.md "Releasing" step 2 and step 9, a comment in `tools/run_all_checks.sh` and `tools/test_release.py`
+    record it.
+  - The guarantee kept by other means, in two halves. First, a release never misstates which changes it covers: the
+    body lists the pull requests in the range and says where the target's date stops. Second, no merged change
+    escapes every release's notes: a merge after the target on that date is caught by the next release, which
+    refuses it when its entry is missing, filed under another date, or dated outside the span from the previous
+    release's date to the target's.
   - Refusals that stay. The target must still be the last first-parent merge of its UTC date on `main` when the
     release is checked, and a release's target date must still be after the previous release's, so at most one
     release targets a given UTC date. Every other check is unchanged.
-  - Revert. Restore the removed finding in `examine()` (`target_date >= today`, which refuses a target whose UTC
-    date has not ended), restore the strict `previous_date < date` test in check 6, and restore the notes and body
-    wording and the tests, by reverting this pull request's changes to `tools/check_release.py`,
-    `tools/test_release.py`, CONTRIBUTING.md "Releasing" and the `CHANGELOG.md` preamble. A release already cut under
-    this rule keeps its tag; its successor must then pass `--previous` and its range is checked as above.
+  - Revert. Restore only the day-end refusal in `examine()` (`target_date >= today`, which refuses a target whose UTC
+    date has not ended), with its test cases, the wording that says a target's date is covered only up to the
+    target, CONTRIBUTING.md "Releasing" step 2 and step 9, the `CHANGELOG.md` preamble and the comment in
+    `tools/run_all_checks.sh` that calls such a date one a release may target. Keep check 6's widened date window
+    (`previous_date <= date <= target_date`) and the extra date section in the notes. Removing them would block the
+    next release after a same-day release for good whenever another merge landed on that date, because no records
+    pull request can change a commit's date. A release already cut under this rule keeps its tag; its successor
+    must pass `--previous`, and its range is checked as above.
 - **Maintainer ruling of 2026-11-11 on the demonstration-form remedy, GQS O5 (#1282).** The orchestrator's store
   records this ruling as resolved by the Architect, the maintainer in this project's records, on 2026-11-11
   while the fleet's operating mode was attended-autonomous, and #1288 enters it here. The store does not record the

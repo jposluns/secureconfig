@@ -574,7 +574,8 @@ link to `CHANGELOG.md` at the tag.
    on a later release.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers, saying that the
-   target's date is covered only up to the target commit. The next release
+   target's date is covered only up to the target commit, and also saying when the release covers
+   the previous release's date after that previous target. The next release
    passes this tag as `--previous`.
 10. Ask lab_infra, which maintains https://posluns.dev/hashes.txt, to add the release: send the
     tag, its target commit and the SHA-256 of the release's `SHA256SUMS` asset, which

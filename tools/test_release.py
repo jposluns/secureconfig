@@ -710,6 +710,14 @@ def cases(tmp):
     expect("a later same-date merge filed under another date is refused by the next release",
            release(repo, c[13], "v1.0.13", "v1.0.11", tmp / "sdm"), 1,
            "#12 (", "merged on 2026-10-02 UTC but is not referenced under `## 2026-10-02`")
+    repo = tmp / "samedaybefore"
+    c = build(repo, history=[HISTORY[0], HISTORY[1], (12, "2026-10-01T20:00:00Z", "2026-10-01"),
+                             HISTORY[3], HISTORY[4]])
+    git(repo, "tag", "v1.0.11", c[11])
+    expect("a range pull request merged before the previous release's UTC date is refused, "
+           "even with its entry under its own date",
+           release(repo, c[13], "v1.0.13", "v1.0.11", tmp / "sdb"), 1,
+           "#12 (", "not on or after the previous release's 2026-10-02")
     repo = tmp / "sameday"
     expect("a target whose UTC date is not after the previous release's is refused",
            release(repo, sameday_commits[12], "v1.0.12", "v1.0.11", tmp / "sd12"), 1,
