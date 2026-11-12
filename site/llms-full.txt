@@ -72712,7 +72712,7 @@ REASONED: following block; the fail2ban jail check for the brute-force control i
 )
 ```
 
-REASONED: following block; this file check reads only a local file and needs no service. It rests on the guide's cited Windmill v1.864.1 Compose file, which sets `REQUIRE_SIGNED_DEBUG_REQUESTS=true` on the `windmill_extra` service that runs the debugger, and on the Windmill v1.864.1 debugger signed-request switch, under which only the exact value `false` turns signing off. Exposed, a line sets the variable to `false` after `=` or `:` and an optional quote, and the block prints that line and exits 1. Fixed, no line does, and the block exits 0: it prints "is not set in this file" when no line names the variable, and an unclassified-observation line when a line names it in another form, such as the vendor's `=true` line or a `${...}` substitution. A commented-out line that sets it to `false` also reports, and so does a quoted `"false"`, even where the quotes would stay in the value, so inspect each hit. Run it once for each Compose and environment file the deployment uses, including every file an `env_file:` line names and the `.env` Compose reads for variable substitution. Values supplied from outside the files, such as the shell environment Compose runs in, are beyond its reach. The block branches only on grep's exit status: 0 when a line is selected, 1 when none is and above 1 for an error, as the sample-token block's recorded runs under GNU grep 3.12 show, and a read error ends with status 3. No Windmill deployment was available for this review, and the check has not been run against one. The block passed bash -n and ShellCheck 0.11.0, and 19 local runs against fixture files, including a copy of the pinned Compose file, under GNU grep 3.12 ended with status 0, 1, 2 and 3 as stated above. Substitute the file path inside the single quotes, and paste the whole block.
+REASONED: following block; this file check reads only a local file and needs no service. It rests on the guide's cited Windmill v1.864.1 Compose file, which sets `REQUIRE_SIGNED_DEBUG_REQUESTS=true` on the `windmill_extra` service that runs the debugger, and on the Windmill v1.864.1 debugger signed-request switch, under which only the exact value `false` turns signing off. Exposed, a line sets the variable to `false`, exactly and in lower case, after `=` or `:` and an optional quote, and the block prints that line and exits 1, whatever the other lines hold. Fixed, the block exits 0 when no line names the variable, printing "is not set in this file", or when every line that names it is read as `true` or `1`, as the vendor's `=true` line is. A line is read that way only when it holds nothing but optional leading spaces, an optional YAML list dash and spaces, the variable name in optional quotes, `=` or `:` with optional blanks around it, `true` in any letter case or `1` in optional quotes, optional blanks, an optional comment that starts with `#` after a blank, and optional trailing whitespace, a CRLF end included. Any other line that names the variable ends with status 3 and a message that the block cannot read that value form, so check that line by hand: examples are a `${...}` substitution, a YAML anchor, alias or tag, a value on the next line, an empty value, a commented-out line, a longer name that contains this one and a case variant such as `False`. The block counts the lines that name the variable and the whole lines that match that form, each with `grep -c`, and exits 0 only when the two counts are equal. A file that holds a NUL byte, or whose size the block cannot measure, also ends with status 3, because grep reads a NUL byte as a line break. A commented-out line that sets it to `false` also reports, and so does a quoted `"false"`, even where the quotes would stay in the value, so inspect each hit. Run it once for each Compose and environment file the deployment uses, including every file an `env_file:` line names and the `.env` Compose reads for variable substitution. Values supplied from outside the files, such as the shell environment Compose runs in, are beyond its reach. The block branches only on grep's exit status and on those two counts: grep exits 0 when a line is selected, 1 when none is and above 1 for an error, as the sample-token block's recorded runs under GNU grep 3.12 show, and a read error ends with status 3. No Windmill deployment was available for this review, and the check has not been run against one. The block passed bash -n and ShellCheck 0.11.0, and 62 local runs against fixture files, including a copy of the pinned Compose file, under GNU grep 3.12 ended with status 0, 1, 2 and 3 as stated above. Substitute the file path inside the single quotes, and paste the whole block.
 
 ```bash
 (
@@ -72727,10 +72727,18 @@ REASONED: following block; this file check reads only a local file and needs no 
       echo "FOUND REQUIRE_SIGNED_DEBUG_REQUESTS set to false: the debugger then accepts unsigned debug sessions; remove the line or set it to true"; exit 1
     else
       case "$?" in
-        1) echo "no line above sets it to false in a form this search classifies; unclassified observation: inspect each line above"; exit 0 ;;
+        1) ;;
         *) echo "grep could not read $1; not checked"; exit 3 ;;
       esac
     fi
+    # grep reads a NUL byte as a line break, so a file holding one cannot be counted by line: compare its size with its size minus its NUL bytes
+    [ "$(LC_ALL=C tr -d '\0' < "$1" | wc -c)" -eq "$(wc -c < "$1")" ] || { echo "$1 holds a NUL byte or could not be measured; cannot read this value form; check it by hand; not checked"; exit 3; }
+    named=$(LC_ALL=C grep -c -F 'REQUIRE_SIGNED_DEBUG_REQUESTS' -- "$1"); rc=$?   # lines that name the setting
+    [ "$rc" -le 1 ] || { echo "grep could not read $1; not checked"; exit 3; }
+    known=$(LC_ALL=C grep -c -E "^ *(- +)?(\"|')?REQUIRE_SIGNED_DEBUG_REQUESTS(\"|')?[[:blank:]]*(=|:)[[:blank:]]*(\"|')?([Tt][Rr][Uu][Ee]|1)(\"|')?([[:blank:]]+#.*)?[[:space:]]*\$" -- "$1"); rc=$?   # whole lines that set it to true or 1
+    [ "$rc" -le 1 ] || { echo "grep could not read $1; not checked"; exit 3; }
+    [ "$named" = "$known" ] || { echo "cannot read this value form: a line above names REQUIRE_SIGNED_DEBUG_REQUESTS without setting it plainly to true or 1; check each such line by hand; not checked"; exit 3; }
+    echo "every line above sets it to true or 1 in a form this block reads; the pinned debugger turns signing off only for the exact value false"; exit 0
   else
     case "$?" in
       1) echo "REQUIRE_SIGNED_DEBUG_REQUESTS is not set in this file" ;;
@@ -72740,7 +72748,7 @@ REASONED: following block; this file check reads only a local file and needs no 
 )
 ```
 
-REASONED: following block; this check reads NocoDB's proxy-trust setting from the container, per the guide's cited NocoDB 2026.09.0 proxy trust default (`NC_TRUST_PROXY`), NocoDB 2026.09.0 port default, JWT secret generation and proxy-trust reset, and Docker `docker exec` environment. No deployed NocoDB container was available, because the authoring host has no container runtime. At startup NocoDB replaces Express's `trust proxy` with the value it reads from `NC_TRUST_PROXY` after trimming whitespace: unset, empty or `false` in any letter case trusts no proxy, `true` in any letter case trusts all proxies in the words of its source comment, a whole number is a hop count, and anything else goes to Express as a subnet or keyword list. Exposed, the value is `true`, and the block prints it and exits 1, because the NocoDB section says never to set `true` on a server clients can reach directly and gives a hop count or subnet as the setting behind a proxy. Fixed, the block prints the value and exits 0 for unset, empty, `false`, a hop count or a subnet or keyword list. It exits 3 for a value with leading or trailing whitespace, and 3 when it cannot read the setting, for example from a missing container. It cannot tell whether clients reach NocoDB directly, whether a hop count matches the proxies in front or whether a subnet list names only them, so judge a 0 against your own topology. Like the key-presence block, it reads the container's configured environment, which `docker exec` inherits, not the server process's own, and which start script the image runs was not verified. The value is not a secret, so the block prints it. Its in-container `printf` ends the value with `|` so that a trailing line break survives the capture, and any other output ends with status 3. That `docker exec` passes the command's standard output through is assumed here; the cited Docker page does not state it. The block passed bash -n and ShellCheck 0.11.0, and 25 local runs against a stub docker that ran the in-container script without a container ended with status 0, 1, 2 and 3 as stated above. Substitute the container name inside the single quotes, and paste the whole block.
+REASONED: following block; this check reads NocoDB's proxy-trust setting from the container, per the guide's cited NocoDB 2026.09.0 proxy trust default (`NC_TRUST_PROXY`), NocoDB 2026.09.0 port default, JWT secret generation and proxy-trust reset, and Docker `docker exec` environment. No deployed NocoDB container was available, because the authoring host has no container runtime. At startup NocoDB replaces Express's `trust proxy` with the value it reads from `NC_TRUST_PROXY` after trimming whitespace: unset, empty or `false` in any letter case trusts no proxy, `true` in any letter case trusts all proxies in the words of its source comment, a whole number is a hop count, and anything else goes to Express as a subnet or keyword list. Per the guide's cited NocoDB 2026.09.0 lockfile, `packages/nocodb` uses Express 4.21.2, which uses proxy-addr 2.0.7, so the guide's cited proxy-addr 2.0.7 `index.js` and Express 4.21.2 `lib/utils.js` show how Express reads that value. Exposed, the value is `true`, and the block prints it and exits 1, because the NocoDB section says never to set `true` on a server clients can reach directly and gives a hop count or subnet as the setting behind a proxy. It also exits 1 when an item of the value, split on commas and trimmed of blanks as Express 4.21.2's `compileTrust` does for a string, ends in `/` and only zeros or in the netmask `/0.0.0.0`, an all-address range such as `0.0.0.0/0` or `::/0`. Such a value is invalid rather than trusting everything: Express hands the items to proxy-addr's `compile`, whose range parse in proxy-addr 2.0.7 runs `if (range <= 0 || range > max)` and throws, so the message says the value was meant to trust every address and asks for the address or hop count of the proxy in front. Other all-address spellings that proxy-addr does accept, such as the two ranges `0.0.0.0/1` and `128.0.0.0/1` that together cover the IPv4 address space, are not detected, and the block cannot tell a list that names only the proxies from one that does not. Fixed, the block prints the value and exits 0 for unset, empty, `false`, a hop count, or a subnet or keyword list with no all-address range. A whole number reaches Express 4.21.2 as a hop count, whose rule is `return function(a, i){ return i < val }`: a hop count of 0, such as `0` or `00`, trusts none of the addresses, so no proxy is trusted, and a hop count N above 0 trusts the nearest N addresses in the chain, the connecting address first, so confirm N matches the number of proxies in front. Before it classifies the value, the block exits 3 when the value holds any byte outside printable ASCII, a tab or line break included, because JavaScript's `trim()` may treat such a byte as whitespace; that message does not repeat the value, though the printed `NC_TRUST_PROXY=` line above it does. It exits 3 for a value with leading or trailing whitespace, and 3 when it cannot read the setting, for example from a missing container. It cannot tell whether clients reach NocoDB directly, whether a hop count matches the proxies in front or whether a subnet list names only them, so judge a 0 against your own topology. Like the key-presence block, it reads the container's configured environment, which `docker exec` inherits, not the server process's own, and which start script the image runs was not verified. The value is not a secret, so the block prints it. Its in-container `printf` ends the value with `|` so that a trailing line break survives the capture, and any other output ends with status 3. That `docker exec` passes the command's standard output through is assumed here; the cited Docker page does not state it. The block passed bash -n and ShellCheck 0.11.0, and 53 local runs against a stub docker that ran the in-container script without a container ended with status 0, 1, 2 and 3 as stated above. Substitute the container name inside the single quotes, and paste the whole block.
 
 ```bash
 (
@@ -72758,14 +72766,32 @@ REASONED: following block; this check reads NocoDB's proxy-trust setting from th
     *) echo "could not read NC_TRUST_PROXY in container $1; not checked"; exit 3 ;;
   esac
   printf 'NC_TRUST_PROXY=%s\n' "$2"
+  if printf '%s' "$2" | LC_ALL=C grep -q -z -E '[^[:print:]]'; then   # -z reads the value as one record, so a line break in it is tested too
+    echo "the value holds a byte outside printable ASCII, which JavaScript trim() may treat as whitespace, so this block cannot classify it; read it yourself; not checked"; exit 3
+  else
+    case "$?" in
+      1) ;;
+      *) echo "grep could not test the value; not checked"; exit 3 ;;
+    esac
+  fi
   case "$2" in
     "") echo "empty: NocoDB trusts no proxy"; exit 0 ;;
     [[:space:]]*|*[[:space:]]) echo "the value has leading or trailing whitespace, which NocoDB trims before reading it; inconclusive: read it yourself"; exit 3 ;;
     [Tt][Rr][Uu][Ee]) echo "FINDING: NC_TRUST_PROXY is true, so NocoDB trusts all proxies; set it to the hop count or subnet of the proxy in front"; exit 1 ;;
     [Ff][Aa][Ll][Ss][Ee]) echo "false: NocoDB trusts no proxy"; exit 0 ;;
-    *[!0123456789]*) echo "passed to Express as a subnet or keyword list; unclassified observation: confirm it names only the proxies in front of NocoDB"; exit 0 ;;
-    *) echo "NocoDB trusts a hop count of $2; confirm it matches the number of proxies in front of it"; exit 0 ;;
+    *[!0123456789]*) ;;                 # a subnet or keyword list: tested for an all-address range below
+    *[!0]*) echo "NocoDB passes the number $2 to Express as a hop count, and Express trusts the nearest $2 addresses in the chain, the connecting address first; confirm $2 matches the number of proxies in front of NocoDB"; exit 0 ;;
+    *) echo "a hop count of 0: NocoDB passes the number 0 to Express, whose hop-count rule trusts none of the addresses, so no proxy is trusted"; exit 0 ;;
   esac
+  if printf '%s' "$2" | LC_ALL=C grep -q -E '/(0+|0\.0\.0\.0)[[:blank:]]*(,|$)'; then   # an item ending in a range of 0, once Express splits on commas and trims
+    echo "FINDING: NC_TRUST_PROXY contains an all-address range; proxy-addr 2.0.7, which NocoDB 2026.09.0's lockfile pins through Express 4.21.2, rejects a range of 0, so the value is invalid and was meant to trust every address; replace it with the address or hop count of the proxy in front"; exit 1
+  else
+    case "$?" in
+      1) ;;
+      *) echo "grep could not test the value; not checked"; exit 3 ;;
+    esac
+  fi
+  echo "passed to Express as a subnet or keyword list; unclassified observation: confirm it names only the proxies in front of NocoDB"; exit 0
 )
 ```
 
@@ -72773,6 +72799,9 @@ REASONED: following block; this check reads NocoDB's proxy-trust setting from th
 
 - NocoDB 2026.09.0 port default, JWT secret generation and proxy-trust reset: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts
 - NocoDB 2026.09.0 proxy trust default (`NC_TRUST_PROXY`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/trustProxy.ts
+- NocoDB 2026.09.0 lockfile (pins Express 4.21.2 and proxy-addr 2.0.7 for `packages/nocodb`; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/pnpm-lock.yaml
+- proxy-addr 2.0.7 `index.js` as pinned by NocoDB 2026.09.0's lockfile (range parsing and hop trust): https://github.com/jshttp/proxy-addr/blob/v2.0.7/index.js
+- Express 4.21.2 `lib/utils.js` as pinned by NocoDB 2026.09.0's lockfile (`compileTrust` for a number and a comma string): https://github.com/expressjs/express/blob/4.21.2/lib/utils.js
 - NocoDB 2026.09.0 entry point (listen with no host, CORS): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/dockerEntry.ts
 - NocoDB 2026.09.0 first user, signup and its refusal message: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/users/users.service.ts
 - NocoDB 2026.09.0 app settings (`invite_only_signup`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/interface/AppSettings.ts
@@ -72989,15 +73018,15 @@ Claims (full source mapping in the JSON block below):
 - verify-litellm-pin (REASONED; budibase, litellm): The LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
 - verify-tcp-outcomes (REASONED; baserow, budibase, windmill): Recorded loopback runs of an earlier form, whose control and result arms ended with status 0, observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. The current form was not re-run.
 - verify-tcp-inputs (REASONED; baserow, budibase, windmill): Recorded guard tests of an earlier form, whose guard, control and result arms ended with status 0, rejected named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 passed, and the invalid hex values tested failed at the control. The current form was not re-run.
-- verify-windmill-debugger (REASONED; windmill): In each Compose or environment file, a line setting REQUIRE_SIGNED_DEBUG_REQUESTS to false is the finding (exit 1); a file that sets it to anything else or not at all exits 0. The pinned debugger turns signing off only for the exact value false. Values supplied from outside the file are beyond its reach. Not run against any deployment.
-- verify-nocodb-trust-proxy (REASONED; nocodb, docker): docker exec reads NC_TRUST_PROXY from the container's configured environment: true in any letter case is the finding (exit 1); unset, empty, false, a hop count or a subnet list exits 0, padded values 3. It cannot tell whether clients reach NocoDB directly or whether a hop count matches the proxies. No real container run.
+- verify-windmill-debugger (REASONED; windmill): In each Compose or environment file, a line setting REQUIRE_SIGNED_DEBUG_REQUESTS to exact lower-case false is the finding (exit 1). Every line naming it set to true in any case or 1 (bare, quoted or list item), or no line naming it, exits 0. Any other form, such as a substitution, an alias, a case variant or a value on the next line, exits 3 for a manual check. Not run against any deployment.
+- verify-nocodb-trust-proxy (REASONED; nocodb, docker): docker exec reads NC_TRUST_PROXY in the container's configured environment: true (any case) or a /0 all-address range (proxy-addr 2.0.7 rejects it) is the finding (exit 1); unset, empty, false, a hop count (0 trusts no proxy) or other subnet list exits 0; padded or non-ASCII values 3. It cannot tell if clients reach NocoDB directly or if a hop count matches the proxies. No real container run.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "96e1faeb9ca1e30b1fe1ea008533cadc35b00ab23ed6cb2e7d4ed20625e04fc7",
+  "body_sha256": "1d1ccf7634313f47cebf01e93742b5f946b2cfa9816e93853512c2c00063c518",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -73025,7 +73054,10 @@ Claims (full source mapping in the JSON block below):
         "s31941e502c14": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/meta/migrations/v0/nc_202603180000_user_mfa.ts",
         "s50856563cb62": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/guards/public-api-limiter.guard.ts#L4-L13",
         "sbe0b751e6286": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/modules/auth/auth.controller.ts#L88",
-        "s659b1179d0e5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/strategies/local.strategy.ts#L18-L39"
+        "s659b1179d0e5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/strategies/local.strategy.ts#L18-L39",
+        "se352e8e45038": "https://github.com/nocodb/nocodb/blob/2026.09.0/pnpm-lock.yaml",
+        "s1174c56ebb50": "https://github.com/jshttp/proxy-addr/blob/v2.0.7/index.js",
+        "s3af21c2530b7": "https://github.com/expressjs/express/blob/4.21.2/lib/utils.js"
       }
     },
     "baserow": {
@@ -73316,8 +73348,8 @@ Claims (full source mapping in the JSON block below):
     "verify-litellm-pin": {"text": "The LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.", "components": ["budibase", "litellm"], "sources": ["litellm:sbe6fa0b81017", "budibase:se33db249e0f0"], "status": "REASONED", "verify": [5]},
     "verify-tcp-outcomes": {"text": "Recorded loopback runs of an earlier form, whose control and result arms ended with status 0, observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. The current form was not re-run.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:sb79f4a0be2f7", "windmill:s6a7eeac413b7"], "status": "REASONED", "verify": [6]},
     "verify-tcp-inputs": {"text": "Recorded guard tests of an earlier form, whose guard, control and result arms ended with status 0, rejected named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 passed, and the invalid hex values tested failed at the control. The current form was not re-run.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:sb79f4a0be2f7", "windmill:s6a7eeac413b7"], "status": "REASONED", "verify": [6]},
-    "verify-windmill-debugger": {"text": "In each Compose or environment file, a line setting REQUIRE_SIGNED_DEBUG_REQUESTS to false is the finding (exit 1); a file that sets it to anything else or not at all exits 0. The pinned debugger turns signing off only for the exact value false. Values supplied from outside the file are beyond its reach. Not run against any deployment.", "components": ["windmill"], "sources": ["windmill:s6a7eeac413b7", "windmill:s50609ebb7768", "windmill:s05c898fe1013"], "status": "REASONED", "verify": [9]},
-    "verify-nocodb-trust-proxy": {"text": "docker exec reads NC_TRUST_PROXY from the container's configured environment: true in any letter case is the finding (exit 1); unset, empty, false, a hop count or a subnet list exits 0, padded values 3. It cannot tell whether clients reach NocoDB directly or whether a hop count matches the proxies. No real container run.", "components": ["nocodb", "docker"], "sources": ["nocodb:s635b35ce4689", "nocodb:sa19c6557b712", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [10]}
+    "verify-windmill-debugger": {"text": "In each Compose or environment file, a line setting REQUIRE_SIGNED_DEBUG_REQUESTS to exact lower-case false is the finding (exit 1). Every line naming it set to true in any case or 1 (bare, quoted or list item), or no line naming it, exits 0. Any other form, such as a substitution, an alias, a case variant or a value on the next line, exits 3 for a manual check. Not run against any deployment.", "components": ["windmill"], "sources": ["windmill:s6a7eeac413b7", "windmill:s50609ebb7768", "windmill:s05c898fe1013"], "status": "REASONED", "verify": [9]},
+    "verify-nocodb-trust-proxy": {"text": "docker exec reads NC_TRUST_PROXY in the container's configured environment: true (any case) or a /0 all-address range (proxy-addr 2.0.7 rejects it) is the finding (exit 1); unset, empty, false, a hop count (0 trusts no proxy) or other subnet list exits 0; padded or non-ASCII values 3. It cannot tell if clients reach NocoDB directly or if a hop count matches the proxies. No real container run.", "components": ["nocodb", "docker"], "sources": ["nocodb:s635b35ce4689", "nocodb:sa19c6557b712", "nocodb:se352e8e45038", "nocodb:s1174c56ebb50", "nocodb:s3af21c2530b7", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [10]}
   }
 }
 ````
